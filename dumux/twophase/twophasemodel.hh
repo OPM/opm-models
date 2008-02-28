@@ -165,7 +165,7 @@ namespace Dune
 		  return;
 	  }
 
-	  virtual double injected() 
+	  virtual double injected(double& upperMass, double& oldUpperMass) 
 	  {
 		  typedef typename G::Traits::template Codim<0>::Entity Entity;
 		  typedef typename G::ctype DT;
@@ -174,7 +174,9 @@ namespace Dune
 		  enum{dimworld = G::dimensionworld};
 		  
 		  const IS& indexset(grid.leafIndexSet());
-		  double result = 0;
+		  double totalMass = 0;
+		  upperMass = 0;
+		  oldUpperMass = 0;
 		  // iterate through leaf grid an evaluate c0 at cell center
 		  Iterator eendit = indexset.template end<0, All_Partition>();
 		  for (Iterator it = indexset.template begin<0, All_Partition>(); it != eendit; ++it)
@@ -184,35 +186,43 @@ namespace Dune
 
 			  // get entity 
 			  const Entity& entity = *it;
-				
-			FVElementGeometry<G> fvGeom;
-		fvGeom.update(entity);
-
-		  const typename Dune::LagrangeShapeFunctionSetContainer<DT,RT,dim>::value_type& 
-		sfs=Dune::LagrangeShapeFunctions<DT,RT,dim>::general(gt, 1);
-	      int size = sfs.size();
+					
+				FVElementGeometry<G> fvGeom;
+			fvGeom.update(entity);
+	
+			  const typename Dune::LagrangeShapeFunctionSetContainer<DT,RT,dim>::value_type& 
+			sfs=Dune::LagrangeShapeFunctions<DT,RT,dim>::general(gt, 1);
+		      int size = sfs.size();
 
 	      for (int i = 0; i < size; i++) {
-		  // get cell center in reference element
-		  const Dune::FieldVector<DT,dim>& 
-				  local = sfs[i].position();
-
-		  // get global coordinate of cell center
-		  Dune::FieldVector<DT,dimworld> global = it->geometry().global(local);
-
-		  int globalId = vertexmapper.template map<dim>(entity, sfs[i].entity());
-
-		double volume = fvGeom.subContVol[i].volume;
-
-		double porosity = this->problem.porosity(global, entity, local);
-
-
-		double density = this->problem.materialLaw().nonwettingPhase.density();
-
-		result += volume*porosity*density*((*(this->u))[globalId][1]);
+			  // get cell center in reference element
+			  const Dune::FieldVector<DT,dim>& 
+					  local = sfs[i].position();
+	
+			  // get global coordinate of cell center
+			  Dune::FieldVector<DT,dimworld> global = it->geometry().global(local);
+	
+			  int globalId = vertexmapper.template map<dim>(entity, sfs[i].entity());
+	
+			double volume = fvGeom.subContVol[i].volume;
+	
+			double porosity = this->problem.porosity(global, entity, local);
+	
+	
+			double density = this->problem.materialLaw().nonwettingPhase.density();
+			
+			double mass = volume*porosity*density*((*(this->u))[globalId][1]);
+	
+			totalMass += mass;
+			
+			if (global[2] > 80.0) {
+				upperMass += mass;
+				oldUpperMass += volume*porosity*density*((*(this->uOldTimeStep))[globalId][1]);
+			}
 		}
 	}
-	return result;
+		  
+	return totalMass;
 }
 
 
@@ -220,7 +230,9 @@ namespace Dune
 	{
 		VTKWriter<G> vtkwriter(this->grid);
 		char fname[128];	
-		sprintf(fname,"%s-%05d",name,k);
+		sprintf(fname,"%s-%05d",name,k); 
+		double minSat = 1e100;
+		double maxSat = -1e100;
 		for (int i = 0; i < size; i++) {
 			pW[i] = (*(this->u))[i][0];
 			//pN[i] = (*(this->u))[i][1];
@@ -229,11 +241,17 @@ namespace Dune
 			//satN[i] = 1 - satW[i];
 			satN[i] = (*(this->u))[i][1];
 			satW[i] = 1 - satN[i];
+			double satNI = satN[i];
+			minSat = std::min(minSat, satNI);
+			maxSat = std::max(maxSat, satNI);
 		}
 		vtkwriter.addVertexData(pW,"wetting phase pressure");
 		vtkwriter.addVertexData(satW,"wetting phase saturation");
 		vtkwriter.addVertexData(satN,"nonwetting phase saturation");
-		vtkwriter.write(fname, VTKOptions::ascii);		
+		vtkwriter.write(fname, VTKOptions::ascii);
+		std::cout << "nonwetting phase saturation: min = " << minSat << ", max = " << maxSat << std::endl;
+		if (minSat < -0.5 || maxSat > 1.5)
+			DUNE_THROW(MathError, "Saturation exceeds range.");	
 	}
 
 protected:
