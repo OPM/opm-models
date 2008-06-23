@@ -29,6 +29,7 @@ public:
 			grid.comm().sum(&globalResiduum, 1);	    
 			if (grid.comm().rank() == 0)
 				std::cout << "initial residual = " << globalResiduum << std::endl;	
+			//printvector(std::cout, *defectGlobal, "global Defect", "row", 200, 1, 3);
 			while ((error > difftolerance || globalResiduum > restolerance) && iter < maxIter) {
 				iter ++;
 				iiter=0;
@@ -41,24 +42,26 @@ public:
 				*f = 0;
 				localJacobian.clearVisited();
 				A.assemble(localJacobian, u, f);
-//				if (grid.comm().rank() == 1) {
-//					printmatrix(std::cout, *A, "global stiffness matrix", "row", 11, 3);
-//					printvector(std::cout, *f, "right hand side", "row", 200, 1, 3);
-//				}
-
+				if (grid.comm().rank() == 10) {
+					printmatrix(std::cout, *A, "global stiffness matrix", "row", 11, 3);
+					printvector(std::cout, *uOldNewtonStep, "uOldNewtonStep", "row", 200, 1, 3);
+					printvector(std::cout, *f, "right hand side", "row", 200, 1, 3);
+				}
+				
 				model.solve();
 				error = oneByMagnitude*((*u).two_norm());
 				//printvector(std::cout, *u, "update", "row", 200, 1, 3);
 				*u *= -lambda;
 				*u += *uOldNewtonStep;
-				//printvector(std::cout, *u, "u", "row", 200, 1, 3);
+				if (grid.comm().rank() == 10) 
+					printvector(std::cout, *u, "u", "row", 200, 1, 3);
 				model.globalDefect(defectGlobal);
 				globalResiduum=0.5*(*defectGlobal).two_norm();
 				grid.comm().sum(&globalResiduum, 1);
 				//printvector(std::cout, *defectGlobal, "global Defect", "row", 200, 1, 3);
 
 				while (globalResiduum >= globalResiduumOld 
-						&& iiter < (maxIter/2)) {
+						&& iiter < (maxIter/2) && globalResiduum*oneByMagnitude > 1e-12) {
 					iiter++;
 					*uOldNewtonStep = *u;
 					globalResiduumOld=globalResiduum;
