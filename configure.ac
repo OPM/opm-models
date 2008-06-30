@@ -78,7 +78,6 @@ AC_CONFIG_FILES([Makefile
     dumux/twophase/fv/Makefile 
     dumux/twophase/problems/Makefile 
     dumux/fractionalflow/impes/Makefile 
-
     dune-mux.pc])
 
 AC_OUTPUT
