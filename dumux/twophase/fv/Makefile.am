@@ -1,4 +1,2 @@
-fvdir = $(includedir)/dune/dumux/2penergy/fv
-fv_HEADERS = boxpwsnte.hh boxpwsntejacobian.hh 
-
+noinst_HEADERS=*.hh
 include $(top_srcdir)/am/global-rules
