@@ -72,8 +72,8 @@ AC_CONFIG_FILES([Makefile
     dumux/fractionalflow/Makefile 
     dumux/twophase/Makefile 
     dumux/nonlinear/Makefile 
-	 dumux/2p2cni/Makefile
-	 test/2p2cni/Makefile
+    dumux/2p2cni/Makefile
+    test/2p2cni/Makefile
     test/fractionalflow/Makefile
     test/transport/Makefile
     test/twophase/Makefile
