@@ -1,8 +1,8 @@
-SUBDIRS = . material nonlinear twophase
+SUBDIRS = . fractionalflow io material nonlinear twophase
 
 # the standard debug streams are put into the libdune
 noinst_LTLIBRARIES = libdumux.la
-SUBLIBS = shape /libshapefunct ns.la /libonedinndgrid.la
+SUBLIBS = shape /lib .la /libonedinndgrid.la
 
 libdumux_la_SOURCES =
 libdumux_la_LIBADD = $(SUBLIBS)

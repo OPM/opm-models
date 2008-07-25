@@ -82,6 +82,7 @@ AC_CONFIG_FILES([Makefile
     dumux/Makefile 
     test/Makefile
     doc/handbook/Makefile 
+    dumux/io/Makefile 
     dumux/material/Makefile 
     dumux/fractionalflow/Makefile 
     dumux/twophase/Makefile 
