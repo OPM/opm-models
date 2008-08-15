@@ -10,4 +10,5 @@ test_2p2c_SOURCES = test_2p2c.cc
 
 #test_twophase_hussam_SOURCES = test_twophase_hussam.cc
 
+noinst_HEADERS=*.hh
 include $(top_srcdir)/am/global-rules
