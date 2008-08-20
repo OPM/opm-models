@@ -1,4 +1,4 @@
-SUBDIRS = . fractionalflow io material nonlinear twophase
+SUBDIRS = fractionalflow io material nonlinear twophase .
 
 # the standard debug streams are put into the libdune
 noinst_LTLIBRARIES = libdumux.la
