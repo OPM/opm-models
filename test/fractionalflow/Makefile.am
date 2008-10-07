@@ -10,5 +10,6 @@ test_fractionalflow_DEPENDENCIES = $(LOCAL_LIBS)
 test_decoupled2p2c_SOURCES = test_decoupled2p2c.cc
 test_decoupled2p2c_DEPENDENCIES = $(LOCAL_LIBS)
 
+EXTRA_DIST=CMakeLists.txt
 noinst_HEADERS=*.hh
 include $(top_srcdir)/am/global-rules

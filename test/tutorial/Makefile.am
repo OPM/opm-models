@@ -10,5 +10,6 @@ tutorial_decoupled_DEPENDENCIES = $(LOCAL_LIBS)
 tutorial_coupled_SOURCES = tutorial_coupled.cc
 tutorial_coupled_DEPENDENCIES = $(LOCAL_LIBS)
 
+EXTRA_DIST=CMakeLists.txt
 noinst_HEADERS=*.hh
 include $(top_srcdir)/am/global-rules
