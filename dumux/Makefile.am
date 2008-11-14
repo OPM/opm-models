@@ -1,4 +1,4 @@
-SUBDIRS = fractionalflow io nonlinear twophase .
+SUBDIRS = fractionalflow io nonlinear timedisc twophase .
 
 # the standard debug streams are put into the libdune
 noinst_LTLIBRARIES = libdumux.la
