@@ -8,10 +8,8 @@ test_fractionalflowdir = $(EXTRA_DIST=CMakeLists.txt
 includedir)/dune/dumux/test/fractionalflow
 test_fractionalflow_HEADERS = heterogeneoussoil_testproblem.hh soilproperties.hh
 test_fractionalflow_SOURCES = test_fractionalflow.cc
-test_fractionalflow_DEPENDENCIES = $(LOCAL_LIBS)
 
 test_decoupled2p2c_SOURCES = test_decoupled2p2c.cc
-test_decoupled2p2c_DEPENDENCIES = $(LOCAL_LIBS)
 
 EXTRA_DIST=CMakeLists.txt
 include $(top_srcdir)/am/global-rules

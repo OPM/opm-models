@@ -9,10 +9,8 @@ includedir)/dune/dumux/test/tutorial
 tutorial_decoupled_HEADERS = tutorial_soilproperties_coupled.hh tutorial_soilproperties_decoupled.hh tutorialproblem_coupled.hh \
 	tutorialproblem_decoupled.hh
 tutorial_decoupled_SOURCES = tutorial_decoupled.cc
-tutorial_decoupled_DEPENDENCIES = $(LOCAL_LIBS)
 
 tutorial_coupled_SOURCES = tutorial_coupled.cc
-tutorial_coupled_DEPENDENCIES = $(LOCAL_LIBS)
 
 EXTRA_DIST=CMakeLists.txt
 include $(top_srcdir)/am/global-rules
