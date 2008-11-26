@@ -1,5 +1,5 @@
-#ifndef DUNE_NEW_INJECTIONPROBLEM_HH
-#define DUNE_NEW_INJECTIONPROBLEM_HH
+#ifndef DUNE_NEW_WATERAIRPROBLEM_HH
+#define DUNE_NEW_WATERAIRPROBLEM_HH
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -35,8 +35,8 @@
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/istl/io.hh>
 
-#include<dumux/new_models/2p2c/2p2cboxmodel.hh>
-#include<dumux/new_models/2p2c/2p2cnewtoncontroller.hh>
+#include<dumux/new_models/2p2cni/2p2cniboxmodel.hh>
+#include<dumux/new_models/2p2cni/2p2cninewtoncontroller.hh>
 
 #include<dumux/timedisc/new_impliciteulerstep.hh>
 #include<dumux/nonlinear/new_newtonmethod.hh>
@@ -52,93 +52,7 @@
 
 namespace Dune
 {
-//////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////--SOIL--//////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////
-    template<class G, class Scalar>
-    class InjectionSoil: public Matrix2p<G,Scalar>
-    {
-    public:
-  	typedef typename G::Traits::template Codim<0>::Entity Entity;
-  	typedef typename G::ctype DT;
-  	enum {dim=G::dimension};
-
-  	InjectionSoil():Matrix2p<G,Scalar>()
-            {
-  		lowK_ = highK_ = 0.;
-  		for(int i = 0; i < dim; i++){
-                    lowK_[i][i] = 1e-13;
-                    highK_[i][i] = 1e-12;
-  		}
-  		layerBottom_ = 22.0;
-            }
-
-  	~InjectionSoil()
-            {}
-
-  	FieldMatrix<DT,dim,dim> K (const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi)
-            {
-  		if (x[1] < layerBottom_)
-                    return highK_;
-  		else
-                    return lowK_;
-            }
-  	
-        double porosity(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
-            {
-  		return 0.3;
-            }
-
-  	double Sr_w(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
-            {
-  		return 0.2;
-            }
-
-        double Sr_n(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
-            {
-  		return 0.0;
-            }
-
-  	/* ATTENTION: define heat capacity per cubic meter! Be sure, that it corresponds to porosity!
-         * Best thing will be to define heatCap = (specific heatCapacity of material) * density * porosity*/
-        double heatCap(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
-            {
-  		return 	790 /* spec. heat cap. of granite */
-                    * 2700 /* density of granite */
-                    * porosity(x, e, xi);
-            }
-
-        double heatCond(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double sat) const
-            {
-  		static const double lWater = 0.6;
-  		static const double lGranite = 2.8;
-  		double poro = porosity(x, e, xi);
-  		double lsat = pow(lGranite, (1-poro)) * pow(lWater, poro);
-  		double ldry = pow(lGranite, (1-poro));
-  		return ldry + sqrt(sat) * (ldry - lsat);
-            }
-
-        std::vector<double> paramRelPerm(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
-            {
-  		// example for Brooks-Corey parameters
-  		std::vector<double> param(2);
-  		param[0] = 2.; // lambda
-  		param[1] = 1e4; // entry-pressures
-
-  		return param;
-            }
-
-        typename Matrix2p<G,Scalar>::modelFlag relPermFlag(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
-            {
-  		return Matrix2p<G,Scalar>::brooks_corey;
-            }
-
-    private:
-  	FieldMatrix<DT,dim,dim> lowK_, highK_;
-	double layerBottom_;
-    };
-
-    //! class that defines the parameters of an air injection under a low permeable layer
+    //! class that defines the parameters of an air waterair under a low permeable layer
     /*! Problem definition of an air injection under a low permeable layer. Air enters the domain
      * at the right boundary and migrates upwards.
      * Problem was set up using the rect2d.dgf grid.
@@ -148,19 +62,19 @@ namespace Dune
      *	- ScalarT  Floating point type used for scalars
      */
     template<class ScalarT>
-    class NewInjectionProblem : public BasicDomain<Dune::SGrid<2,2>, 
-                                                   ScalarT>
+    class NewWaterAirProblem : public BasicDomain<Dune::SGrid<2,2>, 
+                                                  ScalarT>
     {
         typedef Dune::SGrid<2,2>               Grid;
         typedef BasicDomain<Grid, ScalarT>     ParentType;
-        typedef NewInjectionProblem<ScalarT>   ThisType;
-        typedef TwoPTwoCBoxModel<ThisType>     Model;
+        typedef NewWaterAirProblem<ScalarT>    ThisType;
+        typedef TwoPTwoCNIBoxModel<ThisType>   Model;
 
         typedef Dune::GridPtr<Grid>                    GridPointer;
 
         typedef Dune::Liq_WaterAir                     WettingPhase;
         typedef Dune::Gas_WaterAir                     NonwettingPhase;
-        typedef Dune::InjectionSoil<Grid, ScalarT>     Soil;
+        typedef Dune::HomogeneousSoil<Grid, ScalarT>   Soil;
         typedef Dune::TwoPhaseRelations<Grid, ScalarT> MaterialLaw;
         typedef Dune::CWaterAir                        Multicomp;
 
@@ -170,19 +84,20 @@ namespace Dune
         // the traits of the BOX scheme
         typedef typename Model::BoxTraits           BoxTraits;
         // the traits of the Pw-Sn model
-        typedef typename Model::TwoPTwoCTraits      TwoPTwoCTraits;
+        typedef typename Model::TwoPTwoCNITraits    TwoPTwoCNITraits;
 
     private:
         // some constants from the traits for convenience
         enum {
             PrimaryVariables = BoxTraits::PrimaryVariables,
-            PwIndex     = TwoPTwoCTraits::PwIndex,
-            SwitchIndex = TwoPTwoCTraits::SwitchIndex,
+            PwIndex          = TwoPTwoCNITraits::PwIndex,
+            SwitchIndex      = TwoPTwoCNITraits::SwitchIndex,
+            TemperatureIndex = TwoPTwoCNITraits::TemperatureIndex,
             
             // Phase State
-            WPhaseOnly = TwoPTwoCTraits::WPhaseOnly,
-            NPhaseOnly = TwoPTwoCTraits::NPhaseOnly,
-            BothPhases = TwoPTwoCTraits::BothPhases,
+            WPhaseOnly = TwoPTwoCNITraits::WPhaseOnly,
+            NPhaseOnly = TwoPTwoCNITraits::NPhaseOnly,
+            BothPhases = TwoPTwoCNITraits::BothPhases,
 
             // Grid and world dimension
             GridDim  = DomainTraits::GridDim,
@@ -213,40 +128,26 @@ namespace Dune
         typedef Dune::NewImplicitEulerStep<ThisType>        TimeIntegration;
 
         typedef typename Model::NewtonMethod                NewtonMethod;
-        typedef TwoPTwoCNewtonController<NewtonMethod>      NewtonController;
+        typedef TwoPTwoCNINewtonController<NewtonMethod>    NewtonController;
 
     public:
-        NewInjectionProblem(Grid *grid,
-                            Scalar dtInitial,
-                            Scalar tEnd) 
+        NewWaterAirProblem(Grid *grid,
+                           Scalar dtInitial,
+                           Scalar tEnd) 
             : ParentType(grid),
               materialLaw_(soil_, wPhase_, nPhase_),
               multicomp_(wPhase_, nPhase_),
               model_(*this),
               newtonMethod_(model_),
-              resultWriter_("new2p2c")
+              resultWriter_("new_waterair")
             {
                 initialTimeStepSize_ = dtInitial;
                 endTime_ = tEnd;
 
                 // specify the grid dimensions
-                outerLowerLeft_[0] = 0;
-                outerLowerLeft_[1] = 0;
-                outerUpperRight_[0] = 50.0;
-                outerUpperRight_[1] = 40.0;
+                eps_    = 1e-8;
 
-                height_ = outerUpperRight_[1] - outerLowerLeft_[1];
-                width_  = outerUpperRight_[0] - outerLowerLeft_[0];
-                eps_    = 1e-8*width_;
-
-                // for defining e.g. a lense
-                innerLowerLeft_[0] = 0.0;
-                innerLowerLeft_[1] = 0.0;
-
-                innerUpperRight_[0] = 0.0;
-                innerUpperRight_[1] = 0.5;
-
-                depthBOR_ = 800.0;
+                depthBOR_ = 1000.0;
 
                 gravity_[0] = 0;
                 gravity_[1] = -9.81;
@@ -399,13 +300,10 @@ namespace Dune
                            const WorldCoord &globalPos,
                            const LocalCoord &localPos) const
             {
-                if (globalPos[0] < eps_)
+                if(globalPos[0] < eps_)
                     values = BoundaryConditions::dirichlet;
                 else
                     values = BoundaryConditions::neumann;
-
-//		if (globalPos[1] < eps_)
-//			values = BoundaryConditions::dirichlet;
             }
 
         /////////////////////////////
@@ -436,9 +334,10 @@ namespace Dune
             {
                 values = 0;
 
-                //Scalar lambda = (globalPos[1])/height_;
-                if (globalPos[1] < 15 && globalPos[1] > 5) {
-                    values[SwitchIndex] = -1e-3;
+                // negative values for injection
+                if (globalPos[1] > 1.0 && globalPos[1] < 5.0)
+                {
+                    values[SwitchIndex] = -1e-5;
                 }
             }
 
@@ -463,23 +362,11 @@ namespace Dune
                      const WorldCoord &globalPos, 
                      const LocalCoord &localPos)
             {
-                Scalar densityW_ = 1000.0;
-
-                values[PwIndex] = 1e5 - densityW_*gravity_[1]*(depthBOR_ - globalPos[1]);
-                values[SwitchIndex] = 1e-8;
-
-//                std::cout << "cell " << ParentType::cellIndex(cell) << " position of node " << globalNodeIdx << ": " << globalPos << " -> " << values << "\n";
-
-//		if ((globalPos[0] > 60.0 - eps_) && (globalPos[1] < 10 && globalPos[1] > 5))
-//			values[SwitchIndex] = 0.05;
-
-//			if (globalPos[1] >= innerLowerLeft_[1] && globalPos[1] <= innerUpperRight_[1]
-//			 && globalPos[0] >= innerLowerLeft_[0])
-//				values[SwitchIndex] = 0.2;
-//			else
-//				values[SwitchIndex] = 1e-6;
+                Scalar densityW = 1000.0;
+                values[PwIndex] = 1e5 + (depthBOR_ - globalPos[1])*densityW*9.81;
+                values[SwitchIndex] = 0.0;
+                values[TemperatureIndex] = 283.0 + (depthBOR_ - globalPos[1])*0.03;
             }
-
 
         Scalar porosity(const Cell &cell, int localIdx) const
             {
@@ -505,19 +392,7 @@ namespace Dune
                               int              &globalIdx,
                               const WorldCoord &globalPos) const
             {
-                int state;
-              
-//		state = BothPhases;
-                state = WPhaseOnly;
-              
-//		if ((globalPos[0] > 60.0 - eps_) && (globalPos[1] < 10 && globalPos[1] > 5))
-//			state = bothPhases;
-//			if (globalPos[1] >= innerLowerLeft_[1] && globalPos[1] <= innerUpperRight_[1]
-//			      && globalPos[0] >= innerLowerLeft_[0])
-//				state = 2;
-//			else
-
-                return state;
+                return WPhaseOnly;
             }
 
       
@@ -551,15 +426,10 @@ namespace Dune
             }
 
 
-        WorldCoord outerLowerLeft_;
-        WorldCoord outerUpperRight_;
-        WorldCoord innerLowerLeft_;
-        WorldCoord innerUpperRight_;
         Scalar width_;
         Scalar height_;
         Scalar depthBOR_;
         Scalar eps_;
-//	  Scalar densityW_, densityN_;
         WorldCoord  gravity_;
 
         // fluids and material properties
