@@ -5,11 +5,6 @@
 #include "config.h"
 #endif
 
-#if !HAVE_UG
-#error "The UG grid manager is required for this problem"
-#endif
-
-
 #include<iostream>
 #include<iomanip>
 
@@ -163,14 +158,13 @@ namespace Dune
         void init()
             {
                 // set the episode length and initial time step size
-                timeManager_.startNextEpisode(1e100);
                 timeManager_.setStepSize(initialTimeStepSize_);
 
                 // set the initial condition
                 model_.initial();
 
                 // write the inital solution to disk
-//                writeCurrentResult_(); // TODO
+                writeCurrentResult_();
             }
 
         /*!
@@ -217,7 +211,7 @@ namespace Dune
                 std::cout << "Writing result file for current time step\n";
 
                 // write the current result to disk
-                writeCurrentResult_(); // TODO
+                writeCurrentResult_();
 
                 // update the domain with the current solution
 //                updateDomain_();
