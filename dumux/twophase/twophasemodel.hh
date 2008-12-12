@@ -9,6 +9,8 @@
 #include "dumux/nonlinear/newtonmethod.hh"
 #include "dumux/fvgeometry/fvelementgeometry.hh"
 #include "dumux/nonlinear/newtonmethod.hh"
+#include "dumux/io/exporttodgf.hh"
+#include <boost/format.hpp>
 
 namespace Dune {
 template<class G, class RT, class ProblemType, class LocalJacobian,
@@ -182,6 +184,8 @@ public:
 		return;
 	}
 
+	virtual void restart(int restartNum=0) {}
+
 	virtual void update(double& dt) {
 		this->localJacobian.setDt(dt);
 		this->localJacobian.setOldSolution(this->uOldTimeStep);
@@ -350,6 +354,31 @@ public:
 		if (minSat< -0.5 || maxSat > 1.5)DUNE_THROW(MathError, "Saturation exceeds range.");
 	}
 
+	void writerestartfile(int restartNum=0)
+	{
+		enum {dim = G::dimension};
+		typedef typename GV::template Codim<dim>::Iterator Iterator;
+
+//		exportToDGF(_grid.leafView(), *(this->u), m, "primvar", false);
+
+		const int size = vertexmapper.size();
+		BlockVector<FieldVector<double, m> > data(size);
+		data=0;
+
+		Iterator endIt = grid_.leafView().template end<dim>();
+		for (Iterator it = grid_.leafView().template begin<dim>(); it != endIt;	++it)
+		{
+			int index = vertexmapper.map(*it);
+			for (int i = 0; i < m;i++)
+			{
+				data[index][i]=(*(this->u))[index][i];
+			}
+		}
+		restartFileName = (boost::format("data-%05d")
+                           %restartNum).str();
+		exportToDGF(grid_.leafView(), data, (m), restartFileName, false);
+	}
+
     const G &grid() const
         { return grid_; }
 
@@ -366,6 +395,7 @@ protected:
 	BlockVector<FieldVector<RT, 1> > satEx;
 	BlockVector<FieldVector<RT, 1> > pEx;
 	BlockVector<FieldVector<RT, 1> > satError;
+	std::string restartFileName;
 };
 
 }
