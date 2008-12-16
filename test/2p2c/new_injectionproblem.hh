@@ -5,11 +5,6 @@
 #include "config.h"
 #endif
 
-#if !HAVE_UG
-#error "The UG grid manager is required for this problem"
-#endif
-
-
 #include<iostream>
 #include<iomanip>
 
@@ -56,15 +51,19 @@ namespace Dune
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////--SOIL--//////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
-    template<class G, class Scalar>
-    class InjectionSoil: public Matrix2p<G,Scalar>
+    template<class Grid, class ScalarT>
+    class InjectionSoil: public Matrix2p<Grid,ScalarT>
     {
     public:
-        typedef typename G::Traits::template Codim<0>::Entity Entity;
-        typedef typename G::ctype DT;
-        enum {dim=G::dimension};
+        typedef typename Grid::Traits::template Codim<0>::Entity Element;
+        typedef ScalarT Scalar;
+        typedef typename Grid::ctype CoordScalar;
+        enum {dim=Grid::dimension, dimWorld=Grid::dimensionworld};
 
-        InjectionSoil():Matrix2p<G,Scalar>()
+        typedef Dune::FieldVector<CoordScalar,dim>      LocalPosition;
+        typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
+
+        InjectionSoil():Matrix2p<Grid,Scalar>()
             {
                 lowK_ = highK_ = 0.;
                 for(int i = 0; i < dim; i++){
@@ -77,7 +76,7 @@ namespace Dune
         ~InjectionSoil()
             {}
 
-        FieldMatrix<DT,dim,dim> K (const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi)
+        const FieldMatrix<CoordScalar,dim,dim> &K (const GlobalPosition &x, const Element& e, const LocalPosition &xi)
             {
                 if (x[1] < layerBottom_)
                     return highK_;
@@ -85,31 +84,31 @@ namespace Dune
                     return lowK_;
             }
 
-        double porosity(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
+        double porosity(const GlobalPosition &x, const Element& e, const LocalPosition &xi) const
             {
                 return 0.3;
             }
 
-        double Sr_w(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
+        double Sr_w(const GlobalPosition &x, const Element& e, const LocalPosition &xi, const double T) const
             {
                 return 0.2;
             }
 
-        double Sr_n(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
+        double Sr_n(const GlobalPosition &x, const Element& e, const LocalPosition &xi, const double T) const
             {
                 return 0.0;
             }
 
         /* ATTENTION: define heat capacity per cubic meter! Be sure, that it corresponds to porosity!
          * Best thing will be to define heatCap = (specific heatCapacity of material) * density * porosity*/
-        double heatCap(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
+        double heatCap(const GlobalPosition &x, const Element& e, const LocalPosition &xi) const
             {
                 return 	790 /* spec. heat cap. of granite */
                     * 2700 /* density of granite */
                     * porosity(x, e, xi);
             }
 
-        double heatCond(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double sat) const
+        double heatCond(const GlobalPosition &x, const Element& e, const LocalPosition &xi, const double sat) const
             {
                 static const double lWater = 0.6;
                 static const double lGranite = 2.8;
@@ -119,7 +118,7 @@ namespace Dune
                 return ldry + sqrt(sat) * (ldry - lsat);
             }
 
-        std::vector<double> paramRelPerm(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi, const double T) const
+        std::vector<double> paramRelPerm(const GlobalPosition &x, const Element& e, const LocalPosition &xi, const double T) const
             {
                 // example for Brooks-Corey parameters
                 std::vector<double> param(2);
@@ -129,13 +128,13 @@ namespace Dune
                 return param;
             }
 
-        typename Matrix2p<G,Scalar>::modelFlag relPermFlag(const FieldVector<DT,dim>& x, const Entity& e, const FieldVector<DT,dim>& xi) const
+        typename Matrix2p<Grid,Scalar>::modelFlag relPermFlag(const GlobalPosition &x, const Element& e, const LocalPosition &xi) const
             {
-                return Matrix2p<G,Scalar>::brooks_corey;
+                return Matrix2p<Grid,Scalar>::brooks_corey;
             }
 
     private:
-        FieldMatrix<DT,dim,dim> lowK_, highK_;
+        FieldMatrix<Scalar,dim,dim> lowK_, highK_;
         double layerBottom_;
     };
 
@@ -177,8 +176,8 @@ namespace Dune
         // some constants from the traits for convenience
         enum {
             numEq       = BoxTraits::numEq,
-            pWIndex     = TwoPTwoCTraits::pWIndex,
-            switchIndex = TwoPTwoCTraits::switchIndex,
+            pWIdx     = TwoPTwoCTraits::pWIdx,
+            switchIdx = TwoPTwoCTraits::switchIdx,
 
             // Phase State
             WPhaseOnly = TwoPTwoCTraits::wPhaseOnly,
@@ -187,25 +186,25 @@ namespace Dune
 
             // Grid and world dimension
 
-            dim      = DomainTraits::GridDim,
-            WorldDim = DomainTraits::WorldDim
+            dim      = DomainTraits::dim,
+            dimWorld = DomainTraits::dimWorld
         };
 
         // copy some types from the traits for convenience
         typedef typename DomainTraits::Scalar                     Scalar;
-        typedef typename DomainTraits::Cell                       Cell;
-        typedef typename DomainTraits::CellIterator               CellIterator;
+        typedef typename DomainTraits::Element                       Element;
+        typedef typename DomainTraits::ElementIterator               ElementIterator;
         typedef typename DomainTraits::ReferenceElement           ReferenceElement;
-        typedef typename DomainTraits::Node                       Node;
-        typedef typename DomainTraits::NodeIterator               NodeIterator;
+        typedef typename DomainTraits::Vertex                       Vertex;
+        typedef typename DomainTraits::VertexIterator               VertexIterator;
         typedef typename DomainTraits::IntersectionIterator       IntersectionIterator;
         typedef typename DomainTraits::IntersectionIteratorGetter IntersectionIteratorGetter;
-        typedef typename DomainTraits::LocalCoord                 LocalCoord;
-        typedef typename DomainTraits::WorldCoord                 WorldCoord;
+        typedef typename DomainTraits::LocalPosition                 LocalPosition;
+        typedef typename DomainTraits::GlobalPosition                 GlobalPosition;
 
         typedef typename BoxTraits::FVElementGeometry             FVElementGeometry;
         typedef typename BoxTraits::SpatialFunction               SpatialFunction;
-        typedef typename BoxTraits::UnknownsVector                UnknownsVector;
+        typedef typename BoxTraits::SolutionVector                SolutionVector;
         typedef typename BoxTraits::BoundaryTypeVector            BoundaryTypeVector;
 
         typedef Dune::VtkMultiWriter<typename Grid::LeafGridView> VtkMultiWriter;
@@ -396,10 +395,10 @@ namespace Dune
             }
 
         void boundaryTypes(BoundaryTypeVector &values,
-                           const Cell &cell,
-                           const IntersectionIterator &faceIt,
-                           const WorldCoord &globalPos,
-                           const LocalCoord &localPos) const
+                           const Element &element,
+                           const IntersectionIterator &isIt,
+                           const GlobalPosition &globalPos,
+                           const LocalPosition &localPos) const
             {
                 if (globalPos[0] < eps_)
                     values = BoundaryConditions::dirichlet;
@@ -413,16 +412,16 @@ namespace Dune
         /////////////////////////////
         // DIRICHLET boundaries
         /////////////////////////////
-        void dirichlet(UnknownsVector &values,
-                       const Cell &cell,
-                       int nodeIdx,
-                       int globalNodeIdx)
+        void dirichlet(SolutionVector &values,
+                       const Element &element,
+                       int vertIdx,
+                       int globalVertexIdx)
             {
-                const LocalCoord &localPos = DomainTraits::referenceElement(cell.type()).position(nodeIdx, dim);
-                const WorldCoord &globalPos = cell.geometry()[nodeIdx];
+                const LocalPosition &localPos = DomainTraits::referenceElement(element.type()).position(vertIdx, dim);
+                const GlobalPosition &globalPos = element.geometry()[vertIdx];
 
                 initial(values,
-                        cell,
+                        element,
                         globalPos,
                         localPos);
             }
@@ -430,25 +429,25 @@ namespace Dune
         /////////////////////////////
         // NEUMANN boundaries
         /////////////////////////////
-        void neumann(UnknownsVector &values,
-                     const Cell &cell,
-                     const IntersectionIterator &faceIt,
-                     const WorldCoord &globalPos,
-                     const LocalCoord &localPos) const
+        void neumann(SolutionVector &values,
+                     const Element &element,
+                     const IntersectionIterator &isIt,
+                     const GlobalPosition &globalPos,
+                     const LocalPosition &localPos) const
             {
                 values = 0;
 
                 //Scalar lambda = (globalPos[1])/height_;
                 if (globalPos[1] < 15 && globalPos[1] > 5) {
-                    values[switchIndex] = -1e-3;
+                    values[switchIdx] = -1e-3;
                 }
             }
 
         /////////////////////////////
         // sources and sinks
         /////////////////////////////
-        void sourceTerm(UnknownsVector &values,
-                        const Cell &cell,
+        void source(SolutionVector &values,
+                        const Element &element,
                         const FVElementGeometry &,
                         int subControlVolumeIdx) const
             {
@@ -460,52 +459,52 @@ namespace Dune
         /////////////////////////////
         // INITIAL values
         /////////////////////////////
-        void initial(UnknownsVector &values,
-                     const Cell& cell,
-                     const WorldCoord &globalPos,
-                     const LocalCoord &localPos)
+        void initial(SolutionVector &values,
+                     const Element& element,
+                     const GlobalPosition &globalPos,
+                     const LocalPosition &localPos)
             {
                 Scalar densityW_ = 1000.0;
 
-                values[pWIndex] = 1e5 - densityW_*gravity_[1]*(depthBOR_ - globalPos[1]);
-                values[switchIndex] = 1e-8;
+                values[pWIdx] = 1e5 - densityW_*gravity_[1]*(depthBOR_ - globalPos[1]);
+                values[switchIdx] = 1e-8;
 
-//                std::cout << "cell " << ParentType::cellIndex(cell) << " position of node " << globalNodeIdx << ": " << globalPos << " -> " << values << "\n";
+//                std::cout << "element " << ParentType::elementIdx(element) << " position of vert " << globalVertexIdx << ": " << globalPos << " -> " << values << "\n";
 
 //		if ((globalPos[0] > 60.0 - eps_) && (globalPos[1] < 10 && globalPos[1] > 5))
-//			values[switchIndex] = 0.05;
+//			values[switchIdx] = 0.05;
 
 //			if (globalPos[1] >= innerLowerLeft_[1] && globalPos[1] <= innerUpperRight_[1]
 //			 && globalPos[0] >= innerLowerLeft_[0])
-//				values[switchIndex] = 0.2;
+//				values[switchIdx] = 0.2;
 //			else
-//				values[switchIndex] = 1e-6;
+//				values[switchIdx] = 1e-6;
             }
 
 
-        Scalar porosity(const Cell &cell, int localIdx) const
+        Scalar porosity(const Element &element, int localIdx) const
             {
-                // TODO/HACK: porosity should be defined on the nodes
-                // as it is required on the nodes!
-                const LocalCoord &local =
-                    DomainTraits::referenceElement(cell.type()).position(localIdx, dim);
-                const WorldCoord &globalPos = cell.geometry()[localIdx];
-                return soil().porosity(globalPos, *(ParentType::cellBegin()), local);
+                // TODO/HACK: porosity should be defined on the verts
+                // as it is required on the verts!
+                const LocalPosition &local =
+                    DomainTraits::referenceElement(element.type()).position(localIdx, dim);
+                const GlobalPosition &globalPos = element.geometry()[localIdx];
+                return soil().porosity(globalPos, *(ParentType::elementBegin()), local);
             };
 
-        Scalar pC(Scalar satW, int globalIdx, const WorldCoord &globalPos)
+        Scalar pC(Scalar satW, int globalIdx, const GlobalPosition &globalPos)
             {
-                // TODO/HACK: porosity should be defined on the nodes
-                // as it is required on the nodes!
-                const LocalCoord &local =
-                    DomainTraits::referenceElement(ParentType::cellBegin()->type()).position(0, dim);
-                return materialLaw().pC(satW, globalPos, *(ParentType::cellBegin()), local);
+                // TODO/HACK: porosity should be defined on the verts
+                // as it is required on the verts!
+                const LocalPosition &local =
+                    DomainTraits::referenceElement(ParentType::elementBegin()->type()).position(0, dim);
+                return materialLaw().pC(satW, globalPos, *(ParentType::elementBegin()), local);
             };
 
 
-        int initialPhaseState(const Node       &node,
+        int initialPhaseState(const Vertex       &vert,
                               int              &globalIdx,
-                              const WorldCoord &globalPos) const
+                              const GlobalPosition &globalPos) const
             {
                 int state;
 
@@ -523,7 +522,7 @@ namespace Dune
             }
 
 
-        const WorldCoord &gravity () const
+        const GlobalPosition &gravity () const
             {
                 return gravity_;
             }
@@ -553,16 +552,16 @@ namespace Dune
             }
 
 
-        WorldCoord outerLowerLeft_;
-        WorldCoord outerUpperRight_;
-        WorldCoord innerLowerLeft_;
-        WorldCoord innerUpperRight_;
+        GlobalPosition outerLowerLeft_;
+        GlobalPosition outerUpperRight_;
+        GlobalPosition innerLowerLeft_;
+        GlobalPosition innerUpperRight_;
         Scalar width_;
         Scalar height_;
         Scalar depthBOR_;
         Scalar eps_;
 //	  Scalar densityW_, densityN_;
-        WorldCoord  gravity_;
+        GlobalPosition  gravity_;
 
         // fluids and material properties
         WettingPhase    wPhase_;
