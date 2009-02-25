@@ -2,7 +2,7 @@ SUBDIRS = fractionalflow io nonlinear timedisc twophase .
 
 # the standard debug streams are put into the libdune
 noinst_LTLIBRARIES = libdumux.la
-SUBLIBS = shape /lib .la /libonedinndgrid.la
+SUBLIBS = shape /lib .la 
 
 libdumux_la_SOURCES =
 libdumux_la_LIBADD = $(SUBLIBS)
