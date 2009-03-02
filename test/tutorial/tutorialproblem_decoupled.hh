@@ -12,23 +12,23 @@ template<class Grid, class Scalar, class VC> class TutorialProblemDecoupled /*@\
     : public FractionalFlowProblem<Grid, Scalar, VC>
 {
     enum
-    {dim=Grid::dimension, dimWorld = Grid::dimensionworld};
+        {dim=Grid::dimension, dimWorld = Grid::dimensionworld};
     typedef typename Grid::Traits::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar,dim> LocalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
 
 public:
     TutorialProblemDecoupled(VC& variables, Fluid& wettingphase, Fluid& nonwettingphase, Matrix2p<Grid, Scalar>& soil,
-            TwoPhaseRelations<Grid, Scalar>& materialLaw = *(new TwoPhaseRelations<Grid,Scalar>),
-            const FieldVector<Scalar,dim> Left = 0, const FieldVector<Scalar,dim> Right = 0)
-    : FractionalFlowProblem<Grid, Scalar, VC>(variables, wettingphase, nonwettingphase, soil, materialLaw),
-    Left_(Left[0]), Right_(Right[0]), eps_(1e-8)
+                             TwoPhaseRelations<Grid, Scalar>& materialLaw = *(new TwoPhaseRelations<Grid,Scalar>),
+                             const FieldVector<Scalar,dim> Left = 0, const FieldVector<Scalar,dim> Right = 0)
+        : FractionalFlowProblem<Grid, Scalar, VC>(variables, wettingphase, nonwettingphase, soil, materialLaw),
+          Left_(Left[0]), Right_(Right[0]), eps_(1e-8)
     {}
 
     // function returning source/sink terms for the pressure equation
     // depending on the position within the domain
     virtual Scalar sourcePress (const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:qpress}@*/
-            const LocalPosition& localPos)
+                                const LocalPosition& localPos)
     {
         return 0;
     }
@@ -36,7 +36,7 @@ public:
     // function returning the boundary condition type for solution
     // of the pressure equation depending on the position within the domain
     typename BoundaryConditions::Flags bctypePress(const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:bctypepress}@*/
-            const LocalPosition& localPos) const
+                                                   const LocalPosition& localPos) const
     {
         if (globalPos[0] < eps_)
         {
@@ -49,7 +49,7 @@ public:
     // function returning the boundary condition type for solution
     // of the saturation equation depending on the position within the domain
     BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:bctypesat}@*/
-            const LocalPosition& localPos) const
+                                         const LocalPosition& localPos) const
     {
         if (globalPos[0]> (Right_ - eps_) || globalPos[0] < eps_)
         {
@@ -62,7 +62,7 @@ public:
     // function returning the Dirichlet boundary condition for the solution
     // of the pressure equation depending on the position within the domain
     Scalar dirichletPress(const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:gpress}@*/
-            const LocalPosition& localPos) const
+                          const LocalPosition& localPos) const
     {
         return 2e5;
     }
@@ -70,7 +70,7 @@ public:
     // function returning the Dirichlet boundary condition for the solution
     // of the saturation equation depending on the position within the domain
     Scalar dirichletSat(const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:gsat}@*/
-            const LocalPosition& localPos) const
+                        const LocalPosition& localPos) const
     {
         if (globalPos[0] < eps_)
         {
@@ -83,7 +83,7 @@ public:
     // function returning the Neumann boundary condition for the solution
     // of the pressure equation depending on the position within the domain
     Scalar neumannPress(const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:jpress}@*/
-            const LocalPosition& localPos) const
+                        const LocalPosition& localPos) const
     {
         if (globalPos[0]> Right_ - eps_)
         {
@@ -96,7 +96,7 @@ public:
     // function returning the initial saturation
     // depending on the position within the domain
     Scalar initSat (const GlobalPosition& globalPos, const Element& e, /*@\label{tutorial-decoupled:initsat}@*/
-            const FieldVector<Scalar,dim>& xi) const
+                    const FieldVector<Scalar,dim>& xi) const
     {
         return 0;
     }

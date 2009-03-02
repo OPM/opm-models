@@ -22,7 +22,7 @@ template<class G, class RT> class VariableClass2p2cni {
     typedef typename G::ctype DT;
     typedef Dune::BlockVector< Dune::FieldVector<RT,1> > ScalarType;
     typedef Dune::BlockVector< Dune::FieldVector<Dune::FieldVector<double, n>, 2*n> >
-            VelType;
+    VelType;
     typedef typename G::Traits::template Codim<0>::Entity Entity;
 
 public:
@@ -89,17 +89,17 @@ public:
     }
 
     const Dune::FieldVector<RT,1>& sat(const Dune::FieldVector<DT,n>& x, const Entity& e,
-            const Dune::FieldVector<DT,n>& xi) const {
+                                       const Dune::FieldVector<DT,n>& xi) const {
         return saturation[mapper.map(e)];;
     }
 
     const Dune::FieldVector<RT,1>& press(const Dune::FieldVector<DT,n>& x, const Entity& e,
-            const Dune::FieldVector<DT,n>& xi) const {
+                                         const Dune::FieldVector<DT,n>& xi) const {
         return pressure[mapper.map(e)];
     }
 
     const Dune::FieldVector<DT,n>& vTotal(const Entity& e,
-            const int numberInSelf) const {
+                                          const int numberInSelf) const {
         int elemId = mapper.map(e);
 
         return (velocity[elemId][numberInSelf]);
@@ -146,14 +146,14 @@ public:
         else
         {
             Dune::VTKWriter<G, typename G::LevelGridView>
-                    vtkwriterpressure(grid.levelView(pressurelevel));
+                vtkwriterpressure(grid.levelView(pressurelevel));
             char fname[128];
             sprintf(fname, "%s-%05d", name, k);
             vtkwriterpressure.addCellData(pressure, "total pressure p~");
             vtkwriterpressure.write(fname, Dune::VTKOptions::ascii);
 
             VTKWriter<G, typename G::LevelGridView>
-                    vtkwritersaturation(grid.levelView(satlevel));
+                vtkwritersaturation(grid.levelView(satlevel));
             sprintf(fname, "%s-press%05d", name, k);
             vtkwritersaturation.addCellData(saturation, "saturation");
             vtkwritersaturation.write(fname, VTKOptions::ascii);
