@@ -1,5 +1,5 @@
 # tests where program to build and program to run are equal
-NORMALTESTS = new_leakywell new_test_2p2cni test_2p2cni
+NORMALTESTS = new_test_2p2cni test_2p2cni
 
 # list of tests to run
 #TESTS = $(NORMALTESTS)
