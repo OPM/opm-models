@@ -81,7 +81,6 @@ AC_CONFIG_FILES([Makefile
     test/fractionalflow/Makefile
     test/transport/Makefile
     test/tutorial/Makefile
-    test/twophase/Makefile
     dumux/twophase/fv/Makefile 
     dumux/twophase/problems/Makefile 
     dumux/fractionalflow/impes/Makefile 
