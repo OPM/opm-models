@@ -1,5 +1,5 @@
 SUBDIRS = . \
-	 ni \
+	 transport \
 	  fractionalflow \
 	  transport \
 	  tutorial \

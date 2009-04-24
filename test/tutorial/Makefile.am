@@ -17,7 +17,5 @@ tutorial_decoupled_SOURCES = tutorial_decoupled.cc
 
 tutorial_coupled_SOURCES = tutorial_coupled.cc
 
-AM_LDFLAGS = @AM_LDFLAGS@ $(LOCAL_LIBS)
-
 EXTRA_DIST=CMakeLists.txt
 include $(top_srcdir)/am/global-rules
