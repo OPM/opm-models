@@ -5,7 +5,7 @@
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/istl/io.hh>
 #include "dumux/material/phaseproperties/phaseproperties2p.hh"
-#include "dumux/transport/fv/fv_saturationwetting2p.hh"
+#include "dumux/transport/fv/fvsaturationwetting2p.hh"
 #include "dumux/transport/problems/simpleproblem.hh"
 #include "dumux/transport/problems/simplenonlinearproblem.hh"
 #include "dumux/timedisc/timeloop.hh"
