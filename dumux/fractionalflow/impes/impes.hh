@@ -67,7 +67,7 @@ public:
         RepresentationType updateDiff(satSize);
 
         //update constitutive functions
-        updateMaterialLaws();
+        Transport::updateMaterialLaws();
 
         bool converg = false;
         int iter = 0;
@@ -134,39 +134,6 @@ public:
     virtual void vtkout(const char* name, int k) const
     {
         this->transProblem.variables().vtkout(name, k);
-        return;
-    }
-
-    //constitutive functions are updated once if new saturations are calculated and stored in the this->transProblem.variables() object
-    void updateMaterialLaws()
-    {
-        // iterate through leaf grid an evaluate c0 at cell center
-        ElementIterator eItEnd = Transport::gridView.template end<0>();
-        for (ElementIterator eIt = Transport::gridView.template begin<0>(); eIt != eItEnd; ++eIt)
-        {
-            // get geometry type
-            Dune::GeometryType gt = eIt->geometry().type();
-
-            // get cell center in reference element
-            const LocalPosition
-            &localPos = Dune::ReferenceElements<Scalar,dim>::general(gt).position(0, 0);
-
-            // get global coordinate of cell center
-            GlobalPosition globalPos = eIt->geometry().global(localPos);
-
-            int globalIdx = this->transProblem.variables().indexTransport(*eIt);
-
-            Scalar sat = this->transProblem.variables().saturation()[globalIdx];
-
-            std::vector<Scalar> mobilities = this->transProblem.materialLaw().mob(sat, globalPos, *eIt, localPos);
-
-            // initialize mobilities
-            this->transProblem.variables().mobilityWetting()[globalIdx]= mobilities[0];
-            this->transProblem.variables().mobilityNonWetting()[globalIdx]= mobilities[1];
-            this->transProblem.variables().capillaryPressure()[globalIdx]= this->transProblem.materialLaw().pC(sat, globalPos, *eIt, localPos);
-            this->transProblem.variables().fracFlowFuncWetting()[globalIdx]= mobilities[0]/(mobilities[0]+mobilities[1]);
-            this->transProblem.variables().fracFlowFuncNonWetting()[globalIdx]= mobilities[1]/(mobilities[0]+mobilities[1]);
-        }
         return;
     }
 
