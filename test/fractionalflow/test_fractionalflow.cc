@@ -12,8 +12,8 @@
 #include <dumux/material/twophaserelations.hh>
 #include "test_fractionalflow_testproblem.hh"
 #include "dumux/timedisc/timeloop.hh"
-#include "dumux/diffusion/fv/fv_velocitytotal2p.hh"
-#include "dumux/transport/fv/fv_saturationwetting2p.hh"
+#include "dumux/diffusion/fv/fvtotalvelocity2p.hh"
+#include "dumux/transport/fv/fvsaturationwetting2p.hh"
 #include "dumux/transport/fv/capillarydiffusion.hh"
 #include "dumux/fractionalflow/impes/impes.hh"
 #include <dune/disc/operators/boundaryconditions.hh>
