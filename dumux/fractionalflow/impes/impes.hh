@@ -106,22 +106,28 @@ public:
                 updateOldIter = updateVec;
             }
             // break criteria for iteration loop
-            if (iterFlag==2&& dt*updateDiff.two_norm()/(saturation).two_norm() <= maxDefect )
-            converg = true;
-            else if (iterFlag==2 && (saturation.infinity_norm()> 1 || saturation.two_norm()> 1))
+            if (iterFlag == 2 && dt * updateDiff.two_norm() / saturation.two_norm() <= maxDefect )
+            {
+                converg = true;
+            }
+            else if (iterFlag == 2 && (saturation.infinity_norm() > 1 || saturation.two_norm()> 1))
             {
                 converg = false;
             }
-            else if (iterFlag==2&& iter> nIter )
+            else if (iterFlag == 2 && iter> nIter )
             {
                 std::cout << "Nonlinear loop in IMPES.update exceeded nIter = "
                 << nIter << " iterations."<< std::endl;
                 return 1;
             }
-            else if (iterFlag==1&& iter> nIter )
-            converg = true;
+            else if (iterFlag == 1 && iter> nIter )
+            {
+                converg = true;
+            }
             else if (iterFlag==0)
-            converg = true;
+            {
+                converg = true;
+            }
         }
         // outputs
         if (iterFlag==2)
