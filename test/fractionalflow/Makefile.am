@@ -16,7 +16,7 @@ test_fractionalflow_SOURCES = test_fractionalflow.cc
 
 test_decoupled2p2c_SOURCES = test_decoupled2p2c.cc
 
-AM_LDFLAGS = @AM_LDFLAGS@ $(LOCAL_LIBS)
+#AM_LDFLAGS = @AM_LDFLAGS@ $(LOCAL_LIBS)
 
 EXTRA_DIST=CMakeLists.txt
 noinst_HEADERS=*.hh
