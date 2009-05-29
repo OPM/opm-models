@@ -117,7 +117,9 @@ protected:
      *        stored locally.
      */
     struct StaticVertexData {
-        int phaseState;
+        int  phaseState;
+        bool wasSwitched;
+        
         int oldPhaseState;
     };
 
@@ -279,6 +281,8 @@ public:
             // initialize phase state
             staticVertexDat_[globalIdx].phaseState =
                 this->problem_.initialPhaseState(*it, globalIdx, globalPos);
+            staticVertexDat_[globalIdx].wasSwitched = false;
+
             staticVertexDat_[globalIdx].oldPhaseState =
                 staticVertexDat_[globalIdx].phaseState;
         }
@@ -317,8 +321,10 @@ public:
     void updateOldPhaseState()
     {
         int numVertices = this->problem_.numVertices();
-        for (int i = 0; i < numVertices; ++i)
+        for (int i = 0; i < numVertices; ++i) {
             staticVertexDat_[i].oldPhaseState = staticVertexDat_[i].phaseState;
+            staticVertexDat_[i].wasSwitched = false;
+        }
     }
 
     /*!
@@ -629,6 +635,7 @@ protected:
                            const GlobalPosition &globalPos)
     {
         // evaluate primary variable switch
+        bool wouldSwitch  = false;
         int phaseState    = staticVertexDat_[globalIdx].phaseState;
         int newPhaseState = phaseState;
         Scalar temperature = asImp_()->temperature((*globalSol)[globalIdx]);
@@ -651,9 +658,11 @@ protected:
         if (phaseState == nPhaseOnly)
         {
             Scalar xWNmax = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], temperature);
-            if (switched()) {
-                xWNmax *= (1.0 + 1e-3);
-            }
+            if (vertexData.massfrac[wComp][nPhase] > xWNmax)
+                wouldSwitch = true;
+            if (staticVertexDat_[globalIdx].wasSwitched)
+                xWNmax *= (1.0 + 1e-2);
+
             if (vertexData.massfrac[wComp][nPhase] > xWNmax)
             {
                 // wetting phase appears
@@ -669,9 +678,11 @@ protected:
         else if (phaseState == wPhaseOnly)
         {
             Scalar xAWmax = this->problem_.multicomp().xAW(vertexData.pressure[wPhase], temperature);
-            if (switched()) {
-                xAWmax *= (1.0 + 1e-3);
-            }
+            if (vertexData.massfrac[nComp][wPhase] > xAWmax)
+                wouldSwitch = true;
+            if (staticVertexDat_[globalIdx].wasSwitched) 
+                xAWmax *= (1.0 + 1e-2);
+
             if (vertexData.massfrac[nComp][wPhase] > xAWmax)
             {
                 // non-wetting phase appears
@@ -686,10 +697,9 @@ protected:
         }
         else if (phaseState == bothPhases) {
             Scalar Smin = 0.0;
-            if (switched()) {
-                Smin = -1e-3;
-            }
+
             if (vertexData.saturation[nPhase] <= Smin) {
+                wouldSwitch = true;
                 // non-wetting phase disappears
                 std::cout << "Non-wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << std::endl;
@@ -698,6 +708,7 @@ protected:
                     = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], temperature);
             }
             else if (vertexData.saturation[wPhase] <= Smin) {
+                wouldSwitch = true;
                 // wetting phase disappears
                 std::cout << "Wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << std::endl;
@@ -708,7 +719,8 @@ protected:
         }
 
         staticVertexDat_[globalIdx].phaseState = newPhaseState;
-
+        staticVertexDat_[globalIdx].wasSwitched = wouldSwitch;
+        
         return phaseState != newPhaseState;
     }
 

@@ -130,7 +130,7 @@ protected:
         // we accept solutions up to 1 percent bigger than 1
         // or smaller than 0 as being physical for numerical
         // reasons...
-        Scalar phys = 1.0001 - maxSwitchVarDelta*100 - maxPwDelta/1e5;
+        Scalar phys = 1.01 - maxSwitchVarDelta*100 - maxPwDelta/1e5;
 
         return std::min(1.0, phys);
     }
