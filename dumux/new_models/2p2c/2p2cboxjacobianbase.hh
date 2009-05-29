@@ -150,14 +150,16 @@ public:
 
         // compute storage term of all components within all phases
         result = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
-                result[compIdx] +=
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+                result[Indices::comp2Mass(compIdx)] +=
                     vertDat.density[phaseIdx]*
                     vertDat.saturation[phaseIdx]*
                     vertDat.massfrac[compIdx][phaseIdx];
+            }
+        }
         result *= vertDat.porosity;
-         }
+    }
 
     /*!
      * \brief Evaluates the total flux of all conservation quantities
@@ -195,20 +197,25 @@ public:
             for (int  compIdx = 0; compIdx < numComponents; ++compIdx) {
                 // add advective flux of current component in current
                 // phase
-                flux[compIdx] +=
-                    vars.vDarcyNormal[phaseIdx] * (
-                        mobilityUpwindAlpha* // upstream vertex
+                if (mobilityUpwindAlpha > 0.0)
+                    // upstream vertex
+                    flux[Indices::comp2Mass(compIdx)] +=
+                        vars.vDarcyNormal[phaseIdx] * 
+                        mobilityUpwindAlpha* 
                         (  up.density[phaseIdx] *
                            up.mobility[phaseIdx] *
-                           up.massfrac[compIdx][phaseIdx])
-                        +
-                        (1 - mobilityUpwindAlpha)* // downstream vertex
+                           up.massfrac[compIdx][phaseIdx]);
+                if (mobilityUpwindAlpha < 1.0)
+                    // downstream vertex
+                    flux[Indices::comp2Mass(compIdx)] +=
+                        vars.vDarcyNormal[phaseIdx] * 
+                        (1 - mobilityUpwindAlpha)*
                         (  dn.density[phaseIdx] *
                            dn.mobility[phaseIdx] *
-                           dn.massfrac[compIdx][phaseIdx]));
+                           dn.massfrac[compIdx][phaseIdx]);
             }
-        }
-        }
+    }
+    }
 
     /*!
      * \brief Adds the diffusive mass flux of all components over
@@ -220,14 +227,14 @@ public:
         Scalar tmp =
             vars.diffCoeffPM[wPhase] * vars.densityAtIP[wPhase] *
             (vars.concentrationGrad[wPhase]*vars.face->normal);
-        flux[nComp] += tmp;
-        flux[wComp] -= tmp;
+        flux[Indices::comp2Mass(nComp)] += tmp;
+        flux[Indices::comp2Mass(wComp)] -= tmp;
 
         // add diffusive flux of wetting component in non-wetting phase
         tmp = vars.diffCoeffPM[nPhase] * vars.densityAtIP[nPhase] *
             (vars.concentrationGrad[nPhase]*vars.face->normal);;
-        flux[wComp] += tmp;
-        flux[nComp] -= tmp;
+        flux[Indices::comp2Mass(wComp)] += tmp;
+        flux[Indices::comp2Mass(nComp)] -= tmp;
 
         // TODO: the diffusive flux of the wetting component in the
         // wetting phase does rarly exhibit the same mass as the flux

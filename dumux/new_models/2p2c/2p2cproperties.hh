@@ -90,7 +90,7 @@ struct TwoPTwoCIndices
      * (The mass index is the index of a component in the result
      * vector of primary variables in the storage or flux terms.)
      */
-    static int comp2MassIdx(int compIdx) { return PVOffset + compIdx; }
+    static int comp2Mass(int compIdx) { return PVOffset + compIdx; }
 };
 
 ////////////////////////////////
