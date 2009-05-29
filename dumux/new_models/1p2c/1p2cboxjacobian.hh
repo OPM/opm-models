@@ -133,10 +133,10 @@ public:
         // advective flux
         flux[transport] += 
             vars.vDarcyNormal *
-            (  mobilityUpwindAlpha*
+            (  upwindAlpha*
                (  up.molefraction/up.viscosity )
                +
-               (1 - mobilityUpwindAlpha)*
+               (1 - upwindAlpha)*
                (  dn.molefraction/dn.viscosity ) );
         
         // diffusive flux

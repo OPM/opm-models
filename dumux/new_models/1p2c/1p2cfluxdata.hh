@@ -87,6 +87,7 @@ public:
         densityAtIP = 0;
         viscosityAtIP = 0;
         pressureGrad = Scalar(0);
+        concentrationGrad = Scalar(0);
 
         calculateGradients_(problem, element, elemDat);
         calculateVelocities_(problem, element, elemDat);
@@ -140,13 +141,13 @@ private:
         // calculate the permeability tensor. TODO: this should be
         // more flexible
         typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
-        Tensor K;
         const Tensor &Ki = problem.soil().K(insideSCV->global,
                                             element,
                                             insideSCV->local);
         const Tensor &Kj = problem.soil().K(outsideSCV->global,
                                             element,
                                             outsideSCV->local);
+        Tensor K;
         Dune::harmonicMeanMatrix(K, Ki, Kj);
 
         // temporary vector for the Darcy velocity
@@ -170,8 +171,8 @@ private:
 
         // Diffusion coefficient in the porous medium
         diffCoeffPM
-            = 1./2*(vDat_j.tortuosity * vDat_i.tortuosity * vDat_i.diffCoeff +
-                    vDat_j.porosity * vDat_i.tortuosity * vDat_j.diffCoeff);
+            = 1./2*(vDat_j.porosity * vDat_i.tortuosity * vDat_i.diffCoeff +
+                    vDat_j.porosity * vDat_j.tortuosity * vDat_j.diffCoeff);
     }
 
 public:

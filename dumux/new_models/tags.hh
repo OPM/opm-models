@@ -58,6 +58,10 @@ NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxScheme));
 //! The type tag for the non-isothermal two-phase, two-component problems
 NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
 
+//! The type tag for problems discretized using the isothermal
+//! richards model
+NEW_TYPE_TAG(BoxTwoContinua, INHERITS_FROM(BoxScheme));
+
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -80,6 +84,7 @@ NEW_PROP_TAG(Model);         //!< The type of the discretization
 NEW_PROP_TAG(NumEq);         //!< Number of equations in the system of PDEs
 NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
+NEW_PROP_TAG(NumContinua);   //!< Number of continua in a multi-continuum model
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(LocalJacobian); //!< The type of the local jacobian operator
 
@@ -104,6 +109,7 @@ NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
 NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
+NEW_PROP_TAG(TwoContinuaIndices); //!< Enumerations for the double-continuum model
 
 //////////////////////////////////////////////////////////////////
 // Some defaults for very fundamental properties
