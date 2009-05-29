@@ -138,7 +138,7 @@ public:
                       faceId,
                       this->curElemDat_);
         flux = 0;
-        asImp_()->computeFluxdvectiveFlux(flux, vars);
+        asImp_()->computeAdvectiveFlux(flux, vars);
         asImp_()->computeDiffusiveFlux(flux, vars);
     }
 
@@ -146,8 +146,8 @@ public:
      * \brief Evaluates the advective mass flux of all components over
      *        a face of a subcontrol volume.
      */
-    void computeFluxdvectiveFlux(PrimaryVarVector &flux,
-                                 const FluxData &vars) const
+    void computeAdvectiveFlux(PrimaryVarVector &flux,
+                              const FluxData &vars) const
     {
         ////////
         // advective fluxes of all components in all phases
@@ -183,7 +183,7 @@ public:
                               const FluxData &fluxData) const
     {
         // diffusive fluxes
-        flux += 0.0;
+        //flux += 0.0;
     }
 
 
