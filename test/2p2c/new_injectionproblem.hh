@@ -9,6 +9,7 @@
 #include<iomanip>
 
 #include<dune/grid/uggrid.hh>
+#include<dune/grid/io/file/dgfparser/dgfug.hh>
 
 #include<dumux/material/property_baseclasses.hh>
 #include<dumux/material/relperm_pc_law.hh>

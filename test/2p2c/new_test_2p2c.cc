@@ -2,17 +2,9 @@
 
 #include "new_injectionproblem.hh"
 
-
-//#include <dune/grid/yaspgrid.hh>
-#include<dune/grid/uggrid.hh>
-//#include<dune/grid/sgrid.hh>
-
-#include<dune/grid/common/grid.hh>
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/grid/common/gridinfo.hh>
 
-
-#include <dune/common/exceptions.hh>
 #include <dune/common/mpihelper.hh>
 
 #include <iostream>

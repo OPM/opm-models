@@ -731,6 +731,29 @@ protected:
 };
 
 
+/*!
+ * \brief The local jacobian operator for the isothermal two-phase,
+ *        two-component model.
+ *
+ * This is basically just a wrapper for TwoPTwoCBoxJacobianBase so
+ * that it can be instantiated.
+ */
+template<class TypeTag>
+class TwoPTwoCBoxJacobian : public TwoPTwoCBoxJacobianBase<TypeTag,
+                                                           // implementation
+                                                           TwoPTwoCBoxJacobian<TypeTag> >
+{
+    typedef TwoPTwoCBoxJacobian<TypeTag>                   ThisType;
+    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>     ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+
+public:
+    TwoPTwoCBoxJacobian(Problem &problem)
+        : ParentType(problem)
+    {
+    };
+};
+
 } // end namepace
 
 #endif

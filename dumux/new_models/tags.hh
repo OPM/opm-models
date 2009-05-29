@@ -82,6 +82,7 @@ NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for th
 
 // model specific property tags
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
+NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
 
 //////////////////////////////////////////////////////////////////
 // Some defaults for very fundamental properties

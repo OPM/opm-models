@@ -20,11 +20,14 @@
 #ifndef DUMUX_NEW_2P2CNI_BOX_MODEL_HH
 #define DUMUX_NEW_2P2CNI_BOX_MODEL_HH
 
-#include <dumux/new_models/2p2c/2p2cboxjacobianbase.hh>
+#include <dumux/new_models/2p2c/2p2cboxmodel.hh>
+#include <dumux/new_models/2p2c/2p2cboxjacobian.hh>
 
 #include <dumux/new_models/2p2cni/2p2cnielementdata.hh>
 #include <dumux/new_models/2p2cni/2p2cnivertexdata.hh>
 #include <dumux/new_models/2p2cni/2p2cnifluxdata.hh>
+
+#include <dumux/new_models/2p2cni/2p2cniproperties.hh>
 
 namespace Dune
 {
@@ -35,87 +38,45 @@ namespace Dune
 
 /** \todo Please doc me! */
 
-template<class ProblemT,
-         class BoxTraitsT,
-         class TwoPTwoCNITraitsT>
-class TwoPTwoCNIBoxJacobian : public TwoPTwoCBoxJacobianBase<ProblemT,
-                                                             BoxTraitsT,
-                                                             TwoPTwoCNITraitsT,
-                                                             TwoPTwoCNIElementData<TwoPTwoCNITraitsT,
-                                                                                   ProblemT>,
-                                                             TwoPTwoCNIVertexData<TwoPTwoCNITraitsT,
-                                                                                  ProblemT>,
-                                                             TwoPTwoCNIFluxData<TwoPTwoCNITraitsT,
-                                                                                ProblemT,
-                                                                                TwoPTwoCNIVertexData<TwoPTwoCNITraitsT,
-                                                                                                     ProblemT> >,
-
-                                                             TwoPTwoCNIBoxJacobian<ProblemT,
-                                                                                   BoxTraitsT,
-                                                                                   TwoPTwoCNITraitsT> >
+template<class TypeTag>
+class TwoPTwoCNIBoxJacobian 
+    : public TwoPTwoCBoxJacobianBase<TypeTag, TwoPTwoCNIBoxJacobian<TypeTag> >
 {
-    typedef TwoPTwoCNITraitsT TwoPTwoCNITraits;
-    typedef TwoPTwoCNIBoxJacobian<ProblemT,
-                                  BoxTraitsT,
-                                  TwoPTwoCNITraits>  ThisType;
-    typedef TwoPTwoCNIElementData<TwoPTwoCNITraitsT,
-                                  ProblemT>          ElementData;
-    typedef TwoPTwoCNIVertexData<TwoPTwoCNITraitsT,
-                                 ProblemT>           VertexData;
-    typedef TwoPTwoCNIFluxData<TwoPTwoCNITraitsT,
-                               ProblemT,
-                               VertexData >          FluxData;
-    typedef TwoPTwoCBoxJacobianBase<ProblemT,
-                                    BoxTraitsT,
-                                    TwoPTwoCNITraitsT,
-                                    ElementData,
-                                    VertexData,
-                                    FluxData,
-                                    ThisType>     ParentType;
+    typedef TwoPTwoCNIBoxJacobian<TypeTag>               ThisType;
+    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>   ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))    Scalar;
 
-    typedef ProblemT                       Problem;
-    typedef typename Problem::DomainTraits DomTraits;
-    typedef typename DomTraits::Scalar     Scalar;
-    typedef typename DomTraits::Element       Element;
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
-        dim  = DomTraits::dim,
-        dimWorld = DomTraits::dimWorld,
+        dim              = GridView::dimension,
+        dimWorld         = GridView::dimensionworld,
 
-        pressureIdx    = TwoPTwoCNITraits::pressureIdx,
-        switchIdx      = TwoPTwoCNITraits::switchIdx,
-        temperatureIdx = TwoPTwoCNITraits::temperatureIdx,
+        numPhases        = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
+        temperatureIdx   = Indices::pressureIdx,
 
-        numPhases   = TwoPTwoCNITraits::numPhases,
-        wPhase      = TwoPTwoCNITraits::wPhase,
-        nPhase      = TwoPTwoCNITraits::nPhase,
-
-        wComp      = TwoPTwoCNITraits::wComp,
-        nComp      = TwoPTwoCNITraits::nComp,
-
-        wPhaseOnly      = TwoPTwoCNITraits::wPhaseOnly,
-        nPhaseOnly      = TwoPTwoCNITraits::nPhaseOnly,
-        bothPhases      = TwoPTwoCNITraits::bothPhases,
-
+        wPhase   = Indices::wPhase,
+        nPhase   = Indices::nPhase
     };
 
-    typedef BoxTraitsT                              BoxTraits;
-    typedef typename BoxTraits::SolutionVector      SolutionVector;
 
-    typedef typename ParentType::LocalFunction       LocalFunction;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   VertexData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))     FluxData;
+    typedef std::vector<VertexData> VertexDataArray;
 
-    typedef typename ParentType::VertexDataArray     VertexDataArray;
+    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
-    typedef typename BoxTraits::FVElementGeometry    FVElementGeometry;
-
-    typedef typename DomTraits::GlobalPosition        GlobalPosition;
-    typedef typename DomTraits::LocalPosition         LocalPosition;
-
-    typedef FieldMatrix<Scalar, dim, dim>  Tensor;
+    static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
 
 public:
-    TwoPTwoCNIBoxJacobian(ProblemT &problem)
+    TwoPTwoCNIBoxJacobian(Problem &problem)
         : ParentType(problem)
     {
     };
@@ -127,7 +88,7 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(SolutionVector &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVarVector &result, int scvIdx, bool usePrevSol) const
     {
         // compute the storage term for phase mass
         ParentType::computeStorage(result, scvIdx, usePrevSol);
@@ -159,14 +120,13 @@ public:
      * \brief Sets the temperature term of the flux vector to the
      *        heat flux due to advection of the fluids.
      */
-    void computeAdvectiveFlux(SolutionVector &flux,
+    void computeAdvectiveFlux(PrimaryVarVector &flux,
                               const FluxData &fluxData) const
     {
         // advective mass flux
         ParentType::computeAdvectiveFlux(flux, fluxData);
 
         // advective heat flux in all phases
-        const Scalar alpha = TwoPTwoCNITraits::upwindAlpha;
         flux[temperatureIdx] = 0;
         for (int phase = 0; phase < numPhases; ++phase) {
             // vertex data of the upstream and the downstream vertices
@@ -175,12 +135,12 @@ public:
 
             flux[temperatureIdx] +=
                 fluxData.vDarcyNormal[phase] * (
-                    alpha * // upstream vertex
+                    mobilityUpwindAlpha * // upstream vertex
                     (  up.density[phase] *
                        up.mobility[phase] *
                        up.enthalpy[phase])
                     +
-                    (1-alpha) * // downstream vertex
+                    (1-mobilityUpwindAlpha) * // downstream vertex
                     (  dn.density[phase] *
                        dn.mobility[phase] *
                        dn.enthalpy[phase]) );
@@ -191,7 +151,7 @@ public:
      * \brief Adds the diffusive heat flux to the flux vector over
      *        the face of a sub-control volume.
      */
-    void computeDiffusiveFlux(SolutionVector &flux,
+    void computeDiffusiveFlux(PrimaryVarVector &flux,
                               const FluxData &fluxData) const
     {
         // diffusive mass flux
@@ -202,8 +162,8 @@ public:
     }
 
     // internal method!
-    template <class SolutionVector>
-    Scalar temperature(const SolutionVector &sol)
+    template <class PrimaryVarVector>
+    Scalar temperature(const PrimaryVarVector &sol)
     { return sol[temperatureIdx]; }
 };
 
@@ -211,172 +171,29 @@ public:
 // TwoPTwoCNIBoxModel (The actual numerical model.)
 ///////////////////////////////////////////////////////////////////////////
 /**
- * \brief Non-isothermal two phase two component model with Pw and
+ * \brief Non-isothermal two-phase two-component model with Pw and
  *        Sn/X as primary unknowns.
  *
- * This implements a non-isothermal two-phase two-component model
- * with Pw and Sn/X as primary unknowns.
+ * This implements a non-isothermal two-phase two-component model with
+ * Pw and Sn/X as primary unknowns. You can use Pn and Sw/X as primary
+ * variables if you set the Formulation property to pNsW.
  */
-template<class ProblemT,
-         class TwoPTwoCNITraitsT = TwoPTwoCNITraits<typename ProblemT::DomainTraits::Scalar,
-                                                    TwoPTwoCPwSnTraits<typename ProblemT::DomainTraits::Scalar> > >
+template<class TypeTag>
 class TwoPTwoCNIBoxModel
-    : public BoxScheme<TwoPTwoCNIBoxModel<ProblemT,TwoPTwoCNITraitsT>, // Implementation of the box scheme
-
-                       // The Traits for the BOX method
-                       P1BoxTraits<typename ProblemT::DomainTraits::Scalar,
-                                   typename ProblemT::DomainTraits::Grid,
-                                   TwoPTwoCNITraitsT::numEq>,
-
-                       // The actual problem we would like to solve
-                       ProblemT,
-
-                       // The local jacobian operator
-                       TwoPTwoCNIBoxJacobian<ProblemT,
-                                             P1BoxTraits<typename ProblemT::DomainTraits::Scalar,
-                                                         typename ProblemT::DomainTraits::Grid,
-                                                         TwoPTwoCNITraitsT::numEq>,
-                                             TwoPTwoCNITraitsT
-                                             >
-                       >
+    : public TwoPTwoCBoxModelBase<TypeTag, TwoPTwoCNIBoxModel<TypeTag> >
 {
-    typedef typename ProblemT::DomainTraits::Grid           Grid;
-    typedef typename ProblemT::DomainTraits::Scalar         Scalar;
-    typedef TwoPTwoCNIBoxModel<ProblemT, TwoPTwoCNITraitsT> ThisType;
+    typedef TwoPTwoCNIBoxModel<TypeTag>                           ThisType;
+    typedef TwoPTwoCBoxModelBase<TypeTag, ThisType>               ParentType;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
 
 public:
-    typedef TwoPTwoCNITraitsT                                   TwoPTwoCNITraits;
-    typedef P1BoxTraits<Scalar, Grid, TwoPTwoCNITraits::numEq>  BoxTraits;
-
-private:
-    typedef TwoPTwoCNIBoxJacobian<ProblemT, BoxTraits, TwoPTwoCNITraits>  TwoPTwoCNILocalJacobian;
-    typedef BoxScheme<ThisType,
-                      BoxTraits,
-                      ProblemT,
-                      TwoPTwoCNILocalJacobian>        ParentType;
-
-    typedef typename ProblemT::DomainTraits           DomTraits;
-    typedef typename DomTraits::Element               Element;
-    typedef typename DomTraits::ElementIterator       ElementIterator;
-    typedef typename DomTraits::LocalPosition         LocalPosition;
-    typedef typename DomTraits::GlobalPosition        GlobalPosition;
-    typedef typename DomTraits::Vertex                Vertex;
-
-    enum {
-        dim          = DomTraits::dim,
-        dimWorld     = DomTraits::dimWorld
-    };
-
-public:
-    typedef NewNewtonMethod<ThisType> NewtonMethod;
-
-    TwoPTwoCNIBoxModel(ProblemT &prob)
-        : ParentType(prob, twoPTwoCLocalJacobian_),
-          twoPTwoCLocalJacobian_(prob)
+    TwoPTwoCNIBoxModel(Problem &prob)
+        : ParentType(prob)
     {
-        Api::require<Api::BasicDomainTraits, typename ProblemT::DomainTraits>();
     }
-
-
-    /*!
-     * \brief Called by the update() method if applying the newton
-     *         method was unsuccessful.
-     */
-    void updateFailedTry()
-    {
-        ParentType::updateFailedTry();
-
-        twoPTwoCLocalJacobian_.setSwitched(false);
-        twoPTwoCLocalJacobian_.resetPhaseState();
-        twoPTwoCLocalJacobian_.updateStaticData(this->currentSolution(),
-                                                this->previousSolution());
-    };
-
-    /*!
-     * \brief Called by the BoxScheme's update method.
-     */
-    void updateSuccessful()
-    {
-        ParentType::updateSuccessful();
-
-        twoPTwoCLocalJacobian_.updateOldPhaseState();
-        twoPTwoCLocalJacobian_.setSwitched(false);
-    }
-
-
-    /*!
-     * \brief Add the mass fraction of air in water to VTK output of
-     *        the current timestep.
-     */
-    template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer)
-    {
-        twoPTwoCLocalJacobian_.addVtkFields(writer, this->currentSolution());
-    }
-
-    /*!
-     * \brief Calculate the masses in the system for
-     *        the current timestep.
-     */
-    void calculateMass(Dune::FieldVector<Scalar, 4> &mass)
-    {
-        twoPTwoCLocalJacobian_.calculateMass(this->currentSolution(), mass);
-    }
-
-    /*!
-     * \brief Returns true if there was a primary variable switch
-     *        after the last time step.
-     */
-    bool switched() const
-    { return twoPTwoCLocalJacobian_.switched(); }
-
-    void serializeEntity(std::ostream &outStream,
-                         const Vertex &vert)
-    {
-        // write primary variables
-        ParentType::serializeEntity(outStream, vert);
-
-        int vertIdx = this->problem().vertexIdx(vert);
-
-        // write phase state
-        if (!outStream.good()) {
-            DUNE_THROW(IOError,
-                       "Could not serialize vertex "
-                       << vertIdx);
-        }
-        outStream << twoPTwoCLocalJacobian_.staticVertexDat_[vertIdx].phaseState
-                  << " ";
-    };
-
-    /*!
-     * \brief Reads the current solution for a vertex from a restart
-     *        file.
-     */
-    void deserializeEntity(std::istream &inStream,
-                           const Vertex &vert)
-    {
-        // read primary variables
-        ParentType::deserializeEntity(inStream, vert);
-
-        int vertIdx = this->problem().vertexIdx(vert);
-
-        // read phase state
-        if (!inStream.good()) {
-            DUNE_THROW(IOError,
-                       "Could not deserialize vertex "
-                       << vertIdx);
-        }
-
-        inStream >> twoPTwoCLocalJacobian_.staticVertexDat_[vertIdx].phaseState;
-        twoPTwoCLocalJacobian_.staticVertexDat_[vertIdx].oldPhaseState
-            = twoPTwoCLocalJacobian_.staticVertexDat_[vertIdx].phaseState;
-
-    };
-
-private:
-    // calculates the jacobian matrix at a given position
-    TwoPTwoCNILocalJacobian  twoPTwoCLocalJacobian_;
 };
+
 }
 
 #endif

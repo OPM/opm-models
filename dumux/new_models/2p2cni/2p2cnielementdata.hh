@@ -35,9 +35,8 @@ namespace Dune
  *        constant within a finite element in the non-isothermal
  *        two-phase, two-component model.
  */
-template <class TwoPTwoCNITraits, 
-          class Problem>
-class TwoPTwoCNIElementData : public TwoPTwoCElementData<TwoPTwoCNITraits, Problem>
+template <class TypeTag>
+class TwoPTwoCNIElementData : public TwoPTwoCElementData<TypeTag>
 {
 };
 

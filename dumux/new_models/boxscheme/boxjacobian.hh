@@ -172,7 +172,7 @@ public:
         restrictToElement(localU, problem_.model().curSolFunction());
         assemble_(element, localU, orderOfShapeFns);
     }
-    
+  
     /*!
      * \brief Express the boundary conditions for a element in terms
      *        of a linear equation system.

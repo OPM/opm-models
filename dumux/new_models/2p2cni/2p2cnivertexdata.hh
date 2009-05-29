@@ -35,39 +35,47 @@ namespace Dune
  *        finite volume in the non-isothermal two-phase, two-component
  *        model.
  */
-template <class TwoPTwoCNITraits, 
-          class Problem>
-class TwoPTwoCNIVertexData : public TwoPTwoCVertexData<TwoPTwoCNITraits, Problem>
+template <class TypeTag>
+class TwoPTwoCNIVertexData : public TwoPTwoCVertexData<TypeTag>
 {
-    typedef TwoPTwoCNITraits Tr;
-    typedef typename Problem::DomainTraits::Scalar Scalar;
-    typedef typename Problem::DomainTraits::Grid Grid;
+    typedef TwoPTwoCVertexData<TypeTag> ParentType;
 
-    typedef typename Grid::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
-    typedef Dune::FieldVector<Scalar, Tr::numEq>      SolutionVector;
-    typedef Dune::FieldVector<Scalar, Tr::numPhases>  PhasesVector;
-
-    typedef Dune::FieldVector<Scalar, Grid::dimensionworld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, Grid::dimension>       LocalPosition;
-
-    typedef TwoPTwoCVertexData<TwoPTwoCNITraits, Problem> ParentType;
-
+    typedef typename GridView::template Codim<0>::Entity Element;
+    
     enum {
-        dim = Grid::dimension
+        dim           = GridView::dimension,
+        dimWorld      = GridView::dimensionworld,
+
+        numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
+    
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
+    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElem;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
+    typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
+    typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
+
+    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+
 
 public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
     template <class JacobianImp>
-    void update(const SolutionVector   &sol,
+    void update(const PrimaryVarVector &sol,
                 const Element          &element,
                 int                     vertIdx,
                 bool                    isOldSol,
                 JacobianImp            &jac) 
     {
+        typedef Indices I;
+
         // vertex update data for the mass balance
         ParentType::update(sol,
                            element,
@@ -77,30 +85,30 @@ public:
         
         // data for the energy equation
         const LocalPosition &local =
-            Problem::DomainTraits::referenceElement(element.type()).position(vertIdx,
-                                                                             dim);
+            RefElem::ReferenceElements::general(element.type()).position(vertIdx,
+                                                                         dim);
         const GlobalPosition &global =
             element.geometry().corner(vertIdx);
 
-        temperature = sol[Tr::temperatureIdx];
+        temperature = sol[I::temperatureIdx];
         
         heatCond = jac.problem().soil().heatCond(global, 
                                                  element,
                                                  local,
-                                                 this->saturation[Tr::wPhase]);
+                                                 this->saturation[I::wPhase]);
         
-        enthalpy[Tr::wPhase] = jac.problem().wettingPhase().enthalpy(temperature,
-                                                                     this->pressure[Tr::wPhase],
-                                                                     this->massfrac[Tr::nComp][Tr::wPhase]);
-        enthalpy[Tr::nPhase] = jac.problem().nonwettingPhase().enthalpy(temperature,
-                                                                        this->pressure[Tr::nPhase],
-                                                                        this->massfrac[Tr::wComp][Tr::nPhase]);
-        intEnergy[Tr::wPhase] = jac.problem().wettingPhase().intEnergy(temperature,
-                                                                       this->pressure[Tr::wPhase],
-                                                                       this->massfrac[Tr::nComp][Tr::wPhase]);
-        intEnergy[Tr::nPhase] = jac.problem().nonwettingPhase().intEnergy(temperature,
-                                                                          this->pressure[Tr::nPhase],
-                                                                          this->massfrac[Tr::wComp][Tr::nPhase]);
+        enthalpy[I::wPhase] = jac.problem().wettingPhase().enthalpy(temperature,
+                                                                    this->pressure[I::wPhase],
+                                                                    this->massfrac[I::nComp][I::wPhase]);
+        enthalpy[I::nPhase] = jac.problem().nonwettingPhase().enthalpy(temperature,
+                                                                       this->pressure[I::nPhase],
+                                                                       this->massfrac[I::wComp][I::nPhase]);
+        intEnergy[I::wPhase] = jac.problem().wettingPhase().intEnergy(temperature,
+                                                                      this->pressure[I::wPhase],
+                                                                      this->massfrac[I::nComp][I::wPhase]);
+        intEnergy[I::nPhase] = jac.problem().nonwettingPhase().intEnergy(temperature,
+                                                                         this->pressure[I::nPhase],
+                                                                         this->massfrac[I::wComp][I::nPhase]);
     }
 
     PhasesVector intEnergy; //!< Internal energy.

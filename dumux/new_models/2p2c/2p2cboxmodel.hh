@@ -15,34 +15,10 @@
 #ifndef DUMUX_NEW_2P2C_BOX_MODEL_HH
 #define DUMUX_NEW_2P2C_BOX_MODEL_HH
 
-#include <dumux/new_models/2p2c/2p2cboxjacobianbase.hh>
+#include <dumux/new_models/2p2c/2p2cboxjacobian.hh>
 
 namespace Dune
 {
-
-/*!
- * \brief The local jacobian operator for the isothermal two-phase,
- *        two-component model.
- *
- * This is basically just a wrapper for TwoPTwoCBoxJacobianBase so
- * that it can be instantiated.
- */
-template<class TypeTag>
-class TwoPTwoCBoxJacobian : public TwoPTwoCBoxJacobianBase<TypeTag,
-                                                           // implementation
-                                                           TwoPTwoCBoxJacobian<TypeTag> >
-{
-    typedef TwoPTwoCBoxJacobian<TypeTag>                   ThisType;
-    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>     ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-
-public:
-    TwoPTwoCBoxJacobian(Problem &problem)
-        : ParentType(problem)
-    {
-    };
-};
-
 /**
  * \brief Isothermal two-phase two-component model.
  *
@@ -53,14 +29,14 @@ public:
  * variables are either $p_w$ and $S_n;X$ or $p_n$ or $S_w;X$. By
  * default they are $p_w$ and $S_n$
  */
-template<class TypeTag >
-class TwoPTwoCBoxModel
+template<class TypeTag, class Implementation >
+class TwoPTwoCBoxModelBase
     : public BoxScheme<TypeTag,
                        // Implementation of the box scheme
-                       TwoPTwoCBoxModel<TypeTag> >
+                       Implementation >
 {
-    typedef TwoPTwoCBoxModel<TypeTag>                             ThisType;
-    typedef BoxScheme<TypeTag, ThisType>                          ParentType;
+    typedef TwoPTwoCBoxModelBase<TypeTag, Implementation>         ThisType;
+    typedef BoxScheme<TypeTag, Implementation>                    ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))        Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
@@ -75,7 +51,7 @@ class TwoPTwoCBoxModel
     typedef typename GridView::template Codim<dim>::Entity   Vertex;
 
 public:
-    TwoPTwoCBoxModel(Problem &prob)
+    TwoPTwoCBoxModelBase(Problem &prob)
         : ParentType(prob, twoPTwoCLocalJacobian_),
           twoPTwoCLocalJacobian_(prob)
     {
@@ -117,15 +93,6 @@ public:
     }
 
     /*!
-     * \brief Calculate the masses in the system for
-     *        the current timestep.
-     */
-    void calculateMass(Dune::FieldVector<Scalar, 4> &mass)
-    {
-        twoPTwoCLocalJacobian_.calculateMass(this->curSolFunction(), mass);
-    }
-
-    /*!
      * \brief Returns true if there was a primary variable switch
      *        after the last time step.
      */
@@ -162,6 +129,24 @@ private:
     // calculates the jacobian matrix at a given position
     LocalJacobian twoPTwoCLocalJacobian_;
 };
+
+template<class TypeTag >
+class TwoPTwoCBoxModel
+    : public TwoPTwoCBoxModelBase<TypeTag, TwoPTwoCBoxModel<TypeTag> >
+{
+public:
+    typedef TwoPTwoCBoxModel<TypeTag>                           ThisType;
+    typedef TwoPTwoCBoxModelBase<TypeTag, ThisType>             ParentType;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))      Problem;
+
+public:
+    TwoPTwoCBoxModel(Problem &prob)
+        : ParentType(prob)
+    {
+    }
+};
+
 }
 
 #endif

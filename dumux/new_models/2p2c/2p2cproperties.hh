@@ -36,12 +36,6 @@ template<class TypeTag>
 class TwoPTwoCBoxJacobian;
 
 template <class TypeTag>
-class TwoPTwoCPnSwTraits;
-
-template <class TypeTag>
-class TwoPTwoCPwSnTraits;
-
-template <class TypeTag>
 class TwoPTwoCVertexData;
 
 template <class TypeTag>
