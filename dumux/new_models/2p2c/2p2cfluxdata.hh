@@ -1,10 +1,10 @@
 /*****************************************************************************
- *   Copyright (C) 2008,2009 by Klaus Mosthaf,                               *
- *                              Andreas Lauser,                              *
- *                              Bernd Flemisch                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: klaus.mosthaf _at_ iws.uni-stuttgart.de                          *
+ *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *

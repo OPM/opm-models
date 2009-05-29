@@ -23,10 +23,11 @@
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
 #include <dumux/new_models/boxscheme/p1boxtraits.hh>
-#include <dumux/new_models/2p/2ptraits.hh>
-#include <dumux/auxiliary/math.hh>
+
+#include <dumux/new_models/2p/2pproperties.hh>
 
 #include <dumux/new_models/2p/2pvertexdata.hh>
+#include <dumux/new_models/2p/2pelementdata.hh>
 #include <dumux/new_models/2p/2pfluxdata.hh>
 
 #include <dumux/auxiliary/apis.hh>
@@ -43,88 +44,66 @@ namespace Dune
  * \brief Calculate the local Jacobian for the two phase model in the
  *        BOX scheme.
  */
-template<class ProblemT,
-		 class BoxTraitsT,
-		 class TwoPTraitsT,
-		 class VertexDataT,
-		 class FluxDataT,
-		 class Implementation>
-class TwoPBoxJacobianBase : public BoxJacobian<ProblemT,
-                                           BoxTraitsT,
-                                           Implementation,
-                                           VertexDataT>
+template<class TypeTag, class Implementation>
+class TwoPBoxJacobianBase : public BoxJacobian<TypeTag, Implementation>
 {
-    protected:
-    typedef TwoPBoxJacobianBase<ProblemT,
-                            BoxTraitsT,
-                            TwoPTraitsT,
-                            VertexDataT,
-                            FluxDataT,
-                            Implementation>            ThisType;
+protected:
+    typedef TwoPBoxJacobianBase<TypeTag, Implementation> ThisType;
+    typedef BoxJacobian<TypeTag, Implementation>         ParentType;
 
-    typedef BoxJacobian<ProblemT,
-                        BoxTraitsT,
-                        Implementation,
-                        VertexDataT>   ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))      Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))  Indices;
 
-    typedef ProblemT                       Problem;
-    typedef typename Problem::DomainTraits DomTraits;
-    typedef BoxTraitsT                     BoxTraits;
-    typedef TwoPTraitsT                    TwoPTraits;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))       Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))     GridView;
 
     enum {
-        dim            = DomTraits::dim,
-        dimWorld       = DomTraits::dimWorld,
+        dim            = GridView::dimension,
+        dimWorld       = GridView::dimensionworld,
 
-        numEq          = BoxTraits::numEq,
-        numPhases      = TwoPTraits::numPhases,
+        numEq          = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
+        numPhases      = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
 
-        pressureIdx    = TwoPTraits::pressureIdx,
-        saturationIdx  = TwoPTraits::saturationIdx,
+        pressureIdx    = Indices::pressureIdx,
+        saturationIdx  = Indices::saturationIdx,
 
-        wMassIdx       = TwoPTraits::wMassIdx,
-        nMassIdx       = TwoPTraits::nMassIdx,
-
-        formulation    = TwoPTraits::formulation,
-
-        wPhase         = TwoPTraits::wPhase,
-        nPhase         = TwoPTraits::nPhase,
+        wPhase         = Indices::wPhase,
+        nPhase         = Indices::nPhase,
     };
 
-    typedef typename DomTraits::Scalar              Scalar;
-    typedef typename DomTraits::CoordScalar         CoordScalar;
-    typedef typename DomTraits::Grid                Grid;
-    typedef typename DomTraits::Element             Element;
-    typedef typename DomTraits::ElementIterator     ElementIterator;
-    typedef typename Element::EntityPointer         ElementPointer;
+    typedef typename GridView::template Codim<0>::Entity   Element;
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef typename DomTraits::LocalPosition       LocalPosition;
-    typedef typename DomTraits::GlobalPosition      GlobalPosition;
+    typedef FieldVector<Scalar, dim>       LocalPosition;
+    typedef FieldVector<Scalar, dimWorld>  GlobalPosition;
 
-    typedef typename BoxTraits::SolutionVector      SolutionVector;
-    typedef typename BoxTraits::FVElementGeometry   FVElementGeometry;
-    typedef typename BoxTraits::SpatialFunction     SpatialFunction;
-    typedef typename BoxTraits::LocalFunction       LocalFunction;
-    typedef typename Grid::CollectiveCommunication  CollectiveCommunication;
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
+    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+    typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
-    typedef VertexDataT          VertexData;
-    typedef FluxDataT            FluxData;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   VertexData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(ElementData))  ElementData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))     FluxData;
 
     typedef std::vector<VertexData>        VertexDataArray;
     typedef FieldMatrix<Scalar, dim, dim>  Tensor;
-    static const Scalar upwindAlpha = TwoPTraits::upwindAlpha;
+
+    static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
 
 public:
-    TwoPBoxJacobianBase(ProblemT &problem)
+    TwoPBoxJacobianBase(Problem &problem)
         : ParentType(problem)
-    {};
+    {
+    };
 
     /*!
      * \brief Evaluate the amount all conservation quantites
      *        (e.g. phase mass) within a finite volume.
      */
-    void computeStorage(SolutionVector &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVarVector &result, int scvIdx, bool usePrevSol) const
     {
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
@@ -135,13 +114,13 @@ public:
         const VertexData  &vertDat = elemDat[scvIdx];
 
         // wetting phase mass
-        result[wMassIdx] =
+        result[Indices::phase2Mass(wPhase)] =
             vertDat.density[wPhase]
             * vertDat.porosity
             * vertDat.satW;
 
         // non-wetting phase mass
-        result[nMassIdx] =
+        result[Indices::phase2Mass(nPhase)] =
             vertDat.density[nPhase]
             * vertDat.porosity
             * vertDat.satN;
@@ -151,7 +130,7 @@ public:
      * \brief Evaluates the mass flux over a face of a subcontrol
      *        volume.
      */
-    void computeFlux(SolutionVector &flux, int faceId) const
+    void computeFlux(PrimaryVarVector &flux, int faceId) const
     {
 		FluxData vars(this->problem_,
                       this->curElement_(),
@@ -167,8 +146,8 @@ public:
      * \brief Evaluates the advective mass flux of all components over
      *        a face of a subcontrol volume.
      */
-    void computeFluxdvectiveFlux(SolutionVector &flux,
-                              const FluxData &vars) const
+    void computeFluxdvectiveFlux(PrimaryVarVector &flux,
+                                 const FluxData &vars) const
     {
         ////////
         // advective fluxes of all components in all phases
@@ -179,17 +158,17 @@ public:
             const VertexData &up = this->curElemDat_[vars.upstreamIdx[phaseIdx]];
             const VertexData &dn = this->curElemDat_[vars.downstreamIdx[phaseIdx]];
 
-                // add advective flux of current component in current
-                // phase
-                flux[phaseIdx] +=
-                    vars.vDarcyNormal[phaseIdx] * (
-                        upwindAlpha* // upstream vertex
-                        (  up.density[phaseIdx] *
-                           up.mobility[phaseIdx])
-                        +
-                        (1 - upwindAlpha)* // downstream vertex
-                        (  dn.density[phaseIdx] *
-                           dn.mobility[phaseIdx]));
+            // add advective flux of current component in current
+            // phase
+            flux[Indices::phase2Mass(phaseIdx)] +=
+                vars.vDarcyNormal[phaseIdx] * (
+                    mobilityUpwindAlpha* // upstream vertex
+                    (  up.density[phaseIdx] *
+                       up.mobility[phaseIdx])
+                    +
+                    (1 - mobilityUpwindAlpha)* // downstream vertex
+                    (  dn.density[phaseIdx] *
+                       dn.mobility[phaseIdx]));
         }
     }
 
@@ -200,7 +179,7 @@ public:
      *        be used in the non-isothermal two-phase model
      *        to calculate diffusive heat fluxes
      */
-    void computeDiffusiveFlux(SolutionVector &flux,
+    void computeDiffusiveFlux(PrimaryVarVector &flux,
                               const FluxData &fluxData) const
     {
         // diffusive fluxes
@@ -211,7 +190,7 @@ public:
     /*!
      * \brief Calculate the source term of the equation
      */
-    void computeSource(SolutionVector &q, int localVertexIdx)
+    void computeSource(PrimaryVarVector &q, int localVertexIdx)
     {
         this->problem_.source(q,
                               this->curElement_(),
@@ -223,8 +202,8 @@ public:
      * \brief Return the temperature given the solution vector of a
      *        finite volume.
      */
-    template <class SolutionVector>
-    Scalar temperature(const SolutionVector &sol)
+    template <class PrimaryVarVector>
+    Scalar temperature(const PrimaryVarVector &sol)
     {
         return this->problem_.temperature(); /* constant temperature */
     }
@@ -234,13 +213,13 @@ public:
      *         and get minimum and maximum values of primary variables
      *
      */
-    void calculateMass(const SpatialFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
+    void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
     {
         ElementIterator elementIt = this->problem_.elementBegin();
         ElementIterator endit = this->problem_.elementEnd();
         unsigned numVertices = this->problem_.numVertices();
-        LocalFunction tmpSol;
-        VertexDataArray elemDat(BoxTraits::ShapeFunctionSetContainer::maxsize);
+        SolutionOnElement tmpSol;
+        VertexDataArray elemDat;
         VertexData tmp;
         Scalar vol, poro, rhoN, rhoW, satN, satW, pW, Te;
         Scalar massNPhase(0.), massWPhase(0.);
@@ -315,7 +294,7 @@ public:
      *        the current timestep.
      */
     template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer, const SpatialFunction &globalSol)
+    void addVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
@@ -329,7 +308,7 @@ public:
         ScalarField *Te =           writer.template createField<Scalar, 1>(numVertices);
 
 
-        LocalFunction tmpSol;
+        SolutionOnElement tmpSol;
         ElementIterator elementIt = this->problem_.elementBegin();
         ElementIterator endit = this->problem_.elementEnd();
         for (; elementIt != endit; ++elementIt)
@@ -367,6 +346,28 @@ public:
     const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
 };
+
+/*!
+ * \brief Calculate the local Jacobian for the two phase model in the
+ *        BOX scheme.
+ *
+ * This is just a wrapper around TwoPBoxJacobianBase.
+ */
+template<class TypeTag>
+class TwoPBoxJacobian : public TwoPBoxJacobianBase<TypeTag,
+                                                   TwoPBoxJacobian<TypeTag> >
+{
+    typedef TwoPBoxJacobian<TypeTag>                       ThisType;
+    typedef TwoPBoxJacobianBase<TypeTag, ThisType>         ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+
+public:
+    TwoPBoxJacobian(Problem &problem)
+        : ParentType(problem)
+    {
+    };
+};
+
 }
 
 #endif

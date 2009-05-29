@@ -74,11 +74,6 @@ struct TwoPTwoCIndices
     static const int nComp = 1; //!< Index of the non-wetting component in a compent vector
     
     /*!
-     * \brief Component index of the principal component in a phase.
-     */
-    static int principalCompIdxInPhase(int phaseIdx) { return phaseIdx; }
-
-    /*!
      * \brief Map a component index to a mass index.
      *
      * (The mass index is the index of a component in the result
