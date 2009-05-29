@@ -24,6 +24,12 @@
 #include <dune/disc/shapefunctions/lagrangeshapefunctions.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 
+#include <dumux/nonlinear/new_newtonmethod.hh>
+#include <dumux/nonlinear/new_newtoncontroller.hh>
+
+#include <dumux/auxiliary/properties.hh>
+#include <dumux/new_models/tags.hh>
+
 /*!
  * \file
  * \brief Specify the shape functions, operator assemblers, etc
@@ -31,80 +37,99 @@
  */
 namespace Dune
 {
-/*!
- * \brief Specify the shape functions, operator assemblers, etc
- *        used for the BoxScheme.
- */
-template<class Scalar, class Grid, int numEqns>
-class P1BoxTraits
+namespace Properties
+{
+//! Set the default for the FVElementGeometry
+SET_PROP(BoxScheme, FVElementGeometry)
 {
 private:
-    typedef typename Grid::ctype     CoordScalar;
-
-    enum {
-        dim = Grid::dimension,
-        dimWorld = Grid::dimensionworld,
-    };
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
 
 public:
-    enum {
-        numEq = numEqns
-    };
-
-    //! A vector of all primary variables at a point
-    typedef Dune::FieldVector<Scalar, numEq> SolutionVector;
-    //! boundary condition vector
-    typedef Dune::FieldVector<Dune::BoundaryConditions::Flags,
-                              numEq>         BoundaryTypeVector;
-
-    /*!
-     * \brief Represents a local spatial function.
-     *
-     * A field vector is attached at each vertex of the element.
-     */
-    typedef BlockVector<SolutionVector> LocalFunction;
-
-
-    //! The finite volume element segments within a finite element element
-    typedef Dune::FVElementGeometry<Grid>  FVElementGeometry;
-
-    //! a single of shape function used for the BoxFunction inside
-    //! elements.
-    typedef Dune::LagrangeShapeFunctionSetContainer<CoordScalar,
-                                                    Scalar,
-                                                    dim> ShapeFunctionSetContainer;
-
-    //! The actual shape functions which are being used. If a
-    //! grid only contains simplices or tetrahedra, it is more
-    //! efficent to use LagrangeShapeFunctions::p1cube, or
-    //! LagrangeShapeFunctions::p1simplex
-    //!
-    //! TODO: Use specialization to take advantage of simplex grids
-    //!       and structured grids.
-    static const ShapeFunctionSetContainer &shapeFunctions;
-
-    //! The function which represents a solution for a fixed time
-    //! step. We use first-order vertex centered FE polynomials.
-    typedef Dune::LeafP1Function<Grid,
-                                 Scalar,
-                                 numEq>   SpatialFunction;
-
-    //! The OperatorAssembler which assembles the global stiffness
-    //! matrix
-    typedef Dune::LeafP1OperatorAssembler<Grid,
-                                          Scalar,
-                                          numEq>  JacobianAssembler;
+    typedef Dune::FVElementGeometry<Grid>  type;
 };
 
-// this is butt-ugly, but the only way I could come up with to
-// initialize a static const member of a class
-template<class Scalar, class Grid, int numEq>
-const typename P1BoxTraits<Scalar, Grid, numEq>::ShapeFunctionSetContainer &
-P1BoxTraits<Scalar, Grid, numEq>::shapeFunctions
-=  Dune::LagrangeShapeFunctions<typename Grid::ctype,
-                                Scalar,
-                                Grid::dimension>::general;
+//! use the plain newton method for the box scheme by default
+SET_PROP(BoxScheme, NewtonMethod)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))  Model;
 
+public:
+    typedef Dune::NewNewtonMethod<Model> type;
+};
+
+//! use the plain newton controller for the box scheme by default
+SET_PROP(BoxScheme, NewtonController)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
+
+public:
+    typedef Dune::NewtonController<NewtonMethod> type;
+};
+
+/*!
+ * \brief Specifies the types which are assoicated with a solution.
+ *
+ * This means shape functions, solution vectors, etc.
+ */
+SET_PROP(BoxScheme, SolutionTypes)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))    Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;
+    typedef typename GridView::Grid                          Grid;
+    typedef typename Grid::ctype                             CoordScalar;
+
+    enum {
+        dim = GridView::dimension,
+        numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))
+    };
+    
+public:
+    //! A solution function. This is a function with the same domain as the grid. 
+    typedef Dune::P1Function<GridView, Scalar, GridView, numEq>       SolutionFunction;
+
+    /*!
+     * \brief The type which maps an entity to an index in the solution.
+     */
+    typedef typename SolutionFunction::VM                              SolutionMapper;
+
+    /*!
+     * \brief The type of a solution at a fixed time. 
+     *
+     * This is the representation of the solution function and defines
+     * a primary variable vector at each degree of freedom.
+     */
+    typedef typename SolutionFunction::RepresentationType             Solution;
+    /*!
+     * \brief A vector of primary variables.
+     */
+    typedef typename SolutionFunction::BlockType                      PrimaryVarVector;
+
+    /*!
+     * \brief The solution for a single finite element.
+     */
+    typedef Dune::BlockVector<PrimaryVarVector>                       SolutionOnElement;
+    
+    /*!
+     * \brief Vector of boundary types at a degree of freedom.
+     */
+    typedef Dune::FieldVector<Dune::BoundaryConditions::Flags, numEq> BoundaryTypeVector;
+    
+    /*!
+     * \brief The shape functions used by the SolutionFunction
+     */
+    typedef Dune::LagrangeShapeFunctions<CoordScalar, Scalar, dim>    ShapeFunctions;
+    /*!
+     * \brief The container for shape functions within an finite element.
+     */
+    typedef Dune::LagrangeShapeFunctionSet<CoordScalar, Scalar, dim>  ShapeFunctionSet;
+    /*!
+     * \brief Assembler for the global jacobian matrix.
+     */
+    typedef Dune::P1OperatorAssembler<Grid, Scalar, GridView, GridView, numEq>  JacobianAssembler;
+};
+
+}
 }
 
 #endif

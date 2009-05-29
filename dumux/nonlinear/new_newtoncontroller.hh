@@ -92,7 +92,7 @@ public:
             return false; // we are below the desired tolerance
 
         Scalar tmp = asImp_().physicalness_(u);
-        curPhysicalness_ = model().grid().comm().min(tmp);
+        curPhysicalness_ = model().gridView().comm().min(tmp);
         curPhysicalness_ = std::min(curPhysicalness_, 1.0);
 
 
@@ -152,7 +152,7 @@ public:
         curPhysicalness_ = 0;
 
         Scalar tmp = (*u).two_norm2();
-        tmp = sqrt(model().grid().comm().sum(tmp));
+        tmp = sqrt(model().gridView().comm().sum(tmp));
         oneByMagnitude_ = 1.0/std::max(tmp, 1e-5);
     }
 

@@ -27,45 +27,17 @@ namespace Dune
  * This is basically just a wrapper for TwoPTwoCBoxJacobianBase so
  * that it can be instantiated.
  */
-template<class ProblemT,
-         class BoxTraitsT,
-         class TwoPTwoCTraitsT>
-class TwoPTwoCBoxJacobian : public TwoPTwoCBoxJacobianBase<ProblemT,
-                                                           BoxTraitsT,
-                                                           TwoPTwoCTraitsT,
-                                                           TwoPTwoCElementData<TwoPTwoCTraitsT,
-                                                                               ProblemT>,
-                                                           TwoPTwoCVertexData<TwoPTwoCTraitsT,
-                                                                              ProblemT>,
-                                                           TwoPTwoCFluxData<TwoPTwoCTraitsT,
-                                                                            ProblemT,
-                                                                            TwoPTwoCVertexData<TwoPTwoCTraitsT,
-                                                                                               ProblemT> >,
-                                                           
-                                                           TwoPTwoCBoxJacobian<ProblemT,
-                                                                               BoxTraitsT,
-                                                                               TwoPTwoCTraitsT> >
+template<class TypeTag>
+class TwoPTwoCBoxJacobian : public TwoPTwoCBoxJacobianBase<TypeTag,
+                                                           // implementation
+                                                           TwoPTwoCBoxJacobian<TypeTag> >
 {
-    typedef TwoPTwoCBoxJacobian<ProblemT,
-                                BoxTraitsT,
-                                TwoPTwoCTraitsT>  ThisType;
+    typedef TwoPTwoCBoxJacobian<TypeTag>                   ThisType;
+    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>     ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
 
-    typedef TwoPTwoCElementData<TwoPTwoCTraitsT,
-                                ProblemT>         ElementData;
-    typedef TwoPTwoCVertexData<TwoPTwoCTraitsT,
-                               ProblemT>          VertexData;
-    typedef TwoPTwoCFluxData<TwoPTwoCTraitsT,
-                             ProblemT,
-                             VertexData >          FluxData;
-    typedef TwoPTwoCBoxJacobianBase<ProblemT,
-                                    BoxTraitsT,
-                                    TwoPTwoCTraitsT,
-                                    ElementData,
-                                    VertexData,
-                                    FluxData,
-                                    ThisType>     ParentType;
 public:
-    TwoPTwoCBoxJacobian(ProblemT &problem)
+    TwoPTwoCBoxJacobian(Problem &problem)
         : ParentType(problem)
     {
     };
@@ -79,60 +51,34 @@ public:
  * either $p_w$ and $S_n;X$ or $p_n$ or $S_w;X$. By default they are
  * $p_w$ and $S_n$
  */
-template<class ProblemT,
-         class TwoPTwoCTraitsT = TwoPTwoCPwSnTraits<typename ProblemT::DomainTraits::Scalar> >
+template<class TypeTag >
 class TwoPTwoCBoxModel
-    : public BoxScheme<TwoPTwoCBoxModel<ProblemT, TwoPTwoCTraitsT>, // Implementation of the box scheme
-
-                       // The traits for the BOX method
-                       P1BoxTraits<typename ProblemT::DomainTraits::Scalar,
-                                   typename ProblemT::DomainTraits::Grid,
-                                   TwoPTwoCTraitsT::numEq>,
-
-                       // The actual problem we would like to solve
-                       ProblemT,
-                       // The local jacobian operator
-                       TwoPTwoCBoxJacobian<ProblemT,
-                                           P1BoxTraits<typename ProblemT::DomainTraits::Scalar,
-                                                       typename ProblemT::DomainTraits::Grid,
-                                                       TwoPTwoCTraitsT::numEq>,
-                                           TwoPTwoCTraitsT > >
+    : public BoxScheme<TypeTag,
+                       // Implementation of the box scheme
+                       TwoPTwoCBoxModel<TypeTag> >
 {
-    typedef typename ProblemT::DomainTraits::Grid       Grid;
-    typedef typename ProblemT::DomainTraits::Scalar     Scalar;
-    typedef TwoPTwoCBoxModel<ProblemT,TwoPTwoCTraitsT>  ThisType;
+    typedef TwoPTwoCBoxModel<TypeTag>                             ThisType;
+    typedef BoxScheme<TypeTag, ThisType>                          ParentType;
 
-public:
-    typedef TwoPTwoCTraitsT                                  TwoPTwoCTraits;
-    typedef P1BoxTraits<Scalar, Grid, TwoPTwoCTraits::numEq> BoxTraits;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))        Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))      GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
-private:
-    typedef TwoPTwoCBoxJacobian<ProblemT, BoxTraits, TwoPTwoCTraits>  TwoPTwoCLocalJacobian;
-    typedef BoxScheme<ThisType,
-                      BoxTraits,
-                      ProblemT,
-                      TwoPTwoCLocalJacobian>        ParentType;
-
-    typedef typename ProblemT::DomainTraits              DomTraits;
-    typedef typename DomTraits::Element                  Element;
-    typedef typename DomTraits::Vertex                   Vertex;
-    typedef typename DomTraits::ElementIterator          ElementIterator;
-    typedef typename DomTraits::LocalPosition            LocalPosition;
-    typedef typename DomTraits::GlobalPosition           GlobalPosition;
 
     enum {
-        dim              = DomTraits::dim,
-        dimWorld         = DomTraits::dimWorld
+        dim = GridView::dimension
     };
+    typedef typename GridView::template Codim<0>::Entity     Element;
+    typedef typename GridView::template Codim<dim>::Entity   Vertex;
 
 public:
-    typedef NewNewtonMethod<ThisType> NewtonMethod;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) TwoPTwoCTraits;
 
-    TwoPTwoCBoxModel(ProblemT &prob)
+    TwoPTwoCBoxModel(Problem &prob)
         : ParentType(prob, twoPTwoCLocalJacobian_),
           twoPTwoCLocalJacobian_(prob)
     {
-        Api::require<Api::BasicDomainTraits, typename ProblemT::DomainTraits>();
     }
 
 
@@ -146,8 +92,8 @@ public:
 
         twoPTwoCLocalJacobian_.setSwitched(false);
         twoPTwoCLocalJacobian_.resetPhaseState();
-        twoPTwoCLocalJacobian_.updateStaticData(this->currentSolution(),
-                                                this->previousSolution());
+        twoPTwoCLocalJacobian_.updateStaticData(this->curSolFunction(),
+                                                this->prevSolFunction());
     };
 
     /*!
@@ -168,7 +114,7 @@ public:
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
     {
-        twoPTwoCLocalJacobian_.addVtkFields(writer, this->currentSolution());
+        twoPTwoCLocalJacobian_.addVtkFields(writer, this->curSolFunction());
     }
 
     /*!
@@ -177,7 +123,7 @@ public:
      */
     void calculateMass(Dune::FieldVector<Scalar, 4> &mass)
     {
-        twoPTwoCLocalJacobian_.calculateMass(this->currentSolution(), mass);
+        twoPTwoCLocalJacobian_.calculateMass(this->curSolFunction(), mass);
     }
 
     /*!
@@ -215,7 +161,7 @@ public:
 
 private:
     // calculates the jacobian matrix at a given position
-    TwoPTwoCLocalJacobian  twoPTwoCLocalJacobian_;
+    LocalJacobian twoPTwoCLocalJacobian_;
 };
 }
 

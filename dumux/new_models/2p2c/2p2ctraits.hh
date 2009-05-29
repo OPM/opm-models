@@ -18,8 +18,106 @@
 
 #include <dumux/new_models/boxscheme/p1boxtraits.hh>
 
+#include "2p2cnewtoncontroller.hh"
+
 namespace Dune
 {
+////////////////////////////////
+// forward declarations
+////////////////////////////////
+template<class TypeTag>
+class TwoPTwoCBoxModel;
+
+template<class TypeTag>
+class TwoPTwoCBoxJacobian;
+
+template <class Scalar>
+class TwoPTwoCPnSwTraits;
+
+template <class TwoPTwoCTraits, class Problem>
+class TwoPTwoCVertexData;
+
+template <class TwoPTwoCTraits, class ProblemT>
+class TwoPTwoCElementData;
+
+template <class TwoPTwoCTraits, class ProblemT, class VertexData>
+class TwoPTwoCFluxData;
+
+////////////////////////////////
+// properties
+////////////////////////////////
+
+namespace Properties
+{
+//! set the number of equations to 2
+SET_PROP_INT(BoxTwoPTwoC, NumEq, 2);
+
+//! Use the pw-Sn formulation by default
+SET_PROP(BoxTwoPTwoC, TwoPTwoCTraits)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+  
+public:
+    typedef TwoPTwoCPnSwTraits<Scalar> type;
+};
+
+//! Use the 2p2c local jacobian operator for the 2p2c model
+SET_PROP(BoxTwoPTwoC, LocalJacobian)
+{
+    typedef TwoPTwoCBoxJacobian<TypeTag> type;
+};
+
+//! Use the 2p2c specific newton controller for the 2p2c model
+SET_PROP(BoxTwoPTwoC, NewtonController)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod))  NewtonMethod;
+  
+public:
+    typedef TwoPTwoCNewtonController<NewtonMethod> type;
+};
+
+//! the Model property
+SET_PROP(BoxTwoPTwoC, Model)
+{
+    typedef Dune::TwoPTwoCBoxModel<TypeTag> type;
+};
+
+//! the VertexData property
+SET_PROP(BoxTwoPTwoC, VertexData)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))        Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
+    
+public:
+    typedef TwoPTwoCVertexData<Traits, Problem> type;
+};
+
+//! the ElementData property
+SET_PROP(BoxTwoPTwoC, ElementData)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))        Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
+    
+public:
+    typedef TwoPTwoCElementData<Traits, Problem> type;
+};
+
+//! the FluxData property
+SET_PROP(BoxTwoPTwoC, FluxData)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
+    
+public:
+    typedef TwoPTwoCFluxData<Traits, Problem, VertexData> type;
+};
+
+}
+
 /*!
  * \brief Generic 2P-2C traits.
  *

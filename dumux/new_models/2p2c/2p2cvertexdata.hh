@@ -70,8 +70,8 @@ public:
     {
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
-            Problem::DomainTraits::referenceElement(element.type()).position(vertIdx,
-                                                                             Grid::dimension);
+            Dune::GenericReferenceElements<typename Grid::ctype, Grid::dimension>::general(element.type()).position(vertIdx,
+                                                                                                                    Grid::dimension);
         int globalVertIdx = jac.problem().vertexIdx(element, vertIdx);
         int phaseState = jac.phaseState(globalVertIdx, isOldSol);
         Scalar temperature = jac.temperature(sol);
