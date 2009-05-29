@@ -422,7 +422,7 @@ public:
 protected:
     //! returns true iff the grid has an overlap
     bool hasOverlap_()
-    { return gridView_.overlapSize(0) > 0; };
+    { return gridView_.grid().overlapSize(0) > 0; };
 
     void applyInitialSolution_(SolutionFunction &u)
     {

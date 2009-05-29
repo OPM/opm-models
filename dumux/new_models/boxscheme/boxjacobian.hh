@@ -136,7 +136,7 @@ public:
     BoxJacobian(Problem &problem)
         : problem_(problem),
           gridView_(problem.gridView()),
-          curElementPtr_(* gridView_.template end<0>())
+          curElementPtr_(* gridView_.template begin<0>())
     {
     }
 
