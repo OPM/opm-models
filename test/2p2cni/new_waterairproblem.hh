@@ -143,7 +143,8 @@ public:
         timeManager_.setStepSize(dtInitial);
 
         // specify the grid dimensions
-        eps_    = 1e-8;
+        width_ = 60; // [m]
+        height_ = 40; // [m]
 
         depthBOR_ = 1000.0;
 
@@ -319,7 +320,8 @@ public:
         values = 0;
 
         // negative values for injection
-        if (globalPos[1] < 5.0 && globalPos[1] < 15.0)
+        if (globalPos[0] > width_ - eps_ &&
+            globalPos[1] < 5.0 && globalPos[1] < 15.0)
         {
             values[switchIdx] = -1e-3;
         }
@@ -426,7 +428,7 @@ private:
     Scalar width_;
     Scalar height_;
     Scalar depthBOR_;
-    Scalar eps_;
+    static const Scalar eps_ = 1e-8;
     GlobalPosition  gravity_;
 
     // fluids and material properties
