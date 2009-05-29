@@ -17,12 +17,10 @@
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
 #include <dumux/new_models/boxscheme/p1boxtraits.hh>
-#include <dumux/new_models/2p2c/2p2ctraits.hh>
+
 #include <dumux/auxiliary/math.hh>
 
-#include <dumux/new_models/2p2c/2p2celementdata.hh>
-#include <dumux/new_models/2p2c/2p2cvertexdata.hh>
-#include <dumux/new_models/2p2c/2p2cfluxdata.hh>
+#include <dumux/new_models/2p2c/2p2cproperties.hh>
 
 #include <dumux/auxiliary/apis.hh>
 #include <dune/common/collectivecommunication.hh>
@@ -64,32 +62,32 @@ protected:
     typedef typename SolutionTypes::ShapeFunctionSet        ShapeFunctionSet;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) TwoPTwoCTraits;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
-        numEq            = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         dim              = GridView::dimension,
         dimWorld         = GridView::dimensionworld,
 
-        numPhases        = TwoPTwoCTraits::numPhases,
-        numComponents    = TwoPTwoCTraits::numComponents,
+        numEq            = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
+        numPhases        = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
+        numComponents    = GET_PROP_VALUE(TypeTag, PTAG(NumComponents)),
 
-        pressureIdx      = TwoPTwoCTraits::pressureIdx,
-        switchIdx        = TwoPTwoCTraits::switchIdx,
+        pressureIdx      = Indices::pressureIdx,
+        switchIdx        = Indices::switchIdx,
 
-        wPhase           = TwoPTwoCTraits::wPhase,
-        nPhase           = TwoPTwoCTraits::nPhase,
+        wPhase           = Indices::wPhase,
+        nPhase           = Indices::nPhase,
 
-        wComp            = TwoPTwoCTraits::wComp,
-        nComp            = TwoPTwoCTraits::nComp,
+        wComp            = Indices::wComp,
+        nComp            = Indices::nComp,
 
-        wPhaseOnly       = TwoPTwoCTraits::wPhaseOnly,
-        nPhaseOnly       = TwoPTwoCTraits::nPhaseOnly,
-        bothPhases       = TwoPTwoCTraits::bothPhases,
+        wPhaseOnly       = Indices::wPhaseOnly,
+        nPhaseOnly       = Indices::nPhaseOnly,
+        bothPhases       = Indices::bothPhases,
 
-        formulation      = TwoPTwoCTraits::formulation,
-        pWsN             = TwoPTwoCTraits::pWsN,
-        pNsW             = TwoPTwoCTraits::pNsW
+        pWsN             = Indices::pWsN,
+        pNsW             = Indices::pNsW,
+        formulation      = GET_PROP_VALUE(TypeTag, PTAG(Formulation))
     };
 
 

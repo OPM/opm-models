@@ -47,9 +47,11 @@ public:
  * \brief Isothermal two-phase two-component model.
  *
  * This implements an isothermal two phase two component
- * model. Depending on which traits are used the primary variables are
- * either $p_w$ and $S_n;X$ or $p_n$ or $S_w;X$. By default they are
- * $p_w$ and $S_n$
+ * model. 
+ *
+ * Depending on the value of the "Formulation" property, the primary
+ * variables are either $p_w$ and $S_n;X$ or $p_n$ or $S_w;X$. By
+ * default they are $p_w$ and $S_n$
  */
 template<class TypeTag >
 class TwoPTwoCBoxModel
@@ -73,8 +75,6 @@ class TwoPTwoCBoxModel
     typedef typename GridView::template Codim<dim>::Entity   Vertex;
 
 public:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) TwoPTwoCTraits;
-
     TwoPTwoCBoxModel(Problem &prob)
         : ParentType(prob, twoPTwoCLocalJacobian_),
           twoPTwoCLocalJacobian_(prob)

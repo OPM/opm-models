@@ -39,69 +39,59 @@ NEW_TYPE_TAG(BoxScheme);
 //! The type tag for the 2p2c models
 NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxScheme));
 
+//! The type tag for the 2p2cni models
+NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
+
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-//! Property tag for scalar values
-NEW_PROP_TAG(Scalar);
-
-//! Number of equations in the system of PDEs
-NEW_PROP_TAG(NumEq);
+NEW_PROP_TAG(Scalar);        //!< Property tag for scalar values
 
 //! Property tag for types associated with the solution of the PDE.
 //! This means vectors of primary variables, solution functions on the
 //! grid, and elements, and shape functions.
 NEW_PROP_TAG(SolutionTypes);
 
-//! The type of the grid
-NEW_PROP_TAG(Grid);
 
-//! The type of the grid view
-NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(Grid);     //!< The type of the DUNE grid
+NEW_PROP_TAG(GridView); //!< The type of the grid view
 
-//! Reference elements to be used
-NEW_PROP_TAG(ReferenceElements);
-
-//! The type of the problem
-NEW_PROP_TAG(Problem);
-
-//! The type of the discretization
-NEW_PROP_TAG(Model);
+NEW_PROP_TAG(ReferenceElements); //!< DUNE reference elements to be used
+NEW_PROP_TAG(Problem);       //!< The type of the problem
+NEW_PROP_TAG(Model);         //!< The type of the discretization
+NEW_PROP_TAG(NumEq);         //!< Number of equations in the system of PDEs
+NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
+NEW_PROP_TAG(Formulation);   //!< The formulation of the model
+NEW_PROP_TAG(LocalJacobian); //!< The type of the local jacobian operator
 
 //! The type of the finite-volume geometry in the box scheme
 NEW_PROP_TAG(FVElementGeometry);
 
-//! The type of the local jacobian operator
-NEW_PROP_TAG(LocalJacobian);
+NEW_PROP_TAG(VertexData);  //!< Data merging from constitutive relations defined on the vertices of the grid
+NEW_PROP_TAG(ElementData); //!< Data merging from constitutive relations defined on the elements of the grid
+NEW_PROP_TAG(FluxData);    //!< Data required to calculate a flux over a face
 
-//! Data structures defined on the vertices of the grid
-NEW_PROP_TAG(VertexData);
-//! Data structures defined on the elements of the grid
-NEW_PROP_TAG(ElementData);
-//! Data required to calculate a flux over a face 
-NEW_PROP_TAG(FluxData);
+NEW_PROP_TAG(NewtonMethod);     //!< The type of the newton method
+NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 
-//! The type of the newton method
-NEW_PROP_TAG(NewtonMethod);
-//! The type of the newton controller
-NEW_PROP_TAG(NewtonController);
+NEW_PROP_TAG(UpwindAlpha);         //!< The default value of the upwind parameter
+NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
 
-//! The default value of the upwind parameter
-NEW_PROP_TAG(UpwindAlpha);
+// model specific property tags
+NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 
-//! The value of the upwind parameter for the mobility
-NEW_PROP_TAG(MobilityUpwindAlpha);
-
-//! The traits for the 2p2c models. TODO: this is too coarse
-NEW_PROP_TAG(TwoPTwoCTraits);
+//////////////////////////////////////////////////////////////////
+// Some defaults for very fundamental properties
+//////////////////////////////////////////////////////////////////
 
 //! Set the default type for scalar values to double
 SET_PROP_DEFAULT(Scalar)
 { typedef double   type; };
 
-//! Use the leaf grid view if not defined otherwhise
+//! Use the leaf grid view if not defined otherwise
 SET_PROP_DEFAULT(GridView)
 {
 private:
@@ -111,7 +101,7 @@ public:
     typedef typename Grid::LeafGridView type; 
 };
 
-//! Use GenericReferenceElements by default
+//! Use Dune::GenericReferenceElements by default (-> new entity numbering)
 SET_PROP_DEFAULT(ReferenceElements)
 {
 private:

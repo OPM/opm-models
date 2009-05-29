@@ -33,21 +33,22 @@ namespace Dune {
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
-template <class NewtonMethod>
+template <class NewtonMethod, class TypeTag>
 class TwoPTwoCNewtonController
-    : public NewtonControllerBase<NewtonMethod, TwoPTwoCNewtonController<NewtonMethod> >
+    : public NewtonControllerBase<NewtonMethod, TwoPTwoCNewtonController<NewtonMethod, TypeTag> >
 {
     typedef typename NewtonMethod::Model Model;
-    typedef typename Model::TwoPTwoCTraits TwoPTwoCTraits;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
-        pressureIdx = TwoPTwoCTraits::pressureIdx,
-        switchIdx   = TwoPTwoCTraits::switchIdx
+        pressureIdx = Indices::pressureIdx,
+        switchIdx   = Indices::switchIdx
     };
 
 public:
-    typedef TwoPTwoCNewtonController<NewtonMethod>        ThisType;
-    typedef NewtonControllerBase<NewtonMethod, ThisType>  ParentType;
+    typedef TwoPTwoCNewtonController<NewtonMethod, TypeTag>  ThisType;
+    typedef NewtonControllerBase<NewtonMethod, ThisType>     ParentType;
 
     typedef typename ParentType::Scalar            Scalar;
     typedef typename ParentType::Function          Function;

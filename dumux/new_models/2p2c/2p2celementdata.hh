@@ -28,7 +28,6 @@
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
 #include <dumux/new_models/boxscheme/p1boxtraits.hh>
-#include <dumux/new_models/2p2c/2p2ctraits.hh>
 #include <dumux/auxiliary/math.hh>
 
 #include <dumux/auxiliary/apis.hh>
@@ -47,8 +46,7 @@ namespace Dune
  * By for the plain 2p2c model everything is given on the finite
  * volumes, so this class is empty.
  */
-template <class TwoPTwoCTraits, 
-          class ProblemT>
+template <class TypeTag>
 class TwoPTwoCElementData
 {
 };
