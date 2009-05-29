@@ -2,7 +2,7 @@
  *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: and _at_ poware.org                                              *
+ *   email: andreas.lauser _at_ iws.uni-stuttgart.de                         *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -112,7 +112,7 @@ protected:
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld>  Tensor;
 
-    static const Scalar upwindAlpha = TwoPTwoCTraits::upwindAlpha;
+    static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
 
     /*!
      * \brief Data which is attached to each vertex and is not only
@@ -199,12 +199,12 @@ public:
                 // phase
                 flux[compIdx] +=
                     vars.vDarcyNormal[phaseIdx] * (
-                        upwindAlpha* // upstream vertex
+                        mobilityUpwindAlpha* // upstream vertex
                         (  up.density[phaseIdx] *
                            up.mobility[phaseIdx] *
                            up.massfrac[compIdx][phaseIdx])
                         +
-                        (1 - upwindAlpha)* // downstream vertex
+                        (1 - mobilityUpwindAlpha)* // downstream vertex
                         (  dn.density[phaseIdx] *
                            dn.mobility[phaseIdx] *
                            dn.massfrac[compIdx][phaseIdx]));

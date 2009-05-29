@@ -88,6 +88,12 @@ NEW_PROP_TAG(NewtonMethod);
 //! The type of the newton controller
 NEW_PROP_TAG(NewtonController);
 
+//! The default value of the upwind parameter
+NEW_PROP_TAG(UpwindAlpha);
+
+//! The value of the upwind parameter for the mobility
+NEW_PROP_TAG(MobilityUpwindAlpha);
+
 //! The traits for the 2p2c models. TODO: this is too coarse
 NEW_PROP_TAG(TwoPTwoCTraits);
 

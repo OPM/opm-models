@@ -2,7 +2,7 @@
  *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch                    *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: and _at_ poware.org                                              *
+ *   email: andreas.lauser _at_ iws.uni-stuttgart.de                         *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -31,20 +31,61 @@ class TwoPTwoCBoxModel;
 template<class TypeTag>
 class TwoPTwoCBoxJacobian;
 
-template <class Scalar>
+template <class TypeTag>
 class TwoPTwoCPnSwTraits;
 
-template <class Scalar>
+template <class TypeTag>
 class TwoPTwoCPwSnTraits;
 
-template <class TwoPTwoCTraits, class Problem>
+template <class TypeTag>
 class TwoPTwoCVertexData;
 
-template <class TwoPTwoCTraits, class ProblemT>
+template <class TypeTag>
 class TwoPTwoCElementData;
 
-template <class TwoPTwoCTraits, class ProblemT, class VertexData>
+template <class TypeTag>
 class TwoPTwoCFluxData;
+
+/*!
+ * \brief The indices for the isothermal TwoPTwoC model.
+ */
+template <int eqOffset = 0>
+class TwoPTwoCIndices
+{
+    // Primary variable indices
+    static const int pressureIdx = 0;     //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
+    static const int switchIdx   = 1;     //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
+
+    // Phase state (-> 'pseudo' primary variable)
+    static const int nPhaseOnly = 0; //!< Only the non-wetting phase is present
+    static const int wPhaseOnly = 1; //!< Only the wetting phase is present
+    static const int bothPhases = 2;  //!< Both phases are present
+    
+    // Formulations
+    static const int pWsN = 0; //!< Pw and Sn as primary variables
+    static const int pNsW = 1;  //!< Pn and Sw as primary variables
+
+    // Phase indices
+    static const int wPhase      = 0;    //!< Index of the wetting phase in a phase vector
+    static const int nPhase      = 1;    //!< Index of the non-wetting phase in a phase vector
+
+    // Component indices
+    static const int wComp       = 0; //!< Index of the wetting component in a component vector
+    static const int nComp       = 1; //!< Index of the non-wetting component in a compent vector
+    
+    /*!
+     * \brief Map a component index to a mass index.
+     *
+     * (The mass index is the index of a component in the result
+     * vector of primary variables in the storage or flux terms.)
+     */
+    static int comp2MassIdx(int compIdx) { return compIdx; }
+
+    /*!
+     * \brief Component index of the principal component in a phase.
+     */
+    static int mainCompIdx(int phaseIdx) { return phaseIdx; }
+};
 
 ////////////////////////////////
 // properties
@@ -58,10 +99,7 @@ SET_PROP_INT(BoxTwoPTwoC, NumEq, 2);
 //! Use the pw-Sn formulation by default
 SET_PROP(BoxTwoPTwoC, TwoPTwoCTraits)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-  
-public:
-    typedef TwoPTwoCPwSnTraits<Scalar> type;
+    typedef TwoPTwoCPwSnTraits<TypeTag> type;
 };
 
 //! Use the 2p2c local jacobian operator for the 2p2c model
@@ -82,42 +120,57 @@ public:
 //! the Model property
 SET_PROP(BoxTwoPTwoC, Model)
 {
-    typedef Dune::TwoPTwoCBoxModel<TypeTag> type;
+    typedef TwoPTwoCBoxModel<TypeTag> type;
 };
 
 //! the VertexData property
 SET_PROP(BoxTwoPTwoC, VertexData)
 {
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))        Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
-    
-public:
-    typedef TwoPTwoCVertexData<Traits, Problem> type;
+    typedef TwoPTwoCVertexData<TypeTag> type;
 };
 
 //! the ElementData property
 SET_PROP(BoxTwoPTwoC, ElementData)
 {
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))        Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
-    
-public:
-    typedef TwoPTwoCElementData<Traits, Problem> type;
+    typedef TwoPTwoCElementData<TypeTag> type;
 };
 
 //! the FluxData property
 SET_PROP(BoxTwoPTwoC, FluxData)
 {
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCTraits)) Traits;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
-    
-public:
-    typedef TwoPTwoCFluxData<Traits, Problem, VertexData> type;
+    typedef TwoPTwoCFluxData<TypeTag> type;
 };
+
+//! the default upwind factor. default 1.0, i.e. fully upwind...
+SET_PROP(BoxTwoPTwoC, UpwindAlpha)
+{
+private:    
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar);
+public:
+    static const Scalar value = 1.0;
+};
+
+//! the upwind factor for the mobility. uses the value of UpwindAlpha
+//! if the property is not overwritten elsewhere
+SET_PROP(BoxTwoPTwoC, MobilityUpwindAlpha)
+{
+private:    
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar);
+public:
+    static const Scalar value = GET_PROP_VALUE(TypeTag, UpwindAlpha);
+};
+
+//! The number of equations/primary variables in the 2p2c model is 2
+SET_INT_PROP(BoxTwoPTwoC, NumEq, 2);
+
+//! The number of phases in the 2p2c model is 2
+SET_INT_PROP(BoxTwoPTwoC, NumPhases, 2);
+
+//! The number of components in the 2p2c model is 2
+SET_INT_PROP(BoxTwoPTwoC, NumComponents, 2);
+
+//! Set the default formulation to pWsN
+SET_INT_PROP(BoxTwoPTwoC, Formulation, GET_PROP(TypeTag, PTAG(TwoPTwoC) );
 
 }
 
@@ -128,7 +181,7 @@ public:
  * two-component model. By using a different traits class for the
  * model, the model can change its behaviour considerably.
  */
-template <class Scalar>
+template <class TypeTag>
 class TwoPTwoCBaseTraits
 {
 public:
@@ -148,9 +201,6 @@ public:
     // formulation
     static const int pWsN = 0; //!< Pw and Sn as primary variables
     static const int pNsW = 1;  //!< Pn and Sw as primary variables
-
-    // Upwind parameter
-    static const Scalar upwindAlpha = 1.0; //!< Upwind parameter. 1.0 means fully the upstream.
 };
 
 /*!
@@ -163,11 +213,6 @@ class TwoPTwoCPwSnTraits : public TwoPTwoCBaseTraits<Scalar>
 
 public:
     static const int formulation = ParentT::pWsN; //!< Formulation to use
-    static const int wPhase      = 0;    //!< Index of the wetting phase in a phase vector
-    static const int nPhase      = 1;    //!< Index of the non-wetting phase in a phase vector
-
-    static const int wComp       = 0; //!< Index of the wetting component in a component vector
-    static const int nComp       = 1; //!< Index of the non-wetting component in a compent vector
 };
 
 /*!
