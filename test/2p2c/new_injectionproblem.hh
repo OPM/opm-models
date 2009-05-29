@@ -264,7 +264,7 @@ public:
         model_.initial();
 
         // write the inital solution to disk
-        //                writeCurrentResult_(); // TODO
+        writeCurrentResult_();
     }
 
     /*!
@@ -506,7 +506,7 @@ private:
         Scalar densityW_ = 1000.0;
 
         values[pressureIdx] = 1e5 - densityW_*gravity_[1]*(depthBOR_ - globalPos[1]);
-        values[switchIdx] = 1e-8;
+        values[switchIdx] = 0;
     }
 
     // write the fields current solution into an VTK output file.

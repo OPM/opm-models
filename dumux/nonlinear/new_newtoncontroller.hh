@@ -88,7 +88,7 @@ public:
             return true; // we always do at least two iterations
         else if (numSteps_ > maxSteps_)
             return false; // we have exceeded the allowed number of steps
-        else if (newtonConverged())
+        else if (asImp_().newtonConverged())
             return false; // we are below the desired tolerance
 
         Scalar tmp = asImp_().physicalness_(u);
@@ -128,7 +128,7 @@ public:
             // enough for the number of iterations we did and
             // it is the most physical so far.
             maxPhysicalness_ = curPhysicalness_;
-            probationCount_ = std::min(0, probationCount_ - 1);
+            probationCount_ = std::max(0, probationCount_ - 1);
 
             return true; // do another round
         };

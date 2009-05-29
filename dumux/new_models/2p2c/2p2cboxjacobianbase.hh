@@ -124,7 +124,6 @@ protected:
 public:
     TwoPTwoCBoxJacobianBase(Problem &problem)
         : ParentType(problem),
-
           staticVertexDat_(this->gridView_.size(dim))
     {
         switchFlag_ = false;
@@ -652,6 +651,9 @@ protected:
         if (phaseState == nPhaseOnly)
         {
             Scalar xWNmax = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], temperature);
+            if (switched()) {
+                xWNmax *= (1.0 + 1e-3);
+            }
             if (vertexData.massfrac[wComp][nPhase] > xWNmax)
             {
                 // wetting phase appears
@@ -667,6 +669,9 @@ protected:
         else if (phaseState == wPhaseOnly)
         {
             Scalar xAWmax = this->problem_.multicomp().xAW(vertexData.pressure[wPhase], temperature);
+            if (switched()) {
+                xAWmax *= (1.0 + 1e-3);
+            }
             if (vertexData.massfrac[nComp][wPhase] > xAWmax)
             {
                 // non-wetting phase appears
@@ -680,7 +685,11 @@ protected:
             }
         }
         else if (phaseState == bothPhases) {
-            if (vertexData.saturation[nPhase] <= 0) {
+            Scalar Smin = 0.0;
+            if (switched()) {
+                Smin = -1e-3;
+            }
+            if (vertexData.saturation[nPhase] <= Smin) {
                 // non-wetting phase disappears
                 std::cout << "Non-wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << std::endl;
@@ -688,7 +697,7 @@ protected:
                 (*globalSol)[globalIdx][switchIdx]
                     = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], temperature);
             }
-            else if (vertexData.saturation[wPhase] <= 0) {
+            else if (vertexData.saturation[wPhase] <= Smin) {
                 // wetting phase disappears
                 std::cout << "Wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << std::endl;

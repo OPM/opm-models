@@ -102,7 +102,6 @@ protected:
     //! "completely unphysical"
     Scalar physicalness_(Function &u)
     {
-        return 1.0;
         // the maximum distance of a Sn value to a physically
         // meaningful value.
         Scalar maxSwitchVarDelta = 0;
