@@ -82,7 +82,7 @@ public:
                            vertIdx,
                            isOldSol,
                            jac);
-        
+
         // data for the energy equation
         const LocalPosition &local =
             RefElem::ReferenceElements::general(element.type()).position(vertIdx,

@@ -2,7 +2,7 @@
  *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: andreas.lauser _at_ iws.uni-stuttgart.de                         *
+ *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -423,7 +423,7 @@ public:
                 xWN = elemDat[i].massfrac[wComp][nPhase];
                 xAN = elemDat[i].massfrac[nComp][nPhase];
                 pW = elemDat[i].pressure[wPhase];
-                Te = Implementation::temperature_((*globalSol)[globalIdx]);
+                Te = asImp_()->temperature_((*globalSol)[globalIdx]);
                 massNComp = vol * poro * (satN * rhoN * xAN + satW * rhoW * xAW);
                 massNCompNPhase = vol * poro * satN * rhoN * xAN;
                 massWComp = vol * poro * (satW * rhoW * xWW + satN * rhoN * xWN);
@@ -639,6 +639,7 @@ protected:
         int phaseState    = staticVertexDat_[globalIdx].phaseState;
         int newPhaseState = phaseState;
         Scalar temperature = asImp_()->temperature((*globalSol)[globalIdx]);
+
         // calculate saturations, phase pressures and mass fractions
         static VertexData vertexData;
         static LocalPosition localPos(0.0);
@@ -667,7 +668,9 @@ protected:
             {
                 // wetting phase appears
                 std::cout << "wetting phase appears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << std::endl;
+                          << ", coordinates: " << globalPos
+                          << ", xWN/xWNmax: " << vertexData.massfrac[wComp][nPhase]/xWNmax
+                          << std::endl;
                 newPhaseState = bothPhases;
                 if (formulation == pNsW)
                     (*globalSol)[globalIdx][switchIdx] = 0.0;
@@ -687,7 +690,9 @@ protected:
             {
                 // non-wetting phase appears
                 std::cout << "Non-wetting phase appears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << std::endl;
+                          << ", coordinates: " << globalPos
+                          << ", xAW/xAWmax: " << vertexData.massfrac[nComp][wPhase]/xAWmax
+                          << std::endl;
                 newPhaseState = bothPhases;
                 if (formulation == pNsW)
                     (*globalSol)[globalIdx][switchIdx] = 1.0;
@@ -702,7 +707,9 @@ protected:
                 wouldSwitch = true;
                 // non-wetting phase disappears
                 std::cout << "Non-wetting phase disappears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << std::endl;
+                          << ", coordinates: " << globalPos 
+                          << ", Sn: " << vertexData.saturation[nPhase]
+                          << std::endl;
                 newPhaseState = wPhaseOnly;
                 (*globalSol)[globalIdx][switchIdx]
                     = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], temperature);
@@ -711,7 +718,9 @@ protected:
                 wouldSwitch = true;
                 // wetting phase disappears
                 std::cout << "Wetting phase disappears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << std::endl;
+                          << ", coordinates: " << globalPos
+                          << ", Sw: " << vertexData.saturation[wPhase]
+                          << std::endl;
                 newPhaseState = nPhaseOnly;
                 (*globalSol)[globalIdx][switchIdx]
                     = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], temperature);

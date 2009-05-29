@@ -23,7 +23,7 @@
 #include <dumux/auxiliary/timemanager.hh>
 #include <dumux/auxiliary/basicdomain.hh>
 
-//#define ISOTHERMAL
+#define ISOTHERMAL 0
 
 /**
  * @file
@@ -80,7 +80,7 @@ class NewWaterAirProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PT
     typedef NewWaterAirProblem<TypeTag>  ThisType;
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCNIIndices)) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
         numEq       = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
 
@@ -319,9 +319,9 @@ public:
         values = 0;
 
         // negative values for injection
-        if (globalPos[1] > 1.0 && globalPos[1] < 5.0)
+        if (globalPos[1] < 5.0 && globalPos[1] < 15.0)
         {
-            values[switchIdx] = -1e-5;
+            values[switchIdx] = -1e-3;
         }
     }
 
@@ -376,6 +376,13 @@ public:
     {
         return wPhaseOnly;
     }
+
+#if ISOTHERMAL
+    Scalar temperature() const 
+    { 
+        return 303.0;
+    }
+#endif
 
     const GlobalPosition &gravity () const
     {
