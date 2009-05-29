@@ -17,7 +17,7 @@
 
 #include <dumux/auxiliary/properties.hh>
 
-#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/grid/common/referenceelements.hh>
 
 /*!
  * \file
@@ -117,7 +117,7 @@ public:
 /*!
  * \brief Specify the reference elements which we ought to use.
  *
- * We use Dune::GenericReferenceElements by default (-> new entity
+ * We use Dune::ReferenceElements by default (-> old entity
  * numbering).
  *
  * TODO: Some specialization if the grid only supports one kind of
@@ -134,8 +134,8 @@ private:
     static const int dim = Grid::dimension;
 
 public:
-    typedef Dune::GenericReferenceElements<CoordScalar, dim> Container; 
-    typedef Dune::GenericReferenceElement<CoordScalar, dim>  ReferenceElement; 
+    typedef Dune::ReferenceElements<CoordScalar, dim> Container; 
+    typedef Dune::ReferenceElement<CoordScalar, dim>  ReferenceElement; 
 };
 }
 }
