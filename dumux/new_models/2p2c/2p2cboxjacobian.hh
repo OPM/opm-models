@@ -16,16 +16,12 @@
 #define DUMUX_NEW_2P2C_BOX_JACOBIAN_BASE_HH
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
-
 #include <dumux/auxiliary/math.hh>
 
 #include <dumux/new_models/2p2c/2p2cproperties.hh>
 
-#include <dumux/auxiliary/apis.hh>
-#include <dune/common/collectivecommunication.hh>
-#include <vector>
 #include <iostream>
+#include <vector>
 
 namespace Dune
 {

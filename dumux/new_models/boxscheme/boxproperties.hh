@@ -17,8 +17,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUMUX_PWSN_BOX_TRAITS_HH
-#define DUMUX_PWSN_BOX_TRAITS_HH
+#ifndef DUMUX_BOX_PROPERTIES_HH
+#define DUMUX_BOX_PROPERTIES_HH
 
 #include <dune/disc/operators/p1operator.hh>
 #include <dune/disc/shapefunctions/lagrangeshapefunctions.hh>

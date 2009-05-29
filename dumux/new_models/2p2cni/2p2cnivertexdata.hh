@@ -51,8 +51,8 @@ class TwoPTwoCNIVertexData : public TwoPTwoCVertexData<TypeTag>
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
     
-    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
-    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElem;
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))                SolutionTypes;
+    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements))::Container ReferenceElements;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
@@ -84,8 +84,8 @@ public:
 
         // data for the energy equation
         const LocalPosition &local =
-            RefElem::ReferenceElements::general(element.type()).position(vertIdx,
-                                                                         dim);
+            ReferenceElements::general(element.type()).position(vertIdx,
+                                                                dim);
         const GlobalPosition &global =
             element.geometry().corner(vertIdx);
 

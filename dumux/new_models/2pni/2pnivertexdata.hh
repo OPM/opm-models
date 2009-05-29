@@ -49,7 +49,8 @@ class TwoPNIVertexData : public TwoPVertexData<TypeTag>
     };
     
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
-    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements))::ReferenceElements ReferenceElements;
+    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
+    typedef typename RefElemProp::Container                     ReferenceElements;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
@@ -82,7 +83,7 @@ public:
         // data for the energy equation
         const LocalPosition &local =
             ReferenceElements::general(element.type()).position(vertIdx,
-                                                                         dim);
+                                                                dim);
         const GlobalPosition &global =
             element.geometry().corner(vertIdx);
 

@@ -51,7 +51,8 @@ class TwoPVertexData
     };
     
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
-    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElem;
+    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
+    typedef typename RefElemProp::Container                     ReferenceElements;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
@@ -76,8 +77,8 @@ public:
         // coordinates of the vertex
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
-            RefElem::ReferenceElements::general(element.type()).position(vertIdx,
-                                                                         dim);
+            ReferenceElements::general(element.type()).position(vertIdx,
+                                                                dim);
         
         if (formulation == I::pWsN) {
             satN = sol[I::saturationIdx];

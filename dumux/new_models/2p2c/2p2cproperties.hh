@@ -16,8 +16,6 @@
 #ifndef DUMUX_2P2CTRAITS_HH
 #define DUMUX_2P2CTRAITS_HH
 
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
-
 #include "2p2cnewtoncontroller.hh"
 
 #include "2p2cvertexdata.hh"

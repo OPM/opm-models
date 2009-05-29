@@ -24,7 +24,6 @@
 #define DUMUX_2P2C_VERTEX_DATA_HH
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
 #include <dumux/auxiliary/math.hh>
 
 #include <dumux/material/multicomponentrelations.hh>
@@ -60,7 +59,8 @@ class TwoPTwoCVertexData
     };
     
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
-    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElem;
+    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
+    typedef typename RefElemProp::Container                     ReferenceElements;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
@@ -84,8 +84,8 @@ public:
         
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
-            RefElem::ReferenceElements::general(element.type()).position(vertIdx,
-                                                                         dim);
+            ReferenceElements::general(element.type()).position(vertIdx,
+                                                                dim);
         int globalVertIdx = jac.problem().vertexIdx(element, vertIdx);
         int phaseState = jac.phaseState(globalVertIdx, isOldSol);
         Scalar temperature = jac.temperature(sol);

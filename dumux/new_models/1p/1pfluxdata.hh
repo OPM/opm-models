@@ -18,13 +18,10 @@
  * \file
  *
  * \brief This file contains the data which is required to calculate
- *        all fluxes of fluid phases over a face of a finite volume.
- *
- * This means pressure and temperature gradients, phase densities at
- * the integration point, etc.
+ *        the flux of fluid over a face of a finite volume.
  */
-#ifndef DUMUX_2P_FLUX_DATA_HH
-#define DUMUX_2P_FLUX_DATA_HH
+#ifndef DUMUX_1P_FLUX_DATA_HH
+#define DUMUX_1P_FLUX_DATA_HH
 
 #include <dumux/auxiliary/math.hh>
 
@@ -33,14 +30,10 @@ namespace Dune
 
 /*!
  * \brief This template class contains the data which is required to
- *        calculate the fluxes of the fluid phases over a face of a
- *        finite volume for the two-phase model.
- *
- * This means pressure and concentration gradients, phase densities at
- * the intergration point, etc.
+ *        calculate the flux of fluid over a face of a finite volume.
  */
 template <class TypeTag>
-class TwoPFluxData
+class OnePFluxData
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
@@ -54,7 +47,6 @@ class TwoPFluxData
     enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
-        numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
@@ -64,16 +56,14 @@ class TwoPFluxData
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
 
-    typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePIndices)) Indices;
 
 public:
-    TwoPFluxData(const Problem &problem,
-                     const Element &element,
-                     const FVElementGeometry &elemGeom,
-                     int faceIdx,
-                     const VertexDataArray &elemDat)
+    OnePFluxData(const Problem &problem,
+                 const Element &element,
+                 const FVElementGeometry &elemGeom,
+                 int faceIdx,
+                 const VertexDataArray &elemDat)
         : fvElemGeom(elemGeom)
     {
         face = &fvElemGeom.subContVolFace[faceIdx];
@@ -85,9 +75,8 @@ public:
         outsideSCV = &fvElemGeom.subContVol[j];
 
         densityAtIP = 0;
-        for (int phase = 0; phase < numPhases; ++phase) {
-            pressureGrad[phase] = Scalar(0);
-        }
+        viscosityAtIP = 0;
+        pressureGrad = Scalar(0);
 
         calculateGradients_(problem, element, elemDat);
         calculateVelocities_(problem, element, elemDat);
@@ -107,31 +96,25 @@ private:
             // FE gradient at vertex idx
             const LocalPosition &feGrad = face->grad[idx];
 
-            // compute sum of pressure gradients for each phase
-            for (int phase = 0; phase < numPhases; phase++)
-            {
-                // the pressure gradient
-                tmp = feGrad;
-                tmp *= elemDat[idx].pressure[phase];
-                pressureGrad[phase] += tmp;
+            // the pressure gradient
+            tmp = feGrad;
+            tmp *= elemDat[idx].pressure;
+            pressureGrad += tmp;
 
-                // phase density
-                densityAtIP[phase]
-                    +=
-                    elemDat[idx].density[phase] *
-                    face->shapeValue[idx];
-            }
+            // fluid density
+            densityAtIP +=
+                elemDat[idx].density*face->shapeValue[idx];
+            // fluid viscosity
+            viscosityAtIP +=
+                elemDat[idx].viscosity*face->shapeValue[idx];
         }
 
         // correct the pressure gradients by the hydrostatic
         // pressure due to gravity
-        for (int phase=0; phase < numPhases; phase++)
-        {
-            tmp = problem.gravity();
-            tmp *= densityAtIP[phase];
+        tmp = problem.gravity();
+        tmp *= densityAtIP;
 
-            pressureGrad[phase] -= tmp;
-        }
+        pressureGrad -= tmp;
     }
 
     void calculateVelocities_(const Problem &problem,
@@ -152,23 +135,14 @@ private:
 
         // temporary vector for the Darcy velocity
         GlobalPosition vDarcy;
-        for (int phase=0; phase < numPhases; phase++)
-        {
-            K.mv(pressureGrad[phase], vDarcy);  // vDarcy = K * grad p
-            vDarcyNormal[phase] = vDarcy*face->normal;
-        }
+        K.mv(pressureGrad, vDarcy);  // vDarcy = K * grad p
+        vDarcyNormal = vDarcy*face->normal;
 
         // set the upstream and downstream vertices
-        for (int phase = 0; phase < numPhases; ++phase)
-        {
-            upstreamIdx[phase] = face->i;
-            downstreamIdx[phase] = face->j;
-
-            if (vDarcyNormal[phase] > 0) {
-                std::swap(upstreamIdx[phase],
-                          downstreamIdx[phase]);
-            }
-        }
+        upstreamIdx = face->i;
+        downstreamIdx = face->j;
+        if (vDarcyNormal > 0)
+            std::swap(upstreamIdx, downstreamIdx);
     }
 
 public:
@@ -178,18 +152,20 @@ public:
     const SCV     *outsideSCV;
 
     // gradients
-    GlobalPosition pressureGrad[numPhases];
+    GlobalPosition pressureGrad;
 
-    // density of each face at the integration point
-    PhasesVector densityAtIP;
+    // density of the fluid at the integration point
+    Scalar densityAtIP;
+    // viscosity of the fluid at the integration point
+    Scalar viscosityAtIP;
 
     // darcy velocity in direction of the face normal
-    PhasesVector vDarcyNormal;
+    Scalar vDarcyNormal;
 
-    // local index of the upwind vertex for each phase
-    int upstreamIdx[numPhases];
-    // local index of the downwind vertex for each phase
-    int downstreamIdx[numPhases];
+    // local index of the upwind vertex 
+    int upstreamIdx;
+    // local index of the downwind vertex
+    int downstreamIdx;
 };
 
 } // end namepace

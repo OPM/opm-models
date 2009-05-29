@@ -21,7 +21,6 @@
 #define DUMUX_RICHARDS_BOX_MODEL_HH
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
 
 #include <dumux/auxiliary/math.hh>
 

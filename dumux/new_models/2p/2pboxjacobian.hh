@@ -23,7 +23,6 @@
 #define DUMUX_TWOP_BOX_JACOBIAN_BASE_HH
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
 
 #include <dumux/new_models/2p/2pproperties.hh>
 
@@ -308,20 +307,17 @@ public:
         ScalarField *Sn =           writer.template createField<Scalar, 1>(numVertices);
         ScalarField *Te =           writer.template createField<Scalar, 1>(numVertices);
 
-
         SolutionOnElement tmpSol;
         ElementIterator elementIt = this->problem_.elementBegin();
         ElementIterator endit = this->problem_.elementEnd();
         for (; elementIt != endit; ++elementIt)
         {
-            int numLocalVerts = elementIt->template count<dim>();
-            tmpSol.resize(numLocalVerts);
-
             setCurrentElement(*elementIt);
             this->restrictToElement(tmpSol, globalSol);
             this->setCurrentSolution(tmpSol);
 
-            for (int i = 0; i < numLocalVerts; ++i)
+            int numVerts = elementIt->template count<dim>();
+            for (int i = 0; i < numVerts; ++i)
             {
                 int globalIdx = this->problem_.vertexIdx(*elementIt, i);
 

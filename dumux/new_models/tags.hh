@@ -36,16 +36,19 @@ namespace Properties {
 //! The type tag for models based on the box-scheme
 NEW_TYPE_TAG(BoxScheme);
 
-//! The type tag for the 2p problems
+//! The type tag for the isothermal single phase problems
+NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxScheme));
+
+//! The type tag for the two-phase problems
 NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxScheme));
 
-//! The type tag for the non-isothermal 2p problems
+//! The type tag for the non-isothermal two-phase problems
 NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP));
 
-//! The type tag for the 2p2c problems
+//! The type tag for the isothermal two-phase, two-component problems
 NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxScheme));
 
-//! The type tag for the 2p2cni problems
+//! The type tag for the non-isothermal two-phase, two-component problems
 NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
 
 
@@ -87,6 +90,7 @@ NEW_PROP_TAG(UpwindAlpha);         //!< The default value of the upwind paramete
 NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
 
 // model specific property tags
+NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 2p models
 NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
 NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
@@ -110,7 +114,17 @@ public:
     typedef typename Grid::LeafGridView type; 
 };
 
-//! Use Dune::GenericReferenceElements by default (-> new entity numbering)
+/*!
+ * \brief Specify the reference elements which we ought to use.
+ *
+ * We use Dune::GenericReferenceElements by default (-> new entity
+ * numbering).
+ *
+ * TODO: Some specialization if the grid only supports one kind of
+ *       cells would be nice. this would be better fixed inside DUNE,
+ *       though. something like:
+ *       GenericReferenceElements<GeometryType<cube, dim> >
+ */
 SET_PROP_DEFAULT(ReferenceElements)
 {
 private:
@@ -120,7 +134,7 @@ private:
     static const int dim = Grid::dimension;
 
 public:
-    typedef Dune::GenericReferenceElements<CoordScalar, dim> ReferenceElements; 
+    typedef Dune::GenericReferenceElements<CoordScalar, dim> Container; 
     typedef Dune::GenericReferenceElement<CoordScalar, dim>  ReferenceElement; 
 };
 }

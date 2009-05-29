@@ -17,25 +17,25 @@
  * \file 
  *
  * \brief Contains the quantities which are are constant within a
- *        finite element in the two-phase model.
+ *        finite element in the single-phase model.
  *
- * For the plain twophase model everything is given on the finite
+ * For the plain single-phase model everything is given on the finite
  * volumes, so this class is empty.
  */
-#ifndef DUMUX_2P_ELEMENT_DATA_HH
-#define DUMUX_2P_ELEMENT_DATA_HH
+#ifndef DUMUX_1P_ELEMENT_DATA_HH
+#define DUMUX_1P_ELEMENT_DATA_HH
 
 namespace Dune
 {
 /*!
  * \brief This template class contains the quantities which are are
- *        constant within a finite element in the two-phase model.
+ *        constant within a finite element in the singe-phase model.
  *
- * For the plain two-phase model everything is given on the finite
+ * For the plain single-phase model everything is given on the finite
  * volumes, so this class is empty.
  */
 template <class TypeTag>
-class TwoPElementData
+class OnePElementData
 {
 };
 

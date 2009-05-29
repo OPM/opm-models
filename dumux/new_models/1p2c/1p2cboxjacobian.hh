@@ -4,7 +4,6 @@
 #define DUMUX_NEW_1P2C_BOX_JACOBIAN_HH
 
 #include <dumux/new_models/boxscheme/boxscheme.hh>
-#include <dumux/new_models/boxscheme/p1boxtraits.hh>
 #include <dumux/new_models/1p2c/1p2ctraits.hh>
 
 #include <dumux/new_models/1p2c/1p2cvertexdata.hh>

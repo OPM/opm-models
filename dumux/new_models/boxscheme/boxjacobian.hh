@@ -33,7 +33,7 @@
 
 #include <boost/format.hpp>
 
-#include "p1boxtraits.hh"
+#include "boxproperties.hh"
 
 #ifdef HAVE_VALGRIND
 #include <valgrind/memcheck.h>
@@ -110,7 +110,7 @@ private:
     typedef typename Element::EntityPointer                            ElementPointer;
     
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
-    typedef typename RefElemProp::ReferenceElements             ReferenceElements;
+    typedef typename RefElemProp::Container                     ReferenceElements;
     typedef typename RefElemProp::ReferenceElement              ReferenceElement;
 
     typedef typename GridView::IntersectionIterator                    IntersectionIterator;

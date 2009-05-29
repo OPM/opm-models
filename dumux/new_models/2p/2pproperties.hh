@@ -23,7 +23,7 @@
 #ifndef DUMUX_2PPROPERTIES_HH
 #define DUMUX_2PPROPERTIES_HH
 
-#include <dune/common/fvector.hh>
+#include <dumux/new_models/tags.hh>
 
 namespace Dune
 {
