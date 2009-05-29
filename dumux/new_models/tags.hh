@@ -39,6 +39,10 @@ NEW_TYPE_TAG(BoxScheme);
 //! The type tag for the isothermal single phase problems
 NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxScheme));
 
+//! The type tag for problems discretized using the isothermal
+//! richards model
+NEW_TYPE_TAG(BoxRichards, INHERITS_FROM(BoxScheme));
+
 //! The type tag for the two-phase problems
 NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxScheme));
 
@@ -91,6 +95,7 @@ NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for th
 
 // model specific property tags
 NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 2p models
+NEW_PROP_TAG(RichardsIndices); //!< Enumerations for the richards model
 NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
 NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
