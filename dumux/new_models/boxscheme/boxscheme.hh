@@ -599,7 +599,7 @@ protected:
     Problem     &problem_;
     
     // the grid view for which we need a solution
-    const GridView &gridView_;
+    const GridView gridView_;
 
     // mapper for the entities of a solution to their indices
     const SolutionMapper solMapper_;

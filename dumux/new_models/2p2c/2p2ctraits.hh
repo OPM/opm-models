@@ -34,6 +34,9 @@ class TwoPTwoCBoxJacobian;
 template <class Scalar>
 class TwoPTwoCPnSwTraits;
 
+template <class Scalar>
+class TwoPTwoCPwSnTraits;
+
 template <class TwoPTwoCTraits, class Problem>
 class TwoPTwoCVertexData;
 
@@ -58,7 +61,7 @@ SET_PROP(BoxTwoPTwoC, TwoPTwoCTraits)
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
   
 public:
-    typedef TwoPTwoCPnSwTraits<Scalar> type;
+    typedef TwoPTwoCPwSnTraits<Scalar> type;
 };
 
 //! Use the 2p2c local jacobian operator for the 2p2c model
