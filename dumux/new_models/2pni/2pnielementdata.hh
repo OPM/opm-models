@@ -2,7 +2,7 @@
  *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: melanie.darcis _at_ iws.uni-stuttgart.de                         *
+ *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -17,12 +17,12 @@
  *
  * \brief This template class contains the quantities which are are
  *        constant within a finite element in the non-isothermal
- *        two-phase, two-component model.
+ *        two-phase model.
  */
-#ifndef DUMUX_2P2CNI_ELEMENT_DATA_HH
-#define DUMUX_2P2CNI_ELEMENT_DATA_HH
+#ifndef DUMUX_2PNI_ELEMENT_DATA_HH
+#define DUMUX_2PNI_ELEMENT_DATA_HH
 
-#include <dumux/new_models/2p2c/2p2celementdata.hh>
+#include <dumux/new_models/2p/2pelementdata.hh>
 
 namespace Dune
 {
@@ -30,10 +30,10 @@ namespace Dune
 /*!
  * \brief This template class contains the quantities which are are
  *        constant within a finite element in the non-isothermal
- *        two-phase, two-component model.
+ *        two-phase model.
  */
 template <class TypeTag>
-class TwoPTwoCNIElementData : public TwoPTwoCElementData<TypeTag>
+class TwoPNIElementData : public TwoPElementData<TypeTag>
 {
 };
 

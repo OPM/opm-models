@@ -36,13 +36,16 @@ namespace Properties {
 //! The type tag for models based on the box-scheme
 NEW_TYPE_TAG(BoxScheme);
 
-//! The type tag for the 2p models
+//! The type tag for the 2p problems
 NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxScheme));
 
-//! The type tag for the 2p2c models
+//! The type tag for the non-isothermal 2p problems
+NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP));
+
+//! The type tag for the 2p2c problems
 NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxScheme));
 
-//! The type tag for the 2p2cni models
+//! The type tag for the 2p2cni problems
 NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
 
 
@@ -85,6 +88,7 @@ NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for th
 
 // model specific property tags
 NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
+NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
 

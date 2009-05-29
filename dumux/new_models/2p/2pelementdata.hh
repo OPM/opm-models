@@ -1,9 +1,9 @@
-//$Id$
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
+ *   Copyright (C) 2008 by Bernd Flemisch                                    *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
+ *   email: klaus.mosthaf _at_ iws.uni-stuttgart.de                          *
  *                                                                           *
  *   This program is free software; you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -13,27 +13,33 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-
-#ifndef DUMUX_2PNITRAITS_HH
-#define DUMUX_2PNITRAITS_HH
-
-#include <dumux/new_models/2p/2ptraits.hh>
+/*!
+ * \file 
+ *
+ * \brief Contains the quantities which are are constant within a
+ *        finite element in the two-phase model.
+ *
+ * For the plain twophase model everything is given on the finite
+ * volumes, so this class is empty.
+ */
+#ifndef DUMUX_2P_ELEMENT_DATA_HH
+#define DUMUX_2P_ELEMENT_DATA_HH
 
 namespace Dune
 {
 /*!
- * \brief Traits for the non-isothermal 2-phase 2-component model
+ * \brief This template class contains the quantities which are are
+ *        constant within a finite element in the two-phase,
+ *        two-component model.
+ *
+ * By for the plain 2p2c model everything is given on the finite
+ * volumes, so this class is empty.
  */
-template <class Scalar,
-          class BaseTraits = PwSnTwoPTraits<Scalar> >
-class TwoPNITraits : public BaseTraits
+template <class TypeTag>
+class TwoPElementData
 {
-public:
-    static const int numEq = 3;  //!< Override the mumber of primary variables: We also have temperature
-    // Primary variable indices
-    static const int temperatureIdx = 2; //! The index for temperature in solution vectors.
 };
 
-}
+} // end namepace
 
 #endif

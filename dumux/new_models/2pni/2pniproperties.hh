@@ -1,5 +1,8 @@
+//$Id$
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
+ *   Copyright (C) 2008 by Klaus Mosthaf                                     *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008 Bernd Flemisch                                       *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -12,14 +15,15 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUMUX_2P2CNIPROPERTIES_HH
-#define DUMUX_2P2CNIPROPERTIES_HH
 
-#include <dumux/new_models/2p2c/2p2cproperties.hh>
+#ifndef DUMUX_2PNI_PROPERTIES_HH
+#define DUMUX_2PNI_PROPERTIES_HH
 
-#include "2p2cnivertexdata.hh"
-#include "2p2cnielementdata.hh"
-#include "2p2cnifluxdata.hh"
+#include <dumux/new_models/2p/2pproperties.hh>
+
+#include "2pnivertexdata.hh"
+#include "2pnielementdata.hh"
+#include "2pnifluxdata.hh"
 
 namespace Dune
 {
@@ -27,25 +31,25 @@ namespace Dune
 // forward declarations
 ////////////////////////////////
 template<class TypeTag>
-class TwoPTwoCNIBoxModel;
+class TwoPNIBoxModel;
 
 template<class TypeTag>
-class TwoPTwoCNIBoxJacobian;
+class TwoPNIBoxJacobian;
 
 template <class TypeTag>
-class TwoPTwoCNIVertexData;
+class TwoPNIVertexData;
 
 template <class TypeTag>
-class TwoPTwoCNIElementData;
+class TwoPNIElementData;
 
 template <class TypeTag>
-class TwoPTwoCNIFluxData;
+class TwoPNIFluxData;
 
 /*!
- * \brief Enumerations for the non-isothermal 2-phase 2-component model
+ * \brief Enumerations for the non-isothermal 2-phase model
  */
 template <int PVOffset = 0>
-class TwoPTwoCNIIndices : public TwoPTwoCIndices<PVOffset>
+class TwoPNIIndices : public TwoPIndices<PVOffset>
 {
 public:
     static const int temperatureIdx = PVOffset + 2; //! The index for temperature in solution vectors.
@@ -57,30 +61,31 @@ public:
 
 namespace Properties
 {
-SET_INT_PROP(BoxTwoPTwoCNI, NumEq,         3); //!< set the number of equations to 3
+SET_INT_PROP(BoxTwoPNI, NumEq,         3); //!< set the number of equations to 3
 
 //! Use the 2p2cni local jacobian operator for the 2p2cni model
-SET_TYPE_PROP(BoxTwoPTwoCNI, 
+SET_TYPE_PROP(BoxTwoPNI, 
               LocalJacobian,
-              TwoPTwoCNIBoxJacobian<TypeTag>);
+              TwoPNIBoxJacobian<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(BoxTwoPTwoCNI, Model, TwoPTwoCNIBoxModel<TypeTag>);
+SET_TYPE_PROP(BoxTwoPNI, Model, TwoPNIBoxModel<TypeTag>);
 
 //! the VertexData property
-SET_TYPE_PROP(BoxTwoPTwoCNI, VertexData, TwoPTwoCNIVertexData<TypeTag>);
+SET_TYPE_PROP(BoxTwoPNI, VertexData, TwoPNIVertexData<TypeTag>);
 
 //! the ElementData property
-SET_TYPE_PROP(BoxTwoPTwoCNI, ElementData, TwoPTwoCNIElementData<TypeTag>);
+SET_TYPE_PROP(BoxTwoPNI, ElementData, TwoPNIElementData<TypeTag>);
 
 //! the FluxData property
-SET_TYPE_PROP(BoxTwoPTwoCNI, FluxData, TwoPTwoCNIFluxData<TypeTag>);
+SET_TYPE_PROP(BoxTwoPNI, FluxData, TwoPNIFluxData<TypeTag>);
 
 //! The indices required by the non-isothermal 2p2c model
-SET_TYPE_PROP(BoxTwoPTwoCNI, TwoPTwoCIndices,   TwoPTwoCNIIndices<0>);
-SET_TYPE_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices, TwoPTwoCNIIndices<0>);
+SET_TYPE_PROP(BoxTwoPNI, TwoPIndices,   TwoPNIIndices<0>);
+SET_TYPE_PROP(BoxTwoPNI, TwoPNIIndices, TwoPNIIndices<0>);
 
 }
 
 }
+
 #endif
