@@ -81,7 +81,7 @@ protected:
     typedef std::vector<VertexData>        VertexDataArray;
     typedef FieldMatrix<Scalar, dim, dim>  Tensor;
 
-    static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
+    static const Scalar upwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha));
 
 public:
     OnePTwoCBoxJacobian(Problem &problem)

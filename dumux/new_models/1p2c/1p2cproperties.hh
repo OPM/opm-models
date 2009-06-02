@@ -91,12 +91,6 @@ SET_TYPE_PROP(BoxOnePTwoC, FluxData, OnePTwoCFluxData<TypeTag>);
 //! the default upwind factor. Default 1.0, i.e. fully upwind...
 SET_SCALAR_PROP(BoxOnePTwoC, UpwindAlpha, 1.0);
 
-//! the upwind factor for the mobility. uses the value of UpwindAlpha
-//! if the property is not overwritten elsewhere
-SET_SCALAR_PROP(BoxOnePTwoC, 
-                MobilityUpwindAlpha, 
-                GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
-
 //! The indices required by the isothermal 1p2c model
 SET_TYPE_PROP(BoxOnePTwoC, OnePTwoCIndices, Dune::OnePTwoCIndices);
 }
