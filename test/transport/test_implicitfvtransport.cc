@@ -9,6 +9,7 @@
 #include "dumux/material/phaseproperties/phaseproperties2p.hh"
 #include "dumux/transport/fv/implicitfvtransport.hh"
 #include "dumux/transport/fv/computeupwind.hh"
+#include "dumux/transport/fv/capillarydiffusion.hh"
 #include "dumux/transport/problems/simpleproblem.hh"
 #include "dumux/transport/problems/simplenonlinearproblem.hh"
 #include "dumux/timedisc/timeloop.hh"
@@ -55,15 +56,18 @@ int main(int argc, char** argv)
 
         VC variables(gridView,initsat,vel);
 
-        //Dune::SimpleProblem<GridView, NumberType, VC> problem(variables, mat, mat , soil, materialLaw,L,H);
-        Dune::SimpleNonlinearProblem<GridView, NumberType, VC> problem(variables, mat, mat , soil, materialLaw,L,H);
+        //Dune::SimpleProblem<GridView, NumberType, VC> ProblemType;
+        typedef Dune::SimpleNonlinearProblem<GridView, NumberType, VC> ProblemType;
+	ProblemType problem(variables, mat, mat , soil, materialLaw,L,H);
 
-        Dune::DiffusivePart<GridView, NumberType> diffusivePart;
+        //Dune::DiffusivePart<GridView, NumberType> diffusivePart;
+        Dune::CapillaryDiffusion<GridView, NumberType, VC, ProblemType> capillaryDiffusion(problem, soil, false);
         Dune::ComputeUpwind<GridView, NumberType, VC> computeNumFlux(problem);
 
         typedef Dune::ImplicitFVTransport<GridView, NumberType, VC> Transport;
 
-        Transport transport(gridView, problem, dt, diffusivePart, computeNumFlux);
+        //Transport transport(gridView, problem, dt, diffusivePart, computeNumFlux);
+        Transport transport(gridView, problem, dt, capillaryDiffusion, computeNumFlux);
 
 	Dune::RungeKuttaStep<GridType, Transport> timeStep(1);
 	//Dune::ImplicitEulerStep<GridType, Transport> timeStep;
