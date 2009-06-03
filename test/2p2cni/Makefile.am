@@ -1,8 +1,8 @@
-bin_PROGRAMS = new_test_2p2cni
+bin_PROGRAMS = test_2p2cni
 
-new_test_2p2cni_SOURCES = new_test_2p2cni.cc
-new_test_2p2cni_CXXFLAGS = $(MPI_CPPFLAGS) 
-new_test_2p2cni_LDADD = $(MPI_LDFLAGS) 
+test_2p2cni_SOURCES = test_2p2cni.cc
+test_2p2cni_CXXFLAGS = $(MPI_CPPFLAGS) 
+test_2p2cni_LDADD = $(MPI_LDFLAGS) 
 
 EXTRA_DIST=CMakeLists.txt
 noinst_HEADERS=*.hh
