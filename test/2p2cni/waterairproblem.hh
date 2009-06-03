@@ -138,7 +138,7 @@ public:
           timeManager_(tEnd, this->grid().comm().rank() == 0),
           model_(*this),
           newtonMethod_(model_),
-          resultWriter_("new_waterair")
+          resultWriter_("waterair")
     {
         timeManager_.setStepSize(dtInitial);
 
