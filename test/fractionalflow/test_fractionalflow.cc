@@ -75,7 +75,7 @@ int main(int argc, char** argv)
         double tEnd = 5e5;
         const char* fileName = "test_fractionalflow";
         int modulo = 20;
-        double cFLFactor = 0.5;
+        double cFLFactor = 0.3;
         Dune::TimeLoop<GridType, IMPESType > timeloop(tStart, tEnd, fileName, modulo, cFLFactor);
 
         Dune::Timer timer;
