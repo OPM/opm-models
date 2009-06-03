@@ -18,7 +18,7 @@
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/io/restart.hh>
 
-#include <dumux/new_models/2p2cni/2p2cniboxmodel.hh>
+#include <dumux/boxmodels/2p2cni/2p2cniboxmodel.hh>
 
 #include <dumux/auxiliary/timemanager.hh>
 #include <dumux/auxiliary/basicdomain.hh>

@@ -25,7 +25,7 @@
 
 #include <dune/common/timer.hh>
 
-#include <dumux/new_models/2p2c/2p2cboxmodel.hh>
+#include <dumux/boxmodels/2p2c/2p2cboxmodel.hh>
 
 #include <dumux/auxiliary/timemanager.hh>
 #include <dumux/auxiliary/basicdomain.hh>
