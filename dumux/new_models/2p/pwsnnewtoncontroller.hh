@@ -24,7 +24,7 @@
 #ifndef DUMUX_PW_SN_NEWTON_CONTROLLER_HH
 #define DUMUX_PW_SN_NEWTON_CONTROLLER_HH
 
-#include <dumux/nonlinear/new_newtoncontroller.hh>
+#include <dumux/nonlinear/newtoncontroller.hh>
 
 namespace Dune {
 /*!

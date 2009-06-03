@@ -24,8 +24,8 @@
 #include <dune/disc/shapefunctions/lagrangeshapefunctions.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 
-#include <dumux/nonlinear/new_newtonmethod.hh>
-#include <dumux/nonlinear/new_newtoncontroller.hh>
+#include <dumux/nonlinear/newtonmethod.hh>
+#include <dumux/nonlinear/newtoncontroller.hh>
 
 #include <dumux/auxiliary/properties.hh>
 #include <dumux/new_models/tags.hh>
@@ -55,7 +55,7 @@ SET_PROP(BoxScheme, NewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))  Model;
 
 public:
-    typedef Dune::NewNewtonMethod<Model> type;
+    typedef Dune::NewtonMethod<Model> type;
 };
 
 //! use the plain newton controller for the box scheme by default

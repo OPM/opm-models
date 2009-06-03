@@ -29,7 +29,7 @@
 #include<dumux/new_models/2p2c/2p2cnewtoncontroller.hh>
 
 
-#include<dumux/nonlinear/new_newtonmethod.hh>
+#include<dumux/nonlinear/newtonmethod.hh>
 
 #include <dumux/auxiliary/timemanager.hh>
 #include <dumux/auxiliary/basicdomain.hh>

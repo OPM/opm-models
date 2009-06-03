@@ -22,7 +22,7 @@
 
 #include <dumux/new_models/boxscheme/boxjacobian.hh>
 #include <dumux/auxiliary/basicdomain.hh>
-#include <dumux/nonlinear/new_newtonmethod.hh>
+#include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/auxiliary/apis.hh>
 
 #include <dune/istl/operators.hh>

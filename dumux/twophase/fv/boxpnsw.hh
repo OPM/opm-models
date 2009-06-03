@@ -41,8 +41,8 @@
 #include "dumux/twophase/twophasemodel.hh"
 #include "dumux/twophase/twophaseproblem.hh"
 #include "dumux/twophase/fv/boxpnswjacobian.hh"
-#include "dumux/nonlinear/new_newtonmethod.hh"
-#include "dumux/nonlinear/new_newtoncontroller.hh"
+#include "dumux/nonlinear/newtonmethod.hh"
+#include "dumux/nonlinear/newtoncontroller.hh"
 #include "dumux/io/importfromdgf_leaf.hh"
 #include <boost/format.hpp>
 
@@ -105,7 +105,7 @@ public:
         typedef GridT           Grid;
     };
 
-    typedef Dune::NewNewtonMethod<ThisType> NewtonMethod;
+    typedef Dune::NewtonMethod<ThisType> NewtonMethod;
     typedef Dune::NewtonController<NewtonMethod> NewtonController;
 
     typedef typename NewtonTraits::Function Function;

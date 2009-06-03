@@ -19,8 +19,12 @@
  *
  * In order to use the method you need a \ref NewtonController.
  */
-#ifndef DUNE_NEW_NEWTONMETHOD_HH
-#define DUNE_NEW_NEWTONMETHOD_HH
+#ifndef DUNE_NEWTONMETHOD_HH
+#define DUNE_NEWTONMETHOD_HH
+
+#ifdef DUNE_NEWTONMETHOD_DEPRECATED_HH
+# error "Never use the old and the new newton method in one program!"
+#endif
 
 #include <limits>
 #include <dumux/exceptions.hh>
@@ -132,7 +136,7 @@ private:
  * In order to use the method you need a \ref NewtonController.
  */
 template<class ModelT, bool useLineSearch=true>
-class NewNewtonMethod
+class NewtonMethod
 {
 public:
     typedef ModelT Model;
@@ -142,13 +146,13 @@ public:
     typedef typename Model::NewtonTraits::LocalJacobian     LocalJacobian;
     typedef typename Model::NewtonTraits::JacobianAssembler JacobianAssembler;
     typedef typename Model::NewtonTraits::Scalar            Scalar;
-    typedef NewNewtonMethod<Model, useLineSearch>           ThisType;
+    typedef NewtonMethod<Model, useLineSearch>           ThisType;
 
 public:
     typedef typename JacobianAssembler::RepresentationType  JacobianMatrix;
 
 public:
-    NewNewtonMethod(Model &model)
+    NewtonMethod(Model &model)
 #warning "we should use model.gridView().overlapSize()"
         : uOld(model.gridView(), model.gridView(), model.gridView().grid().overlapSize(0) == 0),
           f(model.gridView(), model.gridView(), model.gridView().grid().overlapSize(0) == 0)
@@ -158,7 +162,7 @@ public:
         model_ = NULL;
     }
 
-    ~NewNewtonMethod()
+    ~NewtonMethod()
     {
         delete residual_;
     }
