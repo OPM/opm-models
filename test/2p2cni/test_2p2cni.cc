@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "new_waterairproblem.hh"
+#include "waterairproblem.hh"
 
 #include <dune/common/exceptions.hh>
 #include <dune/grid/common/gridinfo.hh>

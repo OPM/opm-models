@@ -14,7 +14,7 @@
  *****************************************************************************/
 #include "config.h"
 
-#include "new_injectionproblem.hh"
+#include "injectionproblem.hh"
 
 #include <dune/common/exceptions.hh>
 #include <dune/grid/common/gridinfo.hh>

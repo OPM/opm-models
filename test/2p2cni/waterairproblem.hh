@@ -1,5 +1,5 @@
-#ifndef DUNE_NEW_WATERAIRPROBLEM_HH
-#define DUNE_NEW_WATERAIRPROBLEM_HH
+#ifndef DUNE_WATERAIRPROBLEM_HH
+#define DUNE_WATERAIRPROBLEM_HH
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,7 +34,7 @@
 namespace Dune
 {
 template <class TypeTag>
-class NewWaterAirProblem;
+class WaterAirProblem;
 
 namespace Properties
 {
@@ -53,7 +53,7 @@ SET_PROP(WaterAirProblem, Grid)
 
 SET_PROP(WaterAirProblem, Problem)
 {
-    typedef Dune::NewWaterAirProblem<TTAG(WaterAirProblem)> type;
+    typedef Dune::WaterAirProblem<TTAG(WaterAirProblem)> type;
 };
 }
 
@@ -68,7 +68,7 @@ SET_PROP(WaterAirProblem, Problem)
  *    - ScalarT  Floating point type used for scalars
  */
 template <class TypeTag = TTAG(WaterAirProblem) >
-class NewWaterAirProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PTAG(Grid)),
+class WaterAirProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PTAG(Grid)),
                                               typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) >
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))     Scalar;
@@ -77,7 +77,7 @@ class NewWaterAirProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PT
     typedef typename GridView::Grid                           Grid;
 
     typedef BasicDomain<Grid, Scalar>    ParentType;
-    typedef NewWaterAirProblem<TypeTag>  ThisType;
+    typedef WaterAirProblem<TypeTag>  ThisType;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
@@ -129,7 +129,7 @@ class NewWaterAirProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PT
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) NewtonController;
 
 public:
-    NewWaterAirProblem(Grid *grid,
+    WaterAirProblem(Grid *grid,
                        Scalar dtInitial,
                        Scalar tEnd)
         : ParentType(grid),

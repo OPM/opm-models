@@ -1,5 +1,5 @@
-#ifndef DUNE_NEW_INJECTIONPROBLEM_HH
-#define DUNE_NEW_INJECTIONPROBLEM_HH
+#ifndef DUNE_INJECTIONPROBLEM_HH
+#define DUNE_INJECTIONPROBLEM_HH
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -41,7 +41,7 @@ namespace Dune
 {
 
 template <class TypeTag>
-class NewInjectionProblem;
+class InjectionProblem;
 
 namespace Properties
 {
@@ -55,7 +55,7 @@ SET_PROP(InjectionProblem, Grid)
 
 SET_PROP(InjectionProblem, Problem)
 {
-    typedef Dune::NewInjectionProblem<TTAG(InjectionProblem)> type;
+    typedef Dune::InjectionProblem<TTAG(InjectionProblem)> type;
 };
 }
 
@@ -163,7 +163,7 @@ private:
  *    - ScalarT  Floating point type used for scalars
  */
 template <class TypeTag = TTAG(InjectionProblem) >
-class NewInjectionProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PTAG(Grid)),
+class InjectionProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, PTAG(Grid)),
                                                typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) >
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))     Scalar;
@@ -172,7 +172,7 @@ class NewInjectionProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, P
     typedef typename GridView::Grid                           Grid;
 
     typedef BasicDomain<Grid, Scalar>    ParentType;
-    typedef NewInjectionProblem<TypeTag> ThisType;
+    typedef InjectionProblem<TypeTag> ThisType;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
@@ -219,7 +219,7 @@ class NewInjectionProblem : public BasicDomain<typename GET_PROP_TYPE(TypeTag, P
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) NewtonController;
 
 public:
-    NewInjectionProblem(Grid *grid,
+    InjectionProblem(Grid *grid,
                         Scalar dtInitial,
                         Scalar tEnd)
         : ParentType(grid),
