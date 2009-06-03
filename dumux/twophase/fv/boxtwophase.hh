@@ -7,7 +7,7 @@
 #include<dune/istl/solvers.hh>
 #include<dune/istl/preconditioners.hh>
 
-#include "dumux/nonlinear/newtonmethod.hh"
+#include "dumux/nonlinear/newtonmethod_deprecated.hh"
 #include "dumux/twophase/twophasemodel_deprecated.hh"
 #include "dumux/twophase/twophaseproblem_deprecated.hh"
 #include "dumux/twophase/fv/boxtwophasejacobian.hh"

@@ -6,9 +6,9 @@
 #include<dune/grid/common/mcmgmapper.hh>
 #include <dune/disc/shapefunctions/lagrangeshapefunctions.hh>
 #include "dumux/nonlinear/nonlinearmodel.hh"
-#include "dumux/nonlinear/newtonmethod.hh"
+#include "dumux/nonlinear/newtonmethod_deprecated.hh"
 #include "dumux/fvgeometry/fvelementgeometry.hh"
-#include "dumux/nonlinear/newtonmethod.hh"
+#include "dumux/nonlinear/newtonmethod_deprecated.hh"
 #include "dumux/io/exporttodgf.hh"
 #include <boost/format.hpp>
 
