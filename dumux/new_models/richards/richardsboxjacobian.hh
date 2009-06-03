@@ -88,11 +88,11 @@ public:
         const VertexData  &vertDat = elemDat[scvIdx];
 
         // partial time derivative of the wetting phase mass
-        result[pWIdx] = 
-            -vertDat.densityW
+        result[pWIdx] =
+            vertDat.densityW
             * vertDat.porosity
             * this->prevElemDat_[scvIdx].dSwdpC // TODO: use derivative for the current solution
-            * vertDat.pW;
+            * (vertDat.pNreference - vertDat.pW);
     }
 
 
@@ -111,12 +111,12 @@ public:
         // data attached to upstream and the downstream vertices
         const VertexData &up = this->curElemDat_[vars.upstreamIdx];
         const VertexData &dn = this->curElemDat_[vars.downstreamIdx];
-        
+
         flux[pWIdx] =
             vars.vDarcyNormal*
             (  mobilityUpwindAlpha*
                (  up.densityW *
-                  up.mobilityW) 
+                  up.mobilityW)
                +
                (1 - mobilityUpwindAlpha)*
                (  dn.densityW*
@@ -180,7 +180,7 @@ public:
                 (*Sw)[globalIdx] = this->curElemDat_[i].Sw;
                 (*Sn)[globalIdx] = 1.0 - this->curElemDat_[i].Sw;
                 (*pC)[globalIdx] = this->curElemDat_[i].pC;
-                (*pW)[globalIdx] = this->problem_.pNreference() + this->curElemDat_[i].pW;
+                (*pW)[globalIdx] = this->curElemDat_[i].pW;
                 (*dSwdpC)[globalIdx] = this->curElemDat_[i].dSwdpC;
                 (*rhoW)[globalIdx] = this->curElemDat_[i].densityW;
                 (*mobW)[globalIdx] = this->curElemDat_[i].mobilityW;

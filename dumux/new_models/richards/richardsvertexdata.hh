@@ -42,12 +42,12 @@ class RichardsVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GridView::template Codim<0>::Entity Element;
-    
+
     enum {
         dim           = GridView::dimension,
         dimWorld      = GridView::dimensionworld,
     };
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
@@ -67,23 +67,23 @@ public:
                 const Element          &element,
                 int                     vertIdx,
                 bool                    isOldSol,
-                JacobianImp            &jac) 
+                JacobianImp            &jac)
     {
         typedef Indices I;
-        
+
         // coordinates of the vertex
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 GridView::dimension);
 
-        /* pc = -pw || pc = 0 for computing Sw */
-
+        /* pc = pNreference - pw || pc = 0 for computing Sw */
+        pNreference = jac.problem().pNreference();
         pW = sol[I::pWIdx];
-        if (pW >= 0)
+        if (pW >= pNreference)
             pC = 0.0;
         else
-            pC = -pW;
+            pC = pNreference-pW;
 
         dSwdpC = jac.problem().materialLaw().dSdP(pC,
                                                   global,
@@ -98,14 +98,15 @@ public:
                                                      element,
                                                      local,
                                                      jac.problem().temperature(),
-                                                     pW + jac.problem().pNreference());
+                                                     pW);
         densityW = jac.problem().wettingPhase().density(jac.problem().temperature(),
-                                                        pW + jac.problem().pNreference());
+                                                        pW);
         porosity = jac.problem().soil().porosity(global,
                                                  element,
                                                  local);
     }
 
+    Scalar pNreference;
     Scalar pW;
     Scalar pC;
     Scalar Sw;
