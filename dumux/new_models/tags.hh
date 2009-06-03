@@ -62,6 +62,8 @@ NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
 //! richards model
 NEW_TYPE_TAG(BoxTwoContinua, INHERITS_FROM(BoxScheme));
 
+//! Model for elastic deformations of the medium
+NEW_TYPE_TAG(BoxElastic, INHERITS_FROM(BoxScheme));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -110,6 +112,7 @@ NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
 NEW_PROP_TAG(TwoContinuaIndices); //!< Enumerations for the double-continuum model
+NEW_PROP_TAG(ElasticIndices); //!< Enumerations for linear elasticity model
 
 //////////////////////////////////////////////////////////////////
 // Some defaults for very fundamental properties
