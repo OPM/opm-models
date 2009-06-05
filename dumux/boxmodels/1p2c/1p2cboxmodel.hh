@@ -21,9 +21,49 @@
 
 namespace Dune
 {
+
 /*!
- * \brief Adaption of the BOX scheme to the single-phase, two-component model.
+ * \ingroup BoxProblems
+ * \defgroup OnePTwoCBoxProblems One-phase Two-component box problems
  */
+
+/*!
+ * \ingroup BoxModels
+ * \defgroup OnePTwoCBoxModel One-phase Two-component box model
+ */
+
+/*!
+ * \ingroup OnePTwoCBoxModel
+ * \brief Adaption of the BOX scheme to the one-phase two-component flow model.
+ *
+ * This model implements an one-phase flow of an incompressible fluid, that consists of two components,
+ * using a standard Darcy
+ * approach (neglect of the gravitation) as the equation for the conservation of momentum:
+ \f[
+ v_{D} = - \frac{K}{\mu}
+ \left(\grad p  \right)
+ \f]
+ *
+ * By inserting this into the continuity equation, one gets
+ \f[
+ - \Div \left\{
+  \frac{K}{\mu}  \left(\grad p \right)
+ \right\} = q \;,
+ \f]
+ *
+ * The transport of the components is described by the following equation:
+ \f[
+ \Phi \frac{ \partial x}{\partial t} - \Div \left( \frac{K x}{\mu} \grad p
+  + \tau \Phi D \grad x \right) = q.
+ \f]
+ *
+ * All equations are discretized by this model using the fully-coupled vertex
+ * centered finite volume (box) scheme as spatial and
+ * the implicit Euler method as time discretization.
+ *
+ * The primary variables are the pressure p and the mole fraction of dissolved component x.
+ */
+
 template<class TypeTag >
 class OnePTwoCBoxModel : public BoxScheme<TypeTag,  OnePTwoCBoxModel<TypeTag> >
 {
