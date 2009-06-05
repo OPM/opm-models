@@ -13,7 +13,7 @@
  */
 
 /**
- * \defgroup fracflow Fractional Flow Formulation
+ * \defgroup decoupled and fractional flow
  */
 
 namespace Dune
