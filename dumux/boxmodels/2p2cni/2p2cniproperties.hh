@@ -1,3 +1,4 @@
+//$Id$
 /*****************************************************************************
  *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
  *   Institute of Hydraulic Engineering                                      *
@@ -12,6 +13,12 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \brief Defines the properties required for the non-isothermal two-phase,
+ * two-component BOX model.
+ */
 #ifndef DUMUX_2P2CNIPROPERTIES_HH
 #define DUMUX_2P2CNIPROPERTIES_HH
 
@@ -23,6 +30,10 @@
 
 namespace Dune
 {
+/*!
+ * \addtogroup TwoPTwoCNIBoxModel
+ */
+// \{
 ////////////////////////////////
 // forward declarations
 ////////////////////////////////
@@ -60,7 +71,7 @@ namespace Properties
 SET_INT_PROP(BoxTwoPTwoCNI, NumEq,         3); //!< set the number of equations to 3
 
 //! Use the 2p2cni local jacobian operator for the 2p2cni model
-SET_TYPE_PROP(BoxTwoPTwoCNI, 
+SET_TYPE_PROP(BoxTwoPTwoCNI,
               LocalJacobian,
               TwoPTwoCNIBoxJacobian<TypeTag>);
 
