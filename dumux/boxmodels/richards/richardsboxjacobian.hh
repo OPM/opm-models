@@ -1,4 +1,9 @@
 /*****************************************************************************
+ *   Copyright (C) 2007 by Peter Bastian                                     *
+ *   Institute of Parallel and Distributed System                            *
+ *   Department Simulation of Large Systems                                  *
+ *   University of Stuttgart, Germany                                        *
+ *                                                                           *
  *   Copyright (C) 2009 by Onur Dogan                                        *
  *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Institute of Hydraulic Engineering                                      *
@@ -24,8 +29,11 @@
 
 namespace Dune
 {
+{
 /*!
- * \brief Local jacobian operator for the isothermal Richards model
+ * \ingroup RichardsBoxModel
+ * \brief Element-wise calculation of the Jacobian matrix for problems
+ *        using the Richards box model.
  */
 template<class TypeTag>
 class RichardsBoxJacobian : public BoxJacobian<TypeTag, RichardsBoxJacobian<TypeTag> >
