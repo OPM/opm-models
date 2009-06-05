@@ -29,7 +29,6 @@
 
 namespace Dune
 {
-{
 /*!
  * \ingroup RichardsBoxModel
  * \brief Element-wise calculation of the Jacobian matrix for problems
