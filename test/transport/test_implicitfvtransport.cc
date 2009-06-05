@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
         // time loop parameters
         const double tStart = 0;
-        const double tEnd = 2.5e9;
+        const double tEnd = 1.5e9;
         double dt = 2.5e8;
 	double firstDt = dt;
 	double maxDt = dt;
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         typedef Dune::SGrid<dim,dim> GridType;
         typedef GridType::LevelGridView GridView;
         typedef Dune::FieldVector<GridType::ctype,dim> FieldVector;
-        Dune::FieldVector<int,dim> N(1); N[0] = 64;
+        Dune::FieldVector<int,dim> N(1); N[0] = 200;
         FieldVector L(0);
         FieldVector H(300); H[0] = 600;
         GridType grid(N,L,H);
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         typedef Dune::ImplicitFVTransport<GridView, NumberType, VC> Transport;
 
         //Transport transport(gridView, problem, dt, diffusivePart, computeNumFlux);
-        Transport transport(gridView, problem, dt, capillaryDiffusion, computeNumFlux);
+        Transport transport(gridView, problem, capillaryDiffusion, computeNumFlux);
 
 	Dune::RungeKuttaStep<GridType, Transport> timeStep(1);
 	//Dune::ImplicitEulerStep<GridType, Transport> timeStep;
