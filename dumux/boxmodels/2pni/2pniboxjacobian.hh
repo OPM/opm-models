@@ -15,6 +15,13 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \brief Element-wise calculation of the Jacobian matrix for problems
+ *        using the non-isothermal two-phase box model.
+ *
+ */
 #ifndef DUMUX_NEW_2PNI_BOX_JACOBIAN_HH
 #define DUMUX_NEW_2PNI_BOX_JACOBIAN_HH
 

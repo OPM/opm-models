@@ -18,6 +18,12 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \brief Adaption of the BOX scheme to the non-isothermal twophase flow model.
+ */
+
 #ifndef DUMUX_NEW_2PNI_BOX_MODEL_HH
 #define DUMUX_NEW_2PNI_BOX_MODEL_HH
 

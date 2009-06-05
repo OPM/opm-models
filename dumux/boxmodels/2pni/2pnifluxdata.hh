@@ -46,8 +46,7 @@ namespace Dune
  *        face of a finite volume for the non-isothermal two-phase model.
  *
  * This means pressure and concentration gradients, phase densities at
- * the integration point, etc. Whereas the mass flux data is inherited from
- * the base class TwoPFluxData
+ * the integration point, etc.
  */
 template <class TypeTag>
 class TwoPNIFluxData : public TwoPFluxData<TypeTag>
