@@ -12,7 +12,7 @@
 #include "dumux/timedisc/timeloop.hh"
 #include "dumux/timedisc/expliciteulerstep.hh"
 // dumux material properties:
-#include "dumux/material/phaseproperties/phaseproperties_waterair.hh"
+#include "dumux/material/fluids/water_air.hh"
 #include <dumux/material/matrixproperties.hh>
 #include <dumux/material/twophaserelations.hh>
 // problem definition and model:

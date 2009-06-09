@@ -13,7 +13,7 @@
 #include <dumux/material/twophaserelations.hh>
 #include <dumux/material/multicomponentrelations.hh>
 
-#include <dumux/material/phaseproperties/phaseproperties2p.hh>
+#include <dumux/material/fluids/water_air.hh>
 
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/io/restart.hh>

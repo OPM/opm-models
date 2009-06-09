@@ -14,7 +14,7 @@
 #include<dumux/material/property_baseclasses.hh>
 #include<dumux/material/relperm_pc_law.hh>
 
-#include <dumux/material/phaseproperties/phaseproperties_waterair.hh>
+#include <dumux/material/fluids/water_air.hh>
 #include <dumux/material/matrixproperties.hh>
 #include <dumux/material/twophaserelations.hh>
 

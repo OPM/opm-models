@@ -5,7 +5,8 @@
 #include <dune/grid/sgrid.hh> /*@\label{tutorial-coupled:include-begin}@*/
 #include <dune/istl/io.hh>
 #include <dune/common/timer.hh>
-#include "dumux/material/phaseproperties/phaseproperties2p.hh"
+#include "dumux/material/fluids/water.hh"
+#include "dumux/material/fluids/oil.hh"
 #include "tutorial_soilproperties_coupled.hh"
 #include "dumux/material/twophaserelations.hh"
 #include "tutorialproblem_coupled.hh"

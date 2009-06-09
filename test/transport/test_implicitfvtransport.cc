@@ -6,7 +6,7 @@
 #include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/istl/io.hh>
-#include "dumux/material/phaseproperties/phaseproperties2p.hh"
+#include "dumux/material/fluids/uniform.hh"
 #include "dumux/transport/fv/implicitfvtransport.hh"
 #include "dumux/transport/fv/computeupwind.hh"
 #include "dumux/transport/fv/capillarydiffusion.hh"
