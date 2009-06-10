@@ -63,9 +63,9 @@ class TwoPTwoCVertexData
     typedef typename RefElemProp::Container                     ReferenceElements;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
-    typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
-    typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MultiComp))   MultiComp;
+    typedef typename SolutionTypes::PrimaryVarVector               PrimaryVarVector;
+    typedef Dune::FieldVector<Scalar, numPhases>                   PhasesVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MultiComp))       MultiComp;
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
