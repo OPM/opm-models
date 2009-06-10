@@ -28,7 +28,8 @@
 #define DUMUX_NEW_2PNI_BOX_MODEL_HH
 
 #include <dumux/boxmodels/2p/2pboxmodel.hh>
-#include <dumux/boxmodels/2pni/2pniboxjacobian.hh>
+#include "2pniboxjacobian.hh"
+#include "2pniboxproblem.hh"
 
 namespace Dune {
 

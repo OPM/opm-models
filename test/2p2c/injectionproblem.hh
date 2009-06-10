@@ -13,6 +13,11 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
+/**
+ * @file
+ * @brief  Definition of a problem, where air is injected under a low permeable layer
+ * @author Bernd Flemisch, Klaus Mosthaf
+ */
 #ifndef DUNE_INJECTIONPROBLEM_HH
 #define DUNE_INJECTIONPROBLEM_HH
 
@@ -27,12 +32,6 @@
 
 #include "injectionsoil.hh"
 
-
-/**
- * @file
- * @brief  Definition of a problem, where air is injected under a low permeable layer
- * @author Bernd Flemisch, Klaus Mosthaf
- */
 
 namespace Dune
 {
@@ -78,14 +77,11 @@ SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
 }
 
 
-//! class that defines the parameters of an air injection under a low permeable layer
-/*! Problem definition of an air injection under a low permeable layer. Air enters the domain
- * at the right boundary and migrates upwards.
+/*! 
+ * \brief Problem where air is injected under a low permeable layer.
+ *
+ * Air enters the domain at the right boundary and migrates upwards.
  * Problem was set up using the rect2d.dgf grid.
- *
- *    Template parameters are:
- *
- *    - ScalarT  Floating point type used for scalars
  */
 template <class TypeTag = TTAG(InjectionProblem) >
 class InjectionProblem : public TwoPTwoCBoxProblem<TypeTag, InjectionProblem<TypeTag> >
