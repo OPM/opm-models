@@ -76,7 +76,7 @@ class BoxScheme
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
-    typedef typename SolutionTypes::SolutionMapper          SolutionMapper;
+    typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::Solution                Solution;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
@@ -110,19 +110,17 @@ class BoxScheme
 
 public:
     /*!
-     * \brief The traits of the spatial domain (grid type, etc)
-     */
-    typedef typename Problem::DomainTraits DomainTraits;
-
-    /*!
      *  \brief This structure is Required to use models based on the BOX
      *         scheme in conjunction with the newton Method.
+     *
+     * \todo change the newton method to the property system!
      */
     struct NewtonTraits {
         typedef typename ThisType::LocalJacobian     LocalJacobian;
         typedef typename ThisType::SolutionFunction  Function;
         typedef typename ThisType::JacobianAssembler JacobianAssembler;
         typedef typename ThisType::Scalar            Scalar;
+        typedef typename ThisType::GridView::Grid    Grid;
     };
 
     /*!
@@ -131,7 +129,7 @@ public:
     BoxScheme(Problem &prob, LocalJacobian &localJac)
         : problem_(prob),
           gridView_(prob.gridView()),
-          solMapper_(gridView_),
+          dofEntityMapper_(gridView_),
 
           uCur_(gridView_, gridView_, !hasOverlap_()),
           uPrev_(gridView_, gridView_, !hasOverlap_()),
@@ -144,9 +142,10 @@ public:
         wasRestarted_ = false;
 
         // check grid partitioning if we are parallel
-        assert((prob.grid().comm().size() == 1) ||
-               (prob.grid().overlapSize(0) > 0) ||
-               (prob.grid().ghostSize(0) > 0));
+#warning "use gridView.overlapSize() instead once available!"
+        assert((prob.gridView().comm().size() == 1) ||
+               (prob.gridView().grid().overlapSize(0) > 0) ||
+               (prob.gridView().grid().ghostSize(0) > 0));
     }
 
     /*!
@@ -369,9 +368,9 @@ public:
             // this index.
             for(int dofIdx=0; dofIdx < numDofs; dofIdx++)
             {
-                int globalIdx = solMapper_.map(element, 
-                                               sfs[dofIdx].entity(),
-                                               sfs[dofIdx].codim());
+                int globalIdx = dofEntityMapper().map(element, 
+                                                      sfs[dofIdx].entity(),
+                                                      sfs[dofIdx].codim());
                 (*globResidual)[globalIdx] += localResidual[dofIdx];
             }
         }
@@ -401,7 +400,7 @@ public:
     void serializeEntity(std::ostream &outstream,
                          const Vertex &vert)
     {
-        int vertIdx = problem_.vertexIdx(vert);
+        int vertIdx = dofEntityMapper().map(vert);
 
         // write phase state
         if (!outstream.good()) {
@@ -422,7 +421,7 @@ public:
     void deserializeEntity(std::istream &instream,
                            const Vertex &vert)
     {
-        int vertIdx = problem_.vertexIdx(vert);
+        int vertIdx = dofEntityMapper().map(vert);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
                 DUNE_THROW(IOError,
@@ -431,6 +430,16 @@ public:
             instream >> (*curSolFunction())[vertIdx][eqIdx];
         }
     };
+
+    /*!
+     * \brief Mapper for the entities where degrees of freedoms are
+     *        defined to indices.
+     *
+     * This usually means a mapper for vertices.
+     */
+    const DofEntityMapper &dofEntityMapper() const
+    { return dofEntityMapper_; };
+    
 
 protected:
     //! returns true iff the grid has an overlap
@@ -475,9 +484,9 @@ protected:
              scvIdx++)
         {
             // map the local vertex index to the global one
-            int globalIdx = solMapper_.map(element,
-                                           scvIdx,
-                                           dim);
+            int globalIdx = dofEntityMapper().map(element,
+                                                  scvIdx,
+                                                  dim);
 
             const FVElementGeometry &fvElemGeom
                 = localJacobian_.curFvElementGeometry();
@@ -563,8 +572,8 @@ protected:
                                             faceVertIdx, dim);
         int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(isIt->indexInInside(),
                                                            faceVertIdx);
-        int globalVertexIdx = solMapper_.map(element,
-                                             elemVertIdx, dim);
+        int globalVertexIdx = dofEntityMapper().map(element,
+                                                    elemVertIdx, dim);
 
 
         PrimaryVarVector dirichletVal;
@@ -615,7 +624,7 @@ protected:
     const GridView gridView_;
 
     // mapper for the entities of a solution to their indices
-    const SolutionMapper solMapper_;
+    const DofEntityMapper dofEntityMapper_;
     
     // the solution we are looking for
 

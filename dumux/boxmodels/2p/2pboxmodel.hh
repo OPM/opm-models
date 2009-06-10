@@ -23,6 +23,7 @@
 #define DUMUX_TWOP_BOX_MODEL_HH
 
 #include "2pboxjacobian.hh"
+#include "2pboxproblem.hh"
 
 namespace Dune
 {
@@ -69,7 +70,7 @@ namespace Dune
  * chosing either \f$p_w\f$ and \f$S_n\f$ or \f$p_n\f$ and \f$S_w\f$
  * as primary variables. The formulation which ought to be used can be
  * specified by setting the <tt>Formulation</tt> property to either
- * either <tt>TwoPIndices::pWsN</tt> or <tt>TwoPIndices::pNsW</tt>. By
+ * either <tt>TwoPCommonIndices::pWsN</tt> or <tt>TwoPCommonIndices::pNsW</tt>. By
  * default, the model uses \f$p_w\f$ and \f$S_n\f$.
  */
 template<class TypeTag >

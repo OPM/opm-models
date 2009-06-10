@@ -90,7 +90,7 @@ AC_CONFIG_FILES([Makefile
     test/2p2cni/Makefile
     test/fractionalflow/Makefile
     test/transport/Makefile
-    test/tutorial/Makefile
+    tutorial/Makefile
     dumux/fractionalflow/impes/Makefile 
     dune-mux.pc])
 
