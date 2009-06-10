@@ -14,7 +14,9 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for all problems which use the box scheme
+ *
+ * \brief Base class for all problems which use the two-phase,
+ *        two-component box model
  */
 #ifndef DUMUX_2P_BOX_PROBLEM_HH
 #define DUMUX_2P_BOX_PROBLEM_HH
@@ -27,13 +29,13 @@
 namespace Dune
 {
 /*!
- * \ingroup TwoPProblems
- * \brief  Base class for all problems which use the two-phase box model
+ * \ingroup TwoPTwoCProblems
+ * \brief  Base class for all problems which use the two-phase, two-component box model
  *
  * \todo Please doc me more!
  */
 template<class TypeTag, class Implementation>
-class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
+class TwoPTwoCBoxProblem : public BoxProblem<TypeTag, Implementation>
 {
     typedef BoxProblem<TypeTag, Implementation> ParentType;
 
@@ -44,6 +46,7 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
     // material properties
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(WettingPhase))    WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NonwettingPhase)) NonwettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MultiComp))       MultiComp;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Soil))            Soil;
     typedef Dune::TwoPhaseRelations<Grid, Scalar>                  MaterialLaw;
 
@@ -55,12 +58,11 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef Dune::FieldVector<Scalar, dimWorld>      GlobalPosition;
 
 public:
-    TwoPBoxProblem(const GridView &gridView)
+    TwoPTwoCBoxProblem(const GridView &gridView)
         : ParentType(gridView),
           gravity_(0),
           materialLaw_(soil_, wPhase_, nPhase_)
     {
-        gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
     }
@@ -100,6 +102,15 @@ public:
      */
     const NonwettingPhase &nonwettingPhase() const
     { return nPhase_; }
+
+    /*!
+     * \brief Returns the multi-component relations object.
+     *
+     * This specfies how a mixture of multiple components behaves
+     * locally.
+     */
+    const MultiComp &multicomp() const
+    { return multiComp_; }
 
     /*! 
      * \brief Returns the soil properties object.
@@ -142,6 +153,7 @@ private:
     // fluids and material properties
     WettingPhase    wPhase_;
     NonwettingPhase nPhase_;
+    MultiComp       multiComp_;
     Soil            soil_;
     MaterialLaw     materialLaw_;
 };

@@ -65,8 +65,6 @@ namespace Dune
 template<class TypeTag, class Implementation>
 class BoxScheme
 {
-    // copy the relevant problem specfific types from the problem
-    // controller class
     typedef BoxScheme<TypeTag, Implementation>               ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;
@@ -108,6 +106,21 @@ class BoxScheme
     typedef typename GridView::template Codim<dim>::Entity             Vertex;
     typedef typename GridView::template Codim<dim>::Iterator           VertexIterator;
 
+    template<int dim>
+    struct VertexLayout {
+        bool contains (Dune::GeometryType gt) const 
+        { return gt.dim() == 0; }
+    };
+
+    template<int dim>
+    struct ElementLayout {
+        bool contains (Dune::GeometryType gt) const 
+        { return gt.dim() == dim; }
+    };
+
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, VertexLayout> VertexMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, ElementLayout> ElementMapper;
+
 public:
     /*!
      *  \brief This structure is Required to use models based on the BOX
@@ -130,6 +143,8 @@ public:
         : problem_(prob),
           gridView_(prob.gridView()),
           dofEntityMapper_(gridView_),
+          vertexMapper_(gridView_),
+          elementMapper_(gridView_),
 
           uCur_(gridView_, gridView_, !hasOverlap_()),
           uPrev_(gridView_, gridView_, !hasOverlap_()),
@@ -439,6 +454,18 @@ public:
      */
     const DofEntityMapper &dofEntityMapper() const
     { return dofEntityMapper_; };
+
+    /*!
+     * \brief Mapper for vertices to indices.
+     */
+    const VertexMapper &vertexMapper() const
+    { return vertexMapper_; };
+
+    /*!
+     * \brief Mapper for elements to indices.
+     */
+    const ElementMapper &elementMapper() const
+    { return elementMapper_; };
     
 
 protected:
@@ -625,6 +652,12 @@ protected:
 
     // mapper for the entities of a solution to their indices
     const DofEntityMapper dofEntityMapper_;
+
+    // mapper for the vertices to indices
+    const VertexMapper vertexMapper_;
+
+    // mapper for the elements to indices
+    const ElementMapper elementMapper_;
     
     // the solution we are looking for
 

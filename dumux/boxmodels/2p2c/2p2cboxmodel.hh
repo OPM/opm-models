@@ -15,7 +15,8 @@
 #ifndef DUMUX_NEW_2P2C_BOX_MODEL_HH
 #define DUMUX_NEW_2P2C_BOX_MODEL_HH
 
-#include <dumux/boxmodels/2p2c/2p2cboxjacobian.hh>
+#include "2p2cboxjacobian.hh"
+#include "2p2cboxproblem.hh"
 
 namespace Dune
 {

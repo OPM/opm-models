@@ -51,14 +51,34 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))             Model;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))            Scalar;
 
+    enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld
+    };
+
+    typedef typename GridView::Grid::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
+
 public:
     BoxProblem(const GridView &gridView)
         : gridView_(gridView),
+          bboxMin_(std::numeric_limits<double>::max()),
+          bboxMax_(-std::numeric_limits<double>::max()),
           timeManager_(gridView.comm().rank() == 0),
           model_(*asImp_()),
           newtonMethod_(model_),
           resultWriter_(asImp_()->name())
     {
+        // calculate the bounding box of the grid view
+        VertexIterator vIt = gridView.template begin<dim>(); 
+        const VertexIterator vEndIt = gridView.template end<dim>(); 
+        for (; vIt!=vEndIt; ++vIt) {
+            for (int i=0; i<dim; i++) {
+                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
+                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+            }
+        }
     }
 
     /*!
@@ -73,7 +93,7 @@ public:
      * uses \ref Dune::TimeManager::runSimulation() to do the actual
      * work.
      */
-    bool simulate(Scalar tEnd, Scalar dtInitial)
+    bool simulate(Scalar dtInitial, Scalar tEnd)
     {
         // set the initial time step and the time where the simulation ends
         timeManager_.setEndTime(tEnd);
@@ -189,6 +209,20 @@ public:
      */
     const GridView &gridView() const
     { return gridView_; }
+
+    /*!
+     * \brief The coordinate of the corner of the GridView's bounding
+     *        box with the smallest values.
+     */
+    const GlobalPosition &bboxMin() const
+    { return bboxMin_; }
+
+    /*!
+     * \brief The coordinate of the corner of the GridView's bounding
+     *        box with the largest values.
+     */
+    const GlobalPosition &bboxMax() const
+    { return bboxMax_; }
 
     /*! 
      * \brief Returns \ref TimeManager object used by the simulation
@@ -310,6 +344,10 @@ protected:
 
 private:
     const GridView  gridView_;
+    
+    GlobalPosition  bboxMin_;
+    GlobalPosition  bboxMax_;
+
     TimeManager     timeManager_;
 
     Model            model_;
