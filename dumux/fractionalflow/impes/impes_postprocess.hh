@@ -15,7 +15,7 @@
 namespace Dune
 {
 /**
- * \ingroup fracflow
+ * \ingroup MultiMulti
  * @brief IMplicit Pressure Explicit Saturation (IMPES) scheme for the solution of
  * coupled diffusion/transport problems
  */

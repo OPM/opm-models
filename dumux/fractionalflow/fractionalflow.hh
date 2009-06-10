@@ -27,12 +27,19 @@
  */
 
 /**
- * \defgroup fracflow decoupled and fractional flow
+ * \defgroup fracflow Decoupled and Fractional Flow
+ */
+
+/*!
+ * \ingroup fracflow
+ * \defgroup impes IMPES (IMplicit Pressure Explicit Saturation)
  */
 
 namespace Dune
 {
-/*!\ingroup fracflow
+/*!
+ * \ingroup impes
+ * \ingroup fracflow
  * \brief Standard two phase model.
  *
  * This class implements the standard two phase model
