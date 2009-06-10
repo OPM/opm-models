@@ -39,7 +39,7 @@ namespace Dune
  * approach is used as the equation for the conservation of momentum:
  * \f[
      v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} K
-     \left(\grad p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
+     \left(\text{grad} p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
  * \f]
  *
  * By inserting this into the equations for the conservation of the

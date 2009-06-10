@@ -47,7 +47,7 @@ namespace Dune
  * approach as the equation for the conservation of momentum: 
  \f[
  v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} K 
- \left(\grad p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
+ \left(\text{grad} p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
  \f]
  * 
  * By inserting this into the equation for the conservation of the
@@ -55,8 +55,8 @@ namespace Dune
  \f[
  \phi \frac{\partial \varrho_\alpha S_\alpha}{\partial t} 
  - 
- \Div \left\{
- \varrho_\alpha \frac{k_{r\alpha}}{\mu_\alpha} K \left(\grad p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
+ \text{div} \left\{
+ \varrho_\alpha \frac{k_{r\alpha}}{\mu_\alpha} K \left(\text{grad} p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
  \right\} = q_\alpha \;,
  \f]
  * which is discretized by this model using the fully-coupled vertex
