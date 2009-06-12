@@ -27,9 +27,6 @@
 #include <dumux/material/matrixproperties.hh>
 #include <dumux/material/fluids/water_air.hh>
 
-#include <dumux/material/fluids/water.hh>
-#include <dumux/material/fluids/air.hh>
-
 #include <dumux/boxmodels/2p2cni/2p2cniboxmodel.hh>
 
 #define ISOTHERMAL 0
@@ -58,10 +55,10 @@ SET_PROP(WaterAirProblem, Problem)
 };
 
 // Set the wetting phase
-SET_TYPE_PROP(WaterAirProblem, WettingPhase, Dune::Water);
+SET_TYPE_PROP(WaterAirProblem, WettingPhase, Dune::Liq_WaterAir);
 
 // Set the non-wetting phase
-SET_TYPE_PROP(WaterAirProblem, NonwettingPhase, Dune::Air);
+SET_TYPE_PROP(WaterAirProblem, NonwettingPhase, Dune::Gas_WaterAir);
 
 // Set multi-component relations
 SET_TYPE_PROP(WaterAirProblem, MultiComp, Dune::CWaterAir)
