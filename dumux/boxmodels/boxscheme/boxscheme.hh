@@ -60,7 +60,9 @@ namespace Dune
 
 /*!
  * \ingroup BoxScheme
- * \brief The base class for the BOX hybrid finite element/finite volume discretization scheme
+ *
+ * \brief The base class for the vertex centered finite volume
+ *        discretization scheme.
  */
 template<class TypeTag, class Implementation>
 class BoxScheme
