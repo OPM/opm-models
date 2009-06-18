@@ -1,5 +1,5 @@
 # tests where program to build and program to run are equal
-NORMALTESTS = test_transport test_boxtransport test_chtransport test_chtransport1D test_implicitfvtransport
+NORMALTESTS = test_fvtransport test_boxtransport test_chtransport test_chtransport1D test_implicitfvtransport
 
 # list of tests to run
 #TESTS = $(NORMALTESTS)
@@ -11,9 +11,8 @@ dist_noinst_DATA = test_transport.cc
 
 test_transportdir = $(EXTRA_DIST=CMakeLists.txt
 includedir)/dune/dumux/test/transport
-test_transport_HEADERS = simplerproblem.hh
-test_transport_SOURCES = test_transport.cc
 
+test_fvtransport_SOURCES = test_fvtransport.cc simplenonlinearproblem.hh
 test_implicitfvtransport_SOURCES = test_implicitfvtransport.cc
 
 EXTRA_DIST=CMakeLists.txt
