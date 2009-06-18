@@ -30,48 +30,48 @@ int main(int argc, char** argv)
         int modulo = 1;
 
         // create a grid object
-        typedef double NumberType;
-        typedef Dune::SGrid<dim,dim> GridType;
-        typedef GridType::LevelGridView GridView;
-        typedef Dune::FieldVector<GridType::ctype,dim> FieldVector;
+        typedef double Scalar;
+        typedef Dune::SGrid<dim,dim> Grid;
+        typedef Grid::LevelGridView GridView;
+        typedef Dune::FieldVector<Grid::ctype,dim> FieldVector;
         Dune::FieldVector<int,dim> N(1); N[0] = 200;
         FieldVector L(0);
         FieldVector H(300); H[0] = 600;
-        GridType grid(N,L,H);
+        Grid grid(N,L,H);
 
         grid.globalRefine(0);
 
         GridView gridView(grid.levelView(0));
 
         Dune::Uniform mat(0.2);
-        //Dune::HomogeneousLinearSoil<GridType, NumberType> soil;
-        Dune::HomogeneousNonlinearSoil<GridType, NumberType> soil;
-        Dune::TwoPhaseRelations<GridType, NumberType> materialLaw(soil, mat, mat);
+        //Dune::HomogeneousLinearSoil<Grid, Scalar> soil;
+        Dune::HomogeneousNonlinearSoil<Grid, Scalar> soil;
+        Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, mat, mat);
 
-        typedef Dune::VariableClass<GridView, NumberType> VC;
+        typedef Dune::VariableClass<GridView, Scalar> VariableClass;
 
         double initsat=0;
         Dune::FieldVector<double,dim> vel(0);
         vel[0] = 1.0/6.0*1e-6;
 
-        VC variables(gridView,initsat,vel);
+        VariableClass variables(gridView,initsat,vel);
 
-        //Dune::SimpleProblem<GridView, NumberType, VC> ProblemType;
-        typedef Dune::SimpleNonlinearProblem<GridView, NumberType, VC> ProblemType;
+        //Dune::SimpleProblem<GridView, Scalar, VariableClass> ProblemType;
+        typedef Dune::SimpleNonlinearProblem<GridView, Scalar, VariableClass> ProblemType;
 	ProblemType problem(variables, mat, mat , soil, materialLaw,L,H);
 
-        //Dune::DiffusivePart<GridView, NumberType> diffusivePart;
-        Dune::CapillaryDiffusion<GridView, NumberType, VC, ProblemType> capillaryDiffusion(problem, soil, false);
-        Dune::ComputeUpwind<GridView, NumberType, VC> computeNumFlux(problem);
+        //Dune::DiffusivePart<GridView, Scalar> diffusivePart;
+        Dune::CapillaryDiffusion<GridView, Scalar, VariableClass, ProblemType> capillaryDiffusion(problem, soil, false);
+        Dune::ComputeUpwind<GridView, Scalar, VariableClass> computeNumFlux(problem);
 
-        typedef Dune::ImplicitFVTransport<GridView, NumberType, VC> Transport;
+        typedef Dune::ImplicitFVTransport<GridView, Scalar, VariableClass> Transport;
 
         //Transport transport(gridView, problem, dt, diffusivePart, computeNumFlux);
         Transport transport(gridView, problem, capillaryDiffusion, computeNumFlux);
 
-	Dune::RungeKuttaStep<GridType, Transport> timeStep(1);
-	//Dune::ImplicitEulerStep<GridType, Transport> timeStep;
-        Dune::TimeLoop<GridType, Transport > timeloop(tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
+	Dune::RungeKuttaStep<Grid, Transport> timeStep(1);
+	//Dune::ImplicitEulerStep<Grid, Transport> timeStep;
+        Dune::TimeLoop<Grid, Transport > timeloop(tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
 
         timeloop.execute(transport);
 

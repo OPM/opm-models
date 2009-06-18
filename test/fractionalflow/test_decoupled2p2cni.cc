@@ -24,13 +24,13 @@ int main(int argc, char** argv)
         const int dim=2;
 
         // create a grid object
-        typedef double NumberType;
-        typedef Dune::SGrid<dim,dim> GridType;
-        typedef Dune::FieldVector<GridType::ctype,dim> FieldVector;
+        typedef double Scalar;
+        typedef Dune::SGrid<dim,dim> Grid;
+        typedef Dune::FieldVector<Grid::ctype,dim> FieldVector;
         Dune::FieldVector<int,dim> N(20); N[0] = 20;
         FieldVector L(0);
         FieldVector H(300); H[0] = 300;
-        GridType grid(N,L,H);
+        Grid grid(N,L,H);
 
         grid.globalRefine(0);
 
@@ -41,23 +41,23 @@ int main(int argc, char** argv)
 
         Dune::Liq_WaterAir wetmat;
         Dune::Gas_WaterAir nonwetmat;
-        Dune::HomogeneousSoil<GridType, NumberType> soil;
-        //    Dune::HeterogeneousSoil<GridType, NumberType> soil(grid, "permeab.dat", true);
-        Dune::TwoPhaseRelations<GridType, NumberType> materialLaw(soil, wetmat, nonwetmat);
+        Dune::HomogeneousSoil<Grid, Scalar> soil;
+        //    Dune::HeterogeneousSoil<Grid, Scalar> soil(grid, "permeab.dat", true);
+        Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
 
-        Dune::VariableClass2p2cni<GridType,NumberType> var(grid);
+        Dune::VariableClass2p2cni<Grid,Scalar> var(grid);
 
-        typedef Dune::TestProblem2p2cni<GridType, NumberType> TransProb;
+        typedef Dune::TestProblem2p2cni<Grid, Scalar> TransProb;
         TransProb problem(var, wetmat, nonwetmat, soil, materialLaw, false);
 
-        Dune::DiffusivePart<GridType, NumberType> diffPart;
-        const Dune::Upwind<NumberType> numFl;
+        Dune::DiffusivePart<Grid, Scalar> diffPart;
+        const Dune::Upwind<Scalar> numFl;
 
-        typedef Dune::Decoupled2p2cni<GridType, NumberType> ModelType;
+        typedef Dune::Decoupled2p2cni<Grid, Scalar> ModelType;
         ModelType model(grid, problem, grid.maxLevel(), diffPart, false, 0.8, numFl, "CG");
 
-        Dune::ExplicitEulerStep<GridType, ModelType> timestep;
-        Dune::TimeLoop<GridType, ModelType > timeloop(tStart, tEnd, "2p2cni", modulo, cFLFactor, 1e100, 1e100, timestep);
+        Dune::ExplicitEulerStep<Grid, ModelType> timestep;
+        Dune::TimeLoop<Grid, ModelType > timeloop(tStart, tEnd, "2p2cni", modulo, cFLFactor, 1e100, 1e100, timestep);
 
         Dune::Timer timer;
         timer.reset();
