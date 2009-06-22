@@ -25,6 +25,11 @@
 
 namespace Dune
 {
+/*!
+ * \addtogroup TwoPBoxModel
+ */
+// \{
+
 ////////////////////////////////
 // forward declarations
 ////////////////////////////////
@@ -175,6 +180,7 @@ SET_PROP(BoxTwoPTwoC,
     typedef TwoPTwoCIndices<GET_PROP_VALUE(TypeTag, PTAG(Formulation)), 0> type;
 };
 
+// \}
 }
 
 }
