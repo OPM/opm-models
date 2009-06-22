@@ -36,7 +36,7 @@ namespace Dune
  * \brief Adaption of the BOX scheme to the two-phase two-component flow model.
  *
  * This model implements two-phase two-component flow of two compressible and
- * completely immiscible fluids \f$\alpha \in \{ w, n \}\f$ composed of the two components
+ * partially miscible fluids \f$\alpha \in \{ w, n \}\f$ composed of the two components
  * \f$\kappa \in \{ w, a \}\f$. The standard multiphase Darcy
  * approach is used as the equation for the conservation of momentum:
  * \f[
@@ -138,8 +138,9 @@ public:
     }
 
     /*!
-     * \brief Add the mass fraction of air in water to VTK output of
-     *        the current timestep.
+     * \brief Append all quantities of interest which can be derived
+     *        from the solution of the current time step to the VTK
+     *        writer.
      */
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
