@@ -14,6 +14,12 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 
+/*!
+ * \file
+ *
+ * \brief Defines the properties required for the 2p2c BOX model.
+ */
+
 #ifndef DUMUX_2P2CTRAITS_HH
 #define DUMUX_2P2CTRAITS_HH
 
@@ -26,7 +32,7 @@
 namespace Dune
 {
 /*!
- * \addtogroup TwoPBoxModel
+ * \addtogroup TwoPTwoCBoxModel
  */
 // \{
 
