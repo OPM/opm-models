@@ -2,6 +2,7 @@
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -16,8 +17,9 @@
  *****************************************************************************/
 /**
  * @file
+ * \ingroup TwoPTwoCBoxProblems
  * @brief  Definition of a problem, where air is injected under a low permeable layer
- * @author Bernd Flemisch, Klaus Mosthaf
+ * @author Klaus Mosthaf, Andreas Lauser, Bernd Flemisch
  */
 #ifndef DUNE_INJECTIONPROBLEM_HH
 #define DUNE_INJECTIONPROBLEM_HH
