@@ -16,8 +16,9 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
+ * \ingroup TwoPTwoCBoxModel
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the two-phase, two-component model.
  */
@@ -47,7 +48,7 @@ class TwoPTwoCVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GridView::template Codim<0>::Entity Element;
-    
+
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -58,7 +59,7 @@ class TwoPTwoCVertexData
         dim           = GridView::dimension,
         dimWorld      = GridView::dimensionworld,
     };
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
@@ -80,10 +81,10 @@ public:
                 const Element          &element,
                 int                     vertIdx,
                 bool                    isOldSol,
-                JacobianImp            &jac) 
+                JacobianImp            &jac)
     {
         typedef Indices I;
-        
+
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
             ReferenceElements::general(element.type()).position(vertIdx,
@@ -97,11 +98,11 @@ public:
         Scalar pC = jac.problem().materialLaw().pC(saturation[I::wPhase],
                                                    global,
                                                    element,
-                                                   local, 
+                                                   local,
                                                    temperature);
         updatePressures(sol, pC);
         updateMassFracs(sol, jac.problem().multicomp(), phaseState, temperature);
-        
+
         // Densities
         density[I::wPhase] = jac.problem().wettingPhase().density(temperature,
                                                                    pressure[I::wPhase],
@@ -109,7 +110,7 @@ public:
         density[I::nPhase] = jac.problem().nonwettingPhase().density(temperature,
                                                                       pressure[I::nPhase],
                                                                       massfrac[I::wComp][I::nPhase]);
-        
+
         // Mobilities
         mobility[I::wPhase] = jac.problem().materialLaw().mobW(saturation[I::wPhase],
                                                                 global,
@@ -123,11 +124,11 @@ public:
                                                                 local,
                                                                 temperature,
                                                                 pressure[I::nPhase]);
-        
+
         // binary diffusion coefficents
-        diffCoeff[I::wPhase] = 
+        diffCoeff[I::wPhase] =
             jac.problem().wettingPhase().diffCoeff(temperature, pressure[I::wPhase]);
-        diffCoeff[I::nPhase] = 
+        diffCoeff[I::nPhase] =
             jac.problem().nonwettingPhase().diffCoeff(temperature, pressure[I::nPhase]);
 
         // porosity
@@ -137,9 +138,9 @@ public:
     }
 
     /*!
-     * \brief Update saturations. 
+     * \brief Update saturations.
      */
-    void updateSaturations(const PrimaryVarVector &sol, 
+    void updateSaturations(const PrimaryVarVector &sol,
                            int phaseState)
     {
         typedef Indices I;
@@ -147,11 +148,11 @@ public:
         // update saturations
         if (formulation == I::pWsN)
         {
-            if (phaseState == I::bothPhases) 
+            if (phaseState == I::bothPhases)
                 saturation[I::nPhase] = sol[I::switchIdx];
             else if (phaseState == I::wPhaseOnly)
                 saturation[I::nPhase] = 0.0;
-            else if (phaseState == I::nPhaseOnly) 
+            else if (phaseState == I::nPhaseOnly)
                 saturation[I::nPhase] = 1.0;
             else
                 DUNE_THROW(Dune::InvalidStateException, "Phase state " << phaseState << " is invalid.");
@@ -164,7 +165,7 @@ public:
                 saturation[I::wPhase] = sol[I::switchIdx];
             else if (phaseState == I::wPhaseOnly)
                 saturation[I::wPhase] = 1.0;
-            else if (phaseState == I::nPhaseOnly) 
+            else if (phaseState == I::nPhaseOnly)
                 saturation[I::wPhase] = 0.0;
             else
                 DUNE_THROW(Dune::InvalidStateException, "Phase state " << phaseState << " is invalid.");
@@ -175,7 +176,7 @@ public:
     }
 
     /*!
-     * \brief Update phase pressures. 
+     * \brief Update phase pressures.
      *
      * Requires up to date saturations.
      */
@@ -228,7 +229,7 @@ public:
         massfrac[I::wComp][I::wPhase] = 1.0 - massfrac[I::nComp][I::wPhase];
         massfrac[I::nComp][I::nPhase] = 1.0 - massfrac[I::wComp][I::nPhase];
     };
-    
+
 public:
     PhasesVector saturation;//!< Effective phase saturations within the control volume
     PhasesVector pressure;  //!< Effective phase pressures within the control volume
@@ -239,7 +240,7 @@ public:
     PhasesVector diffCoeff; //!< Binary diffusion coefficients for the phases
 
     //! Mass fractions of each component within each phase
-    Dune::FieldMatrix<Scalar, numComponents, numPhases> massfrac; 
+    Dune::FieldMatrix<Scalar, numComponents, numPhases> massfrac;
 };
 
 } // end namepace

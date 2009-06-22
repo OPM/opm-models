@@ -75,11 +75,13 @@ namespace Dune
  * primary variable switch is included. The phase state is stored for all nodes
  * of the system. Following cases can be distinguished:
  * <ul>
- *  <li> both phases are present: The saturation is used (either\f$S_n\f$ or \f$S_w\f$, dependent on the chosen formulation)</li>
- *  <li> only wetting phase is present: The mass fraction of air in the wetting phase \f$X^a_w\f$ is used</li>
- *  <li> only non-wetting phase is present: The mass fraction of water in the non-wetting phase, \f$X^w_n\f$, is used</li>
+ *  <li> Both phases are present: The saturation is used (either \f$S_n\f$ or \f$S_w\f$, dependent on the chosen <tt>Formulation</tt>),
+ *  	as long as \f$ 0 < S_\alpha < 1\f$</li>.
+ *  <li> Only wetting phase is present: The mass fraction of air in the wetting phase \f$X^a_w\f$ is used,
+ *  	as long as the maximum mass fraction is not exceeded (\f$X^a_w<X^a_{w,max}\f$)</li>
+ *  <li> Only non-wetting phase is present: The mass fraction of water in the non-wetting phase, \f$X^w_n\f$, is used,
+ *  	as long as the maximum mass fraction is not exceeded (\f$X^w_n<X^w_{n,max}\f$)</li>
  * </ul>
- *  The following table summarizes the choice of the second primary variable and the respective switch criteria:
  */
 
 template<class TypeTag, class Implementation >
