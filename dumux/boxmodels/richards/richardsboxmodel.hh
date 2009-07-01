@@ -44,7 +44,7 @@ namespace Dune
  * \brief Adaption of the BOX scheme to the isothermal Richards model.
  *
  *
- * In the unsaturated zone Richards` equation can be used.
+ * In the unsaturated zone, Richards' equation can be used.
  * Gas has resistance against the water flow in porous media.
  * However, viscosity of air is about 1\% of the viscosity of water,
  * which makes it highly mobile compared to the water phase.
@@ -52,12 +52,14 @@ namespace Dune
  * where pressure of the gas phase is set to a reference pressure (\f${p_n}_{ref}\f$).
  *
  * \f{align*}
- * \varrho \hspace{1mm} \phi \hspace{1mm} \frac{\partial S_w}{\partial p_c} \frac{\partial p_c}{\partial t} - \nabla \cdot (\frac{kr_w}{\mu_w} \hspace{1mm} \varrho_w \hspace{1mm} K \hspace{1mm} (\nabla p_w - \varrho_w \hspace{1mm} \vec{g})) \hspace{1mm} = \hspace{1mm} q \\
- * ,where \hspace{1mm}  p_w = {p_n}_{ref} - p_c
+ * \varrho \hspace{1mm} \phi \hspace{1mm} \frac{\partial S_w}{\partial p_c} \frac{\partial p_c}{\partial t} - \nabla \cdot (\frac{kr_w}{\mu_w} \hspace{1mm} \varrho_w \hspace{1mm} K \hspace{1mm}
+ * (\nabla p_w - \varrho_w \hspace{1mm} \vec{g})) \hspace{1mm} = \hspace{1mm} q,
  * \f}
- * Here \f$ p_w \f$, \f$ p_c \f$, \f$ p_n \f$  denotes water pressure, capillary pressure, non-wetting phase reference pressure repectively.
+ * where \f$p_w = {p_n}_{ref} - p_c\f$.
+ * Here \f$ p_w \f$, \f$ p_c \f$, and \f$ {p_n}_{ref} \f$
+ * denote water pressure, capillary pressure, and non-wetting phase reference pressure, repectively.
  *
- * To overcome convergence problem \f$ \frac{\partial S_w}{\partial p_c} \f$ is taken from old iteration step.
+ * To overcome convergence problems, \f$ \frac{\partial S_w}{\partial p_c} \f$ is taken from the old iteration step.
  *
  */
 template<class TypeTag >
