@@ -24,6 +24,7 @@
 #define DUMUX_2PPROPERTIES_HH
 
 #include <dumux/boxmodels/tags.hh>
+#include "pwsnnewtoncontroller.hh"
 
 namespace Dune
 {
@@ -57,16 +58,16 @@ class TwoPFluxData;
  * \brief The common indices for the isothermal two-phase model.
  */
 struct TwoPCommonIndices
-{   
+{
     // Formulations
     static const int pWsN = 0; //!< Pw and Sn as primary variables
     static const int pNsW = 1; //!< Pn and Sw as primary variables
-    
+
     // Phase indices
     static const int wPhase = 0; //!< Index of the wetting phase in a phase vector
     static const int nPhase = 1; //!< Index of the non-wetting phase in a phase vector
 };
-    
+
 /*!
  * \brief The indices for the \f$p_w-S_n\f$ formulation of the
  *        isothermal two-phase model.
@@ -141,14 +142,23 @@ SET_INT_PROP(BoxTwoP, NumEq,         2); //!< set the number of equations to 2
 SET_INT_PROP(BoxTwoP, NumPhases,     2); //!< The number of phases in the 2p model is 2
 
 //! Set the default formulation to pWsN
-SET_INT_PROP(BoxTwoP, 
+SET_INT_PROP(BoxTwoP,
              Formulation,
              TwoPCommonIndices::pWsN);
 
 //! Use the 2p local jacobian operator for the 2p model
-SET_TYPE_PROP(BoxTwoP, 
+SET_TYPE_PROP(BoxTwoP,
               LocalJacobian,
               TwoPBoxJacobian<TypeTag>);
+
+//! Use the 2p specific newton controller for the 2p model
+SET_PROP(BoxTwoP, NewtonController)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod))  NewtonMethod;
+
+public:
+    typedef PwSnNewtonController<NewtonMethod> type;
+};
 
 //! the Model property
 SET_TYPE_PROP(BoxTwoP, Model, TwoPBoxModel<TypeTag>);
@@ -167,8 +177,8 @@ SET_SCALAR_PROP(BoxTwoP, UpwindAlpha, 1.0);
 
 //! the upwind factor for the mobility. uses the value of UpwindAlpha
 //! if the property is not overwritten elsewhere
-SET_SCALAR_PROP(BoxTwoP, 
-                MobilityUpwindAlpha, 
+SET_SCALAR_PROP(BoxTwoP,
+                MobilityUpwindAlpha,
                 GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
 
 //! The indices required by the isothermal 2p model
