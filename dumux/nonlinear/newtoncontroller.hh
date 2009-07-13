@@ -289,9 +289,14 @@ protected:
         Dune::OverlappingSchwarzScalarProduct<Vector,Communication>
             scalarProduct(comm);
 
+ #ifdef HAVE_PARDISO
+         SeqPardiso<Matrix,Vector,Vector> seqPreCond;
+         seqPreCond.factorize(A);        // an inverse operator
+ #else 
         SeqILU0<Matrix,Vector,Vector>
             seqPreCond(A, 1.0);// a precondtioner
-        Dune::BlockPreconditioner<Vector,Vector,Communication>
+ #endif       
+	 Dune::BlockPreconditioner<Vector,Vector,Communication>
             parPreCond(seqPreCond, comm);
         Dune::BiCGSTABSolver<Vector>
             solver(opA,
