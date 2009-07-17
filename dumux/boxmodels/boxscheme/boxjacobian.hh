@@ -106,7 +106,7 @@ public:
     BoxJacobian(Problem &problem)
         : problem_(problem),
           gridView_(problem.gridView()),
-          curElementPtr_(* gridView_.template begin<0>())
+          curElementPtr_(* ++gridView_.template begin<0>())
     {
     }
 
@@ -351,7 +351,7 @@ public:
             // tell LocalStiffness (-> parent class) the current
             // number of degrees of freedom
             this->setcurrentsize(curElementGeom_.numVertices);
-        }
+	}
     };
 
 
