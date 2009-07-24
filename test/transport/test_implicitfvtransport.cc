@@ -11,7 +11,7 @@
 #include "dumux/transport/fv/computeupwind.hh"
 #include "dumux/transport/fv/capillarydiffusion.hh"
 #include "dumux/transport/problems/simpleproblem.hh"
-#include "dumux/transport/problems/simplenonlinearproblem.hh"
+#include "simplenonlinearproblem.hh"
 #include "dumux/timedisc/timeloop.hh"
 #include "dumux/fractionalflow/variableclass2p.hh"
 
@@ -23,8 +23,8 @@ int main(int argc, char** argv)
 
         // time loop parameters
         const double tStart = 0;
-        const double tEnd = 1.5e9;
-        double dt = 2.5e8;
+        const double tEnd = 4e9;
+        double dt = 5e7;
 	double firstDt = dt;
 	double maxDt = dt;
         int modulo = 1;
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         typedef Dune::SGrid<dim,dim> Grid;
         typedef Grid::LevelGridView GridView;
         typedef Dune::FieldVector<Grid::ctype,dim> FieldVector;
-        Dune::FieldVector<int,dim> N(1); N[0] = 200;
+        Dune::FieldVector<int,dim> N(1); N[0] = 16;
         FieldVector L(0);
         FieldVector H(300); H[0] = 600;
         Grid grid(N,L,H);

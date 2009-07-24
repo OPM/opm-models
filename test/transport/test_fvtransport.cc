@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 
 		// time loop parameters
 		const double tStart = 0;
-		const double tEnd = 1.5e9;
+		const double tEnd = 4e9;
 		const double cFLFactor = 0.5;
 		double maxDT = 1e100;
 		int modulo = 10;
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 		typedef double Scalar;
 		typedef Dune::SGrid<dim,dim> Grid;
 		typedef Grid::LeafGridView GridView;
-		Dune::FieldVector<int,dim> N(1); N[0] = 64;
+		Dune::FieldVector<int,dim> N(1); N[0] = 16;
 		Dune::FieldVector<Scalar,dim> L(0);
 		Dune::FieldVector<Scalar,dim> H(300); H[0] = 600;
 
