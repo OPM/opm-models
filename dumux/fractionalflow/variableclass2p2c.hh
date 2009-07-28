@@ -50,6 +50,7 @@ public:
     ScalarType mobility_wet, mobility_nonwet;
     ScalarType volErr;
     ScalarType elementVolumes;
+    ScalarType Srn;
     Scalar time_;
 
     template<int dim> struct ElementLayout
@@ -78,6 +79,7 @@ public:
         mobility_nonwet.resize(size);
         volErr.resize(size);
         elementVolumes.resize(size);
+        Srn.resize(size);
 
         volErr = 0;
         time_ = 0;
@@ -130,7 +132,8 @@ public:
         C1.resize(size); C2.resize(size);
         Scalar totalMassC = 0;
         Scalar totalMassX = 0;
-	Scalar dissolvedMass = 0;
+    	Scalar dissolvedMass = 0;
+    	Scalar trappedMass = 0;
         for (int i = 0; i < size; i++)
         {
             C1[i] = totalConcentration[i];
@@ -138,12 +141,17 @@ public:
             totalMassC += C2[i]*elementVolumes[i];
             totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
                                                  +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
-	    dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
+            dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
+            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*Srn[i]*density_nonwet[i]);
+
+            if (Srn[i] > (1 - saturation[i] + 1e-4))
+            	DUNE_THROW(MathError, "Srn = " << Srn[i] << " is greater than Sn = " << (1 - saturation[i]));
         }
         std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
         std::cout.precision(3);
-        std::cout << "total mass of component 2 injected: " << totalMassC << " kg (C), "
-				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%." << std::endl;
+        std::cout << time_ << ": component 2: " << totalMassC << " kg (C), "
+				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%. Residually trapped: "
+				  << trappedMass/totalMassX*100.0 << "%." << std::endl;
 
         VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
@@ -159,7 +167,12 @@ public:
         vtkwriter.addCellData(density_nonwet, "non-wetting phase density [kg/m^3]");
         vtkwriter.addCellData(mobility_wet, "wetting phase mobility [m*s/kg]");
         vtkwriter.addCellData(mobility_nonwet, "non-wetting phase mobility [m*s/kg]");
+        vtkwriter.addCellData(Srn, "residual nonwetting phase saturation [-]");
         vtkwriter.write(fname, VTKOptions::ascii);
+
+        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-4*totalMassX)
+        	DUNE_THROW(MathError, "EVERYTHING TRAPPED OR DISSOLVED! No need to go further.");
+
         return;
     }
 
