@@ -76,7 +76,7 @@ public:
      @param  localPos     position in reference element of element
      \return     value of source term
      */
-    virtual Scalar sourcePress (const GlobalPosition& globalPos, const Element& element,
+    virtual Scalar source (const GlobalPosition& globalPos, const Element& element,
                                 const LocalPosition& localPos) = 0;
 
     //! return type of boundary condition at the given global coordinate
