@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 
 /*****************************************************************************
 * Copyright (C) 2009 by Jochen Fritz                                         *
@@ -32,10 +32,10 @@ namespace Dune {
 template<class GridView, class Scalar> class VariableClass2p2c
 {
 private:
-    enum {n=GridView::dimension};
-    typedef typename GridView::Grid::ctype ct;
+    enum {dim=GridView::dimension};
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarType;
-    typedef typename GridView::template Codim<0>::Entity Entity;
+    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     GridView& gridview;
     const typename GridView::IndexSet& indexset;
@@ -49,6 +49,8 @@ public:
     ScalarType density_wet, density_nonwet;
     ScalarType mobility_wet, mobility_nonwet;
     ScalarType volErr;
+    ScalarType elementVolumes;
+    Scalar time_;
 
     template<int dim> struct ElementLayout
     {
@@ -75,8 +77,19 @@ public:
         mobility_wet.resize(size);
         mobility_nonwet.resize(size);
         volErr.resize(size);
+        elementVolumes.resize(size);
 
         volErr = 0;
+        time_ = 0;
+
+        ElementIterator eItEnd = gridview.template end<0>();
+        for (ElementIterator eIt = gridview.template begin<0>(); eIt != eItEnd; ++eIt)
+        	elementVolumes[indexset.index(*eIt)] = (*eIt).geometry().volume();
+    }
+
+    Scalar time()
+    {
+        return time_;
     }
 
     //! returns a reference to the saturation vector
@@ -92,17 +105,17 @@ public:
     }
 
     //! returns a reference to the saturation at a distinct location
-    const Dune::FieldVector<Scalar,1>& sat(const Dune::FieldVector<ct,n>& x, const Entity& e,
-                                       const Dune::FieldVector<ct,n>& xi) const
+    const Dune::FieldVector<Scalar,1>& sat(const Dune::FieldVector<Scalar,dim>& globalPos, const Element& element,
+                                       const Dune::FieldVector<Scalar,dim>& localPos) const
     {
-        return saturation[indexset.index(e)];;
+        return saturation[indexset.index(element)];;
     }
 
     //! returns a reference to the pressure at a distinct location
-    const Dune::FieldVector<Scalar,1>& press(const Dune::FieldVector<ct,n>& x, const Entity& e,
-                                         const Dune::FieldVector<ct,n>& xi) const
+    const Dune::FieldVector<Scalar,1>& press(const Dune::FieldVector<Scalar,dim>& globalPos, const Element& element,
+                                         const Dune::FieldVector<Scalar,dim>& localPos) const
     {
-        return pressure[indexset.index(e)];
+        return pressure[indexset.index(element)];
     }
 
     /*! @brief writes all variables to a VTK File
@@ -115,11 +128,23 @@ public:
     {
         ScalarType C1, C2;
         C1.resize(size); C2.resize(size);
+        Scalar totalMassC = 0;
+        Scalar totalMassX = 0;
+	Scalar dissolvedMass = 0;
         for (int i = 0; i < size; i++)
         {
             C1[i] = totalConcentration[i];
             C2[i] = totalConcentration[i + size];
+            totalMassC += C2[i]*elementVolumes[i];
+            totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
+                                                 +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
+	    dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
         }
+        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+        std::cout.precision(3);
+        std::cout << "total mass of component 2 injected: " << totalMassC << " kg (C), "
+				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%." << std::endl;
+
         VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
         sprintf(fname, "%s-%05d", name, k);
