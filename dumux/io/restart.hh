@@ -75,7 +75,7 @@ class Restart {
                                               double t)
     {
         int rank = gridView.comm().rank();
-        return (boost::format("%s_time=%3.1d_rank=%05d.drs")
+        return (boost::format("%s_time=%3.5f_rank=%05d.drs")
                 %simName
                 %t
                 %rank).str();
