@@ -136,7 +136,7 @@ private:
  *
  * In order to use the method you need a NewtonController.
  */
-template<class ModelT, bool useLineSearch=true>
+template<class ModelT, bool useLineSearch=false>
 class NewtonMethod
 {
 public:

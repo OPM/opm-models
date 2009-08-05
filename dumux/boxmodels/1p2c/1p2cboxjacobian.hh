@@ -26,7 +26,6 @@
 #include <dumux/boxmodels/1p2c/1p2celementdata.hh>
 #include <dumux/boxmodels/1p2c/1p2cfluxdata.hh>
 
-#include <dumux/auxiliary/apis.hh>
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
 #include <iostream>

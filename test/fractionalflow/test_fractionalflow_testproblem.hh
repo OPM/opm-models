@@ -37,8 +37,9 @@ public:
         Right_(UpperRight[0]), eps_(1e-8)
     {}
 
-    virtual Scalar sourcePress  (const GlobalPosition& globalPos, const Element& element,
-                                 const LocalPosition& localPos)
+    virtual Scalar source(const GlobalPosition& globalPos, 
+                          const Element& element,
+                          const LocalPosition& localPos)
     {
         return 0;
     }

@@ -78,8 +78,7 @@ class OnePTwoCBoxModel : public BoxScheme<TypeTag,  OnePTwoCBoxModel<TypeTag> >
 
 public:
     OnePTwoCBoxModel(Problem &prob)
-        : ParentType(prob, twoPLocalJacobian_),
-          twoPLocalJacobian_(prob)
+        : ParentType(prob)
     {
     }
 
@@ -90,7 +89,7 @@ public:
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
     {
-        twoPLocalJacobian_.addVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addVtkFields(writer, this->curSolFunction());
     }
 
     /*!
@@ -99,14 +98,8 @@ public:
      */
     void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
     {
-        twoPLocalJacobian_.calculateMass(this->curSolFunction(), mass);
+        this->localJacobian().calculateMass(this->curSolFunction(), mass);
     }
-
-
-
-private:
-    // calculates the jacobian matrix at a given position
-    LocalJacobian  twoPLocalJacobian_;
 };
 }
 

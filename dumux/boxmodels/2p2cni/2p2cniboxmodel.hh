@@ -1,8 +1,8 @@
 // $Id$
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Andreas Lauser
- *   Copyright (C) 2008-2009 by Melanie Darcis
- *   Copyright (C) 2008-2009 by Klaus Mosthaf
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *

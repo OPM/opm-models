@@ -30,7 +30,6 @@
 #include "2pelementdata.hh"
 #include "2pfluxdata.hh"
 
-#include <dumux/auxiliary/apis.hh>
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
 #include <iostream>

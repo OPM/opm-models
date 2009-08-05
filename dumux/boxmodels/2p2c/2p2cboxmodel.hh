@@ -107,8 +107,7 @@ class TwoPTwoCBoxModelBase
 
 public:
     TwoPTwoCBoxModelBase(Problem &prob)
-        : ParentType(prob, twoPTwoCLocalJacobian_),
-          twoPTwoCLocalJacobian_(prob)
+        : ParentType(prob)
     {
     }
 
@@ -120,9 +119,9 @@ public:
     {
         ParentType::updateFailedTry();
 
-        twoPTwoCLocalJacobian_.setSwitched(false);
-        twoPTwoCLocalJacobian_.resetPhaseState();
-        twoPTwoCLocalJacobian_.updateStaticData(this->curSolFunction(),
+        this->localJacobian().setSwitched(false);
+        this->localJacobian().resetPhaseState();
+        this->localJacobian().updateStaticData(this->curSolFunction(),
                                                 this->prevSolFunction());
     };
 
@@ -133,8 +132,8 @@ public:
     {
         ParentType::updateSuccessful();
 
-        twoPTwoCLocalJacobian_.updateOldPhaseState();
-        twoPTwoCLocalJacobian_.setSwitched(false);
+        this->localJacobian().updateOldPhaseState();
+        this->localJacobian().setSwitched(false);
     }
 
     /*!
@@ -145,7 +144,7 @@ public:
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
     {
-        twoPTwoCLocalJacobian_.addVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addVtkFields(writer, this->curSolFunction());
     }
 
     /*!
@@ -153,7 +152,7 @@ public:
      *        after the last time step.
      */
     bool switched() const
-    { return twoPTwoCLocalJacobian_.switched(); }
+    { return this->localJacobian().switched(); }
 
     /*!
      * \brief Write the current solution to a restart file.
@@ -164,7 +163,7 @@ public:
         // write primary variables
         ParentType::serializeEntity(outStream, vert);
 
-        twoPTwoCLocalJacobian_.serializeEntity(outStream, vert);
+        this->localJacobian().serializeEntity(outStream, vert);
     };
 
     /*!
@@ -177,13 +176,8 @@ public:
         // read primary variables
         ParentType::deserializeEntity(inStream, vert);
 
-        twoPTwoCLocalJacobian_.deserializeEntity(inStream, vert);
+        this->localJacobian().deserializeEntity(inStream, vert);
     };
-
-
-private:
-    // calculates the jacobian matrix at a given position
-    LocalJacobian twoPTwoCLocalJacobian_;
 };
 
 /**

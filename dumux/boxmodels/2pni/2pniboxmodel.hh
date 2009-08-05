@@ -91,8 +91,7 @@ class TwoPNIBoxModel: public BoxScheme<TypeTag, TwoPNIBoxModel<TypeTag> > {
 
 public:
 	TwoPNIBoxModel(Problem &prob)
-	: ParentType(prob, twoPNILocalJacobian_),
-	twoPNILocalJacobian_(prob)
+	: ParentType(prob)
 	{
 	}
 
@@ -104,7 +103,7 @@ public:
 	template <class MultiWriter>
 	void addVtkFields(MultiWriter &writer)
 	{
-		twoPNILocalJacobian_.addVtkFields(writer, this->curSolFunction());
+		this->localJacobian().addVtkFields(writer, this->curSolFunction());
 	}
 
 	/*!
@@ -113,12 +112,8 @@ public:
 	 */
 	void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
 	{
-		twoPNILocalJacobian_.calculateMass(this->curSolFunction(), mass);
+		this->localJacobian().calculateMass(this->curSolFunction(), mass);
 	}
-
-private:
-	// calculates the jacobian matrix at a given position
-	LocalJacobian twoPNILocalJacobian_;
 };
 
 }

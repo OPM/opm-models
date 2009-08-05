@@ -1,0 +1,14 @@
+Makefile
+Makefile.in
+*.o
+.deps
+*.vtu
+*.pvd
+*.drs
+*.la
+*~
+config*
+!configure.ac
+aclocal*
+am
+*.lo

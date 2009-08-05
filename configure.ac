@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([tar-pax])
 AC_CONFIG_SRCDIR([test/diffusion/test_diffusion.cc])
 AM_CONFIG_HEADER([config.h])
 #AC_SUBST([LOCAL_LIBS], '$(top_srcdir)/lib/libdunemux.la')
@@ -20,10 +20,22 @@ AC_CHECK_PROGS([T4HT], [t4ht], [true])
 AM_CONDITIONAL([TEX4HT], [test "x$TEX4HT" != xtrue])
 AC_CHECK_PROGS([CONVERT], [convert], [false])
 AM_CONDITIONAL([CONVERT], [test "x$CONVERT" != xfalse])
+AM_CONDITIONAL([BUILD_HANDBOOK], [test -a "stamp-vc"])
+
+AC_CHECK_HEADER([valgrind/memcheck.h], 
+                [HAVE_VALGRIND_H="1"],
+                AC_MSG_WARN([valgrind/memcheck.h not found]))
+if test x"$HAVE_VALGRIND_H" = "x1"; then
+   AC_DEFINE(HAVE_VALGRIND,1,[Define whether the valgrind header files for client requests are present.])
+fi
+
 # we need no more than the standard DE-stuff
 # this module depends on dune-common dune-grid dune-istl dune-disc dune-subgrid
 # this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-disc], [dune-subgrid]
 DUNE_CHECK_ALL
+
+# the Boost c++ template libraries
+AX_BOOST_BASE([1.33.1])
 
 AC_DEFUN([SET_PARDISO], [
 AC_PREREQ(2.50)
@@ -73,8 +85,8 @@ fi
 SET_PARDISO
 
 # implicitly set the Dune-flags everywhere
-AC_SUBST(AM_CPPFLAGS, $ALL_PKG_CPPFLAGS)
-AC_SUBST(AM_LDFLAGS, $ALL_PKG_LDFLAGS)
+AC_SUBST(AM_CPPFLAGS, "$ALL_PKG_CPPFLAGS $MPI_CPPFLAGS" )
+AC_SUBST(AM_LDFLAGS, "$ALL_PKG_LDFLAGS $MPI_LDFLAGS" )
 LIBS="$DUNE_LIBS $ALL_PKG_LIBS $PARDISO_LIBS"
 
 AC_CONFIG_FILES([Makefile
@@ -92,7 +104,8 @@ AC_CONFIG_FILES([Makefile
     test/transport/Makefile
     tutorial/Makefile
     dumux/fractionalflow/impes/Makefile 
-    dune-mux.pc])
+    m4/Makefile
+    dumux.pc])
 
 AC_OUTPUT
 # finally print the summary information

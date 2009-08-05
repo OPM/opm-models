@@ -37,9 +37,7 @@
 #include <iostream>
 #include <boost/format.hpp>
 
-#include "dumux/pardiso/pardiso.hh"
-
-
+#include <dumux/pardiso/pardiso.hh>
 
 namespace Dune
 {

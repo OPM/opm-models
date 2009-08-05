@@ -71,6 +71,8 @@ public:
           newtonMethod_(model_),
           resultWriter_(asImp_()->name())
     {
+        wasRestarted_ = false;
+
         // calculate the bounding box of the grid view
         VertexIterator vIt = gridView.template begin<dim>(); 
         const VertexIterator vEndIt = gridView.template end<dim>(); 

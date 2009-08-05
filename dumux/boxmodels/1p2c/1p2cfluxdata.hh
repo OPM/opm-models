@@ -100,32 +100,51 @@ private:
                              const Element &element,
                              const VertexDataArray &elemDat)
     {
-        // calculate gradients
-        GlobalPosition tmp(0.0);
-        for (int idx = 0;
-             idx < fvElemGeom.numVertices;
-             idx++) // loop over adjacent vertices
-        {
-            // FE gradient at vertex idx
-            const LocalPosition &feGrad = face->grad[idx];
+        GlobalPosition tmp;
+        if (!problem.soil().useTwoPointGradient(element, face->i, face->j)) {
+            // use finite-element gradients
+            tmp = 0.0;
+            for (int idx = 0;
+                 idx < fvElemGeom.numVertices;
+                 idx++) // loop over adjacent vertices
+            {
+                // FE gradient at vertex idx
+                const LocalPosition &feGrad = face->grad[idx];
 
-            // the pressure gradient
-            tmp = feGrad;
-            tmp *= elemDat[idx].pressure;
-            pressureGrad += tmp;
+                // the pressure gradient
+                tmp = feGrad;
+                tmp *= elemDat[idx].pressure;
+                pressureGrad += tmp;
+                
+                // the concentration gradient
+                tmp = feGrad;
+                tmp *= elemDat[idx].molefraction;
+                concentrationGrad += tmp;
+                
+                // phase density
+                densityAtIP +=
+                    elemDat[idx].density*face->shapeValue[idx];
+                
+                // phase viscosity
+                viscosityAtIP +=
+                    elemDat[idx].viscosity*face->shapeValue[idx];
+            }
+        }
+        else {
+            // use two-point gradients
+            tmp = element.geometry().corner(face->i);
+            tmp -= element.geometry().corner(face->j);
+            Scalar dist = tmp.two_norm();
 
-            // the concentration gradient
-            tmp = feGrad;
-            tmp *= elemDat[idx].molefraction;
-            concentrationGrad += tmp;
-
-            // phase density
-            densityAtIP +=
-                elemDat[idx].density*face->shapeValue[idx];
-
-            // phase viscosity
-            viscosityAtIP +=
-                elemDat[idx].viscosity*face->shapeValue[idx];
+            tmp  = face->normal;
+            tmp /= face->normal.two_norm()*dist;
+            
+            pressureGrad       = tmp;
+            pressureGrad      *= elemDat[face->j].pressure - elemDat[face->i].pressure;
+            concentrationGrad  = tmp;
+            concentrationGrad *= elemDat[face->j].molefraction - elemDat[face->i].molefraction;
+            densityAtIP        = (elemDat[face->j].density + elemDat[face->i].density)/2;
+            viscosityAtIP      = (elemDat[face->j].viscosity  + elemDat[face->i].viscosity)/2;
         }
 
         // correct the pressure by the hydrostatic pressure due to

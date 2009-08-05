@@ -23,6 +23,7 @@
 #define DUMUX_TWOP_BOX_MODEL_HH
 
 #include "2pboxjacobian.hh"
+#include "2pnewtoncontroller.hh"
 #include "2pboxproblem.hh"
 
 namespace Dune
@@ -85,8 +86,7 @@ class TwoPBoxModel : public BoxScheme<TypeTag,  TwoPBoxModel<TypeTag> >
 
 public:
     TwoPBoxModel(Problem &prob)
-        : ParentType(prob, twoPLocalJacobian_),
-          twoPLocalJacobian_(prob)
+        : ParentType(prob)
     {
     }
 
@@ -98,7 +98,7 @@ public:
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
     {
-        twoPLocalJacobian_.addVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addVtkFields(writer, this->curSolFunction());
     }
 
     /*!
@@ -107,13 +107,8 @@ public:
      */
     void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
     {
-        twoPLocalJacobian_.calculateMass(this->curSolFunction(), mass);
+        this->localJacobian().calculateMass(this->curSolFunction(), mass);
     }
-
-
-private:
-    // calulated the jacobian matrix of element-wise
-    LocalJacobian  twoPLocalJacobian_;
 };
 }
 

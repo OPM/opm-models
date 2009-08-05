@@ -22,9 +22,6 @@
 #define DUMUX_BOX_SCHEME_HH
 
 #include <dumux/boxmodels/boxscheme/boxjacobian.hh>
-#include <dumux/auxiliary/basicdomain.hh>
-#include <dumux/nonlinear/newtonmethod.hh>
-#include <dumux/auxiliary/apis.hh>
 
 #include <dune/istl/operators.hh>
 #include <dune/disc/operators/p1operator.hh>
@@ -36,7 +33,7 @@
 #include "boxproperties.hh"
 
 
-#ifdef HAVE_VALGRIND
+#if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
 #elif !defined VALGRIND_CHECK_MEM_IS_DEFINED
 #define VALGRIND_CHECK_MEM_IS_DEFINED(addr, s)
@@ -142,7 +139,7 @@ public:
     /*!
      * \brief The constructor.
      */
-    BoxScheme(Problem &prob, LocalJacobian &localJac)
+    BoxScheme(Problem &prob)
         : problem_(prob),
           gridView_(prob.gridView()),
           dofEntityMapper_(gridView_),
@@ -155,7 +152,7 @@ public:
           
           jacAsm_(gridView_.grid(), gridView_, gridView_, !hasOverlap_()),
 
-          localJacobian_(localJac)
+          localJacobian_(prob)
     {
         wasRestarted_ = false;
 
@@ -232,17 +229,22 @@ public:
      */
     LocalJacobian &localJacobian()
     { return localJacobian_; }
-
     /*!
-     * \brief A reference to the problem on which the model is applied.
+     * \copydoc localJacobian()
      */
-    const Problem &problem() const
-    { return problem_; }
+    const LocalJacobian &localJacobian() const
+    { return localJacobian_; }
+
 
     /*!
      * \brief A reference to the problem on which the model is applied.
      */
     Problem &problem()
+    { return problem_; }
+    /*!
+     * \copydoc problem()
+     */
+    const Problem &problem() const
     { return problem_; }
 
     /*!
@@ -526,6 +528,7 @@ protected:
                                    element,
                                    fvElemGeom,
                                    scvIdx);
+            VALGRIND_CHECK_MEM_IS_DEFINED(&(*u)[globalIdx], sizeof((*u)[globalIdx]));
         }
     }
 
@@ -628,6 +631,9 @@ protected:
                                    isIt,
                                    elemVertIdx,
                                    boundaryFaceIdx);
+                VALGRIND_CHECK_MEM_IS_DEFINED(&dirichletVal, 
+                                              sizeof(dirichletVal));
+
             }
 
             // copy the dirichlet value for the current equation
@@ -674,7 +680,7 @@ protected:
     // local jacobian
     JacobianAssembler jacAsm_;
     // calculates the local jacobian matrix for a given element
-    LocalJacobian    &localJacobian_;
+    LocalJacobian     localJacobian_;
 
     bool wasRestarted_;
 };

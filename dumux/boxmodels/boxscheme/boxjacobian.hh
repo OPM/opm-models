@@ -77,6 +77,7 @@ private:
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
     typedef typename GridView::template Codim<0>::Entity               Element;
+    typedef typename GridView::template Codim<0>::Iterator             ElementIterator;
     typedef typename Element::EntityPointer                            ElementPointer;
     
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
@@ -108,6 +109,33 @@ public:
           gridView_(problem.gridView()),
           curElementPtr_(* ++gridView_.template begin<0>())
     {
+    }
+
+    /*!
+     * \brief Compute the global residual right hand side
+     *        of an equation we would like to have zero.
+     */
+    void evalGlobalResidual(SolutionFunction &residual)
+    {
+        *residual = 0;
+        SolutionOnElement tmpSol, tmpSolOld;
+        SolutionOnElement localResid;
+        localResid.resize(12);
+        ElementIterator elemIt = gridView_.template begin<0>();
+        const ElementIterator elemEndIt = gridView_.template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            this->setCurrentElement(*elemIt);
+            this->restrictToElement(tmpSol, this->problem().model().curSolFunction());
+            this->restrictToElement(tmpSolOld, this->problem().model().prevSolFunction());
+            this->asImp_().setCurrentSolution(tmpSol);
+            this->asImp_().setPreviousSolution(tmpSolOld);
+            
+            evalLocalResidual(localResid);
+            for (int i = 0; i < elemIt->template count<dim>(); ++i) {
+                int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
+                (*residual)[globalI] += localResid[i];
+            }
+        };
     }
 
     /*!
@@ -252,6 +280,7 @@ public:
                                  isIt,
                                  scvIdx,
                                  boundaryFaceIdx);
+                VALGRIND_CHECK_MEM_IS_DEFINED(&values, sizeof(values));
                 // TODO (?): multiple integration
                 // points
                 values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
@@ -293,6 +322,7 @@ public:
 
             massContrib -= tmp;
             massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
+            
             residual[i] += massContrib;
 
             // subtract the source term from the local rate
@@ -468,11 +498,11 @@ public:
         VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx], 
                                     sizeof(VertexData));
 
-        curElemDat_[vertIdx].template update<Implementation>(curSol[vertIdx], 
-                                                             this->curElement_(),
-                                                             vertIdx, 
-                                                             false,
-                                                             asImp_());
+        curElemDat_[vertIdx].update(curSol[vertIdx], 
+                                    this->curElement_(),
+                                    vertIdx, 
+                                    false,
+                                    asImp_());
         VALGRIND_CHECK_MEM_IS_DEFINED(&curElemDat_[vertIdx], 
                                       sizeof(VertexData));
     }
@@ -568,6 +598,7 @@ private:
                                        isIt,
                                        elemVertIdx,
                                        boundaryFaceIdx);
+                VALGRIND_CHECK_MEM_IS_DEFINED(&tmp, sizeof(tmp));
 
                 // copy boundary type to the bctype array.
                 for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -612,7 +643,7 @@ private:
         {
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
             {
-                Scalar eps = std::max(fabs(1e-5*localU[j][eqIdx]), 1e-5);
+                Scalar eps = std::max(fabs(1e-5*localU[j][eqIdx]), 1e-8);
                 Scalar uJ = localU[j][eqIdx];
 
                 // vary the eqIdx-th equation at the element's j-th
@@ -649,9 +680,8 @@ private:
                 // TODO: in most cases this is not really a boundary
                 // vertex but an interior vertex, so
                 // Dune::BoundaryConditions::neumann is misleading...
-                if (this->bctype[i][eqIdx] == Dune::BoundaryConditions::neumann) {
+                if (this->bctype[i][eqIdx] == Dune::BoundaryConditions::neumann)
                     this->b[i][eqIdx] = residU[i][eqIdx];
-                }
             }
         }
     };

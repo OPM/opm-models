@@ -60,8 +60,7 @@ class OnePBoxModel : public BoxScheme<TypeTag,  OnePBoxModel<TypeTag> >
 
 public:
     OnePBoxModel(Problem &prob)
-        : ParentType(prob, onePLocalJacobian_),
-          onePLocalJacobian_(prob)
+        : ParentType(prob)
     {
     }
 
@@ -72,12 +71,8 @@ public:
     template <class MultiWriter>
     void addVtkFields(MultiWriter &writer)
     {
-        onePLocalJacobian_.addVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addVtkFields(writer, this->curSolFunction());
     }
-
-private:
-    // calculates the jacobian matrix at a given position
-    LocalJacobian  onePLocalJacobian_;
 };
 }
 

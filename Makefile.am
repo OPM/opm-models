@@ -3,8 +3,8 @@
 # we need the module file to be able to build via dunecontrol
 EXTRA_DIST=dune.module
 
-#SUBDIRS = doc dumux lib test benchmarkproblems
-SUBDIRS = doc dumux test tutorial
+#SUBDIRS = doc dumux m4 lib test benchmarkproblems
+SUBDIRS = m4 doc dumux test tutorial
 
 #pkgconfigdir = $(libdir)/pkgconfig
 #pkgconfig_DATA = dune-mux.pc
