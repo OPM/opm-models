@@ -39,6 +39,8 @@
 
 #include <dumux/pardiso/pardiso.hh>
 
+#include<dune/pdelab/backend/istlsolverbackend.hh>
+
 namespace Dune
 {
 /*!
@@ -63,6 +65,10 @@ public:
 
     typedef typename NewtonTraits::Function              Function;
     typedef typename NewtonTraits::JacobianAssembler     JacobianAssembler;
+#if HAVE_DUNE_PDELAB
+    typedef typename JacobianAssembler::GridFunctionSpace GridFunctionSpace;
+    typedef typename JacobianAssembler::ConstraintsTrafo ConstraintsTrafo;
+#endif
     typedef typename JacobianAssembler::RepresentationType    JacAsmRep;
 
     NewtonControllerBase(Scalar tolerance, // maximum tolerated deflection between two iterations
@@ -272,32 +278,46 @@ protected:
         // yet, so we use the targeted accurracy for the defect.
         Scalar residTol = tolerance_/1e8;
 
-        // set up parallel solvers
+#if HAVE_PARDISO
+    	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
+    	SeqPreCond seqPreCond(A);
+#else
+    	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
+    	SeqPreCond seqPreCond(A, 1.0);
+#endif
+
+#ifdef HAVE_DUNE_PDELAB
+    	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
+    	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
+    	typedef Dune::PDELab::NonoverlappingOperator<GridFunctionSpace,Matrix,Vector,Vector> ParallelOperator;
+    	ParallelOperator parallelOperator(model().jacobianAssembler().gridFunctionSpace(), A, parallelHelper);
+    	typedef Dune::PDELab::NonoverlappingScalarProduct<GridFunctionSpace,Vector> ParallelScalarProduct;
+    	ParallelScalarProduct scalarProduct(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
+    	typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
+    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
+    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
+//    	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
+//    	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
+//    	typedef Dune::PDELab::OverlappingOperator<ConstraintsTrafo,Matrix,Vector,Vector> ParallelOperator;
+//    	ParallelOperator parallelOperator(model().jacobianAssembler().constraintsTrafo(), A);
+//    	typedef Dune::PDELab::OverlappingScalarProduct<GridFunctionSpace,Vector> ParallelScalarProduct;
+//    	ParallelScalarProduct scalarProduct(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
+//    	typedef Dune::PDELab::OverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
+//    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
+//    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
+#else
         typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
         typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
-
         Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
         u.fillIndexInfoFromGrid(indexinfo);
-        Communication comm(indexinfo,
-                           MPIHelper::getCommunicator());
+        Communication comm(indexinfo, MPIHelper::getCommunicator());
+        Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication> parallelOperator(A, comm);
+        Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
+        Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
+#endif
 
-        Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication>
-            opA(A, comm);
-
-        Dune::OverlappingSchwarzScalarProduct<Vector,Communication>
-            scalarProduct(comm);
-
- #ifdef HAVE_PARDISO
-         SeqPardiso<Matrix,Vector,Vector> seqPreCond;
-         seqPreCond.factorize(A);        // an inverse operator
- #else 
-        SeqILU0<Matrix,Vector,Vector>
-            seqPreCond(A, 1.0);// a precondtioner
- #endif       
-	 Dune::BlockPreconditioner<Vector,Vector,Communication>
-            parPreCond(seqPreCond, comm);
-        Dune::BiCGSTABSolver<Vector>
-            solver(opA,
+    	Dune::BiCGSTABSolver<Vector>
+            solver(parallelOperator,
                    scalarProduct,
                    parPreCond,
                    residTol,
@@ -305,6 +325,7 @@ protected:
                    this->method().verbose());
 
         Dune::InverseOperatorResult result;
+
         solver.apply(x, b, result);
 
         if (!result.converged)

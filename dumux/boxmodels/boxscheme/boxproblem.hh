@@ -45,7 +45,7 @@ private:
     typedef Dune::TimeManager<Episode>      TimeManager;
 
     typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod))      NewtonMethod;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController))  NewtonController;
 
@@ -74,8 +74,8 @@ public:
         wasRestarted_ = false;
 
         // calculate the bounding box of the grid view
-        VertexIterator vIt = gridView.template begin<dim>(); 
-        const VertexIterator vEndIt = gridView.template end<dim>(); 
+        VertexIterator vIt = gridView.template begin<dim>();
+        const VertexIterator vEndIt = gridView.template end<dim>();
         for (; vIt!=vEndIt; ++vIt) {
             for (int i=0; i<dim; i++) {
                 bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
@@ -90,7 +90,7 @@ public:
     // \{
 
     /*!
-     * \brief Start the simulation procedure. 
+     * \brief Start the simulation procedure.
      *
      * This method is usually called by the main() function and simply
      * uses Dune::TimeManager::runSimulation() to do the actual
@@ -127,7 +127,7 @@ public:
      *       be modified by the timeIntegration(). On exit of this
      *       function \a timeStepSize must contain the step size
      *       actually used by the time integration for the current
-     *       steo, and \a nextStepSize must contain a suggestion for the 
+     *       steo, and \a nextStepSize must contain a suggestion for the
      *       next time step size.
      */
     void timeIntegration(Scalar &stepSize, Scalar &nextStepSize)
@@ -172,10 +172,10 @@ public:
      * steps. This file is intented to be overwritten by the
      * implementation.
      */
-    bool shouldWriteRestartFile() const 
+    bool shouldWriteRestartFile() const
     {
-        return !restarted() && 
-            timeManager().stepNum() > 0 && 
+        return !restarted() &&
+            timeManager().stepNum() > 0 &&
             (timeManager().stepNum() % 5 == 0);
     }
 
@@ -187,7 +187,7 @@ public:
      * very time step. This file is intented to be overwritten by the
      * implementation.
      */
-    bool shouldWriteOutputFile() const 
+    bool shouldWriteOutputFile() const
     { return !restarted(); }
 
     // \}
@@ -227,25 +227,25 @@ public:
     const GlobalPosition &bboxMax() const
     { return bboxMax_; }
 
-    /*! 
+    /*!
      * \brief Returns TimeManager object used by the simulation
      */
     TimeManager &timeManager()
     { return timeManager_; }
 
-    /*! 
+    /*!
      * \copydoc timeManager()
      */
     const TimeManager &timeManager() const
     { return timeManager_; }
-                        
-    /*! 
+
+    /*!
      * \brief Returns numerical model used for the problem.
      */
     Model &model()
     { return model_; }
 
-    /*! 
+    /*!
      * \copydoc model()
      */
     const Model &model() const
@@ -319,9 +319,9 @@ protected:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation *asImp_()
     { return static_cast<Implementation *>(this); }
-    
+
     //! \copydoc asImp_()
-    const Implementation *asImp_() const 
+    const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
 
     //! Write the fields current solution into an VTK output file.
@@ -345,7 +345,7 @@ protected:
 
 private:
     const GridView  gridView_;
-    
+
     GlobalPosition  bboxMin_;
     GlobalPosition  bboxMax_;
 

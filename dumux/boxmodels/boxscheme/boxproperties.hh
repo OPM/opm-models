@@ -27,6 +27,9 @@
 #include <dumux/auxiliary/properties.hh>
 #include <dumux/boxmodels/tags.hh>
 
+#include <dumux/boxmodels/pdelab/assemblerpdelab.hh>
+#include <dumux/boxmodels/pdelab/functionpdelab.hh>
+
 /*!
  * \file
  * \brief Specify the shape functions, operator assemblers, etc
@@ -40,7 +43,7 @@ namespace Properties
  * \addtogroup BoxScheme
  */
 // \{
- 
+
 //! Set the default for the FVElementGeometry
 SET_PROP(BoxScheme, FVElementGeometry)
 {
@@ -85,10 +88,14 @@ SET_PROP(BoxScheme, SolutionTypes)
         dim = GridView::dimension,
         numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))
     };
-    
+
 public:
-    //! A solution function. This is a function with the same domain as the grid. 
+    //! A solution function. This is a function with the same domain as the grid.
+#ifdef HAVE_DUNE_PDELAB
+	typedef FunctionPDELab<TypeTag>               SolutionFunction;
+#else
     typedef Dune::P1Function<GridView, Scalar, GridView, numEq>       SolutionFunction;
+#endif
 
     /*!
      * \brief The type which maps an entity with an attached degree of
@@ -97,7 +104,7 @@ public:
     typedef typename SolutionFunction::VM                              DofEntityMapper;
 
     /*!
-     * \brief The type of a solution at a fixed time. 
+     * \brief The type of a solution at a fixed time.
      *
      * This is the representation of the solution function and defines
      * a primary variable vector at each degree of freedom.
@@ -112,12 +119,12 @@ public:
      * \brief The solution for a single finite element.
      */
     typedef Dune::BlockVector<PrimaryVarVector>                       SolutionOnElement;
-    
+
     /*!
      * \brief Vector of boundary types at a degree of freedom.
      */
     typedef Dune::FieldVector<Dune::BoundaryConditions::Flags, numEq> BoundaryTypeVector;
-    
+
     /*!
      * \brief The shape functions used by the SolutionFunction
      */
@@ -126,11 +133,56 @@ public:
      * \brief The container for shape functions within an finite element.
      */
     typedef Dune::LagrangeShapeFunctionSet<CoordScalar, Scalar, dim>  ShapeFunctionSet;
+
     /*!
      * \brief Assembler for the global jacobian matrix.
      */
+#ifdef HAVE_DUNE_PDELAB
+	typedef AssemblerPDELab<TypeTag>      JacobianAssembler;
+#else
     typedef Dune::P1OperatorAssembler<Grid, Scalar, GridView, GridView, numEq>  JacobianAssembler;
+#endif
 };
+
+
+
+#ifdef HAVE_DUNE_PDELAB
+//! use the local FEM space associated with cubes by default
+SET_PROP(BoxScheme, LocalFEMSpace)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    enum{dim = GridView::dimension};
+
+public:
+    typedef Dune::PDELab::Q1LocalFiniteElementMap<Scalar,Scalar,dim>  type;
+};
+
+SET_PROP(BoxScheme, PDELabTypes)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalFEMSpace)) FEM;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
+public:
+    typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
+    typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, Constraints,
+							Dune::PDELab::ISTLVectorBackend<numEq> > ScalarGridFunctionSpace;
+    typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace, numEq,
+							Dune::PDELab::GridFunctionSpaceBlockwiseMapper> GridFunctionSpace;
+	typedef typename GridFunctionSpace::template ConstraintsContainer<Scalar>::Type ConstraintsTrafo;
+    typedef BoxJacobianPDELab<TypeTag> LocalOperator;
+    typedef Dune::PDELab::GridOperatorSpace<GridFunctionSpace,
+                                            GridFunctionSpace,
+                                            LocalOperator,
+                                            ConstraintsTrafo,
+                                            ConstraintsTrafo,
+                                            Dune::PDELab::ISTLBCRSMatrixBackend<numEq, numEq>,
+                                            true
+                                           > GridOperatorSpace;
+};
+#endif
+
 
 // \}
 

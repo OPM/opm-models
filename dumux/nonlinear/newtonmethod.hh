@@ -109,18 +109,18 @@ public:
         Scalar uNorm = (*u).two_norm();
         if (uNorm < uNormMin_) {
             uNormMin_ = uNorm;
-            
+
             lambda = 1.0;
         }
-        else { 
+        else {
             lambda = uNormMin_ / uNorm;
             if (lambda < 0.05) {
-                DUNE_THROW(NumericalProblem, 
+                DUNE_THROW(NumericalProblem,
                            "Increase of relative defect of " << 1./lambda << " is too much!");
             };
             std::cout << boost::format("Newton: use line search, lambda=%f\n")%lambda;
         }
-        
+
         *u *= - lambda;
         *u += *uOld;
 
@@ -154,12 +154,12 @@ public:
 
 public:
     NewtonMethod(Model &model)
-        : uOld(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0),
-          f(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0)
     {
         deflectionTwoNorm_ = 1e100;
         residual_ = NULL;
         model_ = NULL;
+        uOld = NULL;
+        f = NULL;
     }
 
     ~NewtonMethod()
@@ -230,7 +230,7 @@ public:
     {
         if (!residualUpToDate_) {
             if (!residual_)
-                residual_ = new Function(model_->grid(), 
+                residual_ = new Function(model_->grid(),
                                          model().grid().overlapSize(0) == 0);
             // update the residual
             model_->evalGlobalResidual(*residual_);
@@ -250,6 +250,16 @@ protected:
     template <class NewtonController>
     bool execute_(Model &model, NewtonController &ctl)
     {
+    	if (!uOld)
+    	{
+#ifdef HAVE_DUNE_PDELAB
+    		uOld = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+    		f = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+#else
+            uOld = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
+            f = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
+#endif
+    	}
         model_ = &model;
 
         // TODO (?): u shouldn't be hard coded to the model
@@ -276,14 +286,19 @@ protected:
             ctl.newtonBeginStep();
 
             // make the current solution to the old one
-            *uOld = *u;
-            *f = 0;
+            *(*uOld) = *u;
+            *(*f) = 0;
 
             // linearize the problem at the current solution
-            jacobianAsm.assemble(localJacobian, u, f);
+            jacobianAsm.assemble(localJacobian, u, *f);
+
+            //printmatrix(std::cout, *jacobianAsm, "global stiffness matrix", "row", 100, 2);
+//            printvector(std::cout, *u, "u", "row", 14, 1, 3);
+//            printvector(std::cout, *(*f), "right hand side", "row", 14, 1, 3);
+
 
             // solve the resultuing linear equation system
-            ctl.newtonSolveLinear(*jacobianAsm, u, *f);
+            ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
 
             Scalar tmp = (*u).two_norm2();
             tmp = model.gridView().comm().sum(tmp);
@@ -291,9 +306,9 @@ protected:
 
             // update the current solution. We use either
             // a line search approach or the plain method.
-            updateMethod.update(*this, u, uOld, model);
+            updateMethod.update(*this, u, *uOld, model);
 
-            ctl.newtonEndStep(u, uOld);
+            ctl.newtonEndStep(u, *uOld);
         }
         // tell the controller that we're done
         ctl.newtonEnd();
@@ -310,8 +325,8 @@ protected:
 
 
 private:
-    Function       uOld;
-    Function       f;
+    Function       *uOld;
+    Function       *f;
 
     bool          residualUpToDate_;
     Function     *residual_;

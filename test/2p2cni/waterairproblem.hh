@@ -58,6 +58,19 @@ SET_PROP(WaterAirProblem, Grid)
 #endif
 };
 
+#ifdef HAVE_DUNE_PDELAB
+SET_PROP(WaterAirProblem, LocalFEMSpace)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    enum{dim = GridView::dimension};
+
+public:
+    typedef Dune::PDELab::Q1LocalFiniteElementMap<Scalar,Scalar,dim>  type; // for cubes
+//    typedef Dune::PDELab::P1LocalFiniteElementMap<Scalar,Scalar,dim>  type; // for simplices
+};
+#endif
+
 // Set the problem property
 SET_PROP(WaterAirProblem, Problem)
 {
@@ -290,7 +303,7 @@ public:
                 const FVElementGeometry &fvElemGeom,
                 int                      scvIdx) const
     {
-	       const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+//	       const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
 	       values = Scalar(0.0);
     }
 

@@ -108,13 +108,13 @@ class BoxScheme
 
     template<int dim>
     struct VertexLayout {
-        bool contains (Dune::GeometryType gt) const 
+        bool contains (Dune::GeometryType gt) const
         { return gt.dim() == 0; }
     };
 
     template<int dim>
     struct ElementLayout {
-        bool contains (Dune::GeometryType gt) const 
+        bool contains (Dune::GeometryType gt) const
         { return gt.dim() == dim; }
     };
 
@@ -146,12 +146,6 @@ public:
           vertexMapper_(gridView_),
           elementMapper_(gridView_),
 
-          uCur_(gridView_, gridView_, !hasOverlap_()),
-          uPrev_(gridView_, gridView_, !hasOverlap_()),
-          f_(gridView_, gridView_, !hasOverlap_()),
-          
-          jacAsm_(gridView_.grid(), gridView_, gridView_, !hasOverlap_()),
-
           localJacobian_(prob)
     {
         wasRestarted_ = false;
@@ -167,57 +161,77 @@ public:
      */
     void initial()
     {
-        if (!wasRestarted_) {
+#ifdef HAVE_DUNE_PDELAB
+          jacAsm_ = new JacobianAssembler(problem_);
+          uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+          uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+          f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+#else
+          jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
+          uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+          uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+          f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+#endif
+
+    	if (!wasRestarted_) {
             this->localJacobian().initStaticData();
-            applyInitialSolution_(uCur_);
+            applyInitialSolution_(*uCur_);
         }
 
-        applyDirichletBoundaries_(uCur_);
+        applyDirichletBoundaries_(*uCur_);
 
         // also set the solution of the "previous" time step to the
         // initial solution.
-        *uPrev_ = *uCur_;
+        *(*uPrev_) = *(*uCur_);
 
         // update the static vertex data with the initial solution
-        this->localJacobian().updateStaticData(uCur_, uPrev_);
+        this->localJacobian().updateStaticData(*uCur_, *uPrev_);
+    }
+
+    ~BoxScheme()
+    {
+    	delete jacAsm_;
+    	delete uCur_;
+    	delete uPrev_;
+    	delete f_;
     }
 
     /*!
      * \brief Reference to the current solution function.
      */
     const SolutionFunction &curSolFunction() const
-    { return uCur_; }
+    { return *uCur_; }
 
     /*!
      * \brief Reference to the current solution function.
      */
     SolutionFunction &curSolFunction()
-    { return uCur_; }
+    { return *uCur_; }
 
     /*!
      * \brief Reference to the solution function for the right hand side.
      */
     SolutionFunction &rightHandSideFunction()
-    { return f_; }
+    { return *f_; }
 
     /*!
      * \brief Reference to solution function of the previous time step.
      */
     SolutionFunction &prevSolFunction()
-    { return uPrev_; }
+    { return *uPrev_; }
 
     /*!
      * \brief Reference to solution function of the previous time step.
      */
     const SolutionFunction &prevSolFunction() const
-    { return uPrev_; }
+    { return *uPrev_; }
 
     /*!
      * \brief Returns the operator assembler for the global jacobian of
      *        the problem.
      */
     JacobianAssembler &jacobianAssembler()
-    { return jacAsm_; }
+    { return *jacAsm_; }
 
     /*!
      * \brief Returns the local jacobian which calculates the local
@@ -256,8 +270,8 @@ public:
     /*!
      * \brief Try to progress the model to the next timestep.
      */
-    void update(Scalar &dt, 
-                Scalar &nextDt, 
+    void update(Scalar &dt,
+                Scalar &nextDt,
                 NewtonMethod &solver,
                 NewtonController &controller)
     {
@@ -313,7 +327,7 @@ public:
      */
     void updateBegin()
     {
-        applyDirichletBoundaries_(uCur_);
+        applyDirichletBoundaries_(*uCur_);
     }
 
 
@@ -325,7 +339,7 @@ public:
     void updateSuccessful()
     {
         // make the current solution the previous one.
-        *uPrev_ = *uCur_;
+        *(*uPrev_) = *(*uCur_);
     };
 
     /*!
@@ -338,8 +352,8 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        *uCur_ = *uPrev_;
-        applyDirichletBoundaries_(uCur_);
+        *(*uCur_) = *(*uPrev_);
+        applyDirichletBoundaries_(*uCur_);
     };
 
     /*!
@@ -363,9 +377,9 @@ public:
             // current and the last timestep.
             const Element& element = *it;
 
-            const ShapeFunctionSet &sfs = ShapeFunctions::general(element.geometry().type(),
-                                                                  2 /* order */ );
-            const int numDofs = sfs.size();
+            //const ShapeFunctionSet &sfs = ShapeFunctions::general(element.geometry().type(),
+            //                                                      2 /* order */ );
+            const int numDofs = 4;//sfs.size();
             SolutionOnElement localResidual(numDofs);
 
             SolutionOnElement localU(numDofs);
@@ -387,9 +401,9 @@ public:
             // this index.
             for(int dofIdx=0; dofIdx < numDofs; dofIdx++)
             {
-                int globalIdx = dofEntityMapper().map(element, 
-                                                      sfs[dofIdx].entity(),
-                                                      sfs[dofIdx].codim());
+                int globalIdx = dofEntityMapper().map(element, dofIdx, dim);
+                                                      //sfs[dofIdx].entity(),
+                                                      //sfs[dofIdx].codim());
                 (*globResidual)[globalIdx] += localResidual[dofIdx];
             }
         }
@@ -470,7 +484,7 @@ public:
      */
     const ElementMapper &elementMapper() const
     { return elementMapper_; };
-    
+
 
 protected:
     //! returns true iff the grid has an overlap
@@ -613,7 +627,7 @@ protected:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
         {
             // ignore non-dirichlet boundary conditions
-            if (localJacobian_.bc(elemVertIdx)[eqIdx] 
+            if (localJacobian_.bc(elemVertIdx)[eqIdx]
                 != Dune::BoundaryConditions::dirichlet)
             {
                 continue;
@@ -631,7 +645,7 @@ protected:
                                    isIt,
                                    elemVertIdx,
                                    boundaryFaceIdx);
-                VALGRIND_CHECK_MEM_IS_DEFINED(&dirichletVal, 
+                VALGRIND_CHECK_MEM_IS_DEFINED(&dirichletVal,
                                               sizeof(dirichletVal));
 
             }
@@ -654,7 +668,7 @@ protected:
     // the problem we want to solve. defines the constitutive
     // relations, material laws, etc.
     Problem     &problem_;
-    
+
     // the grid view for which we need a solution
     const GridView gridView_;
 
@@ -666,21 +680,21 @@ protected:
 
     // mapper for the elements to indices
     const ElementMapper elementMapper_;
-    
+
     // the solution we are looking for
+
+    // calculates the local jacobian matrix for a given element
+    LocalJacobian     localJacobian_;
+    // Linearizes the problem at the current time step using the
+    // local jacobian
+    JacobianAssembler *jacAsm_;
 
     // cur is the current solution, prev the solution of the previous
     // time step
-    SolutionFunction uCur_;
-    SolutionFunction uPrev_;
+    SolutionFunction *uCur_;
+    SolutionFunction *uPrev_;
     // the right hand side
-    SolutionFunction  f_;
-
-    // Linearizes the problem at the current time step using the
-    // local jacobian
-    JacobianAssembler jacAsm_;
-    // calculates the local jacobian matrix for a given element
-    LocalJacobian     localJacobian_;
+    SolutionFunction  *f_;
 
     bool wasRestarted_;
 };

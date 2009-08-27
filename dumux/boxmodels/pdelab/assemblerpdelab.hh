@@ -23,36 +23,27 @@ public:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))   GridView;
     enum{dim = GridView::dimension};
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))  Scalar;
-    typedef Dune::PDELab::Q1LocalFiniteElementMap<Scalar,Scalar,dim> FEM;
-    typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
-//    typedef typename Dune::PDELab::OverlappingConformingDirichletConstraints CON;
-    typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, CON,
-      Dune::PDELab::ISTLVectorBackend<numEq>/*, Dune::PDELab::SimpleGridFunctionStaticSize*/> ScalarGridFunctionSpace;
-    typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace,numEq,Dune::PDELab::GridFunctionSpaceBlockwiseMapper> GridFunctionSpace;
-	typedef typename GridFunctionSpace::template VectorContainer<Scalar>::Type Vector;
-    typedef BoundaryTypesPDELab<TypeTag> BTypes;
-//    typedef Dune::PDELab::PowerGridFunction<ScalarBTypes, numEq> BTypes;
-	typedef typename GridFunctionSpace::template ConstraintsContainer<Scalar>::Type ConstraintsTrafo;
-    typedef BoxJacobianPDELab<TypeTag> LocalOperator;
-    typedef Dune::PDELab::GridOperatorSpace<GridFunctionSpace,
-                                            GridFunctionSpace,
-                                            LocalOperator,
-                                            ConstraintsTrafo,
-                                            ConstraintsTrafo,
-                                            Dune::PDELab::ISTLBCRSMatrixBackend<numEq, numEq>,
-                                            true
-                                           > GridOperatorSpace;
-    typedef typename GridOperatorSpace::template MatrixContainer<Scalar>::Type Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalFEMSpace)) FEM;
+    typedef typename GET_PROP(TypeTag, PTAG(PDELabTypes)) PDELabTypes;
+    typedef typename PDELabTypes::Constraints Constraints;
+    typedef typename PDELabTypes::ScalarGridFunctionSpace ScalarGridFunctionSpace;
+    typedef typename PDELabTypes::GridFunctionSpace GridFunctionSpace;
+	typedef typename PDELabTypes::ConstraintsTrafo ConstraintsTrafo;
+    typedef typename PDELabTypes::LocalOperator LocalOperator;
+    typedef typename PDELabTypes::GridOperatorSpace GridOperatorSpace;
+    typedef BoundaryTypesPDELab<TypeTag> BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+	typedef typename GridFunctionSpace::template VectorContainer<Scalar>::Type Vector;
+    typedef typename GridOperatorSpace::template MatrixContainer<Scalar>::Type Matrix;
     typedef Matrix RepresentationType;
 
     AssemblerPDELab(Problem& problem)
     : problem_(problem)
     {
     	fem_ = new FEM();
-    	cn_ = new CON(intghost_);
+    	cn_ = new Constraints(intghost_);
     	scalarGridFunctionSpace_ = new ScalarGridFunctionSpace(problem_.gridView(), *fem_, *cn_);
     	gridFunctionSpace_ = new GridFunctionSpace(*scalarGridFunctionSpace_);
 
@@ -60,11 +51,9 @@ public:
     	Dune::PDELab::GhostDataHandle<GridFunctionSpace, Vector> ghostDataHandle(*gridFunctionSpace_, ghost);
     	if (problem_.gridView().comm().size() > 1)
     		problem_.gridView().communicate(ghostDataHandle,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-    	ghost.std_copy_to(intghost_); // copy to std::vector as Constraints object is allocated before
+    	ghost.std_copy_to(intghost_);
 
-//    	scalarBTypes0_ = new ScalarBTypes(problem_, 0);
-//    	scalarBTypes1_ = new ScalarBTypes(problem_, 1);
-    	bTypes_ = new BTypes(problem_);//*scalarBTypes0_, *scalarBTypes1_);
+    	bTypes_ = new BoundaryTypes(problem_);
     	constraintsTrafo_ = new ConstraintsTrafo();
     	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_);
 
@@ -108,16 +97,27 @@ public:
         return *constraintsTrafo_;
     }
 
+    ~AssemblerPDELab()
+    {
+    	delete matrix_;
+    	delete gridOperatorSpace_;
+    	delete localOperator_;
+    	delete constraintsTrafo_;
+    	delete bTypes_;
+    	delete gridFunctionSpace_;
+    	delete scalarGridFunctionSpace_;
+    	delete fem_;
+    	delete cn_;
+    }
+
 private:
 	Problem& problem_;
 	std::vector<int> intghost_;
-	CON *cn_;
+	Constraints *cn_;
     FEM *fem_;
     ScalarGridFunctionSpace *scalarGridFunctionSpace_;
     GridFunctionSpace *gridFunctionSpace_;
-//    ScalarBTypes *scalarBTypes0_;
-//    ScalarBTypes *scalarBTypes1_;
-    BTypes *bTypes_;
+    BoundaryTypes *bTypes_;
     ConstraintsTrafo *constraintsTrafo_;
     LocalOperator *localOperator_;
     GridOperatorSpace *gridOperatorSpace_;

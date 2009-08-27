@@ -96,10 +96,10 @@ int main(int argc, char** argv)
         IMPESType impes(diffusion, transport, iterFlag, nIter, maxDefect);
 
         double tStart = 0;
-        double tEnd = 5e7;
+        double tEnd = 1e9;
         const char* fileName = "test_fractionalflow";
-        int modulo = 500;
-        double cFLFactor = 0.5;
+        int modulo = 1000;
+        double cFLFactor = 1.0;
         Dune::TimeLoop<Grid, IMPESType > timeloop(tStart, tEnd, fileName, modulo, cFLFactor);
 
         timeloop.execute(impes);

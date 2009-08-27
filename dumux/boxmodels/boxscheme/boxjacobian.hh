@@ -79,7 +79,7 @@ private:
     typedef typename GridView::template Codim<0>::Entity               Element;
     typedef typename GridView::template Codim<0>::Iterator             ElementIterator;
     typedef typename Element::EntityPointer                            ElementPointer;
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
     typedef typename RefElemProp::ReferenceElement              ReferenceElement;
@@ -87,7 +87,7 @@ private:
     typedef typename GridView::IntersectionIterator                    IntersectionIterator;
     typedef typename Element::Geometry                                 Geometry;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry))   FVElementGeometry;
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
@@ -129,8 +129,9 @@ public:
             this->restrictToElement(tmpSolOld, this->problem().model().prevSolFunction());
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
-            
+
             evalLocalResidual(localResid);
+
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
                 int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
                 (*residual)[globalI] += localResid[i];
@@ -171,7 +172,7 @@ public:
         restrictToElement(localU, problem_.model().curSolFunction());
         assemble_(element, localU, orderOfShapeFns);
     }
-  
+
     /*!
      * \brief Express the boundary conditions for a element in terms
      *        of a linear equation system.
@@ -285,11 +286,11 @@ public:
                 // points
                 values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
             }
-            VALGRIND_CHECK_MEM_IS_DEFINED(&values[eqIdx], 
+            VALGRIND_CHECK_MEM_IS_DEFINED(&values[eqIdx],
                                           sizeof(Scalar));
 
             this->b[scvIdx][eqIdx] += values[eqIdx];
-            VALGRIND_CHECK_MEM_IS_DEFINED(&this->b[scvIdx][eqIdx], 
+            VALGRIND_CHECK_MEM_IS_DEFINED(&this->b[scvIdx][eqIdx],
                                           sizeof(Scalar));
         }
     }
@@ -322,7 +323,7 @@ public:
 
             massContrib -= tmp;
             massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
-            
+
             residual[i] += massContrib;
 
             // subtract the source term from the local rate
@@ -358,6 +359,9 @@ public:
             for (int i = 0; i < curElementGeom_.numVertices; i++) {
                 residual[i] += this->b[i];
             }
+//    	    std::cout << "\n residual: ";
+//    	    for (int j = 0; j < 8; j++)
+//    	    	std::cout << residual[j/2][j%2] << ", ";
         }
 
 #if HAVE_VALGRIND
@@ -433,7 +437,7 @@ public:
 
 #ifdef ENABLE_VALGRIND
         for (int i = 0; i < dest.size(); ++i)
-            VALGRIND_MAKE_MEM_UNDEFINED(&dest[i], 
+            VALGRIND_MAKE_MEM_UNDEFINED(&dest[i],
                                         sizeof(VertexData));
 #endif // ENABLE_VALGRIND
 
@@ -482,7 +486,7 @@ public:
      * needs to be recalculated. (Updating the element cache is very
      * expensive since material laws need to be evaluated.)
      */
-    void deflectCurrentSolution(SolutionOnElement &curSol, 
+    void deflectCurrentSolution(SolutionOnElement &curSol,
                                 int vertIdx,
                                 int eqIdx,
                                 Scalar value)
@@ -494,16 +498,16 @@ public:
         // recalculate the vertex data for the box which should be
         // changed
         curSol[vertIdx][eqIdx] = value;
-        
-        VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx], 
+
+        VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx],
                                     sizeof(VertexData));
 
-        curElemDat_[vertIdx].update(curSol[vertIdx], 
+        curElemDat_[vertIdx].update(curSol[vertIdx],
                                     this->curElement_(),
-                                    vertIdx, 
+                                    vertIdx,
                                     false,
                                     asImp_());
-        VALGRIND_CHECK_MEM_IS_DEFINED(&curElemDat_[vertIdx], 
+        VALGRIND_CHECK_MEM_IS_DEFINED(&curElemDat_[vertIdx],
                                       sizeof(VertexData));
     }
 
@@ -514,8 +518,8 @@ public:
      * This only works if deflectSolution was only called with
      * (vert, component) as arguments.
      */
-    void restoreCurrentSolution(SolutionOnElement &curSol, 
-                                int vertIdx, 
+    void restoreCurrentSolution(SolutionOnElement &curSol,
+                                int vertIdx,
                                 int eqIdx,
                                 Scalar origValue)
     {
@@ -551,7 +555,7 @@ protected:
     // current and previous element data. (this is model specific.)
     VertexDataArray  curElemDat_;
     VertexDataArray  prevElemDat_;
-    
+
     // temporary variable to store the variable vertex data
     VertexData   curVertexDataStash_;
 
@@ -611,7 +615,7 @@ private:
                     }
 
                     this->bctype[elemVertIdx][eqIdx] = tmp[eqIdx];
-                    VALGRIND_CHECK_MEM_IS_DEFINED(&this->bctype[elemVertIdx][eqIdx], 
+                    VALGRIND_CHECK_MEM_IS_DEFINED(&this->bctype[elemVertIdx][eqIdx],
                                                   sizeof(Dune::BoundaryConditions));
                 }
             }
@@ -657,7 +661,7 @@ private:
                 evalLocalResidual(residUMinusEps, false);
                 asImp_().restoreCurrentSolution(localU, j, eqIdx, uJ);
 
- 
+
                 // calculate the gradient when varying the
                 // eqIdx-th primary variable at the j-th vert
                 // of the element and fill the required fields of

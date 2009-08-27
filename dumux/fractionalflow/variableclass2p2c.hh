@@ -142,10 +142,11 @@ public:
             totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
                                                  +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
             dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
-            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*Srn[i]*density_nonwet[i]);
+            Scalar trappedI = std::min(1.0 - saturation[i], Srn[i] + 3e-2);
+            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
 
-            if (Srn[i] > (1 - saturation[i] + 1e-4))
-            	DUNE_THROW(MathError, "Srn = " << Srn[i] << " is greater than Sn = " << (1 - saturation[i]));
+//            if (Srn[i] > (1 - saturation[i] + 1e-4))
+//            	DUNE_THROW(MathError, "Srn = " << Srn[i] << " is greater than Sn = " << (1 - saturation[i]));
         }
         std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
         std::cout.precision(3);
@@ -170,8 +171,8 @@ public:
         vtkwriter.addCellData(Srn, "residual nonwetting phase saturation [-]");
         vtkwriter.write(fname, VTKOptions::ascii);
 
-        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-4*totalMassX)
-        	DUNE_THROW(MathError, "EVERYTHING TRAPPED OR DISSOLVED! No need to go further.");
+        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
+        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
 
         return;
     }

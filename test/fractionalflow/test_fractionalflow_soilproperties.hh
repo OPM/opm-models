@@ -62,7 +62,7 @@ public:
 
     virtual modelFlag relPermFlag(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos) const
     {
-        return Matrix2p<Grid, Scalar>::brooks_corey;
+        return Matrix2p<Grid, Scalar>::linear;
     }
 
     FractionalFlowTestSoil(Scalar entryPressure = 0)
@@ -74,8 +74,8 @@ public:
             constPermeability_[i][i] = 1e-7;
         }
 
-        brooksCoreyParameters_[0] = 2.0; // lambda
-        brooksCoreyParameters_[1] = entryPressure_;
+        brooksCoreyParameters_[0] = 0;//2.0; // lambda
+        brooksCoreyParameters_[1] = 0;//entryPressure_;
     }
 
 private:

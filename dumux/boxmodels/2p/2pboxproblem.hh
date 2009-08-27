@@ -58,7 +58,7 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
 public:
     TwoPBoxProblem(const GridView &gridView)
         : ParentType(gridView),
-          gravity_(0),
+        gravity_(0),
           materialLaw_(soil_, wPhase_, nPhase_)
     {
         gravity_ = 0;
@@ -88,47 +88,47 @@ public:
     const GlobalPosition &gravity() const
     { return gravity_; }
 
-    /*! 
+    /*!
      * \brief Fluid properties of the wetting phase.
      */
     const WettingPhase &wettingPhase() const
     { return wPhase_; }
 
-    /*! 
+    /*!
      * \brief Fluid properties of the non-wetting phase.
      */
     const NonwettingPhase &nonwettingPhase() const
     { return nPhase_; }
 
-    /*! 
+    /*!
      * \brief Returns the soil properties object.
      */
     Soil &soil()
     { return soil_; }
 
-    /*! 
+    /*!
      * \copydoc soil()
      */
     const Soil &soil() const
     { return soil_; }
 
-    /*! 
+    /*!
      * \brief Returns the material laws, i.e. capillary pressure -
      *        saturation and relative permeability-saturation
      *        relations.
      */
     MaterialLaw &materialLaw ()
     { return materialLaw_; }
-    
+
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation *asImp_()
     { return static_cast<Implementation *>(this); }
-    
+
     //! \copydoc asImp_()
-    const Implementation *asImp_() const 
+    const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
 
     GlobalPosition  gravity_;
