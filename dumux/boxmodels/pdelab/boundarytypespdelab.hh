@@ -6,7 +6,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/pdelab/common/function.hh>
 
-template<typename TypeTag, typename Problem>
+template<typename TypeTag>
 class BoundaryTypesPDELab
 : public Dune::PDELab::BoundaryGridFunctionBase<
 	Dune::PDELab::BoundaryGridFunctionTraits<
@@ -14,10 +14,11 @@ class BoundaryTypesPDELab
 		int,
 		GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
 		Dune::FieldVector<int,GET_PROP_VALUE(TypeTag, PTAG(NumEq))> >,
-	BoundaryTypesPDELab<TypeTag, Problem> >
+	BoundaryTypesPDELab<TypeTag> >
 {
 
 public:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
 	enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))   GridView;
     enum{dim = GridView::dimension};
@@ -31,7 +32,7 @@ public:
     typedef typename RefElemProp::ReferenceElement              ReferenceElement;
 
     typedef Dune::PDELab::BoundaryGridFunctionTraits<GridView,int,numEq,Dune::FieldVector<int,numEq> > Traits;
-	typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,BoundaryTypesPDELab<TypeTag, Problem> > BaseT;
+	typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,BoundaryTypesPDELab<TypeTag> > BaseT;
 
 	BoundaryTypesPDELab (Problem& problem)
 	: problem_(problem)
