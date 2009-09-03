@@ -99,8 +99,8 @@ private:
 
     ScalarVectorType volumecorrection_;
 
-    ScalarVectorType elementVolumes_;
-    ScalarVectorType Srn_;
+//    ScalarVectorType elementVolumes_;
+//    ScalarVectorType Srn_;
 
 public:
     //! Constructs a VariableClass object
@@ -118,7 +118,7 @@ public:
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialVel);
 
-        analyzeMassInitialize();
+//        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -135,7 +135,7 @@ public:
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
 
-        analyzeMassInitialize();
+//        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -153,7 +153,7 @@ public:
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialVel);
 
-        analyzeMassInitialize();
+//        analyzeMassInitialize();
     }
 private:
     void initializeGlobalVariablesDiffPart(Dune::FieldVector<Scalar, dim>& initialVel)
@@ -231,32 +231,32 @@ private:
         }
         return;
     }
-    void analyzeMassInitialize()
-    {
-        elementVolumes_.resize(gridSizeTransport_);
-        Srn_.resize(gridSizeTransport_);
-        Srn_=0;
-        ElementIterator eItEnd = gridViewTransport_.template end<0>();
-        for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
-        elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
-    }
-    void analyzeMass()
-    {
-        Scalar totalMass = 0;
-        Scalar trappedMass = 0;
-        for (int i = 0; i < gridSizeTransport_; i++)
-        {
-            totalMass += saturation_[i]*elementVolumes_[i]*0.15*density_[i][1];//fixed porosity 0.15
-            trappedMass += 0.15*elementVolumes_[i]*Srn_[i]*density_[i][1];
-
-            //            if (Srn_[i] > (saturation_[i] + 1e-4))
-            //                DUNE_THROW(MathError, "Srn = " << Srn_[i] << " is greater than Sn = " << (saturation_[i]));
-        }
-        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
-        std::cout.precision(3);
-        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg "
-        << "Residually trapped: "<< trappedMass/totalMass*100.0 << "%." << std::endl;
-    }
+//    void analyzeMassInitialize()
+//    {
+//        elementVolumes_.resize(gridSizeTransport_);
+//        Srn_.resize(gridSizeTransport_);
+//        Srn_=0;
+//        ElementIterator eItEnd = gridViewTransport_.template end<0>();
+//        for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
+//        elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
+//    }
+//    void analyzeMass()
+//    {
+//        Scalar totalMass = 0;
+//        Scalar trappedMass = 0;
+//        for (int i = 0; i < gridSizeTransport_; i++)
+//        {
+//            totalMass += saturation_[i]*elementVolumes_[i]*0.15*density_[i][1];//fixed porosity 0.15
+//            trappedMass += 0.15*elementVolumes_[i]*Srn_[i]*density_[i][1];
+//
+//            //            if (Srn_[i] > (saturation_[i] + 1e-4))
+//            //                DUNE_THROW(MathError, "Srn = " << Srn_[i] << " is greater than Sn = " << (saturation_[i]));
+//        }
+//        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+//        std::cout.precision(3);
+//        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg "
+//        << "Residually trapped: "<< trappedMass/totalMass*100.0 << "%." << std::endl;
+//    }
     //Write saturation and pressure into file
     void vtkoutMultiLevel(const char* name, int k) const
     {
@@ -437,10 +437,10 @@ public:
         time_ += dt;
     }
 
-    void storeSrn(Scalar Srn, int index)
-    {
-        Srn_[index]=Srn;
-    }
+//    void storeSrn(Scalar Srn, int index)
+//    {
+//        Srn_[index]=Srn;
+//    }
 
     //! Get index of element (codim 0 entity) corresponding to the grid of the discretized diffusion equation.
     /*! Get index of element (codim 0 entity) corresponding to the grid of the discretized diffusion equation.
@@ -527,7 +527,7 @@ public:
      */
     void vtkout(const char* name, int k)
     {
-        analyzeMass();
+//        analyzeMass();
         vtkoutMultiLevel(name, k);
     }
 };
