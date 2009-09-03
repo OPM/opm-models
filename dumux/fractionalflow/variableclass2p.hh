@@ -33,8 +33,8 @@ namespace Dune
  * \ingroup diffusion
  * \ingroup transport
  */
- //! Class including the variables and data of discretized data of the constitutive relations.
- /*! The variables of two-phase flow, which are one pressure and one saturation are stored in this class.
+//! Class including the variables and data of discretized data of the constitutive relations.
+/*! The variables of two-phase flow, which are one pressure and one saturation are stored in this class.
  * Additionally, a velocity needed in the transport part of the decoupled two-phase flow is stored, as well as discretized data of constitutive relationships like
  * mobilities, fractional flow functions and capillary pressure. Thus, they have to be callculated just once in every time step or every iteration step.
  *
@@ -51,6 +51,10 @@ private:
     {
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
+    enum
+    {
+        wetting = 0, nonWetting = 1
+    };
 
 typedef    typename GridView::Grid Grid;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
@@ -62,7 +66,9 @@ typedef    typename GridView::Grid Grid;
 
 public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;//!<type for vector of scalars
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, 1>, 2*dim> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
+    typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > PhasePropVectorType;//!<type for vector of phase properties
+    typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > FluidPropVectorType;//!<type for vector of fluid properties
+    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, 2>, 2*dim> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
     typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, 2*dim> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 
 private:
@@ -73,19 +79,29 @@ private:
     const int gridSizeDiffusion_;
     const int gridSizeTransport_;
 
-    ScalarVectorType saturation_;
-    ScalarVectorType pressure_;
-    ScalarVectorType mobilityWetting_;//store lambda for efficiency reasons
-    ScalarVectorType mobilityNonWetting_;
-    ScalarVectorType fracFlowFuncWetting_;
-    ScalarVectorType fracFlowFuncNonWetting_;
-    ScalarVectorType capillaryPressure_;
-    VelType velocity_;
-    PotType potentialWetting_;
-    PotType potentialNonWetting_;
-
     bool multiscale_;
     const int codim_;
+
+    Scalar time_;
+
+    ScalarVectorType saturation_;
+    ScalarVectorType pressure_;
+    PhasePropVectorType mobility_;//store lambda for efficiency reasons
+    PhasePropVectorType fracFlowFunc_;
+    ScalarVectorType capillaryPressure_;
+    VelType velocity_;
+    VelType velocitySecondPhase_;
+
+    PotType potential_;
+
+    FluidPropVectorType density_;
+    FluidPropVectorType viscosity_;
+
+    ScalarVectorType volumecorrection_;
+
+    ScalarVectorType elementVolumes_;
+    ScalarVectorType Srn_;
+
 public:
     //! Constructs a VariableClass object
     /**
@@ -97,30 +113,12 @@ public:
     VariableClass(GridView& gridViewDiff, GridView& gridViewTrans, Scalar& initialSat = *(new Scalar(0)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridViewDiff), gridViewTransport_(gridViewTrans),
     indexSetDiffusion_(gridViewDiff.indexSet()),indexSetTransport_(gridViewTrans.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(true), codim_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(true), codim_(0), time_(0)
     {
-        //resize to grid size
-        pressure_.resize(gridSizeDiffusion_);
-        velocity_.resize(gridSizeDiffusion_);
-        potentialWetting_.resize(gridSizeDiffusion_);
-        potentialNonWetting_.resize(gridSizeDiffusion_);
-        saturation_.resize(gridSizeTransport_);
-        mobilityWetting_.resize(gridSizeTransport_);//lambda is dependent on saturation! ->choose same size
-        mobilityNonWetting_.resize(gridSizeTransport_);
-        fracFlowFuncWetting_.resize(gridSizeTransport_);
-        fracFlowFuncNonWetting_.resize(gridSizeTransport_);
-        capillaryPressure_.resize(gridSizeTransport_);
+        initializeGlobalVariablesDiffPart(initialVel);
+        initializeGlobalVariablesTransPart(initialVel);
 
-        //initialise variables
-        pressure_ = 0;
-        velocity_ = initialVel;
-        saturation_ = initialSat;
-        mobilityWetting_ = 0;
-        mobilityNonWetting_ = 0;
-        fracFlowFuncWetting_ = 0;
-        fracFlowFuncNonWetting_ = 0;
-        capillaryPressure_ = 0;
-        initializePotentials(initialVel);
+        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -132,30 +130,12 @@ public:
     VariableClass(GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(false), codim_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(false), codim_(0), time_(0)
     {
-        //resize to grid size
-        pressure_.resize(gridSizeDiffusion_);
-        velocity_.resize(gridSizeDiffusion_);
-        potentialWetting_.resize(gridSizeDiffusion_);
-        potentialNonWetting_.resize(gridSizeDiffusion_);
-        saturation_.resize(gridSizeTransport_);
-        mobilityWetting_.resize(gridSizeTransport_);//lambda is dependent on saturation! ->choose same size
-        mobilityNonWetting_.resize(gridSizeTransport_);
-        fracFlowFuncWetting_.resize(gridSizeTransport_);
-        fracFlowFuncNonWetting_.resize(gridSizeTransport_);
-        capillaryPressure_.resize(gridSizeTransport_);
+        initializeGlobalVariablesDiffPart(initialVel);
+        initializeGlobalVariablesTransPart(initialSat);
 
-        //initialise variables
-        pressure_ = 0;
-        velocity_ = initialVel;
-        saturation_ = initialSat;
-        mobilityWetting_ = 0;
-        mobilityNonWetting_ = 0;
-        fracFlowFuncWetting_ = 0;
-        fracFlowFuncNonWetting_ = 0;
-        capillaryPressure_ = 0;
-        initializePotentials(initialVel);
+        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -168,32 +148,48 @@ public:
     VariableClass(GridView& gridView, int codim, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(codim)),gridSizeTransport_(indexSetTransport_.size(codim)), multiscale_(false), codim_(codim)
+    gridSizeDiffusion_(indexSetDiffusion_.size(codim)),gridSizeTransport_(indexSetTransport_.size(codim)), multiscale_(false), codim_(codim), time_(0)
+    {
+        initializeGlobalVariablesDiffPart(initialVel);
+        initializeGlobalVariablesTransPart(initialVel);
+
+        analyzeMassInitialize();
+    }
+private:
+    void initializeGlobalVariablesDiffPart(Dune::FieldVector<Scalar, dim>& initialVel)
     {
         //resize to grid size
         pressure_.resize(gridSizeDiffusion_);
-        velocity_.resize(gridSizeDiffusion_);
-        potentialWetting_.resize(gridSizeDiffusion_);
-        potentialNonWetting_.resize(gridSizeDiffusion_);
-        saturation_.resize(gridSizeTransport_);
-        mobilityWetting_.resize(gridSizeTransport_);//lambda is dependent on saturation! ->choose same size
-        mobilityNonWetting_.resize(gridSizeTransport_);
-        fracFlowFuncWetting_.resize(gridSizeTransport_);
-        fracFlowFuncNonWetting_.resize(gridSizeTransport_);
-        capillaryPressure_.resize(gridSizeTransport_);
+        velocity_.resize(gridSizeDiffusion_);//depends on pressure
+        velocitySecondPhase_.resize(gridSizeDiffusion_);//depends on pressure
+        potential_.resize(gridSizeDiffusion_);//depends on pressure
+        density_.resize(gridSizeDiffusion_);//depends on pressure
+        viscosity_.resize(gridSizeDiffusion_);//depends on pressure
 
         //initialise variables
         pressure_ = 0;
         velocity_ = initialVel;
-        saturation_ = initialSat;
-        mobilityWetting_ = 0;
-        mobilityNonWetting_ = 0;
-        fracFlowFuncWetting_ = 0;
-        fracFlowFuncNonWetting_ = 0;
-        capillaryPressure_ = 0;
+        velocitySecondPhase_ = initialVel;
         initializePotentials(initialVel);
+        density_=0;
+        viscosity_=0;
     }
-private:
+    void initializeGlobalVariablesTransPart(int initialSat)
+    {
+        //resize to grid size
+        saturation_.resize(gridSizeTransport_);
+        mobility_.resize(gridSizeTransport_);//lambda is dependent on saturation! ->choose same size
+        fracFlowFunc_.resize(gridSizeTransport_);//depends on saturation
+        capillaryPressure_.resize(gridSizeTransport_);//depends on saturation
+        volumecorrection_.resize(gridSizeTransport_);//dS/dt for correction of pressure equation
+
+        //initialise variables
+        saturation_ = initialSat;
+        mobility_ = 0;
+        fracFlowFunc_ = 0;
+        capillaryPressure_ = 0;
+        volumecorrection_=0;
+    }
     void initializePotentials (Dune::FieldVector<Scalar, dim>& initialVel)
     {
         if (initialVel.two_norm())
@@ -224,16 +220,115 @@ private:
 
                     Dune::FieldVector<Scalar,dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
 
-                    potentialWetting_[globalIdxI][indexInInside] = initialVel*unitOuterNormal;
-                    potentialNonWetting_[globalIdxI][indexInInside] = initialVel*unitOuterNormal;
+                    potential_[globalIdxI][indexInInside][wetting] = initialVel*unitOuterNormal;
+                    potential_[globalIdxI][indexInInside][nonWetting] = initialVel*unitOuterNormal;
                 }
             }
         }
         else
         {
-            potentialWetting_ = 0;
-            potentialNonWetting_ = 0;
+            potential_ = FieldVector<Scalar,2>(0);
         }
+        return;
+    }
+    void analyzeMassInitialize()
+    {
+        elementVolumes_.resize(gridSizeTransport_);
+        Srn_.resize(gridSizeTransport_);
+        Srn_=0;
+        ElementIterator eItEnd = gridViewTransport_.template end<0>();
+        for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
+        elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
+    }
+    void analyzeMass()
+    {
+        Scalar totalMass = 0;
+        Scalar trappedMass = 0;
+        for (int i = 0; i < gridSizeTransport_; i++)
+        {
+            totalMass += saturation_[i]*elementVolumes_[i]*0.15*density_[i][1];//fixed porosity 0.15
+            trappedMass += 0.15*elementVolumes_[i]*Srn_[i]*density_[i][1];
+
+            //            if (Srn_[i] > (saturation_[i] + 1e-4))
+            //                DUNE_THROW(MathError, "Srn = " << Srn_[i] << " is greater than Sn = " << (saturation_[i]));
+        }
+        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+        std::cout.precision(3);
+        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg "
+        << "Residually trapped: "<< trappedMass/totalMass*100.0 << "%." << std::endl;
+    }
+    //Write saturation and pressure into file
+    void vtkoutMultiLevel(const char* name, int k) const
+    {
+        if (codim_ == 0)
+        {
+            if (multiscale_)
+            {
+                Dune::VTKWriter<GridView> vtkwriterpressure(gridViewDiffusion_);
+                char fname[128];
+                sprintf(fname, "%s-press%05d", name, k);
+                vtkwriterpressure.addCellData(pressure_, "pressure");
+                vtkwriterpressure.write(fname, Dune::VTKOptions::ascii);
+
+                Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
+                sprintf(fname, "%s-%05d", name, k);
+                vtkwritersaturation.addCellData(saturation_, "saturation");
+                vtkwritersaturation.write(fname, VTKOptions::ascii);
+            }
+            else
+            {
+                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
+                char fname[128];
+                sprintf(fname, "%s-%05d", name, k);
+                vtkwriter.addCellData(pressure_, "pressure");
+                vtkwriter.addCellData(saturation_, "saturation");
+                ScalarVectorType densityW(gridSizeDiffusion_);
+                ScalarVectorType densityNW(gridSizeDiffusion_);
+                ScalarVectorType viscosityW(gridSizeDiffusion_);
+                ScalarVectorType viscosityNW(gridSizeDiffusion_);
+
+                for (int i=0;i< gridSizeDiffusion_;i++)
+                {
+                    densityW[i] = density_[i][wetting];
+                    densityNW[i] = density_[i][nonWetting];
+                    viscosityW[i] = viscosity_[i][wetting];
+                    viscosityNW[i] = viscosity_[i][nonWetting];
+                }
+                vtkwriter.addCellData(densityW, "wetting phase density");
+                vtkwriter.addCellData(densityNW, "nonwetting phase density");
+                vtkwriter.addCellData(viscosityW, "wetting phase viscosity");
+                vtkwriter.addCellData(viscosityNW, "nonwetting phase viscosity");
+
+                vtkwriter.write(fname, VTKOptions::ascii);
+            }
+        }
+        if (codim_ == dim)
+        {
+            if (multiscale_)
+            {
+                Dune::VTKWriter<GridView> vtkwriterpressure(gridViewDiffusion_);
+                char fname[128];
+                sprintf(fname, "%s-press%05d", name, k);
+                vtkwriterpressure.addVertexData(pressure_, "pressure");
+                vtkwriterpressure.write(fname, Dune::VTKOptions::ascii);
+
+                Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
+                sprintf(fname, "%s-%05d", name, k);
+                vtkwritersaturation.addVertexData(saturation_, "saturation");
+                vtkwritersaturation.write(fname, VTKOptions::ascii);
+            }
+            else
+            {
+                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
+                char fname[128];
+                sprintf(fname, "%s-%05d", name, k);
+                vtkwriter.addVertexData(pressure_, "pressure");
+                vtkwriter.addVertexData(saturation_, "saturation");
+
+                vtkwriter.write(fname, VTKOptions::ascii);
+            }
+        }
+
         return;
     }
 public:
@@ -255,46 +350,96 @@ public:
         return velocity_;
     }
 
-    //! Return vector of wetting phase potential gradients
-    PotType& potentialWetting()
+    //! Return velocity vector
+    VelType& velocitySecondPhase()
     {
-        return potentialWetting_;
+        return velocitySecondPhase_;
+    }
+
+    //! Return vector of wetting phase potential gradients
+    Scalar& potentialWetting(int Idx1,int Idx2)
+    {
+        return potential_[Idx1][Idx2][wetting];
     }
 
     //! Return vector of non-wetting phase potential gradients
-    PotType& potentialNonWetting()
+    Scalar& potentialNonWetting(int Idx1,int Idx2)
     {
-        return potentialNonWetting_;
+        return potential_[Idx1][Idx2][nonWetting];
     }
 
     //! Return vector of wetting phase mobilities
-    ScalarVectorType& mobilityWetting()
+    Scalar& mobilityWetting(int Idx)
     {
-        return mobilityWetting_;
+        return mobility_[Idx][wetting];
     }
 
     //! Return vector of non-wetting phase mobilities
-    ScalarVectorType& mobilityNonWetting()
+    Scalar& mobilityNonWetting(int Idx)
     {
-        return mobilityNonWetting_;
+        return mobility_[Idx][nonWetting];
     }
 
     //! Return vector of wetting phase fractional flow functions
-    ScalarVectorType& fracFlowFuncWetting()
+    Scalar& fracFlowFuncWetting(int Idx)
     {
-        return fracFlowFuncWetting_;
+        return fracFlowFunc_[Idx][wetting];
     }
 
     //! Return vector of non-wetting phase fractional flow functions
-    ScalarVectorType& fracFlowFuncNonWetting()
+    Scalar& fracFlowFuncNonWetting(int Idx)
     {
-        return fracFlowFuncNonWetting_;
+        return fracFlowFunc_[Idx][nonWetting];
     }
 
     //! Return capillary pressure vector
-    ScalarVectorType& capillaryPressure()
+    Scalar& capillaryPressure(int Idx)
     {
-        return capillaryPressure_;
+        return capillaryPressure_[Idx][0];
+    }
+
+    //! Return density vector
+    Scalar& densityWetting(int Idx)
+    {
+        return density_[Idx][wetting];
+    }
+    //! Return density vector
+    Scalar& densityNonWetting(int Idx)
+    {
+        return density_[Idx][nonWetting];
+    }
+
+    //! Return density vector
+    Scalar& viscosityWetting(int Idx)
+    {
+        return viscosity_[Idx][wetting];
+    }
+
+    //! Return density vector
+    Scalar& viscosityNonWetting(int Idx)
+    {
+        return viscosity_[Idx][nonWetting];
+    }
+
+    Scalar& volumecorrection(int Idx)
+    {
+        return volumecorrection_[Idx][0];
+    }
+
+    //! Return current time
+    Scalar& time()
+    {
+        return time_;
+    }
+
+    void updateTime(Scalar dt)
+    {
+        time_ += dt;
+    }
+
+    void storeSrn(Scalar Srn, int index)
+    {
+        Srn_[index]=Srn;
     }
 
     //! Get index of element (codim 0 entity) corresponding to the grid of the discretized diffusion equation.
@@ -382,68 +527,8 @@ public:
      */
     void vtkout(const char* name, int k)
     {
+        analyzeMass();
         vtkoutMultiLevel(name, k);
-    }
-
-    //! \brief Write saturation and pressure into file
-    /*!
-     *  \param name file name
-     *  \param k format parameter
-     */
-    void vtkoutMultiLevel(const char* name, int k) const
-    {
-        if (codim_ == 0)
-        {
-            if (multiscale_)
-            {
-                Dune::VTKWriter<GridView> vtkwriterpressure(gridViewDiffusion_);
-                char fname[128];
-                sprintf(fname, "%s-press%05d", name, k);
-                vtkwriterpressure.addCellData(pressure_, "pressure");
-                vtkwriterpressure.write(fname, Dune::VTKOptions::ascii);
-
-                Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
-                sprintf(fname, "%s-%05d", name, k);
-                vtkwritersaturation.addCellData(saturation_, "saturation");
-                vtkwritersaturation.write(fname, VTKOptions::ascii);
-            }
-            else
-            {
-                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
-                char fname[128];
-                sprintf(fname, "%s-%05d", name, k);
-                vtkwriter.addCellData(pressure_, "pressure");
-                vtkwriter.addCellData(saturation_, "saturation");
-                vtkwriter.write(fname, VTKOptions::ascii);
-            }
-        }
-        if (codim_ == dim)
-        {
-            if (multiscale_)
-            {
-                Dune::VTKWriter<GridView> vtkwriterpressure(gridViewDiffusion_);
-                char fname[128];
-                sprintf(fname, "%s-press%05d", name, k);
-                vtkwriterpressure.addVertexData(pressure_, "pressure");
-                vtkwriterpressure.write(fname, Dune::VTKOptions::ascii);
-
-                Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
-                sprintf(fname, "%s-%05d", name, k);
-                vtkwritersaturation.addVertexData(saturation_, "saturation");
-                vtkwritersaturation.write(fname, VTKOptions::ascii);
-            }
-            else
-            {
-                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
-                char fname[128];
-                sprintf(fname, "%s-%05d", name, k);
-                vtkwriter.addVertexData(pressure_, "pressure");
-                vtkwriter.addVertexData(saturation_, "saturation");
-                vtkwriter.write(fname, VTKOptions::ascii);
-            }
-        }
-
-        return;
     }
 };
 }

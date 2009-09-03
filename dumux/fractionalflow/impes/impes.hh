@@ -105,7 +105,7 @@ public:
         RepresentationType updateDiff(satSize);
 
         //update constitutive functions
-        this->transport.updateMaterialLaws();
+        this->diffusion.updateMaterialLaws();
 
         bool converg = false;
         int iter = 0;
@@ -138,7 +138,7 @@ public:
                 updateDiff -= updateOldIter;
                 satOldIter = saturation;
                 updateOldIter = updateVec;
-                this->transport.updateMaterialLaws(saturation, true);
+//                this->transport.updateMaterialLaws(saturation, true);
             }
             // break criteria for iteration loop
             if (iterFlag == 2 && dt * updateDiff.two_norm() / saturation.two_norm() <= maxDefect )

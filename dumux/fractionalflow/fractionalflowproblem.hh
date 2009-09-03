@@ -61,9 +61,17 @@ class FractionalFlowProblem
 {
 public:
     enum
-        {    dim=GridView::dimension,dimWorld= GridView::dimensionworld,numEq=1};
+    {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
+        numEq = 1
+    };
+    enum
+    {
+        wetting = 0, nonwetting = 1
+    };
 protected:
-    typedef typename GridView::Grid Grid;
+typedef    typename GridView::Grid Grid;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar,dim> LocalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
@@ -76,8 +84,8 @@ public:
      @param  localPos     position in reference element of element
      \return     value of source term
      */
-    virtual Scalar source (const GlobalPosition& globalPos, const Element& element,
-                                const LocalPosition& localPos) = 0;
+    virtual std::vector<Scalar> source (const GlobalPosition& globalPos, const Element& element,
+            const LocalPosition& localPos) = 0;
 
     //! return type of boundary condition at the given global coordinate
     /*! return type of boundary condition at the given global coordinate
@@ -87,7 +95,7 @@ public:
      \return     boundary condition type given by enum in this class
      */
     virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
-                                                   const LocalPosition& localPos) const = 0;
+            const LocalPosition& localPos) const = 0;
     //! return type of boundary condition at the given global coordinate
     /*! return type of boundary condition at the given global coordinate
      @param  globalPos    position in global coordinates
@@ -96,7 +104,7 @@ public:
      \return     boundary condition type given by enum in this class
      */
     virtual BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos, const Element& element,
-                                                 const LocalPosition& localPos) const = 0;
+            const LocalPosition& localPos) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
     /*! evaluate Dirichlet boundary condition at given position
@@ -106,7 +114,7 @@ public:
      \return     boundary condition value of a dirichlet pressure boundary condition
      */
     virtual Scalar dirichletPress (const GlobalPosition& globalPos, const Element& element,
-                                   const LocalPosition& localPos) const = 0;
+            const LocalPosition& localPos) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
     /*! evaluate Dirichlet boundary condition at given position
@@ -116,7 +124,7 @@ public:
      \return     boundary condition value of a dirichlet saturation boundary condition
      */
     virtual Scalar dirichletSat (const GlobalPosition& globalPos, const Element& element,
-                                 const LocalPosition& localPos) const
+            const LocalPosition& localPos) const
     {
         return 1;
     }
@@ -128,8 +136,8 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition value of a neumann pressure boundary condition.
      */
-    virtual Scalar neumannPress (const GlobalPosition& globalPos, const Element& element,
-                                 const LocalPosition& localPos) const = 0;
+    virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
+            const LocalPosition& localPos) const = 0;
 
     //! evaluate Neumann boundary condition at given position
     /*! evaluate Neumann boundary condition at given position
@@ -139,7 +147,7 @@ public:
      \return     boundary condition value of a neumann saturation boundary condition.
      */
     virtual Scalar neumannSat (const GlobalPosition& globalPos, const Element& element,
-                               const LocalPosition& localPos, Scalar factor) const
+            const LocalPosition& localPos, Scalar factor) const
     {
         return 0;
     }
@@ -152,7 +160,7 @@ public:
      \return    initial saturation distribution.
      */
     virtual Scalar initSat (const GlobalPosition& globalPos, const Element& element,
-                            const LocalPosition& localPos) const = 0;
+            const LocalPosition& localPos) const = 0;
 
     //! gravity constant
     /*! gravity constant
@@ -163,10 +171,20 @@ public:
         return gravity_;
     }
 
+    //! local temperature
+    /*! local temperature
+     \return    temperature
+     */
+    virtual Scalar temperature (const GlobalPosition& globalPos, const Element& element,
+            const LocalPosition& localPos) const
+    {
+        return 283.15;
+    }
+
     //! properties of the soil
     /*! properties of the soil
-      \return    soil
-    */
+     \return    soil
+     */
     virtual Matrix2p<Grid, Scalar>& soil () const
     {
         return soil_;
@@ -174,8 +192,8 @@ public:
 
     //! object for definition of material law
     /*! object for definition of material law (e.g. Brooks-Corey, Van Genuchten, ...)
-      \return    material law
-    */
+     \return    material law
+     */
     virtual TwoPhaseRelations<Grid, Scalar>& materialLaw () const
     {
         return materialLaw_;
@@ -216,7 +234,7 @@ public:
      *  @param materialLaw implementation of Material laws. Class TwoPhaseRelations or derived.
      */
     FractionalFlowProblem(VC& variables, Fluid& wettingPhase, Fluid& nonWettingPhase, Matrix2p<Grid, Scalar>& soil, TwoPhaseRelations<Grid, Scalar>& materialLaw = *(new TwoPhaseRelations<Grid,Scalar>))
-        : variables_(variables), wettingPhase_(wettingPhase), nonWettingPhase_(nonWettingPhase), soil_(soil), materialLaw_(materialLaw),gravity_(0)
+    : variables_(variables), wettingPhase_(wettingPhase), nonWettingPhase_(nonWettingPhase), soil_(soil), materialLaw_(materialLaw),gravity_(0)
     {}
 
     //! always define virtual destructor in abstract base class
