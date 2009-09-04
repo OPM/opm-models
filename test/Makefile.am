@@ -1,4 +1,5 @@
 SUBDIRS = . \
+	 transport\
 	  fractionalflow \
 	 
 EXTRA_DIST=CMakeLists.txt
