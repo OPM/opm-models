@@ -6,7 +6,7 @@
 #include <dune/istl/io.hh>
 
 #include "dumux/material/fluids/uniform.hh"
-#include "dumux/transport/fv/fvsaturationwetting2p.hh"
+#include "dumux/transport/fv/fvsaturation2p.hh"
 #include "dumux/timedisc/timeloop.hh"
 #include "dumux/fractionalflow/variableclass2p.hh"
 
@@ -49,8 +49,8 @@ int main(int argc, char** argv)
 
 		Dune::SimpleNonlinearProblem<GridView, Scalar, VariableClass> problem(variables, materialLaw, L, H);
 
-		typedef Dune::FVSaturationWetting2P<GridView, Scalar, VariableClass> Transport;
-		Transport transport(gridView, problem, "vt");
+		typedef Dune::FVSaturation2P<GridView, Scalar, VariableClass> Transport;
+		Transport transport(gridView, problem,"Sw", "vt");
 
 		Dune::TimeLoop<Grid, Transport > timeloop(tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
 

@@ -46,12 +46,12 @@ public:
 
     virtual double Sr_w(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos, const double T = 283.15) const
     {
-        return 0.0;
+        return 0.2;
     }
 
     virtual double Sr_n(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos, const double T = 283.15) const
     {
-        return 0.0;
+        return 0.2;
     }
 
 
@@ -62,7 +62,7 @@ public:
 
     virtual modelFlag relPermFlag(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos) const
     {
-        return Matrix2p<Grid, Scalar>::linear;
+        return Matrix2p<Grid, Scalar>::brooks_corey;
     }
 
     FractionalFlowTestSoil(Scalar entryPressure = 0)
@@ -74,8 +74,8 @@ public:
             constPermeability_[i][i] = 1e-7;
         }
 
-        brooksCoreyParameters_[0] = 0;//2.0; // lambda
-        brooksCoreyParameters_[1] = 0;//entryPressure_;
+        brooksCoreyParameters_[0] = 2.0; // lambda
+        brooksCoreyParameters_[1] = entryPressure_;//entryPressure_;
     }
 
 private:

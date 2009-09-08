@@ -525,7 +525,7 @@ public:
      *  \param name file name
      *  \param k format parameter
      */
-    void vtkout(const char* name, int k)
+    void vtkout(const char* name, int k) const
     {
 //        analyzeMass();
         vtkoutMultiLevel(name, k);

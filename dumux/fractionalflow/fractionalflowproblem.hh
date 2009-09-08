@@ -82,7 +82,7 @@ public:
      @param  globalPos    position in global coordinates
      @param  element      entity of codim 0
      @param  localPos     position in reference element of element
-     \return     value of source term
+     \return     value of source term (wetting phase: vector position 0, non-wetting phase: vector position 1).
      */
     virtual std::vector<Scalar> source (const GlobalPosition& globalPos, const Element& element,
             const LocalPosition& localPos) = 0;
@@ -134,7 +134,7 @@ public:
      @param  globalPos    position in global coordinates
      @param  element      entity of codim 0
      @param  localPos     position in reference element of element
-     \return     boundary condition value of a neumann pressure boundary condition.
+     \return     boundary condition value of a neumann pressure boundary condition (wetting phase: vector position 0, non-wetting phase: vector position 1).
      */
     virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
             const LocalPosition& localPos) const = 0;
@@ -204,6 +204,11 @@ public:
      \return    variables object
      */
     virtual VC& variables ()
+    {
+        return variables_;
+    }
+
+    const virtual VC& variables () const
     {
         return variables_;
     }

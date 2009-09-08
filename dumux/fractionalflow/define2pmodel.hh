@@ -13,12 +13,12 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_PRIMARYVARIABLES_HH
-#define DUNE_PRIMARYVARIABLES_HH
+#ifndef DUNE_DEFINE2PMODEL_HH
+#define DUNE_DEFINE2PMODEL_HH
 
 namespace Dune
 {
-struct PrimaryVariablesDefinition
+struct DefineModel
 {
     enum
     {
@@ -29,7 +29,6 @@ struct PrimaryVariablesDefinition
         pressureW = 0,
         pressureNW =1,
         pressureGlobal = 2,
-        noPressure = 3,
         //velocity flags
         velocityW = 0,
         velocityNW = 1,
@@ -38,6 +37,9 @@ struct PrimaryVariablesDefinition
     int saturationType;
     int pressureType;
     int velocityType;
-} defaultImplementation = {0, 0, 2};
+    bool compressibility;
+    DefineModel():saturationType(saturationW),pressureType(pressureW),velocityType(velocityTotal),compressibility(false)
+    {}
+};
 }
 #endif
