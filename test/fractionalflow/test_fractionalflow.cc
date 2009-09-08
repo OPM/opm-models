@@ -86,7 +86,6 @@ int main(int argc, char** argv)
 //        modelDef.saturationType = modelDef.saturationW;
 //        modelDef.pressureType = modelDef.pressureW;
         modelDef.velocityType = modelDef.velocityTotal;
-//        modelDef.compressibility = true;
 
         typedef Dune::FVVelocity2P<GridView, Scalar, VariableType, Problem> DiffusionType;
         DiffusionType diffusion(gridView, problem, modelDef);
@@ -107,7 +106,7 @@ int main(int argc, char** argv)
         double tEnd = 4.32e7;
         const char* fileName = "test_fractionalflow";
         int modulo = 1;
-        double cFLFactor = 0.99;
+        double cFLFactor = 0.8;
         Dune::TimeLoop<Grid, IMPESType > timeloop(tStart, tEnd, fileName, modulo, cFLFactor);
 
         timeloop.execute(impes);

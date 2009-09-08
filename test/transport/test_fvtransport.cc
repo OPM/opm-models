@@ -9,6 +9,7 @@
 #include "dumux/transport/fv/fvsaturation2p.hh"
 #include "dumux/timedisc/timeloop.hh"
 #include "dumux/fractionalflow/variableclass2p.hh"
+#include "dumux/fractionalflow/define2pmodel.hh"
 
 #include "simplenonlinearproblem.hh"
 
@@ -22,7 +23,7 @@ int main(int argc, char** argv)
 		// time loop parameters
 		const double tStart = 0;
 		const double tEnd = 4e9;
-		const double cFLFactor = 0.5;
+		const double cFLFactor = 0.99;
 		double maxDT = 1e100;
 		int modulo = 10;
 
@@ -50,7 +51,7 @@ int main(int argc, char** argv)
 		Dune::SimpleNonlinearProblem<GridView, Scalar, VariableClass> problem(variables, materialLaw, L, H);
 
 		typedef Dune::FVSaturation2P<GridView, Scalar, VariableClass> Transport;
-		Transport transport(gridView, problem,"Sw", "vt");
+		Transport transport(gridView, problem);
 
 		Dune::TimeLoop<Grid, Transport > timeloop(tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
 
