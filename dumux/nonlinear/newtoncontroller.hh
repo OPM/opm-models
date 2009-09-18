@@ -279,7 +279,7 @@ protected:
         // yet, so we use the targeted accurracy for the defect.
         Scalar residTol = tolerance_/1e8;
 
-#if HAVE_PARDISO
+#if 0//HAVE_PARDISO
     	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
     	SeqPreCond seqPreCond(A);
 #else
@@ -425,7 +425,7 @@ public:
     typedef typename ParentType::Function          Function;
     typedef typename ParentType::JacobianAssembler JacobianAssembler;
 
-    NewtonController(Scalar tolerance = 1e-5, int targetSteps=8, int maxSteps = 12)
+    NewtonController(Scalar tolerance = 1e-4, int targetSteps=8, int maxSteps = 12)
         : ParentType(tolerance, targetSteps, maxSteps)
     {};
 };

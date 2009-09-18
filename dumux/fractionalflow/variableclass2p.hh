@@ -151,7 +151,7 @@ public:
     gridSizeDiffusion_(indexSetDiffusion_.size(codim)),gridSizeTransport_(indexSetTransport_.size(codim)), multiscale_(false), codim_(codim), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
-        initializeGlobalVariablesTransPart(initialVel);
+        initializeGlobalVariablesTransPart(initialSat);
 
 //        analyzeMassInitialize();
     }

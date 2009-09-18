@@ -42,6 +42,16 @@ public:
     AssemblerPDELab(Problem& problem)
     : problem_(problem)
     {
+    	fem_ = 0;
+    	cn_ = 0;
+    	scalarGridFunctionSpace_ = 0;
+    	gridFunctionSpace_ = 0;
+    	bTypes_ = 0;
+    	constraintsTrafo_ = 0;
+    	localOperator_ = 0;
+    	gridOperatorSpace_ = 0;
+    	matrix_ = 0;
+
     	fem_ = new FEM();
     	cn_ = new Constraints(intghost_);
     	scalarGridFunctionSpace_ = new ScalarGridFunctionSpace(problem_.gridView(), *fem_, *cn_);
@@ -80,6 +90,7 @@ public:
     void assemble(LocalJacobian& loc, SolutionFunction& u, SolutionFunction& f)
     {
     	*matrix_ = 0;
+
     	gridOperatorSpace_->jacobian(*u, *matrix_);
     	*f = 0;
     	gridOperatorSpace_->residual(*u, *f);
