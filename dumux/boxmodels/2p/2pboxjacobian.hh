@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*****************************************************************************
  *   Copyright (C) 2007 by Peter Bastian                                     *
  *   Institute of Parallel and Distributed System                            *
@@ -145,7 +145,7 @@ public:
 
     /*!
      * \brief Evaluates the advective mass flux of all components over
-     *        a face of a subcontrol volume. 
+     *        a face of a subcontrol volume.
      *
      * This method is called by compute flux and is mainly there for
      * derived models to ease adding equations selectively.
@@ -179,7 +179,7 @@ public:
     /*!
      * \brief Adds the diffusive flux to the flux vector over
      *        the face of a sub-control volume.
-     
+
      * It doesn't do anything in two-phase model but is used by the
      * non-isothermal two-phase models to calculate diffusive heat
      * fluxes
@@ -214,84 +214,154 @@ public:
     }
 
     /*!
-     * \brief Calculate mass of both components in the whole model domain
-     *         and get minimum and maximum values of primary variables
+     * \brief Calculate the fluid phases flux across a certain layer in the domain.
+     * The layer is situated perpendicular to the coordinate axis "coord" and cuts
+     * the axis at the value "coordValue"
      *
      */
-    void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
-    {
-        ElementIterator elementIt = this->problem_.elementBegin();
-        ElementIterator endit = this->problem_.elementEnd();
-        unsigned numVertices = this->problem_.numVertices();
+     void calculateFluxAcrossLayer (const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
+     {
         SolutionOnElement tmpSol;
-        VertexDataArray elemDat;
-        VertexData tmp;
-        Scalar vol, poro, rhoN, rhoW, satN, satW, pW, Te;
-        Scalar massNPhase(0.), massWPhase(0.);
+        ElementIterator elementIt = this->problem_.gridView().template begin<0>();
+        ElementIterator endit = this->problem_.gridView().template end<0>();
+        GlobalPosition globalI, globalJ;
+        PrimaryVarVector tmpFlux(0.0);
+        int sign;
 
-        mass = 0;
-        Scalar minSat = 1e100;
-        Scalar maxSat = -1e100;
-        Scalar minP = 1e100;
-        Scalar maxP = -1e100;
-        Scalar minTe = 1e100;
-        Scalar maxTe = -1e100;
+         // Loop over elements
+          for (; elementIt != endit; ++elementIt)
+          {
+              setCurrentElement(*elementIt);
+               this->restrictToElement(tmpSol, globalSol);
+               this->setCurrentSolution(tmpSol);
 
-        // Loop over elements
-        for (; elementIt != endit; ++elementIt)
-        {
-            setCurrentElement(*elementIt);
-            this->restrictToElement(tmpSol, globalSol);
-            this->updateElementData_(elemDat, tmpSol, false);
-            // get geometry type
 
-            // Loop over element vertices
-            int numLocalVerts = elementIt->template count<dim>();
-            for (int i = 0; i < numLocalVerts; ++i)
-            {
-                int globalIdx = this->problem_.vertexIdx(*elementIt, i);
+   			for (int faceId = 0; faceId < this->curElementGeom_.numEdges; faceId++)
+             {
+                 int idxI = this->curElementGeom_.subContVolFace[faceId].i;
 
-                vol = this->curElementGeom_.subContVol[i].volume;
-                poro = this->problem_.porosity(this->curElement_(), i);
-                rhoN = elemDat[i].density[nPhase];
-                rhoW = elemDat[i].density[wPhase];
-                satN = elemDat[i].saturation[nPhase];
-                satW = elemDat[i].saturation[wPhase];
-                pW = elemDat[i].pressure[wPhase];
-                Te = Implementation::temperature_((*globalSol)[globalIdx]);
+                 int idxJ = this->curElementGeom_.subContVolFace[faceId].j;
 
-                massNPhase = vol * poro * satN * rhoN;
-                massWPhase = vol * poro * satW * rhoW;
+                 int flagI, flagJ;
 
-                // get minimum and maximum values of primary variables
-                minSat = std::min(minSat, satN);
-                maxSat = std::max(maxSat, satN);
-                minP = std::min(minP, pW);
-                maxP = std::max(maxP, pW);
-                minTe = std::min(minTe, Te);
-                maxTe = std::max(maxTe, Te);
+             	globalI = this->curElementGeom_.subContVol[idxI].global;
+             	globalJ = this->curElementGeom_.subContVol[idxJ].global;
+                 // 2D case: give y or x value of the line over which flux is to be
+                 //            calculated.
+                 // up to now only flux calculation to lines or planes (3D) parallel to
+                 // x, y and z axis possible
 
-                // calculate total mass
-                mass[0] += massNPhase; // mass nonwetting phase
-                mass[1] += massWPhase; // mass in wetting phase
-            }
-        }
+                 // Flux across plane with z = 80 numEq
+                 if(globalI[coord] < coordVal)
+                     flagI = 1;
+                 else flagI = -1;
 
-        // IF PARALLEL: calculate total mass including all processors
-        // also works for sequential calculation
-        mass = this->problem_.grid().comm().sum(mass);
+                 if(globalJ[coord] < coordVal)
+                     flagJ = 1;
+                 else flagJ = -1;
 
-        if(this->problem_.grid().comm() == 0) // IF PARALLEL: only print by processor with rank() == 0
-        {
-            // print minimum and maximum values
-            std::cout << "nonwetting phase saturation: min = "<< minSat
-                      << ", max = "<< maxSat << std::endl;
-            std::cout << "wetting phase pressure: min = "<< minP
-                      << ", max = "<< maxP << std::endl;
-            std::cout << "temperature: min = "<< minTe
-                      << ", max = "<< maxTe << std::endl;
-        }
-    }
+                 if(flagI == flagJ)
+                 {
+                     sign = 0;
+                 }
+                 else
+                 {
+                     if(flagI> 0)
+                         sign = -1;
+                     else sign = 1;}
+
+                 // get variables
+
+                 if(flagI != flagJ)
+                 {
+                     computeFlux(tmpFlux, faceId);
+                     tmpFlux *= sign;
+                     flux += tmpFlux;
+                 }
+             }
+         }
+     }
+
+     /*!
+      * \brief Calculate mass of both components in the whole model domain
+      *         and get minimum and maximum values of primary variables
+      *
+      */
+     void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
+     {
+         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
+         SolutionOnElement tmpSol;
+         ElementIterator elementIt = this->problem_.gridView().template begin<0>();
+         ElementIterator endit = this->problem_.gridView().template end<0>();
+
+         VertexDataArray elemDat;
+         VertexData tmp;
+         Scalar vol, poro, rhoN, rhoW, satN, satW, pW, Te;
+         Scalar massNPhase(0.), massWPhase(0.);
+
+         mass = 0;
+         Scalar minSat = 1e100;
+         Scalar maxSat = -1e100;
+         Scalar minP = 1e100;
+         Scalar maxP = -1e100;
+         Scalar minTe = 1e100;
+         Scalar maxTe = -1e100;
+
+         // Loop over elements
+         for (; elementIt != endit; ++elementIt)
+         {
+             setCurrentElement(*elementIt);
+             this->restrictToElement(tmpSol, globalSol);
+             this->setCurrentSolution(tmpSol);
+
+             int numVerts = elementIt->template count<dim>();
+
+             for (int i = 0; i < numVerts; ++i)
+             {
+             	int globalIdx = dofMapper.map(*elementIt, i, dim);
+                 vol = this->curElementGeom_.subContVol[i].volume;
+                 poro = this->curElemDat_[i].porosity;
+                 rhoN = this->curElemDat_[i].density[nPhase];
+                 rhoW = this->curElemDat_[i].density[wPhase];
+                 satW  = this->curElemDat_[i].satW;
+                 satN  = this->curElemDat_[i].satN;
+                 pW = this->curElemDat_[i].pressure[wPhase];
+                 Te = asImp_()->temperature((*globalSol)[globalIdx]);
+
+
+                 massNPhase = vol * poro * satN * rhoN;
+                 massWPhase = vol * poro * satW * rhoW;
+
+                 // get minimum and maximum values of primary variables
+                 minSat = std::min(minSat, satN);
+                 maxSat = std::max(maxSat, satN);
+                 minP = std::min(minP, pW);
+                 maxP = std::max(maxP, pW);
+                 minTe = std::min(minTe, Te);
+                 maxTe = std::max(maxTe, Te);
+
+                 // calculate total mass
+                 mass[0] += massNPhase; // mass nonwetting phase
+                 mass[1] += massWPhase; // mass in wetting phase
+             }
+         }
+
+         // IF PARALLEL: calculate total mass including all processors
+         // also works for sequential calculation
+         mass = this->problem_.gridView().comm().sum(mass);
+
+         if(this->problem_.gridView().comm().rank() == 0) // IF PARALLEL: only print by processor with rank() == 0
+         {
+        	 // print minimum and maximum values
+        	 std::cout << "nonwetting phase saturation: min = "<< minSat
+        	 << ", max = "<< maxSat << std::endl;
+        	 std::cout << "wetting phase pressure: min = "<< minP
+        	 << ", max = "<< maxP << std::endl;
+        	 std::cout << "temperature: min = "<< minTe
+        	 << ", max = "<< maxTe << std::endl;
+         }
+     }
+
 
     /*!
      * \brief Append all quantities of interest which can be derived
@@ -325,10 +395,10 @@ public:
             int numVerts = elementIt->template count<dim>();
             for (int i = 0; i < numVerts; ++i)
             {
-                int globalIdx = dofMapper.map(*elementIt, 
+                int globalIdx = dofMapper.map(*elementIt,
                                               i,
                                               dim);
-                
+
                 (*pW)[globalIdx] = this->curElemDat_[i].pressure[wPhase];
                 (*pN)[globalIdx] = this->curElemDat_[i].pressure[nPhase];
                 (*pC)[globalIdx] = this->curElemDat_[i].pC;

@@ -57,9 +57,9 @@ private:
         dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GridView::Grid::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
+    typedef typename GridView::Grid::ctype 						CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> 			GlobalPosition;
+    typedef typename GridView::template Codim<dim>::Iterator 	VertexIterator;
 
 public:
     BoxProblem(const GridView &gridView)

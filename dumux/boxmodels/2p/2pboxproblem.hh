@@ -66,6 +66,16 @@ public:
             gravity_[dim - 1] = - 9.81;
     }
 
+    TwoPBoxProblem(const GridView &gridView, WettingPhase& wPhase, NonwettingPhase& nPhase)
+        : ParentType(gridView),
+        gravity_(0), wPhase_(wPhase), nPhase_(nPhase),
+          materialLaw_(soil_, wPhase_, nPhase_)
+    {
+        gravity_ = 0;
+        if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
+            gravity_[dim - 1] = - 9.81;
+    }
+
     /*!
      * \name Problem parameters
      */
