@@ -1,4 +1,5 @@
 SUBDIRS = . \
+	 ia \
 	 transport\
 	  fractionalflow \
 	 
