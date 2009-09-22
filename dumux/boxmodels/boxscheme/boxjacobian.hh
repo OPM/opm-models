@@ -28,6 +28,7 @@
 
 #include <dune/disc/operators/localstiffness.hh>
 
+#include <dumux/auxiliary/valgrind.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
 
@@ -35,12 +36,6 @@
 
 #include "boxproperties.hh"
 
-#ifdef HAVE_VALGRIND
-#include <valgrind/memcheck.h>
-#elif !defined VALGRIND_CHECK_MEM_IS_DEFINED
-#define VALGRIND_CHECK_MEM_IS_DEFINED(addr, s)
-#define VALGRIND_MAKE_MEM_UNDEFINED(addr, s)
-#endif // HAVE_VALGRIND
 
 
 namespace Dune
@@ -102,7 +97,7 @@ private:
 
     typedef typename GET_PROP(TypeTag, PTAG(VertexData))::type VertexData;
     typedef typename std::vector<VertexData>                   VertexDataArray;
-
+    
 public:
     BoxJacobian(Problem &problem)
         : problem_(problem),
@@ -130,7 +125,7 @@ public:
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
 
-            evalLocalResidual(localResid);
+            evalLocalResidual(localResid, true); // with boundary
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
                 int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
@@ -150,8 +145,7 @@ public:
 
 #if HAVE_VALGRIND
         for (size_t i = 0; i < localU.size(); ++i)
-            VALGRIND_CHECK_MEM_IS_DEFINED(&localU[i],
-                                          sizeof(PrimaryVarVector));
+            Valgrind::CheckDefined(localU[i]);
 #endif // HAVE_VALGRIND
 
         SolutionOnElement mutableLocalU(localU);
@@ -172,7 +166,7 @@ public:
         restrictToElement(localU, problem_.model().curSolFunction());
         assemble_(element, localU, orderOfShapeFns);
     }
-
+  
     /*!
      * \brief Express the boundary conditions for a element in terms
      *        of a linear equation system.
@@ -199,8 +193,6 @@ public:
         asImp_().setCurrentElement(element);
         updateBoundaryTypes_();
     }
-
-
 
     void applyBoundaryCondition_()
     {
@@ -281,17 +273,15 @@ public:
                                  isIt,
                                  scvIdx,
                                  boundaryFaceIdx);
-                VALGRIND_CHECK_MEM_IS_DEFINED(&values, sizeof(values));
+                Valgrind::CheckDefined(values);
                 // TODO (?): multiple integration
                 // points
                 values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
             }
-            VALGRIND_CHECK_MEM_IS_DEFINED(&values[eqIdx],
-                                          sizeof(Scalar));
+            Valgrind::CheckDefined(values[eqIdx]);
 
             this->b[scvIdx][eqIdx] += values[eqIdx];
-            VALGRIND_CHECK_MEM_IS_DEFINED(&this->b[scvIdx][eqIdx],
-                                          sizeof(Scalar));
+            Valgrind::CheckDefined(this->b[scvIdx][eqIdx]);
         }
     }
 
@@ -306,6 +296,10 @@ public:
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
             residual[i] = 0;
         }
+        
+        if (withBoundary)
+            assembleBoundaryCondition(this->curElement_());
+
 
         // evaluate the local rate
         for (int i=0; i < curElementGeom_.numVertices; i++)
@@ -323,7 +317,7 @@ public:
 
             massContrib -= tmp;
             massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
-
+            
             residual[i] += massContrib;
 
             // subtract the source term from the local rate
@@ -331,8 +325,7 @@ public:
             this->asImp_().computeSource(source, i);
             source *= curElementGeom_.subContVol[i].volume;
             residual[i] -= source;
-            VALGRIND_CHECK_MEM_IS_DEFINED(&residual[i],
-                                          sizeof(PrimaryVarVector));
+            Valgrind::CheckDefined(residual[i]);
         }
 
         // calculate the mass flux over the faces and subtract
@@ -343,31 +336,32 @@ public:
             int j = curElementGeom_.subContVolFace[k].j;
 
             PrimaryVarVector flux;
-            VALGRIND_MAKE_MEM_UNDEFINED(&flux, sizeof(PrimaryVarVector));
+            Valgrind::SetUndefined(flux);
             this->asImp_().computeFlux(flux, k);
-            VALGRIND_CHECK_MEM_IS_DEFINED(&flux, sizeof(PrimaryVarVector));
+            Valgrind::CheckDefined(flux);
 
-            // subtract fluxes from the local mass rates of
-            // the respective sub control volume adjacent to
-            // the face.
-            residual[i] -= flux;
-            residual[j] += flux;
+            // subtract fluxes from the local mass rates of the
+            // respective sub control volume adjacent to the face. We
+            // ignore dirichlet cells because for them, the mass
+            // change inside the cell is not equal to the flux out of
+            // the cell.
+            for (int eq = 0; eq < numEq; ++ eq) {
+                if (this->bctype[i][eq] == BoundaryConditions::neumann) 
+                    residual[i][eq] -= flux[eq];
+                if (this->bctype[j][eq] == BoundaryConditions::neumann) 
+                    residual[j][eq] += flux[eq];
+            }
         }
 
         if (withBoundary) {
-            assembleBoundaryCondition(this->curElement_());
             for (int i = 0; i < curElementGeom_.numVertices; i++) {
                 residual[i] += this->b[i];
             }
-//    	    std::cout << "\n residual: ";
-//    	    for (int j = 0; j < 8; j++)
-//    	    	std::cout << residual[j/2][j%2] << ", ";
         }
 
 #if HAVE_VALGRIND
         for (int i=0; i < curElementGeom_.numVertices; i++)
-            VALGRIND_CHECK_MEM_IS_DEFINED(&residual[i],
-                                          sizeof(PrimaryVarVector));
+            Valgrind::SetUndefined(residual[i]);
 #endif // HAVE_VALGRIND
     }
 
@@ -437,8 +431,7 @@ public:
 
 #ifdef ENABLE_VALGRIND
         for (int i = 0; i < dest.size(); ++i)
-            VALGRIND_MAKE_MEM_UNDEFINED(&dest[i],
-                                        sizeof(VertexData));
+            Valgrind::SetUndefined(dest[i]);
 #endif // ENABLE_VALGRIND
 
         int numVertices = this->curElement_().template count<dim>();
@@ -486,7 +479,7 @@ public:
      * needs to be recalculated. (Updating the element cache is very
      * expensive since material laws need to be evaluated.)
      */
-    void deflectCurrentSolution(SolutionOnElement &curSol,
+    void deflectCurrentSolution(SolutionOnElement &curSol, 
                                 int vertIdx,
                                 int eqIdx,
                                 Scalar value)
@@ -498,17 +491,16 @@ public:
         // recalculate the vertex data for the box which should be
         // changed
         curSol[vertIdx][eqIdx] = value;
-
-        VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx],
+        
+        VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx], 
                                     sizeof(VertexData));
 
-        curElemDat_[vertIdx].update(curSol[vertIdx],
+        curElemDat_[vertIdx].update(curSol[vertIdx], 
                                     this->curElement_(),
-                                    vertIdx,
+                                    vertIdx, 
                                     false,
                                     asImp_());
-        VALGRIND_CHECK_MEM_IS_DEFINED(&curElemDat_[vertIdx],
-                                      sizeof(VertexData));
+        Valgrind::CheckDefined(curElemDat_[vertIdx]);
     }
 
     /*!
@@ -518,8 +510,8 @@ public:
      * This only works if deflectSolution was only called with
      * (vert, component) as arguments.
      */
-    void restoreCurrentSolution(SolutionOnElement &curSol,
-                                int vertIdx,
+    void restoreCurrentSolution(SolutionOnElement &curSol, 
+                                int vertIdx, 
                                 int eqIdx,
                                 Scalar origValue)
     {
@@ -555,7 +547,7 @@ protected:
     // current and previous element data. (this is model specific.)
     VertexDataArray  curElemDat_;
     VertexDataArray  prevElemDat_;
-
+    
     // temporary variable to store the variable vertex data
     VertexData   curVertexDataStash_;
 
@@ -602,7 +594,7 @@ private:
                                        isIt,
                                        elemVertIdx,
                                        boundaryFaceIdx);
-                VALGRIND_CHECK_MEM_IS_DEFINED(&tmp, sizeof(tmp));
+                Valgrind::CheckDefined(tmp);
 
                 // copy boundary type to the bctype array.
                 for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -615,8 +607,7 @@ private:
                     }
 
                     this->bctype[elemVertIdx][eqIdx] = tmp[eqIdx];
-                    VALGRIND_CHECK_MEM_IS_DEFINED(&this->bctype[elemVertIdx][eqIdx],
-                                                  sizeof(Dune::BoundaryConditions));
+                    Valgrind::CheckDefined(this->bctype[elemVertIdx][eqIdx]);
                 }
             }
         }
@@ -636,6 +627,7 @@ private:
         SolutionOnElement localOldU(numVertices);
         restrictToElement(localOldU, problem_.model().prevSolFunction());
 
+        
         this->asImp_().setCurrentSolution(localU);
         this->asImp_().setPreviousSolution(localOldU);
 
@@ -647,7 +639,7 @@ private:
         {
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
             {
-                Scalar eps = std::max(fabs(1e-5*localU[j][eqIdx]), 1e-8);
+                Scalar eps = asImp_().numericEpsilon_(localU, j, eqIdx);
                 Scalar uJ = localU[j][eqIdx];
 
                 // vary the eqIdx-th equation at the element's j-th
@@ -661,7 +653,7 @@ private:
                 evalLocalResidual(residUMinusEps, false);
                 asImp_().restoreCurrentSolution(localU, j, eqIdx, uJ);
 
-
+ 
                 // calculate the gradient when varying the
                 // eqIdx-th primary variable at the j-th vert
                 // of the element and fill the required fields of
@@ -689,6 +681,23 @@ private:
             }
         }
     };
+    
+protected:
+    /*!
+     * \brief Returns the epsilon value which is added and removed
+     *        from the current solution.
+     *
+     * \param elemSol    The current solution on the element
+     * \param vertexIdx  The local index of the element's vertex for 
+     *                   which the local derivative ought to be calculated.
+     * \param pvIdx      The index of the primary variable which gets varied
+     */
+    Scalar numericEpsilon_(const SolutionOnElement &elemSol,
+                           int vertIdx,
+                           int pvIdx) const
+    {
+        return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-7);
+    }
 
     void updateLocalStiffness_(int j,
                                int varJIdx,
