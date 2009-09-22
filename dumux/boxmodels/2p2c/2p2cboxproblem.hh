@@ -131,6 +131,15 @@ public:
     MaterialLaw &materialLaw ()
     { return materialLaw_; }
 
+
+    /*!
+     * \brief Returns the material laws, i.e. capillary pressure -
+     *        saturation and relative permeability-saturation
+     *        relations.
+     */
+    const MaterialLaw &materialLaw () const
+    { return materialLaw_; }
+
     // \}
 
 private:
