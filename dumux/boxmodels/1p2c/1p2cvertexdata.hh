@@ -41,7 +41,7 @@ class OnePTwoCVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GridView::template Codim<0>::Entity Element;
-    
+
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -50,7 +50,7 @@ class OnePTwoCVertexData
         dim           = GridView::dimension,
         dimWorld      = GridView::dimensionworld,
     };
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
@@ -61,7 +61,7 @@ class OnePTwoCVertexData
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-    
+
 public:
     /*!
      * \brief Update all quantities for a given control volume.
@@ -71,16 +71,16 @@ public:
                 const Element          &element,
                 int                     vertIdx,
                 bool                    isOldSol,
-                JacobianImp            &jac) 
+                JacobianImp            &jac)
     {
         typedef Indices I;
-        
+
         // coordinates of the vertex
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 dim);
-        
+
         double T = jac.temperature(sol);
 
         pressure = sol[I::konti];
@@ -90,6 +90,7 @@ public:
         diffCoeff = jac.problem().fluid().diffCoeff(T, pressure);
         viscosity = jac.problem().fluid().viscosity(T, pressure);
         tortuosity = jac.problem().soil().tortuosity(global,element,local);
+        molarDensity = jac.problem().fluid().molarDensity(T, pressure);
     }
 
     Scalar porosity;
@@ -99,6 +100,7 @@ public:
     Scalar diffCoeff;
     Scalar molefraction;
     Scalar pressure;
+    Scalar molarDensity;
 };
 
 }

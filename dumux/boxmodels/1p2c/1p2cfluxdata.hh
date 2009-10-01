@@ -86,6 +86,7 @@ public:
         outsideSCV = &fvElemGeom.subContVol[j];
 
         densityAtIP = 0;
+        molarDensityAtIP = 0;
         viscosityAtIP = 0;
         pressureGrad = Scalar(0);
         concentrationGrad = Scalar(0);
@@ -115,16 +116,20 @@ private:
                 tmp = feGrad;
                 tmp *= elemDat[idx].pressure;
                 pressureGrad += tmp;
-                
+
                 // the concentration gradient
                 tmp = feGrad;
                 tmp *= elemDat[idx].molefraction;
                 concentrationGrad += tmp;
-                
+
                 // phase density
                 densityAtIP +=
                     elemDat[idx].density*face->shapeValue[idx];
-                
+
+                // molar phase density
+                molarDensityAtIP +=
+                    elemDat[idx].molarDensity*face->shapeValue[idx];
+
                 // phase viscosity
                 viscosityAtIP +=
                     elemDat[idx].viscosity*face->shapeValue[idx];
@@ -138,12 +143,13 @@ private:
 
             tmp  = face->normal;
             tmp /= face->normal.two_norm()*dist;
-            
+
             pressureGrad       = tmp;
             pressureGrad      *= elemDat[face->j].pressure - elemDat[face->i].pressure;
             concentrationGrad  = tmp;
             concentrationGrad *= elemDat[face->j].molefraction - elemDat[face->i].molefraction;
             densityAtIP        = (elemDat[face->j].density + elemDat[face->i].density)/2;
+            molarDensityAtIP        = (elemDat[face->j].molarDensity + elemDat[face->i].molarDensity)/2;
             viscosityAtIP      = (elemDat[face->j].viscosity  + elemDat[face->i].viscosity)/2;
         }
 
@@ -210,6 +216,9 @@ public:
 
     //! density of the fluid at the integration point
     Scalar densityAtIP;
+
+    //! molar density of the fluid at the integration point
+    Scalar molarDensityAtIP;
 
     //! viscosity of the fluid at the integration point
     Scalar viscosityAtIP;
