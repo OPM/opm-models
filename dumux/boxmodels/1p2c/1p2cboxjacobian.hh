@@ -107,7 +107,7 @@ public:
         result[konti] = 0;
 
         // storage term of the transport equation
-        result[transport] = vertDat.density * vertDat.porosity * vertDat.molefraction;
+        result[transport] = vertDat.molarDensity * vertDat.porosity * vertDat.molefraction;
     }
 
     /*!
@@ -134,15 +134,15 @@ public:
         flux[transport] +=
             vars.vDarcyNormal *
             (  upwindAlpha*
-               (  up.density * up.molefraction/up.viscosity )
+               (  up.molarDensity * up.molefraction/up.viscosity )
                +
                (1 - upwindAlpha)*
-               (  dn.density * dn.molefraction/dn.viscosity ) );
+               (  dn.molarDensity * dn.molefraction/dn.viscosity ) );
 
         // diffusive flux
         flux[transport] +=
-            vars.densityAtIP * vars.diffCoeffPM *
-            (vars.concentrationGrad*vars.face->normal);
+            vars.molarDensityAtIP * vars.diffCoeffPM *
+            (vars.concentrationGrad * vars.face->normal);
     }
 
     /*!
