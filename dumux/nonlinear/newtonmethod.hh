@@ -203,7 +203,7 @@ public:
             model_ = NULL;
             return false;
         };
-    };
+    }
 
     /*!
      * \brief Returns the current Jacobian matrix.

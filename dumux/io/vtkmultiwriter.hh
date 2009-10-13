@@ -78,7 +78,7 @@ public:
         if (!multiFile_.is_open()) {
             commRank_ = gridView.comm().rank();
             commSize_ = gridView.comm().size();
-            
+
             beginMultiFile_(multiFileName_);
         }
 
@@ -282,7 +282,7 @@ public:
             multiFile_.seekp(0, std::ios::end);
             size_t fileLen = multiFile_.tellp();
             multiFile_.seekp(filePos);
-            
+
             res.serializeStream() << fileLen << "  " << filePos << "\n";
 
             std::ifstream multiFileIn(multiFileName_.c_str());
@@ -291,7 +291,7 @@ public:
             res.serializeStream().write(tmp, fileLen);
             delete[] tmp;
         }
-    };
+    }
 
     /*!
      * \brief Read the multi-writer's state from a restart file.
@@ -321,10 +321,10 @@ public:
             res.deserializeStream().read(tmp, fileLen);
             multiFile_.write(tmp, fileLen);
             delete[] tmp;
-            
+
             multiFile_.seekp(filePos);
         }
-    };
+    }
 
 
 private:

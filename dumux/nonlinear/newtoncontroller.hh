@@ -184,7 +184,7 @@ public:
 #else
         solveSequential_(A, *u, b);
 #endif
-    };
+    }
 
     //! Indicates that we're done solving one newton step.
     void newtonEndStep(Function &u, Function &uOld)
@@ -194,11 +194,11 @@ public:
         if (this->method().verbose())
             std::cout << boost::format("Newton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
                 %numSteps_%(method_->deflectionTwoNorm()*oneByMagnitude_)%curPhysicalness_%maxPhysicalness_;
-    };
+    }
 
     //! Indicates that we're done solving the equation system.
     void newtonEnd()
-    {};
+    {}
 
     //! Called when the newton method broke down.
     void newtonFail()

@@ -68,7 +68,7 @@ protected:
         saturationIdx  = Indices::saturationIdx,
 
         wPhase         = Indices::wPhase,
-        nPhase         = Indices::nPhase,
+        nPhase         = Indices::nPhase
     };
 
     typedef typename GridView::template Codim<0>::Entity   Element;
@@ -415,6 +415,25 @@ public:
         writer.addVertexData(Sn, "SN");
         writer.addVertexData(Te, "Te");
     }
+
+    /*!
+     * \brief Returns the epsilon value which is added and removed
+     *        from the current solution.
+     *
+     * \param elemSol    The current solution on the element
+     * \param vertexIdx  The local index of the element's vertex for
+     *                   which the local derivative ought to be calculated.
+     * \param pvIdx      The index of the primary variable which gets varied
+     */
+//    Scalar numericEpsilon_(const SolutionOnElement &elemSol,
+//                           int vertIdx,
+//                           int pvIdx) const
+//    {
+//    	if (pvIdx == pressureIdx)
+//    		return 1e1;
+//    	else
+//    		return 1e-6;
+//    }
 
 protected:
     Implementation *asImp_()

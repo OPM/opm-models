@@ -40,7 +40,7 @@ class TwoPVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GridView::template Codim<0>::Entity Element;
-    
+
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -48,9 +48,9 @@ class TwoPVertexData
         formulation   = GET_PROP_VALUE(TypeTag, PTAG(Formulation)),
 
         dim           = GridView::dimension,
-        dimWorld      = GridView::dimensionworld,
+        dimWorld      = GridView::dimensionworld
     };
-    
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
@@ -61,7 +61,7 @@ class TwoPVertexData
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-    
+
 public:
     /*!
      * \brief Update all quantities for a given control volume.
@@ -71,16 +71,16 @@ public:
                 const Element          &element,
                 int                     vertIdx,
                 bool                    isOldSol,
-                JacobianImp            &jac) 
+                JacobianImp            &jac)
     {
         typedef Indices I;
-        
+
         // coordinates of the vertex
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 dim);
-        
+
         if (formulation == I::pWsN) {
             satN = sol[I::saturationIdx];
             satW = 1.0 - satN;
@@ -101,12 +101,12 @@ public:
             pressure[I::nPhase] = sol[I::pressureIdx];
             pressure[I::wPhase] = pressure[I::nPhase] - pC;
         }
-        
+
         density[I::wPhase] =jac.problem().wettingPhase().density(jac.temperature(sol),
                                                                   pressure[I::wPhase]);
         density[I::nPhase] =jac.problem().nonwettingPhase().density(jac.temperature(sol),
                                                                      pressure[I::nPhase]);
-        
+
         mobility[I::wPhase] =jac.problem().materialLaw().mobW(satW,
                                                                global,
                                                                element,
@@ -125,12 +125,12 @@ public:
                                                  element,
                                                  local);
     }
-        
+
     Scalar satW;
     Scalar satN;
     Scalar pC;
     Scalar porosity;
-        
+
     PhasesVector density;
     PhasesVector pressure;
     PhasesVector mobility;
