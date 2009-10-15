@@ -470,7 +470,7 @@ public:
 
         // create the required scalar fields
         unsigned numVertices = this->gridView_.size(dim);
-        unsigned numElements = this->gridView_.size(0);
+
         ScalarField *pW =           writer.template createField<Scalar, 1>(numVertices);
         ScalarField *pN =           writer.template createField<Scalar, 1>(numVertices);
         ScalarField *pC =           writer.template createField<Scalar, 1>(numVertices);
@@ -486,9 +486,27 @@ public:
         ScalarField *massfracWinN = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *temperature  = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *phaseState   = writer.template createField<Scalar, 1>(numVertices);
-        ScalarField *velocityX    = writer.template createField<Scalar, 1>(numElements);
-        ScalarField *velocityY    = writer.template createField<Scalar, 1>(numElements);
-        ScalarField *velocityZ    = writer.template createField<Scalar, 1>(numElements);
+
+//		#define velocity_output  // include this line if an output of the velocity is needed
+
+		#ifdef velocity_output  // check if velocity output is demanded
+			ScalarField *velocityX    = writer.template createField<Scalar, 1>(numVertices);
+        	ScalarField *velocityY    = writer.template createField<Scalar, 1>(numVertices);
+        	ScalarField *velocityZ    = writer.template createField<Scalar, 1>(numVertices);
+        	Scalar maxV=0.; // variable to store the maximum face velocity
+
+        	// initialize velocity fields
+        	Scalar boxSurface[numVertices];
+        	for (int i = 0; i < numVertices; ++i) {
+        		(*velocityX)[i] = 0;
+        		if (dim > 1)
+				(*velocityY)[i] = 0;
+        		if (dim > 2)
+				(*velocityZ)[i] = 0;
+        		boxSurface[i] = 0.0;  // initialize the boundary surface of the fv-boxes
+        	}
+		#endif
+
 
         SolutionOnElement tmpSol;
         VertexDataArray   elemDat;
@@ -526,32 +544,72 @@ public:
                 (*phaseState)[globalIdx] = staticVertexDat_[globalIdx].phaseState;
             };
 
-            // Vector containing the velocity at the element
-            GlobalPosition velocity[numPhases];
-            GlobalPosition elementVelocity[numPhases];
-
+		#ifdef velocity_output		// check if velocity output is demanded
+            // In the box method, the velocity is evaluated on the FE-Grid. However, to get an
+            // average apparent velocity at the vertex, all contributing velocities have to be interpolated.
+            GlobalPosition velocity(0.);
             // loop over the phases
-            for (int phase=0; phase < numPhases; phase++)
+            for (int faceIdx = 0; faceIdx< this->curElementGeom_.numEdges; faceIdx++)
             {
-                elementVelocity[phase] = 0;
+            	//prepare the flux calculations (set up and prepare geometry, FE gradients)
+            	FluxData fluxDat(this->problem_,
+            			this->curElement_(),
+            			this->curElementGeom_,
+            			faceIdx,
+            			elemDat);
 
-                int elementIdx = this->problem_.model().elementMapper().map(*elementIt);
-                for (int faceIdx = 0; faceIdx< this->curElementGeom_.numEdges; faceIdx++)
-                {
-                    velocity[phase] = 0;
-                    /* asImp_().calculateDarcyVelocity(velocity[phase],
-                                                     faceIdx);
-                    */
-                    elementVelocity[phase] += velocity[phase];
+                // choose phase of interest. Alternatively, a loop over all phases would be possible.
+            	int phaseIdx = wPhase;
+
+            	// get darcy velocity
+            	velocity = fluxDat.vDarcy[phaseIdx];  // mind the sign: vDarcy = kf grad p
+
+            	// up+downstream mobility
+            	const VertexData &up = elemDat[fluxDat.upstreamIdx[phaseIdx]];
+            	const VertexData &down = elemDat[fluxDat.downstreamIdx[phaseIdx]];
+            	Scalar scvfArea = fluxDat.face->normal.two_norm(); //get surface area to weight velocity at the IP with the surface area
+            	velocity *= (mobilityUpwindAlpha*up.mobility[phaseIdx] + (1-mobilityUpwindAlpha)*down.mobility[phaseIdx])* scvfArea;
+
+            	maxV = std::max(maxV, std::sqrt(velocity[0]*velocity[0]+velocity[1]*velocity[1])); //evaluate maximum velocity at IP
+
+            	int vertIIdx = this->problem().model().vertexMapper().map(this->curElement_(),
+									  fluxDat.face->i,
+									  dim);
+            	int vertJIdx = this->problem().model().vertexMapper().map(this->curElement_(),
+									  fluxDat.face->j,
+									  dim);
+            	// add surface area for weighting purposes
+            	boxSurface[vertIIdx] += scvfArea;
+            	boxSurface[vertJIdx] += scvfArea;
+
+            	// Add velocity to upstream and downstream vertex.
+            	// Beware: velocity has to be substracted because of the (wrong) sign of vDarcy
+            	(*velocityX)[vertIIdx] -= velocity[0];
+                (*velocityX)[vertJIdx] -= velocity[0];
+                if (dim >= 2) {
+                    (*velocityY)[vertIIdx] -= velocity[1];
+                    (*velocityY)[vertJIdx] -= velocity[1];
                 }
-                elementVelocity[phase] *= 1.0/this->curElementGeom_.numEdges;
-                (*velocityX)[elementIdx] = elementVelocity[0][phase];
-                if (dim >= 2)
-                    (*velocityY)[elementIdx] = elementVelocity[1][phase];
-                if (dim == 3)
-                    (*velocityZ)[elementIdx] = elementVelocity[2][phase];
+                if (dim == 3) {
+                    (*velocityZ)[vertIIdx] -= velocity[2];
+                    (*velocityZ)[vertJIdx] -= velocity[2];
+                }
             }
+		#endif
         }
+
+		#ifdef velocity_output		// check if velocity output is demanded
+        std::cout << "maximum Velocity was " << maxV << "\n";  //console output for maximum velocity magnitude at IP
+
+        // normalize the velocities at the vertices
+        for (int i = 0; i < numVertices; ++i) {
+        	(*velocityX)[i] /= boxSurface[i];
+        if (dim >= 2)
+        	(*velocityY)[i] /= boxSurface[i];
+        if (dim == 3)
+        	(*velocityZ)[i] /= boxSurface[i];
+        }
+		#endif
 
         writer.addVertexData(pW, "pW");
         writer.addVertexData(pN, "pN");
@@ -568,11 +626,13 @@ public:
         writer.addVertexData(massfracWinN, "XwN");
         writer.addVertexData(temperature, "T");
         writer.addVertexData(phaseState, "phase state");
-        writer.addCellData(velocityX, "Vx");
+		#ifdef velocity_output		// check if velocity output is demanded
+        writer.addVertexData(velocityX, "Vx");
         if (dim >= 2)
-            writer.addCellData(velocityY, "Vy");
+            writer.addVertexData(velocityY, "Vy");
         if (dim == 3)
-            writer.addCellData(velocityZ, "Vz");
+            writer.addVertexData(velocityZ, "Vz");
+		#endif
     }
 
     /*!

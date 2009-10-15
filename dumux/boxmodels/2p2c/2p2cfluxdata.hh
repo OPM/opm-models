@@ -169,11 +169,10 @@ private:
         Dune::harmonicMeanMatrix(K, Ki, Kj);
 
         // temporary vector for the Darcy velocity
-        GlobalPosition vDarcy;
         for (int phase=0; phase < numPhases; phase++)
         {
-            K.mv(pressureGrad[phase], vDarcy);  // vDarcy = K * grad p
-            vDarcyNormal[phase] = vDarcy*face->normal;
+            K.mv(pressureGrad[phase], vDarcy[phase]);  // vDarcy = K * grad p
+            vDarcyNormal[phase] = vDarcy[phase]*face->normal;
         }
 
         // set the upstream and downstream vertices
@@ -241,6 +240,9 @@ public:
 
     // density of each face at the integration point
     PhasesVector densityAtIP;
+
+    // darcy velocities of each phase (without the mobility)
+    PhasesVector vDarcy[numPhases];
 
     // darcy velocity in direction of the face normal
     PhasesVector vDarcyNormal;
