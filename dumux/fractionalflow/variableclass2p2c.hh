@@ -89,6 +89,42 @@ public:
         	elementVolumes[indexset.index(*eIt)] = (*eIt).geometry().volume();
     }
 
+    // serialization methods
+    template <class Restarter>
+    void serialize(Restarter &res)
+    {
+        res.serializeSection("VariableClass2p2cni");
+        res.serializeStream()  << time_ << std::endl;
+        res.template serializeEntities<0>(*this, gridview);
+    }
+    template <class Restarter>
+    void deserialize(Restarter &res)
+    {
+        res.deserializeSection("VariableClass2p2cni");
+        res.deserializeStream() >> time_;
+        std::string dummy;
+        std::getline(res.deserializeStream(), dummy);
+
+        res.template deserializeEntities<0>(*this, gridview);
+    }
+
+    void serializeEntity(std::ostream &outstream, const Element &e)
+    {
+        int globalIdx = indexset.index(e);
+        outstream  << pressure[globalIdx] << "  "
+            << totalConcentration[globalIdx] << "  "
+            << totalConcentration[globalIdx + size] << "  "
+            << totalConcentration[globalIdx + size + size];
+    }
+    void deserializeEntity(std::istream &instream, const Element &e)
+    {
+        int globalIdx = indexset.index(e);
+        instream >> pressure[globalIdx]
+            >> totalConcentration[globalIdx]
+            >> totalConcentration[globalIdx + size]
+            >> totalConcentration[globalIdx + size + size];
+    }
+
     Scalar time()
     {
         return time_;
@@ -138,21 +174,21 @@ public:
         {
             C1[i] = totalConcentration[i];
             C2[i] = totalConcentration[i + size];
-            totalMassC += C2[i]*elementVolumes[i];
-            totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
-                                                 +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
-            dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
-            Scalar trappedI = std::min(1.0 - saturation[i], Srn[i] + 3e-2);
-            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
+//            totalMassC += C2[i]*elementVolumes[i];
+//            totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
+//                                                 +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
+//            dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
+//            Scalar trappedI = std::min(1.0 - saturation[i], Srn[i] + 3e-2);
+//            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
 
 //            if (Srn[i] > (1 - saturation[i] + 1e-4))
 //            	DUNE_THROW(MathError, "Srn = " << Srn[i] << " is greater than Sn = " << (1 - saturation[i]));
         }
-        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
-        std::cout.precision(3);
-        std::cout << time_ << ": component 2: " << totalMassC << " kg (C), "
-				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%. Residually trapped: "
-				  << trappedMass/totalMassX*100.0 << "%." << std::endl;
+//        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+//        std::cout.precision(3);
+//        std::cout << time_ << ": component 2: " << totalMassC << " kg (C), "
+//				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%. Residually trapped: "
+//				  << trappedMass/totalMassX*100.0 << "%." << std::endl;
 
         VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
@@ -171,8 +207,11 @@ public:
         vtkwriter.addCellData(Srn, "residual nonwetting phase saturation [-]");
         vtkwriter.write(fname, VTKOptions::ascii);
 
-        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
-        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
+
+        dinfo << "Output " << k << " written to file" << fname << ".vtu" << std::endl;
+
+//        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
+//        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
 
         return;
     }
