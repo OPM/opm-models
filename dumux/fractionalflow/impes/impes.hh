@@ -184,6 +184,18 @@ public:
         return;
     }
 
+    // serialization methods
+    template <class Restarter>
+    void serialize(Restarter &res)
+    {
+        this->transport.problem().variables().serialize<Restarter>(res);
+    }
+    template <class Restarter>
+    void deserialize(Restarter &res)
+    {
+        this->transport.problem().variables().deserialize<Restarter>(res);
+    }
+
     //! Constructs an IMPES object
     /**
      * \param diffusion an object of type Diffusion

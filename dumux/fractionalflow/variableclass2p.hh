@@ -155,6 +155,39 @@ public:
 
 //        analyzeMassInitialize();
     }
+
+    // serialization methods
+    template <class Restarter>
+    void serialize(Restarter &res)
+    {
+        res.serializeSection("VariableClass2p");
+        res.serializeStream()  << time_ << std::endl;
+        res.template serializeEntities<0>(*this, gridViewDiffusion_);
+    }
+    template <class Restarter>
+    void deserialize(Restarter &res)
+    {
+        res.deserializeSection("VariableClass2p");
+        res.deserializeStream() >> time_;
+        std::string dummy;
+        std::getline(res.deserializeStream(), dummy);
+
+        res.template deserializeEntities<0>(*this, gridViewDiffusion_);
+    }
+
+    void serializeEntity(std::ostream &outstream, const Element &element)
+    {
+        int globalIdx = indexSetDiffusion_.index(element);
+        outstream  << pressure_[globalIdx] << "  "
+            << saturation_[globalIdx];
+    }
+    void deserializeEntity(std::istream &instream, const Element &element)
+    {
+        int globalIdx = indexSetDiffusion_.index(element);
+        instream >> pressure_[globalIdx]
+            >> saturation_[globalIdx];
+    }
+
 private:
     void initializeGlobalVariablesDiffPart(Dune::FieldVector<Scalar, dim>& initialVel)
     {
@@ -231,6 +264,7 @@ private:
         }
         return;
     }
+
 //    void analyzeMassInitialize()
 //    {
 //        elementVolumes_.resize(gridSizeTransport_);
