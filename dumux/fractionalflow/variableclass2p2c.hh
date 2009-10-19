@@ -113,16 +113,14 @@ public:
         int globalIdx = indexset.index(e);
         outstream  << pressure[globalIdx] << "  "
             << totalConcentration[globalIdx] << "  "
-            << totalConcentration[globalIdx + size] << "  "
-            << totalConcentration[globalIdx + size + size];
+            << totalConcentration[globalIdx + size];
     }
     void deserializeEntity(std::istream &instream, const Element &e)
     {
         int globalIdx = indexset.index(e);
         instream >> pressure[globalIdx]
             >> totalConcentration[globalIdx]
-            >> totalConcentration[globalIdx + size]
-            >> totalConcentration[globalIdx + size + size];
+            >> totalConcentration[globalIdx + size];
     }
 
     Scalar time()
