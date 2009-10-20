@@ -89,39 +89,40 @@ public:
         	elementVolumes[indexset.index(*eIt)] = (*eIt).geometry().volume();
     }
 
-    // serialization methods
-    template <class Restarter>
-    void serialize(Restarter &res)
-    {
-        res.serializeSection("VariableClass2p2cni");
-        res.serializeStream()  << time_ << std::endl;
-        res.template serializeEntities<0>(*this, gridview);
-    }
-    template <class Restarter>
-    void deserialize(Restarter &res)
-    {
-        res.deserializeSection("VariableClass2p2cni");
-        res.deserializeStream() >> time_;
-        std::string dummy;
-        std::getline(res.deserializeStream(), dummy);
+     // serialization methods
+     template <class Restarter>
+     void serialize(Restarter &res)
+     {
+         res.serializeSection("VariableClass2p2c");
+         res.serializeStream()  << time_ << std::endl;
+         res.template serializeEntities<0>(*this, gridview);
+     }
+     template <class Restarter>
+     void deserialize(Restarter &res)
+     {
+         res.deserializeSection("VariableClass2p2c");
+         res.deserializeStream() >> time_;
+         std::string dummy;
+         std::getline(res.deserializeStream(), dummy);
 
-        res.template deserializeEntities<0>(*this, gridview);
-    }
+         res.template deserializeEntities<0>(*this, gridview);
+     }
 
-    void serializeEntity(std::ostream &outstream, const Element &e)
-    {
-        int globalIdx = indexset.index(e);
-        outstream  << pressure[globalIdx] << "  "
-            << totalConcentration[globalIdx] << "  "
-            << totalConcentration[globalIdx + size];
-    }
-    void deserializeEntity(std::istream &instream, const Element &e)
-    {
-        int globalIdx = indexset.index(e);
-        instream >> pressure[globalIdx]
-            >> totalConcentration[globalIdx]
-            >> totalConcentration[globalIdx + size];
-    }
+     void serializeEntity(std::ostream &outstream, const Element &e)
+     {
+         int globalIdx = indexset.index(e);
+         outstream  << pressure[globalIdx] << "  "
+             << totalConcentration[globalIdx] << "  "
+             << totalConcentration[globalIdx + size];
+     }
+     void deserializeEntity(std::istream &instream, const Element &e)
+     {
+         int globalIdx = indexset.index(e);
+         instream >> pressure[globalIdx]
+             >> totalConcentration[globalIdx]
+             >> totalConcentration[globalIdx + size];
+     }
+
 
     Scalar time()
     {
@@ -168,25 +169,83 @@ public:
         Scalar totalMassX = 0;
     	Scalar dissolvedMass = 0;
     	Scalar trappedMass = 0;
-        for (int i = 0; i < size; i++)
+        Scalar extent = 0;
+        FieldVector<Scalar,dim> injectionPoint(0);
+        injectionPoint[0] = 5e4; injectionPoint[2] = 5e2;
+        ElementIterator eItEnd = gridview.template end<0>();
+        FieldVector<Scalar,dim> centerOfMass(0);
+        FieldVector<Scalar,dim> squaredVec(0);
+        for (ElementIterator eIt = gridview.template begin<0>(); eIt != eItEnd; ++eIt)
         {
-            C1[i] = totalConcentration[i];
-            C2[i] = totalConcentration[i + size];
-//            totalMassC += C2[i]*elementVolumes[i];
-//            totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
-//                                                 +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
-//            dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
-//            Scalar trappedI = std::min(1.0 - saturation[i], Srn[i] + 3e-2);
-//            trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
+            int i = indexset.index(*eIt);
 
-//            if (Srn[i] > (1 - saturation[i] + 1e-4))
-//            	DUNE_THROW(MathError, "Srn = " << Srn[i] << " is greater than Sn = " << (1 - saturation[i]));
+        	GeometryType gt = eIt->geometry().type();
+        	const FieldVector<Scalar,dim>& localPos = ReferenceElements<Scalar,dim>::general(gt).position(0,0);
+        	FieldVector<Scalar,dim> globalPos = eIt->geometry().global(localPos);
+
+    		C1[i] = totalConcentration[i];
+    		C2[i] = totalConcentration[i + size];
+
+//    		// do not count the most upper layer (assumed width 0.01m)
+//        	if (globalPos[2] < 0.01*globalPos[0] + 50.0 - 0.01)
+//        	{
+        		totalMassC += C2[i]*elementVolumes[i];
+        		totalMassX += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
+        		                                                                              +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
+        		dissolvedMass += 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
+        		Scalar trappedI = std::min(1.0 - saturation[i], Srn[i]);
+        		trappedMass += 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
+
+        		if (saturation[i] < 0.99)
+        		{
+        			FieldVector<Scalar,dim> distanceVec = globalPos;
+        			distanceVec -= injectionPoint;
+        			// extent only in upslope (= x) direction
+        			extent = std::max(extent, std::abs(distanceVec[0]));
+
+        			Scalar massXI = 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]
+        			                                                                                +(1-nonwet_X1[i])*(1-saturation[i])*density_nonwet[i]);
+        			Scalar dissolvedMassI = 0.15*elementVolumes[i]*((1-wet_X1[i])*saturation[i]*density_wet[i]);
+        			Scalar trappedI = std::min(1.0 - saturation[i], Srn[i]);
+        			Scalar trappedMassI = 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
+        			Scalar freeMassI = massXI - dissolvedMassI - trappedMassI;
+
+        			FieldVector<Scalar,dim> centerI = globalPos;
+        			centerI -= injectionPoint;
+        			FieldVector<Scalar,dim> centerI2(0);
+        			for (int comp = 0; comp < dim; comp++)
+        				centerI2[comp] = centerI[comp]*centerI[comp];
+
+        			centerI *= freeMassI;
+        			// y-axisymmetric situation:
+        			centerI[1] = 0;
+        			centerOfMass += centerI;
+
+        			centerI2 *= freeMassI;
+        			squaredVec += centerI2;
+        		}
+//        	}
         }
-//        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
-//        std::cout.precision(3);
-//        std::cout << time_ << ": component 2: " << totalMassC << " kg (C), "
-//				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%. Residually trapped: "
-//				  << trappedMass/totalMassX*100.0 << "%." << std::endl;
+        Scalar freeMass = totalMassX - dissolvedMass - trappedMass;
+        centerOfMass /= freeMass;
+    	FieldVector<Scalar,dim> centerOfMass2(0);
+    	for (int comp = 0; comp < dim; comp++)
+    		centerOfMass2[comp] = centerOfMass[comp]*centerOfMass[comp];
+
+        FieldVector<Scalar,dim> standardDev = squaredVec;
+        standardDev /= freeMass;
+        standardDev -= centerOfMass2;
+    	for (int comp = 0; comp < dim; comp++)
+    		standardDev[comp] = sqrt(standardDev[comp]);
+
+
+        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+        std::cout.precision(3);
+        std::cout << time_ << ": component 2: " << totalMassC << " kg (C), "
+				  << totalMassX << " kg (X). Dissolved: " << dissolvedMass/totalMassX*100.0 << "%. Residually trapped: "
+				  << trappedMass/totalMassX*100.0 << "%." << std::endl;
+        std::cout << "\tExtent " << extent << "m, center of mass " << centerOfMass
+				  << ", standard deviation " << standardDev << std::endl;
 
         VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
@@ -205,11 +264,8 @@ public:
         vtkwriter.addCellData(Srn, "residual nonwetting phase saturation [-]");
         vtkwriter.write(fname, VTKOptions::ascii);
 
-
-        dinfo << "Output " << k << " written to file" << fname << ".vtu" << std::endl;
-
-//        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
-//        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
+        if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
+        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
 
         return;
     }

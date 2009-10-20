@@ -49,13 +49,13 @@ public:
     }
 
     Scalar temp(const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos)
+                                           const FieldVector<Scalar, dim>& localPos, double t)
     {
         return 283.15;
     }
 
     BoundaryConditions2p2c::Flags bc_type (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos) const
+                                           const FieldVector<Scalar, dim>& localPos, double t) const
     {
 
         return BoundaryConditions2p2c::concentration;
@@ -68,7 +68,7 @@ public:
     }
 
     BoundaryConditions::Flags press_bc_type (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                             const Dune::FieldVector<Scalar, dim>& localPos) const
+                                             const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
         if (globalPos[0] > 10-1E-6 || globalPos[0] < 1e-6)
             return Dune::BoundaryConditions::dirichlet;
@@ -77,19 +77,19 @@ public:
     }
 
 
-    Scalar dirichlet (const FieldVector<Scalar, dim>& globalPos, const Entity& element, const FieldVector<Scalar, dim>& localPos) const
+    Scalar dirichlet (const FieldVector<Scalar, dim>& globalPos, const Entity& element, const FieldVector<Scalar, dim>& localPos, double t) const
     {
         return (globalPos[0] < 1e-6) ? (2.5e5 - 10000 * globalPos[2]) : (2e5 - 10000 * globalPos[2]);
     }
 
     Scalar dirichletConcentration (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                   const FieldVector<Scalar, dim>& localPos) const
+                                   const FieldVector<Scalar, dim>& localPos, double t) const
     {
         return 1;
     }
 
     Scalar dirichletSat (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                         const FieldVector<Scalar, dim>& localPos) const
+                         const FieldVector<Scalar, dim>& localPos, double t) const
     {
         if (globalPos[0] < 15)
             return 0;
@@ -98,14 +98,14 @@ public:
     }
 
     virtual FieldVector<Scalar,2> neumann (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos) const
+                                           const FieldVector<Scalar, dim>& localPos, double t) const
     {
         FieldVector<Scalar,2> J_(0);
         return J_;
     }
 
     virtual FieldVector<Scalar,2> source (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                          const FieldVector<Scalar, dim>& localPos) const
+                                          const FieldVector<Scalar, dim>& localPos, double t) const
     {
         FieldVector<Scalar,2> q_(0);
         if (fabs(globalPos[0] - 4.5) < 1 && fabs(globalPos[1] - 4.5) < 1) q_[1] = 0.0001;

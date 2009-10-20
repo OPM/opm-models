@@ -79,7 +79,7 @@ int main(int argc, char** argv)
     ModelType model(gridview, problem);
 
     Dune::ExplicitEulerStep<Grid, ModelType> timestep;
-    Dune::TimeLoop<Grid, ModelType > timeloop(tStart, tEnd, "2p2c", modulo, cFLFactor, 1e100, 1e100, timestep);
+    Dune::TimeLoop<GridView, ModelType > timeloop(gridview, tStart, tEnd, "2p2c", modulo, cFLFactor, 1e100, 1e100, timestep);
 
     Dune::Timer timer;
     timer.reset();

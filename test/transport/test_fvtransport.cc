@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 		typedef Dune::FVSaturation2P<GridView, Scalar, VariableClass> Transport;
 		Transport transport(gridView, problem);
 
-		Dune::TimeLoop<Grid, Transport > timeloop(tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
+		Dune::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
 
 		timeloop.execute(transport);
 

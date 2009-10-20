@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
 	Dune::RungeKuttaStep<Grid, Transport> timeStep(1);
 	//Dune::ImplicitEulerStep<Grid, Transport> timeStep;
-        Dune::TimeLoop<Grid, Transport > timeloop(tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
+        Dune::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
 
         timeloop.execute(transport);
 
