@@ -47,18 +47,27 @@ namespace Properties
 //! Set the default for the FVElementGeometry
 SET_PROP(BoxScheme, FVElementGeometry)
 {
+#if HAVE_DUNE_PDELAB
 private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalFEMSpace))  LocalFEMSpace;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
 
 public:
+    typedef Dune::FVElementGeometry<Grid, LocalFEMSpace>  type;
+
+#else
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
+public:
     typedef Dune::FVElementGeometry<Grid>  type;
+#endif
 };
 
 //! use the plain newton method for the box scheme by default
 SET_PROP(BoxScheme, NewtonMethod)
 {
+private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))  Model;
-
 public:
     typedef Dune::NewtonMethod<Model> type;
 };
