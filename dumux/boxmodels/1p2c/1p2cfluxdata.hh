@@ -199,8 +199,8 @@ private:
 
         // Diffusion coefficient in the porous medium
         diffCoeffPM
-            = 1./2*(vDat_i.density * vDat_i.porosity * vDat_i.tortuosity * vDat_i.diffCoeff +
-                    vDat_j.density * vDat_j.porosity * vDat_j.tortuosity * vDat_j.diffCoeff);
+            = 1./2*(vDat_i.porosity * vDat_i.tortuosity * vDat_i.diffCoeff +
+                    vDat_j.porosity * vDat_j.tortuosity * vDat_j.diffCoeff);
     }
 
 public:
