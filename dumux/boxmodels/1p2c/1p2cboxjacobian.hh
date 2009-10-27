@@ -139,10 +139,15 @@ public:
                (1 - upwindAlpha)*
                (  dn.molarDensity * dn.molefraction/dn.viscosity ) );
 
+        FieldVector<Scalar,dim> unitNormal(vars.face->normal);
+        unitNormal/=vars.face->normal.two_norm();
         // diffusive flux
         flux[transport] +=
             vars.molarDensityAtIP * vars.diffCoeffPM *
             (vars.concentrationGrad * vars.face->normal);
+        flux[transport] +=
+            vars.molarDensityAtIP * (vars.dispersivity *unitNormal) * vars.vDarcyNormal *
+            (vars.concentrationGrad * unitNormal);//face->normal already in vDarcyNormal!
     }
 
     /*!

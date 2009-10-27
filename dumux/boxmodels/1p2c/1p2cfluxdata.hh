@@ -201,6 +201,9 @@ private:
         diffCoeffPM
             = 1./2*(vDat_i.porosity * vDat_i.tortuosity * vDat_i.diffCoeff +
                     vDat_j.porosity * vDat_j.tortuosity * vDat_j.diffCoeff);
+        dispersivity = vDat_i.dispersivity;
+        dispersivity += vDat_j.dispersivity;
+        dispersivity *= 0.5;
     }
 
 public:
@@ -225,6 +228,9 @@ public:
 
     //! the effective diffusion coefficent in the porous medium
     Scalar diffCoeffPM;
+
+    //! the dispersivity coefficent in the porous medium
+    FieldVector<Scalar, dim> dispersivity;
 
     //! darcy velocity in direction of the face normal
     Scalar vDarcyNormal;

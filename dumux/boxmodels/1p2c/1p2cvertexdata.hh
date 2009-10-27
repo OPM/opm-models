@@ -90,6 +90,7 @@ public:
         diffCoeff = jac.problem().fluid().diffCoeff(T, pressure);
         viscosity = jac.problem().fluid().viscosity(T, pressure);
         tortuosity = jac.problem().soil().tortuosity(global,element,local);
+        dispersivity = jac.problem().soil().dispersivity(global,element,local);
         molarDensity = jac.problem().fluid().molarDensity(T, pressure);
     }
 
@@ -97,6 +98,7 @@ public:
     Scalar density;
     Scalar viscosity;
     Scalar tortuosity;
+    FieldVector<Scalar,dim> dispersivity;
     Scalar diffCoeff;
     Scalar molefraction;
     Scalar pressure;
