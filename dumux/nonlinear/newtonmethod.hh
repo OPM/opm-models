@@ -300,7 +300,8 @@ protected:
             // solve the resultuing linear equation system
             ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
 
-            Scalar tmp = (*u).two_norm2();
+            //Scalar tmp = (*u).two_norm2();
+            Scalar tmp = ctl.weightedNorm2(*u, *(*uOld));
             tmp = model.gridView().comm().sum(tmp);
             deflectionTwoNorm_ = sqrt(tmp);
 

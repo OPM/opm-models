@@ -146,7 +146,7 @@ public:
     //! tolerance
     bool newtonConverged()
     {
-        return ((method_->deflectionTwoNorm()*oneByMagnitude_ <= tolerance_) && (curPhysicalness_ >= 1.0));
+        return ((method_->deflectionTwoNorm() <= tolerance_) && (curPhysicalness_ >= 1.0));
     }
 
     //! called before the newton method is applied to an equation
@@ -158,10 +158,6 @@ public:
         probationCount_ = 0;
         maxPhysicalness_ = 0;
         curPhysicalness_ = 0;
-
-        Scalar tmp = (*u).two_norm2();
-        tmp = sqrt(model().gridView().comm().sum(tmp));
-        oneByMagnitude_ = 1.0/std::max(tmp, 1e-5);
     }
 
     //! indidicates the beginning of a newton iteration
@@ -196,7 +192,7 @@ public:
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
             std::cout << boost::format("Newton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
-                %numSteps_%(method_->deflectionTwoNorm()*oneByMagnitude_)%curPhysicalness_%maxPhysicalness_;
+                %numSteps_%(method_->deflectionTwoNorm())%curPhysicalness_%maxPhysicalness_;
     }
 
     //! Indicates that we're done solving the equation system.
@@ -255,6 +251,27 @@ public:
     const Model &model() const
     { return method_->model(); }
 
+    template <class Vector>
+    Scalar weightedNorm2(const Vector& vector, const Vector& sol)
+    {
+    	const unsigned int numEq = vector[0].size;
+
+    	std::vector<Scalar> normsVSquared(numEq, 0);
+    	std::vector<Scalar> normsSolSquared(numEq, 0);
+
+    	for (unsigned int block = 0; block < vector.size(); block++)
+    		for (unsigned int comp = 0; comp < numEq; comp++)
+    		{
+    			normsVSquared[comp] += vector[block][comp]*vector[block][comp];
+    			normsSolSquared[comp] += sol[block][comp]*sol[block][comp];
+    		}
+
+    	Scalar result = 0;
+		for (unsigned int comp = 0; comp < numEq; comp++)
+			result += normsVSquared[comp]/std::max(normsSolSquared[comp], 1e-10);
+
+		return result;
+    }
 
 protected:
     // returns the actual implementation for the cotroller we do
@@ -401,7 +418,6 @@ protected:
 
     Scalar maxPhysicalness_;
     Scalar curPhysicalness_;
-    Scalar oneByMagnitude_;
     int    probationCount_;
 
     // optimal number of iterations we want to achive
