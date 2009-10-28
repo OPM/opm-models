@@ -48,7 +48,7 @@ public:
         return gravity_;
     }
 
-    Scalar temp(const FieldVector<Scalar, dim>& globalPos, const Entity& element,
+    Scalar temperature(const FieldVector<Scalar, dim>& globalPos, const Entity& element,
                                            const FieldVector<Scalar, dim>& localPos, double t)
     {
         return 283.15;
