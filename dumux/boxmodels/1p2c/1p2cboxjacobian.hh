@@ -141,12 +141,13 @@ public:
 
         FieldVector<Scalar,dim> unitNormal(vars.face->normal);
         unitNormal/=vars.face->normal.two_norm();
+
         // diffusive flux
         flux[transport] +=
             vars.molarDensityAtIP * vars.diffCoeffPM *
             (vars.concentrationGrad * vars.face->normal);
         flux[transport] +=
-            vars.molarDensityAtIP * (vars.dispersivity *unitNormal) * vars.vDarcyNormal *
+            vars.molarDensityAtIP * std::abs((vars.dispersivity *unitNormal) * (vars.vDarcyNormal/vars.viscosityAtIP)) *
             (vars.concentrationGrad * unitNormal);//face->normal already in vDarcyNormal!
     }
 
