@@ -559,7 +559,7 @@ public:
             			elemDat);
 
                 // choose phase of interest. Alternatively, a loop over all phases would be possible.
-            	int phaseIdx = wPhase;
+            	int phaseIdx = nPhase;
 
             	// get darcy velocity
             	velocity = fluxDat.vDarcy[phaseIdx];  // mind the sign: vDarcy = kf grad p
@@ -569,8 +569,6 @@ public:
             	const VertexData &down = elemDat[fluxDat.downstreamIdx[phaseIdx]];
             	Scalar scvfArea = fluxDat.face->normal.two_norm(); //get surface area to weight velocity at the IP with the surface area
             	velocity *= (mobilityUpwindAlpha*up.mobility[phaseIdx] + (1-mobilityUpwindAlpha)*down.mobility[phaseIdx])* scvfArea;
-
-            	maxV = std::max(maxV, std::sqrt(velocity[0]*velocity[0]+velocity[1]*velocity[1])); //evaluate maximum velocity at IP
 
             	int vertIIdx = this->problem().model().vertexMapper().map(this->curElement_(),
 									  fluxDat.face->i,
@@ -599,7 +597,6 @@ public:
         }
 
 		#ifdef velocity_output		// check if velocity output is demanded
-        std::cout << "maximum Velocity was " << maxV << "\n";  //console output for maximum velocity magnitude at IP
 
         // normalize the velocities at the vertices
         for (int i = 0; i < numVertices; ++i) {
