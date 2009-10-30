@@ -272,7 +272,6 @@ public:
     template <class Restarter>
     void serialize(Restarter &res)
     {
-        std::cerr << "serialize\n";
         res.serializeSection("VTKMultiWriter");
         res.serializeStream() << writerNum_ - 1 << "\n";
 
@@ -299,7 +298,6 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-        std::cerr << "deserialize\n";
         wasRestarted_ = true;
 
         res.deserializeSection("VTKMultiWriter");
