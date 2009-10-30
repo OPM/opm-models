@@ -71,7 +71,7 @@ public:
                 const Element           &element,
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
-                Problem                 &problem,
+                const Problem           &problem,
                 bool                     isOldSol) 
     {
         typedef Indices I;
@@ -81,7 +81,8 @@ public:
                            element,
                            elemGeom,
                            vertIdx,
-                           problem);
+                           problem,
+                           isOldSol);
 
         // data for the energy equation
         const LocalPosition &local =
@@ -110,7 +111,7 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      vertIdx,
-                            Problem                 &problem) 
+                            const Problem           &problem) 
     {
         typedef Indices I;
         this->temperature = sol[I::temperatureIdx];

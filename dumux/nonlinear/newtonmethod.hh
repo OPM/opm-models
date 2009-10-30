@@ -74,7 +74,7 @@ public:
         // invalidate the current residual vector
         newton.setResidualObsolete();
         return true;
-    };
+    }
 };
 
 /*!
@@ -139,7 +139,7 @@ public:
             lambda /= 2;
         }
         return true;
-    };
+    }
 
 private:
     Scalar relDefMin_;
@@ -303,11 +303,6 @@ protected:
             // linearize the problem at the current solution
             jacobianAsm.assemble(localJacobian, u, *f);
 
-            //printmatrix(std::cout, *jacobianAsm, "global stiffness matrix", "row", 100, 2);
-//            printvector(std::cout, *u, "u", "row", 14, 1, 3);
-//            printvector(std::cout, *(*f), "right hand side", "row", 14, 1, 3);
-
-
             // solve the resultuing linear equation system
             if (verbose()) {
                 std::cout << "\rSolve Mx = r              ";
@@ -321,10 +316,17 @@ protected:
             std::cout << "*u["<<i<<"]: "
                       << (*u)[i] << "\n";
             */
-            //printmatrix(std::cout, *jacobianAsm, "J", "row");
+            /*
+#if HAVE_DUNE_PDELAB
+            printmatrix(std::cout, (*jacobianAsm).base(), "J PDELab", "row");
+#else
+            printmatrix(std::cout, *jacobianAsm, "J", "row");
+#endif
+            std::cout << "rhs:" << *(*f) << "\n";
+            */
 
-            ctl.newtonSolveLinear(*jacobianAsm, u, *f);
-            ctl.newtonUpdateRelError(uOld, u);
+            ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
+            ctl.newtonUpdateRelError(*uOld, u);
             
             // update the current solution. We use either
             // a line search approach or the plain method.

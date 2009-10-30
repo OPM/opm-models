@@ -127,8 +127,6 @@ public:
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
 
-            localUEval_ = tmpSol;
-
             asImp_().evalLocalResidual(localResid, true); // with boundary
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
@@ -156,8 +154,6 @@ public:
         assemble_(element, mutableLocalU, orderOfShapeFns);
     }
 
-    SolutionOnElement localUEval_;
-
     /*!
      * \brief Assemble the linear system of equations for the
      *        verts of a element.
@@ -171,30 +167,6 @@ public:
         SolutionOnElement localU(numVertices);
         restrictToElement(localU, problem_.model().curSolFunction());
         assemble_(element, localU, orderOfShapeFns);
-
-#if 0
-        int numVerts = curElementGeom_.numVertices;
-        for (int vertI = 0; vertI < numVerts; ++vertI) 
-        {
-            std::cout << problem().model().vertexMapper().map(element, vertI, dim)
-                      << ", Sn: " << this->curElemDat_[vertI].flash.Sn()
-                      << "---------------\n";
-
-            for (int pv = 0; pv < numEq; ++pv) 
-            {
-                int vertJ = vertI;
-                //for (int vertJ = 0; vertJ < numVerts; ++vertJ) 
-                {
-                    for (int eq = 0; eq < numEq; ++eq) 
-                    {
-                        std::cout << vertI << ": " << pv << "<->" << /*vertJ << ":" << */ eq << " = " << this->A[vertI][vertJ][eq][pv] << "\n";
-                    
-                    }
-                }
-            }
-        }
-        exit(1);
-#endif
     }
   
     /*!
@@ -300,7 +272,7 @@ public:
                 problem_.neumann(values,
                                  curElement_(),
                                  curElementGeom_,
-                                 isIt,
+                                 *isIt,
                                  scvIdx,
                                  boundaryFaceIdx);
                 Valgrind::CheckDefined(values);
@@ -655,7 +627,7 @@ private:
                 problem_.boundaryTypes(tmp,
                                        curElement_(),
                                        curFvElementGeometry(),
-                                       isIt,
+                                       *isIt,
                                        elemVertIdx,
                                        boundaryFaceIdx);
                 Valgrind::CheckDefined(tmp);
@@ -679,8 +651,6 @@ private:
 
     void assemble_(const Element &element, SolutionOnElement& localU, int orderOfShapeFns = 1)
     {
-        localUEval_ = localU;
-        
         // set the current grid element
         asImp_().setCurrentElement(element);
 
@@ -784,6 +754,7 @@ protected:
                            int pvIdx) const
     {
         return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-7);
+        //return std::max(std::abs(1e-9*elemSol[vertIdx][pvIdx]), Scalar(1e-12));
     }
 
     /*!

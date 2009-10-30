@@ -151,7 +151,7 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      vertIdx,
-                            Problem                 &problem) 
+                            const Problem           &problem) 
     {
         temperature = problem.temperature(element, elemGeom, vertIdx);
     }

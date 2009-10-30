@@ -429,7 +429,7 @@ public:
                 xWN = elemDat[i].massfrac[wComp][nPhase];
                 xAN = elemDat[i].massfrac[nComp][nPhase];
                 pW = elemDat[i].pressure[wPhase];
-                Te = asImp_()->temperature_((*globalSol)[globalIdx]);
+                Te = elemDat[i].temperature;
                 massNComp = vol * poro * (satN * rhoN * xAN + satW * rhoW * xAW);
                 massNCompNPhase = vol * poro * satN * rhoN * xAN;
                 massWComp = vol * poro * (satW * rhoW * xWW + satN * rhoN * xWN);

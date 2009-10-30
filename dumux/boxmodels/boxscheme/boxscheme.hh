@@ -130,9 +130,9 @@ public:
     {
         wasRestarted_ = false;
 
-        (*f_) = Scalar(0);
-        (*uCur_) = Scalar(0);
-        (*uPrev_) = Scalar(0);
+        f_ = 0;
+        uCur_ = 0;
+        uPrev_ = 0;
 
         // check grid partitioning if we are parallel
         assert((prob.gridView().comm().size() == 1) ||
@@ -642,7 +642,7 @@ protected:
                 problem_.dirichlet(dirichletVal,
                                    element,
                                    fvElemGeom,
-                                   isIt,
+                                   *isIt,
                                    elemVertIdx,
                                    boundaryFaceIdx);
                 Valgrind::CheckDefined(dirichletVal);

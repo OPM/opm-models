@@ -167,11 +167,6 @@ public:
         // diffusive heat flux
         flux[temperatureIdx] += (fluxData.temperatureGrad*fluxData.face->normal)*fluxData.heatCondAtIp;
     }
-
-    // internal method!
-    template <class PrimaryVarVector>
-    Scalar temperature(const PrimaryVarVector &sol)
-    { return sol[temperatureIdx]; }
 };
 
 }

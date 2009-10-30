@@ -48,24 +48,16 @@ public:
 
 		BoundaryTypeVector values;
 
-        IntersectionIterator isIt = element.ileafbegin();
-        const IntersectionIterator &endIt = element.ileafend();
-        for (; isIt != endIt; ++isIt)
-        {
-        	if (isIt->indexInInside() == ig.indexInInside())
-        		break;
-        }
-
         y = 1; // Dirichlet
         Dune::GeometryType geoType = element.geometry().type();
         const ReferenceElement& refElem = ReferenceElements::general(geoType);
-        int faceIdx = isIt->indexInInside();
-        for (int faceVertIdx = 0; faceVertIdx < isIt->geometry().corners(); faceVertIdx++)
+        int faceIdx = ig.indexInInside();
+        for (int faceVertIdx = 0; faceVertIdx < ig.geometry().corners(); faceVertIdx++)
         {
         	int scvIdx = refElem.subEntity(faceIdx, 1, faceVertIdx, dim);
         	int boundaryFaceIdx = fvGeom.boundaryFaceIndex(faceIdx, faceVertIdx);
 
-        	problem_.boundaryTypes(values, element, fvGeom, isIt, scvIdx, boundaryFaceIdx);
+        	problem_.boundaryTypes(values, element, fvGeom, ig.intersection(), scvIdx, boundaryFaceIdx);
 
         	for (unsigned int comp = 0; comp < numEq; comp++)
         		if (values[comp] == Dune::BoundaryConditions::neumann)

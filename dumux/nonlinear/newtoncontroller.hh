@@ -179,7 +179,7 @@ public:
      */
     template <class Function>
     void newtonUpdateRelError(const Function &uOld,
-                               const Function &deltaU)
+                              const Function &deltaU)
     {
         // calculate the relative error as the maximum relative
         // deflection in any degree of freedom.
@@ -195,7 +195,7 @@ public:
             }
         };
         model().gridView().comm().max(error_);
-    };
+    }
 
     Scalar relError() const
     { return error_; };
@@ -220,6 +220,7 @@ public:
             p.message(e.what());
             throw p;
         }
+    }
 
     //! Indicates that we're done solving one newton step.
     void newtonEndStep(Function &u, Function &uOld)
@@ -399,7 +400,8 @@ protected:
                        "Solving the linear system of equations did not converge.");
     }
 
-#elif !HAVE_MPI
+
+#else // !HAVE_MPI
     template <class Matrix, class Vector>
     void solveSequential_(Matrix &A,
                           Vector &x,
@@ -410,7 +412,7 @@ protected:
         // accurately. On the other hand, if this is the first
         // newton step, we don't have a meaningful value for the error
         // yet, so we use the targeted accurracy for the error.
-        Scalar residTol = tolerance_/1e11;
+        Scalar residTol = tolerance_/1e3;
 
         typedef Dune::MatrixAdapter<typename JacobianAssembler::RepresentationType,
             typename Function::RepresentationType,
@@ -438,7 +440,6 @@ protected:
                        "Solving the linear system of equations did not converge.");
     }
 #endif // HAVE_MPI
-
 
     //! this function is an indication of how "physically
     //! meaningful" a temporary solution is. 0 means it isn't
@@ -490,7 +491,7 @@ public:
     typedef typename ParentType::Function          Function;
     typedef typename ParentType::JacobianAssembler JacobianAssembler;
 
-    NewtonController(Scalar tolerance = 1e-4, int targetSteps=8, int maxSteps = 12)
+    NewtonController(Scalar tolerance = 1e-6, int targetSteps=8, int maxSteps = 12)
         : ParentType(tolerance, targetSteps, maxSteps)
     {};
 };

@@ -163,16 +163,6 @@ public:
     }
 
     /*!
-     * \brief Return the temperature given the solution vector of a
-     *        finite volume.
-     */
-    template <class PrimaryVarVector>
-    Scalar temperature(const PrimaryVarVector &sol)
-    {
-        return this->problem_.temperature(); /* constant temperature */
-    }
-
-    /*!
      * \brief Add the mass fraction of air in water to VTK output of
      *        the current timestep.
      */
