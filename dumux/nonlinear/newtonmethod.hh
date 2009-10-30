@@ -120,7 +120,7 @@ public:
             *u *= -lambda;
             *u += *uOld;
             globalResidual_ = model.globalResidual(u);
-            if (globalResidual_ <= globDefOld*1.01 || lambda <= 1.0/1024) {
+            if (globalResidual_ <= globDefOld*1.01 || lambda <= 1.0/32) {
                 std::cout << "Newton: globalDefect=" << globalResidual_ << " lambda=" << lambda << "\n";
                return true;
             }
