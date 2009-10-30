@@ -75,7 +75,7 @@ class Restart {
                                               double t)
     {
         int rank = gridView.comm().rank();
-        return (boost::format("%s_time=%lf_rank=%05d.drs")
+        return (boost::format("%s_time=%.3lf_rank=%05d.drs")
                 %simName
                 %t
                 %rank).str();
@@ -84,6 +84,12 @@ class Restart {
 
 public:
     /*!
+     * \brief Returns the name of the file which is (de-)serialized.
+     */
+    const std::string &fileName() const
+    { return fileName_; }
+
+    /*!
      * \brief Write the current state of the model to disk.
      */
     void serializeBegin(const GridView &gridView,
@@ -91,10 +97,10 @@ public:
                         double t)
     {
         const std::string magicCookie = magicRestartCookie_(gridView);
-        const std::string fileName = restartFileName_(gridView, simName, t);
+        fileName_ = restartFileName_(gridView, simName, t);
 
         // open output file and write magic cookie
-        outStream_.open(fileName.c_str());
+        outStream_.open(fileName_.c_str());
         outStream_.precision(20);
 
         serializeSection(magicCookie);
@@ -156,14 +162,14 @@ public:
                           const std::string &simName,
                           double t)
     {
-        const std::string fileName = restartFileName_(grid, simName, t);
+        fileName_ = restartFileName_(grid, simName, t);
 
         // open input file and read magic cookie
-        inStream_.open(fileName.c_str());
+        inStream_.open(fileName_.c_str());
         if (!inStream_.good()) {
             DUNE_THROW(Dune::IOError,
                        "Restart file '"
-                       << fileName
+                       << fileName_
                        << "' could not be opened properly");
         }
 
@@ -173,7 +179,7 @@ public:
         if (pos == 0) {
             DUNE_THROW(IOError,
                        "Restart file '"
-                       << fileName
+                       << fileName_
                        << "' is empty");
         }
         inStream_.seekg(0, std::ios::beg);
@@ -257,6 +263,7 @@ public:
 
 
 private:
+    std::string   fileName_;
     std::ifstream inStream_;
     std::ofstream outStream_;
 };
