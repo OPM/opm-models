@@ -294,6 +294,7 @@ public:
         res.serializeBegin(gridView(),
                            asImp_()->name(),
                            timeManager_.time());
+        std::cerr << "Serialize to file " << res.fileName() << "\n";
 
         timeManager_.serialize(res);
         resultWriter_.serialize(res);
@@ -316,6 +317,7 @@ public:
         res.deserializeBegin(gridView(),
                              asImp_()->name(),
                              t);
+        std::cerr << "Deserialize from file " << res.fileName() << "\n";
 
         timeManager_.deserialize(res);
         resultWriter_.deserialize(res);
@@ -347,7 +349,7 @@ protected:
 
             resultWriter_.beginTimestep(timeManager_.time(),
                                         gridView());
-            model_.addVtkFields(resultWriter_);
+            model_.addOutputVtkFields(resultWriter_);
             resultWriter_.endTimestep();
         }
 
