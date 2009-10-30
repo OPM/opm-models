@@ -299,6 +299,10 @@ protected:
             *(*uOld) = *u;
             *(*f) = 0;
 
+            if (verbose()) {
+                std::cout << "Assembling global jacobian";
+                std::cout.flush();
+            }
             // linearize the problem at the current solution
             jacobianAsm.assemble(localJacobian, u, *f);
 
@@ -308,20 +312,26 @@ protected:
 
 
             // solve the resultuing linear equation system
-            ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
+            if (verbose()) {
+                std::cout << "\rSolve Mx = r              ";
+                std::cout.flush();
+            }
+            ctl.newtonSolveLinear(*jacobianAsm, u, *f);
 
             //Scalar tmp = (*u).two_norm2();
             Scalar tmp = ctl.weightedNorm2(*u, *(*uOld));
             tmp = model.gridView().comm().sum(tmp);
             deflectionTwoNorm_ = sqrt(tmp);
             
-            
+
+#if 0            
             double t = timeStep_ + iterStep_/100.0;
             std::cout << "convergence time: " << t << "\n";
             writer_.beginTimestep(t, this->model().gridView());
             this->model().localJacobian().addVtkFields2(writer_, u, *uOld);
             writer_.endTimestep();
             ++iterStep_;
+#endif
             
             // update the current solution. We use either
             // a line search approach or the plain method.

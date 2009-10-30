@@ -196,7 +196,7 @@ public:
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
-            std::cout << boost::format("Newton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
+            std::cout << boost::format("\rNewton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
                 %numSteps_%(method_->deflectionTwoNorm())%curPhysicalness_%maxPhysicalness_;
     }
 
@@ -348,7 +348,7 @@ protected:
                    parPreCond,
                    residTol,
                    1000,
-                   this->method().verbose());
+                   0);
 
         Dune::InverseOperatorResult result;
 
@@ -387,7 +387,7 @@ protected:
         //                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
         //                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
         // invert the linear equation system
-        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residTol, 500, 1);
+        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residTol, 500, 0);
 #endif // HAVE_PARDISO
 
         Dune::InverseOperatorResult result;

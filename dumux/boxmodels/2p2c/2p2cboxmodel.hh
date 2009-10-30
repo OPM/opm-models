@@ -95,7 +95,9 @@ class TwoPTwoCBoxModelBase
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))        Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
+public:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))      GridView;
+private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
 
