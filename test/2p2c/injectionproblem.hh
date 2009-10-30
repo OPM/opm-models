@@ -50,7 +50,7 @@ NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxTwoPTwoC));
 // Set the grid type
 SET_PROP(InjectionProblem, Grid)
 {
-#if HAVE_UG
+#if 0 //HAVE_UG
     typedef Dune::UGGrid<2> type;
 #else
     typedef Dune::SGrid<2, 2> type;
@@ -84,7 +84,7 @@ SET_TYPE_PROP(InjectionProblem, WettingPhase, Dune::Liq_WaterAir);
 SET_TYPE_PROP(InjectionProblem, NonwettingPhase, Dune::Gas_WaterAir);
 
 // Set multi-component relations
-SET_TYPE_PROP(InjectionProblem, MultiComp, Dune::CWaterAir)
+SET_TYPE_PROP(InjectionProblem, MultiComp, Dune::CWaterAir);
 
 // Set the soil properties
 SET_PROP(InjectionProblem, Soil)
@@ -169,9 +169,11 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    Scalar temperature() const
+    Scalar temperature(const Element           &element,
+                       const FVElementGeometry &fvElemGeom,
+                       int                      scvIdx) const
     {
-        return 283.15; // -> 10°C
+        return temperature_;
     };
 
     // \}
@@ -296,12 +298,13 @@ private:
     void initial_(PrimaryVarVector       &values,
                   const GlobalPosition   &globalPos) const
     {
-        Scalar densityW = this->wettingPhase().density(temperature(), 1e5);
+        Scalar densityW = this->wettingPhase().density(temperature_, 1e5);
 
         values[Indices::pW] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
         values[Indices::sNorX] = 0;
     }
 
+    static const Scalar temperature_ = 273.15 + 10; // [K]
     static const Scalar depthBOR_ = 800.0; // [m]
     static const Scalar eps_ = 1e-6;
 };

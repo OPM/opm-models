@@ -40,6 +40,9 @@ class OnePVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+
     typedef typename GridView::template Codim<0>::Entity Element;
 
     enum {
@@ -61,28 +64,28 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                const Problem           &problem,
+                bool                     isOldSol)
     {
         typedef Indices I;
         const GlobalPosition &global = element.geometry().corner(vertIdx);
-        const LocalPosition   &local =
+        const LocalPosition  &local =
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 GridView::dimension);
 
+        Scalar temperature = problem.temperature(element, elemGeom, vertIdx);
         pressure = sol[I::pressureIdx];
-        density = jac.problem().fluid().density(jac.temperature(sol),
-                                                pressure);
-        viscosity = jac.problem().fluid().viscosity(jac.temperature(sol),
-                                                    pressure);
+        density = problem.fluid().density(temperature, pressure);
+        viscosity = problem.fluid().viscosity(temperature, pressure);
+
         // porosity
-        porosity = jac.problem().soil().porosity(global,
-                                                 element,
-                                                 local);
+        porosity = problem.soil().porosity(global,
+                                           element,
+                                           local);
     };
 
     Scalar pressure;

@@ -39,6 +39,7 @@ class OnePTwoCVertexData
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
@@ -55,6 +56,8 @@ class OnePTwoCVertexData
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePTwoCIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
@@ -66,12 +69,12 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                const Problem           &problem,
+                bool                     isOldSol)
     {
         typedef Indices I;
 
@@ -81,15 +84,15 @@ public:
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 dim);
 
-        double T = jac.temperature(sol);
+        Scalar T = problem.temperature(element, elemGeom, vertIdx);
 
         pressure = sol[I::konti];
         molefraction = sol[I::transport];
-        porosity = jac.problem().soil().porosity(global,element,local);
-        density = jac.problem().fluid().density(T, pressure);
-        diffCoeff = jac.problem().fluid().diffCoeff(T, pressure);
-        viscosity = jac.problem().fluid().viscosity(T, pressure);
-        tortuosity = jac.problem().soil().tortuosity(global,element,local);
+        porosity = problem.soil().porosity(global,element,local);
+        density = problem.fluid().density(T, pressure);
+        diffCoeff = problem.fluid().diffCoeff(T, pressure);
+        viscosity = problem.fluid().viscosity(T, pressure);
+        tortuosity = problem.soil().tortuosity(global,element,local);
         dispersivity = jac.problem().soil().dispersivity(global,element,local);
         molarDensity = jac.problem().fluid().molarDensity(T, pressure);
     }

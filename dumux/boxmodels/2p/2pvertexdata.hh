@@ -41,6 +41,10 @@ class TwoPVertexData
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
+    // this is a bit hacky: the Vertex data might not be identical to
+    // the implementation.
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   Implementation;
+    
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -55,6 +59,8 @@ class TwoPVertexData
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
@@ -66,15 +72,21 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                Problem                 &problem,
+                bool                     isOldSol) 
     {
         typedef Indices I;
 
+        asImp().updateTemperature_(sol,
+                                   element, 
+                                   elemGeom,
+                                   vertIdx,
+                                   problem);
+        
         // coordinates of the vertex
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
@@ -84,7 +96,7 @@ public:
         if (formulation == I::pWsN) {
             satN = sol[I::saturationIdx];
             satW = 1.0 - satN;
-            pC =jac.problem().materialLaw().pC(satW,
+            pC =problem.materialLaw().pC(satW,
                                                global,
                                                element,
                                                local);
@@ -94,7 +106,7 @@ public:
         else if (formulation == I::pNsW) {
             satW = sol[I::saturationIdx];
             satN = 1.0 - satW;
-            pC =jac.problem().materialLaw().pC(satW,
+            pC =problem.materialLaw().pC(satW,
                                                global,
                                                element,
                                                local);
@@ -102,38 +114,55 @@ public:
             pressure[I::wPhase] = pressure[I::nPhase] - pC;
         }
 
-        density[I::wPhase] =jac.problem().wettingPhase().density(jac.temperature(sol),
-                                                                  pressure[I::wPhase]);
-        density[I::nPhase] =jac.problem().nonwettingPhase().density(jac.temperature(sol),
-                                                                     pressure[I::nPhase]);
+        density[I::wPhase] = problem.wettingPhase().density(temperature,
+                                                           pressure[I::wPhase]);
+        density[I::nPhase] = problem.nonwettingPhase().density(temperature,
+                                                              pressure[I::nPhase]);
 
-        mobility[I::wPhase] =jac.problem().materialLaw().mobW(satW,
-                                                               global,
-                                                               element,
-                                                               local,
-                                                               jac.temperature(sol),
-                                                               pressure[I::wPhase]);
-        mobility[I::nPhase] =jac.problem().materialLaw().mobN(satN,
-                                                               global,
-                                                               element,
-                                                               local,
-                                                               jac.temperature(sol),
-                                                               pressure[I::nPhase]);
+        mobility[I::wPhase] =problem.materialLaw().mobW(satW,
+                                                        global,
+                                                        element,
+                                                        local,
+                                                        temperature,
+                                                        pressure[I::wPhase]);
+        mobility[I::nPhase] =problem.materialLaw().mobN(satN,
+                                                        global,
+                                                        element,
+                                                        local,
+                                                        temperature,
+                                                        pressure[I::nPhase]);
 
         // porosity
-        porosity = jac.problem().soil().porosity(global,
-                                                 element,
-                                                 local);
+        porosity = problem.soil().porosity(global,
+                                           element,
+                                           local);
     }
 
+    void updateTemperature_(const PrimaryVarVector  &sol,
+                            const Element           &element,
+                            const FVElementGeometry &elemGeom,
+                            int                      vertIdx,
+                            Problem                 &problem) 
+    {
+        temperature = problem.temperature(element, elemGeom, vertIdx);
+    }
+        
     Scalar satW;
     Scalar satN;
     Scalar pC;
     Scalar porosity;
+    Scalar temperature;
 
     PhasesVector density;
     PhasesVector pressure;
     PhasesVector mobility;
+
+private:
+    Implementation &asImp()
+    { return *static_cast<Implementation*>(this); }
+    
+    const Implementation &asImp() const
+    { return *static_cast<const Implementation*>(this); }
 };
 
 }

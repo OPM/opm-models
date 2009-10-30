@@ -401,7 +401,7 @@ public:
 
 #if HAVE_VALGRIND
         for (int i=0; i < curElementGeom_.numVertices; i++)
-            Valgrind::SetUndefined(residual[i]);
+            Valgrind::CheckDefined(residual[i]);
 #endif // HAVE_VALGRIND
     }
 
@@ -480,7 +480,8 @@ public:
                                  curElement_(),
                                  curFvElementGeometry(),
                                  vertIdx,
-                                 problem());
+                                 problem(), 
+                                 isOldSol);
         }
     }
 
@@ -537,7 +538,8 @@ public:
                                     curElement_(),
                                     curFvElementGeometry(),
                                     vertIdx, 
-                                    problem());
+                                    problem(),
+                                    false);
         Valgrind::CheckDefined(curElemDat_[vertIdx]);
     }
 
@@ -752,7 +754,7 @@ protected:
         asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ + eps);
         asImp_().evalLocalResidual(dest, false);
         asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
-        
+
         asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ - eps);
         SolutionOnElement tmp(curElementGeom_.numVertices);
         asImp_().evalLocalResidual(tmp, false);
@@ -761,6 +763,11 @@ protected:
         // central differences
         dest -= tmp;
         dest /= 2*eps;
+
+#if HAVE_VALGRIND
+        for (unsigned i = 0; i < dest.size(); ++i)
+            Valgrind::CheckDefined(dest[i]);
+#endif
     }
 
     /*!
@@ -795,6 +802,7 @@ protected:
                 // vertex 'i' depending on the primary variable
                 // 'pvIdx' at vertex 'j'.
                 this->A[i][j][eqIdx][pvIdx] = stiffness[i][eqIdx];
+                Valgrind::CheckDefined(this->A[i][j][eqIdx][pvIdx]);
             }
         }
     }

@@ -39,6 +39,8 @@ class TwoPNIVertexData : public TwoPVertexData<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
@@ -65,21 +67,21 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                Problem                 &problem,
+                bool                     isOldSol) 
     {
         typedef Indices I;
 
         // vertex update data for the mass balance
         ParentType::update(sol,
                            element,
+                           elemGeom,
                            vertIdx,
-                           isOldSol,
-                           jac);
+                           problem);
 
         // data for the energy equation
         const LocalPosition &local =
@@ -88,22 +90,32 @@ public:
         const GlobalPosition &global =
             element.geometry().corner(vertIdx);
 
-        temperature = sol[I::temperatureIdx];
+        heatCond = problem.soil().heatCond(global,
+                                           element,
+                                           local,
+                                           this->satW);
 
-        heatCond = jac.problem().soil().heatCond(global,
-                                                 element,
-                                                 local,
-                                                 this->satW);
-
-        enthalpy[I::wPhase] = jac.problem().wettingPhase().enthalpy(temperature,
-                                                                    this->pressure[I::wPhase]);
-        enthalpy[I::nPhase] = jac.problem().nonwettingPhase().enthalpy(temperature,
-                                                                       this->pressure[I::nPhase]);
-        intEnergy[I::wPhase] = jac.problem().wettingPhase().intEnergy(temperature,
-                                                                      this->pressure[I::wPhase]);
-        intEnergy[I::nPhase] = jac.problem().nonwettingPhase().intEnergy(temperature,
-                                                                         this->pressure[I::nPhase]);
+        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(temperature,
+                                                              this->pressure[I::wPhase]);
+        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(temperature,
+                                                                 this->pressure[I::nPhase]);
+        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(temperature,
+                                                                this->pressure[I::wPhase]);
+        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(temperature,
+                                                                   this->pressure[I::nPhase]);
     }
+
+    // this method gets called by the parent class
+    void updateTemperature_(const PrimaryVarVector  &sol,
+                            const Element           &element,
+                            const FVElementGeometry &elemGeom,
+                            int                      vertIdx,
+                            Problem                 &problem) 
+    {
+        typedef Indices I;
+        this->temperature = sol[I::temperatureIdx];
+    }
+
 
     PhasesVector intEnergy; //!< Internal energy.
     PhasesVector enthalpy;  //!< Enthalpy.

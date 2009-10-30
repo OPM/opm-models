@@ -45,6 +45,8 @@ class TwoPTwoCNIVertexData : public TwoPTwoCVertexData<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
 
     enum {
         dim           = GridView::dimension,
@@ -68,21 +70,22 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                Problem                 &problem,
+                bool                     isOldSol) 
     {
         typedef Indices I;
 
         // vertex update data for the mass balance
         ParentType::update(sol,
                            element,
+                           elemGeom,
                            vertIdx,
-                           isOldSol,
-                           jac);
+                           problem,
+                           isOldSol);
 
         // data for the energy equation
         const LocalPosition &local =
@@ -91,30 +94,39 @@ public:
         const GlobalPosition &global =
             element.geometry().corner(vertIdx);
 
-        temperature = sol[I::temperatureIdx];
-
-        heatCond = jac.problem().soil().heatCond(global,
-                                                 element,
-                                                 local,
-                                                 this->saturation[I::wPhase]);
-
-        enthalpy[I::wPhase] = jac.problem().wettingPhase().enthalpy(temperature,
-                                                                    this->pressure[I::wPhase],
-                                                                    this->massfrac[I::nComp][I::wPhase]);
-        enthalpy[I::nPhase] = jac.problem().nonwettingPhase().enthalpy(temperature,
-                                                                       this->pressure[I::nPhase],
-                                                                       this->massfrac[I::wComp][I::nPhase]);
-        intEnergy[I::wPhase] = jac.problem().wettingPhase().intEnergy(temperature,
-                                                                      this->pressure[I::wPhase],
-                                                                      this->massfrac[I::nComp][I::wPhase]);
-        intEnergy[I::nPhase] = jac.problem().nonwettingPhase().intEnergy(temperature,
-                                                                         this->pressure[I::nPhase],
-                                                                         this->massfrac[I::wComp][I::nPhase]);
+        heatCond = problem.soil().heatCond(global,
+                                           element,
+                                           local,
+                                           this->saturation[I::wPhase]);
+        
+        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(this->temperature,
+                                                              this->pressure[I::wPhase],
+                                                              this->massfrac[I::nComp][I::wPhase]);
+        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(this->temperature,
+                                                                 this->pressure[I::nPhase],
+                                                                 this->massfrac[I::wComp][I::nPhase]);
+        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(this->temperature,
+                                                                this->pressure[I::wPhase],
+                                                                this->massfrac[I::nComp][I::wPhase]);
+        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(this->temperature,
+                                                                   this->pressure[I::nPhase],
+                                                                   this->massfrac[I::wComp][I::nPhase]);
     }
+
+    // this method gets called by the parent class
+    void updateTemperature_(const PrimaryVarVector  &sol,
+                            const Element           &element,
+                            const FVElementGeometry &elemGeom,
+                            int                      vertIdx,
+                            Problem                 &problem)
+    {
+        typedef Indices I;
+        this->temperature = sol[I::temperatureIdx];
+    }
+
 
     PhasesVector intEnergy; //!< Internal energy.
     PhasesVector enthalpy;  //!< Enthalpy.
-    Scalar       temperature; //!< The temperature. We assume thermal equilibrium
     Scalar       heatCond; //!< Total heat conductivity.
 };
 

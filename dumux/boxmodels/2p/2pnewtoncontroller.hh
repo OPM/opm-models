@@ -47,7 +47,7 @@ public:
     typedef typename ParentType::Function          Function;
     typedef typename ParentType::JacobianAssembler JacobianAssembler;
 
-    TwoPNewtonController(Scalar tolerance = 1e-5,
+    TwoPNewtonController(Scalar tolerance = 1e-8,
                          int targetSteps = 8,
                          int maxSteps = 12)
         : ParentType(tolerance, targetSteps, maxSteps)

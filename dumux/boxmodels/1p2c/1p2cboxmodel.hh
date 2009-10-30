@@ -87,9 +87,9 @@ public:
      *        the current timestep.
      */
     template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer)
+    void addOutputVtkFields(MultiWriter &writer)
     {
-        this->localJacobian().addVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
     }
 
     /*!

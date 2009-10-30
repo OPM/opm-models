@@ -101,6 +101,30 @@ public:
     };
 
     /*!
+     * \internal
+     * \brief Returns the epsilon value which is added and removed
+     *        from the current solution.
+     *
+     * \param elemSol    The current solution on the element
+     * \param vertexIdx  The local index of the element's vertex for 
+     *                   which the local derivative ought to be calculated.
+     * \param pvIdx      The index of the primary variable which gets varied
+     */
+    Scalar numericEpsilon_(const SolutionOnElement &elemSol,
+                           int vertIdx,
+                           int pvIdx) const
+    {
+        const PrimaryVarVector &sol = elemSol[vertIdx];
+
+        if (pvIdx == 0)
+            return 0.01; // pressure
+        else if (pvIdx == 1)
+            return 1e-7; // saturation
+        
+        return ParentType::numericEpsilon_(elemSol, vertIdx, pvIdx);
+    }
+
+    /*!
      * \brief Evaluate the amount all conservation quantites
      *        (e.g. phase mass) within a finite sub-control volume.
      */
@@ -201,16 +225,6 @@ public:
                               this->curElement_(),
                               this->curElementGeom_,
                               localVertexIdx);
-    }
-
-    /*!
-     * \brief Return the temperature given the solution vector of a
-     *        finite volume.
-     */
-    template <class PrimaryVarVector>
-    Scalar temperature(const PrimaryVarVector &sol)
-    {
-        return this->problem_.temperature(); /* constant temperature */
     }
 
     /*!
@@ -369,7 +383,7 @@ public:
      *        writer.
      */
     template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
@@ -404,7 +418,7 @@ public:
                 (*pC)[globalIdx] = this->curElemDat_[i].pC;
                 (*Sw)[globalIdx] = this->curElemDat_[i].satW;
                 (*Sn)[globalIdx] = this->curElemDat_[i].satN;
-                (*Te)[globalIdx] = asImp_()->temperature((*globalSol)[globalIdx]);
+                (*Te)[globalIdx] = this->curElemDat_[i].temperature;
             };
         }
 

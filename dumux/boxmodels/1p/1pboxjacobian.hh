@@ -139,7 +139,7 @@ public:
      *        solution to an ouput writer.
      */
     template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 

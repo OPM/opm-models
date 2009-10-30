@@ -115,6 +115,7 @@ protected:
         bool wasSwitched;
 
         int oldPhaseState;
+        bool visited;
     };
 
 public:
@@ -209,7 +210,7 @@ public:
                            dn.mobility[phaseIdx] *
                            dn.massfrac[compIdx][phaseIdx]);
             }
-    }
+        }
     }
 
     /*!
@@ -249,14 +250,6 @@ public:
     }
 
     /*!
-     * \brief Return the temperature given the solution vector of a
-     *        finite volume.
-     */
-    template <class PrimaryVarVector>
-    Scalar temperature(const PrimaryVarVector &sol)
-    { return this->problem_.temperature(); /* constant temperature */ }
-
-    /*!
      * \brief Initialize the static data with the initial solution.
      *
      * Called by TwoPTwoCBoxModel::initial()
@@ -289,17 +282,35 @@ public:
     {
         bool wasSwitched = false;
 
-        VertexIterator it = this->gridView_.template begin<dim>();
-        const VertexIterator &endit = this->gridView_.template end<dim>();
+        for (unsigned i = 0; i < staticVertexDat_.size(); ++i)
+            staticVertexDat_[i].visited = false;
+
+        static VertexData vertexData;
+        ElementIterator it = this->gridView_.template begin<0>();
+        const ElementIterator &endit = this->gridView_.template end<0>();
         for (; it != endit; ++it)
         {
-            int globalIdx = this->problem_.model().dofEntityMapper().map(*it);
-            const GlobalPosition &global = it->geometry().corner(0);
+            this->curElementGeom_.update(*it);
+            for (int i = 0; i < this->curElementGeom_.numVertices; ++i) {
+                int globalIdx = this->vertexMapper().map(*it, i, dim);
 
-            wasSwitched = primaryVarSwitch_(curGlobalSol,
-                                            globalIdx,
-                                            global)
-                || wasSwitched;
+                if (staticVertexDat_[globalIdx].visited)
+                    continue;
+
+                staticVertexDat_[globalIdx].visited = true;
+                vertexData.update((*curGlobalSol)[globalIdx],
+                                  *it,
+                                  this->curElementGeom_,
+                                  i,
+                                  this->problem(),
+                                  false);
+                const GlobalPosition &global = it->geometry().corner(i);
+                wasSwitched = primaryVarSwitch_(curGlobalSol,
+                                                vertexData,
+                                                globalIdx,
+                                                global)
+                    || wasSwitched;
+            }
         }
 
         // make sure that if there was a variable switch in an
@@ -464,7 +475,7 @@ public:
      *        the current timestep.
      */
     template <class MultiWriter>
-    void addVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
@@ -540,7 +551,7 @@ public:
                 (*massfracAinN)[globalIdx] = elemDat[i].massfrac[nComp][nPhase];
                 (*massfracWinW)[globalIdx] = elemDat[i].massfrac[wComp][wPhase];
                 (*massfracWinN)[globalIdx] = elemDat[i].massfrac[wComp][nPhase];
-                (*temperature)[globalIdx] = asImp_()->temperature((*globalSol)[globalIdx]);
+                (*temperature)[globalIdx] = elemDat[i].temperature;
                 (*phaseState)[globalIdx] = staticVertexDat_[globalIdx].phaseState;
             };
 
@@ -683,6 +694,7 @@ protected:
     //  perform variable switch at a vertex; Returns true if a
     //  variable switch was performed.
     bool primaryVarSwitch_(SolutionFunction &globalSol,
+                           const VertexData &vertexData,
                            int globalIdx,
                            const GlobalPosition &globalPos)
     {
@@ -690,27 +702,12 @@ protected:
         bool wouldSwitch  = false;
         int phaseState    = staticVertexDat_[globalIdx].phaseState;
         int newPhaseState = phaseState;
-        Scalar temperature = asImp_()->temperature((*globalSol)[globalIdx]);
-
-        // calculate saturations, phase pressures and mass fractions
-        static VertexData vertexData;
-        static LocalPosition localPos(0.0);
-        vertexData.updateSaturations((*globalSol)[globalIdx], phaseState);
-        Scalar pC = this->problem_.materialLaw().pC(vertexData.saturation[wPhase],
-                                                    globalPos,
-                                                    * (this->gridView_.template begin<0>()), // HACK
-                                                    localPos,
-                                                    temperature);
-        vertexData.updatePressures((*globalSol)[globalIdx], pC);
-        vertexData.updateMassFracs((*globalSol)[globalIdx],
-                                   this->problem_.multicomp(),
-                                   phaseState,
-                                   temperature);
-
+        
         // check if a primary var switch is necessary
         if (phaseState == nPhaseOnly)
         {
-            Scalar xWNmax = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], temperature);
+            Scalar xWNmax = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], 
+                                                           vertexData.temperature);
             if (vertexData.massfrac[wComp][nPhase] > xWNmax)
                 wouldSwitch = true;
             if (staticVertexDat_[globalIdx].wasSwitched)
@@ -732,7 +729,8 @@ protected:
         }
         else if (phaseState == wPhaseOnly)
         {
-            Scalar xAWmax = this->problem_.multicomp().xAW(vertexData.pressure[wPhase], temperature);
+            Scalar xAWmax = this->problem_.multicomp().xAW(vertexData.pressure[wPhase], 
+                                                           vertexData.temperature);
             if (vertexData.massfrac[nComp][wPhase] > xAWmax)
                 wouldSwitch = true;
             if (staticVertexDat_[globalIdx].wasSwitched)
@@ -764,7 +762,8 @@ protected:
                           << std::endl;
                 newPhaseState = wPhaseOnly;
                 (*globalSol)[globalIdx][switchIdx]
-                    = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], temperature);
+                    = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], 
+                                                     vertexData.temperature);
             }
             else if (vertexData.saturation[wPhase] <= Smin) {
                 wouldSwitch = true;
@@ -775,7 +774,8 @@ protected:
                           << std::endl;
                 newPhaseState = nPhaseOnly;
                 (*globalSol)[globalIdx][switchIdx]
-                    = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], temperature);
+                    = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], 
+                                                     vertexData.temperature);
             }
         }
 
@@ -789,7 +789,7 @@ protected:
     std::vector<StaticVertexData> staticVertexDat_;
     bool                          switchFlag_;
     int                           formulation_;
-};
+    };
 
 
 /*!

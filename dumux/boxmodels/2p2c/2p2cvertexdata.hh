@@ -48,6 +48,10 @@ class TwoPTwoCVertexData
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
+    // this is a bit hacky: the Vertex data might not be identical to
+    // the implementation.
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   Implementation;
+
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -63,6 +67,8 @@ class TwoPTwoCVertexData
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector               PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>                   PhasesVector;
@@ -75,65 +81,79 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                const Problem           &problem,
+                bool                     isOldSol) 
     {
         typedef Indices I;
 
+        asImp().updateTemperature_(sol,
+                                   element, 
+                                   elemGeom,
+                                   vertIdx,
+                                   problem);
+        
         const GlobalPosition &global = element.geometry().corner(vertIdx);
         const LocalPosition   &local =
             ReferenceElements::general(element.type()).position(vertIdx,
                                                                 dim);
-        int globalVertIdx = jac.problem().model().dofEntityMapper().map(element, vertIdx, dim);
-        int phaseState = jac.phaseState(globalVertIdx, isOldSol);
-        Scalar temperature = jac.temperature(sol);
+        int globalVertIdx = problem.model().dofEntityMapper().map(element, vertIdx, dim);
+        int phaseState = problem.model().localJacobian().phaseState(globalVertIdx, isOldSol);
 
         // update saturations, pressures and mass fractions
         updateSaturations(sol, phaseState);
-        Scalar pC = jac.problem().materialLaw().pC(saturation[I::wPhase],
-                                                   global,
-                                                   element,
-                                                   local,
-                                                   temperature);
+        Scalar pC = problem.materialLaw().pC(saturation[I::wPhase],
+                                             global,
+                                             element,
+                                             local,
+                                             temperature);
         updatePressures(sol, pC);
-        updateMassFracs(sol, jac.problem().multicomp(), phaseState, temperature);
+        updateMassFracs(sol, problem.multicomp(), phaseState, temperature);
 
         // Densities
-        density[I::wPhase] = jac.problem().wettingPhase().density(temperature,
-                                                                   pressure[I::wPhase],
-                                                                   massfrac[I::nComp][I::wPhase]);
-        density[I::nPhase] = jac.problem().nonwettingPhase().density(temperature,
-                                                                      pressure[I::nPhase],
-                                                                      massfrac[I::wComp][I::nPhase]);
+        density[I::wPhase] = problem.wettingPhase().density(temperature,
+                                                            pressure[I::wPhase],
+                                                            massfrac[I::nComp][I::wPhase]);
+        density[I::nPhase] = problem.nonwettingPhase().density(temperature,
+                                                               pressure[I::nPhase],
+                                                               massfrac[I::wComp][I::nPhase]);
 
         // Mobilities
-        mobility[I::wPhase] = jac.problem().materialLaw().mobW(saturation[I::wPhase],
-                                                                global,
-                                                                element,
-                                                                local,
-                                                                temperature,
-                                                                pressure[I::wPhase]);
-        mobility[I::nPhase] = jac.problem().materialLaw().mobN(saturation[I::nPhase],
-                                                                global,
-                                                                element,
-                                                                local,
-                                                                temperature,
-                                                                pressure[I::nPhase]);
+        mobility[I::wPhase] = problem.materialLaw().mobW(saturation[I::wPhase],
+                                                         global,
+                                                         element,
+                                                         local,
+                                                         temperature,
+                                                         pressure[I::wPhase]);
+        mobility[I::nPhase] = problem.materialLaw().mobN(saturation[I::nPhase],
+                                                         global,
+                                                         element,
+                                                         local,
+                                                         temperature,
+                                                         pressure[I::nPhase]);
 
         // binary diffusion coefficents
         diffCoeff[I::wPhase] =
-            jac.problem().wettingPhase().diffCoeff(temperature, pressure[I::wPhase]);
+            problem.wettingPhase().diffCoeff(temperature, pressure[I::wPhase]);
         diffCoeff[I::nPhase] =
-            jac.problem().nonwettingPhase().diffCoeff(temperature, pressure[I::nPhase]);
-
+            problem.nonwettingPhase().diffCoeff(temperature, pressure[I::nPhase]);
+        
         // porosity
-        porosity = jac.problem().soil().porosity(global,
-                                                 element,
+        porosity = problem.soil().porosity(global,
+                                           element,
                                                  local);
+    }
+
+    void updateTemperature_(const PrimaryVarVector  &sol,
+                            const Element           &element,
+                            const FVElementGeometry &elemGeom,
+                            int                      vertIdx,
+                            Problem                 &problem) 
+    {
+        temperature = problem.temperature(element, elemGeom, vertIdx);
     }
 
     /*!
@@ -232,6 +252,7 @@ public:
 public:
     PhasesVector saturation;//!< Effective phase saturations within the control volume
     PhasesVector pressure;  //!< Effective phase pressures within the control volume
+    Scalar temperature;     //!< Temperature within the control volume
     Scalar pC;              //!< Effective capillary pressure within the control volume
     Scalar porosity;        //!< Effective porosity within the control volume
     PhasesVector mobility;  //!< Effective mobility within the control volume
@@ -240,6 +261,13 @@ public:
 
     //! Mass fractions of each component within each phase
     Dune::FieldMatrix<Scalar, numComponents, numPhases> massfrac;
+
+private:
+    Implementation &asImp()
+    { return *static_cast<Implementation*>(this); }
+    
+    const Implementation &asImp() const
+    { return *static_cast<const Implementation*>(this); }
 };
 
 } // end namepace
