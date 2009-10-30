@@ -337,7 +337,7 @@ protected:
         // accurately. On the other hand, if this is the first
         // newton step, we don't have a meaningful value for the defect
         // yet, so we use the targeted accurracy for the defect.
-        Scalar residTol = tolerance_/1e8;
+        Scalar residTol = tolerance_/1e11;
 
 #if 0//HAVE_PARDISO
     	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
@@ -405,7 +405,7 @@ protected:
         // accurately. On the other hand, if this is the first
         // newton step, we don't have a meaningful value for the defect
         // yet, so we use the targeted accurracy for the defect.
-        Scalar residTol = tolerance_/1e8;
+        Scalar residTol = tolerance_/1e11;
 
         typedef Dune::MatrixAdapter<typename JacobianAssembler::RepresentationType,
             typename Function::RepresentationType,

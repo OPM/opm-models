@@ -206,8 +206,9 @@ public:
         for (; isIt != endIt; ++isIt)
         {
             // handle only faces on boundaries.
-            if (!isIt->boundary())
+            if (!isIt->boundary()) {
                 continue;
+            }
 
             // Assemble the boundary for all verts of the
             // current face

@@ -200,13 +200,14 @@ public:
         *tmpU = *uCur_;
         *uCur_ = *u;
         localJacobian_.evalGlobalResidual(tmp);
+
         Scalar result = (*tmp).two_norm();
-        
         /*
         Scalar result = 0;
-        for (int i = 0; i < (*tmp).size(); ++i)
+        for (int i = 0; i < (*tmp).size(); ++i) {
             for (int j = 0; j < numEq; ++j)
                 result += std::abs((*tmp)[i][j]);
+        }
         */
         
         *uCur_ = *tmpU;

@@ -123,13 +123,14 @@ public:
             *u *= -lambda;
             *u += *uOld;
             globDef = model.globalResidual(u, tmp);
-            
-            if (globDef <= oldGlobDef || lambda <= 1.0/2) {
-                globalResidual_ = globDef;
-                std::cout << "Newton: Global defect " << globalResidual_ << " @lambda=" << lambda << "\n";
-                return true;
+            if (lambda < 1 || globDef < oldGlobDef/1.05) {
+                if (globDef < oldGlobDef || lambda <= 1.0/4) {
+                    globalResidual_ = globDef;
+                    std::cout << "Newton: Global defect " << globalResidual_ << " @lambda=" << lambda << "\n";
+                    return true;
+                }
             }
-
+            
             // undo the last iteration
             *u -= *uOld;
             *u /= - lambda;
@@ -292,7 +293,8 @@ protected:
         
         // execute the method as long as the controller thinks
         // that we should do another iteration
-        while (ctl.newtonProceed(u) && updateMethod.globalResidual_ > 1e-5)
+        while (ctl.newtonProceed(u) && 
+               (updateMethod.globalResidual_ > 1e-8 || ctl.relDefect() > 1e-5))
         {
             // notify the controller that we're about to start
             // a new timestep
