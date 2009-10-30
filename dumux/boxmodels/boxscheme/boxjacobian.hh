@@ -631,6 +631,26 @@ private:
         this->asImp_().setCurrentSolution(localU);
         this->asImp_().setPreviousSolution(localOldU);
 
+#if 0
+        localU[0][1] = 2e-5;
+        int n=1000;
+        Scalar tMin = -0.5e4;
+        Scalar tMax =  5.5e4;
+        PrimaryVarVector c;
+        for (int i = 0; i <= n; ++i) {
+            Scalar theta = (tMax - tMin)*i/n + tMin;
+            localU[0][0] = theta;
+            this->asImp_().setCurrentSolution(localU);
+            asImp_().computeStorage(c, 0, false);
+            std::cerr << theta << " ";
+            for (int j = 0; j < 2; ++j) {
+                std::cerr << c[j] << " ";
+            };
+            std::cerr << "\n";
+        };
+        exit(0);
+#endif
+
         // approximate the local stiffness matrix numerically
         // TODO: do this analytically if possible
         SolutionOnElement residUPlusEps(numVertices);

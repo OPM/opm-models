@@ -30,6 +30,8 @@
 #include <limits>
 #include <dumux/exceptions.hh>
 
+#include <dumux/io/vtkmultiwriter.hh>
+
 
 namespace Dune
 {
@@ -131,6 +133,7 @@ private:
     Scalar uNormMin_;
 };
 
+
 /*!
  * \brief The algorithmic part of the multi dimensional newton method.
  *
@@ -152,8 +155,16 @@ public:
 public:
     typedef typename JacobianAssembler::RepresentationType  JacobianMatrix;
 
+#if 0
+    typedef typename Model::GridView GridView;
+    typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+    VtkMultiWriter  writer_;
+    int timeStep_;
+    int iterStep_;
+#endif
 public:
     NewtonMethod(Model &model)
+          writer_("convergence")
     {
         deflectionTwoNorm_ = 1e100;
         residual_ = NULL;
@@ -304,6 +315,15 @@ protected:
             Scalar tmp = ctl.weightedNorm2(*u, *(*uOld));
             tmp = model.gridView().comm().sum(tmp);
             deflectionTwoNorm_ = sqrt(tmp);
+            
+            /*
+            double t = timeStep_ + iterStep_/100.0;
+            std::cout << "convergence time: " << t << "\n";
+            writer_.beginTimestep(t, this->model().gridView());
+            this->model().localJacobian().addVtkFields2(writer_, u);
+            writer_.endTimestep();
+            ++iterStep_;
+            */
 
             // update the current solution. We use either
             // a line search approach or the plain method.
