@@ -195,7 +195,6 @@ public:
             }
         };
         model().gridView().comm().max(error_);
-
     };
 
     Scalar relError() const
@@ -209,12 +208,18 @@ public:
                            Function &u,
                            Vector &b)
     {
+        try {
 #if HAVE_MPI
         solveParallel_(A, u, b);
 #else
         solveSequential_(A, *u, b);
 #endif
-    }
+        }
+        catch (MatrixBlockError e) {
+            Dune::NumericalProblem p;
+            p.message(e.what());
+            throw p;
+        }
 
     //! Indicates that we're done solving one newton step.
     void newtonEndStep(Function &u, Function &uOld)

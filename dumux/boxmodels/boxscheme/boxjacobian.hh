@@ -477,10 +477,10 @@ public:
         int numVertices = this->curElement_().template count<dim>();
         for (int vertIdx = 0; vertIdx < numVertices; vertIdx++) {
             dest[vertIdx].update(sol[vertIdx],
-                                 this->curElement_(),
+                                 curElement_(),
+                                 curFvElementGeometry(),
                                  vertIdx,
-                                 isOldSol,
-                                 asImp_());
+                                 problem());
         }
     }
 
@@ -534,10 +534,10 @@ public:
         
         Valgrind::SetUndefined(curElemDat_[vertIdx]);
         curElemDat_[vertIdx].update(curSol[vertIdx], 
-                                    this->curElement_(),
+                                    curElement_(),
+                                    curFvElementGeometry(),
                                     vertIdx, 
-                                    false,
-                                    asImp_());
+                                    problem());
         Valgrind::CheckDefined(curElemDat_[vertIdx]);
     }
 

@@ -165,16 +165,6 @@ public:
     typedef NewtonMethod<Model, useLineSearch>           ThisType;
 
 public:
-    typedef typename JacobianAssembler::RepresentationType  JacobianMatrix;
-
-#if 0
-    typedef typename Model::GridView GridView;
-    typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
-    VtkMultiWriter  writer_;
-    int timeStep_;
-    int iterStep_;
-#endif
-public:
     NewtonMethod(Model &model)
     {
         residual_ = NULL;
@@ -226,11 +216,13 @@ public:
         };
     }
 
+#if 0
     /*!
      * \brief Returns the current Jacobian matrix.
      */
     const JacobianMatrix &currentJacobian() const
     { return *(model_->jacobianAssembler()); }
+#endif
 
 
     /*!
@@ -321,36 +313,18 @@ protected:
                 std::cout << "\rSolve Mx = r              ";
                 std::cout.flush();
             }
-            
-/*
-            printmatrix(std::cout, *jacobianAsm, "J", "row");
-*/
 
-/*
-            int i = 10;
-            
-            std::cout << "---------------------------------------------\n";
-            std::cout << "-A ------------------------------------------\n";
-            std::cout << "(*jacobianAsm)["<<i<<"]["<<i<<"]:\n"
+            /*
+            int i = 285;
+            std::cout << (boost::format("*jacobianAsm[%d][%d]: \n")%i%i).str()
                       << (*jacobianAsm)[i][i];
-            std::cout << "-det(A) -------------------------------------\n";
-            std::cout << "(*jacobianAsm)["<<i<<"]["<<i<<"].determinant() = " << (*jacobianAsm)[i][i].determinant() << "\n";          
-            std::cout << "-u ------------------------------------------\n";
-            std::cout << "(*u)["<<i<<"]:" << (*u)[i] << "\n";
-            std::cout << "---------------------------------------------\n";
-*/
+            std::cout << "*u["<<i<<"]: "
+                      << (*u)[i] << "\n";
+            */
+            //printmatrix(std::cout, *jacobianAsm, "J", "row");
 
             ctl.newtonSolveLinear(*jacobianAsm, u, *f);
             ctl.newtonUpdateRelError(uOld, u);
-
-#if 0
-            double t = timeStep_ + iterStep_/100.0;
-            std::cout << "convergence time: " << t << "\n";
-            writer_.beginTimestep(t, this->model().gridView());
-            this->model().localJacobian().addVtkFields2(writer_, u, *uOld);
-            writer_.endTimestep();
-            ++iterStep_;
-#endif
             
             // update the current solution. We use either
             // a line search approach or the plain method.
