@@ -32,6 +32,8 @@
 #include <dune/istl/solvers.hh>
 #include "dune/istl/owneroverlapcopy.hh"
 
+#include <dune/istl/io.hh>
+
 #include <dune/common/mpihelper.hh>
 
 #include <iostream>
@@ -183,7 +185,7 @@ public:
         // deflection in any degree of freedom.
         typedef typename Function::BlockType FV;
         defect_ = 0;
-        for (int i = 0; i < (*uOld).size(); ++i) {
+        for (int i = 0; i < int((*uOld).size()); ++i) {
             for (int j = 0; j < FV::size; ++j) {
                 Scalar tmp
                     = 

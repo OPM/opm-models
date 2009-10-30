@@ -290,7 +290,8 @@ public:
      *        of an equation we would like to have zero.
      */
     void evalLocalResidual(SolutionOnElement &residual,
-                           bool withBoundary = true)
+                           bool withBoundary = true,
+                           bool writeInFlux = false)
     {
         // reset residual
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
@@ -631,30 +632,6 @@ private:
         this->asImp_().setCurrentSolution(localU);
         this->asImp_().setPreviousSolution(localOldU);
 
-#if 0
-        static bool foo = false;
-        if (!foo) {
-            localU[0][1] = 1e5;
-            int n=1000;
-            Scalar tMin = 0;
-            Scalar tMax = 10;
-            PrimaryVarVector c;
-            for (int i = 0; i <= n; ++i) {
-                Scalar theta = (tMax - tMin)*i/n + tMin;
-                localU[0][0] = theta;
-                this->asImp_().setCurrentSolution(localU);
-                asImp_().computeStorage(c, 0, false);
-                std::cerr << theta << " ";
-                for (int j = 0; j < 2; ++j) {
-                    std::cerr << c[j] << " ";
-                };
-                std::cerr << curElemDat_[0].flash.totalPressure();
-                std::cerr << "\n";
-            };
-            foo = true;
-        }
-#endif
-
         // approximate the local stiffness matrix numerically
         // TODO: do this analytically if possible
         SolutionOnElement residUPlusEps(numVertices);
@@ -693,7 +670,7 @@ private:
 
         // calculate the right hand side
         SolutionOnElement residU(numVertices);
-        evalLocalResidual(residU, true); // include boundary conditions for the residual
+        evalLocalResidual(residU, true, true); // include boundary conditions for the residual
 
         for (int i=0; i < numVertices; i++) {
             for (int eqIdx=0; eqIdx < numEq; eqIdx++) {

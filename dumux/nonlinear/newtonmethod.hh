@@ -59,6 +59,8 @@ public:
                         Model &model)
     {};
 
+    static const Scalar globalResidual_ = 1e100;
+
     template <class NewtonController>
     bool update(NewtonController &ctl,
                 NewtonMethod &newton,
@@ -99,9 +101,11 @@ public:
                         Function &uInitial,
                         Model &model)
     {
-        uNormMin_ = std::numeric_limits<Scalar>::max();
+        relDefMin_ = std::numeric_limits<Scalar>::max();
+        globalResidual_ = 1e100;
     };
 
+    Scalar globalResidual_;
 
     template <class NewtonController>
     bool update(NewtonController &ctl,
@@ -110,31 +114,28 @@ public:
                 Function &uOld,
                 Model &model)
     {
-        Scalar lambda = 1.0;
-
-        Scalar uNorm = ctl.relDefect();
-        if (uNorm < uNormMin_/1.2) {
-            uNormMin_ = uNorm;
-
-            lambda = 1.0;
+        Scalar lambda = 1.0;      
+        Scalar globDefOld = model.globalResidual(uOld);
+        while (true) {
+            *u *= -lambda;
+            *u += *uOld;
+            globalResidual_ = model.globalResidual(u);
+            if (globalResidual_ <= globDefOld*1.01 || lambda <= 1.0/1024) {
+                std::cout << "Newton: globalDefect=" << globalResidual_ << " lambda=" << lambda << "\n";
+               return true;
+            }
+            // undo the last iteration
+            *u -= *uOld;
+            *u /= - lambda;
+            
+            // divide lambda by 2
+            lambda /= 2;
         }
-        else {
-            lambda = uNormMin_ / uNorm / 5;
-            if (lambda < 0.05) {
-                DUNE_THROW(NumericalProblem,
-                           "Increase of relative defect of " << 1./lambda << " is too much!");
-            };
-            std::cout << boost::format("Newton: use line search, lambda=%f\n")%lambda;
-        }
-
-        *u *= - lambda;
-        *u += *uOld;
-
         return true;
     };
 
 private:
-    Scalar uNormMin_;
+    Scalar relDefMin_;
 };
 
 
@@ -143,7 +144,7 @@ private:
  *
  * In order to use the method you need a NewtonController.
  */
-template<class ModelT, bool useLineSearch=false>
+template<class ModelT, bool useLineSearch=true>
 class NewtonMethod
 {
 public:
@@ -285,7 +286,7 @@ protected:
 
         // execute the method as long as the controller thinks
         // that we should do another iteration
-        while (ctl.newtonProceed(u))
+        while (ctl.newtonProceed(u) && updateMethod.globalResidual_ > 1e-5)
         {
             // notify the controller that we're about to start
             // a new timestep
@@ -315,7 +316,7 @@ protected:
             ctl.newtonSolveLinear(*jacobianAsm, u, *f);
             ctl.newtonUpdateRelDefect(uOld, u);
 
-#if 1
+#if 0
             double t = timeStep_ + iterStep_/100.0;
             std::cout << "convergence time: " << t << "\n";
             writer_.beginTimestep(t, this->model().gridView());
@@ -333,7 +334,7 @@ protected:
         // tell the controller that we're done
         ctl.newtonEnd();
 
-        if (!ctl.newtonConverged()) {
+        if (!ctl.newtonConverged() &&  updateMethod.globalResidual_ > 1e-5) {
             ctl.newtonFail();
             model_ = NULL;
             return false;

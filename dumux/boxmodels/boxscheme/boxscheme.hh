@@ -196,6 +196,24 @@ public:
     	delete f_;
     }
 
+
+    Scalar globalResidual(SolutionFunction &u) 
+    {
+        SolutionFunction tmpU(gridView_, gridView_);
+        *tmpU = *uCur_;
+        *uCur_ = *u;
+        SolutionFunction tmp(gridView_, gridView_);
+        localJacobian_.evalGlobalResidual(tmp);
+        Scalar result = (*tmp).two_norm();
+        /*
+        Scalar result = 0;
+        for (int i = 0; i < (*tmp).size(); ++i)
+            for (int j = 0; j < numEq; ++j)
+                result = std::max(std::abs(result), (*tmp)[i][j]);
+        */
+        *uCur_ = *tmpU;
+        return result;
+    };
     /*!
      * \brief Reference to the current solution function.
      */
