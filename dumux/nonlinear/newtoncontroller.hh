@@ -158,10 +158,6 @@ public:
         probationCount_ = 0;
         maxPhysicalness_ = 0;
         curPhysicalness_ = 0;
-
-        Scalar tmp = (*u).two_norm2();
-        tmp = sqrt(model().gridView().comm().sum(tmp));
-        oneByMagnitude_ = 1.0/std::max(tmp, Scalar(1e-5));
     }
 
     //! indidicates the beginning of a newton iteration
@@ -193,6 +189,11 @@ public:
     void newtonEndStep(Function &u, Function &uOld)
     {
         ++numSteps_;
+
+        Scalar tmp = (*u).two_norm2();
+        tmp = sqrt(model().gridView().comm().sum(tmp));
+        oneByMagnitude_ = 1.0/std::max(tmp, Scalar(1e-5));
+
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
             std::cout << boost::format("Newton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
