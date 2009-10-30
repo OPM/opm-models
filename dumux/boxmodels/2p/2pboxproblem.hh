@@ -130,6 +130,12 @@ public:
     MaterialLaw &materialLaw ()
     { return materialLaw_; }
 
+    /*!
+     * \copydoc materialLaw()
+     */
+    const MaterialLaw &materialLaw () const
+    { return materialLaw_; }
+
     // \}
 
 private:

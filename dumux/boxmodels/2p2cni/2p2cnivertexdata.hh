@@ -118,7 +118,7 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      vertIdx,
-                            Problem                 &problem)
+                            const Problem           &problem)
     {
         typedef Indices I;
         this->temperature = sol[I::temperatureIdx];

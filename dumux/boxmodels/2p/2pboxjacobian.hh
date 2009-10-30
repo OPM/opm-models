@@ -114,8 +114,6 @@ public:
                            int vertIdx,
                            int pvIdx) const
     {
-        const PrimaryVarVector &sol = elemSol[vertIdx];
-
         if (pvIdx == 0)
             return 0.01; // pressure
         else if (pvIdx == 1)

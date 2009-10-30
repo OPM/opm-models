@@ -138,7 +138,7 @@ class InjectionProblem : public TwoPTwoCBoxProblem<TypeTag, InjectionProblem<Typ
 
     typedef typename GridView::template Codim<0>::Entity        Element;
     typedef typename GridView::template Codim<dim>::Entity      Vertex;
-    typedef typename GridView::IntersectionIterator             IntersectionIterator;
+    typedef typename GridView::Intersection                     Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
 
@@ -190,7 +190,7 @@ public:
     void boundaryTypes(BoundaryTypeVector         &values,
                        const Element              &element,
                        const FVElementGeometry    &fvElemGeom,
-                       const IntersectionIterator &isIt,
+                       const Intersection         &is,
                        int                         scvIdx,
                        int                         boundaryFaceIdx) const
     {
@@ -211,7 +211,7 @@ public:
     void dirichlet(PrimaryVarVector           &values,
                    const Element              &element,
                    const FVElementGeometry    &fvElemGeom,
-                   const IntersectionIterator &isIt,
+                   const Intersection         &is,
                    int                         scvIdx,
                    int                         boundaryFaceIdx) const
     {
@@ -231,7 +231,7 @@ public:
     void neumann(PrimaryVarVector           &values,
                  const Element              &element,
                  const FVElementGeometry    &fvElemGeom,
-                 const IntersectionIterator &isIt,
+                 const Intersection         &is,
                  int                         scvIdx,
                  int                         boundaryFaceIdx) const
     {

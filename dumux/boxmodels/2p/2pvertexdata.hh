@@ -76,7 +76,7 @@ public:
                 const Element           &element,
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
-                Problem                 &problem,
+                const Problem           &problem,
                 bool                     isOldSol) 
     {
         typedef Indices I;
@@ -96,10 +96,10 @@ public:
         if (formulation == I::pWsN) {
             satN = sol[I::saturationIdx];
             satW = 1.0 - satN;
-            pC =problem.materialLaw().pC(satW,
-                                               global,
-                                               element,
-                                               local);
+            pC = problem.materialLaw().pC(satW,
+                                          global,
+                                          element,
+                                          local);
             pressure[I::wPhase] = sol[I::pressureIdx];
             pressure[I::nPhase] = pressure[I::wPhase] + pC;
         }
@@ -142,7 +142,7 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      vertIdx,
-                            Problem                 &problem) 
+                            const Problem           &problem) 
     {
         temperature = problem.temperature(element, elemGeom, vertIdx);
     }

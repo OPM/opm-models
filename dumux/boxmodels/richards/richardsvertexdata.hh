@@ -50,6 +50,8 @@ class RichardsVertexData
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename SolutionTypes::PrimaryVarVector            PrimaryVarVector;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(RichardsIndices))  Indices;
@@ -61,12 +63,12 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    template <class JacobianImp>
-    void update(const PrimaryVarVector &sol,
-                const Element          &element,
-                int                     vertIdx,
-                bool                    isOldSol,
-                JacobianImp            &jac)
+    void update(const PrimaryVarVector  &sol,
+                const Element           &element,
+                const FVElementGeometry &elemGeom,
+                int                      vertIdx,
+                const Problem           &problem,
+                bool                     isOldSol) 
     {
         typedef Indices I;
 
@@ -77,32 +79,34 @@ public:
                                                                 GridView::dimension);
 
         /* pc = pNreference - pw || pc = 0 for computing Sw */
-        pNreference = jac.problem().pNreference();
+        pNreference = problem.pNreference();
         pW = sol[I::pW];
         if (pW >= pNreference)
             pC = 0.0;
         else
             pC = pNreference-pW;
 
-        dSwdpC = jac.problem().materialLaw().dSdP(pC,
-                                                  global,
-                                                  element,
-                                                  local);
-        Sw = jac.problem().materialLaw().saturationW(pC,
-                                                     global,
-                                                     element,
-                                                     local);
-        mobilityW = jac.problem().materialLaw().mobW(Sw,
-                                                     global,
-                                                     element,
-                                                     local,
-                                                     jac.problem().temperature(),
-                                                     pW);
-        densityW = jac.problem().wettingPhase().density(jac.problem().temperature(),
-                                                        pW);
-        porosity = jac.problem().soil().porosity(global,
-                                                 element,
-                                                 local);
+        dSwdpC = problem.materialLaw().dSdP(pC,
+                                            global,
+                                            element,
+                                            local);
+        Sw = problem.materialLaw().saturationW(pC,
+                                               global,
+                                               element,
+                                               local);
+
+        temperature = problem.temperature(element, elemGeom, vertIdx);
+        mobilityW = problem.materialLaw().mobW(Sw,
+                                               global,
+                                               element,
+                                               local,
+                                               temperature,
+                                               pW);
+        densityW = problem.wettingPhase().density(temperature,
+                                                  pW);
+        porosity = problem.soil().porosity(global,
+                                           element,
+                                           local);
     }
 
     Scalar pNreference;
@@ -114,6 +118,7 @@ public:
     Scalar densityW;
     Scalar mobilityW;
     Scalar porosity;
+    Scalar temperature;
 };
 
 }
