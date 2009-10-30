@@ -146,7 +146,7 @@ public:
     //! tolerance
     bool newtonConverged()
     {
-        return ((method_->deflectionTwoNorm() <= tolerance_) && (curPhysicalness_ >= 1.0));
+        return (defect_ <= tolerance_) && (curPhysicalness_ >= 1.0);
     }
 
     //! called before the newton method is applied to an equation
@@ -170,6 +170,35 @@ public:
     int newtonNumSteps()
     { return numSteps_; }
 
+    
+    /*!
+     * \brief Update the defect of the solution compared to the
+     *        previous iteration.
+     */
+    template <class Function>
+    void newtonUpdateRelDefect(const Function &uOld,
+                               const Function &deltaU)
+    {
+        // calculate the relative defect as the maximum relative
+        // deflection in any degree of freedom.
+        typedef typename Function::BlockType FV;
+        defect_ = 0;
+        for (int i = 0; i < (*uOld).size(); ++i) {
+            for (int j = 0; j < FV::size; ++j) {
+                Scalar tmp
+                    = 
+                    std::abs((*deltaU)[i][j])
+                    / std::max(std::abs((*uOld)[i][j]), Scalar(1));
+                defect_ = std::max(defect_, tmp);
+            }
+        };
+        model().gridView().comm().max(defect_);
+
+    };
+
+    Scalar relDefect() const
+    { return defect_; };
+
     //! Solve the linear equation system Ax - b = 0 for the
     //! current iteration.
     //! Returns true iff the equation system could be solved.
@@ -190,14 +219,15 @@ public:
     {
         ++numSteps_;
 
-        Scalar tmp = (*u).two_norm2();
+/*        Scalar tmp = (*u).two_norm2();
         tmp = sqrt(model().gridView().comm().sum(tmp));
         oneByMagnitude_ = 1.0/std::max(tmp, Scalar(1e-5));
+*/
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
             std::cout << boost::format("\rNewton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
-                %numSteps_%(method_->deflectionTwoNorm())%curPhysicalness_%maxPhysicalness_;
+                %numSteps_%defect_%curPhysicalness_%maxPhysicalness_;
     }
 
     //! Indicates that we're done solving the equation system.
@@ -423,7 +453,7 @@ protected:
 
     Scalar maxPhysicalness_;
     Scalar curPhysicalness_;
-    Scalar oneByMagnitude_;
+    Scalar defect_;
     int    probationCount_;
 
     // optimal number of iterations we want to achive

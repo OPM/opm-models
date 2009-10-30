@@ -59,7 +59,9 @@ public:
                         Model &model)
     {};
 
-    bool update(NewtonMethod &newton,
+    template <class NewtonController>
+    bool update(NewtonController &ctl,
+                NewtonMethod &newton,
                 Function &u,
                 Function &uOld,
                 Model &model)
@@ -101,21 +103,23 @@ public:
     };
 
 
-    bool update(NewtonMethod &newton,
+    template <class NewtonController>
+    bool update(NewtonController &ctl,
+                NewtonMethod &newton,
                 Function &u,
                 Function &uOld,
                 Model &model)
     {
         Scalar lambda = 1.0;
 
-        Scalar uNorm = (*u).two_norm();
-        if (uNorm < uNormMin_) {
+        Scalar uNorm = ctl.relDefect();
+        if (uNorm < uNormMin_/1.2) {
             uNormMin_ = uNorm;
 
             lambda = 1.0;
         }
         else {
-            lambda = uNormMin_ / uNorm;
+            lambda = uNormMin_ / uNorm / 5;
             if (lambda < 0.05) {
                 DUNE_THROW(NumericalProblem,
                            "Increase of relative defect of " << 1./lambda << " is too much!");
@@ -165,7 +169,6 @@ public:
 public:
     NewtonMethod(Model &model)
     {
-        deflectionTwoNorm_ = 1e100;
         residual_ = NULL;
         model_ = NULL;
         uOld = NULL;
@@ -250,12 +253,6 @@ public:
         return *residual_;
     }
 
-    /*!
-     * \brief Returns the euclidean norm of the last newton step size.
-     */
-    Scalar deflectionTwoNorm() const
-    { return deflectionTwoNorm_; }
-
 protected:
     template <class NewtonController>
     bool execute_(Model &model, NewtonController &ctl)
@@ -282,7 +279,6 @@ protected:
         Dune::_NewtonUpdateMethod<ThisType, useLineSearch> updateMethod(*this, u, model);;
 
         residualUpToDate_ = false;
-        deflectionTwoNorm_ = 1e100;
 
         // tell the controller that we begin solving
         ctl.newtonBegin(this, u);
@@ -317,14 +313,9 @@ protected:
                 std::cout.flush();
             }
             ctl.newtonSolveLinear(*jacobianAsm, u, *f);
+            ctl.newtonUpdateRelDefect(uOld, u);
 
-            //Scalar tmp = (*u).two_norm2();
-            Scalar tmp = ctl.weightedNorm2(*u, *(*uOld));
-            tmp = model.gridView().comm().sum(tmp);
-            deflectionTwoNorm_ = sqrt(tmp);
-            
-
-#if 0            
+#if 1
             double t = timeStep_ + iterStep_/100.0;
             std::cout << "convergence time: " << t << "\n";
             writer_.beginTimestep(t, this->model().gridView());
@@ -335,7 +326,7 @@ protected:
             
             // update the current solution. We use either
             // a line search approach or the plain method.
-            updateMethod.update(*this, u, *uOld, model);
+            updateMethod.update(ctl, *this, u, *uOld, model);
 
             ctl.newtonEndStep(u, *uOld);
         }
@@ -359,7 +350,6 @@ private:
 
     bool          residualUpToDate_;
     Function     *residual_;
-    Scalar        deflectionTwoNorm_;
     Model        *model_;
     bool          verbose_;
 };
