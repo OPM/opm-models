@@ -22,6 +22,7 @@
 #define DUMUX_BOX_SCHEME_HH
 
 #include <dumux/boxmodels/boxscheme/boxjacobian.hh>
+#include <dumux/auxiliary/valgrind.hh>
 
 #include <dune/istl/operators.hh>
 #include <dune/disc/operators/p1operator.hh>
@@ -31,14 +32,6 @@
 #include <boost/format.hpp>
 
 #include "boxproperties.hh"
-
-
-#if HAVE_VALGRIND
-#include <valgrind/memcheck.h>
-#elif !defined VALGRIND_CHECK_MEM_IS_DEFINED
-#define VALGRIND_CHECK_MEM_IS_DEFINED(addr, s)
-#define VALGRIND_MAKE_MEM_UNDEFINED(addr, s)
-#endif // HAVE_VALGRIND
 
 namespace Dune
 {
@@ -150,6 +143,10 @@ public:
     {
         wasRestarted_ = false;
 
+        (*f_) = Scalar(0);
+        (*uCur_) = Scalar(0);
+        (*uPrev_) = Scalar(0);
+
         // check grid partitioning if we are parallel
         assert((prob.gridView().comm().size() == 1) ||
                (prob.gridView().overlapSize(0) > 0) ||
@@ -197,20 +194,21 @@ public:
     }
 
 
-    Scalar globalResidual(SolutionFunction &u) 
+    Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 
     {
         SolutionFunction tmpU(gridView_, gridView_);
         *tmpU = *uCur_;
         *uCur_ = *u;
-        SolutionFunction tmp(gridView_, gridView_);
         localJacobian_.evalGlobalResidual(tmp);
         Scalar result = (*tmp).two_norm();
+        
         /*
         Scalar result = 0;
         for (int i = 0; i < (*tmp).size(); ++i)
             for (int j = 0; j < numEq; ++j)
-                result = std::max(std::abs(result), (*tmp)[i][j]);
+                result += std::abs((*tmp)[i][j]);
         */
+        
         *uCur_ = *tmpU;
         return result;
     };
@@ -295,8 +293,7 @@ public:
     {
 #if HAVE_VALGRIND
         for (size_t i = 0; i < (*curSolFunction()).size(); ++i)
-            VALGRIND_CHECK_MEM_IS_DEFINED(&(*curSolFunction())[i],
-                                          sizeof(PrimaryVarVector));
+            Valgrind::CheckDefined((*curSolFunction())[i]);
 #endif // HAVE_VALGRIND
 
         asImp_().updateBegin();
@@ -331,8 +328,7 @@ public:
 
 #if HAVE_VALGRIND
         for (size_t i = 0; i < (*curSolFunction()).size(); ++i) {
-            VALGRIND_CHECK_MEM_IS_DEFINED(&(*curSolFunction())[i],
-                                          sizeof(PrimaryVarVector));
+            Valgrind::CheckDefined(&(*curSolFunction())[i]);
         }
 #endif // HAVE_VALGRIND
     }
@@ -560,7 +556,7 @@ protected:
                                    element,
                                    fvElemGeom,
                                    scvIdx);
-            VALGRIND_CHECK_MEM_IS_DEFINED(&(*u)[globalIdx], sizeof((*u)[globalIdx]));
+            Valgrind::CheckDefined((*u)[globalIdx]);
         }
     }
 
@@ -663,9 +659,7 @@ protected:
                                    isIt,
                                    elemVertIdx,
                                    boundaryFaceIdx);
-                VALGRIND_CHECK_MEM_IS_DEFINED(&dirichletVal,
-                                              sizeof(dirichletVal));
-
+                Valgrind::CheckDefined(dirichletVal);
             }
 
             // copy the dirichlet value for the current equation

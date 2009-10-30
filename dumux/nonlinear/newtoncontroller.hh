@@ -257,6 +257,9 @@ public:
             return oldTimeStep/(1 + percent);
         }
         else {
+            /*Scalar percent = (Scalar(1))/targetSteps_;
+            return oldTimeStep*(1 + percent);
+            */
             Scalar percent = ((Scalar) targetSteps_ - numSteps_)/targetSteps_;
             return oldTimeStep*(1 + percent/1.2);
         }

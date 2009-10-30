@@ -115,15 +115,21 @@ public:
                 Model &model)
     {
         Scalar lambda = 1.0;      
-        Scalar globDefOld = model.globalResidual(uOld);
+        Scalar globDef;
+        Function tmp(model.gridView(), model.gridView());
+        Scalar oldGlobDef = model.globalResidual(uOld, tmp);
+        
         while (true) {
             *u *= -lambda;
             *u += *uOld;
-            globalResidual_ = model.globalResidual(u);
-            if (globalResidual_ <= globDefOld*1.01 || lambda <= 1.0/32) {
-                std::cout << "Newton: globalDefect=" << globalResidual_ << " lambda=" << lambda << "\n";
-               return true;
+            globDef = model.globalResidual(u, tmp);
+            
+            if (globDef <= oldGlobDef || lambda <= 1.0/2) {
+                globalResidual_ = globDef;
+                std::cout << "Newton: Global defect " << globalResidual_ << " @lambda=" << lambda << "\n";
+                return true;
             }
+
             // undo the last iteration
             *u -= *uOld;
             *u /= - lambda;
@@ -283,7 +289,7 @@ protected:
 
         // tell the controller that we begin solving
         ctl.newtonBegin(this, u);
-
+        
         // execute the method as long as the controller thinks
         // that we should do another iteration
         while (ctl.newtonProceed(u) && updateMethod.globalResidual_ > 1e-5)
@@ -334,7 +340,7 @@ protected:
         // tell the controller that we're done
         ctl.newtonEnd();
 
-        if (!ctl.newtonConverged() &&  updateMethod.globalResidual_ > 1e-5) {
+        if (!ctl.newtonConverged() && updateMethod.globalResidual_ > 1e-5) {
             ctl.newtonFail();
             model_ = NULL;
             return false;
