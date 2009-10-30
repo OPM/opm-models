@@ -164,7 +164,6 @@ public:
 #endif
 public:
     NewtonMethod(Model &model)
-          writer_("convergence")
     {
         deflectionTwoNorm_ = 1e100;
         residual_ = NULL;
@@ -264,8 +263,8 @@ protected:
     	if (!uOld)
     	{
 #ifdef HAVE_DUNE_PDELAB
-    		uOld = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
-    		f = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+            uOld = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+            f = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
 #else
             uOld = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
             f = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
@@ -316,15 +315,14 @@ protected:
             tmp = model.gridView().comm().sum(tmp);
             deflectionTwoNorm_ = sqrt(tmp);
             
-            /*
+            
             double t = timeStep_ + iterStep_/100.0;
             std::cout << "convergence time: " << t << "\n";
             writer_.beginTimestep(t, this->model().gridView());
-            this->model().localJacobian().addVtkFields2(writer_, u);
+            this->model().localJacobian().addVtkFields2(writer_, u, *uOld);
             writer_.endTimestep();
             ++iterStep_;
-            */
-
+            
             // update the current solution. We use either
             // a line search approach or the plain method.
             updateMethod.update(*this, u, *uOld, model);

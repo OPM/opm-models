@@ -101,7 +101,7 @@ public:
 
         Scalar tmp = asImp_().physicalness_(u);
         curPhysicalness_ = model().gridView().comm().min(tmp);
-        curPhysicalness_ = std::min(curPhysicalness_, 1.0);
+        curPhysicalness_ = std::min(curPhysicalness_, Scalar(1.0));
 
 
         // check for the physicalness of the solution
@@ -158,6 +158,10 @@ public:
         probationCount_ = 0;
         maxPhysicalness_ = 0;
         curPhysicalness_ = 0;
+
+        Scalar tmp = (*u).two_norm2();
+        tmp = sqrt(model().gridView().comm().sum(tmp));
+        oneByMagnitude_ = 1.0/std::max(tmp, Scalar(1e-5));
     }
 
     //! indidicates the beginning of a newton iteration
@@ -418,6 +422,7 @@ protected:
 
     Scalar maxPhysicalness_;
     Scalar curPhysicalness_;
+    Scalar oneByMagnitude_;
     int    probationCount_;
 
     // optimal number of iterations we want to achive

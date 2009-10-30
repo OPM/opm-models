@@ -130,12 +130,16 @@ public:
      *       steo, and \a nextStepSize must contain a suggestion for the
      *       next time step size.
      */
-    void timeIntegration(Scalar &stepSize, Scalar &nextStepSize)
+    void timeIntegration(double &stepSize, double &nextStepSize)
     {
-        model_.update(stepSize,
-                      nextStepSize,
+        Scalar cur = stepSize;
+        Scalar next = nextStepSize;
+        model_.update(cur,
+                      next,
                       newtonMethod_,
                       newtonCtl_);
+        nextStepSize = next;
+        stepSize = cur;
     }
 
     /*!
