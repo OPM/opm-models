@@ -151,7 +151,7 @@ private:
  *
  * In order to use the method you need a NewtonController.
  */
-template<class ModelT, bool useLineSearch=true>
+template<class ModelT, bool useLineSearch=false>
 class NewtonMethod
 {
 public:
@@ -294,7 +294,7 @@ protected:
         // execute the method as long as the controller thinks
         // that we should do another iteration
         while (ctl.newtonProceed(u) && 
-               (updateMethod.globalResidual_ > 1e-8 || ctl.relDefect() > 1e-5))
+               (updateMethod.globalResidual_ > 1e-8 || ctl.relError() > 1e-5))
         {
             // notify the controller that we're about to start
             // a new timestep
@@ -321,8 +321,27 @@ protected:
                 std::cout << "\rSolve Mx = r              ";
                 std::cout.flush();
             }
+            
+/*
+            printmatrix(std::cout, *jacobianAsm, "J", "row");
+*/
+
+/*
+            int i = 10;
+            
+            std::cout << "---------------------------------------------\n";
+            std::cout << "-A ------------------------------------------\n";
+            std::cout << "(*jacobianAsm)["<<i<<"]["<<i<<"]:\n"
+                      << (*jacobianAsm)[i][i];
+            std::cout << "-det(A) -------------------------------------\n";
+            std::cout << "(*jacobianAsm)["<<i<<"]["<<i<<"].determinant() = " << (*jacobianAsm)[i][i].determinant() << "\n";          
+            std::cout << "-u ------------------------------------------\n";
+            std::cout << "(*u)["<<i<<"]:" << (*u)[i] << "\n";
+            std::cout << "---------------------------------------------\n";
+*/
+
             ctl.newtonSolveLinear(*jacobianAsm, u, *f);
-            ctl.newtonUpdateRelDefect(uOld, u);
+            ctl.newtonUpdateRelError(uOld, u);
 
 #if 0
             double t = timeStep_ + iterStep_/100.0;

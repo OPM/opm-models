@@ -53,8 +53,8 @@ class BoxJacobian : public Dune::LocalStiffness<typename GET_PROP_TYPE(TypeTag, 
                                                 GET_PROP_VALUE(TypeTag, PTAG(NumEq)) >
 {
 private:
-
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))    Model;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef BoxJacobian<TypeTag, Implementation> ThisType;
@@ -86,6 +86,8 @@ private:
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
+    typedef typename SolutionTypes::VertexMapper            VertexMapper;
+    typedef typename SolutionTypes::ElementMapper           ElementMapper;
     typedef typename SolutionTypes::Solution                Solution;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
@@ -125,7 +127,9 @@ public:
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
 
-            evalLocalResidual(localResid, true); // with boundary
+            localUEval_ = tmpSol;
+
+            asImp_().evalLocalResidual(localResid, true); // with boundary
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
                 int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
@@ -152,6 +156,8 @@ public:
         assemble_(element, mutableLocalU, orderOfShapeFns);
     }
 
+    SolutionOnElement localUEval_;
+
     /*!
      * \brief Assemble the linear system of equations for the
      *        verts of a element.
@@ -165,6 +171,30 @@ public:
         SolutionOnElement localU(numVertices);
         restrictToElement(localU, problem_.model().curSolFunction());
         assemble_(element, localU, orderOfShapeFns);
+
+#if 0
+        int numVerts = curElementGeom_.numVertices;
+        for (int vertI = 0; vertI < numVerts; ++vertI) 
+        {
+            std::cout << problem().model().vertexMapper().map(element, vertI, dim)
+                      << ", Sn: " << this->curElemDat_[vertI].flash.Sn()
+                      << "---------------\n";
+
+            for (int pv = 0; pv < numEq; ++pv) 
+            {
+                int vertJ = vertI;
+                //for (int vertJ = 0; vertJ < numVerts; ++vertJ) 
+                {
+                    for (int eq = 0; eq < numEq; ++eq) 
+                    {
+                        std::cout << vertI << ": " << pv << "<->" << /*vertJ << ":" << */ eq << " = " << this->A[vertI][vertJ][eq][pv] << "\n";
+                    
+                    }
+                }
+            }
+        }
+        exit(1);
+#endif
     }
   
     /*!
@@ -178,20 +208,20 @@ public:
 
         // reset the right hand side and the boundary
         // condition type vector
-        resetRhs_();
+        asImp_().resetRhs_();
 
         // set the boundary types
-        updateBoundaryTypes_();
-
+        asImp_().updateBoundaryTypes_();
+        
         // apply the neumann conditions
-        applyBoundaryCondition_();
+        asImp_().applyBoundaryCondition_();
     };
 
     void updateBoundaryTypes(const Element &element)
     {
         // set the current grid element
         asImp_().setCurrentElement(element);
-        updateBoundaryTypes_();
+        asImp_().updateBoundaryTypes_();
     }
 
     void applyBoundaryCondition_()
@@ -289,16 +319,18 @@ public:
      * \brief Compute the local residual, i.e. the right hand side
      *        of an equation we would like to have zero.
      */
+    template <int firstEq = 0, int lastEq = numEq>
     void evalLocalResidual(SolutionOnElement &residual,
                            bool withBoundary = true)
     {
         // reset residual
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
-            residual[i] = 0;
+            for (int j = firstEq; j < lastEq; ++j)
+                residual[i][j] = Scalar(0);
         }
         
         if (withBoundary)
-            assembleBoundaryCondition(this->curElement_());
+            this->asImp_().assembleBoundaryCondition(this->curElement_());
 
 
         // evaluate the local rate
@@ -318,14 +350,21 @@ public:
             massContrib -= tmp;
             massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
             
-            residual[i] += massContrib;
+            for (int j = firstEq; j < lastEq; ++j)
+                residual[i][j] += massContrib[j];
 
             // subtract the source term from the local rate
             PrimaryVarVector source;
             this->asImp_().computeSource(source, i);
             source *= curElementGeom_.subContVol[i].volume;
-            residual[i] -= source;
-            Valgrind::CheckDefined(residual[i]);
+
+            for (int j = firstEq; j < lastEq; ++j) {
+                residual[i][j] -= source[j];
+                
+                // make sure that only defined quantities where used
+                // to calculate the residual.
+                Valgrind::CheckDefined(residual[i][j]);
+            }
         }
 
         // calculate the mass flux over the faces and subtract
@@ -345,7 +384,7 @@ public:
             // ignore dirichlet cells because for them, the mass
             // change inside the cell is not equal to the flux out of
             // the cell.
-            for (int eq = 0; eq < numEq; ++ eq) {
+            for (int eq = firstEq; eq < lastEq; ++ eq) {
                 if (this->bctype[i][eq] == BoundaryConditions::neumann) 
                     residual[i][eq] -= flux[eq];
                 if (this->bctype[j][eq] == BoundaryConditions::neumann) 
@@ -355,7 +394,8 @@ public:
 
         if (withBoundary) {
             for (int i = 0; i < curElementGeom_.numVertices; i++) {
-                residual[i] += this->b[i];
+                for (int j = firstEq; j < lastEq; j++)
+                    residual[i][j] += this->b[i][j];
             }
         }
 
@@ -492,9 +532,7 @@ public:
         // changed
         curSol[vertIdx][eqIdx] = value;
         
-        VALGRIND_MAKE_MEM_UNDEFINED(&curElemDat_[vertIdx], 
-                                    sizeof(VertexData));
-
+        Valgrind::SetUndefined(curElemDat_[vertIdx]);
         curElemDat_[vertIdx].update(curSol[vertIdx], 
                                     this->curElement_(),
                                     vertIdx, 
@@ -530,6 +568,30 @@ public:
      */
     const Problem &problem() const
     { return problem_; };
+
+    /*!
+     * \brief Returns a reference to the model.
+     */
+    Model &model()
+    { return problem_.model(); };
+
+    /*!
+     * \brief Returns a reference to the model.
+     */
+    const Model &model() const
+    { return problem_.model(); };
+
+    /*!
+     * \brief Returns a reference to the vertex mapper.
+     */
+    const VertexMapper &vertexMapper() const
+    { return model().vertexMapper(); };
+
+    /*!
+     * \brief Returns a reference to the element mapper.
+     */
+    const ElementMapper &elementMapper() const
+    { return model().elementMapper(); };
 
 protected:
     const Element &curElement_() const
@@ -615,6 +677,8 @@ private:
 
     void assemble_(const Element &element, SolutionOnElement& localU, int orderOfShapeFns = 1)
     {
+        localUEval_ = localU;
+        
         // set the current grid element
         asImp_().setCurrentElement(element);
 
@@ -633,43 +697,25 @@ private:
 
         // approximate the local stiffness matrix numerically
         // TODO: do this analytically if possible
-        SolutionOnElement residUPlusEps(numVertices);
-        SolutionOnElement residUMinusEps(numVertices);
-        for (int j = 0; j < numVertices; j++)
-        {
-            for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
-            {
-                Scalar eps = asImp_().numericEpsilon_(localU, j, eqIdx);
-                Scalar uJ = localU[j][eqIdx];
-
-                // vary the eqIdx-th equation at the element's j-th
-                // vertex and calculate the residual, don't include
-                // the boundary conditions
-                asImp_().deflectCurrentSolution(localU, j, eqIdx, uJ + eps);
-                evalLocalResidual(residUPlusEps, false);
-                asImp_().restoreCurrentSolution(localU, j, eqIdx, uJ);
-
-                asImp_().deflectCurrentSolution(localU, j, eqIdx, uJ - eps);
-                evalLocalResidual(residUMinusEps, false);
-                asImp_().restoreCurrentSolution(localU, j, eqIdx, uJ);
-
- 
-                // calculate the gradient when varying the
-                // eqIdx-th primary variable at the j-th vert
-                // of the element and fill the required fields of
-                // the LocalStiffness base class.
-                residUPlusEps -= residUMinusEps;
-
-                residUPlusEps /= 2*eps;
+        SolutionOnElement partialStiffness(numVertices);
+        for (int j = 0; j < numVertices; j++) {
+            for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
+                asImp_().assemblePartialStiffness_(partialStiffness, 
+                                                   localU,
+                                                   j,
+                                                   pvIdx);
+                
+                // update the local stiffness matrix with the current partial
+                // derivatives
                 updateLocalStiffness_(j,
-                                      eqIdx,
-                                      residUPlusEps);
+                                      pvIdx,
+                                      partialStiffness);
             }
         }
 
         // calculate the right hand side
         SolutionOnElement residU(numVertices);
-        evalLocalResidual(residU, true, true); // include boundary conditions for the residual
+        asImp_().evalLocalResidual(residU, true); // include boundary conditions for the residual
 
         for (int i=0; i < numVertices; i++) {
             for (int eqIdx=0; eqIdx < numEq; eqIdx++) {
@@ -683,6 +729,40 @@ private:
     };
     
 protected:
+    /*!
+     * \brief Update the stiffness matrix for all equations on all
+     *        vertices of the current element with the partial
+     *        derivative to the pvIdx's primary variable at the
+     *        vertexIdx-th vertex.
+     *
+     * This method can be overwritten by the implementation if a
+     * better scheme than central differences ought to be used.
+     */
+    void assemblePartialStiffness_(SolutionOnElement &dest,
+                                   SolutionOnElement &elemSol,
+                                   int vertexIdx,
+                                   int pvIdx)
+    {
+        Scalar eps = asImp_().numericEpsilon_(elemSol, vertexIdx, pvIdx);
+        Scalar uJ = elemSol[vertexIdx][pvIdx];
+        
+        // vary the pvIdx-th primary variable at the element's j-th
+        // vertex and calculate the residual, don't include the
+        // boundary conditions
+        asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ + eps);
+        asImp_().evalLocalResidual(dest, false);
+        asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
+        
+        asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ - eps);
+        SolutionOnElement tmp(curElementGeom_.numVertices);
+        asImp_().evalLocalResidual(tmp, false);
+        asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
+        
+        // central differences
+        dest -= tmp;
+        dest /= 2*eps;
+    }
+
     /*!
      * \brief Returns the epsilon value which is added and removed
      *        from the current solution.
@@ -699,19 +779,22 @@ protected:
         return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-7);
     }
 
+    /*!
+     * \brief Updates the current local stiffness matrix with the
+     *        partial derivatives of all equations in regard to the
+     *        primary variable 'pvIdx' at vertex j .
+     */
     void updateLocalStiffness_(int j,
-                               int varJIdx,
+                               int pvIdx,
                                const SolutionOnElement &stiffness)
     {
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
-            for (int varIIdx = 0; varIIdx < numEq; varIIdx++) {
-                // A[i][j][varIIdx][varJIdx] is the
-                // approximate rate of change of the
-                // unknown 'varIIdx' at vertex 'i' if the
-                // unknown 'varJIdx' at vertex 'j' is
-                // slightly deflected from the current
-                // local solution
-                this->A[i][j][varIIdx][varJIdx] = stiffness[i][varIIdx];
+            for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
+                // A[i][j][eqIdx][pvIdx] is the approximate rate of
+                // change of the residual of equation 'eqIdx' at
+                // vertex 'i' depending on the primary variable
+                // 'pvIdx' at vertex 'j'.
+                this->A[i][j][eqIdx][pvIdx] = stiffness[i][eqIdx];
             }
         }
     }

@@ -68,6 +68,8 @@ class BoxScheme
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
+    typedef typename SolutionTypes::VertexMapper            VertexMapper;
+    typedef typename SolutionTypes::ElementMapper           ElementMapper;
     typedef typename SolutionTypes::Solution                Solution;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
@@ -98,21 +100,6 @@ class BoxScheme
     typedef typename GridView::IntersectionIterator                    IntersectionIterator;
     typedef typename GridView::template Codim<dim>::Entity             Vertex;
     typedef typename GridView::template Codim<dim>::Iterator           VertexIterator;
-
-    template<int dim>
-    struct VertexLayout {
-        bool contains (Dune::GeometryType gt) const
-        { return gt.dim() == 0; }
-    };
-
-    template<int dim>
-    struct ElementLayout {
-        bool contains (Dune::GeometryType gt) const
-        { return gt.dim() == dim; }
-    };
-
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, VertexLayout> VertexMapper;
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, ElementLayout> ElementMapper;
 
 public:
     /*!
@@ -193,7 +180,6 @@ public:
     	delete f_;
     }
 
-
     Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 
     {
         SolutionFunction tmpU(gridView_, gridView_);
@@ -209,7 +195,6 @@ public:
                 result += std::abs((*tmp)[i][j]);
         }
         */
-        
         *uCur_ = *tmpU;
         return result;
     };

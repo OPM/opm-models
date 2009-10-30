@@ -98,6 +98,18 @@ SET_PROP(BoxScheme, SolutionTypes)
         numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))
     };
 
+    template<int dim>
+    struct VertexLayout {
+        bool contains (Dune::GeometryType gt) const 
+        { return gt.dim() == 0; }
+    };
+
+    template<int dim>
+    struct ElementLayout {
+        bool contains (Dune::GeometryType gt) const 
+        { return gt.dim() == dim; }
+    };
+    
 public:
     //! A solution function. This is a function with the same domain as the grid.
 #ifdef HAVE_DUNE_PDELAB
@@ -111,6 +123,16 @@ public:
      *        freedom to an index in the solution.
      */
     typedef typename SolutionFunction::VM                              DofEntityMapper;
+
+    /*!
+     * \brief Mapper for the grid view's vertices.
+     */
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, VertexLayout> VertexMapper;
+
+    /*!
+     * \brief Mapper for the grid view's elements.
+     */
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, ElementLayout> ElementMapper;
 
     /*!
      * \brief The type of a solution at a fixed time.

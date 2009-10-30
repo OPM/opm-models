@@ -144,11 +144,11 @@ public:
         };
     }
 
-    //! Returns true if the defect of the solution is below the
+    //! Returns true if the error of the solution is below the
     //! tolerance
     bool newtonConverged()
     {
-        return (defect_ <= tolerance_) && (curPhysicalness_ >= 1.0);
+        return (error_ <= tolerance_) && (curPhysicalness_ >= 1.0);
     }
 
     //! called before the newton method is applied to an equation
@@ -174,32 +174,32 @@ public:
 
     
     /*!
-     * \brief Update the defect of the solution compared to the
+     * \brief Update the error of the solution compared to the
      *        previous iteration.
      */
     template <class Function>
-    void newtonUpdateRelDefect(const Function &uOld,
+    void newtonUpdateRelError(const Function &uOld,
                                const Function &deltaU)
     {
-        // calculate the relative defect as the maximum relative
+        // calculate the relative error as the maximum relative
         // deflection in any degree of freedom.
         typedef typename Function::BlockType FV;
-        defect_ = 0;
+        error_ = 0;
         for (int i = 0; i < int((*uOld).size()); ++i) {
             for (int j = 0; j < FV::size; ++j) {
                 Scalar tmp
                     = 
                     std::abs((*deltaU)[i][j])
                     / std::max(std::abs((*uOld)[i][j]), Scalar(1));
-                defect_ = std::max(defect_, tmp);
+                error_ = std::max(error_, tmp);
             }
         };
-        model().gridView().comm().max(defect_);
+        model().gridView().comm().max(error_);
 
     };
 
-    Scalar relDefect() const
-    { return defect_; };
+    Scalar relError() const
+    { return error_; };
 
     //! Solve the linear equation system Ax - b = 0 for the
     //! current iteration.
@@ -228,8 +228,8 @@ public:
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
-            std::cout << boost::format("\rNewton iteration %d done: defect=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
-                %numSteps_%defect_%curPhysicalness_%maxPhysicalness_;
+            std::cout << boost::format("\rNewton iteration %d done: error=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
+                %numSteps_%error_%curPhysicalness_%maxPhysicalness_;
     }
 
     //! Indicates that we're done solving the equation system.
@@ -335,8 +335,8 @@ protected:
         // if the deflection of the newton method is large, we
         // do not need to solve the linear approximation
         // accurately. On the other hand, if this is the first
-        // newton step, we don't have a meaningful value for the defect
-        // yet, so we use the targeted accurracy for the defect.
+        // newton step, we don't have a meaningful value for the error
+        // yet, so we use the targeted accurracy for the error.
         Scalar residTol = tolerance_/1e11;
 
 #if 0//HAVE_PARDISO
@@ -403,8 +403,8 @@ protected:
         // if the deflection of the newton method is large, we
         // do not need to solve the linear approximation
         // accurately. On the other hand, if this is the first
-        // newton step, we don't have a meaningful value for the defect
-        // yet, so we use the targeted accurracy for the defect.
+        // newton step, we don't have a meaningful value for the error
+        // yet, so we use the targeted accurracy for the error.
         Scalar residTol = tolerance_/1e11;
 
         typedef Dune::MatrixAdapter<typename JacobianAssembler::RepresentationType,
@@ -458,7 +458,7 @@ protected:
 
     Scalar maxPhysicalness_;
     Scalar curPhysicalness_;
-    Scalar defect_;
+    Scalar error_;
     int    probationCount_;
 
     // optimal number of iterations we want to achive
