@@ -206,9 +206,8 @@ public:
         for (; isIt != endIt; ++isIt)
         {
             // handle only faces on boundaries.
-            if (!isIt->boundary()) {
+            if (!isIt->boundary())
                 continue;
-            }
 
             // Assemble the boundary for all verts of the
             // current face
@@ -291,8 +290,7 @@ public:
      *        of an equation we would like to have zero.
      */
     void evalLocalResidual(SolutionOnElement &residual,
-                           bool withBoundary = true,
-                           bool writeInFlux = false)
+                           bool withBoundary = true)
     {
         // reset residual
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
