@@ -37,55 +37,57 @@ namespace Dune
  *        two-component model in the BOX scheme.
  */
 template<class TypeTag>
-class OnePTwoCBoxJacobian : public BoxJacobian<TypeTag, OnePTwoCBoxJacobian<TypeTag> >
+class OnePTwoCBoxJacobian: public BoxJacobian<TypeTag, OnePTwoCBoxJacobian<
+        TypeTag> >
 {
 protected:
-    typedef OnePTwoCBoxJacobian<TypeTag>     ThisType;
-    typedef BoxJacobian<TypeTag, ThisType>   ParentType;
+    typedef OnePTwoCBoxJacobian<TypeTag> ThisType;
+    typedef BoxJacobian<TypeTag, ThisType> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))      Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePTwoCIndices))  Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePTwoCIndices)) Indices;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))       Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))     GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
-    enum {
-        dim            = GridView::dimension,
-        dimWorld       = GridView::dimensionworld,
+    enum
+    {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
 
-        numEq          = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
-        numPhases      = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
-        numComponents  = GET_PROP_VALUE(TypeTag, PTAG(NumComponents)),
+        numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
+        numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
+        numComponents = GET_PROP_VALUE(TypeTag, PTAG(NumComponents)),
 
-        konti          = Indices::konti,
-        transport      = Indices::transport,
+        konti = Indices::konti,
+        transport = Indices::transport,
     };
 
-    typedef typename GridView::template Codim<0>::Entity   Element;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef FieldVector<Scalar, dim>       LocalPosition;
-    typedef FieldVector<Scalar, dimWorld>  GlobalPosition;
+    typedef FieldVector<Scalar, dim> LocalPosition;
+    typedef FieldVector<Scalar, dimWorld> GlobalPosition;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
-    typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
+    typedef typename SolutionTypes::PrimaryVarVector PrimaryVarVector;
+    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    typedef typename SolutionTypes::SolutionOnElement SolutionOnElement;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   VertexData;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(ElementData))  ElementData;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))     FluxData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(ElementData)) ElementData;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData)) FluxData;
 
-    typedef std::vector<VertexData>        VertexDataArray;
-    typedef FieldMatrix<Scalar, dim, dim>  Tensor;
+    typedef std::vector<VertexData> VertexDataArray;
+    typedef FieldMatrix<Scalar, dim, dim> Tensor;
 
     static const Scalar upwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha));
 
 public:
     OnePTwoCBoxJacobian(Problem &problem)
-        : ParentType(problem)
+    : ParentType(problem)
     {
     };
 
@@ -100,8 +102,8 @@ public:
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const VertexDataArray &elemDat = usePrevSol ? this->prevElemDat_  : this->curElemDat_;
-        const VertexData  &vertDat = elemDat[scvIdx];
+        const VertexDataArray &elemDat = usePrevSol ? this->prevElemDat_ : this->curElemDat_;
+        const VertexData &vertDat = elemDat[scvIdx];
 
         // storage term of continuity equation
         result[konti] = 0;
@@ -116,11 +118,11 @@ public:
      */
     void computeFlux(PrimaryVarVector &flux, int faceId) const
     {
-		FluxData vars(this->problem_,
-                      this->curElement_(),
-                      this->curElementGeom_,
-                      faceId,
-                      this->curElemDat_);
+        FluxData vars(this->problem_,
+                this->curElement_(),
+                this->curElementGeom_,
+                faceId,
+                this->curElemDat_);
         flux = 0;
 
         // data attached to upstream and the downstream vertices
@@ -132,23 +134,28 @@ public:
 
         // advective flux
         flux[transport] +=
-            vars.vDarcyNormal *
-            (  upwindAlpha*
-               (  up.molarDensity * up.molefraction/up.viscosity )
-               +
-               (1 - upwindAlpha)*
-               (  dn.molarDensity * dn.molefraction/dn.viscosity ) );
+        vars.vDarcyNormal *
+        ( upwindAlpha*
+                ( up.molarDensity * up.molefraction/up.viscosity )
+                +
+                (1 - upwindAlpha)*
+                ( dn.molarDensity * dn.molefraction/dn.viscosity ) );
 
         FieldVector<Scalar,dim> unitNormal(vars.face->normal);
         unitNormal/=vars.face->normal.two_norm();
 
         // diffusive flux
         flux[transport] +=
-            vars.molarDensityAtIP * vars.diffCoeffPM *
-            (vars.concentrationGrad * vars.face->normal);
+        vars.molarDensityAtIP * vars.diffCoeffPM *
+        (vars.concentrationGrad * vars.face->normal);
+
+        //multiply hydrodynamic dispersion tensor with the face normal
+        FieldVector<Scalar,dim> normalDisp;
+        vars.dispersionTensor.mv(vars.face->normal, normalDisp);
+
+        //add dispersive flux
         flux[transport] +=
-            vars.molarDensityAtIP * std::abs((vars.dispersivity *unitNormal) * (vars.vDarcyNormal/vars.viscosityAtIP)) *
-            (vars.concentrationGrad * unitNormal);//face->normal already in vDarcyNormal!
+        vars.molarDensityAtIP * (normalDisp * vars.concentrationGrad);
     }
 
     /*!
@@ -157,9 +164,9 @@ public:
     void computeSource(PrimaryVarVector &q, int localVertexIdx)
     {
         this->problem_.source(q,
-                              this->curElement_(),
-                              this->curElementGeom_,
-                              localVertexIdx);
+                this->curElement_(),
+                this->curElementGeom_,
+                localVertexIdx);
     }
 
     /*!
@@ -178,7 +185,7 @@ public:
         ScalarField *molefraction = writer.template createField<Scalar, 1>(numVertices);
 
         SolutionOnElement tmpSol;
-        VertexDataArray   elemDat;
+        VertexDataArray elemDat;
 
         ElementIterator elementIt = this->gridView_.template begin<0>();
         const ElementIterator &endit = this->gridView_.template end<0>();

@@ -101,7 +101,7 @@ public:
     Scalar density;
     Scalar viscosity;
     Scalar tortuosity;
-    FieldVector<Scalar,dim> dispersivity;
+    FieldVector<Scalar,2> dispersivity;
     Scalar diffCoeff;
     Scalar molefraction;
     Scalar pressure;

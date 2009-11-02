@@ -60,6 +60,7 @@ class OnePTwoCFluxData
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    typedef FieldMatrix<Scalar, dim, dim> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
@@ -94,6 +95,7 @@ public:
         calculateGradients_(problem, element, elemDat);
         calculateVelocities_(problem, element, elemDat);
         calculateDiffCoeffPM_(problem, element, elemDat);
+        calculateDispersionTensor_(problem, element, elemDat);
     };
 
 private:
@@ -178,8 +180,7 @@ private:
         Tensor K;
         Dune::harmonicMeanMatrix(K, Ki, Kj);
 
-        // temporary vector for the Darcy velocity
-        GlobalPosition vDarcy;
+        // vector for the Darcy velocity
         K.mv(pressureGrad, vDarcy);  // vDarcy = K * grad p
         vDarcyNormal = vDarcy*face->normal;
 
@@ -201,9 +202,51 @@ private:
         diffCoeffPM
             = 1./2*(vDat_i.porosity * vDat_i.tortuosity * vDat_i.diffCoeff +
                     vDat_j.porosity * vDat_j.tortuosity * vDat_j.diffCoeff);
-        dispersivity = vDat_i.dispersivity;
-        dispersivity += vDat_j.dispersivity;
-        dispersivity *= 0.5;
+    }
+
+    void calculateDispersionTensor_(const Problem &problem,
+            const Element &element,
+            const VertexDataArray &elemDat)
+    {
+        const VertexData &vDat_i = elemDat[face->i];
+        const VertexData &vDat_j = elemDat[face->j];
+
+        //calculate dispersivity at the interface: [0]: alphaL = longitudinal disp. [m], [1] alphaT = transverse disp. [m]
+        Dune::FieldVector<Scalar, 2> dispersivity(0);
+        dispersivity[0] = 0.5 * (vDat_i.dispersivity[0] +  vDat_j.dispersivity[0]);
+        dispersivity[1] = 0.5 * (vDat_i.dispersivity[1] +  vDat_j.dispersivity[1]);
+
+        //calculate velocity at interface: v = -1/mu * vDarcy = -1/mu * K * grad(p)
+        GlobalPosition velocity(vDarcy);
+        velocity *= -1/viscosityAtIP;
+
+        dispersionTensor = 0;
+
+        //matrix multiplication of the velocity at the interface: vv^T
+        for (int i=0; i<dim; i++)
+        {
+            for (int j = 0; j<dim; j++)
+            {
+                dispersionTensor[i][j]=velocity[i]*velocity[j];
+            }
+        }
+        //normalize velocity product --> vv^T/||v||, [m/s]
+        Scalar vNorm = velocity.two_norm();
+
+        dispersionTensor /= vNorm;
+        if (vNorm == 0)
+        {
+            dispersionTensor = 0;
+        }
+
+        //multiply with dispersivity difference: vv^T/||v||*(alphaL - alphaT), [m^2/s] --> alphaL = longitudinal disp., alphaT = transverse disp.
+        dispersionTensor *= (dispersivity[0] - dispersivity[1]);
+
+        //add ||v||*alphaT to the main diagonal:vv^T/||v||*(alphaL - alphaT) + ||v||*alphaT, [m^2/s]
+        for (int i = 0; i<dim; i++)
+        {
+            dispersionTensor[i][i]+=vNorm*dispersivity[1];
+        }
     }
 
 public:
@@ -229,8 +272,11 @@ public:
     //! the effective diffusion coefficent in the porous medium
     Scalar diffCoeffPM;
 
-    //! the dispersivity coefficent in the porous medium
-    FieldVector<Scalar, dim> dispersivity;
+    //! the dispersion tensor in the porous medium
+    Tensor dispersionTensor;
+
+    //! darcy velocity at the face
+   GlobalPosition vDarcy;
 
     //! darcy velocity in direction of the face normal
     Scalar vDarcyNormal;
