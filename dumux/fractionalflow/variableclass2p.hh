@@ -19,6 +19,7 @@
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
+#include <dune/grid/common/referenceelements.hh>
 
 /**
  * @file
