@@ -52,11 +52,11 @@ namespace Dune {
  * Using the standard multiphase Darcy approach, the mass conservation equations for both phases can
  * be described as follows:
  * \f{eqnarray*}
- && \phi \frac{\partial (\sum_\alpha \varrho_\alpha S_\alpha )}{\partial t}
- - \sum_\alpha \text{div} \left\{ \varrho_\alpha
+ && \phi \frac{\partial (\varrho_\alpha S_\alpha )}{\partial t}
+ - \text{div} \left\{ \varrho_\alpha
  \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
  (\text{grad} p_\alpha - \varrho_{\alpha} \mbox{\bf g}) \right\}
- - \sum_\alpha q_\alpha^\kappa = \quad 0 \qquad \alpha \in \{w, n\}
+ - q_\alpha^\kappa = \quad 0 \qquad \alpha \in \{w, n\}
  * 	\f}
  * For the energy balance, local thermal equilibrium is assumed which results in one
  * energy conservation equation for the porous solid matrix and the fluids:
