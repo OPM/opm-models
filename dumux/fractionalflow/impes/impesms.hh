@@ -21,13 +21,13 @@ class IMPESMS : public IMPES<G, Diffusion, Transport, VC>
 {
     enum{dim = G::dimension, dimworld = G::dimensionworld};
     typedef typename Diffusion::RepresentationType PressType;
-    typedef typename Diffusion::NumberType RT;
+    typedef typename Diffusion::NumberType Scalar;
 
 public:
     typedef typename G::ctype ct;
     typedef typename Transport::RepresentationType RepresentationType;
 
-    virtual void totalVelocity(const RT t=0)
+    virtual void totalVelocity(const Scalar t=0)
     {
         Diffusion::calcTotalVelocity(t);
 
@@ -48,7 +48,7 @@ public:
     }
 
 
-    int update(const RT t, RT& dt, RepresentationType& updateVec, RT cFLFactor = 1)
+    int update(const Scalar t, Scalar& dt, RepresentationType& updateVec, Scalar cFLFactor = 1)
     {
         typedef typename G::template Codim<0>::LevelIterator ElementLevelIterator;
         typedef typename G::template Codim<0>::HierarchicIterator HierarchicIterator;

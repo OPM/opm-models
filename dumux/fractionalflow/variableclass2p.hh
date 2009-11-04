@@ -50,7 +50,7 @@ class VariableClass
 private:
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
+        dim = GridView::dimension, dimWorld = GridView::dimensionworld, maxIntersections = 12
     };
     enum
     {
@@ -69,8 +69,8 @@ public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;//!<type for vector of scalars
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > PhasePropVectorType;//!<type for vector of phase properties
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > FluidPropVectorType;//!<type for vector of fluid properties
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, 2>, 2*dim> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, 2*dim> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
+    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, 2>, maxIntersections> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
+    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, maxIntersections> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 
 private:
     GridView& gridViewDiffusion_;
