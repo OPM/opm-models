@@ -309,15 +309,14 @@ protected:
                 std::cout.flush();
             }
 
-            
-            /*
-            int i = 1;
+/*
+            int i = 38;
             std::cout << (boost::format("*jacobianAsm[%d][%d]: \n")%i%i).str()
                       << (*jacobianAsm)[i][i];
             std::cout << "*u["<<i<<"]: "
                       << (*u)[i] << "\n";
             exit(1);
-            */
+*/
 
             /*
 #if HAVE_DUNE_PDELAB
