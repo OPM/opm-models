@@ -75,6 +75,8 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar,dim> LocalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
+    typedef typename GridView::IntersectionIterator IntersectionIterator;
+
 
 public:
     //! evaluate source term
@@ -96,6 +98,12 @@ public:
      */
     virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
             const LocalPosition& localPos) const = 0;
+    virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
+                const LocalPosition& localPos, const IntersectionIterator& isIt) const
+    {
+        return bctypePress(globalPos, element, localPos);
+    }
+
     //! return type of boundary condition at the given global coordinate
     /*! return type of boundary condition at the given global coordinate
      @param  globalPos    position in global coordinates
@@ -138,6 +146,11 @@ public:
      */
     virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
             const LocalPosition& localPos) const = 0;
+    virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
+                const LocalPosition& localPos, const IntersectionIterator& isIt) const
+    {
+        return neumannPress(globalPos, element, localPos);
+    }
 
     //! evaluate Neumann boundary condition at given position
     /*! evaluate Neumann boundary condition at given position
