@@ -190,7 +190,7 @@ public:
                 Scalar tmp
                     = 
                     std::abs((*deltaU)[i][j])
-                    / std::max(std::abs((*uOld)[i][j]), Scalar(1));
+                    / std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
                 error_ = std::max(error_, tmp);
             }
         };
@@ -210,9 +210,9 @@ public:
     {
         try {
 #if HAVE_MPI
-        solveParallel_(A, u, b);
+            solveParallel_(A, u, b);
 #else
-        solveSequential_(A, *u, b);
+            solveSequential_(A, *u, b);
 #endif
         }
         catch (MatrixBlockError e) {
@@ -226,11 +226,6 @@ public:
     void newtonEndStep(Function &u, Function &uOld)
     {
         ++numSteps_;
-
-/*        Scalar tmp = (*u).two_norm2();
-        tmp = sqrt(model().gridView().comm().sum(tmp));
-        oneByMagnitude_ = 1.0/std::max(tmp, Scalar(1e-5));
-*/
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
@@ -296,28 +291,6 @@ public:
      */
     const Model &model() const
     { return method_->model(); }
-
-    template <class Vector>
-    Scalar weightedNorm2(const Vector& vector, const Vector& sol)
-    {
-    	const unsigned int numEq = vector[0].size;
-
-    	std::vector<Scalar> normsVSquared(numEq, 0);
-    	std::vector<Scalar> normsSolSquared(numEq, 0);
-
-    	for (unsigned int block = 0; block < vector.size(); block++)
-    		for (unsigned int comp = 0; comp < numEq; comp++)
-    		{
-    			normsVSquared[comp] += vector[block][comp]*vector[block][comp];
-    			normsSolSquared[comp] += sol[block][comp]*sol[block][comp];
-    		}
-
-    	Scalar result = 0;
-		for (unsigned int comp = 0; comp < numEq; comp++)
-			result += normsVSquared[comp]/std::max(normsSolSquared[comp], 1e-10);
-
-		return result;
-    }
 
 protected:
     // returns the actual implementation for the cotroller we do
