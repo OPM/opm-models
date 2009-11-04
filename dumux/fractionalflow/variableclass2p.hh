@@ -311,10 +311,12 @@ private:
             for (; face != gridViewDiffusion_.iend(cell); ++face, ++fcount) {
                 FieldVector<Scalar, dim-1> faceref_centroid = ReferenceElements<Scalar, dim - 1>::general(face->geometry().type()).position(0,0);
                 FieldVector<Scalar, dim> v = face->geometry().global(faceref_centroid);
+                FieldVector<Scalar, dim> normal = face->unitOuterNormal(faceref_centroid);
+
                 v -= cell_centroid;
                 FieldVector<Scalar, dim> v2 = v;
-                double flux = velocity_[cell_index][fcount].two_norm()*face->geometry().volume();
-                double flux2 = velocitySecondPhase_[cell_index][fcount].two_norm()*face->geometry().volume();
+                double flux = (velocity_[cell_index][fcount]*normal)*face->geometry().volume();
+                double flux2 = (velocitySecondPhase_[cell_index][fcount]*normal)*face->geometry().volume();
                 v *= flux/cell->geometry().volume();
                 v2 *= flux2/cell->geometry().volume();
                 cv += v;
