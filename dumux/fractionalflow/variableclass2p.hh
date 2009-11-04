@@ -292,6 +292,39 @@ private:
 //        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg "
 //        << "Residually trapped: "<< trappedMass/totalMass*100.0 << "%." << std::endl;
 //    }
+
+
+    void computeCellVelocities(ScalarVectorType& cellv, ScalarVectorType& cellv_ph2) const
+    {
+        const typename GridView::IndexSet& indexset = gridViewDiffusion_.indexSet();
+        cellv.resize(gridSizeDiffusion_);
+        cellv_ph2.resize(gridSizeDiffusion_);
+        typename GridView::template Codim<0>::Iterator cell = gridViewDiffusion_.template begin<0>();
+        for (; cell != gridViewDiffusion_.template end<0>(); ++cell) {
+            int cell_index = indexset.index(*cell);
+            FieldVector<Scalar, dim> cellref_centroid = ReferenceElements<Scalar, dim>::general(cell->geometry().type()).position(0,0);
+            FieldVector<Scalar, dim> cell_centroid = cell->geometry().global(cellref_centroid);
+            FieldVector<Scalar, dim> cv(0.0);
+            FieldVector<Scalar, dim> cv2(0.0);
+            typename GridView::IntersectionIterator face = gridViewDiffusion_.ibegin(cell);
+            int fcount = 0;
+            for (; face != gridViewDiffusion_.iend(cell); ++face, ++fcount) {
+                FieldVector<Scalar, dim-1> faceref_centroid = ReferenceElements<Scalar, dim - 1>::general(face->geometry().type()).position(0,0);
+                FieldVector<Scalar, dim> v = face->geometry().global(faceref_centroid);
+                v -= cell_centroid;
+                FieldVector<Scalar, dim> v2 = v;
+                double flux = velocity_[cell_index][fcount].two_norm()*face->geometry().volume();
+                double flux2 = velocitySecondPhase_[cell_index][fcount].two_norm()*face->geometry().volume();
+                v *= flux/cell->geometry().volume();
+                v2 *= flux2/cell->geometry().volume();
+                cv += v;
+                cv2 += v2;
+            }
+            cellv[cell_index] = cv.two_norm();
+            cellv_ph2[cell_index] = cv2.two_norm();
+        }
+    }
+
     //Write saturation and pressure into file
     void vtkoutMultiLevel(const char* name, int k) const
     {
@@ -333,6 +366,13 @@ private:
                 vtkwriter.addCellData(densityNW, "nonwetting phase density");
                 vtkwriter.addCellData(viscosityW, "wetting phase viscosity");
                 vtkwriter.addCellData(viscosityNW, "nonwetting phase viscosity");
+
+                ScalarVectorType cell_velocity;
+                ScalarVectorType cell_velocity_second_phase;
+                computeCellVelocities(cell_velocity, cell_velocity_second_phase);
+
+                vtkwriter.addCellData(cell_velocity, "velocity magnitude (cell)");
+                vtkwriter.addCellData(cell_velocity_second_phase, "velocity magnitude (cell, second phase)");
 
                 vtkwriter.write(fname, VTKOptions::ascii);
             }
