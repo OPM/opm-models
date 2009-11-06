@@ -64,6 +64,7 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::IndexSet IndexSet;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
+    typedef Dune::ReservoirPropertyCapillary<3> ReservoirProperties;
 
 public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;//!<type for vector of scalars
@@ -79,6 +80,7 @@ private:
     const IndexSet& indexSetTransport_;
     const int gridSizeDiffusion_;
     const int gridSizeTransport_;
+    const ReservoirProperties& resProps_;
 
     bool multiscale_;
     const int codim_;
@@ -100,7 +102,7 @@ private:
 
     ScalarVectorType volumecorrection_;
 
-//    ScalarVectorType elementVolumes_;
+    ScalarVectorType elementVolumes_;
 //    ScalarVectorType Srn_;
 
 public:
@@ -114,12 +116,13 @@ public:
     VariableClass(GridView& gridViewDiff, GridView& gridViewTrans, Scalar& initialSat = *(new Scalar(0)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridViewDiff), gridViewTransport_(gridViewTrans),
     indexSetDiffusion_(gridViewDiff.indexSet()),indexSetTransport_(gridViewTrans.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(true), codim_(0), time_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
+    multiscale_(true), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialVel);
 
-//        analyzeMassInitialize();
+        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -128,15 +131,16 @@ public:
      *  @param initialSat initial value for the saturation (only necessary if only diffusion part is solved)
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
-    VariableClass(GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    VariableClass(GridView& gridView, const ReservoirProperties& resProps, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(false), codim_(0), time_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
+    resProps_(resProps), multiscale_(false), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
 
-//        analyzeMassInitialize();
+        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -266,32 +270,23 @@ private:
         return;
     }
 
-//    void analyzeMassInitialize()
-//    {
-//        elementVolumes_.resize(gridSizeTransport_);
-//        Srn_.resize(gridSizeTransport_);
-//        Srn_=0;
-//        ElementIterator eItEnd = gridViewTransport_.template end<0>();
-//        for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
-//        elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
-//    }
-//    void analyzeMass()
-//    {
-//        Scalar totalMass = 0;
-//        Scalar trappedMass = 0;
-//        for (int i = 0; i < gridSizeTransport_; i++)
-//        {
-//            totalMass += saturation_[i]*elementVolumes_[i]*0.15*density_[i][1];//fixed porosity 0.15
-//            trappedMass += 0.15*elementVolumes_[i]*Srn_[i]*density_[i][1];
-//
-//            //            if (Srn_[i] > (saturation_[i] + 1e-4))
-//            //                DUNE_THROW(MathError, "Srn = " << Srn_[i] << " is greater than Sn = " << (saturation_[i]));
-//        }
-//        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
-//        std::cout.precision(3);
-//        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg "
-//        << "Residually trapped: "<< trappedMass/totalMass*100.0 << "%." << std::endl;
-//    }
+    void analyzeMassInitialize()
+    {
+        elementVolumes_.resize(gridSizeTransport_);
+        ElementIterator eItEnd = gridViewTransport_.template end<0>();
+        for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
+            elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
+    }
+    
+    void analyzeMass() const
+    {
+        Scalar totalMass = 0;
+        for (int i = 0; i < gridSizeTransport_; i++)
+            totalMass += saturation_[i]*elementVolumes_[i]*resProps_.porosity(i)*density_[i][1];
+        std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+        std::cout.precision(3);
+        std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg." << std::endl;
+    }
 
 
     void computeCellVelocities(ScalarVectorType& cellv, ScalarVectorType& cellv_ph2) const
@@ -315,8 +310,8 @@ private:
 
                 v -= cell_centroid;
                 FieldVector<Scalar, dim> v2 = v;
-                double flux = (velocity_[cell_index][fcount]*normal)*face->geometry().volume();
-                double flux2 = (velocitySecondPhase_[cell_index][fcount]*normal)*face->geometry().volume();
+                double flux = -(velocity_[cell_index][fcount]*normal)*face->geometry().volume();
+                double flux2 = -(velocitySecondPhase_[cell_index][fcount]*normal)*face->geometry().volume();
                 v *= flux/cell->geometry().volume();
                 v2 *= flux2/cell->geometry().volume();
                 cv += v;
@@ -356,6 +351,8 @@ private:
                 ScalarVectorType densityNW(gridSizeDiffusion_);
                 ScalarVectorType viscosityW(gridSizeDiffusion_);
                 ScalarVectorType viscosityNW(gridSizeDiffusion_);
+                ScalarVectorType porosity(gridSizeDiffusion_);
+                ScalarVectorType permeability(gridSizeDiffusion_);
 
                 for (int i=0;i< gridSizeDiffusion_;i++)
                 {
@@ -363,11 +360,15 @@ private:
                     densityNW[i] = density_[i][nonWetting];
                     viscosityW[i] = viscosity_[i][wetting];
                     viscosityNW[i] = viscosity_[i][nonWetting];
+                    porosity[i] = resProps_.porosity(i);
+                    permeability[i] = (resProps_.permeability(i))(0,0);
                 }
                 vtkwriter.addCellData(densityW, "wetting phase density");
                 vtkwriter.addCellData(densityNW, "nonwetting phase density");
                 vtkwriter.addCellData(viscosityW, "wetting phase viscosity");
                 vtkwriter.addCellData(viscosityNW, "nonwetting phase viscosity");
+                vtkwriter.addCellData(porosity, "porosity");
+                vtkwriter.addCellData(permeability, "permeability");
 
                 ScalarVectorType cell_velocity;
                 ScalarVectorType cell_velocity_second_phase;
@@ -604,7 +605,7 @@ public:
      */
     void vtkout(const char* name, int k) const
     {
-//        analyzeMass();
+        analyzeMass();
         vtkoutMultiLevel(name, k);
     }
 };

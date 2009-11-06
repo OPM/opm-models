@@ -95,6 +95,8 @@ public:
      */
     virtual void postProcessUpdate(Scalar t, Scalar dt)
     {
+        updateTime(dt);
+        
         return;
     }
 
@@ -105,6 +107,11 @@ public:
      */
     virtual void vtkout (const char* name, int k) const = 0;
 
+    void updateTime (double dt)
+    {
+        transport.problem().variables().updateTime(dt);
+    }
+    
     //! Constructs a FractionalFlow object
     /**
      * \param diff an object of type Diffusion

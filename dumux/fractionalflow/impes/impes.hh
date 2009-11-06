@@ -111,14 +111,19 @@ public:
         int iter = 0;
         int iterTot = 0;
         updateOldIter = 0;
+        int nextPressureTime = pressureDt_;
         while (!converg)
         {
             iter++;
             iterTot++;
 
             // update pressure: give false as the pressure field is already initialised
-            this->diffusion.pressure(false , t);
-
+            if (t >= nextPressureTime)
+            {
+                this->diffusion.pressure(false, t);
+                nextPressureTime = t + pressureDt_;
+            }
+            
             //calculate velocities
             this->diffusion.calculateVelocity(t);
 
@@ -206,9 +211,9 @@ public:
      * \param om under relaxation factor (om <= 1)
      */
     IMPES(Diffusion& diffusion, Transport& transport, int flag = 0, int nIt = 2,
-            Scalar maxDef = 1e-5, Scalar om = 1) :
+            Scalar maxDef = 1e-5, Scalar om = 1, Scalar pressureDt = 0) :
     FractionalFlow(diffusion, transport),
-    iterFlag(flag), nIter(nIt), maxDefect(maxDef), omega(om)
+    iterFlag(flag), nIter(nIt), maxDefect(maxDef), omega(om), pressureDt_(pressureDt)
     {
     }
 
@@ -217,6 +222,7 @@ protected:
     const int nIter;//!<maximum number of iterations
     const Scalar maxDefect;//!maximum defect for convergence criterion
     const Scalar omega;//!under relaxation factor
+    Scalar pressureDt_;
 };
 }
 #endif
