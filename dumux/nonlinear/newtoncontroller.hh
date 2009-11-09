@@ -172,7 +172,7 @@ public:
     int newtonNumSteps()
     { return numSteps_; }
 
-    
+
     /*!
      * \brief Update the error of the solution compared to the
      *        previous iteration.
@@ -188,7 +188,7 @@ public:
         for (int i = 0; i < int((*uOld).size()); ++i) {
             for (int j = 0; j < FV::size; ++j) {
                 Scalar tmp
-                    = 
+                    =
                     std::abs((*deltaU)[i][j])
                     / std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
                 error_ = std::max(error_, tmp);
@@ -385,7 +385,7 @@ protected:
         // accurately. On the other hand, if this is the first
         // newton step, we don't have a meaningful value for the error
         // yet, so we use the targeted accurracy for the error.
-        Scalar residTol = tolerance_/1e3;
+        Scalar residTol = tolerance_/1e8;
 
         typedef Dune::MatrixAdapter<typename JacobianAssembler::RepresentationType,
             typename Function::RepresentationType,
