@@ -16,10 +16,15 @@
 #ifndef DUNE_VARIABLECLASS2P_NEW_HH
 #define DUNE_VARIABLECLASS2P_NEW_HH
 
+//#define HACK_SINTEF_RESPROP
+
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/common/referenceelements.hh>
+#ifdef HACK_SINTEF_RESPROP
+#include <dune/solvers/common/ReservoirPropertyCapillary.hpp>
+#endif
 
 /**
  * @file
@@ -64,7 +69,9 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::IndexSet IndexSet;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
+#ifdef HACK_SINTEF_RESPROP
     typedef Dune::ReservoirPropertyCapillary<3> ReservoirProperties;
+#endif
 
 public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;//!<type for vector of scalars
@@ -80,7 +87,9 @@ private:
     const IndexSet& indexSetTransport_;
     const int gridSizeDiffusion_;
     const int gridSizeTransport_;
+#ifdef HACK_SINTEF_RESPROP
     const ReservoirProperties& resProps_;
+#endif
 
     bool multiscale_;
     const int codim_;
@@ -131,6 +140,7 @@ public:
      *  @param initialSat initial value for the saturation (only necessary if only diffusion part is solved)
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
+#ifdef HACK_SINTEF_RESPROP
     VariableClass(GridView& gridView, const ReservoirProperties& resProps, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
@@ -142,6 +152,19 @@ public:
 
         analyzeMassInitialize();
     }
+#else
+    VariableClass(GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
+    indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
+    multiscale_(false), codim_(0), time_(0)
+    {
+        initializeGlobalVariablesDiffPart(initialVel);
+        initializeGlobalVariablesTransPart(initialSat);
+
+        analyzeMassInitialize();
+    }
+#endif
 
     //! Constructs a VariableClass object
     /**
@@ -280,12 +303,14 @@ private:
     
     void analyzeMass() const
     {
+#ifdef HACK_SINTEF_RESPROP
         Scalar totalMass = 0;
         for (int i = 0; i < gridSizeTransport_; i++)
             totalMass += saturation_[i]*elementVolumes_[i]*resProps_.porosity(i)*density_[i][1];
         std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
         std::cout.precision(3);
         std::cout << time_ << ": Mass non-wetting Phase: " << totalMass << " kg." << std::endl;
+#endif
     }
 
 
@@ -301,9 +326,9 @@ private:
             FieldVector<Scalar, dim> cell_centroid = cell->geometry().global(cellref_centroid);
             FieldVector<Scalar, dim> cv(0.0);
             FieldVector<Scalar, dim> cv2(0.0);
-            typename GridView::IntersectionIterator face = gridViewDiffusion_.ibegin(cell);
+            typename GridView::IntersectionIterator face = gridViewDiffusion_.ibegin(*cell);
             int fcount = 0;
-            for (; face != gridViewDiffusion_.iend(cell); ++face, ++fcount) {
+            for (; face != gridViewDiffusion_.iend(*cell); ++face, ++fcount) {
                 FieldVector<Scalar, dim-1> faceref_centroid = ReferenceElements<Scalar, dim - 1>::general(face->geometry().type()).position(0,0);
                 FieldVector<Scalar, dim> v = face->geometry().global(faceref_centroid);
                 FieldVector<Scalar, dim> normal = face->unitOuterNormal(faceref_centroid);
@@ -360,15 +385,19 @@ private:
                     densityNW[i] = density_[i][nonWetting];
                     viscosityW[i] = viscosity_[i][wetting];
                     viscosityNW[i] = viscosity_[i][nonWetting];
+#ifdef HACK_SINTEF_RESPROP
                     porosity[i] = resProps_.porosity(i);
                     permeability[i] = (resProps_.permeability(i))(0,0);
+#endif
                 }
                 vtkwriter.addCellData(densityW, "wetting phase density");
                 vtkwriter.addCellData(densityNW, "nonwetting phase density");
                 vtkwriter.addCellData(viscosityW, "wetting phase viscosity");
                 vtkwriter.addCellData(viscosityNW, "nonwetting phase viscosity");
+#ifdef HACK_SINTEF_RESPROP
                 vtkwriter.addCellData(porosity, "porosity");
                 vtkwriter.addCellData(permeability, "permeability");
+#endif
 
                 ScalarVectorType cell_velocity;
                 ScalarVectorType cell_velocity_second_phase;
