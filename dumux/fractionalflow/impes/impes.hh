@@ -111,17 +111,16 @@ public:
         int iter = 0;
         int iterTot = 0;
         updateOldIter = 0;
-        int nextPressureTime = pressureDt_;
         while (!converg)
         {
             iter++;
             iterTot++;
 
             // update pressure: give false as the pressure field is already initialised
-            if (t >= nextPressureTime)
+            if (t >= nextPressureTime_)
             {
                 this->diffusion.pressure(false, t);
-                nextPressureTime = t + pressureDt_;
+                nextPressureTime_ += pressureDt_;
             }
             
             //calculate velocities
@@ -215,6 +214,7 @@ public:
     FractionalFlow(diffusion, transport),
     iterFlag(flag), nIter(nIt), maxDefect(maxDef), omega(om), pressureDt_(pressureDt)
     {
+        nextPressureTime_ = pressureDt_;
     }
 
 protected:
@@ -223,6 +223,7 @@ protected:
     const Scalar maxDefect;//!maximum defect for convergence criterion
     const Scalar omega;//!under relaxation factor
     Scalar pressureDt_;
+    Scalar nextPressureTime_;
 };
 }
 #endif
