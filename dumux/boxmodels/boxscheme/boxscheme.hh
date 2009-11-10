@@ -131,7 +131,7 @@ public:
         wasRestarted_ = false;
 
 #ifdef HAVE_DUNE_PDELAB
-        jacAsm_ = new JacobianAssembler(problem_);
+        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
         uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
         uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
         f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);

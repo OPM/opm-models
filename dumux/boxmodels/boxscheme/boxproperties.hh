@@ -29,6 +29,7 @@
 
 #include <dumux/boxmodels/pdelab/assemblerpdelab.hh>
 #include <dumux/boxmodels/pdelab/functionpdelab.hh>
+#include <dumux/boxmodels/pdelab/boxdirichletconstraints.hh>
 
 /*!
  * \file
@@ -196,7 +197,8 @@ SET_PROP(BoxScheme, PDELabTypes)
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
     enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
 public:
-    typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
+    //typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
+    typedef typename Dune::BoxDirichletConstraints<TypeTag> Constraints;
     typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, Constraints,
 							Dune::PDELab::ISTLVectorBackend<numEq> > ScalarGridFunctionSpace;
     typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace, numEq,

@@ -67,8 +67,6 @@ public:
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
           timeManager_(gridView.comm().rank() == 0),
-          model_(*asImp_()),
-          newtonMethod_(model_),
           resultWriter_(asImp_()->name())
     {
         wasRestarted_ = false;
@@ -82,7 +80,15 @@ public:
                 bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
             }
         }
+        model_ = new Model(*asImp_());
+        newtonMethod_ = new NewtonMethod(*model_);
     }
+
+    ~BoxProblem()
+    {
+        delete model_;
+        delete newtonMethod_;
+    };
 
     /*!
      * \name Simulation steering
@@ -113,7 +119,7 @@ public:
     void init()
     {
         // set the initial condition of the model
-        model_.initial();
+        model().initial();
 
         // write the inital solution to disk
         writeCurrentResult_();
@@ -134,9 +140,9 @@ public:
     {
         Scalar cur = stepSize;
         Scalar next = nextStepSize;
-        model_.update(cur,
+        model().update(cur,
                       next,
-                      newtonMethod_,
+                      *newtonMethod_,
                       newtonCtl_);
         nextStepSize = next;
         stepSize = cur;
@@ -256,13 +262,13 @@ public:
      * \brief Returns numerical model used for the problem.
      */
     Model &model()
-    { return model_; }
+    { return *model_; }
 
     /*!
      * \copydoc model()
      */
     const Model &model() const
-    { return model_; }
+    { return *model_; }
     // \}
 
     /*!
@@ -298,7 +304,7 @@ public:
 
         timeManager_.serialize(res);
         resultWriter_.serialize(res);
-        model_.serialize(res);
+        model().serialize(res);
 
         res.serializeEnd();
     }
@@ -321,7 +327,7 @@ public:
 
         timeManager_.deserialize(res);
         resultWriter_.deserialize(res);
-        model_.deserialize(res);
+        model().deserialize(res);
 
         res.deserializeEnd();
 
@@ -349,7 +355,7 @@ protected:
 
             resultWriter_.beginTimestep(timeManager_.time(),
                                         gridView());
-            model_.addOutputVtkFields(resultWriter_);
+            model().addOutputVtkFields(resultWriter_);
             resultWriter_.endTimestep();
         }
 
@@ -369,9 +375,9 @@ private:
 
     TimeManager     timeManager_;
 
-    Model            model_;
+    Model           *model_;
 
-    NewtonMethod     newtonMethod_;
+    NewtonMethod    *newtonMethod_;
     NewtonController newtonCtl_;
 
     VtkMultiWriter  resultWriter_;

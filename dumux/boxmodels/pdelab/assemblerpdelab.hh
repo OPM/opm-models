@@ -18,6 +18,7 @@ template<class TypeTag>
 class AssemblerPDELab
 {
 public:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))    Model;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
     enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))   GridView;
@@ -39,7 +40,7 @@ public:
     typedef typename GridOperatorSpace::template MatrixContainer<Scalar>::Type Matrix;
     typedef Matrix RepresentationType;
 
-    AssemblerPDELab(Problem& problem)
+    AssemblerPDELab(Model &model, Problem& problem)
     : problem_(problem)
     {
     	fem_ = 0;
@@ -53,7 +54,8 @@ public:
     	matrix_ = 0;
 
     	fem_ = new FEM();
-    	cn_ = new Constraints(intghost_);
+    	//cn_ = new Constraints(intghost_);
+        cn_ = new Constraints(problem_);
     	scalarGridFunctionSpace_ = new ScalarGridFunctionSpace(problem_.gridView(), *fem_, *cn_);
     	gridFunctionSpace_ = new GridFunctionSpace(*scalarGridFunctionSpace_);
 
@@ -67,7 +69,7 @@ public:
     	constraintsTrafo_ = new ConstraintsTrafo();
     	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_);
 
-    	localOperator_ = new LocalOperator(problem_);
+    	localOperator_ = new LocalOperator(model);
     	gridOperatorSpace_ = new GridOperatorSpace(*gridFunctionSpace_, *constraintsTrafo_,
 												   *gridFunctionSpace_, *constraintsTrafo_, *localOperator_);
 

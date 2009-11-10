@@ -26,14 +26,14 @@ public:
 	// residual assembly flags
 	enum { doAlphaVolume = true };
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))             Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))    Model;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
 
-    BoxJacobianPDELab (Problem& problem)
-	: model_(problem.model())
+    BoxJacobianPDELab (Model &model)
+        : model_(model)
 	{}
 
 	// volume integral depending on test and ansatz functions
