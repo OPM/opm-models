@@ -229,8 +229,8 @@ public:
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
-            std::cout << boost::format("\rNewton iteration %d done: error=%g, physicalness: %.3f, maxPhysicalness=%.3f\n")
-                %numSteps_%error_%curPhysicalness_%maxPhysicalness_;
+            std::cout << boost::format("\rNewton iteration %d done: error=%g\n")
+                %numSteps_%error_;
     }
 
     //! Indicates that we're done solving the equation system.
