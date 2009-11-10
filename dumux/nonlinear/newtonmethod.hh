@@ -36,122 +36,11 @@
 namespace Dune
 {
 /*!
- * \internal
- * \brief This internal class updates the current iteration u_k of
- *        the solution of the newton method to u_{k+1}. It is not
- *        in the actual execute method because we need
- *        specialization in order not to call interfaces which
- *        might not be present in the model if we do not use the
- *        line search newton method.
- *
- * This is the version without line search.
- */
-template <class NewtonMethod, bool lineSearch=false>
-class _NewtonUpdateMethod
-{
-    typedef typename NewtonMethod::Model Model;
-    typedef typename Model::NewtonTraits::Function   Function;
-    typedef typename Model::NewtonTraits::Scalar     Scalar;
-
-public:
-    _NewtonUpdateMethod(NewtonMethod &newton,
-                        Function &uInitial,
-                        Model &model)
-    {};
-
-    static const Scalar globalResidual_ = 1e100;
-
-    template <class NewtonController>
-    bool update(NewtonController &ctl,
-                NewtonMethod &newton,
-                Function &u,
-                Function &uOld,
-                Model &model)
-    {
-        *u *= -1.0;
-        *u += *uOld;
-
-        // invalidate the current residual vector
-        newton.setResidualObsolete();
-        return true;
-    }
-};
-
-/*!
- * \internal
- * \brief This internal class updates the current iteration u_k of
- *        the solution of the newton method to u_{k+1}. It is not
- *        in the actual execute method because we need
- *        specialization in order not to call interfaces which
- *        might not be present in the model if we do not use the
- *        line search newton method.
- *
- * This is the version with line search. Models using this require
- * an evalGlobalDefect() method.
- */
-template <class NewtonMethod>
-class _NewtonUpdateMethod<NewtonMethod, true>
-{
-public:
-    typedef typename NewtonMethod::Model             Model;
-    typedef typename Model::NewtonTraits::Function   Function;
-    typedef typename Model::NewtonTraits::Scalar     Scalar;
-
-    _NewtonUpdateMethod(NewtonMethod &newton,
-                        Function &uInitial,
-                        Model &model)
-    {
-        relDefMin_ = std::numeric_limits<Scalar>::max();
-        globalResidual_ = 1e100;
-    };
-
-    Scalar globalResidual_;
-
-    template <class NewtonController>
-    bool update(NewtonController &ctl,
-                NewtonMethod &newton,
-                Function &u,
-                Function &uOld,
-                Model &model)
-    {
-        Scalar lambda = 1.0;      
-        Scalar globDef;
-        Function tmp(model.gridView(), model.gridView());
-        Scalar oldGlobDef = model.globalResidual(uOld, tmp);
-        
-        while (true) {
-            *u *= -lambda;
-            *u += *uOld;
-            globDef = model.globalResidual(u, tmp);
-            if (lambda < 1 || globDef < oldGlobDef/1.05) {
-                if (globDef < oldGlobDef || lambda <= 1.0/4) {
-                    globalResidual_ = globDef;
-                    std::cout << "Newton: Global defect " << globalResidual_ << " @lambda=" << lambda << "\n";
-                    return true;
-                }
-            }
-            
-            // undo the last iteration
-            *u -= *uOld;
-            *u /= - lambda;
-            
-            // divide lambda by 2
-            lambda /= 2;
-        }
-        return true;
-    }
-
-private:
-    Scalar relDefMin_;
-};
-
-
-/*!
  * \brief The algorithmic part of the multi dimensional newton method.
  *
  * In order to use the method you need a NewtonController.
  */
-template<class ModelT, bool useLineSearch=false>
+template <class ModelT>
 class NewtonMethod
 {
 public:
@@ -162,21 +51,18 @@ public:
     typedef typename Model::NewtonTraits::LocalJacobian     LocalJacobian;
     typedef typename Model::NewtonTraits::JacobianAssembler JacobianAssembler;
     typedef typename Model::NewtonTraits::Scalar            Scalar;
-    typedef NewtonMethod<Model, useLineSearch>           ThisType;
+    typedef NewtonMethod<Model>                             ThisType;
 
 public:
     NewtonMethod(Model &model)
     {
-        residual_ = NULL;
         model_ = NULL;
         uOld = NULL;
         f = NULL;
     }
 
     ~NewtonMethod()
-    {
-        delete residual_;
-    }
+    { }
 
     /*!
      * \brief Returns a reference to the current numeric model.
@@ -216,43 +102,6 @@ public:
         };
     }
 
-#if 0
-    /*!
-     * \brief Returns the current Jacobian matrix.
-     */
-    const JacobianMatrix &currentJacobian() const
-    { return *(model_->jacobianAssembler()); }
-#endif
-
-
-    /*!
-     * \brief This method causes the residual to be recalcuated
-     *        next time the residual() method is called. It is
-     *        internal and only used by some update methods such
-     *        as LineSearch.
-     */
-    void setResidualObsolete(bool yesno=true)
-    { residualUpToDate_ = !yesno; };
-
-    /*!
-     * \brief Returns the current residual, i.e. the deivation of
-     *        the non-linear function from 0 for the current
-     *        iteration.
-     */
-    Function &residual()
-    {
-        if (!residualUpToDate_) {
-            if (!residual_)
-                residual_ = new Function(model_->grid(),
-                                         model().grid().overlapSize(0) == 0);
-            // update the residual
-            model_->evalGlobalResidual(*residual_);
-            residualUpToDate_ = true;
-        }
-
-        return *residual_;
-    }
-
 protected:
     template <class NewtonController>
     bool execute_(Model &model, NewtonController &ctl)
@@ -273,20 +122,13 @@ protected:
         Function          &u             = model.curSolFunction();
         LocalJacobian     &localJacobian = model.localJacobian();
         JacobianAssembler &jacobianAsm   = model.jacobianAssembler();
-
-        // method to of how updated are done. (either
-        // LineSearch or the plain newton-raphson method)
-        Dune::_NewtonUpdateMethod<ThisType, useLineSearch> updateMethod(*this, u, model);;
-
-        residualUpToDate_ = false;
-
+        
         // tell the controller that we begin solving
         ctl.newtonBegin(this, u);
         
         // execute the method as long as the controller thinks
         // that we should do another iteration
-        while (ctl.newtonProceed(u) && 
-               (updateMethod.globalResidual_ > 1e-8 || ctl.relError() > 1e-5))
+        while (ctl.newtonProceed(u))
         {
             // notify the controller that we're about to start
             // a new timestep
@@ -318,33 +160,36 @@ protected:
             exit(1);
 */
 
-            /*
+/*
 #if HAVE_DUNE_PDELAB
             printmatrix(std::cout, (*jacobianAsm).base(), "J PDELab", "row");
 #else
             printmatrix(std::cout, *jacobianAsm, "J", "row");
 #endif
             std::cout << "rhs:" << *(*f) << "\n";
-            */
+            exit(1);
+*/
 
+            // ask the controller to solve the linearized system
             ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
-            ctl.newtonUpdateRelError(*uOld, u);
-            
-            // update the current solution. We use either
-            // a line search approach or the plain method.
-            updateMethod.update(ctl, *this, u, *uOld, model);
 
+            // update the current solution (i.e. uOld) with the delta
+            // (i.e. u). The result is stored in u
+            ctl.newtonUpdate(u, *uOld);
+
+            // tell the controller that we're done with this iteration
             ctl.newtonEndStep(u, *uOld);
         }
         // tell the controller that we're done
         ctl.newtonEnd();
-
-        if (!ctl.newtonConverged() && updateMethod.globalResidual_ > 1e-5) {
+        
+        if (!ctl.newtonConverged()) {
             ctl.newtonFail();
             model_ = NULL;
             return false;
         }
-
+        
+        ctl.newtonSucceed();
         model_ = NULL;
         return true;
     }
@@ -354,8 +199,6 @@ private:
     Function       *uOld;
     Function       *f;
 
-    bool          residualUpToDate_;
-    Function     *residual_;
     Model        *model_;
     bool          verbose_;
 };

@@ -91,7 +91,9 @@ public:
         maxPhysicalness_ = 0;
     };
 
-    //! Returns true if another iteration should be done.
+    /*!
+     * \brief Returns true iff another iteration should be done.
+     */
     bool newtonProceed(Function &u)
     {
         if (numSteps_ < 2)
@@ -144,15 +146,19 @@ public:
         };
     }
 
-    //! Returns true if the error of the solution is below the
-    //! tolerance
+    /*!
+     * \brief Returns true iff the error of the solution is below the
+     *        tolerance.
+     */
     bool newtonConverged()
     {
         return (error_ <= tolerance_) && (curPhysicalness_ >= 1.0);
     }
 
-    //! called before the newton method is applied to an equation
-    //! system.
+    /*!
+     * \brief Called before the newton method is applied to an
+     *        non-linear system of equations.
+     */
     void newtonBegin(NewtonMethod *method, Function &u)
     {
         method_ = method;
@@ -162,13 +168,17 @@ public:
         curPhysicalness_ = 0;
     }
 
-    //! indidicates the beginning of a newton iteration
+    /*!
+     * \brief Indidicates the beginning of a newton iteration.
+     */
     void newtonBeginStep()
     {
     }
 
-    //! Returns the number of steps done since newtonBegin() was
-    //! called
+    /*!
+     * \brief Returns the number of steps done since newtonBegin() was
+     *        called.
+     */
     int newtonNumSteps()
     { return numSteps_; }
 
@@ -197,12 +207,13 @@ public:
         model().gridView().comm().max(error_);
     }
 
-    Scalar relError() const
-    { return error_; };
-
-    //! Solve the linear equation system Ax - b = 0 for the
-    //! current iteration.
-    //! Returns true iff the equation system could be solved.
+    /*!
+     * \brief Solve the linear system of equations \f$ \mathbf{A}x - b
+     *        = 0\f$.
+     *
+     * Throws Dune::NumericalProblem if the linear solver didn't
+     * converge.
+     */
     template <class Matrix, class Function, class Vector>
     void newtonSolveLinear(Matrix &A,
                            Function &u,
@@ -222,7 +233,33 @@ public:
         }
     }
 
-    //! Indicates that we're done solving one newton step.
+    /*!
+     * \brief Update the current solution function with a delta vector.
+     *
+     * The error estimates required for the newtonConverged() and
+     * newtonProceed() methods should be updated here.
+     *
+     * Different update strategies, such as line search and chopped
+     * updates can be implemented. The default behaviour is just to
+     * subtract deltaU from uOld.
+     *
+     * \param deltaU The delta as calculated from solving the linear
+     *               system of equations. This parameter also stores
+     *               the updated solution.
+     * \param uOld   The solution of the last iteration
+     */
+    template <class Function>
+    void newtonUpdate(Function &deltaU, const Function &uOld)
+    {
+        newtonUpdateRelError(uOld, deltaU);
+        
+        *deltaU *= -1;
+        *deltaU += *uOld;
+    }
+
+    /*!
+     * \brief Indicates that one newton iteration was finished.
+     */
     void newtonEndStep(Function &u, Function &uOld)
     {
         ++numSteps_;
@@ -233,19 +270,37 @@ public:
                 %numSteps_%error_;
     }
 
-    //! Indicates that we're done solving the equation system.
+    /*!
+     * \brief Indicates that we're done solving the non-linear system of equations.
+     */
     void newtonEnd()
     {}
 
-    //! Called when the newton method broke down.
+    /*!
+     * \brief Called if the newton method broke down.
+     *
+     * This method is called _after_ newtonEnd() 
+     */
     void newtonFail()
     {
         numSteps_ = targetSteps_*2;
     }
 
-    //! Suggest a new time stepsize based on the number of newton
-    //! iterations required for the last time step and the old time
-    //! step size.
+    /*!
+     * \brief Called when the newton method was sucessful.
+     *
+     * This method is called _after_ newtonEnd() 
+     */
+    void newtonSucceed()
+    { }
+
+    /*!
+     * \brief Suggest a new time stepsize based on the old time step size.
+     *
+     * The default behaviour is to suggest the old time step size
+     * scaled by the ratio between the target iterations and the
+     * iterations required to actually solve the last time step.
+     */
     Scalar suggestTimeStepSize(Scalar oldTimeStep) const
     {
         // be agressive reducing the timestep size but
