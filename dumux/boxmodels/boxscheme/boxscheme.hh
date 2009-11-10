@@ -130,9 +130,17 @@ public:
     {
         wasRestarted_ = false;
 
-        f_ = 0;
-        uCur_ = 0;
-        uPrev_ = 0;
+#ifdef HAVE_DUNE_PDELAB
+        jacAsm_ = new JacobianAssembler(problem_);
+        uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+        uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+        f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+#else
+        jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
+        uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+        uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+        f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+#endif
 
         // check grid partitioning if we are parallel
         assert((prob.gridView().comm().size() == 1) ||
@@ -140,23 +148,20 @@ public:
                (prob.gridView().ghostSize(0) > 0));
     }
 
+    ~BoxScheme()
+    { 
+        delete jacAsm_;
+        delete uCur_;
+        delete uPrev_;
+        delete f_;
+    }
+
+
     /*!
      * \brief Apply the initial conditions to the model.
      */
     void initial()
     {
-#ifdef HAVE_DUNE_PDELAB
-          jacAsm_ = new JacobianAssembler(problem_);
-          uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-          uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-          f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-#else
-          jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
-          uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-          uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-          f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-#endif
-
     	if (!wasRestarted_) {
             this->localJacobian().initStaticData();
             applyInitialSolution_(*uCur_);
@@ -170,14 +175,6 @@ public:
 
         // update the static vertex data with the initial solution
         this->localJacobian().updateStaticData(*uCur_, *uPrev_);
-    }
-
-    ~BoxScheme()
-    {
-    	delete jacAsm_;
-    	delete uCur_;
-    	delete uPrev_;
-    	delete f_;
     }
 
     Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 
