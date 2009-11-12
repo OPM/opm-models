@@ -21,8 +21,6 @@
 #ifndef DUMUX_RICHARDS_PROPERTIES_DATA_HH
 #define DUMUX_RICHARDS_PROPERTIES_DATA_HH
 
-#include <dumux/boxmodels/tags.hh>
-
 namespace Dune
 {
 /*!
@@ -57,9 +55,33 @@ struct RichardsIndices
 };
 
 ///////////////////////////////////////////////////////////////////////////
-// properties for the isothermal single phase model
+// properties for the isothermal richards model
 ///////////////////////////////////////////////////////////////////////////
 namespace Properties {
+
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The type tag for problems discretized using the isothermal
+//! richards model
+NEW_TYPE_TAG(BoxRichards, INHERITS_FROM(BoxScheme));
+
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+
+NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(RichardsIndices); //!< Enumerations for the richards models
+NEW_PROP_TAG(Soil); //!< The type of the soil properties object
+NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
+NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
+
+//////////////////////////////////////////////////////////////////
+// Properties
+//////////////////////////////////////////////////////////////////
 SET_INT_PROP(BoxRichards, NumEq, 1);
 SET_INT_PROP(BoxRichards, NumPhases, 2);
 
@@ -80,14 +102,10 @@ SET_TYPE_PROP(BoxRichards, ElementData, RichardsElementData<TypeTag>);
 //! the FluxData property
 SET_TYPE_PROP(BoxRichards, FluxData, RichardsFluxData<TypeTag>);
 
-//! the default upwind factor. Default 1.0, i.e. fully upwind...
-SET_SCALAR_PROP(BoxRichards, UpwindAlpha, 1.0);
-
-//! the upwind factor for the mobility. uses the value of UpwindAlpha
-//! if the property is not overwritten elsewhere
+//! the weight of the upwind vertex for the mobility
 SET_SCALAR_PROP(BoxRichards,
                 MobilityUpwindAlpha,
-                GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
+                1.0);
 
 //! The indices required by the isothermal single-phase model
 SET_TYPE_PROP(BoxRichards, RichardsIndices, Dune::RichardsIndices);

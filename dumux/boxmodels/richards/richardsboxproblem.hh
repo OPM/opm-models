@@ -20,7 +20,6 @@
 #ifndef DUMUX_RICHARDS_BOX_PROBLEM_HH
 #define DUMUX_RICHARDS_BOX_PROBLEM_HH
 
-#include <dumux/boxmodels/tags.hh>
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
 #include <dumux/material/twophaserelations.hh>
 

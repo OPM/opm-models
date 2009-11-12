@@ -22,7 +22,7 @@
 #ifndef DUMUX_1P_PROPERTIES_DATA_HH
 #define DUMUX_1P_PROPERTIES_DATA_HH
 
-#include <dumux/boxmodels/tags.hh>
+#include <dumux/boxmodels/boxscheme/boxproperties.hh>
 
 namespace Dune
 {
@@ -60,6 +60,28 @@ struct OnePIndices
 // properties for the isothermal single phase model
 ///////////////////////////////////////////////////////////////////////////
 namespace Properties {
+
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The type tag for the isothermal single phase problems
+NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxScheme));
+
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+
+NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 1p models
+NEW_PROP_TAG(Soil); //!< The type of the soil properties object
+NEW_PROP_TAG(Fluid); //!< The fluid for the single-phase problems
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+
+//////////////////////////////////////////////////////////////////
+// Properties
+//////////////////////////////////////////////////////////////////
+
 SET_INT_PROP(BoxOneP, NumEq, 1);
 SET_INT_PROP(BoxOneP, NumPhases, 1);
 
@@ -80,18 +102,8 @@ SET_TYPE_PROP(BoxOneP, ElementData, OnePElementData<TypeTag>);
 //! the FluxData property
 SET_TYPE_PROP(BoxOneP, FluxData, OnePFluxData<TypeTag>);
 
-//! the default upwind factor. Default 1.0, i.e. fully upwind...
-SET_SCALAR_PROP(BoxOneP, UpwindAlpha, 1.0);
-
-//! the upwind factor for the mobility. uses the value of UpwindAlpha
-//! if the property is not overwritten elsewhere
-SET_SCALAR_PROP(BoxOneP,
-                MobilityUpwindAlpha,
-                GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
-
 //! The indices required by the isothermal single-phase model
 SET_TYPE_PROP(BoxOneP, OnePIndices, OnePIndices);
-
 
 // \}
 };

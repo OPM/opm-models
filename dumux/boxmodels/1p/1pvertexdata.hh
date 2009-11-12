@@ -22,8 +22,6 @@
 #ifndef DUMUX_1P_VERTEX_DATA_HH
 #define DUMUX_1P_VERTEX_DATA_HH
 
-#include <dumux/boxmodels/tags.hh>
-
 #include "1pproperties.hh"
 
 namespace Dune

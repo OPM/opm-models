@@ -25,13 +25,14 @@
 #ifndef DUMUX_NEW_2PNI_BOX_JACOBIAN_HH
 #define DUMUX_NEW_2PNI_BOX_JACOBIAN_HH
 
+#include "2pniproperties.hh"
+
 #include <dumux/boxmodels/2p/2pboxjacobian.hh>
 
 #include <dumux/boxmodels/2pni/2pnielementdata.hh>
 #include <dumux/boxmodels/2pni/2pnivertexdata.hh>
 #include <dumux/boxmodels/2pni/2pnifluxdata.hh>
 
-#include <dumux/boxmodels/2pni/2pniproperties.hh>
 
 namespace Dune
 {

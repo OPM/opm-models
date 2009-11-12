@@ -23,11 +23,7 @@
 #ifndef DUMUX_2P2CTRAITS_HH
 #define DUMUX_2P2CTRAITS_HH
 
-#include "2p2cnewtoncontroller.hh"
-
-#include "2p2cvertexdata.hh"
-#include "2p2celementdata.hh"
-#include "2p2cfluxdata.hh"
+#include <dumux/boxmodels/boxscheme/boxproperties.hh>
 
 namespace Dune
 {
@@ -35,6 +31,39 @@ namespace Dune
  * \addtogroup TwoPTwoCBoxModel
  */
 // \{
+namespace Properties
+{
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The type tag for the isothermal single phase problems
+NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxScheme));
+
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+
+NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
+NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
+NEW_PROP_TAG(Formulation);   //!< The formulation of the model
+NEW_PROP_TAG(Soil); //!< The type of the soil properties object
+NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
+NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
+NEW_PROP_TAG(MultiComp); //!< Type of the multi-component relations
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
+}
+}
+
+#include "2p2cnewtoncontroller.hh"
+
+#include "2p2cvertexdata.hh"
+#include "2p2celementdata.hh"
+#include "2p2cfluxdata.hh"
+
+namespace Dune {
 
 ////////////////////////////////
 // forward declarations
@@ -129,12 +158,12 @@ struct TwoPTwoCIndices<TwoPTwoCCommonIndices::pNsW, PVOffset>
     static int comp2Mass(int compIdx) { return PVOffset + 1 - compIdx; }
 };
 
-////////////////////////////////
-// properties
-////////////////////////////////
+namespace Properties {
 
-namespace Properties
-{
+//////////////////////////////////////////////////////////////////
+// Properties
+//////////////////////////////////////////////////////////////////
+
 SET_INT_PROP(BoxTwoPTwoC, NumEq,         2); //!< set the number of equations to 2
 SET_INT_PROP(BoxTwoPTwoC, NumPhases,     2); //!< The number of phases in the 2p2c model is 2
 SET_INT_PROP(BoxTwoPTwoC, NumComponents, 2); //!< The number of components in the 2p2c model is 2
@@ -170,14 +199,8 @@ SET_TYPE_PROP(BoxTwoPTwoC, ElementData, TwoPTwoCElementData<TypeTag>);
 //! the FluxData property
 SET_TYPE_PROP(BoxTwoPTwoC, FluxData, TwoPTwoCFluxData<TypeTag>);
 
-//! the default upwind factor. Default 1.0, i.e. fully upwind...
-SET_SCALAR_PROP(BoxTwoPTwoC, UpwindAlpha, 1.0);
-
-//! the upwind factor for the mobility. uses the value of UpwindAlpha
-//! if the property is not overwritten elsewhere
-SET_SCALAR_PROP(BoxTwoPTwoC,
-                MobilityUpwindAlpha,
-                GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
+//! the upwind factor for the mobility.
+SET_SCALAR_PROP(BoxTwoPTwoC, MobilityUpwindAlpha, 1.0);
 
 //! The indices required by the isothermal 2p2c model
 SET_PROP(BoxTwoPTwoC,

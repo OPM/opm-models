@@ -70,8 +70,6 @@ class OnePBoxJacobian : public BoxJacobian<TypeTag, OnePBoxJacobian<TypeTag> >
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
-    static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
-
 public:
     OnePBoxJacobian(Problem &problem)
         : ParentType(problem)

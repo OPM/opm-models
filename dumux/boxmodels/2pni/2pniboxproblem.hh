@@ -22,7 +22,6 @@
 #ifndef DUMUX_2PNI_BOX_PROBLEM_HH
 #define DUMUX_2PNI_BOX_PROBLEM_HH
 
-#include <dumux/boxmodels/tags.hh>
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
 #include <dumux/material/twophaserelations.hh>
 

@@ -25,7 +25,6 @@
 #define DUMUX_2PNI_PROPERTIES_HH
 
 #include <dumux/boxmodels/2p/2pproperties.hh>
-
 #include "2pnivertexdata.hh"
 #include "2pnielementdata.hh"
 #include "2pnifluxdata.hh"
@@ -71,7 +70,24 @@ public:
 
 namespace Properties
 {
-SET_INT_PROP(BoxTwoPNI, NumEq,         3); //!< set the number of equations to 3
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The type tag for the non-isothermal two-phase problems
+NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP));
+
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+
+NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
+
+//////////////////////////////////////////////////////////////////
+// Properties
+//////////////////////////////////////////////////////////////////
+
+SET_INT_PROP(BoxTwoPNI, NumEq, 3); //!< set the number of equations to 3
 
 //! Use the 2pni local jacobian operator for the 2pni model
 SET_TYPE_PROP(BoxTwoPNI,

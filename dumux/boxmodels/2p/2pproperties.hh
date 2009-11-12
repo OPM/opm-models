@@ -23,7 +23,6 @@
 #ifndef DUMUX_2PPROPERTIES_HH
 #define DUMUX_2PPROPERTIES_HH
 
-#include <dumux/boxmodels/tags.hh>
 #include "2pnewtoncontroller.hh"
 
 namespace Dune
@@ -137,10 +136,36 @@ struct TwoPIndices<TwoPCommonIndices::pNsW, PVOffset>
 ////////////////////////////////
 namespace Properties
 {
+
 /*!
  * \addtogroup TwoPBoxModel
  */
 // \{
+
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The type tag for the two-phase problems
+NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxScheme));
+
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+
+NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(Soil); //!< The type of the soil properties object
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
+NEW_PROP_TAG(Formulation);   //!< The formulation of the model
+NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
+NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
+NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
+
+//////////////////////////////////////////////////////////////////
+// Properties
+//////////////////////////////////////////////////////////////////
+
 SET_INT_PROP(BoxTwoP, NumEq,         2); //!< set the number of equations to 2
 SET_INT_PROP(BoxTwoP, NumPhases,     2); //!< The number of phases in the 2p model is 2
 
@@ -176,14 +201,8 @@ SET_TYPE_PROP(BoxTwoP, ElementData, TwoPElementData<TypeTag>);
 //! the FluxData property
 SET_TYPE_PROP(BoxTwoP, FluxData, TwoPFluxData<TypeTag>);
 
-//! the default upwind factor. Default 1.0, i.e. fully upwind...
-SET_SCALAR_PROP(BoxTwoP, UpwindAlpha, 1.0);
-
-//! the upwind factor for the mobility. uses the value of UpwindAlpha
-//! if the property is not overwritten elsewhere
-SET_SCALAR_PROP(BoxTwoP,
-                MobilityUpwindAlpha,
-                GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha)));
+//! the upwind factor for the mobility.
+SET_SCALAR_PROP(BoxTwoP, MobilityUpwindAlpha,  1.0);
 
 //! The indices required by the isothermal 2p model
 SET_PROP(BoxTwoP, TwoPIndices)
