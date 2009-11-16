@@ -47,7 +47,7 @@ namespace Dune
  *
  * \todo Please doc me more!
  */
-template<class TypeTag, class Implementation>
+template<class TypeTag, class Implementation = typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) >
 class BoxJacobian : public Dune::LocalStiffness<typename GET_PROP_TYPE(TypeTag, PTAG(GridView)),
                                                 typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)),
                                                 GET_PROP_VALUE(TypeTag, PTAG(NumEq)) >
