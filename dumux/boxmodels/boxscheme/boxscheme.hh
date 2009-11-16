@@ -130,17 +130,10 @@ public:
     {
         wasRestarted_ = false;
 
-#ifdef HAVE_DUNE_PDELAB
-        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
-        uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-        uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-        f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-#else
-        jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
-        uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-        uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-        f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-#endif
+        jacAsm_ = 0;
+        uCur_ = 0;
+        uPrev_ = 0;
+        f_ = 0;
 
         // check grid partitioning if we are parallel
         assert((prob.gridView().comm().size() == 1) ||
@@ -163,6 +156,7 @@ public:
     void initial()
     {
     	if (!wasRestarted_) {
+	    allocateStuff_();
             this->localJacobian().initStaticData();
             applyInitialSolution_(*uCur_);
         }
@@ -419,6 +413,7 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
+      allocateStuff_();
         res.template deserializeEntities<dim>(asImp_(), this->gridView_);
         wasRestarted_ = true;
     }
@@ -487,6 +482,21 @@ protected:
     //! returns true iff the grid has an overlap
     bool hasOverlap_()
     { return gridView_.overlapSize(0) > 0; };
+
+  void allocateStuff_()
+  {
+#ifdef HAVE_DUNE_PDELAB
+        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
+        uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+        uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+        f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
+#else
+        jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
+        uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+        uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+        f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
+#endif
+  }
 
     void applyInitialSolution_(SolutionFunction &u)
     {
