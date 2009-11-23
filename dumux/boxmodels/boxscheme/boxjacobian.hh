@@ -783,8 +783,10 @@ protected:
     {
         int numVertices = this->currentsize();
         for (int i=0; i < numVertices; i++) {
-            this->bctype[i].assign(Dune::BoundaryConditions::neumann);
-            this->b[i] = 0;
+            for (int j = 0; j < numEq; ++j) {
+                this->bctype[i][j] = Dune::BoundaryConditions::neumann;
+                this->b[i][j] = 0;
+            }
         }
     };
 
