@@ -32,7 +32,7 @@ public:
 	typedef typename PDELabTypes::ConstraintsTrafo ConstraintsTrafo;
     typedef typename PDELabTypes::LocalOperator LocalOperator;
     typedef typename PDELabTypes::GridOperatorSpace GridOperatorSpace;
-    typedef BoundaryTypesPDELab<TypeTag> BoundaryTypes;
+    typedef BoundaryIndexHelperPDELab<TypeTag> BoundaryFunction;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
@@ -65,9 +65,9 @@ public:
     		problem_.gridView().communicate(ghostDataHandle,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
     	ghost.std_copy_to(intghost_);
 
-    	bTypes_ = new BoundaryTypes(problem_);
+    	bTypes_ = new BoundaryFunction();
     	constraintsTrafo_ = new ConstraintsTrafo();
-    	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_);
+    	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_, true);
 
     	localOperator_ = new LocalOperator(model);
     	gridOperatorSpace_ = new GridOperatorSpace(*gridFunctionSpace_, *constraintsTrafo_,
@@ -130,7 +130,7 @@ private:
     FEM *fem_;
     ScalarGridFunctionSpace *scalarGridFunctionSpace_;
     GridFunctionSpace *gridFunctionSpace_;
-    BoundaryTypes *bTypes_;
+    BoundaryFunction *bTypes_;
     ConstraintsTrafo *constraintsTrafo_;
     LocalOperator *localOperator_;
     GridOperatorSpace *gridOperatorSpace_;

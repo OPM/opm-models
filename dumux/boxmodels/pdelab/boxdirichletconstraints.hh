@@ -42,43 +42,57 @@ public:
 
     //! boundary constraints
     /**
-     * \tparam F   grid function returning boundary condition type (this is ignored. we ask the problem directly...)
+     * \tparam F   grid function returning boundary condition type
      * \tparam IG  intersection geometry
      * \tparam LFS local function space
      * \tparam T   TransformationType
      */
-    template<typename F, typename I, typename LFS, typename T>
-    void boundary (const F& f, const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                   const LFS& lfs, T& trafo) const
+    template<typename F, typename I, typename LFS, 
+             typename T>
+    void boundary (const F& f,
+                   const Dune::PDELab::IntersectionGeometry<I>& ig, 
+                   const LFS& lfs,
+                   T& trafo) const
     {
-        typename F::Traits::RangeType bctype;
-        
 		const Element& element = *(ig.inside());
         FVElementGeometry fvElemGeom;
         fvElemGeom.update(element);
-		BoundaryTypeVector values;
-       
+		BoundaryTypeVector bcTypes;
+
+        //problem_.boundaryTypes(values, element, fvElemGeom, ig.intersection(), scvIdx, boundaryFaceIdx);
+        //typename F::Traits::RangeType bctype;
+
+        const int face = ig.indexInInside();
+
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside()->type();
         typedef typename Dune::PDELab::IntersectionGeometry<I>::ctype DT;
-        const Dune::GenericReferenceElement<DT,dim>& refElem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+        const int dim = Dune::PDELab::IntersectionGeometry<I>::Entity::Geometry::dimension;
+        const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        int faceIdx = ig.indexInInside();
-        for (int faceVertIdx = 0; faceVertIdx < ig.geometry().corners(); faceVertIdx++)
-        {
-        	int scvIdx = refElem.subEntity(faceIdx, 1, faceVertIdx, dim);
-        	int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(faceIdx, faceVertIdx);
-
-        	problem_.boundaryTypes(values, element, fvElemGeom, ig.intersection(), scvIdx, boundaryFaceIdx);
-        	for (unsigned int comp = 0; comp < numEq; comp++)
-        		if (values[comp] == Dune::BoundaryConditions::dirichlet) {
-                    trafo[scvIdx] = empty; // TODO mixed boundaries
-                    break;
+        for (int faceVertIdx = 0; faceVertIdx < refelem.size(face, 1, dim); faceVertIdx ++){
+            int elemVertIdx = refelem.subEntity(face, 1, faceVertIdx, dim);
+            int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(face, faceVertIdx);
+            
+            problem_.boundaryTypes(bcTypes, element, fvElemGeom, ig.intersection(), elemVertIdx, boundaryFaceIdx);
+            
+            for (std::size_t i = 0; i < lfs.localFiniteElement().localCoefficients().size(); i++) {
+                // The codim to which this dof is attached to
+                unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
+                
+                if (codim!=dim)
+                    continue;
+                if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity() != elemVertIdx)
+                    continue;
+                
+                if (bcTypes[F::eqIdx] == BoundaryConditions::dirichlet) {
+                    trafo[i] = empty;
                 }
-        }
+            }
+          }
     }
 };
 }
