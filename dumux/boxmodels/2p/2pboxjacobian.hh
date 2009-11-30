@@ -442,9 +442,9 @@ public:
 //                           int pvIdx) const
 //    {
 //    	if (pvIdx == pressureIdx)
-//    		return 1e1;
+//    		return 1e-1;
 //    	else
-//    		return 1e-6;
+//    		return 1e-5;
 //    }
 
 protected:

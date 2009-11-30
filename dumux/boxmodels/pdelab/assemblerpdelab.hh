@@ -92,12 +92,43 @@ public:
     void assemble(LocalJacobian& loc, SolutionFunction& u, SolutionFunction& f)
     {
     	*matrix_ = 0;
-
     	gridOperatorSpace_->jacobian(*u, *matrix_);
+
     	*f = 0;
     	gridOperatorSpace_->residual(*u, *f);
-		set_constrained_dofs(*constraintsTrafo_, 0.0, *f);
-		set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
+
+    	set_constrained_dofs(*constraintsTrafo_, 0.0, *f);
+    	set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
+
+    	typedef typename Matrix::RowIterator RowIterator;
+    	typedef typename Matrix::ColIterator ColIterator;
+    	const typename Matrix::block_type::size_type rowsInBlock = Matrix::block_type::rows;
+    	const typename Matrix::block_type::size_type colsInBlock = Matrix::block_type::cols;
+    	RowIterator endIBlock = matrix_->end();
+    	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock)
+    		for (typename Matrix::block_type::size_type iLocal = 0; iLocal < rowsInBlock; iLocal++)
+    		{
+    			Scalar diagonalEntry = 0;
+
+    			ColIterator endJBlock = iBlock->end();
+    			for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
+    				if (iBlock.index() == jBlock.index())
+    				{
+    					diagonalEntry = (*jBlock)[iLocal][iLocal];
+    					break;
+    				}
+
+    			if (std::abs(diagonalEntry) > 1e-12)
+    			{
+    				for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
+    					for (typename Matrix::block_type::size_type jLocal = 0; jLocal < colsInBlock; jLocal++)
+    						(*jBlock)[iLocal][jLocal] /= diagonalEntry;
+
+    				(*f)[iBlock.index()][iLocal] /= diagonalEntry;
+    			}
+//    			else
+//    				std::cout << "assemblerpdelab.hh:assemble(): iBlock = " << iBlock.index() << ", iLocal = " << iLocal << ": ZERO diagonal!" << std::endl;
+    		}
     }
 
     const GridFunctionSpace& gridFunctionSpace() const
