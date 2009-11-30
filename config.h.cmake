@@ -8,6 +8,8 @@
 #cmakedefine HAVE_DUNE_DISC 1
 #cmakedefine HAVE_DUNE_FEM 1
 #cmakedefine HAVE_DUNE_ISTL 1
+#cmakedefine HAVE_DUNE_LOCALFUNCTIONS 1
+#cmakedefine HAVE_DUNE_PDELAB 1
 
 #ifdef ENABLE_MPI
 #cmakedefine HAVE_MPI 1

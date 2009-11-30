@@ -197,16 +197,16 @@ SET_PROP(BoxScheme, SolutionTypes)
 
     template<int dim>
     struct VertexLayout {
-        bool contains (Dune::GeometryType gt) const 
+        bool contains (Dune::GeometryType gt) const
         { return gt.dim() == 0; }
     };
 
     template<int dim>
     struct ElementLayout {
-        bool contains (Dune::GeometryType gt) const 
+        bool contains (Dune::GeometryType gt) const
         { return gt.dim() == dim; }
     };
-    
+
 public:
     //! A solution function. This is a function with the same domain as the grid.
 #ifdef HAVE_DUNE_PDELAB

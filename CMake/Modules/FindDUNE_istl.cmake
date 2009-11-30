@@ -8,7 +8,7 @@ INCLUDE(DumuxMacros)
 
 DumuxSetup("DUNE_istl" "dune-istl" "DUNE")
 
-DumuxFindIncludeDir("istl/io.hh")
+DumuxFindIncludeDir("dune/istl/io.hh")
 
 DumuxRequiredLibsFound()
 DumuxIncludeDirsFound()
