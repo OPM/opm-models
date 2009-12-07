@@ -17,6 +17,9 @@
 
 #ifdef ENABLE_UG
 #cmakedefine HAVE_UG 1
+#ifdef ENABLE_MPI
+#define ModelP
+#endif
 #endif
 
 #ifdef ENABLE_ALUGRID
