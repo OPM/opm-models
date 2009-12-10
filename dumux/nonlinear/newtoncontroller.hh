@@ -366,6 +366,9 @@ protected:
     {
         Vector &x = *u;
 
+#if 0 //HAVE_SUPERLU
+        Dune::SuperLU<typename Matrix::BaseT> solver(A, false);
+#else
         // if the deflection of the newton method is large, we
         // do not need to solve the linear approximation
         // accurately. On the other hand, if this is the first
@@ -373,13 +376,13 @@ protected:
         // yet, so we use the targeted accurracy for the error.
         Scalar residTol = tolerance_/1e11;
 
-#if 0//HAVE_PARDISO
+#if HAVE_PARDISO
     	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
     	SeqPreCond seqPreCond(A);
-#else
+#else // !HAVE_PARDISO
     	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
     	SeqPreCond seqPreCond(A, 1.0);
-#endif
+#endif // HAVE_PARDISO
 
 #ifdef HAVE_DUNE_PDELAB
     	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
@@ -400,7 +403,7 @@ protected:
 //    	typedef Dune::PDELab::OverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
 //    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
 //    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
-#else
+#else // !HAVE_DUNE_PDELAB
         typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
         typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
         Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
@@ -409,8 +412,7 @@ protected:
         Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication> parallelOperator(A, comm);
         Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
         Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
-#endif
-
+#endif // HAVE_DUNE_PDELAB
     	Dune::BiCGSTABSolver<Vector>
             solver(parallelOperator,
                    scalarProduct,
@@ -418,6 +420,7 @@ protected:
                    residTol,
                    100,
                    0);
+#endif // HAVE_SUPERLU
 
         Dune::InverseOperatorResult result;
 
@@ -450,7 +453,7 @@ protected:
 #ifdef HAVE_PARDISO
         SeqPardiso<Matrix,Vector,Vector> pardiso;
         pardiso.factorize(A);
-        BiCGSTABSolver<Vector> solver(opA, pardiso, residTol, 100, 2);         // an inverse operator
+        BiCGSTABSolver<Vector> solver(opA, pardiso, residTol, 100, 0);         // an inverse operator
 #else // HAVE_PARDISO
         // initialize the preconditioner
         Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
