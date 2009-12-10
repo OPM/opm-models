@@ -301,14 +301,14 @@ public:
       */
      void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
      {
-         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
+//         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
          SolutionOnElement tmpSol;
          ElementIterator elementIt = this->problem_.gridView().template begin<0>();
          ElementIterator endit = this->problem_.gridView().template end<0>();
 
          VertexDataArray elemDat;
          VertexData tmp;
-         Scalar vol, poro, rhoN, rhoW, satN, satW, pW, Te;
+         Scalar vol, poro, rhoN, rhoW, satN, satW, pW;//, Te;
          Scalar massNPhase(0.), massWPhase(0.);
 
          mass = 0;
@@ -316,8 +316,8 @@ public:
          Scalar maxSat = -1e100;
          Scalar minP = 1e100;
          Scalar maxP = -1e100;
-         Scalar minTe = 1e100;
-         Scalar maxTe = -1e100;
+//         Scalar minTe = 1e100;
+//         Scalar maxTe = -1e100;
 
          // Loop over elements
          for (; elementIt != endit; ++elementIt)
@@ -330,7 +330,7 @@ public:
 
              for (int i = 0; i < numVerts; ++i)
              {
-             	int globalIdx = dofMapper.map(*elementIt, i, dim);
+//             	int globalIdx = dofMapper.map(*elementIt, i, dim);
                  vol = this->curElementGeom_.subContVol[i].volume;
                  poro = this->curElemDat_[i].porosity;
                  rhoN = this->curElemDat_[i].density[nPhase];
@@ -338,7 +338,7 @@ public:
                  satW  = this->curElemDat_[i].satW;
                  satN  = this->curElemDat_[i].satN;
                  pW = this->curElemDat_[i].pressure[wPhase];
-                 Te = asImp_()->temperature((*globalSol)[globalIdx]);
+//                 Te = asImp_()->temperature((*globalSol)[globalIdx]);
 
 
                  massNPhase = vol * poro * satN * rhoN;
@@ -349,8 +349,8 @@ public:
                  maxSat = std::max(maxSat, satN);
                  minP = std::min(minP, pW);
                  maxP = std::max(maxP, pW);
-                 minTe = std::min(minTe, Te);
-                 maxTe = std::max(maxTe, Te);
+//                 minTe = std::min(minTe, Te);
+//                 maxTe = std::max(maxTe, Te);
 
                  // calculate total mass
                  mass[0] += massNPhase; // mass nonwetting phase
@@ -369,8 +369,8 @@ public:
         	 << ", max = "<< maxSat << std::endl;
         	 std::cout << "wetting phase pressure: min = "<< minP
         	 << ", max = "<< maxP << std::endl;
-        	 std::cout << "temperature: min = "<< minTe
-        	 << ", max = "<< maxTe << std::endl;
+//        	 std::cout << "temperature: min = "<< minTe
+//        	 << ", max = "<< maxTe << std::endl;
          }
      }
 
@@ -442,9 +442,9 @@ public:
 //                           int pvIdx) const
 //    {
 //    	if (pvIdx == pressureIdx)
-//    		return 1e-1;
+//    		return 1e1;
 //    	else
-//    		return 1e-5;
+//    		return 1e-6;
 //    }
 
 protected:
