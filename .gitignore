@@ -12,3 +12,8 @@ config*
 aclocal*
 am
 *.lo
+.svn/
+*.tex
+.deps/
+.libs/
+*.log
