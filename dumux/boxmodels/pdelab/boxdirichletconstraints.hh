@@ -124,7 +124,7 @@ public:
     // loop over all degrees of freedom and check if it is not owned by this processor
     for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
       {
-        if (gh[lfs.globalIndex(i)]!=0)
+        if (ghost_[lfs.globalIndex(i)]!=0)
           {
             trafo[i] = empty;
           }
@@ -139,23 +139,75 @@ public:
     Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ighost);
     if (gfs.gridview().comm().size()>1)
       gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-    ighost.std_copy_to(gh);
+    ighost.std_copy_to(ghost_);
     rank = gfs.gridview().comm().rank();
   }
 
   void print ()
   {
     std::cout << "/" << rank << "/ " << "ghost size="
-              << gh.size() << std::endl;
-    for (std::size_t i=0; i<gh.size(); i++)
+              << ghost_.size() << std::endl;
+    for (std::size_t i=0; i<ghost_.size(); i++)
       std::cout << "/" << rank << "/ " << "ghost[" << i << "]="
-                << gh[i] << std::endl;
+                << ghost_[i] << std::endl;
   }
 
 private:
   int rank;
-  std::vector<int> gh;
+  std::vector<int> ghost_;
 };
+
+// extend constraints class by processor boundary
+template <class TypeTag>
+class OverlappingBoxDirichletConstraints : public BoxDirichletConstraints<TypeTag>
+{
+public:
+  enum { doProcessor = true };
+  typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
+
+  OverlappingBoxDirichletConstraints(Problem& problem)
+  : BoxDirichletConstraints<TypeTag>(problem)
+  {}
+
+  // boundary constraints
+  // IG : intersection geometry
+  // LFS : local function space
+  // T : TransformationType
+  template<typename I, typename LFS, typename T>
+  void processor (const Dune::PDELab::IntersectionGeometry<I>& ig,
+                  const LFS& lfs, T& trafo) const
+  {
+    // determine face
+    const int face = ig.indexInInside();
+
+    // find all local indices of this face
+    Dune::GeometryType gt = ig.inside()->type();
+    typedef typename Dune::PDELab::IntersectionGeometry<I>::ctype DT;
+    const int dim = Dune::PDELab::IntersectionGeometry<I>::Entity::Geometry::dimension;
+
+
+    const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+
+    // empty map means Dirichlet constraint
+    typename T::RowType empty;
+
+    // loop over all degrees of freedom and check if it is on given face
+    for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+      {
+        // The codim to which this dof is attached to
+        unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
+
+        if (codim==0) continue;
+
+        for (int j=0; j<refelem.size(face,1,codim); j++)
+          if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
+            trafo[i] = empty;
+      }
+  }
+};
+
+
+
 
 }
 

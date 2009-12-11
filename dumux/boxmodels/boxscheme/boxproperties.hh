@@ -294,7 +294,7 @@ SET_PROP(BoxScheme, PDELabTypes)
     enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
 public:
     //typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
-    typedef typename Dune::BoxDirichletConstraints<TypeTag> Constraints;
+    typedef typename Dune::NonoverlappingBoxDirichletConstraints<TypeTag> Constraints;
     typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, Constraints,
 							Dune::PDELab::ISTLVectorBackend<numEq> > ScalarGridFunctionSpace;
     typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace, numEq,

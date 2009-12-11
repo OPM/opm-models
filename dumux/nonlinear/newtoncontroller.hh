@@ -394,6 +394,9 @@ protected:
     	typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
     	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
     								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
+//    	typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace, Vector, Vector> ParPreCond;
+//    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
+
 //    	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
 //    	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
 //    	typedef Dune::PDELab::OverlappingOperator<ConstraintsTrafo,Matrix,Vector,Vector> ParallelOperator;
@@ -418,7 +421,7 @@ protected:
                    scalarProduct,
                    parPreCond,
                    residTol,
-                   100,
+                   1000,
                    0);
 #endif // HAVE_SUPERLU
 

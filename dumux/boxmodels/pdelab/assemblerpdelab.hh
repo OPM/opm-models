@@ -54,20 +54,15 @@ public:
     	matrix_ = 0;
 
     	fem_ = new FEM();
-    	//cn_ = new Constraints(intghost_);
         cn_ = new Constraints(problem_);
     	scalarGridFunctionSpace_ = new ScalarGridFunctionSpace(problem_.gridView(), *fem_, *cn_);
     	gridFunctionSpace_ = new GridFunctionSpace(*scalarGridFunctionSpace_);
 
-    	Vector ghost(*gridFunctionSpace_, 0.0);
-    	Dune::PDELab::GhostDataHandle<GridFunctionSpace, Vector> ghostDataHandle(*gridFunctionSpace_, ghost);
-    	if (problem_.gridView().comm().size() > 1)
-    		problem_.gridView().communicate(ghostDataHandle,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-    	ghost.std_copy_to(intghost_);
+    	cn_->compute_ghosts(*gridFunctionSpace_);
 
     	bTypes_ = new BoundaryFunction();
     	constraintsTrafo_ = new ConstraintsTrafo();
-    	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_, true);
+    	Dune::PDELab::constraints(*bTypes_, *gridFunctionSpace_, *constraintsTrafo_, false);
 
     	localOperator_ = new LocalOperator(model);
     	gridOperatorSpace_ = new GridOperatorSpace(*gridFunctionSpace_, *constraintsTrafo_,
@@ -100,35 +95,35 @@ public:
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *f);
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
 
-//    	typedef typename Matrix::RowIterator RowIterator;
-//    	typedef typename Matrix::ColIterator ColIterator;
-//    	const typename Matrix::block_type::size_type rowsInBlock = Matrix::block_type::rows;
-//    	const typename Matrix::block_type::size_type colsInBlock = Matrix::block_type::cols;
-//    	RowIterator endIBlock = matrix_->end();
-//    	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock)
-//    		for (typename Matrix::block_type::size_type iLocal = 0; iLocal < rowsInBlock; iLocal++)
-//    		{
-//    			Scalar diagonalEntry = 0;
-//
-//    			ColIterator endJBlock = iBlock->end();
-//    			for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
-//    				if (iBlock.index() == jBlock.index())
-//    				{
-//    					diagonalEntry = (*jBlock)[iLocal][iLocal];
-//    					break;
-//    				}
-//
-//    			if (std::abs(diagonalEntry) > 1e-12)
-//    			{
-//    				for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
-//    					for (typename Matrix::block_type::size_type jLocal = 0; jLocal < colsInBlock; jLocal++)
-//    						(*jBlock)[iLocal][jLocal] /= diagonalEntry;
-//
-//    				(*f)[iBlock.index()][iLocal] /= diagonalEntry;
-//    			}
-////    			else
-////    				std::cout << "assemblerpdelab.hh:assemble(): iBlock = " << iBlock.index() << ", iLocal = " << iLocal << ": ZERO diagonal!" << std::endl;
-//    		}
+    	typedef typename Matrix::RowIterator RowIterator;
+    	typedef typename Matrix::ColIterator ColIterator;
+    	const typename Matrix::block_type::size_type rowsInBlock = Matrix::block_type::rows;
+    	const typename Matrix::block_type::size_type colsInBlock = Matrix::block_type::cols;
+    	RowIterator endIBlock = matrix_->end();
+    	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock)
+    		for (typename Matrix::block_type::size_type iLocal = 0; iLocal < rowsInBlock; iLocal++)
+    		{
+    			Scalar diagonalEntry = 0;
+
+    			ColIterator endJBlock = iBlock->end();
+    			for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
+    				if (iBlock.index() == jBlock.index())
+    				{
+    					diagonalEntry = (*jBlock)[iLocal][iLocal];
+    					break;
+    				}
+
+    			if (std::abs(diagonalEntry) > 1e-12)
+    			{
+    				for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
+    					for (typename Matrix::block_type::size_type jLocal = 0; jLocal < colsInBlock; jLocal++)
+    						(*jBlock)[iLocal][jLocal] /= diagonalEntry;
+
+    				(*f)[iBlock.index()][iLocal] /= diagonalEntry;
+    			}
+//    			else
+//    				std::cout << "assemblerpdelab.hh:assemble(): iBlock = " << iBlock.index() << ", iLocal = " << iLocal << ": ZERO diagonal!" << std::endl;
+    		}
     }
 
     const GridFunctionSpace& gridFunctionSpace() const
@@ -156,7 +151,6 @@ public:
 
 private:
 	Problem& problem_;
-	std::vector<int> intghost_;
 	Constraints *cn_;
     FEM *fem_;
     ScalarGridFunctionSpace *scalarGridFunctionSpace_;
