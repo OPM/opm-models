@@ -95,6 +95,68 @@ public:
           }
     }
 };
+
+// extend constraints class by processor boundary
+template <class TypeTag>
+class NonoverlappingBoxDirichletConstraints : public BoxDirichletConstraints<TypeTag>
+{
+public:
+  enum { doVolume = true };
+  typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
+
+  NonoverlappingBoxDirichletConstraints(Problem& problem)
+  : BoxDirichletConstraints<TypeTag>(problem)
+  {}
+
+
+  template<typename E, typename LFS, typename T>
+  void volume (const Dune::PDELab::ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
+  {
+    // nothing to do for interior entities
+    if (eg.entity().partitionType()==Dune::InteriorEntity)
+      return;
+
+    // empty map means Dirichlet constraint
+    typename T::RowType empty;
+
+	typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
+
+    // loop over all degrees of freedom and check if it is not owned by this processor
+    for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+      {
+        if (gh[lfs.globalIndex(i)]!=0)
+          {
+            trafo[i] = empty;
+          }
+      }
+  }
+
+  template<class GFS>
+  void compute_ghosts (const GFS& gfs)
+  {
+    typedef typename GFS::template VectorContainer<int>::Type V;
+    V ighost(gfs);
+    Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ighost);
+    if (gfs.gridview().comm().size()>1)
+      gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+    ighost.std_copy_to(gh);
+    rank = gfs.gridview().comm().rank();
+  }
+
+  void print ()
+  {
+    std::cout << "/" << rank << "/ " << "ghost size="
+              << gh.size() << std::endl;
+    for (std::size_t i=0; i<gh.size(); i++)
+      std::cout << "/" << rank << "/ " << "ghost[" << i << "]="
+                << gh[i] << std::endl;
+  }
+
+private:
+  int rank;
+  std::vector<int> gh;
+};
+
 }
 
 #endif
