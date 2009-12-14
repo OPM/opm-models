@@ -94,14 +94,14 @@ public:
         std::string suffix = fileSuffix_();
         if (commSize_ == 1) {
             fileName = curOutFileName_;
-            multiFile_ << (boost::format("   <DataSet timestep=\"%lf\" file=\"%s.%s\"/>\n")
+            multiFile_ << (boost::format("   <DataSet timestep=\"%lg\" file=\"%s.%s\"/>\n")
                            %t%fileName%suffix);
         }
         if (commSize_ > 1 && commRank_ == 0)  {
             // only the first process updates the multi-file
             for (int part=0; part < commSize_; ++part) {
                 fileName = fileName_(part);
-                multiFile_ << (boost::format("   <DataSet part=\"%d\" timestep=\"%lf\" file=\"%s.%s\"/>\n")
+                multiFile_ << (boost::format("   <DataSet part=\"%d\" timestep=\"%lg\" file=\"%s.%s\"/>\n")
                                %part%t%fileName%suffix);
             }
         }
