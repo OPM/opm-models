@@ -53,26 +53,6 @@ public:
         : ParentType(tolerance, targetSteps, maxSteps)
     {};
 
-        //! Suggest a new time stepsize based on the number of newton
-        //! iterations required for the last time step and the old time
-        //! step size.
-        Scalar suggestTimeStepSize(Scalar oldTimeStep) const
-        {
-            // be agressive reducing the timestep size but
-            // conservative when increasing it. the rationale is
-            // that we want to avoid failing in the next newton
-            // iteration which would require another linerization
-            // of the problem.
-            if (this->numSteps_ > this->targetSteps_) {
-                Scalar percent = ((Scalar) this->numSteps_ - this->targetSteps_)/this->targetSteps_;
-                return oldTimeStep/(1 + percent);
-            }
-            else {
-                Scalar percent = ((Scalar) this->targetSteps_ - this->numSteps_)/this->targetSteps_;
-                return oldTimeStep*(1 + percent/1.2);
-            }
-        }
-
 protected:
     friend class NewtonControllerBase<NewtonMethod, ThisType>;
     //! called by the base class the get an indication of how physical
