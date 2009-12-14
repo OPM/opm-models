@@ -463,7 +463,7 @@ protected:
         //                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
         //                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
         // invert the linear equation system
-        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residTol, 100, 0);
+        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residTol, 1000, 0);
 #endif // HAVE_PARDISO
 
         Dune::InverseOperatorResult result;
