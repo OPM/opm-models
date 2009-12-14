@@ -82,10 +82,12 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/nonlinear/newtoncontroller.hh>
 
+#if HAVE_DUNE_PDELAB
 #include <dumux/boxmodels/pdelab/assemblerpdelab.hh>
 #include <dumux/boxmodels/pdelab/functionpdelab.hh>
-#if HAVE_DUNE_PDELAB
 #include <dumux/boxmodels/pdelab/boxdirichletconstraints.hh>
+#else
+#include <dune/disc/operators/p1operator.hh>
 #endif
 
 #include <dumux/boundarytypes.hh>
