@@ -52,8 +52,6 @@ protected:
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
-    typedef typename SolutionTypes::ShapeFunctions          ShapeFunctions;
-    typedef typename SolutionTypes::ShapeFunctionSet        ShapeFunctionSet;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
@@ -385,7 +383,7 @@ public:
         ElementIterator endit = this->problem_.elementEnd();
         unsigned numVertices = this->problem_.numVertices();
         SolutionOnElement curSol(numVertices);
-        VertexDataArray elemDat(ShapeFunctions::general::maxsize);
+        VertexDataArray elemDat;
         VertexData tmp;
         int state;
         Scalar vol, poro, rhoN, rhoW, satN, satW, xAW, xWW, xWN, xAN, pW, Te;

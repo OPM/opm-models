@@ -12,7 +12,7 @@
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 
 #include<dumux/boundarytypes.hh>
-#include<dune/disc/operators/boundaryconditions.hh>
+#include<dumux/operators/boundaryconditions.hh>
 
 namespace Dune {
 //! Constraints construction

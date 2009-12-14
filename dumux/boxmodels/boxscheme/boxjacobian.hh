@@ -26,7 +26,7 @@
 #ifndef DUMUX_BOX_JACOBIAN_HH
 #define DUMUX_BOX_JACOBIAN_HH
 
-#include <dune/disc/operators/localstiffness.hh>
+#include <dumux/operators/localstiffness.hh>
 
 #include <dumux/auxiliary/valgrind.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
@@ -92,8 +92,6 @@ private:
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
-    typedef typename SolutionTypes::ShapeFunctions          ShapeFunctions;
-    typedef typename SolutionTypes::ShapeFunctionSet        ShapeFunctionSet;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 
 

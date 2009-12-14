@@ -25,9 +25,7 @@
 #include <dumux/auxiliary/valgrind.hh>
 
 #include <dune/istl/operators.hh>
-#include <dune/disc/operators/p1operator.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
-//#include <dune/grid/common/referenceelements.hh>
 
 #include <boost/format.hpp>
 
@@ -74,8 +72,6 @@ class BoxScheme
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
-    typedef typename SolutionTypes::ShapeFunctions          ShapeFunctions;
-    typedef typename SolutionTypes::ShapeFunctionSet        ShapeFunctionSet;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 
     enum {
@@ -368,9 +364,7 @@ public:
             // current and the last timestep.
             const Element& element = *it;
 
-            //const ShapeFunctionSet &sfs = ShapeFunctions::general(element.geometry().type(),
-            //                                                      2 /* order */ );
-            const int numDofs = 4;//sfs.size();
+            const int numDofs = element.template count<dim>();
             SolutionOnElement localResidual(numDofs);
 
             SolutionOnElement localU(numDofs);
@@ -393,8 +387,6 @@ public:
             for(int dofIdx=0; dofIdx < numDofs; dofIdx++)
             {
                 int globalIdx = dofEntityMapper().map(element, dofIdx, dim);
-                                                      //sfs[dofIdx].entity(),
-                                                      //sfs[dofIdx].codim());
                 (*globResidual)[globalIdx] += localResidual[dofIdx];
             }
         }

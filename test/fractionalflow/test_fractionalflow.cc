@@ -31,7 +31,7 @@
 #include "dumux/transport/fv/fvsaturation2p.hh"
 #include "dumux/transport/fv/capillarydiffusion.hh"
 #include "dumux/fractionalflow/impes/impes.hh"
-#include <dune/disc/operators/boundaryconditions.hh>
+#include <dumux/operators/boundaryconditions.hh>
 #include "dumux/timedisc/expliciteulerstep.hh"
 #include "dumux/fractionalflow/variableclass2p.hh"
 #include "dumux/fractionalflow/define2pmodel.hh"

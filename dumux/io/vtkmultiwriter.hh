@@ -21,6 +21,7 @@
 #ifndef VTK_MULTI_WRITER_HH
 #define VTK_MULTI_WRITER_HH
 
+#include <dune/grid/common/referenceelements.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/common/fvector.hh>

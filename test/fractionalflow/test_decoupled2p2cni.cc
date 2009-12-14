@@ -28,7 +28,7 @@
 #include <dumux/material/twophaserelations.hh>
 #include "dumux/transport/problems/testproblem2p2cni.hh"
 #include "dumux/transport/fv/decoupled2p2cni.hh"
-#include <dune/disc/operators/boundaryconditions.hh>
+#include <dumux/operators/boundaryconditions.hh>
 #include "dumux/timedisc/expliciteulerstep.hh"
 
 int main(int argc, char** argv)

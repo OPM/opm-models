@@ -77,8 +77,6 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 }
 }
 
-#include <dune/disc/operators/p1operator.hh>
-#include <dune/disc/shapefunctions/lagrangeshapefunctions.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 
 #include <dumux/nonlinear/newtonmethod.hh>
@@ -254,15 +252,6 @@ public:
      * \brief Vector of boundary types at a degree of freedom.
      */
     typedef Dune::BoundaryTypes<numEq>  BoundaryTypeVector;
-
-    /*!
-     * \brief The shape functions used by the SolutionFunction
-     */
-    typedef Dune::LagrangeShapeFunctions<CoordScalar, Scalar, dim>    ShapeFunctions;
-    /*!
-     * \brief The container for shape functions within an finite element.
-     */
-    typedef Dune::LagrangeShapeFunctionSet<CoordScalar, Scalar, dim>  ShapeFunctionSet;
 
     /*!
      * \brief Assembler for the global jacobian matrix.
