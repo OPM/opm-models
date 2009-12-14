@@ -88,6 +88,8 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 #include <dumux/boxmodels/pdelab/functionpdelab.hh>
 #include <dumux/boxmodels/pdelab/boxdirichletconstraints.hh>
 
+#include <dumux/boundarytypes.hh>
+
 namespace Dune {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
@@ -251,7 +253,7 @@ public:
     /*!
      * \brief Vector of boundary types at a degree of freedom.
      */
-    typedef Dune::FieldVector<Dune::BoundaryConditions::Flags, numEq> BoundaryTypeVector;
+    typedef Dune::BoundaryTypes<numEq>  BoundaryTypeVector;
 
     /*!
      * \brief The shape functions used by the SolutionFunction

@@ -11,6 +11,7 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 
+#include<dumux/boundarytypes.hh>
 #include<dune/disc/operators/boundaryconditions.hh>
 
 namespace Dune {
@@ -21,13 +22,14 @@ class BoxDirichletConstraints // : public Dune::PDELab::ConformingDirichletConst
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity Element;
 
 	enum {numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     enum {dim = GridView::dimension};
 
-    typedef Dune::FieldVector<Dune::BoundaryConditions::Flags, numEq> BoundaryTypeVector;
+    typedef Dune::BoundaryTypes<numEq> BoundaryTypeVector;
     Problem &problem_;
 
 public:
@@ -77,22 +79,24 @@ public:
             int elemVertIdx = refelem.subEntity(face, 1, faceVertIdx, dim);
             int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(face, faceVertIdx);
             
+            bcTypes.reset();
             problem_.boundaryTypes(bcTypes, element, fvElemGeom, ig.intersection(), elemVertIdx, boundaryFaceIdx);
+            bcTypes.checkWellPosed();
             
             for (std::size_t i = 0; i < lfs.localFiniteElement().localCoefficients().size(); i++) {
                 // The codim to which this dof is attached to
                 unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
-                
+
                 if (codim!=dim)
                     continue;
                 if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity() != elemVertIdx)
                     continue;
                 
-                if (bcTypes[F::eqIdx] == BoundaryConditions::dirichlet) {
+                if (bcTypes.isDirichlet(F::eqIdx)) {
                     trafo[i] = empty;
                 }
             }
-          }
+        }
     }
 };
 

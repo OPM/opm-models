@@ -304,6 +304,7 @@ public:
         if (withBoundary)
             this->asImp_().assembleBoundaryCondition(this->curElement_());
 
+        this->evalFluxes_<firstEq, lastEq>(residual);
 
         // evaluate the local rate
         for (int i=0; i < curElementGeom_.numVertices; i++)
@@ -336,31 +337,6 @@ public:
                 // make sure that only defined quantities where used
                 // to calculate the residual.
                 Valgrind::CheckDefined(residual[i][j]);
-            }
-        }
-
-        // calculate the mass flux over the faces and subtract
-        // it from the local rates
-        for (int k = 0; k < curElementGeom_.numEdges; k++)
-        {
-            int i = curElementGeom_.subContVolFace[k].i;
-            int j = curElementGeom_.subContVolFace[k].j;
-
-            PrimaryVarVector flux;
-            Valgrind::SetUndefined(flux);
-            this->asImp_().computeFlux(flux, k);
-            Valgrind::CheckDefined(flux);
-
-            // subtract fluxes from the local mass rates of the
-            // respective sub control volume adjacent to the face. We
-            // ignore dirichlet cells because for them, the mass
-            // change inside the cell is not equal to the flux out of
-            // the cell.
-            for (int eq = firstEq; eq < lastEq; ++ eq) {
-                if (this->bctype[i][eq] == BoundaryConditions::neumann) 
-                    residual[i][eq] -= flux[eq];
-                if (this->bctype[j][eq] == BoundaryConditions::neumann) 
-                    residual[j][eq] += flux[eq];
             }
         }
 
@@ -624,12 +600,14 @@ private:
 
                 // set the boundary types
                 BoundaryTypeVector tmp;
+                tmp.reset();
                 problem_.boundaryTypes(tmp,
                                        curElement_(),
                                        curFvElementGeometry(),
                                        *isIt,
                                        elemVertIdx,
                                        boundaryFaceIdx);
+                tmp.checkWellPosed();
                 Valgrind::CheckDefined(tmp);
 
                 // copy boundary type to the bctype array.
@@ -641,8 +619,11 @@ private:
                     {
                         continue;
                     }
-
-                    this->bctype[elemVertIdx][eqIdx] = tmp[eqIdx];
+                    
+                    if (tmp.isDirichlet(eqIdx))
+                        this->bctype[elemVertIdx][eqIdx] = BoundaryConditions::dirichlet;
+                    else
+                        this->bctype[elemVertIdx][eqIdx] = BoundaryConditions::neumann;
                     Valgrind::CheckDefined(this->bctype[elemVertIdx][eqIdx]);
                 }
             }
@@ -663,7 +644,6 @@ private:
         SolutionOnElement localOldU(numVertices);
         restrictToElement(localOldU, problem_.model().prevSolFunction());
 
-        
         this->asImp_().setCurrentSolution(localU);
         this->asImp_().setPreviousSolution(localOldU);
 
@@ -701,6 +681,36 @@ private:
     };
     
 protected:
+    template <int firstEq = 0, int lastEq = numEq>
+    void evalFluxes_(SolutionOnElement &residual)
+    {
+        // calculate the mass flux over the faces and subtract
+        // it from the local rates
+        for (int k = 0; k < curElementGeom_.numEdges; k++)
+        {
+            int i = curElementGeom_.subContVolFace[k].i;
+            int j = curElementGeom_.subContVolFace[k].j;
+
+            PrimaryVarVector flux;
+            Valgrind::SetUndefined(flux);
+            this->asImp_().computeFlux(flux, k);
+            Valgrind::CheckDefined(flux);
+
+            // subtract fluxes from the local mass rates of the
+            // respective sub control volume adjacent to the face. We
+            // ignore dirichlet cells because for them, the mass
+            // change inside the cell is not equal to the flux out of
+            // the cell.
+            for (int eq = firstEq; eq < lastEq; ++ eq) {
+                if (this->bctype[i][eq] == BoundaryConditions::neumann) 
+                    residual[i][eq] -= flux[eq];
+                if (this->bctype[j][eq] == BoundaryConditions::neumann) 
+                    residual[j][eq] += flux[eq];
+            }
+        }
+    }
+
+
     /*!
      * \brief Update the stiffness matrix for all equations on all
      *        vertices of the current element with the partial

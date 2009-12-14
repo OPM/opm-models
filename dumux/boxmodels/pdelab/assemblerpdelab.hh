@@ -84,7 +84,7 @@ public:
         return *matrix_;
     }
 
-    void assemble(LocalJacobian& loc, SolutionFunction& u, SolutionFunction& f)
+    void assemble(LocalJacobian& loc, SolutionFunction &u, SolutionFunction &f)
     {
     	*matrix_ = 0;
     	gridOperatorSpace_->jacobian(*u, *matrix_);

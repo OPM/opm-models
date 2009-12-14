@@ -156,7 +156,7 @@ public:
     void initial()
     {
     	if (!wasRestarted_) {
-	    allocateStuff_();
+            allocateStuff_();
             this->localJacobian().initStaticData();
             applyInitialSolution_(*uCur_);
         }
@@ -553,7 +553,6 @@ protected:
         }
     }
 
-
     // apply dirichlet boundaries for the whole grid
     void applyDirichletBoundaries_(SolutionFunction &u)
     {
@@ -630,15 +629,20 @@ protected:
 
 
         PrimaryVarVector dirichletVal;
+        BoundaryTypeVector boundaryTypes;
+        problem_.boundaryTypes(boundaryTypes,
+                               element,
+                               fvElemGeom,
+                               *isIt,
+                               elemVertIdx,
+                               boundaryFaceIdx);
+
         bool dirichletEvaluated = false;
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
         {
             // ignore non-dirichlet boundary conditions
-            if (localJacobian_.bc(elemVertIdx)[eqIdx]
-                != Dune::BoundaryConditions::dirichlet)
-            {
-                continue;
-            }
+            if (!boundaryTypes.isDirichlet(eqIdx))
+            { continue; }
 
             // make sure to evaluate the dirichlet boundary
             // conditions exactly once (and only if the boundary
@@ -656,12 +660,12 @@ protected:
             }
 
             // copy the dirichlet value for the current equation
-            // to the global index.
+            // to the global solution.
             //
             // TODO: we should propably use the sum weighted by the
             //       sub-control volume instead of just overwriting
             //       the previous values...
-            (*u)[globalVertexIdx][eqIdx] = dirichletVal[eqIdx];
+            (*u)[globalVertexIdx][eqIdx] = dirichletVal[boundaryTypes.eqToDirichletIndex(eqIdx)];
         }
     }
 
