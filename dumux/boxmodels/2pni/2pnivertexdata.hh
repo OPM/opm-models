@@ -96,13 +96,13 @@ public:
                                            local,
                                            this->satW);
 
-        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(temperature,
+        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(this->temperature,
                                                               this->pressure[I::wPhase]);
-        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(temperature,
+        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(this->temperature,
                                                                  this->pressure[I::nPhase]);
-        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(temperature,
+        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(this->temperature,
                                                                 this->pressure[I::wPhase]);
-        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(temperature,
+        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(this->temperature,
                                                                    this->pressure[I::nPhase]);
     }
 
@@ -120,7 +120,6 @@ public:
 
     PhasesVector intEnergy; //!< Internal energy.
     PhasesVector enthalpy;  //!< Enthalpy.
-    Scalar       temperature; //!< The temperature. We assume thermal equilibrium
     Scalar       heatCond; //!< Total heat conductivity.
 };
 
