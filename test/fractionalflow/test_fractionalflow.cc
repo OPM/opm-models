@@ -66,7 +66,7 @@ int main(int argc, char** argv)
         Grid grid(N,L,H);
 
         grid.globalRefine(0);
-        GridView gridView(grid.levelView(0));
+        const GridView gridView(grid.levelView(0));
 
         Dune::Water wetmat(1000,0.001);
         Dune::Oil nonwetmat(1000,0.001);
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
         double cFLFactor = 0.8;
         Dune::TimeLoop<GridView, IMPESType > timeloop(gridView, tStart, tEnd, fileName, modulo, cFLFactor);
 
-        timeloop.execute(impes);
+        timeloop.execute(impes, false);
 
         return 0;
     }
