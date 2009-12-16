@@ -92,6 +92,7 @@ LIBS="$DUNE_LIBS $ALL_PKG_LIBS $PARDISO_LIBS"
 AC_CONFIG_FILES([Makefile
     doc/Makefile 
     dumux/Makefile 
+    test/Makefile
     doc/doxygen/Makefile 
     doc/handbook/Makefile
     dumux/fractionalflow/Makefile 
