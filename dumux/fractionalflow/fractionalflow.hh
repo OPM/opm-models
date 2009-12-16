@@ -111,7 +111,18 @@ public:
     {
         transport.problem().variables().updateTime(dt);
     }
+
+    typename Diffusion::ProblemType& problem()
+    {
+        return diffusion.problem();
+    }
+
     
+    typename Diffusion::ProblemType& problem() const
+    {
+        return diffusion.problem();
+    }
+
     //! Constructs a FractionalFlow object
     /**
      * \param diff an object of type Diffusion

@@ -95,9 +95,9 @@ public:
     virtual int update(const Scalar t, Scalar& dt, RepresentationType& updateVec,
             Scalar cFLFactor = 1)
     {
-        int satSize = this->transport.problem().variables().gridSizeTransport();
-        RepresentationType saturation(this->transport.problem().variables().saturation());
-        RepresentationType satOldIter(this->transport.problem().variables().saturation());
+        int satSize = this->problem().variables().gridSizeTransport();
+        RepresentationType saturation(this->problem().variables().saturation());
+        RepresentationType satOldIter(this->problem().variables().saturation());
         RepresentationType satHelp(satSize);
         RepresentationType satDiff(satSize);
         RepresentationType updateOldIter(satSize);
@@ -132,7 +132,7 @@ public:
             if (iterFlag)
             { // only needed if iteration has to be done
                 updateHelp = updateVec;
-                saturation = this->transport.problem().variables().saturation();
+                saturation = this->problem().variables().saturation();
                 saturation += (updateHelp *= (dt*cFLFactor));
                 saturation *= omega;
                 satHelp = satOldIter;
@@ -184,7 +184,19 @@ public:
      */
     virtual void vtkout(const char* name, int k) const
     {
-        this->transport.problem().variables().vtkout(name, k);
+        this->problem().variables().vtkout(name, k);
+        return;
+    }
+
+    // serialization methods
+    template <class Restarter>
+    void serialize(Restarter &res)
+    {
+        return;
+    }
+    template <class Restarter>
+    void deserialize(Restarter &res)
+    {
         return;
     }
 
@@ -213,9 +225,8 @@ public:
             Scalar maxDef = 1e-5, Scalar om = 1, Scalar pressureDt = 0) :
     FractionalFlow(diffusion, transport),
     iterFlag(flag), nIter(nIt), maxDefect(maxDef), omega(om), pressureDt_(pressureDt)
-    {
+    {}
         nextPressureTime_ = pressureDt_;
-    }
 
 protected:
     const int iterFlag;//!<iteration flag

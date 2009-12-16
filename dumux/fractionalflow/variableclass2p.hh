@@ -275,7 +275,7 @@ private:
 
                     // center in face's reference element
                     const Dune::FieldVector<Scalar,dim-1>&
-                    faceLocal = Dune::ReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
+                    faceLocal = Dune::GenericReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
 
                     Dune::FieldVector<Scalar,dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
 
@@ -580,13 +580,13 @@ public:
     }
 
     //!Return gridView on the grid of the discretized diffusion equation
-    GridView& gridViewDiffusion()
+    const GridView& gridViewDiffusion()
     {
         return gridViewDiffusion_;
     }
 
     //!Return gridView on the grid of the discretized transport equation
-    GridView& gridViewTransport()
+    const GridView& gridViewTransport()
     {
         return gridViewTransport_;
     }
