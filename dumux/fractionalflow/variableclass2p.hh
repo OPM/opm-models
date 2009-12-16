@@ -81,8 +81,8 @@ public:
     typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, maxIntersections> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 
 private:
-    GridView& gridViewDiffusion_;
-    GridView& gridViewTransport_;
+    const GridView& gridViewDiffusion_;
+    const GridView& gridViewTransport_;
     const IndexSet& indexSetDiffusion_;
     const IndexSet& indexSetTransport_;
     const int gridSizeDiffusion_;
@@ -122,16 +122,15 @@ public:
      *  @param initialSat initial value for the saturation (only necessary if only diffusion part is solved)
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
-    VariableClass(GridView& gridViewDiff, GridView& gridViewTrans, Scalar& initialSat = *(new Scalar(0)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    VariableClass(const GridView& gridViewDiff,const GridView& gridViewTrans, Scalar& initialSat = *(new Scalar(0)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridViewDiff), gridViewTransport_(gridViewTrans),
     indexSetDiffusion_(gridViewDiff.indexSet()),indexSetTransport_(gridViewTrans.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
-    multiscale_(true), codim_(0), time_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(true), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
-        initializeGlobalVariablesTransPart(initialVel);
+        initializeGlobalVariablesTransPart(initialSat);
 
-        analyzeMassInitialize();
+//        analyzeMassInitialize();
     }
 
     //! Constructs a VariableClass object
@@ -141,11 +140,11 @@ public:
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
 #ifdef HACK_SINTEF_RESPROP
-    VariableClass(GridView& gridView, const ReservoirProperties& resProps, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    VariableClass(const GridView& gridView, const ReservoirProperties& resProps, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
     gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
-    resProps_(resProps), multiscale_(false), codim_(0), time_(0)
+    resProps_(resProps), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
@@ -153,16 +152,15 @@ public:
         analyzeMassInitialize();
     }
 #else
-    VariableClass(GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    VariableClass(const GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
-    multiscale_(false), codim_(0), time_(0)
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), multiscale_(false), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
 
-        analyzeMassInitialize();
+//        analyzeMassInitialize();
     }
 #endif
 
@@ -173,7 +171,7 @@ public:
      *  @param initialSat initial value for the saturation (only necessary if only diffusion part is solved)
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
-    VariableClass(GridView& gridView, int codim, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
+    VariableClass(const GridView& gridView, int codim, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
     gridSizeDiffusion_(indexSetDiffusion_.size(codim)),gridSizeTransport_(indexSetTransport_.size(codim)), multiscale_(false), codim_(codim), time_(0)
@@ -634,7 +632,7 @@ public:
      */
     void vtkout(const char* name, int k) const
     {
-        analyzeMass();
+//        analyzeMass();
         vtkoutMultiLevel(name, k);
     }
 };
