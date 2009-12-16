@@ -3,7 +3,6 @@ BASEDIR=../..
 CURDIR=doc/doxygen
 WHAT=
 
-doxygendir = $(docdir)/html
 doxygen_DATA = $(WHAT)
 
 #we need this in the distribution
