@@ -192,18 +192,6 @@ public:
     template <class Restarter>
     void serialize(Restarter &res)
     {
-        return;
-    }
-    template <class Restarter>
-    void deserialize(Restarter &res)
-    {
-        return;
-    }
-
-    // serialization methods
-    template <class Restarter>
-    void serialize(Restarter &res)
-    {
         this->transport.problem().variables().serialize<Restarter>(res);
     }
     template <class Restarter>
@@ -225,8 +213,9 @@ public:
             Scalar maxDef = 1e-5, Scalar om = 1, Scalar pressureDt = 0) :
     FractionalFlow(diffusion, transport),
     iterFlag(flag), nIter(nIt), maxDefect(maxDef), omega(om), pressureDt_(pressureDt)
-    {}
+    {
         nextPressureTime_ = pressureDt_;
+    }
 
 protected:
     const int iterFlag;//!<iteration flag
