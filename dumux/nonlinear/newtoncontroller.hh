@@ -219,11 +219,18 @@ public:
                            Function &u,
                            Vector &b)
     {
+        // if the deflection of the newton method is large, we do not
+        // need to solve the linear approximation accurately. Assuming
+        // that the initial value for the delta vector u is quite
+        // close to the final value, a reduction of 6 orders of
+        // magnitute in the defect should be sufficient...
+        Scalar residReduction = 1e-5;
+
         try {
 #if HAVE_MPI
-            solveParallel_(A, u, b);
+            solveParallel_(A, u, b, residReduction);
 #else
-            solveSequential_(A, *u, b);
+            solveSequential_(A, *u, b, residReduction);
 #endif
         }
         catch (MatrixBlockError e) {
@@ -362,19 +369,14 @@ protected:
     template <class Matrix, class Vector>
     void solveParallel_(Matrix &A,
                         Function &u,
-                        Vector &b)
+                        Vector &b, 
+                        Scalar residReduction)
     {
         Vector &x = *u;
 
 #if 0 //HAVE_SUPERLU
         Dune::SuperLU<typename Matrix::BaseT> solver(A, false);
 #else
-        // if the deflection of the newton method is large, we
-        // do not need to solve the linear approximation
-        // accurately. On the other hand, if this is the first
-        // newton step, we don't have a meaningful value for the error
-        // yet, so we use the targeted accurracy for the error.
-        Scalar residTol = tolerance_/1e11;
 
 #if HAVE_PARDISO
     	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
@@ -420,7 +422,7 @@ protected:
             solver(parallelOperator,
                    scalarProduct,
                    parPreCond,
-                   residTol,
+                   residReduction,
                    1000,
                    0);
 #endif // HAVE_SUPERLU
@@ -456,14 +458,14 @@ protected:
 #ifdef HAVE_PARDISO
         SeqPardiso<Matrix,Vector,Vector> pardiso;
         pardiso.factorize(A);
-        BiCGSTABSolver<Vector> solver(opA, pardiso, residTol, 100, 0);         // an inverse operator
+        BiCGSTABSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
 #else // HAVE_PARDISO
         // initialize the preconditioner
         Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
         //                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
         //                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
         // invert the linear equation system
-        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residTol, 1000, 0);
+        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residReduction, 1000, 0);
 #endif // HAVE_PARDISO
 
         Dune::InverseOperatorResult result;

@@ -171,6 +171,8 @@ protected:
 */
 
             // ask the controller to solve the linearized system
+            *u = 0; // set the delta vector to zero before solving the
+                    // linear system!
             ctl.newtonSolveLinear(*jacobianAsm, u, *(*f));
 
             // update the current solution (i.e. uOld) with the delta
