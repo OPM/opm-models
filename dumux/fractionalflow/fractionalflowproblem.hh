@@ -95,7 +95,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition type given by enum in this class
      */
-    virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
+    virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos,
             const Intersection& intersection) const = 0;
 
     //! return type of boundary condition at the given global coordinate
@@ -105,7 +105,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition type given by enum in this class
      */
-    virtual BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos, const Element& element,
+    virtual BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos,
             const Intersection& intersection) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
@@ -115,7 +115,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition value of a dirichlet pressure boundary condition
      */
-    virtual Scalar dirichletPress (const GlobalPosition& globalPos, const Element& element,
+    virtual Scalar dirichletPress (const GlobalPosition& globalPos,
             const Intersection& intersection) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
@@ -125,7 +125,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition value of a dirichlet saturation boundary condition
      */
-    virtual Scalar dirichletSat (const GlobalPosition& globalPos, const Element& element,
+    virtual Scalar dirichletSat (const GlobalPosition& globalPos,
             const Intersection& intersection) const
     {
         return 1;
@@ -138,7 +138,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition value of a neumann pressure boundary condition (wetting phase: vector position 0, non-wetting phase: vector position 1).
      */
-    virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
+    virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos,
             const Intersection& intersection) const = 0;
 
     //! evaluate Neumann boundary condition at given position
@@ -148,7 +148,7 @@ public:
      @param  localPos     position in reference element of element
      \return     boundary condition value of a neumann saturation boundary condition.
      */
-    virtual Scalar neumannSat (const GlobalPosition& globalPos, const Element& element,
+    virtual Scalar neumannSat (const GlobalPosition& globalPos,
             const Intersection& intersection, Scalar factor) const
     {
         return 0;
