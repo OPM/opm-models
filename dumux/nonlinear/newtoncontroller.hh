@@ -378,14 +378,6 @@ protected:
         Dune::SuperLU<typename Matrix::BaseT> solver(A, false);
 #else
 
-#if HAVE_PARDISO
-    	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
-    	SeqPreCond seqPreCond(A);
-#else // !HAVE_PARDISO
-    	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
-    	SeqPreCond seqPreCond(A, 1.0);
-#endif // HAVE_PARDISO
-
 #ifdef HAVE_DUNE_PDELAB
     	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
     	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
@@ -393,11 +385,11 @@ protected:
     	ParallelOperator parallelOperator(model().jacobianAssembler().gridFunctionSpace(), A, parallelHelper);
     	typedef Dune::PDELab::NonoverlappingScalarProduct<GridFunctionSpace,Vector> ParallelScalarProduct;
     	ParallelScalarProduct scalarProduct(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
-    	typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
-    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
-    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
-//    	typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace, Vector, Vector> ParPreCond;
-//    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
+//    	typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
+//    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
+//    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
+    	typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace, Vector, Vector> ParPreCond;
+    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
 
 //    	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
 //    	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
@@ -409,6 +401,15 @@ protected:
 //    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
 //    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
 #else // !HAVE_DUNE_PDELAB
+
+#if HAVE_PARDISO
+    	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
+    	SeqPreCond seqPreCond(A);
+#else // !HAVE_PARDISO
+    	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
+    	SeqPreCond seqPreCond(A, 1.0);
+#endif // HAVE_PARDISO
+
         typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
         typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
         Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
@@ -423,8 +424,8 @@ protected:
                    scalarProduct,
                    parPreCond,
                    residReduction,
-                   1000,
-                   0);
+                   5000,
+                   model().gridView().grid().comm().rank() == 0 ? 1 : 0);
 #endif // HAVE_SUPERLU
 
         Dune::InverseOperatorResult result;

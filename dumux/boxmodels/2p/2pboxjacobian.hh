@@ -292,6 +292,8 @@ public:
                  }
              }
          }
+
+          flux = this->problem_.gridView().comm().sum(flux);
      }
 
      /*!
