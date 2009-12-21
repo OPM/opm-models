@@ -36,6 +36,7 @@ template<class GridView, class Scalar, class VariableClass> class FractionalFlow
     };
     typedef typename GridView::Grid Grid;
 typedef    typename GridView::Traits::template Codim<0>::Entity Element;
+typedef typename GridView::Intersection Intersection;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
@@ -54,7 +55,7 @@ public:
     }
 
     typename BoundaryConditions::Flags bctypePress(const GlobalPosition& globalPos,
-            const Element& element, const LocalPosition& localPos) const
+            const Element& element, const Intersection& intersection) const
     {
         if ((globalPos[0] < eps_))
         return BoundaryConditions::dirichlet;
@@ -63,7 +64,7 @@ public:
     }
 
     BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const
+            const Intersection& intersection) const
     {
         //        if (globalPos[0] > (Right_ - eps_) || globalPos[0] < eps_)
         if (globalPos[0] < eps_)
@@ -73,7 +74,7 @@ public:
     }
 
     Scalar dirichletPress(const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const
+            const Intersection& intersection) const
     {
         if (globalPos[0] < eps_)
         return 2e5;
@@ -82,7 +83,7 @@ public:
     }
 
     Scalar dirichletSat(const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const
+            const Intersection& intersection) const
     {
         if (globalPos[0] < eps_)
         return 0.8;
@@ -91,7 +92,7 @@ public:
     }
 
     std::vector<Scalar> neumannPress(const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const
+            const Intersection& intersection) const
     {
         std::vector<Scalar> neumannFlux(2,0.0);
         if (globalPos[0]> Right_ - eps_)
@@ -102,7 +103,7 @@ public:
     }
 
     Scalar neumannSat(const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos, Scalar factor) const
+            const Intersection& intersection, Scalar factor) const
     {
         if (globalPos[0]> Right_ - eps_)
         return factor;

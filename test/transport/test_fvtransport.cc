@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 		Dune::FieldVector<Scalar,dim> H(300); H[0] = 600;
 
 		Grid grid(N,L,H);
-		GridView gridView(grid.leafView());
+		const GridView gridView(grid.leafView());
 
 		Dune::Uniform fluid;
 		Dune::HomogeneousNonlinearSoil<Grid, Scalar> soil;

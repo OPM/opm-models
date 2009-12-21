@@ -75,8 +75,7 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar,dim> LocalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
-    typedef typename GridView::IntersectionIterator IntersectionIterator;
-
+    typedef typename GridView::Intersection Intersection;
 
 public:
     //! evaluate source term
@@ -97,12 +96,7 @@ public:
      \return     boundary condition type given by enum in this class
      */
     virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const = 0;
-    virtual BoundaryConditions::Flags bctypePress (const GlobalPosition& globalPos, const Element& element,
-                const LocalPosition& localPos, const IntersectionIterator& isIt) const
-    {
-        return bctypePress(globalPos, element, localPos);
-    }
+            const Intersection& intersection) const = 0;
 
     //! return type of boundary condition at the given global coordinate
     /*! return type of boundary condition at the given global coordinate
@@ -112,7 +106,7 @@ public:
      \return     boundary condition type given by enum in this class
      */
     virtual BoundaryConditions::Flags bctypeSat (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const = 0;
+            const Intersection& intersection) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
     /*! evaluate Dirichlet boundary condition at given position
@@ -122,7 +116,7 @@ public:
      \return     boundary condition value of a dirichlet pressure boundary condition
      */
     virtual Scalar dirichletPress (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const = 0;
+            const Intersection& intersection) const = 0;
 
     //! evaluate Dirichlet boundary condition at given position
     /*! evaluate Dirichlet boundary condition at given position
@@ -132,7 +126,7 @@ public:
      \return     boundary condition value of a dirichlet saturation boundary condition
      */
     virtual Scalar dirichletSat (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const
+            const Intersection& intersection) const
     {
         return 1;
     }
@@ -145,12 +139,7 @@ public:
      \return     boundary condition value of a neumann pressure boundary condition (wetting phase: vector position 0, non-wetting phase: vector position 1).
      */
     virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos) const = 0;
-    virtual std::vector<Scalar> neumannPress (const GlobalPosition& globalPos, const Element& element,
-                const LocalPosition& localPos, const IntersectionIterator& isIt) const
-    {
-        return neumannPress(globalPos, element, localPos);
-    }
+            const Intersection& intersection) const = 0;
 
     //! evaluate Neumann boundary condition at given position
     /*! evaluate Neumann boundary condition at given position
@@ -160,7 +149,7 @@ public:
      \return     boundary condition value of a neumann saturation boundary condition.
      */
     virtual Scalar neumannSat (const GlobalPosition& globalPos, const Element& element,
-            const LocalPosition& localPos, Scalar factor) const
+            const Intersection& intersection, Scalar factor) const
     {
         return 0;
     }
