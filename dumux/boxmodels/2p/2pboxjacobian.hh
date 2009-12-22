@@ -243,6 +243,9 @@ public:
          // Loop over elements
           for (; elementIt != endit; ++elementIt)
           {
+         	 if (elementIt->partitionType() != Dune::InteriorEntity)
+         		 continue;
+
               setCurrentElement(*elementIt);
                this->restrictToElement(tmpSol, globalSol);
                this->setCurrentSolution(tmpSol);
@@ -324,6 +327,9 @@ public:
          // Loop over elements
          for (; elementIt != endit; ++elementIt)
          {
+        	 if (elementIt->partitionType() != Dune::InteriorEntity)
+        		 continue;
+
              setCurrentElement(*elementIt);
              this->restrictToElement(tmpSol, globalSol);
              this->setCurrentSolution(tmpSol);

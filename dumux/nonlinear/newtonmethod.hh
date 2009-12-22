@@ -182,6 +182,7 @@ protected:
             // tell the controller that we're done with this iteration
             ctl.newtonEndStep(u, *uOld);
         }
+
         // tell the controller that we're done
         ctl.newtonEnd();
         
