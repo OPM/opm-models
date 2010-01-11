@@ -17,3 +17,10 @@ am
 .deps/
 .libs/
 *.log
+autom4te.cache/
+dumux-handbook.dvi
+.cproject
+.project
+libtool
+missing
+stamp*
