@@ -55,12 +55,98 @@ namespace Properties
 //! i.e. it doesn't print anything)
 NEW_PROP_TAG(NewtonLinearSolverVerbosity);
 
+//! specifies whether the convergence rate and the global residual
+//! gets written out to disk for every newton iteration (default is false)
+NEW_PROP_TAG(NewtonWriteConvergence);
+
 SET_PROP_DEFAULT(NewtonLinearSolverVerbosity)
 {public:
     static const int value = 0;
 };
+
+SET_PROP_DEFAULT(NewtonWriteConvergence)
+{public:
+    static const bool value = false;
+};
 };
 
+
+template <class TypeTag, bool enable>
+struct NewtonConvergenceWriter
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+    
+    NewtonConvergenceWriter() 
+    { 
+        timeStepNum_ = 0;
+        iteration_ = 0;
+        vtkMultiWriter_ = new VtkMultiWriter("convergence");
+    }
+        
+    ~NewtonConvergenceWriter() 
+    { delete vtkMultiWriter_; };
+
+    void beginTimestep()
+    {
+        ++timeStepNum_;
+        iteration_ = 0;
+    };
+
+    void beginIteration(const GridView &gv)
+    {
+        ++ iteration_;
+        vtkMultiWriter_->beginTimestep(timeStepNum_ + iteration_ / 100.0, 
+                                       gv);
+    };
+
+    void writeFields(SolutionFunction &uOld, SolutionFunction &deltaU)
+    {
+        this->model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
+    };
+
+    void endIteration()
+    {
+        vtkMultiWriter_->endTimestep();
+    };
+
+    void endTimestep()
+    {
+        ++timeStepNum_;
+        iteration_ = 0;
+    };
+        
+private:
+    int timeStepNum_;
+    int iteration_;
+    VtkMultiWriter *vtkMultiWriter_;
+};
+
+template <class TypeTag>
+struct NewtonConvergenceWriter<TypeTag, false>
+{ 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+
+    void beginTimestep()
+    { };
+
+    void beginIteration(const GridView &gv)
+    { };
+
+    void writeFields(SolutionFunction &uOld, SolutionFunction &deltaU)
+    { };
+
+    void endIteration()
+    { };
+
+    void endTimestep()
+    { };      
+};
 
 /*!
  * \brief The reference implementation of a newton controller.
@@ -75,7 +161,7 @@ class NewtonController
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))  Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController))  Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid))    Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))    GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))        Model;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
@@ -87,6 +173,8 @@ class NewtonController
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))  SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction         SolutionFunction;
 
+    typedef NewtonConvergenceWriter<TypeTag, GET_PROP_VALUE(TypeTag, PTAG(NewtonWriteConvergence))>  ConvergenceWriter;
+    
 public:
     NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
                      int targetSteps   = 8,
@@ -177,14 +265,15 @@ public:
         probationCount_ = 0;
         maxPhysicalness_ = 0;
         curPhysicalness_ = 0;
+
+        convergenceWriter_.beginTimestep();
     }
 
     /*!
      * \brief Indidicates the beginning of a newton iteration.
      */
     void newtonBeginStep()
-    {
-    }
+    { }
 
     /*!
      * \brief Returns the number of steps done since newtonBegin() was
@@ -267,6 +356,10 @@ public:
      */
     void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
     {
+        convergenceWriter_.beginIteration(this->model().gridView());
+        convergenceWriter_.writeFields(uOld, deltaU);
+        convergenceWriter_.endIteration();
+
         newtonUpdateRelError(uOld, deltaU);
         
         *deltaU *= -1;
@@ -290,7 +383,9 @@ public:
      * \brief Indicates that we're done solving the non-linear system of equations.
      */
     void newtonEnd()
-    {}
+    {
+        convergenceWriter_.endTimestep();
+    }
 
     /*!
      * \brief Called if the newton method broke down.
@@ -332,7 +427,7 @@ public:
         }
         else {
             /*Scalar percent = (Scalar(1))/targetSteps_;
-            return oldTimeStep*(1 + percent);
+              return oldTimeStep*(1 + percent);
             */
             Scalar percent = ((Scalar) targetSteps_ - numSteps_)/targetSteps_;
             return oldTimeStep*(1 + percent/1.2);
@@ -401,7 +496,7 @@ protected:
     	ParallelScalarProduct scalarProduct(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
     	typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
     	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), seqPreCond,
-    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
+                              model().jacobianAssembler().constraintsTrafo(), parallelHelper);
 //    	typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace, Vector, Vector> ParPreCond;
 //    	ParPreCond parPreCond(model().jacobianAssembler().gridFunctionSpace(), parallelHelper);
 
@@ -513,6 +608,8 @@ protected:
     }
 
     NewtonMethod *method_;
+
+    ConvergenceWriter convergenceWriter_;
 
     Scalar tolerance_;
 
