@@ -35,12 +35,19 @@ namespace Dune {
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
-template <class NewtonMethod, class TypeTag>
-class TwoPTwoCNewtonController
-    : public NewtonControllerBase<NewtonMethod, TwoPTwoCNewtonController<NewtonMethod, TypeTag> >
+template <class TypeTag>
+class TwoPTwoCNewtonController : public NewtonController<TypeTag>
 {
-    typedef typename NewtonMethod::Model Model;
+    typedef NewtonController<TypeTag>        ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) Implementation;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model)) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
+
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
@@ -49,13 +56,6 @@ class TwoPTwoCNewtonController
     };
 
 public:
-    typedef TwoPTwoCNewtonController<NewtonMethod, TypeTag>  ThisType;
-    typedef NewtonControllerBase<NewtonMethod, ThisType>     ParentType;
-
-    typedef typename ParentType::Scalar            Scalar;
-    typedef typename ParentType::Function          Function;
-    typedef typename ParentType::JacobianAssembler JacobianAssembler;
-
     TwoPTwoCNewtonController(Scalar tolerance = 1e-7,
                              int targetSteps = 9,
                              int maxSteps = 18)
@@ -64,7 +64,7 @@ public:
 
     //! Suggest a new time stepsize based either on the number of newton
     //! iterations required or on the variable switch
-    void newtonEndStep(Function &u, Function &uOld)
+    void newtonEndStep(SolutionFunction &u, SolutionFunction &uOld)
     {
         // call the method of the base class
         ParentType::model().localJacobian().updateStaticData(u, uOld);
@@ -90,7 +90,7 @@ public:
     };
 
     //! Returns true iff another iteration should be done.
-    bool newtonProceed(Function &u)
+    bool newtonProceed(SolutionFunction &u)
     {
         return ParentType::newtonProceed(u);
     }
@@ -98,11 +98,11 @@ public:
     /** \todo Please doc me! */
 
 protected:
-    friend class NewtonControllerBase<NewtonMethod, ThisType>;
+    friend class NewtonController<TypeTag>;
     //! called by the base class the get an indication of how physical
     //! an iterative solution is 1 means "completely physical", 0 means
     //! "completely unphysical"
-    Scalar physicalness_(Function &u)
+    Scalar physicalness_(SolutionFunction &u)
     {
         // the maximum distance of a Sn value to a physically
         // meaningful value.

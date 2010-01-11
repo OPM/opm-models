@@ -23,8 +23,6 @@
 #ifndef DUMUX_2PPROPERTIES_HH
 #define DUMUX_2PPROPERTIES_HH
 
-#include "2pnewtoncontroller.hh"
-
 namespace Dune
 {
 /*!
@@ -41,7 +39,7 @@ class TwoPBoxModel;
 template<class TypeTag>
 class TwoPBoxJacobian;
 
-template<class NewtonMethod>
+template<class TypeTag>
 class TwoPNewtonController;
 
 template <class TypeTag, class Implementation>
@@ -183,14 +181,7 @@ SET_TYPE_PROP(BoxTwoP,
 SET_TYPE_PROP(BoxTwoP, Model, TwoPBoxModel<TypeTag>);
 
 //! the default newton controller for two-phase problems
-SET_PROP(BoxTwoP, NewtonController)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
-
-public:
-    typedef TwoPNewtonController<NewtonMethod> type;
-};
+SET_TYPE_PROP(BoxTwoP, NewtonController, TwoPNewtonController<TypeTag>);
 
 //! the VertexData property
 SET_TYPE_PROP(BoxTwoP, VertexData, TwoPVertexData<TypeTag>);

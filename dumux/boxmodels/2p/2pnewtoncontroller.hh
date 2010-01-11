@@ -35,18 +35,21 @@ namespace Dune {
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
-template <class NewtonMethod>
-class TwoPNewtonController
-    : public NewtonControllerBase<NewtonMethod, TwoPNewtonController<NewtonMethod> >
+template <class TypeTag>
+class TwoPNewtonController : public NewtonController<TypeTag>
 {
+    typedef TwoPNewtonController<TypeTag>  ThisType;
+    typedef NewtonController<TypeTag>      ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) Implementation;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model)) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
+
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+
 public:
-    typedef TwoPNewtonController<NewtonMethod>            ThisType;
-    typedef NewtonControllerBase<NewtonMethod, ThisType>  ParentType;
-
-    typedef typename ParentType::Scalar            Scalar;
-    typedef typename ParentType::Function          Function;
-    typedef typename ParentType::JacobianAssembler JacobianAssembler;
-
     TwoPNewtonController(Scalar tolerance = 1e-8,
                          int targetSteps = 8,
                          int maxSteps = 12)
@@ -54,11 +57,11 @@ public:
     {};
 
 protected:
-    friend class NewtonControllerBase<NewtonMethod, ThisType>;
+    friend class NewtonController<TypeTag>;
     //! called by the base class the get an indication of how physical
     //! an iterative solution is 1 means "completely physical", 0 means
     //! "completely unphysical"
-    Scalar physicalness_(Function &u)
+    Scalar physicalness_(SolutionFunction &u)
     {
         const Scalar satNormFactor = 2.5;
 

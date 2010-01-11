@@ -166,20 +166,14 @@ public:
 
 //! use the plain newton method for the box scheme by default
 SET_PROP(BoxScheme, NewtonMethod)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))  Model;
-public:
-    typedef Dune::NewtonMethod<Model> type;
+{public:
+    typedef Dune::NewtonMethod<TypeTag> type;
 };
 
 //! use the plain newton controller for the box scheme by default
 SET_PROP(BoxScheme, NewtonController)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
-
-public:
-    typedef Dune::NewtonController<NewtonMethod> type;
+{public:
+    typedef Dune::NewtonController<TypeTag> type;
 };
 
 /*!

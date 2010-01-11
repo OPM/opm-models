@@ -49,37 +49,48 @@
 
 namespace Dune
 {
+namespace Properties
+{
+//! specifies the verbosity of the linear solver (by default it is 0,
+//! i.e. it doesn't print anything)
+NEW_PROP_TAG(NewtonLinearSolverVerbosity);
+
+SET_PROP_DEFAULT(NewtonLinearSolverVerbosity)
+{public:
+    static const int value = 0;
+};
+};
+
+
 /*!
- * \brief Base class for the reference implementation of a newton
- *        controller.
+ * \brief The reference implementation of a newton controller.
  *
  * If you want to specialize only some methods but are happy with
  * the defaults of the reference controller, derive your
  * controller from this class and simply overload the required
  * methods.
  */
-template <class NewtonMethod,
-          class Implementation>
-class NewtonControllerBase
+template <class TypeTag>
+class NewtonController
 {
-    typedef typename NewtonMethod::Model  Model;
-    typedef typename Model::NewtonTraits  NewtonTraits;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))  Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController))  Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid))    Grid;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))        Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
+
+    typedef typename GET_PROP(TypeTag, PTAG(PDELabTypes))  PDELabTypes;
+    typedef typename PDELabTypes::GridFunctionSpace GridFunctionSpace;
+    typedef typename PDELabTypes::ConstraintsTrafo ConstraintsTrafo;
+
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))  SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction         SolutionFunction;
 
 public:
-    typedef typename NewtonTraits::Scalar  Scalar;
-    typedef typename NewtonTraits::Grid    Grid;
-
-    typedef typename NewtonTraits::Function              Function;
-    typedef typename NewtonTraits::JacobianAssembler     JacobianAssembler;
-#if HAVE_DUNE_PDELAB
-    typedef typename JacobianAssembler::GridFunctionSpace GridFunctionSpace;
-    typedef typename JacobianAssembler::ConstraintsTrafo ConstraintsTrafo;
-#endif
-    typedef typename JacobianAssembler::RepresentationType    JacAsmRep;
-
-    NewtonControllerBase(Scalar tolerance, // maximum tolerated deflection between two iterations
-                         int targetSteps,
-                         int maxSteps)
+    NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
+                     int targetSteps   = 8,
+                     int maxSteps      = 12)
     {
         assert(maxSteps > targetSteps + 3);
         numSteps_ = 0;
@@ -94,7 +105,7 @@ public:
     /*!
      * \brief Returns true iff another iteration should be done.
      */
-    bool newtonProceed(Function &u)
+    bool newtonProceed(SolutionFunction &u)
     {
         if (numSteps_ < 2)
             return true; // we always do at least two iterations
@@ -159,7 +170,7 @@ public:
      * \brief Called before the newton method is applied to an
      *        non-linear system of equations.
      */
-    void newtonBegin(NewtonMethod *method, Function &u)
+    void newtonBegin(NewtonMethod *method, SolutionFunction &u)
     {
         method_ = method;
         numSteps_ = 0;
@@ -187,13 +198,12 @@ public:
      * \brief Update the error of the solution compared to the
      *        previous iteration.
      */
-    template <class Function>
-    void newtonUpdateRelError(const Function &uOld,
-                              const Function &deltaU)
+    void newtonUpdateRelError(const SolutionFunction &uOld,
+                              const SolutionFunction &deltaU)
     {
         // calculate the relative error as the maximum relative
         // deflection in any degree of freedom.
-        typedef typename Function::BlockType FV;
+        typedef typename SolutionFunction::BlockType FV;
         error_ = 0;
         for (int i = 0; i < int((*uOld).size()); ++i) {
             for (int j = 0; j < FV::size; ++j) {
@@ -214,9 +224,9 @@ public:
      * Throws Dune::NumericalProblem if the linear solver didn't
      * converge.
      */
-    template <class Matrix, class Function, class Vector>
+    template <class Matrix, class Vector>
     void newtonSolveLinear(Matrix &A,
-                           Function &u,
+                           SolutionFunction &u,
                            Vector &b)
     {
         // if the deflection of the newton method is large, we do not
@@ -255,8 +265,7 @@ public:
      *               the updated solution.
      * \param uOld   The solution of the last iteration
      */
-    template <class Function>
-    void newtonUpdate(Function &deltaU, const Function &uOld)
+    void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
     {
         newtonUpdateRelError(uOld, deltaU);
         
@@ -267,7 +276,7 @@ public:
     /*!
      * \brief Indicates that one newton iteration was finished.
      */
-    void newtonEndStep(Function &u, Function &uOld)
+    void newtonEndStep(SolutionFunction &u, SolutionFunction &uOld)
     {
         ++numSteps_;
 
@@ -317,6 +326,8 @@ public:
         // of the problem.
         if (numSteps_ > targetSteps_) {
             Scalar percent = ((Scalar) numSteps_ - targetSteps_)/targetSteps_;
+#warning HACK
+            percent /= 1.5;
             return oldTimeStep/(1 + percent);
         }
         else {
@@ -368,7 +379,7 @@ protected:
 #if HAVE_MPI
     template <class Matrix, class Vector>
     void solveParallel_(Matrix &A,
-                        Function &u,
+                        SolutionFunction &u,
                         Vector &b, 
                         Scalar residReduction)
     {
@@ -423,13 +434,15 @@ protected:
         Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
         Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
 #endif // HAVE_DUNE_PDELAB
+        const int verbosity = GET_PROP_VALUE(TypeTag,
+                                             PTAG(NewtonLinearSolverVerbosity));
     	Dune::BiCGSTABSolver<Vector>
             solver(parallelOperator,
                    scalarProduct,
                    parPreCond,
                    residReduction,
-                   10000,
-                   model().gridView().grid().comm().rank() == 0 ? 1 : 0);
+                   300,
+                   model().gridView().grid().comm().rank() == 0 ? verbosity : 0);
 #endif // HAVE_SUPERLU
 
         Dune::InverseOperatorResult result;
@@ -494,7 +507,7 @@ protected:
     //! iteration. (The controller assumes that as the method
     //! progresses, the physicallness of the solution must
     //! increase.)
-    Scalar physicalness_(Function &u)
+    Scalar physicalness_(SolutionFunction &u)
     {
         return 1;
     }
@@ -516,26 +529,6 @@ protected:
     int    numSteps_;
 };
 
-//! A reference implementation of a newton method controller
-//!
-//! Basically the only difference to NewtonControllerBase is that
-//! this class can be instanciated more easily.
-template <class NewtonMethod>
-class NewtonController
-    : public NewtonControllerBase<NewtonMethod, NewtonController<NewtonMethod> >
-{
-public:
-    typedef NewtonController<NewtonMethod>               ThisType;
-    typedef NewtonControllerBase<NewtonMethod, ThisType> ParentType;
-
-    typedef typename ParentType::Scalar            Scalar;
-    typedef typename ParentType::Function          Function;
-    typedef typename ParentType::JacobianAssembler JacobianAssembler;
-
-    NewtonController(Scalar tolerance = 1e-6, int targetSteps=8, int maxSteps = 12)
-        : ParentType(tolerance, targetSteps, maxSteps)
-    {};
-};
 }
 
 

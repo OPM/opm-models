@@ -179,13 +179,7 @@ SET_TYPE_PROP(BoxTwoPTwoC,
               TwoPTwoCBoxJacobian<TypeTag>);
 
 //! Use the 2p2c specific newton controller for the 2p2c model
-SET_PROP(BoxTwoPTwoC, NewtonController)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod))  NewtonMethod;
-
-public:
-    typedef TwoPTwoCNewtonController<NewtonMethod, TypeTag> type;
-};
+SET_TYPE_PROP(BoxTwoPTwoC, NewtonController, TwoPTwoCNewtonController<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxTwoPTwoC, Model, TwoPTwoCBoxModel<TypeTag>);

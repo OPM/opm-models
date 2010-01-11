@@ -40,19 +40,16 @@ namespace Dune
  *
  * In order to use the method you need a NewtonController.
  */
-template <class ModelT>
+template <class TypeTag>
 class NewtonMethod
 {
-public:
-    typedef ModelT Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model)) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
-    //    private:
-    typedef typename Model::NewtonTraits::Function          Function;
-    typedef typename Model::NewtonTraits::LocalJacobian     LocalJacobian;
-    typedef typename Model::NewtonTraits::JacobianAssembler JacobianAssembler;
-    typedef typename Model::NewtonTraits::Scalar            Scalar;
-    typedef NewtonMethod<Model>                             ThisType;
-
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
+    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+    typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 public:
     NewtonMethod(Model &model)
     {
@@ -109,17 +106,17 @@ protected:
     	if (!uOld)
     	{
 #ifdef HAVE_DUNE_PDELAB
-            uOld = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
-            f = new Function(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+            uOld = new SolutionFunction(model.jacobianAssembler().gridFunctionSpace(), 0.0);
+            f = new SolutionFunction(model.jacobianAssembler().gridFunctionSpace(), 0.0);
 #else
-            uOld = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
-            f = new Function(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
+            uOld = new SolutionFunction(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
+            f = new SolutionFunction(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
 #endif
     	}
         model_ = &model;
 
         // TODO (?): u shouldn't be hard coded to the model
-        Function          &u             = model.curSolFunction();
+        SolutionFunction          &u             = model.curSolFunction();
         LocalJacobian     &localJacobian = model.localJacobian();
         JacobianAssembler &jacobianAsm   = model.jacobianAssembler();
         
@@ -199,8 +196,8 @@ protected:
 
 
 private:
-    Function       *uOld;
-    Function       *f;
+    SolutionFunction *uOld;
+    SolutionFunction *f;
 
     Model        *model_;
     bool          verbose_;
