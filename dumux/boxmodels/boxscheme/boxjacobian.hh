@@ -26,7 +26,8 @@
 #ifndef DUMUX_BOX_JACOBIAN_HH
 #define DUMUX_BOX_JACOBIAN_HH
 
-#include <dumux/operators/localstiffness.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/disc/operators/localstiffness.hh>
 
 #include <dumux/auxiliary/valgrind.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
@@ -35,7 +36,6 @@
 #include <boost/format.hpp>
 
 #include "boxproperties.hh"
-
 
 
 namespace Dune
@@ -278,6 +278,7 @@ public:
                 // points
                 values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
             }
+
             Valgrind::CheckDefined(values[eqIdx]);
 
             this->b[scvIdx][eqIdx] += values[eqIdx];
@@ -396,7 +397,7 @@ public:
      * necessary.
      */
     void initStaticData()
-    { };
+    { }
 
     /*!
      * \brief Update the static data of all elements with the current solution
@@ -663,6 +664,7 @@ private:
             }
         }
 
+#if !HAVE_DUNE_PDELAB
         // calculate the right hand side
         SolutionOnElement residU(numVertices);
         asImp_().evalLocalResidual(residU, true); // include boundary conditions for the residual
@@ -676,6 +678,7 @@ private:
                     this->b[i][eqIdx] = residU[i][eqIdx];
             }
         }
+#endif
     };
     
 protected:
@@ -761,7 +764,7 @@ protected:
                            int vertIdx,
                            int pvIdx) const
     {
-        return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-7);
+        return std::max(fabs(1e-7*elemSol[vertIdx][pvIdx]), 1e-7);
         //return std::max(std::abs(1e-9*elemSol[vertIdx][pvIdx]), Scalar(1e-12));
     }
 

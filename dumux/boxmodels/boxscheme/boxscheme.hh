@@ -169,9 +169,13 @@ public:
 
     Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 
     {
+#if HAVE_DUNE_PDELAB
+        SolutionFunction tmpU(jacobianAssembler().gridFunctionSpace(), 0.0);
+#else
         SolutionFunction tmpU(gridView_, gridView_);
-        *tmpU = *uCur_;
-        *uCur_ = *u;
+#endif
+        *tmpU = *(*uCur_);
+        *(*uCur_) = *u;
         localJacobian_.evalGlobalResidual(tmp);
 
         Scalar result = (*tmp).two_norm();
@@ -182,7 +186,7 @@ public:
                 result += std::abs((*tmp)[i][j]);
         }
         */
-        *uCur_ = *tmpU;
+        *(*uCur_) = *tmpU;
         return result;
     };
     /*!
@@ -405,7 +409,7 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-      allocateStuff_();
+        allocateStuff_();
         res.template deserializeEntities<dim>(asImp_(), this->gridView_);
         wasRestarted_ = true;
     }
@@ -475,8 +479,8 @@ protected:
     bool hasOverlap_()
     { return gridView_.overlapSize(0) > 0; };
 
-  void allocateStuff_()
-  {
+    void allocateStuff_()
+    {
 #ifdef HAVE_DUNE_PDELAB
         jacAsm_ = new JacobianAssembler(asImp_(), problem_);
         uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
@@ -488,7 +492,7 @@ protected:
         uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
         f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
 #endif
-  }
+    }
 
     void applyInitialSolution_(SolutionFunction &u)
     {
