@@ -75,11 +75,14 @@ template <class TypeTag, bool enable>
 struct NewtonConvergenceWriter
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) NewtonController;
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
     typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
     
-    NewtonConvergenceWriter() 
+    NewtonConvergenceWriter(NewtonController &ctl) 
+        : ctl_(ctl)
     { 
         timeStepNum_ = 0;
         iteration_ = 0;
@@ -102,9 +105,11 @@ struct NewtonConvergenceWriter
                                        gv);
     };
 
-    void writeFields(SolutionFunction &uOld, SolutionFunction &deltaU)
+    void writeFields(const SolutionFunction &uOld,
+                     const SolutionFunction &deltaU)
     {
-        this->model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
+        std::cout << "writeFields\n";
+        ctl_.model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
     };
 
     void endIteration()
@@ -122,15 +127,21 @@ private:
     int timeStepNum_;
     int iteration_;
     VtkMultiWriter *vtkMultiWriter_;
+    NewtonController &ctl_;
 };
 
 template <class TypeTag>
 struct NewtonConvergenceWriter<TypeTag, false>
 { 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) NewtonController;
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
     typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+
+    NewtonConvergenceWriter(NewtonController &ctl) 
+    {};
 
     void beginTimestep()
     { };
@@ -138,7 +149,8 @@ struct NewtonConvergenceWriter<TypeTag, false>
     void beginIteration(const GridView &gv)
     { };
 
-    void writeFields(SolutionFunction &uOld, SolutionFunction &deltaU)
+    void writeFields(const SolutionFunction &uOld,
+                     const SolutionFunction &deltaU)
     { };
 
     void endIteration()
@@ -179,6 +191,7 @@ public:
     NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
                      int targetSteps   = 8,
                      int maxSteps      = 12)
+        : convergenceWriter_(asImp_())
     {
         assert(maxSteps > targetSteps + 3);
         numSteps_ = 0;
@@ -356,9 +369,7 @@ public:
      */
     void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
     {
-        convergenceWriter_.beginIteration(this->model().gridView());
-        convergenceWriter_.writeFields(uOld, deltaU);
-        convergenceWriter_.endIteration();
+        writeConvergence_(uOld, deltaU);
 
         newtonUpdateRelError(uOld, deltaU);
         
@@ -421,8 +432,6 @@ public:
         // of the problem.
         if (numSteps_ > targetSteps_) {
             Scalar percent = ((Scalar) numSteps_ - targetSteps_)/targetSteps_;
-#warning HACK
-            percent /= 1.5;
             return oldTimeStep/(1 + percent);
         }
         else {
@@ -469,6 +478,14 @@ protected:
     { return *static_cast<Implementation*>(this); }
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
+
+    void writeConvergence_(const SolutionFunction &uOld, 
+                           const SolutionFunction &deltaU)
+    {
+        convergenceWriter_.beginIteration(this->model().gridView());
+        convergenceWriter_.writeFields(uOld, deltaU);
+        convergenceWriter_.endIteration();
+    };
 
 
 #if HAVE_MPI
