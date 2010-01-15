@@ -319,6 +319,7 @@ public:
         error_ = model().gridView().comm().max(error_);
     }
 
+
     /*!
      * \brief Solve the linear system of equations \f$ \mathbf{A}x - b
      *        = 0\f$.
@@ -372,7 +373,7 @@ public:
         writeConvergence_(uOld, deltaU);
 
         newtonUpdateRelError(uOld, deltaU);
-        
+
         *deltaU *= -1;
         *deltaU += *uOld;
     }
@@ -401,7 +402,7 @@ public:
     /*!
      * \brief Called if the newton method broke down.
      *
-     * This method is called _after_ newtonEnd() 
+     * This method is called _after_ newtonEnd()
      */
     void newtonFail()
     {
@@ -411,7 +412,7 @@ public:
     /*!
      * \brief Called when the newton method was sucessful.
      *
-     * This method is called _after_ newtonEnd() 
+     * This method is called _after_ newtonEnd()
      */
     void newtonSucceed()
     { }
@@ -428,7 +429,7 @@ public:
         // be agressive reducing the timestep size but
         // conservative when increasing it. the rationale is
         // that we want to avoid failing in the next newton
-        // iteration which would require another linerization
+        // iteration which would require another linearization
         // of the problem.
         if (numSteps_ > targetSteps_) {
             Scalar percent = ((Scalar) numSteps_ - targetSteps_)/targetSteps_;
@@ -571,18 +572,12 @@ protected:
     template <class Matrix, class Vector>
     void solveSequential_(Matrix &A,
                           Vector &x,
-                          Vector &b)
+                          Vector &b,
+			  Scalar residReduction)
     {
-        // if the deflection of the newton method is large, we
-        // do not need to solve the linear approximation
-        // accurately. On the other hand, if this is the first
-        // newton step, we don't have a meaningful value for the error
-        // yet, so we use the targeted accurracy for the error.
-        Scalar residTol = tolerance_/1e8;
-
-        typedef Dune::MatrixAdapter<typename JacobianAssembler::RepresentationType,
-            typename Function::RepresentationType,
-            typename Function::RepresentationType>  MatrixAdapter;
+      typedef typename SolutionTypes::JacobianAssembler::RepresentationType AsmRep;
+      typedef typename SolutionFunction::RepresentationType FnRep;
+      typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  MatrixAdapter;
         MatrixAdapter opA(A);
 
 #ifdef HAVE_PARDISO
