@@ -32,7 +32,7 @@
 #include <dumux/new_decoupled/2p/diffusion/fv/fvvelocity2p.hh>
 #include <dumux/new_decoupled/2p/transport/fv/fvsaturation2p.hh>
 
-#include "test_2p_soilproperties.hh"
+#include "test_2p_spatialparams.hh"
 
 namespace Dune
 {
@@ -80,14 +80,14 @@ SET_TYPE_PROP(TwoPTestProblem, WettingPhase, Dune::Water);
 SET_TYPE_PROP(TwoPTestProblem, NonwettingPhase, Dune::Oil);
 
 // Set the soil properties
-SET_PROP(TwoPTestProblem, Soil)
+SET_PROP(TwoPTestProblem, SpatialParameters)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 
 public:
-    typedef Dune::Test2PSoil<Grid, Scalar> type;
+    typedef Dune::Test2PSpatialParams<TypeTag> type;
 };
 
 // Enable gravity
@@ -182,8 +182,7 @@ bool shouldWriteRestartFile() const
  * This problem assumes a temperature of 10 degrees Celsius.
  */
 Scalar temperature(const GlobalPosition& globalPos,
-        const Element& element,
-                const LocalPosition& localPos) const
+        const Element& element) const
 {
     return 273.15 + 10; // -> 10°C
 }

@@ -56,15 +56,17 @@ namespace Dune
 template<class TypeTag>
 class FVSaturation2P
 {
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
-      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-      typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) ReferenceElements;
-      typedef typename ReferenceElements::Container ReferenceElementContainer;
-      typedef typename ReferenceElements::ContainerFaces ReferenceElementFaceContainer;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))            GridView;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))            Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))           Problem;
+      typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements))      ReferenceElements;
+      typedef typename ReferenceElements::Container                    ReferenceElementContainer;
+      typedef typename ReferenceElements::ContainerFaces               ReferenceElementFaceContainer;
 
-      typedef typename GET_PROP_TYPE(TypeTag, PTAG(DiffusivePart)) DiffusivePart;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(DiffusivePart))     DiffusivePart;
 
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
+      typedef typename SpatialParameters::MaterialLaw                  MaterialLaw;
 
     enum
     {
@@ -105,10 +107,10 @@ typedef    typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     { return *diffusivePart_; }
 
     //function to calculate the time step if a non-wetting phase velocity is used
-    template<class ScalarType> ScalarType evaluateTimeStepNonwettingFlux(ScalarType timestepFactorIn, ScalarType timestepFactorOutNW, ScalarType& residualSatW, ScalarType& residualSatNW, int globalIdxI);
+    Scalar evaluateTimeStepNonwettingFlux(Scalar timestepFactorIn, Scalar timestepFactorOutNW, Scalar& residualSatW, Scalar& residualSatNW, int globalIdxI);
 
     //function to calculate the time step if a total velocity is used
-    template<class ScalarType> ScalarType evaluateTimeStepTotalFlux(ScalarType timestepFactorIn,ScalarType timestepFactorOut, ScalarType diffFactorIn, ScalarType diffFactorOut, ScalarType& residualSatW, ScalarType& residualSatNW);
+    Scalar evaluateTimeStepTotalFlux(Scalar timestepFactorIn,Scalar timestepFactorOut, Scalar diffFactorIn, Scalar diffFactorOut, Scalar& residualSatW, Scalar& residualSatNW);
 
 public:
     //! Calculate the update vector.
@@ -224,14 +226,14 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
         // cell index
         int globalIdxI = problem_.variables().index(*eIt);
 
-        Scalar residualSatW = problem_.soil().Sr_w(globalPos, *eIt, localPos);
-        Scalar residualSatNW = problem_.soil().Sr_n(globalPos, *eIt, localPos);
+        Scalar residualSatW = problem_.spatialParameters().materialLawParams(globalPos, *eIt).Swr();
+        Scalar residualSatNW = problem_.spatialParameters().materialLawParams(globalPos, *eIt).Snr();
 
         //for benchmark only!
         //        problem_.variables().storeSrn(residualSatNW, globalIdxI);
         //for benchmark only!
 
-        Scalar porosity = problem_.soil().porosity(globalPos, *eIt,localPos);
+        Scalar porosity = problem_.spatialParameters().porosity(globalPos, *eIt);
 
         Scalar viscosityWI = problem_.variables().viscosityWetting(globalIdxI);
         Scalar viscosityNWI = problem_.variables().viscosityNonwetting(globalIdxI);
@@ -505,7 +507,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                     factorSecondPhase = (problem_.variables().velocitySecondPhase()[globalIdxI][isIndex] * unitDistVec) * (faceArea * (unitOuterNormal * unitDistVec)) / (volume*porosity);
 
                     Scalar pressBound = problem_.variables().pressure()[globalIdxI];
-                    Scalar temperature = problem_.temperature(globalPosFace, *eIt, localPosFace);
+                    Scalar temperature = problem_.temperature(globalPosFace, *eIt);
 
                     //determine phase saturations from primary saturation variable
                     Scalar satWI = 0;
@@ -520,7 +522,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                         satWI = 1-problem_.variables().saturation()[globalIdxI];
                         satWBound = 1-satBound;
                     }
-                    Scalar pcBound = problem_.materialLaw().pC(satWBound,globalPosFace, *eIt, localPosFace);
+                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satBound);
 
                     //determine phase pressures from primary pressure variable
                     Scalar pressW = 0;
@@ -556,11 +558,11 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                     {
                         if (compressibility_)
                         {
-                            lambdaW = problem_.materialLaw().mobW(satWBound,globalPosFace, *eIt, localPosFace, temperature, pressW);
+                            lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/problem_.wettingPhase().viscosity(temperature, pressW);
                         }
                         else
                         {
-                            lambdaW = problem_.materialLaw().mobW(satWBound,globalPosFace, *eIt, localPosFace, temperature);
+                            lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/viscosityWI;
                         }
                     }
 
@@ -576,11 +578,11 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                     {
                         if (compressibility_)
                         {
-                            lambdaNW = problem_.materialLaw().mobN(1-satWBound,globalPosFace, *eIt, localPosFace, temperature, pressNW);
+                            lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/problem_.nonwettingPhase().viscosity(temperature, pressNW);
                         }
                         else
                         {
-                            lambdaNW = problem_.materialLaw().mobN(1-satWBound,globalPosFace, *eIt, localPosFace, temperature);
+                            lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/viscosityNWI;
                         }
                     }
 //                    std::cout<<lambdaW<<" "<<lambdaNW<<std::endl;
@@ -841,11 +843,10 @@ void FVSaturation2P<TypeTag>::initialTransport()
 }
 
 template<class TypeTag>
-template<class ScalarType>
-ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepTotalFlux(ScalarType timestepFactorIn,ScalarType timestepFactorOut, ScalarType diffFactorIn, ScalarType diffFactorOut, ScalarType& residualSatW, ScalarType& residualSatNW)
+typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeStepTotalFlux(Scalar timestepFactorIn,Scalar timestepFactorOut, Scalar diffFactorIn, Scalar diffFactorOut, Scalar& residualSatW, Scalar& residualSatNW)
 {
     // compute volume correction
-    ScalarType volumeCorrectionFactor = (1 - residualSatW -residualSatNW);
+    Scalar volumeCorrectionFactor = (1 - residualSatW -residualSatNW);
 
     //make sure correction is in the right range. If not: force dt to be not min-dt!
     if (timestepFactorIn <= 0)
@@ -857,7 +858,7 @@ ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepTotalFlux(ScalarType timeste
         timestepFactorOut = 1e-100;
     }
 
-    ScalarType sumFactor = std::min(volumeCorrectionFactor/timestepFactorIn, volumeCorrectionFactor/timestepFactorOut);
+    Scalar sumFactor = std::min(volumeCorrectionFactor/timestepFactorIn, volumeCorrectionFactor/timestepFactorOut);
 
     //make sure that diffFactor > 0
     if (diffFactorIn <= 0)
@@ -869,7 +870,7 @@ ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepTotalFlux(ScalarType timeste
         diffFactorOut = 1e-100;
     }
 
-    ScalarType minDiff = std::min(volumeCorrectionFactor/diffFactorIn,volumeCorrectionFactor/diffFactorOut);
+    Scalar minDiff = std::min(volumeCorrectionFactor/diffFactorIn,volumeCorrectionFactor/diffFactorOut);
 
     //determine time step
     sumFactor = std::min(sumFactor, 0.1*minDiff);
@@ -877,20 +878,19 @@ ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepTotalFlux(ScalarType timeste
     return sumFactor;
 }
 template<class TypeTag>
-template<class ScalarType>
-ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepNonwettingFlux(ScalarType timestepFactorIn,ScalarType timestepFactorOut, ScalarType& residualSatW, ScalarType& residualSatNW, int globalIdxI)
+typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeStepNonwettingFlux(Scalar timestepFactorIn,Scalar timestepFactorOut, Scalar& residualSatW, Scalar& residualSatNW, int globalIdxI)
 {
     // compute dt restriction
-    ScalarType volumeCorrectionFactorIn = 1-residualSatW - residualSatNW;
-    ScalarType volumeCorrectionFactorOut = 0;
+    Scalar volumeCorrectionFactorIn = 1-residualSatW - residualSatNW;
+    Scalar volumeCorrectionFactorOut = 0;
     if (saturationType_ == Sw)
     {
-        ScalarType satI = problem_.variables().saturation()[globalIdxI];
+        Scalar satI = problem_.variables().saturation()[globalIdxI];
         volumeCorrectionFactorOut = std::max((satI - residualSatW), 1e-2);
     }
     if (saturationType_ == Sn)
     {
-        ScalarType satI = problem_.variables().saturation()[globalIdxI];
+        Scalar satI = problem_.variables().saturation()[globalIdxI];
         volumeCorrectionFactorOut = std::max((satI - residualSatNW), 1e-2);
     }
 
@@ -915,7 +915,7 @@ ScalarType FVSaturation2P<TypeTag>::evaluateTimeStepNonwettingFlux(ScalarType ti
     timestepFactorOut= volumeCorrectionFactorOut / timestepFactorOut;
 
     //determine timestep
-    ScalarType timestepFactor = std::min(timestepFactorIn,timestepFactorOut);
+    Scalar timestepFactor = std::min(timestepFactorIn,timestepFactorOut);
 
     return timestepFactor;
 }
@@ -959,24 +959,22 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation 
             satW = 1-sat;
         }
 
-        Scalar temperature = problem_.temperature(globalPos, *eIt, localPos);
-
-        std::vector<Scalar> mobilities = problem_.materialLaw().mob(satW, globalPos, *eIt, localPos, temperature);
-
-        // initialize mobilities
-        problem_.variables().mobilityWetting(globalIdx) = mobilities[0];
-        problem_.variables().mobilityNonwetting(globalIdx) = mobilities[1];
-        problem_.variables().capillaryPressure(globalIdx) = problem_.materialLaw().pC(satW, globalPos, *eIt, localPos);
+        Scalar temperature = problem_.temperature(globalPos, *eIt);
 
         problem_.variables().densityWetting(globalIdx) = problem_.wettingPhase().density(temperature);
         problem_.variables().densityNonwetting(globalIdx) = problem_.nonwettingPhase().density(temperature);
         problem_.variables().viscosityWetting(globalIdx) = problem_.wettingPhase().viscosity(temperature);
         problem_.variables().viscosityNonwetting(globalIdx) = problem_.nonwettingPhase().viscosity(temperature);
 
-        problem_.variables().fracFlowFuncWetting(globalIdx) = problem_.variables().densityWetting(globalIdx)*mobilities[0]/(problem_.variables().densityWetting(globalIdx)*mobilities[0] + problem_.variables().densityNonwetting(globalIdx)*mobilities[1]);
-        problem_.variables().fracFlowFuncNonwetting(globalIdx) = problem_.variables().densityNonwetting(globalIdx)*mobilities[1]/(problem_.variables().densityWetting(globalIdx)*mobilities[0] + problem_.variables().densityNonwetting(globalIdx)*mobilities[1]);
+        // initialize mobilities
+        problem_.variables().mobilityWetting(globalIdx) = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/problem_.variables().viscosityWetting(globalIdx);
+        problem_.variables().mobilityNonwetting(globalIdx) = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/problem_.variables().viscosityNonwetting(globalIdx);
+        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
-        problem_.soil().update(satW, *eIt);
+        problem_.variables().fracFlowFuncWetting(globalIdx) = problem_.variables().densityWetting(globalIdx)*problem_.variables().mobilityWetting(globalIdx)/(problem_.variables().densityWetting(globalIdx)*problem_.variables().mobilityWetting(globalIdx) + problem_.variables().densityNonwetting(globalIdx)*problem_.variables().mobilityNonwetting(globalIdx));
+        problem_.variables().fracFlowFuncNonwetting(globalIdx) = problem_.variables().densityNonwetting(globalIdx)*problem_.variables().mobilityNonwetting(globalIdx)/(problem_.variables().densityWetting(globalIdx)*problem_.variables().mobilityWetting(globalIdx) + problem_.variables().densityNonwetting(globalIdx)*problem_.variables().mobilityNonwetting(globalIdx));
+
+        problem_.spatialParameters().update(satW, *eIt);
     }
     return;
 }

@@ -57,6 +57,8 @@ class FVVelocity2P: public FVPressure2P<TypeTag>
      typedef typename ReferenceElements::Container ReferenceElementContainer;
      typedef typename ReferenceElements::ContainerFaces ReferenceElementFaceContainer;
 
+     typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
+     typedef typename SpatialParameters::MaterialLaw                  MaterialLaw;
 
 typedef    typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Grid Grid;
@@ -202,7 +204,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
             Dune::FieldVector<Scalar,dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
 
             // get absolute permeability
-            FieldMatrix permeabilityI(this->problem().soil().K(globalPos, *eIt, localPos));
+            FieldMatrix permeabilityI(this->problem().spatialParameters().intrinsicPermeability(globalPos, *eIt));
 
             // handle interior face
             if (isIt->neighbor())
@@ -232,7 +234,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                 unitDistVec /= dist;
 
                 // get absolute permeability
-                FieldMatrix permeabilityJ(this->problem().soil().K(globalPosNeighbor, *neighborPointer, localPosNeighbor));
+                FieldMatrix permeabilityJ(this->problem().spatialParameters().intrinsicPermeability(globalPosNeighbor, *neighborPointer));
 
                 // compute vectorized permeabilities
                 FieldMatrix meanPermeability(0);
@@ -415,7 +417,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                         DUNE_THROW(RangeError, "saturation type not implemented");
                     }
                     Scalar pressBound = this->problem().dirichletPress(globalPosFace, *isIt);
-                    Scalar pcBound = this->problem().materialLaw().pC(satW, globalPosFace, *eIt, localPosFace);
+                    Scalar pcBound = MaterialLaw::pC(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
                     //determine phase pressures from primary pressure variable
                     Scalar pressW=0;
@@ -432,7 +434,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     }
 
                     //get temperature at current position
-                    Scalar temperature = this->problem().temperature(globalPosFace, *eIt, localPosFace);
+                    Scalar temperature = this->problem().temperature(globalPosFace, *eIt);
 
                     Scalar densityWBound = 0;
                     Scalar densityNWBound = 0;
@@ -442,15 +444,19 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     {
                         densityWBound = this->problem().wettingPhase().density(temperature,pressW);
                         densityNWBound = this->problem().nonwettingPhase().density(temperature,pressNW);
-                        lambdaWBound = this->problem().materialLaw().mobW(satW,globalPosFace, *eIt, localPosFace, temperature,pressW)*densityWBound;
-                        lambdaNWBound = this->problem().materialLaw().mobN(satNW,globalPosFace, *eIt, localPosFace, temperature,pressNW)*densityNWBound;
+                        Scalar viscosityWBound = this->problem().wettingPhase().viscosity(temperature, pressW);
+                        Scalar viscosityNWBound = this->problem().nonwettingPhase().viscosity(temperature, pressNW);
+                        lambdaWBound = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound * densityWBound;
+                        lambdaNWBound = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound * densityNWBound;
                     }
                     else
                     {
                         densityWBound = this->problem().wettingPhase().density(temperature);
                         densityNWBound = this->problem().nonwettingPhase().density(temperature);
-                        lambdaWBound = this->problem().materialLaw().mobW(satW,globalPosFace, *eIt, localPosFace, temperature);
-                        lambdaNWBound = this->problem().materialLaw().mobN(satNW,globalPosFace, *eIt, localPosFace, temperature);
+                        Scalar viscosityWBound = this->problem().wettingPhase().viscosity(temperature);
+                        Scalar viscosityNWBound = this->problem().nonwettingPhase().viscosity(temperature);
+                        lambdaWBound = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound;
+                        lambdaNWBound = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound;
                     }
 
                     Scalar potentialW = 0;

@@ -67,6 +67,10 @@ template<class TypeTag> class FVPressure2P
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) ReferenceElements;
     typedef typename ReferenceElements::Container ReferenceElementContainer;
     typedef typename ReferenceElements::ContainerFaces ReferenceElementFaceContainer;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
+    typedef typename SpatialParameters::MaterialLaw                  MaterialLaw;
+
     enum
     {
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
@@ -301,10 +305,10 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
         }
         f_[globalIdxI] = volume * (source[wetting] + source[nonwetting]);
 
-        Scalar porosity = problem_.soil().porosity(globalPos, *eIt, localPos);
+        Scalar porosity = problem_.spatialParameters().porosity(globalPos, *eIt);
 
         // get absolute permeability
-        FieldMatrix permeabilityI(problem_.soil().K(globalPos, *eIt, localPos));
+        FieldMatrix permeabilityI(problem_.spatialParameters().intrinsicPermeability(globalPos, *eIt));
 
         // get mobilities and fractional flow factors
         Scalar lambdaWI = problem_.variables().mobilityWetting(globalIdxI);
@@ -361,8 +365,7 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                 FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
-                FieldMatrix permeabilityJ = problem_.soil().K(globalPosNeighbor, *neighborPointer,
-                        localPosNeighbor);
+                FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor, *neighborPointer);
 
                 // compute vectorized permeabilities
                 FieldMatrix meanPermeability(0);
@@ -530,7 +533,7 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     {
                         satBound = problem_.variables().saturation()[globalIdxI];
                     }
-                    Scalar temperature = problem_.temperature(globalPosFace, *eIt, localPosFace);
+                    Scalar temperature = problem_.temperature(globalPosFace, *eIt);
 
                     //get dirichlet pressure boundary condition
                     Scalar pressBound = problem_.dirichletPress(globalPosFace, *isIt);
@@ -551,7 +554,7 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     }
 
                     Scalar pcI = problem_.variables().capillaryPressure(globalIdxI);
-                    Scalar pcBound = problem_.materialLaw().pC(satW, globalPosFace, *eIt, localPosFace);
+                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
                     //determine phase pressures from primary pressure variable
                     Scalar pressW = 0;
@@ -571,23 +574,24 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     Scalar densityNWBound = 0;
                     Scalar lambdaWBound = 0;
                     Scalar lambdaNWBound = 0;
+
                     if (compressibility)
                     {
                         densityWBound = problem_.wettingPhase().density(temperature, pressW);
                         densityNWBound = problem_.nonwettingPhase().density(temperature, pressNW);
-                        lambdaWBound = problem_.materialLaw().mobW(satW, globalPosFace, *eIt, localPosFace,
-                                temperature, pressW) * densityWBound;
-                        lambdaNWBound = problem_.materialLaw().mobN(satNW, globalPosFace, *eIt, localPosFace,
-                                temperature, pressNW) * densityNWBound;
+                        Scalar viscosityWBound = problem_.wettingPhase().viscosity(temperature, pressW);
+                        Scalar viscosityNWBound = problem_.nonwettingPhase().viscosity(temperature, pressNW);
+                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityWBound * densityWBound;
+                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityNWBound * densityNWBound;
                     }
                     else
                     {
                         densityWBound = problem_.wettingPhase().density(temperature);
                         densityNWBound = problem_.nonwettingPhase().density(temperature);
-                        lambdaWBound = problem_.materialLaw().mobW(satW, globalPosFace, *eIt, localPosFace,
-                                temperature);
-                        lambdaNWBound = problem_.materialLaw().mobN(satNW, globalPosFace, *eIt, localPosFace,
-                                temperature);
+                        Scalar viscosityWBound = problem_.wettingPhase().viscosity(temperature);
+                        Scalar viscosityNWBound = problem_.nonwettingPhase().viscosity(temperature);
+                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound;
+                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound;
                     }
                     Scalar fractionalWBound = lambdaWBound / (lambdaWBound + lambdaNWBound);
                     Scalar fractionalNWBound = lambdaNWBound / (lambdaWBound + lambdaNWBound);
@@ -796,7 +800,7 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
 
         int globalIdx = problem_.variables().index(*eIt);
 
-        Scalar temperature = problem_.temperature(globalPos, *eIt, localPos);
+        Scalar temperature = problem_.temperature(globalPos, *eIt);
 
         //determine phase saturations from primary saturation variable
         Scalar satW = 0;
@@ -828,9 +832,6 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
             pressNW = problem_.variables().pressure()[globalIdx];
         }
 
-        //get relative permeabilities
-        std::vector<Scalar> kr = problem_.materialLaw().kr(satW, globalPos, *eIt, localPos, temperature);
-
         Scalar densityW = 0;
         Scalar densityNW = 0;
         Scalar viscosityW = 0;
@@ -853,8 +854,9 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
             viscosityNW = problem_.nonwettingPhase().viscosity(temperature);
         }
 
-        Scalar mobilityW = kr[0] / viscosityW;
-        Scalar mobilityNW = kr[1] / viscosityNW;
+        // initialize mobilities
+        Scalar mobilityW =  MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityW;
+        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityNW;
 
         if (compressibility)
         {
@@ -878,9 +880,9 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         problem_.variables().fracFlowFuncWetting(globalIdx) = mobilityW / (mobilityW + mobilityNW);
         problem_.variables().fracFlowFuncNonwetting(globalIdx) = mobilityNW / (mobilityW + mobilityNW);
 
-        problem_.variables().capillaryPressure(globalIdx) = problem_.materialLaw().pC(satW, globalPos,
-                *eIt, localPos);
-        problem_.soil().update(satW, *eIt);
+        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
+
+        problem_.spatialParameters().update(satW, *eIt);
     }
     return;
 }

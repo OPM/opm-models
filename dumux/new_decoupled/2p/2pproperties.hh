@@ -88,7 +88,7 @@ NEW_TYPE_TAG(DecoupledTwoP, INHERITS_FROM(IMPES));
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG( Soil); //!< The type of the soil properties object
+NEW_PROP_TAG( SpatialParameters ); //!< The type of the soil properties object
 NEW_PROP_TAG( EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG( PressureFormulation); //!< The formulation of the model
 NEW_PROP_TAG( SaturationFormulation); //!< The formulation of the model
