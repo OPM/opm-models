@@ -8,7 +8,7 @@ Makefile.in
 *.la
 *~
 config*
-configure.ac
+!configure.ac
 *.module
 aclocal*
 am
