@@ -68,25 +68,30 @@ class FVSaturation2P
       typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
       typedef typename SpatialParameters::MaterialLaw                  MaterialLaw;
 
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState))        PhaseState;
+
     enum
     {
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
     enum
     {
-        pw = TwoPCommonIndices::pressureW,
-        pn = TwoPCommonIndices::pressureNW,
-        pglobal = TwoPCommonIndices::pressureGlobal,
-        vw = TwoPCommonIndices::velocityW,
-        vn = TwoPCommonIndices::velocityNW,
-        vt = TwoPCommonIndices::velocityTotal,
-        Sw = TwoPCommonIndices::saturationW,
-        Sn = TwoPCommonIndices::saturationNW,
+        pw = Indices::pressureW,
+        pn = Indices::pressureNW,
+        pglobal = Indices::pressureGlobal,
+        vw = Indices::velocityW,
+        vn = Indices::velocityNW,
+        vt = Indices::velocityTotal,
+        Sw = Indices::saturationW,
+        Sn = Indices::saturationNW,
         other = 999
     };
     enum
     {
-        wetting = TwoPCommonIndices::wPhase, nonwetting = TwoPCommonIndices::nPhase
+        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
     };
 
 typedef    typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
@@ -538,6 +543,9 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                         pressNW = pressBound;
                     }
 
+                    PhaseState phaseState;
+                    phaseState.update(pressW, pressNW, temperature);
+
                     //get phase potentials
                     Scalar potentialW = problem_.variables().potentialWetting(globalIdxI, isIndex);
                     Scalar potentialNW = problem_.variables().potentialNonwetting(globalIdxI, isIndex);
@@ -558,7 +566,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                     {
                         if (compressibility_)
                         {
-                            lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/problem_.wettingPhase().viscosity(temperature, pressW);
+                            lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/ FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
                         }
                         else
                         {
@@ -578,7 +586,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
                     {
                         if (compressibility_)
                         {
-                            lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)/problem_.nonwettingPhase().viscosity(temperature, pressNW);
+                            lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound) / FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
                         }
                         else
                         {
@@ -757,15 +765,15 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt,
         Scalar source = 0;
         if (velocityType_ == vw)
         {
-            source = problem_.source(globalPos, *eIt, localPos)[wetting]/densityWI;
+            source = problem_.source(globalPos, *eIt, localPos)[wPhaseIdx]/densityWI;
         }
         if (velocityType_ == vn)
         {
-            source = problem_.source(globalPos, *eIt, localPos)[nonwetting]/densityNWI;
+            source = problem_.source(globalPos, *eIt, localPos)[nPhaseIdx]/densityNWI;
         }
         if (velocityType_ == vt)
         {
-            source = problem_.source(globalPos, *eIt, localPos)[wetting]/densityWI + problem_.source(globalPos, *eIt, localPos)[nonwetting]/densityNWI;
+            source = problem_.source(globalPos, *eIt, localPos)[wPhaseIdx]/densityWI + problem_.source(globalPos, *eIt, localPos)[nPhaseIdx]/densityNWI;
         }
         if (source)
         {
@@ -922,6 +930,8 @@ typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeSt
 template<class TypeTag>
 void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation = *(new RepresentationType(0)), bool iterate=false)
 {
+    PhaseState phaseState;
+
     // iterate through leaf grid an evaluate c0 at cell center
     ElementIterator eItEnd = problem_.gridView().template end<0>();
     for (ElementIterator eIt = problem_.gridView().template begin<0>(); eIt != eItEnd; ++eIt)
@@ -961,10 +971,12 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation 
 
         Scalar temperature = problem_.temperature(globalPos, *eIt);
 
-        problem_.variables().densityWetting(globalIdx) = problem_.wettingPhase().density(temperature);
-        problem_.variables().densityNonwetting(globalIdx) = problem_.nonwettingPhase().density(temperature);
-        problem_.variables().viscosityWetting(globalIdx) = problem_.wettingPhase().viscosity(temperature);
-        problem_.variables().viscosityNonwetting(globalIdx) = problem_.nonwettingPhase().viscosity(temperature);
+        phaseState.update(temperature);
+
+        problem_.variables().densityWetting(globalIdx) = FluidSystem::phaseDensity(wPhaseIdx, phaseState);
+        problem_.variables().densityNonwetting(globalIdx) = FluidSystem::phaseDensity(nPhaseIdx, phaseState);
+        problem_.variables().viscosityWetting(globalIdx) = FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+        problem_.variables().viscosityNonwetting(globalIdx) = FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
 
         // initialize mobilities
         problem_.variables().mobilityWetting(globalIdx) = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/problem_.variables().viscosityWetting(globalIdx);

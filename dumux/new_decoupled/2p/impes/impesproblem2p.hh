@@ -24,6 +24,7 @@
 #include <dumux/new_decoupled/common/impes.hh>
 #include <dumux/new_decoupled/common/impesproblem.hh>
 #include <dumux/new_decoupled/2p/variableclass2p.hh>
+#include <dumux/new_material/fluidsystems/2p_system.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
 
@@ -45,9 +46,7 @@ class IMPESProblem2P : public IMPESProblem<TypeTag, Implementation>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
 
     // material properties
-//    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(WettingPhase))    WettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NonwettingPhase)) NonwettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))            SpatialParameters;
 
 
@@ -62,16 +61,6 @@ public:
     IMPESProblem2P(const GridView &gridView)
         : ParentType(gridView),
         gravity_(0),spatialParameters_(gridView)
-    {
-        gravity_ = 0;
-        if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
-            gravity_[dim - 1] = - 9.81;
-    }
-
-    IMPESProblem2P(const GridView &gridView, WettingPhase& wPhase, NonwettingPhase& nPhase)
-        : ParentType(gridView),
-        gravity_(0), wPhase_(wPhase), nPhase_(nPhase),
-        spatialParameters_(gridView)
     {
         gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
@@ -101,18 +90,6 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Fluid properties of the wetting phase.
-     */
-    const WettingPhase &wettingPhase() const
-    { return wPhase_; }
-
-    /*!
-     * \brief Fluid properties of the non-wetting phase.
-     */
-    const NonwettingPhase &nonwettingPhase() const
-    { return nPhase_; }
-
-    /*!
      * \brief Returns the spatial parameters object.
      */
     SpatialParameters &spatialParameters()
@@ -139,8 +116,6 @@ private:
     GlobalPosition  gravity_;
 
     // fluids and material properties
-    WettingPhase    wPhase_;
-    NonwettingPhase nPhase_;
     SpatialParameters  spatialParameters_;
 };
 

@@ -58,7 +58,7 @@ NEW_PROP_TAG( ReferenceElements); //!< DUNE reference elements to be used
 
 NEW_PROP_TAG( Problem); //!< The type of the problem
 NEW_PROP_TAG( Model); //!< The type of the discretizations
-NEW_PROP_TAG( NumPhase); //!< Number of phases in the system
+NEW_PROP_TAG( NumPhases); //!< Number of phases in the system
 NEW_PROP_TAG( Variables); //!< The type of the container of global variables
 }
 }
@@ -144,7 +144,7 @@ SET_PROP(DecoupledModel, SolutionTypes)
 
     enum
     {
-        dim = GridView::dimension, numPhase = GET_PROP_VALUE(TypeTag, PTAG(NumPhase))
+        dim = GridView::dimension, numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
     template<int dim>
@@ -178,9 +178,9 @@ public:
      * This defines the primary and secondary variable vectors at each degree of freedom.
      */
     typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarSolution;//!<type for vector of scalars
-    typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhase> > PhaseProperty;//!<type for vector of phase properties
-    typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhase> > FluidProperty;//!<type for vector of fluid properties
-    typedef Dune::BlockVector<FieldVector<FieldVector<Scalar, numPhase>, 2*dim > > PhasePropertyElemFace;//!<type for vector of vectors (of size 2 x dimension) of scalars
+    typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhases> > PhaseProperty;//!<type for vector of phase properties
+    typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhases> > FluidProperty;//!<type for vector of fluid properties
+    typedef Dune::BlockVector<FieldVector<FieldVector<Scalar, numPhases>, 2*dim > > PhasePropertyElemFace;//!<type for vector of vectors (of size 2 x dimension) of scalars
     typedef Dune::BlockVector<FieldVector<FieldVector<Scalar, dim>, 2*dim > > DimVecElemFace;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 };
 

@@ -56,7 +56,7 @@ private:
     enum
     {
         dim = GridView::dimension, dimWorld = GridView::dimensionworld, numPhase = GET_PROP_VALUE(TypeTag, PTAG(
-                NumPhase))
+                NumPhases))
     };
 
     typedef typename GridView::Grid Grid;

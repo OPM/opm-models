@@ -17,6 +17,7 @@
 #define DUNE_VARIABLECLASS2P_HH
 
 #include <dumux/new_decoupled/common/variableclass.hh>
+#include <dumux/new_decoupled/2p/2pphasestate.hh>
 #include "2pproperties.hh"
 
 /**
@@ -48,6 +49,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+
     typedef VariableClass<TypeTag> ParentClass;
 
     enum
@@ -56,13 +59,18 @@ private:
     };
     enum
     {
-        wetting = TwoPCommonIndices::wPhase, nonWetting = TwoPCommonIndices::nPhase
+        pw = Indices::pressureW, pn = Indices::pressureNW, pglobal = Indices::pressureGlobal,
+    };
+    enum
+    {
+        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
     };
 
+    static const int pressureType_ = GET_PROP_VALUE(TypeTag, PTAG(PressureFormulation));
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
-    typedef Dune::FieldVector<Scalar,dim> LocalPosition;
-    typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dim> LocalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef typename GridView::IndexSet IndexSet;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
@@ -97,12 +105,12 @@ public:
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
 
-    VariableClass2P(const GridView& gridView, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
-    : VariableClass<TypeTag>(gridView, initialVel), codim_(0)
+    VariableClass2P(const GridView& gridView, Scalar& initialSat = *(new Scalar(1)),
+            Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim>(0))) :
+        VariableClass<TypeTag> (gridView, initialVel), codim_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
-
     }
 
     //! Constructs a VariableClass object
@@ -112,36 +120,35 @@ public:
      *  @param initialSat initial value for the saturation (only necessary if only diffusion part is solved)
      *  @param initialVel initial value for the velocity (only necessary if only transport part is solved)
      */
-    VariableClass2P(const GridView& gridView, int codim, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
-    : VariableClass<TypeTag>(gridView, codim, initialVel), codim_(codim)
+    VariableClass2P(const GridView& gridView, int codim, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<
+            Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim>(0))) :
+        VariableClass<TypeTag> (gridView, codim, initialVel), codim_(codim)
     {
         initializeGlobalVariablesDiffPart(initialVel);
         initializeGlobalVariablesTransPart(initialSat);
     }
 
     // serialization methods
-    template <class Restarter>
+    template<class Restarter>
     void serialize(Restarter &res)
     {
-        res.template serializeEntities<0>(*this, this->gridView());
+        res.template serializeEntities<0> (*this, this->gridView());
     }
-    template <class Restarter>
+    template<class Restarter>
     void deserialize(Restarter &res)
     {
-        res.template deserializeEntities<0>(*this, this->gridView());
+        res.template deserializeEntities<0> (*this, this->gridView());
     }
 
     void serializeEntity(std::ostream &outstream, const Element &element)
     {
         int globalIdx = this->elementMapper().map(element);
-        outstream  << this->pressure()[globalIdx] << "  "
-            << saturation_[globalIdx];
+        outstream << this->pressure()[globalIdx] << "  " << saturation_[globalIdx];
     }
     void deserializeEntity(std::istream &instream, const Element &element)
     {
         int globalIdx = this->elementMapper().map(element);
-        instream >> this->pressure()[globalIdx]
-            >> saturation_[globalIdx];
+        instream >> this->pressure()[globalIdx] >> saturation_[globalIdx];
     }
 
 private:
@@ -154,8 +161,8 @@ private:
 
         //initialise variables
         velocitySecondPhase_ = initialVel;
-        density_=0;
-        viscosity_=0;
+        density_ = 0;
+        viscosity_ = 0;
     }
     void initializeGlobalVariablesTransPart(int initialSat)
     {
@@ -171,7 +178,7 @@ private:
         mobility_ = 0;
         fracFlowFunc_ = 0;
         capillaryPressure_ = 0;
-        volumecorrection_=0;
+        volumecorrection_ = 0;
     }
 
 public:
@@ -181,8 +188,8 @@ public:
     {
         if (codim_ == 0)
         {
-            ScalarSolutionType *pressure = writer.template createField<Scalar, 1>(this->gridSize());
-            ScalarSolutionType *saturation = writer.template createField<Scalar, 1>(this->gridSize());
+            ScalarSolutionType *pressure = writer.template createField<Scalar, 1> (this->gridSize());
+            ScalarSolutionType *saturation = writer.template createField<Scalar, 1> (this->gridSize());
 
             *pressure = this->pressure();
             *saturation = saturation_;
@@ -192,8 +199,8 @@ public:
         }
         if (codim_ == dim)
         {
-            ScalarSolutionType *pressure = writer.template createField<Scalar, 1>(this->gridSize());
-            ScalarSolutionType *saturation = writer.template createField<Scalar, 1>(this->gridSize());
+            ScalarSolutionType *pressure = writer.template createField<Scalar, 1> (this->gridSize());
+            ScalarSolutionType *saturation = writer.template createField<Scalar, 1> (this->gridSize());
 
             *pressure = this->pressure();
             *saturation = saturation_;
@@ -218,39 +225,39 @@ public:
     }
 
     //! Return vector of wetting phase potential gradients
-    Scalar& potentialWetting(int Idx1,int Idx2)
+    Scalar& potentialWetting(int Idx1, int Idx2)
     {
-        return this->potential(Idx1, Idx2)[wetting];
+        return this->potential(Idx1, Idx2)[wPhaseIdx];
     }
 
     //! Return vector of non-wetting phase potential gradients
-    Scalar& potentialNonwetting(int Idx1,int Idx2)
+    Scalar& potentialNonwetting(int Idx1, int Idx2)
     {
-        return this->potential(Idx1, Idx2)[nonWetting];
+        return this->potential(Idx1, Idx2)[nPhaseIdx];
     }
 
     //! Return vector of wetting phase mobilities
     Scalar& mobilityWetting(int Idx)
     {
-        return mobility_[Idx][wetting];
+        return mobility_[Idx][wPhaseIdx];
     }
 
     //! Return vector of non-wetting phase mobilities
     Scalar& mobilityNonwetting(int Idx)
     {
-        return mobility_[Idx][nonWetting];
+        return mobility_[Idx][nPhaseIdx];
     }
 
     //! Return vector of wetting phase fractional flow functions
     Scalar& fracFlowFuncWetting(int Idx)
     {
-        return fracFlowFunc_[Idx][wetting];
+        return fracFlowFunc_[Idx][wPhaseIdx];
     }
 
     //! Return vector of non-wetting phase fractional flow functions
     Scalar& fracFlowFuncNonwetting(int Idx)
     {
-        return fracFlowFunc_[Idx][nonWetting];
+        return fracFlowFunc_[Idx][nPhaseIdx];
     }
 
     //! Return capillary pressure vector
@@ -262,24 +269,24 @@ public:
     //! Return density vector
     Scalar& densityWetting(int Idx)
     {
-        return density_[Idx][wetting];
+        return density_[Idx][wPhaseIdx];
     }
     //! Return density vector
     Scalar& densityNonwetting(int Idx)
     {
-        return density_[Idx][nonWetting];
+        return density_[Idx][nPhaseIdx];
     }
 
     //! Return density vector
     Scalar& viscosityWetting(int Idx)
     {
-        return viscosity_[Idx][wetting];
+        return viscosity_[Idx][wPhaseIdx];
     }
 
     //! Return density vector
     Scalar& viscosityNonwetting(int Idx)
     {
-        return viscosity_[Idx][nonWetting];
+        return viscosity_[Idx][nPhaseIdx];
     }
 
     Scalar& volumecorrection(int Idx)
@@ -292,7 +299,7 @@ public:
      @param  element      entity of codim 0
      \return     value of saturation
      */
-    const Dune::FieldVector<Scalar,1>& satElement(const Element& element) const
+    const Dune::FieldVector<Scalar, 1>& satElement(const Element& element) const
     {
         return saturation_[this->elementMapper().map(element)];;
     }

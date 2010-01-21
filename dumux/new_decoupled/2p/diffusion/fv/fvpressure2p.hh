@@ -69,7 +69,12 @@ template<class TypeTag> class FVPressure2P
     typedef typename ReferenceElements::ContainerFaces ReferenceElementFaceContainer;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
-    typedef typename SpatialParameters::MaterialLaw                  MaterialLaw;
+    typedef typename SpatialParameters::MaterialLaw MaterialLaw;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
 
     enum
     {
@@ -77,16 +82,16 @@ template<class TypeTag> class FVPressure2P
     };
     enum
     {
-        pw = TwoPCommonIndices::pressureW,
-        pn = TwoPCommonIndices::pressureNW,
-        pglobal = TwoPCommonIndices::pressureGlobal,
-        Sw = TwoPCommonIndices::saturationW,
-        Sn = TwoPCommonIndices::saturationNW,
+        pw = Indices::pressureW,
+        pn = Indices::pressureNW,
+        pglobal = Indices::pressureGlobal,
+        Sw = Indices::saturationW,
+        Sn = Indices::saturationNW,
         other = 999
     };
     enum
     {
-        wetting = TwoPCommonIndices::wPhase, nonwetting = TwoPCommonIndices::nPhase
+        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
     };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
@@ -114,10 +119,14 @@ template<class TypeTag> class FVPressure2P
 
 protected:
     Problem& problem()
-    { return problem_; }
+    {
+        return problem_;
+    }
 
     const Problem& problem() const
-    { return problem_; }
+    {
+        return problem_;
+    }
 
 public:
     //! Calculate the pressure.
@@ -300,10 +309,10 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
         std::vector<Scalar> source(problem_.source(globalPos, *eIt, localPos));
         if (!compressibility)
         {
-            source[wetting] /= densityWI;
-            source[nonwetting] /= densityNWI;
+            source[wPhaseIdx] /= densityWI;
+            source[nPhaseIdx] /= densityNWI;
         }
-        f_[globalIdxI] = volume * (source[wetting] + source[nonwetting]);
+        f_[globalIdxI] = volume * (source[wPhaseIdx] + source[nPhaseIdx]);
 
         Scalar porosity = problem_.spatialParameters().porosity(globalPos, *eIt);
 
@@ -326,8 +335,8 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
             GeometryType faceGT = isIt->geometryInInside().type();
 
             // center in face's reference element
-            const FieldVector<Scalar, dim - 1>& faceLocal =
-                    ReferenceElementFaceContainer::general(faceGT).position(0, 0);
+            const FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0,
+                    0);
 
             //int isIndex = isIt->indexInInside();
             isIndex++;
@@ -350,8 +359,7 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                 // compute factor in neighbor
                 GeometryType neighborGT = neighborPointer->geometry().type();
-                const LocalPosition& localPosNeighbor = ReferenceElementContainer::general(neighborGT).position(0,
-                        0);
+                const LocalPosition& localPosNeighbor = ReferenceElementContainer::general(neighborGT).position(0, 0);
 
                 // neighbor cell center in global coordinates
                 const GlobalPosition& globalPosNeighbor = neighborPointer->geometry().global(localPosNeighbor);
@@ -365,7 +373,8 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                 FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
-                FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor, *neighborPointer);
+                FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor,
+                        *neighborPointer);
 
                 // compute vectorized permeabilities
                 FieldMatrix meanPermeability(0);
@@ -542,32 +551,42 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     //determine phase saturations from primary saturation variable
                     Scalar satW = 0;
                     Scalar satNW = 0;
-                    if (saturationType == Sw)
+                    switch (saturationType)
+                    {
+                    case Sw:
                     {
                         satW = satBound;
                         satNW = 1 - satBound;
+                        break;
                     }
-                    else if (saturationType == Sn)
+                    case Sn:
                     {
                         satW = 1 - satBound;
                         satNW = satBound;
                     }
+                    }
 
                     Scalar pcI = problem_.variables().capillaryPressure(globalIdxI);
-                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
+                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt),
+                            satW);
 
                     //determine phase pressures from primary pressure variable
                     Scalar pressW = 0;
                     Scalar pressNW = 0;
-                    if (pressureType == pw)
+                    switch (pressureType)
+                    {
+                    case pw:
                     {
                         pressW = pressBound;
                         pressNW = pressBound + pcBound;
+                        break;
                     }
-                    else if (pressureType == pn)
+                    case pn:
                     {
                         pressW = pressBound - pcBound;
                         pressNW = pressBound;
+                        break;
+                    }
                     }
 
                     Scalar densityWBound = 0;
@@ -577,21 +596,33 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                     if (compressibility)
                     {
-                        densityWBound = problem_.wettingPhase().density(temperature, pressW);
-                        densityNWBound = problem_.nonwettingPhase().density(temperature, pressNW);
-                        Scalar viscosityWBound = problem_.wettingPhase().viscosity(temperature, pressW);
-                        Scalar viscosityNWBound = problem_.nonwettingPhase().viscosity(temperature, pressNW);
-                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityWBound * densityWBound;
-                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityNWBound * densityNWBound;
+                        PhaseState phaseState;
+                        phaseState.update(pressW, pressNW, temperature);
+                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, phaseState);
+                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, phaseState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+                        lambdaWBound = MaterialLaw::krw(
+                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                                / viscosityWBound * densityWBound;
+                        lambdaNWBound = MaterialLaw::krn(
+                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                                / viscosityNWBound * densityNWBound;
                     }
                     else
                     {
-                        densityWBound = problem_.wettingPhase().density(temperature);
-                        densityNWBound = problem_.nonwettingPhase().density(temperature);
-                        Scalar viscosityWBound = problem_.wettingPhase().viscosity(temperature);
-                        Scalar viscosityNWBound = problem_.nonwettingPhase().viscosity(temperature);
-                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound;
-                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound;
+                        PhaseState phaseState;
+                        phaseState.update(temperature);
+                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, phaseState);
+                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, phaseState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+                        lambdaWBound = MaterialLaw::krw(
+                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                                / viscosityWBound;
+                        lambdaNWBound = MaterialLaw::krn(
+                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                                / viscosityNWBound;
                     }
                     Scalar fractionalWBound = lambdaWBound / (lambdaWBound + lambdaNWBound);
                     Scalar fractionalNWBound = lambdaNWBound / (lambdaWBound + lambdaNWBound);
@@ -619,24 +650,30 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                         densityNW = (potentialNW == 0.) ? rhoMeanNW : densityNW;
 
                         //calculate potential gradient
-                        if (pressureType == pw)
+                        switch (pressureType)
+                        {
+                        case pw:
                         {
                             potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound) / dist;
-                            potentialNW = (problem_.variables().pressure()[globalIdxI] + pcI - pressBound
-                                    - pcBound) / dist;
+                            potentialNW = (problem_.variables().pressure()[globalIdxI] + pcI - pressBound - pcBound)
+                                    / dist;
+                            break;
                         }
-                        if (pressureType == pn)
+                        case pn:
                         {
-                            potentialW = (problem_.variables().pressure()[globalIdxI] - pcI - pressBound
-                                    + pcBound) / dist;
+                            potentialW = (problem_.variables().pressure()[globalIdxI] - pcI - pressBound + pcBound)
+                                    / dist;
                             potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound) / dist;
+                            break;
                         }
-                        if (pressureType == pglobal)
+                        case pglobal:
                         {
-                            potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound - fMeanNW
-                                    * (pcI - pcBound)) / dist;
-                            potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound + fMeanW
-                                    * (pcI - pcBound)) / dist;
+                            potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound - fMeanNW * (pcI
+                                    - pcBound)) / dist;
+                            potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound + fMeanW * (pcI
+                                    - pcBound)) / dist;
+                            break;
+                        }
                         }
 
                         potentialW += densityW * (unitDistVec * gravity);
@@ -666,7 +703,9 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     Scalar rightEntry = (lambdaW * densityW + lambdaNW * densityNW) * (permeability * gravity)
                             * faceArea;
 
-                    if (pressureType == pw)
+                    switch (pressureType)
+                    {
+                    case pw:
                     {
                         // calculate capillary pressure gradient
                         FieldVector<Scalar, dim> pCGradient = unitDistVec;
@@ -674,8 +713,9 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                         //add capillary pressure term to right hand side
                         rightEntry += 0.5 * (lambdaNWI + lambdaNWBound) * (permeability * pCGradient) * faceArea;
+                        break;
                     }
-                    if (pressureType == pn)
+                    case pn:
                     {
                         // calculate capillary pressure gradient
                         FieldVector<Scalar, dim> pCGradient = unitDistVec;
@@ -683,6 +723,8 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                         //add capillary pressure term to right hand side
                         rightEntry -= 0.5 * (lambdaWI + lambdaWBound) * (permeability * pCGradient) * faceArea;
+                        break;
+                    }
                     }
 
                     // set diagonal entry and right hand side entry
@@ -697,15 +739,15 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     std::vector<Scalar> J(problem_.neumannPress(globalPosFace, *isIt));
                     if (!compressibility)
                     {
-                        J[wetting] /= densityWI;
-                        J[nonwetting] /= densityNWI;
+                        J[wPhaseIdx] /= densityWI;
+                        J[nPhaseIdx] /= densityNWI;
                     }
-                    f_[globalIdxI] -= (J[wetting] + J[nonwetting]) * faceArea;
+                    f_[globalIdxI] -= (J[wPhaseIdx] + J[nPhaseIdx]) * faceArea;
 
                     //Assumes that the phases flow in the same direction at the neumann boundary, which is the direction of the total flux!!!
                     //needed to determine the upwind direction in the saturation equation
-                    problem_.variables().potentialWetting(globalIdxI, isIndex) = J[wetting];
-                    problem_.variables().potentialNonwetting(globalIdxI, isIndex) = J[nonwetting];
+                    problem_.variables().potentialWetting(globalIdxI, isIndex) = J[wPhaseIdx];
+                    problem_.variables().potentialNonwetting(globalIdxI, isIndex) = J[nPhaseIdx];
                 }
             }
         } // end all intersections
@@ -713,15 +755,20 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
         //volume correction due to density differences
         if (compressibility)
         {
-            if (saturationType == Sw)
+            switch (saturationType)
             {
-                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume
-                        * (densityWI - densityNWI);
+            case Sw:
+            {
+                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityWI
+                        - densityNWI);
+                break;
             }
-            if (saturationType == Sn)
+            case Sn:
             {
-                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume
-                        * (densityNWI - densityWI);
+                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityNWI
+                        - densityWI);
+                break;
+            }
             }
         }
     } // end grid traversal
@@ -785,6 +832,8 @@ void FVPressure2P<TypeTag>::solve()
 template<class TypeTag>
 void FVPressure2P<TypeTag>::updateMaterialLaws()
 {
+    PhaseState phaseState;
+
     // iterate through leaf grid an evaluate c0 at cell center
     ElementIterator eItEnd = problem_.gridView().template end<0> ();
     for (ElementIterator eIt = problem_.gridView().template begin<0> (); eIt != eItEnd; ++eIt)
@@ -805,31 +854,39 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         //determine phase saturations from primary saturation variable
         Scalar satW = 0;
         Scalar satNW = 0;
-        if (saturationType == Sw)
+        switch (saturationType)
+        {
+        case Sw:
         {
             satW = problem_.variables().saturation()[globalIdx];
             satNW = 1 - problem_.variables().saturation()[globalIdx];
+            break;
         }
-        else if (saturationType == Sn)
+        case Sn:
         {
             satW = 1 - problem_.variables().saturation()[globalIdx];
             satNW = problem_.variables().saturation()[globalIdx];
+            break;
+        }
         }
 
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
         Scalar pressNW = 0;
-        if (pressureType == pw)
+        switch (pressureType)
+        {
+        case pw:
         {
             pressW = problem_.variables().pressure()[globalIdx];
-            pressNW = problem_.variables().pressure()[globalIdx]
-                    + problem_.variables().capillaryPressure(globalIdx);
+            pressNW = problem_.variables().pressure()[globalIdx] + problem_.variables().capillaryPressure(globalIdx);
+            break;
         }
-        else if (pressureType == pn)
+        case pn:
         {
-            pressW = problem_.variables().pressure()[globalIdx] - problem_.variables().capillaryPressure(
-                    globalIdx);
+            pressW = problem_.variables().pressure()[globalIdx] - problem_.variables().capillaryPressure(globalIdx);
             pressNW = problem_.variables().pressure()[globalIdx];
+            break;
+        }
         }
 
         Scalar densityW = 0;
@@ -839,24 +896,24 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
 
         if (compressibility)
         {
-            densityW = problem_.wettingPhase().density(temperature, pressW);
-            densityNW = problem_.nonwettingPhase().density(temperature, pressNW);
-
-            viscosityW = problem_.wettingPhase().viscosity(temperature, pressW);
-            viscosityNW = problem_.nonwettingPhase().viscosity(temperature, pressNW);
+            phaseState.update(pressW, pressNW, temperature);
         }
         else
         {
-            densityW = problem_.wettingPhase().density(temperature);
-            densityNW = problem_.nonwettingPhase().density(temperature);
-
-            viscosityW = problem_.wettingPhase().viscosity(temperature);
-            viscosityNW = problem_.nonwettingPhase().viscosity(temperature);
+            phaseState.update(temperature);
         }
 
+        densityW = FluidSystem::phaseDensity(wPhaseIdx, phaseState);
+        densityNW = FluidSystem::phaseDensity(nPhaseIdx, phaseState);
+
+        viscosityW = FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+        viscosityNW = FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+
         // initialize mobilities
-        Scalar mobilityW =  MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityW;
-        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)/ viscosityNW;
+        Scalar mobilityW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                / viscosityW;
+        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                / viscosityNW;
 
         if (compressibility)
         {
@@ -880,7 +937,8 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         problem_.variables().fracFlowFuncWetting(globalIdx) = mobilityW / (mobilityW + mobilityNW);
         problem_.variables().fracFlowFuncNonwetting(globalIdx) = mobilityNW / (mobilityW + mobilityNW);
 
-        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
+        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(
+                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
         problem_.spatialParameters().update(satW, *eIt);
     }
