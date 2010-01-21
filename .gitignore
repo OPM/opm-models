@@ -8,7 +8,8 @@ Makefile.in
 *.la
 *~
 config*
-!configure.ac
+configure.ac
+*.module
 aclocal*
 am
 *.lo
@@ -21,6 +22,7 @@ autom4te.cache/
 dumux-handbook.dvi
 .cproject
 .project
+.gitignore
 libtool
 missing
 stamp*
