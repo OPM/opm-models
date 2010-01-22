@@ -31,6 +31,8 @@
 #include <dumux/new_decoupled/2p/impes/impesproblem2p.hh>
 #include <dumux/new_decoupled/2p/diffusion/fv/fvvelocity2p.hh>
 #include <dumux/new_decoupled/2p/transport/fv/fvsaturation2p.hh>
+#include <dumux/new_decoupled/2p/transport/fv/capillarydiffusion.hh>
+#include <dumux/new_decoupled/2p/transport/fv/gravitypart.hh>
 
 #include "test_2p_spatialparams.hh"
 
@@ -66,13 +68,19 @@ SET_PROP(TwoPTestProblem, SaturationModel)
 {
     typedef Dune::FVSaturation2P<TTAG(TwoPTestProblem)> type;
 };
+SET_TYPE_PROP(TwoPTestProblem, DiffusivePart, Dune::CapillaryDiffusion<TypeTag>);
+SET_TYPE_PROP(TwoPTestProblem, ConvectivePart, Dune::GravityPart<TypeTag>);
+
 SET_PROP(TwoPTestProblem, PressureModel)
 {
     typedef Dune::FVVelocity2P<TTAG(TwoPTestProblem)> type;
 };
 
-SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
-        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
+//SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
+//        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
+
+//SET_INT_PROP(TwoPTestProblem, PressureFormulation,
+//        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::pressureGlobal);
 
 // Set the wetting phase
 SET_PROP(TwoPTestProblem, WettingPhase)
@@ -89,7 +97,7 @@ SET_PROP(TwoPTestProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 public:
-    typedef Dune::LiquidPhase<Scalar, Dune::H2O<Scalar> > type;
+    typedef Dune::LiquidPhase<Scalar, Dune::Oil<Scalar> > type;
 };
 
 // Set the soil properties
@@ -121,6 +129,9 @@ typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
 typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
+typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+
 enum
 {
     dim = GridView::dimension, dimWorld = GridView::dimensionworld
@@ -139,8 +150,8 @@ typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
 public:
-Test2PProblem(const GridView &gridView, const GlobalPosition LowerLeft = 0, const GlobalPosition UpperRight = 0) :
-ParentType(gridView), Left_(LowerLeft[0]), Right_(UpperRight[0])
+Test2PProblem(const GridView &gridView, const GlobalPosition lowerLeft = 0, const GlobalPosition upperRight = 0) :
+ParentType(gridView), lowerLeft_(lowerLeft), upperRight_(upperRight)
 {
 }
 
@@ -192,7 +203,7 @@ typename BoundaryConditions::Flags bctypePress(const GlobalPosition& globalPos, 
 
 BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Intersection& intersection) const
 {
-    //        if (globalPos[0] > (Right_ - eps_) || globalPos[0] < eps_)
+    //        if (globalPos[0] > (upperRight_[0] - eps_) || globalPos[0] < eps_)
     if (globalPos[0] < eps_)
     return Dune::BoundaryConditions::dirichlet;
     else
@@ -202,7 +213,16 @@ BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Inter
 Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& intersection) const
 {
     if (globalPos[0] < eps_)
-    return 2e5;
+    {
+        if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
+        {
+            PhaseState phaseState;
+            phaseState.update(temperature(globalPos, *(intersection.inside())));
+            return (2e5 + (upperRight_[1] - globalPos[1]) * FluidSystem::phaseDensity(wPhaseIdx, phaseState) * this->gravity().two_norm());
+        }
+        else
+        return 2e5;
+    }
     // all other boundaries
     return 2e5;
 }
@@ -218,16 +238,16 @@ Scalar dirichletSat(const GlobalPosition& globalPos, const Intersection& interse
 std::vector<Scalar> neumannPress(const GlobalPosition& globalPos, const Intersection& intersection) const
 {
     std::vector<Scalar> neumannFlux(2, 0.0);
-    if (globalPos[0] > Right_ - eps_)
+    if (globalPos[0] > upperRight_[0] - eps_)
     {
-        neumannFlux[nPhaseIdx] = 3e-4;
+        neumannFlux[nPhaseIdx] = 5e-5;
     }
     return neumannFlux;
 }
 
 Scalar neumannSat(const GlobalPosition& globalPos, const Intersection& intersection, Scalar factor) const
 {
-    if (globalPos[0] > Right_ - eps_)
+    if (globalPos[0] > upperRight_[0] - eps_)
     return factor;
     return 0;
 }
@@ -238,8 +258,8 @@ Scalar initSat(const GlobalPosition& globalPos, const Element& element, const Lo
 }
 
 private:
-Scalar Left_;
-Scalar Right_;
+GlobalPosition lowerLeft_;
+GlobalPosition upperRight_;
 
 static const Scalar eps_ = 1e-6;
 };
