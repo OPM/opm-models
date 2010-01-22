@@ -101,6 +101,7 @@ AC_CONFIG_FILES([Makefile
     test/2p2c/Makefile
     test/2p2cni/Makefile
     test/fractionalflow/Makefile
+    test/new_decoupled/Makefile
     test/transport/Makefile
     tutorial/Makefile
     dumux/fractionalflow/impes/Makefile 

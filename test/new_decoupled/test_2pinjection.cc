@@ -17,7 +17,7 @@
  *****************************************************************************/
 #include "config.h"
 
-#include "test_2p_problem.hh"
+#include "test_2p_injectionproblem.hh"
 
 #include <dune/grid/common/gridinfo.hh>
 
@@ -80,9 +80,9 @@ int main(int argc, char** argv)
         ////////////////////////////////////////////////////////////
         // create the grid
         ////////////////////////////////////////////////////////////
-        Dune::FieldVector<int,dim> N(6); N[0] = 30;
+        Dune::FieldVector<int,dim> N(15); N[0] = 20;
         Dune::FieldVector<double ,dim> L(0);
-        Dune::FieldVector<double,dim> H(60); H[0] = 300;
+        Dune::FieldVector<double,dim> H(50); H[0] = 60;
         Grid grid(N,L,H);
 
         ////////////////////////////////////////////////////////////
