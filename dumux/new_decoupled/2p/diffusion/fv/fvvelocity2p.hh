@@ -281,20 +281,26 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                 densityW = (potentialW == 0.) ? 0.5 * (densityWI + densityWJ) : densityW;
                 densityNW = (potentialNW == 0.) ? 0.5 * (densityNWI + densityNWJ) : densityNW;
 
-                if (this->pressureType == pw)
+                switch (this->pressureType)
+                {
+                case pw:
                 {
                     potentialW = (pressI - pressJ) / dist;
                     potentialNW = (pressI - pressJ+ pcI - pcJ) / dist;
+                    break;
                 }
-                if (this->pressureType == pn)
+                case pn:
                 {
                     potentialW = (pressI - pressJ - pcI + pcJ) / dist;
                     potentialNW = (pressI - pressJ) / dist;
+                    break;
                 }
-                if (this->pressureType == pglobal)
+                case pglobal:
                 {
                     potentialW = (pressI - pressJ - 0.5 * (fractionalNWI+fractionalNWJ)*(pcI - pcJ)) / dist;
                     potentialNW = (pressI - pressJ + 0.5 * (fractionalWI+fractionalWJ)*(pcI - pcJ)) / dist;
+                    break;
+                }
                 }
 
                 potentialW += densityW * (unitDistVec * this->gravity);//delta z/delta x in unitDistVec[z]
@@ -324,12 +330,15 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                 gravityTermNW *= (this->gravity*permeability)*(lambdaNW * densityNW);
 
                 //calculate velocity depending on the pressure used -> use pc = pn - pw
-                if (this->pressureType == pw)
+                switch (this->pressureType)
+                {
+                case pw:
                 {
                     velocityW *= lambdaW * (pressI - pressJ)/dist;
                     velocityNW *= lambdaNW * (pressI - pressJ)/dist + 0.5 * (lambdaNWI + lambdaNWJ) * (pcI - pcJ) / dist;
                     velocityW += gravityTermW;
                     velocityNW += gravityTermNW;
+                    break;
                 }
                 if (this->pressureType == pn)
                 {
@@ -337,6 +346,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     velocityNW *= lambdaNW * (pressI - pressJ) / dist;
                     velocityW += gravityTermW;
                     velocityNW += gravityTermNW;
+                    break;
                 }
                 if (this->pressureType == pglobal)
                 {
@@ -344,18 +354,24 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     this->problem().variables().velocity()[globalIdxI][isIndex]*= (lambdaW + lambdaNW)* (pressI - pressJ )/ dist;
                     this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermW;
                     this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermNW;
+                    break;
+                }
                 }
 
                 //store velocities
-                if (velocityType_ == vw)
+                switch (velocityType_)
+                {
+                case vw:
                 {
                     this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW;
                     this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                    break;
                 }
                 if (velocityType_ == vn)
                 {
                     this->problem().variables().velocity()[globalIdxI][isIndex] = velocityNW;
                     this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                    break;
                 }
                 if (velocityType_ == vt)
                 {
@@ -363,6 +379,8 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
                     }
+                    break;
+                }
                 }
             }//end intersection with neighbor
 
@@ -407,19 +425,24 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     //determine phase saturations from primary saturation variable
                     Scalar satW;
                     Scalar satNW;
-                    if (this->saturationType == Sw)
+                    switch (this->saturationType)
+                    {
+                    case Sw:
                     {
                         satW = satBound;
                         satNW = 1-satBound;
+                        break;
                     }
-                    else if (this->saturationType == Sn)
+                    case Sn:
                     {
                         satW = 1-satBound;
                         satNW = satBound;
+                        break;
                     }
-                    else
+                    default:
                     {
                         DUNE_THROW(RangeError, "saturation type not implemented");
+                    }
                     }
                     Scalar pressBound = this->problem().dirichletPress(globalPosFace, *isIt);
                     Scalar pcBound = MaterialLaw::pC(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW);
@@ -427,15 +450,20 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     //determine phase pressures from primary pressure variable
                     Scalar pressW=0;
                     Scalar pressNW=0;
-                    if (this->pressureType == pw)
+                    switch (this->pressureType)
+                    {
+                    case pw:
                     {
                         pressW = pressBound;
                         pressNW = pressBound + pcBound;
+                        break;
                     }
-                    else if (this->pressureType == pn)
+                    case pn:
                     {
                         pressW = pressBound - pcBound;
                         pressNW = pressBound;
+                        break;
+                    }
                     }
 
                     //get temperature at current position
@@ -481,20 +509,26 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     densityNW = (potentialNW == 0.) ? 0.5 * (densityNWI + densityNWBound) : densityNW;
 
                     //calculate potential gradient
-                    if (this->pressureType == pw)
+                    switch (this->pressureType)
+                    {
+                    case pw:
                     {
                         potentialW = (pressI - pressBound) / dist;
                         potentialNW = (pressI + pcI - pressBound - pcBound) / dist;
+                        break;
                     }
-                    if (this->pressureType == pn)
+                    case pn:
                     {
                         potentialW = (pressI - pcI - pressBound + pcBound) / dist;
                         potentialNW = (pressI - pressBound) / dist;
+                        break;
                     }
-                    if (this->pressureType == pglobal)
+                    case pglobal:
                     {
                         potentialW = (pressI - pressBound - fractionalNWI * (pcI - pcBound)) / dist;
                         potentialNW = (pressI - pressBound + fractionalWI * (pcI - pcBound)) / dist;
+                        break;
+                    }
                     }
 
                     potentialW += densityW * (unitDistVec * this->gravity);
@@ -524,45 +558,57 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     gravityTermNW *= (this->gravity*permeability)*(lambdaNW * densityNW);
 
                     //calculate velocity depending on the pressure used -> use pc = pn - pw
-                    if (this->pressureType == pw)
+                    switch (this->pressureType)
+                    {
+                    case pw:
                     {
                         velocityW *= lambdaW * (pressI - pressBound)/dist;
                         velocityNW *= lambdaNW * (pressI - pressBound)/dist + 0.5 * (lambdaNWI + lambdaNWBound) * (pcI - pcBound) / dist;
                         velocityW += gravityTermW;
                         velocityNW += gravityTermNW;
+                        break;
                     }
-                    if (this->pressureType == pn)
+                    case pn:
                     {
                         velocityW *= lambdaW * (pressI - pressBound)/dist - 0.5 * (lambdaWI + lambdaWBound) * (pcI - pcBound) / dist;
                         velocityNW *= lambdaNW * (pressI - pressBound) / dist;
                         velocityW += gravityTermW;
                         velocityNW += gravityTermNW;
+                        break;
                     }
-                    if (this->pressureType == pglobal)
+                    case pglobal:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = permeability;
                         this->problem().variables().velocity()[globalIdxI][isIndex]*= (lambdaW + lambdaNW)* (pressI - pressBound )/ dist;
                         this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermW;
                         this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermNW;
+                        break;
+                    }
                     }
 
                     //store velocities
-                    if (velocityType_ == vw)
+                    switch (velocityType_)
+                    {
+                    case vw:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW;
                         this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                        break;
                     }
-                    if (velocityType_ == vn)
+                    case vn:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityNW;
                         this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                        break;
                     }
-                    if (velocityType_ == vt)
+                    case vt:
                     {
                         if (this->pressureType == pw || this->pressureType == pn)
                         {
                             this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
                         }
+                        break;
+                    }
                     }
                 }//end dirichlet boundary
 
@@ -581,19 +627,25 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                         velocityNW /= densityNWI;
                     }
 
-                    if (velocityType_ == vw)
+                    switch (velocityType_)
+                    {
+                    case vw:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW;
                         this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                        break;
                     }
-                    if (velocityType_ == vn)
+                    case vn:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityNW;
                         this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                        break;
                     }
-                    if (velocityType_ == vt)
+                    case vt:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                        break;
+                    }
                     }
                 }//end neumann boundary
             }//end boundary

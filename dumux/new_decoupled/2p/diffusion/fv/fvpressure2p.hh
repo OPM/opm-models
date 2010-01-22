@@ -432,26 +432,32 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                     densityW = (potentialW == 0.) ? rhoMeanW : densityW;
                     densityNW = (potentialNW == 0.) ? rhoMeanNW : densityNW;
 
-                    if (pressureType == pw)
+                    switch (pressureType)
+                    {
+                    case pw:
                     {
                         potentialW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ]) / dist;
                         potentialNW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ] + pcI - pcJ) / dist;
+                        break;
                     }
-                    if (pressureType == pn)
+                    case pn:
                     {
                         potentialW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ] - pcI + pcJ) / dist;
                         potentialNW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ]) / dist;
+                        break;
                     }
-                    if (pressureType == pglobal)
+                    case pglobal:
                     {
                         potentialW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ] - fMeanNW * (pcI - pcJ)) / dist;
                         potentialNW = (problem_.variables().pressure()[globalIdxI]
                                 - problem_.variables().pressure()[globalIdxJ] + fMeanW * (pcI - pcJ)) / dist;
+                        break;
+                    }
                     }
 
                     potentialW += densityW * (unitDistVec * gravity);
@@ -481,7 +487,9 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
                 //calculate right hand side
                 Scalar rightEntry = (lambdaW * densityW + lambdaNW * densityNW) * (permeability * gravity) * faceArea;
 
-                if (pressureType == pw)
+                switch (pressureType)
+                {
+                case pw:
                 {
                     // calculate capillary pressure gradient
                     FieldVector<Scalar, dim> pCGradient = unitDistVec;
@@ -489,8 +497,9 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                     //add capillary pressure term to right hand side
                     rightEntry += 0.5 * (lambdaNWI + lambdaNWJ) * (permeability * pCGradient) * faceArea;
+                    break;
                 }
-                if (pressureType == pn)
+                case pn:
                 {
                     // calculate capillary pressure gradient
                     FieldVector<Scalar, dim> pCGradient = unitDistVec;
@@ -498,6 +507,8 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
 
                     //add capillary pressure term to right hand side
                     rightEntry -= 0.5 * (lambdaWI + lambdaWJ) * (permeability * pCGradient) * faceArea;
+                    break;
+                }
                 }
 
                 //set right hand side
