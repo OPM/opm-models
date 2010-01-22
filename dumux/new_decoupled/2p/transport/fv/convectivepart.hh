@@ -36,10 +36,14 @@ namespace Dune
  - Scalar        type used for scalar quantities
  */
 
-template<class GridView, class Scalar>
+template<class TypeTag>
 class ConvectivePart
 {
 private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+
     enum{dim = GridView::dimension, dimWorld = GridView::dimensionworld};
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
@@ -52,7 +56,7 @@ public:
      *  @param[in] indexInInside  face index in reference element
      *  \return     convective term of an advection-diffusion equation
      */
-    virtual Scalar operator() (const Element& element, const Scalar sat, const int indexInInside) const
+    Scalar operator() (const Element& element, const int indexInInside, const Scalar sat) const
     {
         Scalar trivial(0);
         return trivial;
@@ -65,11 +69,14 @@ public:
      *  @param[in] indexInInside  face index in reference element
      *  \return     convective term of an advection-diffusion equation
      */
-    virtual FieldVector<Scalar, dimWorld> operator() (const Element& element, const Scalar satI, const Scalar satJ, const int indexInInside) const
+    FieldVector<Scalar, dimWorld> operator() (const Element& element, const int indexInInside, const Scalar satI, const Scalar satJ) const
     {
         FieldVector<Scalar, dimWorld> trivial(0);
         return trivial;
     }
+
+    ConvectivePart(Problem& problem)
+    {}
 
     //! always define virtual destructor in abstract base class
     virtual ~ConvectivePart()

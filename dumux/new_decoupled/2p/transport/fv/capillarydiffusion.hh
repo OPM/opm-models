@@ -1,7 +1,7 @@
 // $Id$
 /*****************************************************************************
  *   Copyright (C) 2007-2009 by Bernd Flemisch                               *
- *   Copyright (C) 2008-2009 by Markus Wolff                                 *
+ *   Copyright (C) 2008-2010 by Markus Wolff                                 *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -18,7 +18,6 @@
 #define DUNE_CAPILLARYDIFFUSION_HH
 
 #include "dumux/transport/fv/diffusivepart.hh"
-#include "dumux/transport/transportproblem.hh"
 
 /**
  * @file
@@ -44,15 +43,33 @@ namespace Dune
  - VC            type of a class containing different variables of the model
  - Problem       class defining the physical problem
  */
-template<class GridView, class Scalar, class VC,
-        class Problem = TransportProblem<GridView, Scalar, VC> >
-class CapillaryDiffusion: public DiffusivePart<GridView, Scalar>
+template<class TypeTag>
+class CapillaryDiffusion: public DiffusivePart<TypeTag>
 {
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+      typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) ReferenceElements;
+      typedef typename ReferenceElements::Container ReferenceElementContainer;
+
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
+      typedef typename SpatialParameters::MaterialLaw MaterialLaw;
+
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+
     enum
     {
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
-typedef    typename GridView::Grid Grid;
+    enum
+    {
+        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
+    };
+
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
@@ -77,40 +94,44 @@ public:
         GeometryType gt = element.geometry().type();
 
         // cell center in reference element
-        const LocalPosition& localPos = ReferenceElements<Scalar,dim>::general(gt).position(0,0);
+        const LocalPosition& localPos = ReferenceElementContainer::general(gt).position(0,0);
 
         // get global coordinate of cell center
         const GlobalPosition& globalPos = element.geometry().global(localPos);
 
         // get absolute permeability of cell
-        FieldMatrix permeability(soil_.K(globalPos,element,localPos));
+        FieldMatrix permeability(problem_.spatialParameters().intrinsicPermeability(globalPos,element));
 
-        IntersectionIterator isItEnd = element.ilevelend();
-        IntersectionIterator isIt = element.ilevelbegin();
+        IntersectionIterator isItEnd = problem_.gridView().template iend(element);
+        IntersectionIterator isIt = problem_.gridView().template ibegin(element);
         for (; isIt != isItEnd; ++isIt)
         {
             if(isIt->indexInInside() == indexInInside)
             break;
         }
-        int globalIdxI = problem_.variables().indexTransport(element);
+        int globalIdxI = problem_.variables().index(element);
 
         // get geometry type of face
         GeometryType faceGT = isIt->geometryInInside().type();
 
         //get lambda_bar = lambda_n*f_w
-        Scalar mobBar;
-        Scalar mobilityWI;
-        Scalar mobilityNWI;
+        Scalar mobBar = 0;
+        Scalar mobilityWI = 0;
+        Scalar mobilityNWI = 0;
 
         if (preComput_)
         {
             mobilityWI = problem_.variables().mobilityWetting(globalIdxI);
-            mobilityNWI = problem_.variables().mobilityNonWetting(globalIdxI);
+            mobilityNWI = problem_.variables().mobilityNonwetting(globalIdxI);
         }
         else
         {
-            mobilityWI = problem_.materialLaw().mobW(satI,globalPos,element,localPos);
-            mobilityNWI = problem_.materialLaw().mobW(1 - satI,globalPos,element,localPos);
+            PhaseState phaseState;
+            phaseState.update(problem_.temperature(globalPos, element));
+            mobilityWI = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
+            mobilityWI /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+            mobilityNWI = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
+            mobilityNWI /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
         }
 
         if (isIt->neighbor())
@@ -118,11 +139,11 @@ public:
             // access neighbor
             ElementPointer neighborPointer = isIt->outside();
 
-            int globalIdxJ = problem_.variables().indexTransport(*neighborPointer);
+            int globalIdxJ = problem_.variables().index(*neighborPointer);
 
             // compute factor in neighbor
             GeometryType neighborGT = neighborPointer->geometry().type();
-            const LocalPosition& localPosNeighbor = ReferenceElements<Scalar,dim>::general(neighborGT).position(0,0);
+            const LocalPosition& localPosNeighbor = ReferenceElementContainer::general(neighborGT).position(0,0);
 
             // neighbor cell center in global coordinates
             const GlobalPosition& globalPosNeighbor = neighborPointer->geometry().global(localPosNeighbor);
@@ -137,7 +158,7 @@ public:
             unitDistVec /= dist;
 
             // get absolute permeability
-            FieldMatrix permeabilityJ(soil_.K(globalPosNeighbor, *neighborPointer, localPosNeighbor));
+            FieldMatrix permeabilityJ(problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor, *neighborPointer));
 
             // harmonic mean of permeability
             for (int x = 0;x<dim;x++)
@@ -150,18 +171,22 @@ public:
                     }
                 }
             }
-            Scalar mobilityWJ;
-            Scalar mobilityNWJ;
+            Scalar mobilityWJ = 0;
+            Scalar mobilityNWJ = 0;
             //get lambda_bar = lambda_n*f_w
             if(preComput_)
             {
                 mobilityWJ = problem_.variables().mobilityWetting(globalIdxJ);
-                mobilityNWJ = problem_.variables().mobilityNonWetting(globalIdxJ);
+                mobilityNWJ = problem_.variables().mobilityNonwetting(globalIdxJ);
             }
             else
             {
-                mobilityWJ = problem_.materialLaw().mobW(satI,globalPos,element,localPos);
-                mobilityNWJ = problem_.materialLaw().mobW(1 - satI,globalPos,element,localPos);
+                PhaseState phaseState;
+                phaseState.update(problem_.temperature(globalPosNeighbor, *neighborPointer));
+                mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
+                mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+                mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
+                mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
             }
             Scalar mobilityWMean = 0.5*(mobilityWI + mobilityWJ);
             Scalar mobilityNWMean = 0.5*(mobilityNWI + mobilityNWJ);
@@ -169,15 +194,21 @@ public:
          }//end intersection with neighbor
         else
         {
-            //calculate lambda_n*f_w at the boundary: use a regularization with regularizationparamter eps_
-            std::vector<Scalar> mobI = problem_.materialLaw().mob(satI, globalPos, element, localPos);
-            std::vector<Scalar> mobJ = problem_.materialLaw().mob(satJ, globalPos, element, localPos);
-            std::vector<Scalar> mobMean(2,0.0);
-            for (int i = 0; i < 2; i++)
-            {
-                mobMean[i]=0.5*(mobI[i]+mobJ[i]);
-            }
-            mobBar = mobMean[0]*mobMean[1]/(mobMean[0]+mobMean[1]);
+            Scalar mobilityWJ = 0;
+            Scalar mobilityNWJ = 0;
+
+            //calculate lambda_n*f_w at the boundary
+            PhaseState phaseState;
+            phaseState.update(problem_.temperature(globalPos, element));
+            mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
+            mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+            mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
+            mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+
+            Scalar mobWMean = 0.5 * (mobilityWI + mobilityWJ);
+            Scalar mobNWMean = 0.5 * (mobilityNWI + mobilityNWJ);
+
+            mobBar = mobWMean * mobNWMean / (mobWMean + mobNWMean);
         }
 
         // set result to K*grad(pc)
@@ -195,13 +226,12 @@ public:
      *  @param soil implementation of the solid matrix
      *  @param preComput if preCompute = true previous calculated mobilities are taken, if preCompute = false new mobilities will be computed (for implicit Scheme)
      */
-    CapillaryDiffusion (Problem& problem, Matrix2p<Grid, Scalar>& soil, const bool preComput = true)
-    : problem_(problem), soil_(soil), preComput_(preComput)
+    CapillaryDiffusion (Problem& problem, const bool preComput = true)
+    : DiffusivePart<TypeTag>(problem), problem_(problem), preComput_(preComput)
     {}
 
 private:
     Problem& problem_;//problem data
-    Matrix2p<Grid, Scalar>& soil_;//object derived from Dune::Matrix2p
     const bool preComput_;//if preCompute = true the mobilities are taken from the variable object, if preCompute = false new mobilities will be taken (for implicit Scheme)
 };
 }

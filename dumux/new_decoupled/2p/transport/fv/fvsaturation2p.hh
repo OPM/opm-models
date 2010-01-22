@@ -17,6 +17,7 @@
 #define DUNE_FVSATURATION2P_HH
 
 #include "dumux/new_decoupled/2p/transport/fv/diffusivepart.hh"
+#include "dumux/new_decoupled/2p/transport/fv/convectivepart.hh"
 #include <dumux/new_decoupled/2p/transport/transportproperties.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
@@ -64,6 +65,7 @@ class FVSaturation2P
     typedef typename ReferenceElements::ContainerFaces ReferenceElementFaceContainer;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(DiffusivePart)) DiffusivePart;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(ConvectivePart)) ConvectivePart;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
     typedef typename SpatialParameters::MaterialLaw MaterialLaw;
@@ -87,7 +89,6 @@ class FVSaturation2P
         vt = Indices::velocityTotal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        other = 999
     };
     enum
     {
@@ -115,8 +116,18 @@ class FVSaturation2P
         return *diffusivePart_;
     }
 
+    ConvectivePart& convectivPart()
+    {
+        return *convectivePart_;
+    }
+
+    const ConvectivePart& convectivePart() const
+    {
+        return *convectivePart_;
+    }
+
     //function to calculate the time step if a non-wetting phase velocity is used
-    Scalar evaluateTimeStepNonwettingFlux(Scalar timestepFactorIn, Scalar timestepFactorOutNW, Scalar& residualSatW,
+    Scalar evaluateTimeStepPhaseFlux(Scalar timestepFactorIn, Scalar timestepFactorOutNW, Scalar& residualSatW,
             Scalar& residualSatNW, int globalIdxI);
 
     //function to calculate the time step if a total velocity is used
@@ -169,30 +180,35 @@ public:
             DUNE_THROW(NotImplemented,
                     "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
-        if (saturationType_ == other)
+        if (saturationType_ != Sw && saturationType_ != Sn)
         {
-            DUNE_THROW(NotImplemented, "Saturation type not supported in FVSaturation2P!");
+            DUNE_THROW(NotImplemented, "Saturation type not supported!");
         }
-        if (velocityType_ == other)
+        if (pressureType_ != pw && pressureType_ != pn && pressureType_ != pglobal)
         {
-            DUNE_THROW(NotImplemented, "Velocity type not supported in FVSaturation2P!");
+            DUNE_THROW(NotImplemented, "Pressure type not supported!");
         }
-        if (pressureType_ == other)
+        if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
-            DUNE_THROW(NotImplemented, "Pressure type not supported in FVSaturation2P!");
+            DUNE_THROW(NotImplemented, "Velocity type not supported!");
         }
 
-        diffusivePart_ = new DiffusivePart;
+
+        diffusivePart_ = new DiffusivePart(problem);
+        convectivePart_ = new ConvectivePart(problem);
     }
 
     ~FVSaturation2P()
     {
         delete diffusivePart_;
+        delete convectivePart_;
     }
 
 private:
     Problem& problem_;
     DiffusivePart* diffusivePart_;
+    ConvectivePart* convectivePart_;
+
     static const bool compressibility_ = GET_PROP_VALUE(TypeTag, PTAG(EnableCompressibility));
     ;
     static const int saturationType_ = GET_PROP_VALUE(TypeTag, PTAG(SaturationFormulation));
@@ -263,13 +279,11 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
         Scalar diffFactorOut = 0;
 
         // run through all intersections with neighbors and boundary
-        int isIndex = -1;
         IntersectionIterator isItEnd = problem_.gridView().template iend(*eIt);
         for (IntersectionIterator isIt = problem_.gridView().template ibegin(*eIt); isIt != isItEnd; ++isIt)
         {
             // local number of facet
-            //int isIndex = isIt->indexInInside();
-            isIndex++;
+            int isIndex = isIt->indexInInside();
 
             // get geometry type of face
             Dune::GeometryType faceGT = isIt->geometryInInside().type();
@@ -417,6 +431,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                     // get the diffusive part -> give 1-sat because sat = S_n and lambda = lambda(S_w) and pc = pc(S_w)
                     Scalar diffPart = diffusivePart()(*eIt, isIndex, satWI, satWJ, pcGradient) * unitDistVec * faceArea
                             / (volume * porosity) * (unitOuterNormal * unitDistVec);
+                    Scalar convPart = convectivePart() (*eIt, isIndex, satWI, satWJ) * unitDistVec * faceArea / (volume * porosity) * (unitOuterNormal * unitDistVec);
 
                     //for time step criterion
                     if (diffPart >= 0)
@@ -426,6 +441,14 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                     if (diffPart < 0)
                     {
                         diffFactorOut -= diffPart / (krSum * viscosityRatio);
+                    }
+                    if (convPart >= 0)
+                    {
+                        timestepFactorOut += convPart / (krSum * viscosityRatio);
+                    }
+                    if (convPart < 0)
+                    {
+                        timestepFactorIn -= convPart / (krSum * viscosityRatio);
                     }
 
                     switch (saturationType_)
@@ -665,6 +688,8 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         // get the diffusive part -> give 1-sat because sat = S_n and lambda = lambda(S_w) and pc = pc(S_w)
                         Scalar diffPart = diffusivePart()(*eIt, isIndex, satWI, satWBound, pcGradient) * unitDistVec
                                 * faceArea / (volume * porosity) * (unitOuterNormal * unitDistVec);
+                        Scalar convPart = convectivePart()(*eIt, isIndex, satWI, satWBound) * unitDistVec * faceArea / (volume * porosity) * (unitOuterNormal * unitDistVec);
+
 
                         //for time step criterion
                         if (diffPart >= 0)
@@ -674,6 +699,14 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         if (diffPart < 0)
                         {
                             diffFactorOut -= diffPart / (krSum * viscosityRatio);
+                        }
+                        if (convPart >= 0)
+                        {
+                            timestepFactorOut += convPart / (krSum * viscosityRatio);
+                        }
+                        if (convPart < 0)
+                        {
+                            timestepFactorIn -= convPart / (krSum * viscosityRatio);
                         }
 
                         switch (saturationType_)
@@ -899,7 +932,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
         //calculate time step
         if (velocityType_ == vw || velocityType_ == vn)
         {
-            dt = std::min(dt, evaluateTimeStepNonwettingFlux(timestepFactorIn, timestepFactorOut, residualSatW,
+            dt = std::min(dt, evaluateTimeStepPhaseFlux(timestepFactorIn, timestepFactorOut, residualSatW,
                     residualSatNW, globalIdxI));
         }
         if (velocityType_ == vt)
@@ -975,7 +1008,7 @@ typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeSt
     return sumFactor;
 }
 template<class TypeTag>
-typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeStepNonwettingFlux(
+typename FVSaturation2P<TypeTag>::Scalar FVSaturation2P<TypeTag>::evaluateTimeStepPhaseFlux(
         Scalar timestepFactorIn, Scalar timestepFactorOut, Scalar& residualSatW, Scalar& residualSatNW, int globalIdxI)
 {
     // compute dt restriction

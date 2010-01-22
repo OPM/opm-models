@@ -40,6 +40,7 @@ class DiffusivePart
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
       typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
 
     enum{dim = GridView::dimension};
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
@@ -96,6 +97,9 @@ public:
         return trivial;
     }
 
+
+    DiffusivePart(Problem& problem)
+    {}
     //! always define virtual destructor in abstract base class
     ~DiffusivePart()
     { }

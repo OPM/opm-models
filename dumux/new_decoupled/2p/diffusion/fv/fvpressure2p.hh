@@ -87,7 +87,6 @@ template<class TypeTag> class FVPressure2P
         pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        other = 999
     };
     enum
     {
@@ -193,6 +192,15 @@ public:
                 * problem.variables().gridSize(), BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
                 solverName_("BiCGSTAB"), preconditionerName_("SeqILU0"), gravity(problem.gravity())
     {
+        if (pressureType != pw && pressureType != pn && pressureType != pglobal)
+        {
+            DUNE_THROW(NotImplemented, "Pressure type not supported!");
+        }
+        if (saturationType != Sw && saturationType != Sn)
+        {
+            DUNE_THROW(NotImplemented, "Saturation type not supported!");
+        }
+
         initializeMatrix();
     }
 
@@ -210,6 +218,15 @@ public:
                 * problem.variables().gridSize(), BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
                 solverName_(solverName), preconditionerName_(preconditionerName), gravity(problem.gravity())
     {
+        if (pressureType != pw && pressureType != pn && pressureType != pglobal)
+        {
+            DUNE_THROW(NotImplemented, "Pressure type not supported!");
+        }
+        if (saturationType != Sw && saturationType != Sn)
+        {
+            DUNE_THROW(NotImplemented, "Saturation type not supported!");
+        }
+
         initializeMatrix();
     }
 
@@ -326,7 +343,6 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
         Scalar fractionalNWI = problem_.variables().fracFlowFuncNonwetting(globalIdxI);
         Scalar pcI = problem_.variables().capillaryPressure(globalIdxI);
 
-        int isIndex = -1;
         IntersectionIterator isItEnd = problem_.gridView().template iend(*eIt);
         for (IntersectionIterator isIt = problem_.gridView().template ibegin(*eIt); isIt != isItEnd; ++isIt)
         {
@@ -338,8 +354,7 @@ void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
             const FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0,
                     0);
 
-            //int isIndex = isIt->indexInInside();
-            isIndex++;
+            int isIndex = isIt->indexInInside();
 
             // center of face inside volume reference element
             const LocalPosition localPosFace(0);
@@ -833,9 +848,7 @@ void FVPressure2P<TypeTag>::solve()
         DUNE_THROW(NotImplemented, "FVPressure2P :: solve : preconditioner " << preconditionerName_ << ".");
     //            printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
     //            printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
-    //            printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
-
-    //printvector(std::cout, this->diffProblem.variables().pressure(), "solution", "row", 100, 1, 3);
+//                printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
 
     return;
 }
@@ -925,6 +938,9 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
                 / viscosityW;
         Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
                 / viscosityNW;
+//        std::cout<<"MobilityW: "<<mobilityW <<"\n"
+//                "MobilityNW"<< mobilityNW<<"\n";
+
 
         if (compressibility)
         {

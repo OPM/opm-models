@@ -86,7 +86,6 @@ typedef    typename GridView::Traits::template Codim<0>::Entity Element;
         vt = Indices::velocityTotal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        other = 999
     };
     enum
     {
@@ -112,7 +111,7 @@ public:
         {
             DUNE_THROW(NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
-        if (velocityType_ == other)
+        if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
             DUNE_THROW(NotImplemented, "Velocity type not supported!");
         }
@@ -134,7 +133,7 @@ public:
         {
             DUNE_THROW(NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
-        if (velocityType_ == other)
+        if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
             DUNE_THROW(NotImplemented, "Velocity type not supported!");
         }
@@ -185,7 +184,6 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
         Scalar densityNWI = this->problem().variables().densityNonwetting(globalIdxI);
 
         // run through all intersections with neighbors and boundary
-        int isIndex = -1;
         IntersectionIterator
         isItEnd = this->problem().gridView().template iend(*eIt);
         for (IntersectionIterator
@@ -193,8 +191,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                 !=isItEnd; ++isIt)
         {
             // local number of facet
-            //int isIndex = isIt->indexInInside();
-            isIndex++;
+            int isIndex = isIt->indexInInside();
             
             // get geometry type of face
             Dune::GeometryType faceGT = isIt->geometryInInside().type();
@@ -340,7 +337,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     velocityNW += gravityTermNW;
                     break;
                 }
-                if (this->pressureType == pn)
+                case pn:
                 {
                     velocityW *= lambdaW * (pressI - pressJ)/dist - 0.5 * (lambdaWI + lambdaWJ) * (pcI - pcJ) / dist;
                     velocityNW *= lambdaNW * (pressI - pressJ) / dist;
@@ -348,7 +345,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     velocityNW += gravityTermNW;
                     break;
                 }
-                if (this->pressureType == pglobal)
+                case pglobal:
                 {
                     this->problem().variables().velocity()[globalIdxI][isIndex] = permeability;
                     this->problem().variables().velocity()[globalIdxI][isIndex]*= (lambdaW + lambdaNW)* (pressI - pressJ )/ dist;
@@ -367,13 +364,13 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
                     break;
                 }
-                if (velocityType_ == vn)
+                case vn:
                 {
                     this->problem().variables().velocity()[globalIdxI][isIndex] = velocityNW;
                     this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
                     break;
                 }
-                if (velocityType_ == vt)
+                case vt:
                 {
                     if (this->pressureType == pw || this->pressureType == pn)
                     {
@@ -579,7 +576,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
                     case pglobal:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = permeability;
-                        this->problem().variables().velocity()[globalIdxI][isIndex]*= (lambdaW + lambdaNW)* (pressI - pressBound )/ dist;
+                        this->problem().variables().velocity()[globalIdxI][isIndex] *= (lambdaW + lambdaNW)* (pressI - pressBound )/ dist;
                         this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermW;
                         this->problem().variables().velocity()[globalIdxI][isIndex] += gravityTermNW;
                         break;
