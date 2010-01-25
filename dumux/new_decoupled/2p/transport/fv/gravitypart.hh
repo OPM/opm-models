@@ -89,7 +89,7 @@ public:
      *  @param[in] indexInInside  face index in reference element
      *  \return     gravity term of a saturation equation
      */
-    virtual FieldVector operator() (const Element& element, const int indexInInside, const Scalar satI, const Scalar satJ) const
+    FieldVector operator() (const Element& element, const int indexInInside, const Scalar satI, const Scalar satJ) const
     {
         // cell geometry type
         GeometryType gt = element.geometry().type();
@@ -197,7 +197,7 @@ public:
 
         // set result to K*grad(pc)
         FieldVector result(0);
-        permeability.umv(gravity_, result);
+        permeability.umv(problem_.gravity(), result);
 
         Scalar lambdaW = (potentialW >= 0) ? lambdaWI : lambdaWJ;
         lambdaW = (potentialW == 0) ? 0.5 * (lambdaWI + lambdaWJ) : lambdaW;
@@ -210,7 +210,6 @@ public:
 
         // set result to f_w*lambda_n*K*grad(pc)
         result *= lambdaW*lambdaNW/(lambdaW+lambdaNW);
-
         result *= (densityW - densityNW);
 
         return result;
@@ -222,14 +221,11 @@ public:
      */
     GravityPart (Problem& problem, const bool preComput = true)
     : ConvectivePart<TypeTag>(problem), problem_(problem), preComput_(preComput)
-    {
-        gravity_ = problem.gravity();
-    }
+    {}
 
 private:
     Problem& problem_;//problem data
     const bool preComput_;//if preCompute = true the mobilities are taken from the variable object, if preCompute = false new mobilities will be taken (for implicit Scheme)
-    FieldVector gravity_;//gravity vector
 };
 }
 

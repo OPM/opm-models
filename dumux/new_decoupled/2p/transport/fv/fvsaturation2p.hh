@@ -467,6 +467,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                     }
                     }
                     factor -= diffPart;
+                    factor += convPart;
                     break;
                 }
                 case vw:
@@ -690,7 +691,6 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                                 * faceArea / (volume * porosity) * (unitOuterNormal * unitDistVec);
                         Scalar convPart = convectivePart()(*eIt, isIndex, satWI, satWBound) * unitDistVec * faceArea / (volume * porosity) * (unitOuterNormal * unitDistVec);
 
-
                         //for time step criterion
                         if (diffPart >= 0)
                         {
@@ -726,6 +726,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         }
                         //vt*fw
                         factor -= diffPart;
+                        factor += convPart;
                         break;
                     }
 

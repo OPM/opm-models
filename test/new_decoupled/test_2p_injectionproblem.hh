@@ -76,8 +76,8 @@ SET_PROP(TwoPTestProblem, PressureModel)
     typedef Dune::FVVelocity2P<TTAG(TwoPTestProblem)> type;
 };
 
-//SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
-//        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
+SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
+        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
 
 //SET_INT_PROP(TwoPTestProblem, PressureFormulation,
 //        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::pressureGlobal);
