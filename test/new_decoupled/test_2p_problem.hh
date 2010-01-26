@@ -43,7 +43,7 @@ template<class TypeTag>
 class Test2PProblem;
 
 //////////
-// Specify the properties for the lens problem
+// Specify the properties
 //////////
 namespace Properties
 {
