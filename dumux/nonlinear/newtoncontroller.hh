@@ -108,7 +108,6 @@ struct NewtonConvergenceWriter
     void writeFields(const SolutionFunction &uOld,
                      const SolutionFunction &deltaU)
     {
-        std::cout << "writeFields\n";
         ctl_.model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
     };
 
@@ -191,7 +190,8 @@ public:
     NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
                      int targetSteps   = 8,
                      int maxSteps      = 12)
-        : convergenceWriter_(asImp_())
+        : endIterMsgStream_(std::ostringstream::out),
+          convergenceWriter_(asImp_())
     {
         assert(maxSteps > targetSteps + 3);
         numSteps_ = 0;
@@ -387,8 +387,9 @@ public:
 
         curPhysicalness_ = asImp_().physicalness_(u);
         if (this->method().verbose())
-            std::cout << boost::format("\rNewton iteration %d done: error=%g\n")
-                %numSteps_%error_;
+            std::cout << "\rNewton iteration " << numSteps_ << " done: "
+                      << "error=" << error_ << endIterMsg().str() << "\n";
+        endIterMsgStream_.str("");
     }
 
     /*!
@@ -469,6 +470,9 @@ public:
      */
     const Model &model() const
     { return method_->model(); }
+
+    std::ostringstream &endIterMsg() 
+    { return endIterMsgStream_; }
 
 protected:
     // returns the actual implementation for the cotroller we do
@@ -618,6 +622,8 @@ protected:
     {
         return 1;
     }
+
+    std::ostringstream endIterMsgStream_;
 
     NewtonMethod *method_;
 
