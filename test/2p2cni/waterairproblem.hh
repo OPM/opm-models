@@ -128,6 +128,9 @@ SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
  *
  * This problem should typically be simulated for 300000 s.
  * A good choice for the initial time step size is 1000 s.
+ *
+ * To run the simulation execute the following line in shell: 
+ * <tt>./test_2p2cni ./grids/test_2p2cni.dgf 300000 1000</tt>
  *  */
 template <class TypeTag = TTAG(WaterAirProblem) >
 class WaterAirProblem : public TwoPTwoCNIBoxProblem<TypeTag, WaterAirProblem<TypeTag> >
