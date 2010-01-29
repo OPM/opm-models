@@ -210,8 +210,13 @@ public:
     {
         if (numSteps_ < 2)
             return true; // we always do at least two iterations
-        else if (numSteps_ > maxSteps_)
-            return false; // we have exceeded the allowed number of steps
+        else if (numSteps_ >= maxSteps_) {
+            // we have exceeded the allowed number of steps.  if the
+            // relative error was reduced by a factor of at least 5,
+            // we proceed even if we are above the maximum number of
+            // steps
+            return error_*4.0 < lastError_ && !asImp_().newtonConverged(); 
+        }
         else if (asImp_().newtonConverged())
             return false; // we are below the desired tolerance
 
@@ -286,7 +291,7 @@ public:
      * \brief Indidicates the beginning of a newton iteration.
      */
     void newtonBeginStep()
-    { }
+    { lastError_ = error_; }
 
     /*!
      * \brief Returns the number of steps done since newtonBegin() was
@@ -337,7 +342,7 @@ public:
         // that the initial value for the delta vector u is quite
         // close to the final value, a reduction of 6 orders of
         // magnitute in the defect should be sufficient...
-        Scalar residReduction = 1e-5;
+        Scalar residReduction = 1e-18;
 
         try {
 #if HAVE_MPI
@@ -634,6 +639,7 @@ protected:
     Scalar maxPhysicalness_;
     Scalar curPhysicalness_;
     Scalar error_;
+    Scalar lastError_;
     int    probationCount_;
 
     // optimal number of iterations we want to achive
