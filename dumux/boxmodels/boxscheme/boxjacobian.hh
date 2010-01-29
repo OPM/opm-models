@@ -341,8 +341,12 @@ public:
 
         if (withBoundary) {
             for (int i = 0; i < curElementGeom_.numVertices; i++) {
-                for (int j = firstEq; j < lastEq; j++)
-                    residual[i][j] += this->b[i][j];
+                for (int j = firstEq; j < lastEq; j++) {
+                    if (this->bctype[i][j] == BoundaryConditions::dirichlet)
+                        residual[i][j] = 0;
+                    else
+                        residual[i][j] += this->b[i][j];
+                }
             }
         }
 
