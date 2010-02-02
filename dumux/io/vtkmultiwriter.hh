@@ -87,26 +87,8 @@ public:
         curWriter_ = new VtkWriter(gridView);
         ++writerNum_;
 
+        curTime_ = t;
         curOutFileName_ = fileName_();
-
-        // determine name to write into the multi-file for the
-        // current time step
-        std::string fileName;
-        std::string suffix = fileSuffix_();
-        if (commSize_ == 1) {
-            fileName = curOutFileName_;
-            multiFile_ << (boost::format("   <DataSet timestep=\"%lg\" file=\"%s.%s\"/>\n")
-                           %t%fileName%suffix);
-        }
-        if (commSize_ > 1 && commRank_ == 0)  {
-            // only the first process updates the multi-file
-            for (int part=0; part < commSize_; ++part) {
-                fileName = fileName_(part);
-                multiFile_ << (boost::format("   <DataSet part=\"%d\" timestep=\"%lg\" file=\"%s.%s\"/>\n")
-                               %part%t%fileName%suffix);
-            }
-        }
-
     }
 
     /*!
@@ -250,10 +232,33 @@ public:
      *
      * This means that everything will be written to disk.
      */
-    void endTimestep()
+    void endTimestep(bool onlyDiscard=false)
     {
-        curWriter_->write(curOutFileName_.c_str(),
-                          Dune::VTKOptions::ascii);
+    	if (!onlyDiscard) {
+    		curWriter_->write(curOutFileName_.c_str(),
+							  Dune::VTKOptions::ascii);
+
+    		// determine name to write into the multi-file for the
+            // current time step
+            std::string fileName;
+            std::string suffix = fileSuffix_();
+            if (commSize_ == 1) {
+                fileName = curOutFileName_;
+                multiFile_ << (boost::format("   <DataSet timestep=\"%lg\" file=\"%s.%s\"/>\n")
+                               %curTime_%fileName%suffix);
+            }
+            if (commSize_ > 1 && commRank_ == 0)  {
+                // only the first process updates the multi-file
+                for (int part=0; part < commSize_; ++part) {
+                    fileName = fileName_(part);
+                    multiFile_ << (boost::format("   <DataSet part=\"%d\" timestep=\"%lg\" file=\"%s.%s\"/>\n")
+                                   %part%curTime_%fileName%suffix);
+                }
+            }
+
+    	}
+    	else
+    		-- writerNum_;
 
         delete curWriter_;
         while (vectorFields_.begin() != vectorFields_.end()) {
@@ -438,6 +443,7 @@ private:
     int commRank_; // rank of the current process in the communicator
 
     VtkWriter     * curWriter_;
+    double          curTime_;
     const GridView* curGridView_;
     std::string     curOutFileName_;
     int             writerNum_;
