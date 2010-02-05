@@ -6,6 +6,7 @@ Makefile.in
 *.pvd
 *.drs
 *.la
+*.orig
 *~
 config*
 !configure.ac
