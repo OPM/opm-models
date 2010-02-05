@@ -242,7 +242,7 @@ public:
     PhasesVector densityAtIP;
 
     // darcy velocities of each phase (without the mobility)
-    PhasesVector vDarcy[numPhases];
+    GlobalPosition vDarcy[numPhases];
 
     // darcy velocity in direction of the face normal
     PhasesVector vDarcyNormal;
