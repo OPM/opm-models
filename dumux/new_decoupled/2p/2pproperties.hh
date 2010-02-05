@@ -25,6 +25,7 @@
 #define DUMUX_2PPROPERTIES_HH
 
 #include <dumux/new_decoupled/common/impesproperties.hh>
+#include <dumux/new_decoupled/2p/transport/transportproperties.hh>
 
 namespace Dune
 {
@@ -66,7 +67,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the two-phase problems
-NEW_TYPE_TAG(DecoupledTwoP, INHERITS_FROM(IMPES));
+NEW_TYPE_TAG(DecoupledTwoP, INHERITS_FROM(IMPES, Transport));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

@@ -44,8 +44,6 @@ class TwoPPhaseState : public PhaseState<typename GET_PROP_TYPE(TypeTag, PTAG(Sc
         nPhaseIdx = Indices::nPhaseIdx,
     };
 
-    typedef Dune::IdealGas<Scalar> IdealGas;
-
 public:
     enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
     

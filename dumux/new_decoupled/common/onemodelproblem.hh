@@ -18,11 +18,11 @@
 #ifndef DUNE_ONE_MODEL_PROBLEM_HH
 #define DUNE_ONE_MODEL_PROBLEM_HH
 
-#include "decoupledproperties.hh"
+#include <dumux/new_decoupled/common/decoupledproperties.hh>
+#include <dumux/auxiliary/timemanager.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/io/restart.hh>
 
-#include <dumux/auxiliary/timemanager.hh>
 
 /**
  * @file
@@ -33,7 +33,7 @@
 namespace Dune
 {
 
-/*! \ingroup fracflow
+/*! \ingroup Diffusion
  * @brief base class that defines the parameters of loosely coupled diffusion and transport equations
  *
  * An interface for defining parameters for the stationary diffusion equation
@@ -101,15 +101,15 @@ public:
     {
         wasRestarted_ = false;
 
-        // calculate the bounding box of the grid view
-        VertexIterator vIt = gridView.template begin<dim>();
-        const VertexIterator vEndIt = gridView.template end<dim>();
-        for (; vIt!=vEndIt; ++vIt) {
-            for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
-            }
-        }
+//        // calculate the bounding box of the grid view
+//        VertexIterator vIt = gridView.template begin<dim>();
+//        const VertexIterator vEndIt = gridView.template end<dim>();
+//        for (; vIt!=vEndIt; ++vIt) {
+//            for (int i=0; i<dim; i++) {
+//                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
+//                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+//            }
+//        }
 
         model_ = new Model(*asImp_()) ;
     }
@@ -117,8 +117,6 @@ public:
     //! destructor
     virtual ~OneModelProblem ()
     {
-        delete pressModel_;
-        delete satModel_;
         delete model_;
     }
 
@@ -336,6 +334,12 @@ public:
     bool restarted() const
     { return wasRestarted_; }
 
+    void restarted(bool setRestarted)
+    {
+        wasRestarted_ = setRestarted;
+        return ;
+    }
+
     /*!
      * \brief This method writes the complete state of the problem
      *        to the harddisk.
@@ -415,6 +419,16 @@ protected:
         // write restart file if necessary
         if (asImp_()->shouldWriteRestartFile())
             serialize();
+    }
+
+    VtkMultiWriter& resultWriter()
+    {
+        return resultWriter_;
+    }
+
+    VtkMultiWriter& resultWriter() const
+    {
+        return resultWriter_;
     }
 
 private:

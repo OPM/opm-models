@@ -149,13 +149,13 @@ public:
      *  The method is needed in the IMPES (Implicit Pressure Explicit Saturation) algorithm which is used for a fractional flow formulation
      *  to provide the velocity field required for the solution of the saturation equation.
      */
-    void calculateVelocity(const Scalar t);
+    void calculateVelocity();
 
 private:
     static const int velocityType_ = GET_PROP_VALUE(TypeTag, PTAG(VelocityFormulation)); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
 };
 template<class TypeTag>
-void FVVelocity2P<TypeTag>::calculateVelocity(const Scalar t=0)
+void FVVelocity2P<TypeTag>::calculateVelocity()
 {
     // compute update vector
     ElementIterator eItEnd = this->problem().gridView().template end<0>();

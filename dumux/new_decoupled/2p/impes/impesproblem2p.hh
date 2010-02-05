@@ -60,11 +60,31 @@ class IMPESProblem2P : public IMPESProblem<TypeTag, Implementation>
 public:
     IMPESProblem2P(const GridView &gridView)
         : ParentType(gridView),
-        gravity_(0),spatialParameters_(gridView)
+        gravity_(0)
     {
+        newSpatialParams_ = true;
+        spatialParameters_ = new SpatialParameters(gridView);
+
         gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
+    }
+    IMPESProblem2P(const GridView &gridView, SpatialParameters &spatialParameters)
+        : ParentType(gridView),
+        gravity_(0),spatialParameters_(&spatialParameters)
+    {
+        newSpatialParams_ = false;
+        gravity_ = 0;
+        if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
+            gravity_[dim - 1] = - 9.81;
+    }
+
+    virtual ~IMPESProblem2P()
+    {
+        if (newSpatialParams_)
+        {
+        delete spatialParameters_;
+        }
     }
 
     /*!
@@ -93,13 +113,13 @@ public:
      * \brief Returns the spatial parameters object.
      */
     SpatialParameters &spatialParameters()
-    { return spatialParameters_; }
+    { return *spatialParameters_; }
 
     /*!
      * \copydoc spatialParameters()
      */
     const SpatialParameters &spatialParameters() const
-    { return spatialParameters_; }
+    { return *spatialParameters_; }
 
 
     // \}
@@ -116,7 +136,8 @@ private:
     GlobalPosition  gravity_;
 
     // fluids and material properties
-    SpatialParameters  spatialParameters_;
+    SpatialParameters*  spatialParameters_;
+    bool newSpatialParams_;
 };
 
 }

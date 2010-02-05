@@ -76,12 +76,11 @@ public:
     //! Set initial solution and initialize parameters
     virtual void initial()
     {
-        Scalar t = 0;
         //initial saturations
         problem.saturationModel().initialTransport();
         //call function with true to get a first initialisation of the pressure field
-        problem.pressureModel().pressure(true, t);
-        problem.pressureModel().calculateVelocity(t);
+        problem.pressureModel().initial();
+        problem.pressureModel().calculateVelocity();
 
         return;
     }
@@ -119,10 +118,10 @@ public:
             iter++;
             iterTot++;
 
-            problem.pressureModel().pressure(false, t);
+            problem.pressureModel().pressure(false);
 
             //calculate velocities
-            problem.pressureModel().calculateVelocity(t);
+            problem.pressureModel().calculateVelocity();
 
             //calculate saturation defect
             problem.saturationModel().update(t, dt, updateVec, cFLFactor_, true);

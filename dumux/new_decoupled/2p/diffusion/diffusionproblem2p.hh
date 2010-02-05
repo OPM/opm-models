@@ -26,7 +26,6 @@
 #include <dumux/new_material/fluidsystems/2p_system.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
-
 namespace Dune
 {
 /*!
@@ -36,34 +35,50 @@ namespace Dune
  * \todo Please doc me more!
  */
 template<class TypeTag, class Implementation>
-class DiffusionProblem2P : public OneModelProblem<TypeTag, Implementation>
+class DiffusionProblem2P: public OneModelProblem<TypeTag, Implementation>
 {
     typedef OneModelProblem<TypeTag, Implementation> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
-    typedef typename GridView::Grid                         Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
+    typedef typename GridView::Grid Grid;typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))            SpatialParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
 
-
-    enum {
-        dim = Grid::dimension,
-        dimWorld = Grid::dimensionworld
+    enum
+    {
+        dim = Grid::dimension, dimWorld = Grid::dimensionworld
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld>      GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-    DiffusionProblem2P(const GridView &gridView)
-        : ParentType(gridView),
-        gravity_(0),spatialParameters_(gridView)
+    DiffusionProblem2P(const GridView &gridView) :
+        ParentType(gridView), gravity_(0)
     {
+        spatialParameters_ = new SpatialParameters(gridView);
+        newSpatialParams_ = true;
         gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
-            gravity_[dim - 1] = - 9.81;
+            gravity_[dim - 1] = -9.81;
+    }
+
+    DiffusionProblem2P(const GridView &gridView, SpatialParameters &spatialParameters) :
+        ParentType(gridView), gravity_(0), spatialParameters_(&spatialParameters)
+    {
+        newSpatialParams_ = false;
+        gravity_ = 0;
+        if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
+            gravity_[dim - 1] = -9.81;
+    }
+
+    virtual ~DiffusionProblem2P()
+    {
+        if (newSpatialParams_)
+        {
+            delete spatialParameters_;
+        }
     }
 
     /*!
@@ -71,13 +86,42 @@ public:
      */
     // \{
 
+    void init()
+    {
+    }
+
+    void timeIntegration(double &stepSize, double &nextStepSize)
+    {
+        stepSize = 0;
+        nextStepSize = 0;
+        // set the initial condition of the model
+        ParentType::init();
+
+        //end simulation -> no time dependent problem!
+        this->timeManager().setFinished();
+
+        return;
+    }
+
+    void serialize()
+    {
+        return;
+    }
+    void deserialize(double t)
+    {
+        return;
+    }
+
     /*!
      * \brief Returns the temperature within the domain.
      *
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { return asImp_()->temperature(); };
+    {
+        return asImp_()->temperature();
+    }
+    ;
 
     /*!
      * \brief Returns the acceleration due to gravity.
@@ -86,36 +130,46 @@ public:
      * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
      */
     const GlobalPosition &gravity() const
-    { return gravity_; }
+    {
+        return gravity_;
+    }
 
     /*!
      * \brief Returns the spatial parameters object.
      */
     SpatialParameters &spatialParameters()
-    { return spatialParameters_; }
+    {
+        return *spatialParameters_;
+    }
 
     /*!
      * \copydoc spatialParameters()
      */
     const SpatialParameters &spatialParameters() const
-    { return spatialParameters_; }
-
+    {
+        return *spatialParameters_;
+    }
 
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation *asImp_()
-    { return static_cast<Implementation *>(this); }
+    {
+        return static_cast<Implementation *> (this);
+    }
 
     //! \copydoc asImp_()
     const Implementation *asImp_() const
-    { return static_cast<const Implementation *>(this); }
+    {
+        return static_cast<const Implementation *> (this);
+    }
 
-    GlobalPosition  gravity_;
+    GlobalPosition gravity_;
 
     // fluids and material properties
-    SpatialParameters  spatialParameters_;
+    SpatialParameters* spatialParameters_;
+    bool newSpatialParams_;
 };
 
 }

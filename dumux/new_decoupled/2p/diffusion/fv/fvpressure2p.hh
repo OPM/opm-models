@@ -111,7 +111,7 @@ template<class TypeTag> class FVPressure2P
     void initializeMatrix();
 
     //function which assembles the system of equations to be solved
-    void assemble(bool first, const Scalar t);
+    void assemble(bool first);
 
     //solves the system of equations to get the spatial distribution of the pressure
     void solve();
@@ -140,19 +140,18 @@ public:
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws();
 
-    void pressure(bool first = true, const Scalar t = 0, bool solveTwice = true)
+    void initial(bool solveTwice = true)
     {
-        if (first)
-        {
+
             updateMaterialLaws();
-        }
-        assemble(first, t);
+
+        assemble(true);
         solve();
-        if (first && solveTwice)
+        if (solveTwice)
         {
             BlockVector<FieldVector<Scalar, 1> > pressureOld(this->problem().variables().pressure());
 
-            assemble(false, t);
+            assemble(false);
             solve();
 
             BlockVector<FieldVector<Scalar, 1> > pressureDiff(pressureOld);
@@ -164,7 +163,7 @@ public:
             while (pressureNorm > 1e-5 && numIter < 10)
             {
                 updateMaterialLaws();
-                assemble(false, t);
+                assemble(false);
                 solve();
 
                 pressureDiff = pressureOld;
@@ -177,6 +176,36 @@ public:
             }
             //            std::cout<<"Pressure defect = "<<pressureNorm<<"; "<<numIter<<" Iterations needed for initial pressure field"<<std::endl;
         }
+        return;
+    }
+
+    void pressure(bool solveTwice = true)
+    {
+        assemble(false);
+        solve();
+
+        return;
+    }
+
+    // serialization methods
+    template<class Restarter>
+    void serialize(Restarter &res)
+    {
+       return;
+    }
+
+    template<class Restarter>
+    void deserialize(Restarter &res)
+    {
+        return;
+    }
+
+    //! \brief Write data files
+     /*  \param name file name */
+    template<class MultiWriter>
+    void addOutputVtkFields(MultiWriter &writer)
+    {
+        problem().variables().addOutputVtkFields(writer);
         return;
     }
 
@@ -295,7 +324,7 @@ void FVPressure2P<TypeTag>::initializeMatrix()
 
 //function which assembles the system of equations to be solved
 template<class TypeTag>
-void FVPressure2P<TypeTag>::assemble(bool first, const Scalar t = 0)
+void FVPressure2P<TypeTag>::assemble(bool first)
 {
     // initialization: set matrix A_ to zero
     A_ = 0;
@@ -846,8 +875,8 @@ void FVPressure2P<TypeTag>::solve()
     }
     else
         DUNE_THROW(NotImplemented, "FVPressure2P :: solve : preconditioner " << preconditionerName_ << ".");
-    //            printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
-    //            printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
+//                printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
+//                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
 //                printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
 
     return;

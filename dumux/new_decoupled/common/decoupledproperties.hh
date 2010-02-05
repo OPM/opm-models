@@ -64,7 +64,7 @@ NEW_PROP_TAG( Variables); //!< The type of the container of global variables
 }
 
 #include <dumux/boundarytypes.hh>
-#include <dune/grid/common/mcmgmapper.hh>>
+#include <dune/grid/common/mcmgmapper.hh>
 #include <dune/istl/bvector.hh>
 
 template<class TypeTag>

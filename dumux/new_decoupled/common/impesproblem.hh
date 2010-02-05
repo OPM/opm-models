@@ -102,15 +102,15 @@ public:
     {
         wasRestarted_ = false;
 
-        // calculate the bounding box of the grid view
-        VertexIterator vIt = gridView.template begin<dim>();
-        const VertexIterator vEndIt = gridView.template end<dim>();
-        for (; vIt!=vEndIt; ++vIt) {
-            for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
-            }
-        }
+//        // calculate the bounding box of the grid view
+//        VertexIterator vIt = gridView.template begin<dim>();
+//        const VertexIterator vEndIt = gridView.template end<dim>();
+//        for (; vIt!=vEndIt; ++vIt) {
+//            for (int i=0; i<dim; i++) {
+//                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
+//                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+//            }
+//        }
 
         pressModel_ = new PressureModel(*asImp_());
         satModel_ = new SaturationModel(*asImp_());
@@ -364,6 +364,12 @@ public:
     bool restarted() const
     { return wasRestarted_; }
 
+    void restarted(bool setRestarted)
+    {
+        wasRestarted_ = setRestarted;
+        return ;
+    }
+
     /*!
      * \brief This method writes the complete state of the problem
      *        to the harddisk.
@@ -443,6 +449,16 @@ protected:
         // write restart file if necessary
         if (asImp_()->shouldWriteRestartFile())
             serialize();
+    }
+
+    VtkMultiWriter& resultWriter()
+    {
+        return resultWriter_;
+    }
+
+    VtkMultiWriter& resultWriter() const
+    {
+        return resultWriter_;
     }
 
 private:
