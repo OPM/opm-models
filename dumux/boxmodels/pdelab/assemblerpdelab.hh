@@ -95,35 +95,46 @@ public:
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *f);
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
 
+#if 1
+        // rescale jacobian and right hand side to the largest 
+        // entry on the main diagonal block matrix
     	typedef typename Matrix::RowIterator RowIterator;
     	typedef typename Matrix::ColIterator ColIterator;
+        typedef typename Matrix::block_type  BlockType;
     	const typename Matrix::block_type::size_type rowsInBlock = Matrix::block_type::rows;
     	const typename Matrix::block_type::size_type colsInBlock = Matrix::block_type::cols;
+        Scalar diagonalEntry[rowsInBlock];
     	RowIterator endIBlock = matrix_->end();
-    	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock)
-    		for (typename Matrix::block_type::size_type iLocal = 0; iLocal < rowsInBlock; iLocal++)
-    		{
-    			Scalar diagonalEntry = 0;
+    	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock) {
+            BlockType &diagBlock = (*iBlock)[iBlock.index()];
+            
+            for (int i = 0; i < rowsInBlock; ++i) {
+                diagonalEntry[i] = 0;
+                for (int j = 0; j < colsInBlock; ++j) {
+                    diagonalEntry[i] = std::max(diagonalEntry[i], 
+                                                std::abs(diagBlock[i][j]));
+                }
 
-    			ColIterator endJBlock = iBlock->end();
-    			for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
-    				if (iBlock.index() == jBlock.index())
-    				{
-    					diagonalEntry = (*jBlock)[iLocal][iLocal];
-    					break;
-    				}
+                if (diagonalEntry[i] < 1e-14)
+                    diagonalEntry[i] = 1.0;
+            }
 
-    			if (std::abs(diagonalEntry) > 1e-12)
-    			{
-    				for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock)
-    					for (typename Matrix::block_type::size_type jLocal = 0; jLocal < colsInBlock; jLocal++)
-    						(*jBlock)[iLocal][jLocal] /= diagonalEntry;
-
-    				(*f)[iBlock.index()][iLocal] /= diagonalEntry;
-    			}
-//    			else
-//    				std::cout << "assemblerpdelab.hh:assemble(): iBlock = " << iBlock.index() << ", iLocal = " << iLocal << ": ZERO diagonal!" << std::endl;
-    		}
+            // divide right-hand side
+            for (int i = 0; i < rowsInBlock; i++) {
+                (*f)[iBlock.index()][i] /= diagonalEntry[i];
+            }
+            
+            // divide row of the jacobian
+            ColIterator endJBlock = iBlock->end();
+            for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock) {
+                for (int i = 0; i < rowsInBlock; i++) {
+                    for (int j = 0; j < colsInBlock; j++) {
+                        (*jBlock)[i][j] /= diagonalEntry[i];
+                    }
+                }
+            }
+        }
+#endif
     }
 
     const GridFunctionSpace& gridFunctionSpace() const
