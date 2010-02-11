@@ -93,6 +93,12 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 #include <dumux/boundarytypes.hh>
 
 namespace Dune {
+
+#if HAVE_DUNE_PDELAB
+template<typename TypeTag>
+class FVElementGeometry;
+#endif
+
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Some defaults for very fundamental properties
@@ -154,7 +160,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
 
 public:
-    typedef Dune::FVElementGeometry<Grid, LocalFEMSpace>  type;
+    typedef Dune::FVElementGeometry<TypeTag>  type;
+//    typedef Dune::FVElementGeometry<Grid, LocalFEMSpace>  type;
 
 #else
 private:
