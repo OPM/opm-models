@@ -23,7 +23,6 @@ autom4te.cache/
 dumux-handbook.dvi
 .cproject
 .project
-.gitignore
 libtool
 missing
 stamp*
