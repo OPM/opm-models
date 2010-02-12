@@ -221,8 +221,18 @@ public:
         return pressure_;
     }
 
+    const ScalarSolutionType& pressure() const
+    {
+        return pressure_;
+    }
+
     //! Return velocity vector
     DimVecElemFaceType& velocity()
+    {
+        return velocity_;
+    }
+
+    const DimVecElemFaceType& velocity() const
     {
         return velocity_;
     }
@@ -243,8 +253,18 @@ public:
         return elementMapper_.map(element);
     }
 
+    int index(const Element& element) const
+    {
+        return elementMapper_.map(element);
+    }
+
     //!Return the number of data elements
-    int gridSize()
+    const int gridSize()
+    {
+        return gridSize_;
+    }
+
+    const int gridSize() const
     {
         return gridSize_;
     }
@@ -270,6 +290,11 @@ public:
      @param  element      entity of codim 0
      \return     value of pressure
      */
+    Dune::FieldVector<Scalar, 1>& pressElement(const Element& element)
+    {
+        return pressure_[elementMapper_.map(element)];
+    }
+
     const Dune::FieldVector<Scalar, 1>& pressElement(const Element& element) const
     {
         return pressure_[elementMapper_.map(element)];
@@ -281,6 +306,13 @@ public:
      @param  indexInInside     index in reference element
      \return     vector of velocity
      */
+    Dune::FieldVector<Scalar, dim>& velocityElementFace(const Element& element, const int indexInInside)
+    {
+        int elemId = elementMapper_.map(element);
+
+        return (velocity_[elemId][indexInInside]);
+    }
+
     const Dune::FieldVector<Scalar, dim>& velocityElementFace(const Element& element, const int indexInInside) const
     {
         int elemId = elementMapper_.map(element);

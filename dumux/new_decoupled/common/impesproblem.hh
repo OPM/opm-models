@@ -92,11 +92,11 @@ public:
      *  @param soil implementation of the solid matrix
      *  @param materialLaw implementation of Material laws. Class TwoPhaseRelations or derived.
      */
-    IMPESProblem(const GridView &gridView)
+    IMPESProblem(const GridView &gridView, bool verbose = true)
         : gridView_(gridView),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          timeManager_(gridView.comm().rank() == 0),
+          timeManager_(0.0, verbose),
           variables_(gridView),
           resultWriter_(asImp_()->name())
     {
@@ -183,12 +183,12 @@ public:
         // obtain the first update and the time step size
         model().update(t, dt, k1);
 
-        //set next step size -> will be compared with end time in the time manager
-        nextStepSize = dt;
-
         //make sure t_old + dt is not larger than tend
         setTimeStepSize(dt);
         dt = timeStepSize();
+
+        //set next step size -> will be compared with end time in the time manager
+        nextStepSize = dt;
 
         //set current time step right: important for right time accumulation
         stepSize = dt;
@@ -442,6 +442,7 @@ protected:
 
             resultWriter_.beginTimestep(timeManager_.time(),
                                         gridView());
+
             model().addOutputVtkFields(resultWriter_);
             resultWriter_.endTimestep();
         }

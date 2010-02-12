@@ -54,8 +54,8 @@ class DiffusionProblem2P: public OneModelProblem<TypeTag, Implementation>
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-    DiffusionProblem2P(const GridView &gridView) :
-        ParentType(gridView), gravity_(0)
+    DiffusionProblem2P(const GridView &gridView, bool verbose = true) :
+        ParentType(gridView, verbose), gravity_(0)
     {
         spatialParameters_ = new SpatialParameters(gridView);
         newSpatialParams_ = true;
@@ -64,8 +64,8 @@ public:
             gravity_[dim - 1] = -9.81;
     }
 
-    DiffusionProblem2P(const GridView &gridView, SpatialParameters &spatialParameters) :
-        ParentType(gridView), gravity_(0), spatialParameters_(&spatialParameters)
+    DiffusionProblem2P(const GridView &gridView, SpatialParameters &spatialParameters, bool verbose = true) :
+        ParentType(gridView, verbose), gravity_(0), spatialParameters_(&spatialParameters)
     {
         newSpatialParams_ = false;
         gravity_ = 0;

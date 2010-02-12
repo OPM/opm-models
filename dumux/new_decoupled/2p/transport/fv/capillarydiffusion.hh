@@ -17,7 +17,7 @@
 #ifndef DUNE_CAPILLARYDIFFUSION_HH
 #define DUNE_CAPILLARYDIFFUSION_HH
 
-#include "dumux/transport/fv/diffusivepart.hh"
+#include "dumux/new_decoupled/2p/transport/fv/diffusivepart.hh"
 
 /**
  * @file
@@ -88,7 +88,7 @@ public:
      *  @param[in] pcGradient     gradient of capillary pressure between element I and J
      *  \return     capillary pressure term of the saturation equation
      */
-    virtual FieldVector operator() (const Element& element, const int indexInInside, Scalar satI, Scalar satJ, const FieldVector& pcGradient) const
+    FieldVector operator() (const Element& element, const int indexInInside, Scalar satI, Scalar satJ, const FieldVector& pcGradient) const
     {
         // cell geometry type
         GeometryType gt = element.geometry().type();

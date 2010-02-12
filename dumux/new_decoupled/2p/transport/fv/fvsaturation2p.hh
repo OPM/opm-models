@@ -965,8 +965,7 @@ void FVSaturation2P<TypeTag>::initialTransport()
         GlobalPosition globalPos = eIt->geometry().global(localPos);
 
         // initialize cell concentration
-        problem_.variables().saturation()[problem_.variables().index(*eIt)] = problem_.initSat(globalPos, *eIt,
-                localPos);
+        problem_.variables().saturation()[problem_.variables().index(*eIt)] = problem_.initSat(globalPos, *eIt);
     }
     return;
 }

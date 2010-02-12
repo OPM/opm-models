@@ -58,8 +58,8 @@ class IMPESProblem2P : public IMPESProblem<TypeTag, Implementation>
     typedef Dune::FieldVector<Scalar, dimWorld>      GlobalPosition;
 
 public:
-    IMPESProblem2P(const GridView &gridView)
-        : ParentType(gridView),
+    IMPESProblem2P(const GridView &gridView, bool verbose = true)
+        : ParentType(gridView, verbose),
         gravity_(0)
     {
         newSpatialParams_ = true;
@@ -69,8 +69,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
     }
-    IMPESProblem2P(const GridView &gridView, SpatialParameters &spatialParameters)
-        : ParentType(gridView),
+    IMPESProblem2P(const GridView &gridView, SpatialParameters &spatialParameters, bool verbose = true)
+        : ParentType(gridView, verbose),
         gravity_(0),spatialParameters_(&spatialParameters)
     {
         newSpatialParams_ = false;

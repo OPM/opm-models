@@ -91,11 +91,11 @@ public:
      *  @param soil implementation of the solid matrix
      *  @param materialLaw implementation of Material laws. Class TwoPhaseRelations or derived.
      */
-    OneModelProblem(const GridView &gridView)
+    OneModelProblem(const GridView &gridView, bool verbose = true)
         : gridView_(gridView),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          timeManager_(gridView.comm().rank() == 0),
+          timeManager_(0.0, verbose),
           variables_(gridView),
           resultWriter_(asImp_()->name())
     {

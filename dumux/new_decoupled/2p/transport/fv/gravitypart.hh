@@ -16,7 +16,7 @@
 #ifndef DUNE_GRAVITYPART_HH
 #define DUNE_GRAVITYPART_HH
 
-#include "dumux/transport/fv/convectivepart.hh"
+#include "dumux/new_decoupled/2p/transport/fv/convectivepart.hh"
 
 
 /**

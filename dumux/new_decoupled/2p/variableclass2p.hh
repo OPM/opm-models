@@ -218,8 +218,18 @@ public:
         return saturation_;
     }
 
+    const ScalarSolutionType& saturation() const
+    {
+        return saturation_;
+    }
+
     //! Return velocity vector
     DimVecElemFaceType& velocitySecondPhase()
+    {
+        return velocitySecondPhase_;
+    }
+
+    const DimVecElemFaceType& velocitySecondPhase() const
     {
         return velocitySecondPhase_;
     }
@@ -230,8 +240,18 @@ public:
         return this->potential(Idx1, Idx2)[wPhaseIdx];
     }
 
+    const Scalar& potentialWetting(int Idx1, int Idx2) const
+    {
+        return this->potential(Idx1, Idx2)[wPhaseIdx];
+    }
+
     //! Return vector of non-wetting phase potential gradients
     Scalar& potentialNonwetting(int Idx1, int Idx2)
+    {
+        return this->potential(Idx1, Idx2)[nPhaseIdx];
+    }
+
+    const Scalar& potentialNonwetting(int Idx1, int Idx2) const
     {
         return this->potential(Idx1, Idx2)[nPhaseIdx];
     }
@@ -242,8 +262,18 @@ public:
         return mobility_[Idx][wPhaseIdx];
     }
 
+    const Scalar& mobilityWetting(int Idx) const
+    {
+        return mobility_[Idx][wPhaseIdx];
+    }
+
     //! Return vector of non-wetting phase mobilities
     Scalar& mobilityNonwetting(int Idx)
+    {
+        return mobility_[Idx][nPhaseIdx];
+    }
+
+    const Scalar& mobilityNonwetting(int Idx) const
     {
         return mobility_[Idx][nPhaseIdx];
     }
@@ -254,8 +284,18 @@ public:
         return fracFlowFunc_[Idx][wPhaseIdx];
     }
 
+    const Scalar& fracFlowFuncWetting(int Idx) const
+    {
+        return fracFlowFunc_[Idx][wPhaseIdx];
+    }
+
     //! Return vector of non-wetting phase fractional flow functions
     Scalar& fracFlowFuncNonwetting(int Idx)
+    {
+        return fracFlowFunc_[Idx][nPhaseIdx];
+    }
+
+    const Scalar& fracFlowFuncNonwetting(int Idx) const
     {
         return fracFlowFunc_[Idx][nPhaseIdx];
     }
@@ -266,13 +306,28 @@ public:
         return capillaryPressure_[Idx][0];
     }
 
+    const Scalar& capillaryPressure(int Idx) const
+    {
+        return capillaryPressure_[Idx][0];
+    }
+
     //! Return density vector
     Scalar& densityWetting(int Idx)
     {
         return density_[Idx][wPhaseIdx];
     }
+    const Scalar& densityWetting(int Idx) const
+    {
+        return density_[Idx][wPhaseIdx];
+    }
+
     //! Return density vector
     Scalar& densityNonwetting(int Idx)
+    {
+        return density_[Idx][nPhaseIdx];
+    }
+
+    const Scalar& densityNonwetting(int Idx) const
     {
         return density_[Idx][nPhaseIdx];
     }
@@ -283,8 +338,18 @@ public:
         return viscosity_[Idx][wPhaseIdx];
     }
 
+    const Scalar& viscosityWetting(int Idx) const
+    {
+        return viscosity_[Idx][wPhaseIdx];
+    }
+
     //! Return density vector
     Scalar& viscosityNonwetting(int Idx)
+    {
+        return viscosity_[Idx][nPhaseIdx];
+    }
+
+    const Scalar& viscosityNonwetting(int Idx) const
     {
         return viscosity_[Idx][nPhaseIdx];
     }
@@ -294,11 +359,21 @@ public:
         return volumecorrection_[Idx][0];
     }
 
+    const Scalar& volumecorrection(int Idx) const
+    {
+        return volumecorrection_[Idx][0];
+    }
+
     //! Get saturation
     /*! evaluate saturation at given element
      @param  element      entity of codim 0
      \return     value of saturation
      */
+    Dune::FieldVector<Scalar, 1>& satElement(const Element& element)
+    {
+        return saturation_[this->elementMapper().map(element)];;
+    }
+
     const Dune::FieldVector<Scalar, 1>& satElement(const Element& element) const
     {
         return saturation_[this->elementMapper().map(element)];;
