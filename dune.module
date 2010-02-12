@@ -6,4 +6,4 @@ Module: dumux
 Version: 1.0-unstable
 Maintainer: "Bernd Flemisch <bernd.flemisch@iws.uni-stuttgart.de>"
 #depending on 
-Depends: dune-common dune-grid dune-istl dune-disc dune-pdelab dune-multidomaingrid
+Depends: dune-common dune-grid dune-istl dune-disc dune-pdelab
