@@ -30,6 +30,7 @@
 namespace Dune
 {
 /*!
+ * \ingroup fracflow
  * \addtogroup DecoupledModel
  */
 // \{
@@ -58,6 +59,7 @@ namespace Properties
 {
 
 /*!
+ * \ingroup fracflow
  * \addtogroup DecoupledModel
  */
 // \{
