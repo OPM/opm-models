@@ -34,7 +34,7 @@ class ConvectivePart;
 namespace Properties
 {
 /*!
- * \addtogroup Diffusion
+ * \addtogroup diffusion
  */
 // \{
 

@@ -33,7 +33,7 @@
 namespace Dune
 {
 
-/*! \ingroup Diffusion
+/*! \ingroup diffusion
  * @brief base class that defines the parameters of loosely coupled diffusion and transport equations
  *
  * An interface for defining parameters for the stationary diffusion equation

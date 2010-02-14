@@ -32,7 +32,7 @@ class IMPES;
 namespace Properties
 {
 /*!
- * \addtogroup Diffusion
+ * \addtogroup diffusion
  */
 // \{
 

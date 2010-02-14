@@ -28,7 +28,7 @@ namespace Dune
 namespace Properties
 {
 /*!
- * \addtogroup Diffusion
+ * \addtogroup diffusion
  */
 // \{
 
