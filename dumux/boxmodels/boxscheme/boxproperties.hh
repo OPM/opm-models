@@ -155,13 +155,7 @@ public:
 SET_PROP(BoxScheme, FVElementGeometry)
 {
 #if HAVE_DUNE_PDELAB
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalFEMSpace))  LocalFEMSpace;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
-
-public:
     typedef Dune::FVElementGeometry<TypeTag>  type;
-//    typedef Dune::FVElementGeometry<Grid, LocalFEMSpace>  type;
 
 #else
 private:
