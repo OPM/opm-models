@@ -54,6 +54,12 @@ class TwoPElementData;
 template <class TypeTag>
 class TwoPFluxData;
 
+template<class TypeTag>
+class FluidSystem2P;
+
+template<class TypeTag>
+class TwoPPhaseState;
+
 /*!
  * \brief The common indices for the isothermal two-phase model.
  */
@@ -152,13 +158,17 @@ NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxScheme));
 //////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
-NEW_PROP_TAG(Soil); //!< The type of the soil properties object
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(TwoPIndices); //!< Enumerations for the 2p models
+NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
+NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
+NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)
 NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
 NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
+NEW_PROP_TAG( FluidSystem ); //!<The fluid systems including the information about the phases
+NEW_PROP_TAG( PhaseState ); //!<The phases state
 
 //////////////////////////////////////////////////////////////////
 // Properties
@@ -200,6 +210,36 @@ SET_PROP(BoxTwoP, TwoPIndices)
 {
     typedef TwoPIndices<GET_PROP_VALUE(TypeTag, PTAG(Formulation)), 0> type;
 };
+
+/*!
+ * \brief Set the property for the material law by retrieving it from
+ *        the spatial parameters.
+ */
+SET_PROP(BoxTwoP, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))  SpatialParameters;
+
+public:
+    typedef typename SpatialParameters::MaterialLaw type;
+};
+
+/*!
+ * \brief Set the property for the material parameters by extracting
+ *        it from the material law.
+ */
+SET_PROP(BoxTwoP, MaterialLawParams)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))  MaterialLaw;
+
+public:
+    typedef typename MaterialLaw::Params type;
+};
+
+SET_TYPE_PROP(BoxTwoP, FluidSystem, FluidSystem2P<TypeTag>);
+
+SET_TYPE_PROP(BoxTwoP, PhaseState, TwoPPhaseState<TypeTag>);
 
 // \}
 }

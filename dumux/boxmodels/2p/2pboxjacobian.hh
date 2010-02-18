@@ -29,6 +29,7 @@
 #include "2pvertexdata.hh"
 #include "2pelementdata.hh"
 #include "2pfluxdata.hh"
+#include "2pphasestate.hh"
 
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
@@ -85,6 +86,7 @@ protected:
 
     typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))  FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   VertexData;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(ElementData))  ElementData;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))     FluxData;

@@ -21,8 +21,7 @@
 #define DUMUX_2P_BOX_PROBLEM_HH
 
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
-#include <dumux/material/twophaserelations.hh>
-
+#include <dumux/new_material/fluidsystems/2p_system.hh>
 
 namespace Dune
 {
@@ -42,10 +41,8 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(WettingPhase))    WettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NonwettingPhase)) NonwettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Soil))            Soil;
-    typedef Dune::TwoPhaseRelations<Grid, Scalar>                  MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))            SpatialParameters;
 
     enum {
         dim = Grid::dimension,
@@ -55,24 +52,34 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef Dune::FieldVector<Scalar, dimWorld>      GlobalPosition;
 
 public:
-    TwoPBoxProblem(const GridView &gridView)
+    TwoPBoxProblem(const GridView &gridView, bool verbose = true)
         : ParentType(gridView),
-        gravity_(0),
-          materialLaw_(soil_, wPhase_, nPhase_)
+        gravity_(0)
     {
+        newSpatialParams_ = true;
+        spatialParameters_ = new SpatialParameters(gridView);
+
         gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
     }
 
-    TwoPBoxProblem(const GridView &gridView, WettingPhase& wPhase, NonwettingPhase& nPhase)
-        : ParentType(gridView),
-        gravity_(0), wPhase_(wPhase), nPhase_(nPhase),
-          materialLaw_(soil_, wPhase_, nPhase_)
+    TwoPBoxProblem(const GridView &gridView, SpatialParameters &spatialParameters, bool verbose = true)
+        : ParentType(gridView), spatialParameters_(&spatialParameters),
+        gravity_(0)
     {
+        newSpatialParams_ = false;
         gravity_ = 0;
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
+    }
+
+    virtual ~TwoPBoxProblem()
+    {
+        if (newSpatialParams_)
+        {
+        delete spatialParameters_;
+        }
     }
 
     /*!
@@ -98,42 +105,16 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Fluid properties of the wetting phase.
+     * \brief Returns the spatial parameters object.
      */
-    const WettingPhase &wettingPhase() const
-    { return wPhase_; }
+    SpatialParameters &spatialParameters()
+    { return *spatialParameters_; }
 
     /*!
-     * \brief Fluid properties of the non-wetting phase.
+     * \copydoc spatialParameters()
      */
-    const NonwettingPhase &nonwettingPhase() const
-    { return nPhase_; }
-
-    /*!
-     * \brief Returns the soil properties object.
-     */
-    Soil &soil()
-    { return soil_; }
-
-    /*!
-     * \copydoc soil()
-     */
-    const Soil &soil() const
-    { return soil_; }
-
-    /*!
-     * \brief Returns the material laws, i.e. capillary pressure -
-     *        saturation and relative permeability-saturation
-     *        relations.
-     */
-    MaterialLaw &materialLaw ()
-    { return materialLaw_; }
-
-    /*!
-     * \copydoc materialLaw()
-     */
-    const MaterialLaw &materialLaw () const
-    { return materialLaw_; }
+    const SpatialParameters &spatialParameters() const
+    { return *spatialParameters_; }
 
     // \}
 
@@ -149,10 +130,8 @@ private:
     GlobalPosition  gravity_;
 
     // fluids and material properties
-    WettingPhase    wPhase_;
-    NonwettingPhase nPhase_;
-    Soil            soil_;
-    MaterialLaw     materialLaw_;
+    SpatialParameters*  spatialParameters_;
+    bool newSpatialParams_;
 };
 
 }
