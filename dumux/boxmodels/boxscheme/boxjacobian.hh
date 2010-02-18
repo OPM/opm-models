@@ -149,7 +149,7 @@ public:
 #endif // HAVE_VALGRIND
 
         SolutionOnElement mutableLocalU(localU);
-        assemble_(element, mutableLocalU, orderOfShapeFns);
+        asImp_().assemble_(element, mutableLocalU);
     }
 
     /*!
@@ -164,7 +164,7 @@ public:
         int numVertices = curElementGeom_.numVertices;
         SolutionOnElement localU(numVertices);
         restrictToElement(localU, problem_.model().curSolFunction());
-        assemble_(element, localU, orderOfShapeFns);
+        asImp_().assemble_(element, localU);
     }
   
     /*!
@@ -290,20 +290,19 @@ public:
      * \brief Compute the local residual, i.e. the right hand side
      *        of an equation we would like to have zero.
      */
-    template <int firstEq = 0, int lastEq = numEq>
     void evalLocalResidual(SolutionOnElement &residual,
                            bool withBoundary = true)
     {
         // reset residual
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
-            for (int j = firstEq; j < lastEq; ++j)
+            for (int j = 0; j < numEq; ++j)
                 residual[i][j] = Scalar(0);
         }
         
         if (withBoundary)
             this->asImp_().assembleBoundaryCondition(this->curElement_());
 
-        this->evalFluxes_<firstEq, lastEq>(residual);
+        this->evalFluxes_(residual);
 
         // evaluate the local rate
         for (int i=0; i < curElementGeom_.numVertices; i++)
@@ -322,7 +321,7 @@ public:
             massContrib -= tmp;
             massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
             
-            for (int j = firstEq; j < lastEq; ++j)
+            for (int j = 0; j < numEq; ++j)
                 residual[i][j] += massContrib[j];
 
             // subtract the source term from the local rate
@@ -330,7 +329,7 @@ public:
             this->asImp_().computeSource(source, i);
             source *= curElementGeom_.subContVol[i].volume;
 
-            for (int j = firstEq; j < lastEq; ++j) {
+            for (int j = 0; j < numEq; ++j) {
                 residual[i][j] -= source[j];
                 
                 // make sure that only defined quantities where used
@@ -341,7 +340,7 @@ public:
 
         if (withBoundary) {
             for (int i = 0; i < curElementGeom_.numVertices; i++) {
-                for (int j = firstEq; j < lastEq; j++) {
+                for (int j = 0; j < numEq; j++) {
                     if (this->bctype[i][j] == BoundaryConditions::dirichlet)
                         residual[i][j] = 0;
                     else
@@ -566,7 +565,7 @@ protected:
     // temporary variable to store the variable vertex data
     VertexData   curVertexDataStash_;
 
-private:
+protected:
     void updateBoundaryTypes_()
     {
         Dune::GeometryType      geoType = curElement_().geometry().type();
@@ -633,7 +632,7 @@ private:
         }
     };
 
-    void assemble_(const Element &element, SolutionOnElement& localU, int orderOfShapeFns = 1)
+    void assemble_(const Element &element, SolutionOnElement& localU)
     {
         // set the current grid element
         asImp_().setCurrentElement(element);
@@ -686,7 +685,6 @@ private:
     };
     
 protected:
-    template <int firstEq = 0, int lastEq = numEq>
     void evalFluxes_(SolutionOnElement &residual)
     {
         // calculate the mass flux over the faces and subtract
@@ -706,7 +704,7 @@ protected:
             // ignore dirichlet cells because for them, the mass
             // change inside the cell is not equal to the flux out of
             // the cell.
-            for (int eq = firstEq; eq < lastEq; ++ eq) {
+            for (int eq = 0; eq < numEq; ++ eq) {
                 if (this->bctype[i][eq] == BoundaryConditions::neumann) 
                     residual[i][eq] -= flux[eq];
                 if (this->bctype[j][eq] == BoundaryConditions::neumann) 
