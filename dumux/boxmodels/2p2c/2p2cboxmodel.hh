@@ -122,7 +122,7 @@ public:
         ParentType::updateFailedTry();
 
         this->localJacobian().setSwitched(false);
-        this->localJacobian().resetPhaseState();
+        this->localJacobian().resetPhasePresence();
         this->localJacobian().updateStaticData(this->curSolFunction(),
                                                 this->prevSolFunction());
     };
@@ -134,7 +134,7 @@ public:
     {
         ParentType::updateSuccessful();
 
-        this->localJacobian().updateOldPhaseState();
+        this->localJacobian().updateOldPhasePresence();
         this->localJacobian().setSwitched(false);
     }
 

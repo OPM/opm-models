@@ -94,48 +94,6 @@ public:
     {
         return ParentType::newtonProceed(u);
     }
-
-    /** \todo Please doc me! */
-
-protected:
-    friend class NewtonController<TypeTag>;
-    //! called by the base class the get an indication of how physical
-    //! an iterative solution is 1 means "completely physical", 0 means
-    //! "completely unphysical"
-    Scalar physicalness_(SolutionFunction &u)
-    {
-        // the maximum distance of a Sn value to a physically
-        // meaningful value.
-        Scalar maxSwitchVarDelta = 0;
-        Scalar maxPwDelta = 0;
-
-        for (int idx = 0; idx < (int) (*u).size(); idx++)
-        {
-            Scalar pressure = (*u)[idx][pressureIdx];
-            Scalar switchVar = (*u)[idx][switchIdx];
-
-            if (switchVar < 0.0) {
-                maxSwitchVarDelta = std::max(maxSwitchVarDelta,
-                                             std::abs(switchVar));
-            }
-            else if (switchVar > 1.0) {
-                maxSwitchVarDelta = std::max(maxSwitchVarDelta,
-                                             std::abs(switchVar - 1));
-            }
-
-            if (pressure < 0.0){
-                maxPwDelta = std::max(maxPwDelta,
-                                      std::abs(pressure));
-            }
-        }
-
-        // we accept solutions up to 1 percent bigger than 1
-        // or smaller than 0 as being physical for numerical
-        // reasons...
-        Scalar phys = 1.01 - maxSwitchVarDelta*100 - maxPwDelta/1e5;
-
-        return std::min(1.0, phys);
-    }
 };
 }
 

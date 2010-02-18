@@ -44,11 +44,7 @@ class TwoPTwoCBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(WettingPhase))    WettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(NonwettingPhase)) NonwettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MultiComp))       MultiComp;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Soil))            Soil;
-    typedef Dune::TwoPhaseRelations<Grid, Scalar>                  MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
 
     enum {
         dim = Grid::dimension,
@@ -61,7 +57,7 @@ public:
     TwoPTwoCBoxProblem(const GridView &gridView)
         : ParentType(gridView),
           gravity_(0),
-          materialLaw_(soil_, wPhase_, nPhase_)
+          spatialParams_(gridView)
     {
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim - 1] = - 9.81;
@@ -78,7 +74,7 @@ public:
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { return asImp_()->temperature(); };
+    { DUNE_THROW(NotImplemented, "The Problem must implement a temperature() method for isothermal problems!"); };
 
     /*!
      * \brief Returns the acceleration due to gravity.
@@ -90,54 +86,16 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Fluid properties of the wetting phase.
-     */
-    const WettingPhase &wettingPhase() const
-    { return wPhase_; }
-
-    /*!
-     * \brief Fluid properties of the non-wetting phase.
-     */
-    const NonwettingPhase &nonwettingPhase() const
-    { return nPhase_; }
-
-    /*!
-     * \brief Returns the multi-component relations object.
-     *
-     * This specifies how a mixture of multiple components behaves
-     * locally.
-     */
-    const MultiComp &multicomp() const
-    { return multiComp_; }
-
-    /*!
      * \brief Returns the soil properties object.
      */
-    Soil &soil()
-    { return soil_; }
+    SpatialParameters &spatialParameters()
+    { return spatialParams_; }
 
     /*!
      * \copydoc soil()
      */
-    const Soil &soil() const
-    { return soil_; }
-
-    /*!
-     * \brief Returns the material laws, i.e. capillary pressure -
-     *        saturation and relative permeability-saturation
-     *        relations.
-     */
-    MaterialLaw &materialLaw ()
-    { return materialLaw_; }
-
-
-    /*!
-     * \brief Returns the material laws, i.e. capillary pressure -
-     *        saturation and relative permeability-saturation
-     *        relations.
-     */
-    const MaterialLaw &materialLaw () const
-    { return materialLaw_; }
+    const SpatialParameters &spatialParameters() const
+    { return spatialParams_; }
 
     // \}
 
@@ -152,12 +110,8 @@ private:
 
     GlobalPosition  gravity_;
 
-    // fluids and material properties
-    WettingPhase    wPhase_;
-    NonwettingPhase nPhase_;
-    MultiComp       multiComp_;
-    Soil            soil_;
-    MaterialLaw     materialLaw_;
+    // soil properties
+    SpatialParameters spatialParams_;
 };
 
 }

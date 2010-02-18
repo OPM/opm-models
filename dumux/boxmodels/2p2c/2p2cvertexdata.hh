@@ -28,10 +28,11 @@
 #include <dumux/boxmodels/boxscheme/boxscheme.hh>
 #include <dumux/auxiliary/math.hh>
 
-#include <dumux/material/multicomponentrelations.hh>
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
 #include <iostream>
+
+#include "2p2cphasestate.hh"
 
 namespace Dune
 {
@@ -48,7 +49,7 @@ class TwoPTwoCVertexData
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    // this is a bit hacky: the Vertex data might not be identical to
+    // this is a bit hacky: the vertex data might not be identical to
     // the implementation.
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   Implementation;
 
@@ -63,19 +64,26 @@ class TwoPTwoCVertexData
         dimWorld      = GridView::dimensionworld,
     };
 
-    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
-    typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
-    typedef typename RefElemProp::Container                     ReferenceElements;
-
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))           Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
-    typedef typename SolutionTypes::PrimaryVarVector               PrimaryVarVector;
-    typedef Dune::FieldVector<Scalar, numPhases>                   PhasesVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MultiComp))       MultiComp;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices))   Indices;
 
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    enum {
+        wCompIdx  = Indices::wCompIdx,
+        nCompIdx  = Indices::nCompIdx,
+
+        wPhaseIdx  = Indices::wPhaseIdx,
+        nPhaseIdx  = Indices::nPhaseIdx
+    };
+
+    typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))        SolutionTypes;
+    typedef typename SolutionTypes::PrimaryVarVector               PrimaryVarVector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))     FluidSystem;
+    typedef TwoPTwoCPhaseState<TypeTag>                            PhaseState;
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))       MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLawParams)) MaterialLawParams;
 
 public:
     /*!
@@ -84,183 +92,129 @@ public:
     void update(const PrimaryVarVector  &sol,
                 const Element           &element,
                 const FVElementGeometry &elemGeom,
-                int                      vertIdx,
+                int                      scvIdx,
                 const Problem           &problem,
                 bool                     isOldSol) 
     {
-        typedef Indices I;
-
         asImp().updateTemperature_(sol,
                                    element, 
                                    elemGeom,
-                                   vertIdx,
+                                   scvIdx,
                                    problem);
+
+        // capillary pressure parameters
+        const MaterialLawParams &materialParams = 
+            problem.spatialParameters().materialLawParams(element, elemGeom, scvIdx);
         
-        const GlobalPosition &global = element.geometry().corner(vertIdx);
-        const LocalPosition   &local =
-            ReferenceElements::general(element.type()).position(vertIdx,
-                                                                dim);
-        int globalVertIdx = problem.model().dofEntityMapper().map(element, vertIdx, dim);
-        int phaseState = problem.model().localJacobian().phaseState(globalVertIdx, isOldSol);
+        int globalVertIdx = problem.model().dofEntityMapper().map(element, scvIdx, dim);
+        int phasePresence = problem.model().localJacobian().phasePresence(globalVertIdx, isOldSol);
 
-        // update saturations, pressures and mass fractions
-        updateSaturations(sol, phaseState);
-        Scalar pC = problem.materialLaw().pC(saturation[I::wPhase],
-                                             global,
-                                             element,
-                                             local,
-                                             temperature);
-        updatePressures(sol, pC);
-        updateMassFracs(sol, problem.multicomp(), phaseState, temperature);
-
-        // Densities
-        density[I::wPhase] = problem.wettingPhase().density(temperature,
-                                                            pressure[I::wPhase],
-                                                            massfrac[I::nComp][I::wPhase]);
-        density[I::nPhase] = problem.nonwettingPhase().density(temperature,
-                                                               pressure[I::nPhase],
-                                                               massfrac[I::wComp][I::nPhase]);
+        // calculate phase state
+        phaseState_.update(sol, materialParams, temperature(), phasePresence);
+        Valgrind::CheckDefined(phaseState_);
 
         // Mobilities
-        mobility[I::wPhase] = problem.materialLaw().mobW(saturation[I::wPhase],
-                                                         global,
-                                                         element,
-                                                         local,
-                                                         temperature,
-                                                         pressure[I::wPhase]);
-        mobility[I::nPhase] = problem.materialLaw().mobN(saturation[I::nPhase],
-                                                         global,
-                                                         element,
-                                                         local,
-                                                         temperature,
-                                                         pressure[I::nPhase]);
+        Scalar muL = FluidSystem::phaseViscosity(wPhaseIdx, phaseState());
+        Scalar muG = FluidSystem::phaseViscosity(nPhaseIdx, phaseState());
+        mobility_[wPhaseIdx] = Scalar(1.0) / muL * MaterialLaw::krw(materialParams, saturation(wPhaseIdx));
+        mobility_[nPhaseIdx] = Scalar(1.0) / muG * MaterialLaw::krn(materialParams, saturation(wPhaseIdx));
+        Valgrind::CheckDefined(mobility_[wPhaseIdx]);
+        Valgrind::CheckDefined(mobility_[nPhaseIdx]);
 
         // binary diffusion coefficents
-        diffCoeff[I::wPhase] =
-            problem.wettingPhase().diffCoeff(temperature, pressure[I::wPhase]);
-        diffCoeff[I::nPhase] =
-            problem.nonwettingPhase().diffCoeff(temperature, pressure[I::nPhase]);
+        diffCoeff_[wPhaseIdx] = 
+            FluidSystem::diffCoeff(wPhaseIdx, wCompIdx, nCompIdx, phaseState_);
+        diffCoeff_[nPhaseIdx] = 
+            FluidSystem::diffCoeff(nPhaseIdx, wCompIdx, nCompIdx, phaseState_);
+        Valgrind::CheckDefined(diffCoeff_);
         
         // porosity
-        porosity = problem.soil().porosity(global,
-                                           element,
-                                                 local);
-    }
+        porosity_ = problem.spatialParameters().porosity(element,
+                                                         elemGeom,
+                                                         scvIdx);
+        Valgrind::CheckDefined(porosity_);
+   }
 
     void updateTemperature_(const PrimaryVarVector  &sol,
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
-                            int                      vertIdx,
+                            int                      scvIdx,
                             const Problem           &problem) 
     {
-        temperature = problem.temperature(element, elemGeom, vertIdx);
+        temperature_ = problem.temperature(element, elemGeom, scvIdx);
     }
 
     /*!
-     * \brief Update saturations.
+     * \brief Returns the phase state for the control-volume.
      */
-    void updateSaturations(const PrimaryVarVector &sol,
-                           int phaseState)
-    {
-        typedef Indices I;
-
-        // update saturations
-        if (formulation == I::pWsN)
-        {
-            if (phaseState == I::bothPhases)
-                saturation[I::nPhase] = sol[I::switchIdx];
-            else if (phaseState == I::wPhaseOnly)
-                saturation[I::nPhase] = 0.0;
-            else if (phaseState == I::nPhaseOnly)
-                saturation[I::nPhase] = 1.0;
-            else
-                DUNE_THROW(Dune::InvalidStateException, "Phase state " << phaseState << " is invalid.");
-
-            saturation[I::wPhase] = 1.0 - saturation[I::nPhase];
-        }
-        else if (formulation == I::pNsW)
-        {
-            if (phaseState == I::bothPhases)
-                saturation[I::wPhase] = sol[I::switchIdx];
-            else if (phaseState == I::wPhaseOnly)
-                saturation[I::wPhase] = 1.0;
-            else if (phaseState == I::nPhaseOnly)
-                saturation[I::wPhase] = 0.0;
-            else
-                DUNE_THROW(Dune::InvalidStateException, "Phase state " << phaseState << " is invalid.");
-
-            saturation[I::nPhase] = 1.0 - saturation[I::wPhase];
-        }
-        else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
-    }
+    const PhaseState &phaseState() const
+    { return phaseState_; }
 
     /*!
-     * \brief Update phase pressures.
+     * \brief Returns the effective saturation of a given phase within
+     *        the control volume.
+     */
+    Scalar saturation(int phaseIdx) const
+    { return phaseState_.saturation(phaseIdx); }
+
+    /*!
+     * \brief Returns the mass density of a given phase within the
+     *        control volume.
+     */
+    Scalar density(int phaseIdx) const
+    { return phaseState_.density(phaseIdx); }
+
+    /*!
+     * \brief Returns the effective pressure of a given phase within
+     *        the control volume.
+     */
+    Scalar pressure(int phaseIdx) const
+    { return phaseState_.phasePressure(phaseIdx); }
+
+    /*!
+     * \brief Returns temperature inside the sub-control volume.
      *
-     * Requires up to date saturations.
+     * Note that we assume thermodynamic equilibrium, i.e. the
+     * temperature of the rock matrix and of all fluid phases are
+     * identical.
      */
-    void updatePressures(const PrimaryVarVector &sol,
-                         Scalar capillaryPressure)
-    {
-        typedef Indices I;
+    Scalar temperature() const
+    { return temperature_; }
 
-        // update pressures
-        pC = capillaryPressure;
-
-        if (formulation == I::pWsN) {
-            pressure[I::wPhase] = sol[I::pressureIdx];
-            pressure[I::nPhase] = pressure[I::wPhase] + pC;
-        }
-        else if (formulation == I::pNsW) {
-            pressure[I::nPhase] = sol[I::pressureIdx];
-            pressure[I::wPhase] = pressure[I::nPhase] - pC;
-        }
-        else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
+    /*!
+     * \brief Returns the effective mobility of a given phase within
+     *        the control volume.
+     */
+    Scalar mobility(int phaseIdx) const
+    { 
+        return mobility_[phaseIdx];
     }
 
     /*!
-     * \brief Update mass fraction matrix.
-     *
-     * Requires up to date pressures and saturations.
+     * \brief Returns the effective capillary pressure within the control volume.
      */
-    void updateMassFracs(const PrimaryVarVector &sol,
-                         const MultiComp &multicomp,
-                         int phaseState,
-                         Scalar temperature)
-    {
-        typedef Indices I;
+    Scalar capillaryPressure() const
+    { return phaseState_.capillaryPressure(); }
 
-        // Solubilities of components in phases
-        if (phaseState == I::bothPhases) {
-            massfrac[I::wComp][I::nPhase] = multicomp.xWN(pressure[I::nPhase], temperature);
-            massfrac[I::nComp][I::wPhase] = multicomp.xAW(pressure[I::nPhase], temperature);
-        }
-        else if (phaseState == I::wPhaseOnly) {
-            massfrac[I::wComp][I::nPhase] = 0.0;
-            massfrac[I::nComp][I::wPhase] = sol[I::switchIdx];
-        }
-        else if (phaseState == I::nPhaseOnly) {
-            massfrac[I::wComp][I::nPhase] = sol[I::switchIdx];
-            massfrac[I::nComp][I::wPhase] = 0.0;
-        }
-        else DUNE_THROW(Dune::InvalidStateException, "Phase state " << phaseState << " is invalid.");
+    /*!
+     * \brief Returns the average porosity within the control volume.
+     */
+    Scalar porosity() const
+    { return porosity_; }
 
-        massfrac[I::wComp][I::wPhase] = 1.0 - massfrac[I::nComp][I::wPhase];
-        massfrac[I::nComp][I::nPhase] = 1.0 - massfrac[I::wComp][I::nPhase];
-    };
+    /*!
+     * \brief Returns the binary diffusion coefficients for a phase
+     */
+    Scalar diffCoeff(int phaseIdx) const
+    { return diffCoeff_[phaseIdx]; }
 
-public:
-    PhasesVector saturation;//!< Effective phase saturations within the control volume
-    PhasesVector pressure;  //!< Effective phase pressures within the control volume
-    Scalar temperature;     //!< Temperature within the control volume
-    Scalar pC;              //!< Effective capillary pressure within the control volume
-    Scalar porosity;        //!< Effective porosity within the control volume
-    PhasesVector mobility;  //!< Effective mobility within the control volume
-    PhasesVector density;   //!< Effective density within the control volume
-    PhasesVector diffCoeff; //!< Binary diffusion coefficients for the phases
 
-    //! Mass fractions of each component within each phase
-    Dune::FieldMatrix<Scalar, numComponents, numPhases> massfrac;
+protected:
+    Scalar temperature_;     //!< Temperature within the control volume
+    Scalar porosity_;        //!< Effective porosity within the control volume
+    Scalar mobility_[numPhases];  //!< Effective mobility within the control volume
+    Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
+    PhaseState phaseState_;
 
 private:
     Implementation &asImp()

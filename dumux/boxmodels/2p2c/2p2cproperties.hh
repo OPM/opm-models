@@ -48,10 +48,12 @@ NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model
-NEW_PROP_TAG(Soil); //!< The type of the soil properties object
-NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
-NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
-NEW_PROP_TAG(MultiComp); //!< Type of the multi-component relations
+NEW_PROP_TAG(SpatialParameters); //!< The type of the soil
+NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
+
+NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
+NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)
+
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for the mobility
 }
@@ -90,7 +92,7 @@ class TwoPTwoCFluxData;
  */
 struct TwoPTwoCCommonIndices
 {
-    // Phase state (-> 'pseudo' primary variable)
+    // present phases (-> 'pseudo' primary variable)
     static const int nPhaseOnly = 0; //!< Only the non-wetting phase is present
     static const int wPhaseOnly = 1; //!< Only the wetting phase is present
     static const int bothPhases = 2; //!< Both phases are present
@@ -100,12 +102,12 @@ struct TwoPTwoCCommonIndices
     static const int pNsW = 1; //!< Pn and Sw as primary variables
 
     // Phase indices
-    static const int wPhase = 0; //!< Index of the wetting phase in a phase vector
-    static const int nPhase = 1; //!< Index of the non-wetting phase in a phase vector
+    static const int wPhaseIdx = 0; //!< Index of the wetting phase in a phase vector
+    static const int nPhaseIdx = 1; //!< Index of the non-wetting phase in a phase vector
 
     // Component indices
-    static const int wComp = 0; //!< Index of the wetting component in a component vector
-    static const int nComp = 1; //!< Index of the non-wetting component in a compent vector
+    static const int wCompIdx = 0; //!< Index of the wetting component in a component vector
+    static const int nCompIdx = 1; //!< Index of the non-wetting component in a compent vector
 };
 
 /*!
@@ -164,14 +166,73 @@ namespace Properties {
 // Properties
 //////////////////////////////////////////////////////////////////
 
+/*!
+ * \brief Set the property for the number of components.
+ *
+ * We just forward the number from the fluid system and use an static
+ * assert to make sure it is 2.
+ */
+SET_PROP(BoxTwoPTwoC, NumComponents)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+    
+public:
+    static const int value = FluidSystem::numComponents;
+
+    static_assert(value == 2, 
+                  "Only fluid systems with 2 components are supported by the 2p-2c model!");
+};
+
+/*!
+ * \brief Set the property for the number of fluid phases.
+ *
+ * We just forward the number from the fluid system and use an static
+ * assert to make sure it is 2.
+ */
+SET_PROP(BoxTwoPTwoC, NumPhases)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+    
+public:
+    static const int value = FluidSystem::numPhases;
+    static_assert(value == 2, 
+                  "Only fluid systems with 2 phases are supported by the 2p-2c model!");
+};
+
 SET_INT_PROP(BoxTwoPTwoC, NumEq,         2); //!< set the number of equations to 2
-SET_INT_PROP(BoxTwoPTwoC, NumPhases,     2); //!< The number of phases in the 2p2c model is 2
-SET_INT_PROP(BoxTwoPTwoC, NumComponents, 2); //!< The number of components in the 2p2c model is 2
 
 //! Set the default formulation to pWsN
 SET_INT_PROP(BoxTwoPTwoC,
              Formulation,
              TwoPTwoCCommonIndices::pWsN);
+
+/*!
+ * \brief Set the property for the material law by retrieving it from
+ *        the spatial parameters.
+ */
+SET_PROP(BoxTwoPTwoC, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))  SpatialParameters;
+
+public:
+    typedef typename SpatialParameters::MaterialLaw type;
+};
+
+/*!
+ * \brief Set the property for the material parameters by extracting
+ *        it from the material law.
+ */
+SET_PROP(BoxTwoPTwoC, MaterialLawParams)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))  MaterialLaw;
+
+public:
+    typedef typename MaterialLaw::Params type;
+};
 
 //! Use the 2p2c local jacobian operator for the 2p2c model
 SET_TYPE_PROP(BoxTwoPTwoC,

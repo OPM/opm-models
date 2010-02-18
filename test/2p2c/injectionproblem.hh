@@ -28,13 +28,11 @@
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
-#include <dumux/material/fluids/water_air.hh>
-
-#include <dumux/material/multicomponentrelations.hh>
-
 #include <dumux/boxmodels/2p2c/2p2cboxmodel.hh>
 
-#include "injectionsoil.hh"
+#include <dumux/new_material/fluidsystems/h2o_n2_system.hh>
+
+#include "injectionspatialparameters.hh"
 
 
 namespace Dune
@@ -50,12 +48,7 @@ NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxTwoPTwoC));
 // Set the grid type
 SET_PROP(InjectionProblem, Grid)
 {
-#if 0 //HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#else
-    typedef Dune::SGrid<2, 2> type;
-    //typedef Dune::YaspGrid<2> type;
-#endif
+    typedef Dune::YaspGrid<2> type;
 };
 
 #ifdef HAVE_DUNE_PDELAB
@@ -77,25 +70,15 @@ SET_PROP(InjectionProblem, Problem)
     typedef Dune::InjectionProblem<TTAG(InjectionProblem)> type;
 };
 
-// Set the wetting phase
-SET_TYPE_PROP(InjectionProblem, WettingPhase, Dune::Liq_WaterAir);
-
-// Set the non-wetting phase
-SET_TYPE_PROP(InjectionProblem, NonwettingPhase, Dune::Gas_WaterAir);
-
-// Set multi-component relations
-SET_TYPE_PROP(InjectionProblem, MultiComp, Dune::CWaterAir);
+// Set fluid configuration
+SET_TYPE_PROP(InjectionProblem, 
+              FluidSystem, 
+              Dune::H2O_N2_System<TypeTag> );
 
 // Set the soil properties
-SET_PROP(InjectionProblem, Soil)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-
-public:
-    typedef Dune::InjectionSoil<Grid, Scalar> type;
-};
+SET_TYPE_PROP(InjectionProblem, 
+              SpatialParameters,
+              Dune::InjectionSpatialParameters<TypeTag>);
 
 // Enable gravity
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
@@ -124,12 +107,20 @@ class InjectionProblem : public TwoPTwoCBoxProblem<TypeTag, InjectionProblem<Typ
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))   GridView;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))     Scalar;
 
-    // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
         // Grid and world dimension
         dim         = GridView::dimension,
         dimWorld    = GridView::dimensionworld,
+    };
+
+    // copy some indices for convenience
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
+    enum {
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
+
+        wCompIdx = Indices::wCompIdx,
+        nCompIdx = Indices::nCompIdx,
     };
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
@@ -141,15 +132,18 @@ class InjectionProblem : public TwoPTwoCBoxProblem<TypeTag, InjectionProblem<Typ
     typedef typename GridView::Intersection                     Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
 public:
     InjectionProblem(const GridView &gridView)
         : ParentType(gridView)
     {
+        // initialize the tables of the fluid system
+        FluidSystem::init();
     }
+
 
     /*!
      * \name Problem parameters
@@ -239,7 +233,7 @@ public:
 
         values = 0;
         if (globalPos[1] < 15 && globalPos[1] > 5) {
-            values[Indices::comp2Mass(Indices::nComp)] = -1e-3;
+            values[Indices::comp2Mass(nCompIdx)] = -1e-3;
         }
     }
 
@@ -286,9 +280,9 @@ public:
     /*!
      * \brief Return the initial phase state inside a control volume.
      */
-    int initialPhaseState(const Vertex       &vert,
-                          int                &globalIdx,
-                          const GlobalPosition &globalPos) const
+    int initialPhasePresence(const Vertex       &vert,
+                             int                &globalIdx,
+                             const GlobalPosition &globalPos) const
     { return Indices::wPhaseOnly; }
 
     // \}
@@ -298,7 +292,7 @@ private:
     void initial_(PrimaryVarVector       &values,
                   const GlobalPosition   &globalPos) const
     {
-        Scalar densityW = this->wettingPhase().density(temperature_, 1e5);
+        Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
 
         values[Indices::pW] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
         values[Indices::sNorX] = 0;

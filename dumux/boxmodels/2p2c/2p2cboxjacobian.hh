@@ -67,11 +67,11 @@ protected:
         pressureIdx      = Indices::pressureIdx,
         switchIdx        = Indices::switchIdx,
 
-        wPhase           = Indices::wPhase,
-        nPhase           = Indices::nPhase,
+        wPhaseIdx        = Indices::wPhaseIdx,
+        nPhaseIdx        = Indices::nPhaseIdx,
 
-        wComp            = Indices::wComp,
-        nComp            = Indices::nComp,
+        wCompIdx         = Indices::wCompIdx,
+        nCompIdx         = Indices::nCompIdx,
 
         wPhaseOnly       = Indices::wPhaseOnly,
         nPhaseOnly       = Indices::nPhaseOnly,
@@ -109,10 +109,10 @@ protected:
      *        stored locally.
      */
     struct StaticVertexData {
-        int  phaseState;
+        int  phasePresence;
         bool wasSwitched;
 
-        int oldPhaseState;
+        int oldPhasePresence;
         bool visited;
     };
 
@@ -147,12 +147,12 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
                 result[Indices::comp2Mass(compIdx)] +=
-                    vertDat.density[phaseIdx]*
-                    vertDat.saturation[phaseIdx]*
-                    vertDat.massfrac[compIdx][phaseIdx];
+                    vertDat.density(phaseIdx)*
+                    vertDat.saturation(phaseIdx)*
+                    vertDat.phaseState().massFrac(phaseIdx, compIdx);
             }
         }
-        result *= vertDat.porosity;
+        result *= vertDat.porosity();
     }
 
     /*!
@@ -170,6 +170,11 @@ public:
         flux = 0;
         asImp_()->computeAdvectiveFlux(flux, vars);
         asImp_()->computeDiffusiveFlux(flux, vars);
+
+        // negative direction because the boxjacobian expects all
+        // fluxes going to node i. TODO: change this in the base class,
+        // this would break quite a few models, though
+        flux *= -1;
     }
 
     /*!
@@ -194,19 +199,19 @@ public:
                 if (mobilityUpwindAlpha > 0.0)
                     // upstream vertex
                     flux[Indices::comp2Mass(compIdx)] +=
-                        vars.vDarcyNormal[phaseIdx] *
+                        vars.KmvpNormal[phaseIdx] *
                         mobilityUpwindAlpha*
-                        (  up.density[phaseIdx] *
-                           up.mobility[phaseIdx] *
-                           up.massfrac[compIdx][phaseIdx]);
+                        (  up.density(phaseIdx) *
+                           up.mobility(phaseIdx) *
+                           up.phaseState().massFrac(phaseIdx, compIdx));
                 if (mobilityUpwindAlpha < 1.0)
                     // downstream vertex
                     flux[Indices::comp2Mass(compIdx)] +=
-                        vars.vDarcyNormal[phaseIdx] *
+                        vars.KmvpNormal[phaseIdx] *
                         (1 - mobilityUpwindAlpha)*
-                        (  dn.density[phaseIdx] *
-                           dn.mobility[phaseIdx] *
-                           dn.massfrac[compIdx][phaseIdx]);
+                        (  dn.density(phaseIdx) *
+                           dn.mobility(phaseIdx) *
+                           dn.phaseState().massFrac(phaseIdx, compIdx));
             }
         }
     }
@@ -219,21 +224,21 @@ public:
     {
         // add diffusive flux of non-wetting component in wetting phase
         Scalar tmp =
-            vars.diffCoeffPM[wPhase] * vars.densityAtIP[wPhase] *
-            (vars.concentrationGrad[wPhase]*vars.face->normal);
-        flux[Indices::comp2Mass(nComp)] += tmp;
-        flux[Indices::comp2Mass(wComp)] -= tmp;
+            vars.diffCoeffPM[wPhaseIdx] * vars.densityAtIP[wPhaseIdx] *
+            (vars.concentrationGrad[wPhaseIdx]*vars.face().normal);
+        flux[Indices::comp2Mass(nCompIdx)] += tmp;
+        flux[Indices::comp2Mass(wCompIdx)] -= tmp;
 
         // add diffusive flux of wetting component in non-wetting phase
-        tmp = vars.diffCoeffPM[nPhase] * vars.densityAtIP[nPhase] *
-            (vars.concentrationGrad[nPhase]*vars.face->normal);;
-        flux[Indices::comp2Mass(wComp)] += tmp;
-        flux[Indices::comp2Mass(nComp)] -= tmp;
+        tmp = vars.diffCoeffPM[nPhaseIdx] * vars.densityAtIP[nPhaseIdx] *
+            (vars.concentrationGrad[nPhaseIdx]*vars.face().normal);;
+        flux[Indices::comp2Mass(wCompIdx)] += tmp;
+        flux[Indices::comp2Mass(nCompIdx)] -= tmp;
 
         // TODO: the diffusive flux of the wetting component in the
         // wetting phase does rarly exhibit the same mass as the flux
         // of the non-wetting component, which means that it is not
-        // -tmp
+        // equivalent to -tmp.
     }
 
     /*!
@@ -263,13 +268,13 @@ public:
             int globalIdx = this->problem_.model().dofEntityMapper().map(*it);
             const GlobalPosition &globalPos = it->geometry().corner(0);
 
-            // initialize phase state
-            staticVertexDat_[globalIdx].phaseState =
-                this->problem_.initialPhaseState(*it, globalIdx, globalPos);
+            // initialize phase presence
+            staticVertexDat_[globalIdx].phasePresence =
+                this->problem_.initialPhasePresence(*it, globalIdx, globalPos);
             staticVertexDat_[globalIdx].wasSwitched = false;
 
-            staticVertexDat_[globalIdx].oldPhaseState =
-                staticVertexDat_[globalIdx].phaseState;
+            staticVertexDat_[globalIdx].oldPhasePresence =
+                staticVertexDat_[globalIdx].phasePresence;
         }
     }
 
@@ -322,36 +327,36 @@ public:
     /*!
      * \brief Set the old phase of all verts state to the current one.
      */
-    void updateOldPhaseState()
+    void updateOldPhasePresence()
     {
         int numVertices = this->gridView_.size(dim);
         for (int i = 0; i < numVertices; ++i) {
-            staticVertexDat_[i].oldPhaseState = staticVertexDat_[i].phaseState;
+            staticVertexDat_[i].oldPhasePresence = staticVertexDat_[i].phasePresence;
             staticVertexDat_[i].wasSwitched = false;
         }
     }
 
     /*!
-     * \brief Returns the phase state of the current or the old solution of a vertex.
+     * \brief Returns the phase presence of the current or the old solution of a vertex.
      */
-    int phaseState(int globalVertexIdx, bool oldSol) const
+    int phasePresence(int globalVertexIdx, bool oldSol) const
     {
         return
             oldSol?
-            staticVertexDat_[globalVertexIdx].oldPhaseState :
-            staticVertexDat_[globalVertexIdx].phaseState;
+            staticVertexDat_[globalVertexIdx].oldPhasePresence :
+            staticVertexDat_[globalVertexIdx].phasePresence;
     }
 
     /*!
-     * \brief Reset the current phase state of all vertices to the old one.
+     * \brief Reset the current phase presence of all vertices to the old one.
      *
      * This is done after an update failed.
      */
-    void resetPhaseState()
+    void resetPhasePresence()
     {
         int numVertices = this->gridView_.size(dim);
         for (int i = 0; i < numVertices; ++i)
-            staticVertexDat_[i].phaseState = staticVertexDat_[i].oldPhaseState;
+            staticVertexDat_[i].phasePresence = staticVertexDat_[i].oldPhasePresence;
     }
 
     /*!
@@ -416,17 +421,17 @@ public:
 
                 vol = this->curElementGeom_.subContVol[i].volume;
 
-                state =  staticVertexDat_[globalIdx].phaseState;
+                state =  staticVertexDat_[globalIdx].phasePresence;
                 poro = this->problem_.porosity(this->curElement_(), i);
-                rhoN = elemDat[i].density[nPhase];
-                rhoW = elemDat[i].density[wPhase];
-                satN = elemDat[i].saturation[nPhase];
-                satW = elemDat[i].saturation[wPhase];
-                xAW = elemDat[i].massfrac[nComp][wPhase];
-                xWW = elemDat[i].massfrac[wComp][wPhase];
-                xWN = elemDat[i].massfrac[wComp][nPhase];
-                xAN = elemDat[i].massfrac[nComp][nPhase];
-                pW = elemDat[i].pressure[wPhase];
+                rhoN = elemDat[i].density[nPhaseIdx];
+                rhoW = elemDat[i].density[wPhaseIdx];
+                satN = elemDat[i].saturation[nPhaseIdx];
+                satW = elemDat[i].saturation[wPhaseIdx];
+                xAW = elemDat[i].massfrac[nCompIdx][wPhaseIdx];
+                xWW = elemDat[i].massfrac[wCompIdx][wPhaseIdx];
+                xWN = elemDat[i].massfrac[wCompIdx][nPhaseIdx];
+                xAN = elemDat[i].massfrac[nCompIdx][nPhaseIdx];
+                pW = elemDat[i].pressure[wPhaseIdx];
                 Te = elemDat[i].temperature;
                 massNComp = vol * poro * (satN * rhoN * xAN + satW * rhoW * xAW);
                 massNCompNPhase = vol * poro * satN * rhoN * xAN;
@@ -461,7 +466,7 @@ public:
                       << ", max = "<< maxSat << std::endl;
             std::cout << "wetting phase pressure: min = "<< minP
                       << ", max = "<< maxP << std::endl;
-            std::cout << "mass fraction nComp: min = "<< minX
+            std::cout << "mass fraction nCompIdx: min = "<< minX
                       << ", max = "<< maxX << std::endl;
             std::cout << "temperature: min = "<< minTe
                       << ", max = "<< maxTe << std::endl;
@@ -494,7 +499,7 @@ public:
         ScalarField *massfracWinW = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *massfracWinN = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *temperature  = writer.template createField<Scalar, 1>(numVertices);
-        ScalarField *phaseState   = writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *phasePresence   = writer.template createField<Scalar, 1>(numVertices);
 
 //		#define velocity_output  // include this line if an output of the velocity is needed
 
@@ -536,21 +541,21 @@ public:
             {
                 int globalIdx = this->problem_.model().dofEntityMapper().map(*elementIt, i, dim);
 
-                (*pW)[globalIdx] = elemDat[i].pressure[wPhase];
-                (*pN)[globalIdx] = elemDat[i].pressure[nPhase];
-                (*pC)[globalIdx] = elemDat[i].pC;
-                (*Sw)[globalIdx] = elemDat[i].saturation[wPhase];
-                (*Sn)[globalIdx] = elemDat[i].saturation[nPhase];
-                (*rhoW)[globalIdx] = elemDat[i].density[wPhase];
-                (*rhoN)[globalIdx] = elemDat[i].density[nPhase];
-                (*mobW)[globalIdx] = elemDat[i].mobility[wPhase];
-                (*mobN)[globalIdx] = elemDat[i].mobility[nPhase];
-                (*massfracAinW)[globalIdx] = elemDat[i].massfrac[nComp][wPhase];
-                (*massfracAinN)[globalIdx] = elemDat[i].massfrac[nComp][nPhase];
-                (*massfracWinW)[globalIdx] = elemDat[i].massfrac[wComp][wPhase];
-                (*massfracWinN)[globalIdx] = elemDat[i].massfrac[wComp][nPhase];
-                (*temperature)[globalIdx] = elemDat[i].temperature;
-                (*phaseState)[globalIdx] = staticVertexDat_[globalIdx].phaseState;
+                (*pW)[globalIdx] = elemDat[i].pressure(wPhaseIdx);
+                (*pN)[globalIdx] = elemDat[i].pressure(nPhaseIdx);
+                (*pC)[globalIdx] = elemDat[i].capillaryPressure();
+                (*Sw)[globalIdx] = elemDat[i].saturation(wPhaseIdx);
+                (*Sn)[globalIdx] = elemDat[i].saturation(nPhaseIdx);
+                (*rhoW)[globalIdx] = elemDat[i].density(wPhaseIdx);
+                (*rhoN)[globalIdx] = elemDat[i].density(nPhaseIdx);
+                (*mobW)[globalIdx] = elemDat[i].mobility(wPhaseIdx);
+                (*mobN)[globalIdx] = elemDat[i].mobility(nPhaseIdx);
+                (*massfracAinW)[globalIdx] = elemDat[i].phaseState().massFrac(wPhaseIdx, nCompIdx);
+                (*massfracAinN)[globalIdx] = elemDat[i].phaseState().massFrac(nPhaseIdx, nCompIdx);
+                (*massfracWinW)[globalIdx] = elemDat[i].phaseState().massFrac(wPhaseIdx, wCompIdx);
+                (*massfracWinN)[globalIdx] = elemDat[i].phaseState().massFrac(nPhaseIdx, wCompIdx);
+                (*temperature)[globalIdx] = elemDat[i].temperature();
+                (*phasePresence)[globalIdx] = staticVertexDat_[globalIdx].phasePresence;
             };
 
 		#ifdef velocity_output		// check if velocity output is demanded
@@ -568,7 +573,7 @@ public:
             			elemDat);
 
                 // choose phase of interest. Alternatively, a loop over all phases would be possible.
-            	int phaseIdx = nPhase;
+            	int phaseIdx = nPhaseIdx;
 
             	// get darcy velocity
             	velocity = fluxDat.vDarcy[phaseIdx];  // mind the sign: vDarcy = kf grad p
@@ -631,7 +636,7 @@ public:
         writer.addVertexData(massfracWinW, "XwW");
         writer.addVertexData(massfracWinN, "XwN");
         writer.addVertexData(temperature, "T");
-        writer.addVertexData(phaseState, "phase state");
+        writer.addVertexData(phasePresence, "phase presence");
 		#ifdef velocity_output		// check if velocity output is demanded
         writer.addVertexData(velocityX, "Vx");
         if (dim >= 2)
@@ -650,20 +655,20 @@ public:
     {
         int vertIdx = this->problem_.model().dofEntityMapper().map(vert);
 
-        // read phase state
+        // read phase presence
         if (!inStream.good()) {
             DUNE_THROW(IOError,
                        "Could not deserialize vertex "
                        << vertIdx);
         }
 
-        inStream >> staticVertexDat_[vertIdx].phaseState;
-        staticVertexDat_[vertIdx].oldPhaseState
-            = staticVertexDat_[vertIdx].phaseState;
+        inStream >> staticVertexDat_[vertIdx].phasePresence;
+        staticVertexDat_[vertIdx].oldPhasePresence
+            = staticVertexDat_[vertIdx].phasePresence;
     };
 
     /*!
-     * \brief Write the current phase state of an vertex to a restart
+     * \brief Write the current phase presence of an vertex to a restart
      *        file.
      */
     void serializeEntity(std::ostream &outStream,
@@ -677,7 +682,7 @@ public:
                        << vertIdx);
         }
 
-        outStream << staticVertexDat_[vertIdx].phaseState
+        outStream << staticVertexDat_[vertIdx].phasePresence
                   << " ";
     };
 
@@ -698,96 +703,120 @@ protected:
     {
         // evaluate primary variable switch
         bool wouldSwitch  = false;
-        int phaseState    = staticVertexDat_[globalIdx].phaseState;
-        int newPhaseState = phaseState;
+        int phasePresence    = staticVertexDat_[globalIdx].phasePresence;
+        int newPhasePresence = phasePresence;
         
         // check if a primary var switch is necessary
-        if (phaseState == nPhaseOnly)
+        if (phasePresence == nPhaseOnly)
         {
-            Scalar xWNmax = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], 
-                                                           vertexData.temperature);
-            if (vertexData.massfrac[wComp][nPhase] > xWNmax)
+            // calculate mole fraction in the hypothetic wetting phase
+            Scalar x_ww = 
+                vertexData.phaseState().partialPressure(wCompIdx) /
+                vertexData.phaseState().beta(wCompIdx);
+            Scalar x_wn = 
+                vertexData.phaseState().partialPressure(nCompIdx) /
+                vertexData.phaseState().beta(nCompIdx);
+            
+            Scalar x_wMax = 1.0;
+            if (x_ww + x_wn > x_wMax)
                 wouldSwitch = true;
             if (staticVertexDat_[globalIdx].wasSwitched)
-                xWNmax *= (1.0 + 1e-2);
+                x_wMax *= 1.02;
 
-            if (vertexData.massfrac[wComp][nPhase] > xWNmax)
+            // if the sum of the mole fractions would be larger than
+            // 100%, wetting phase appears
+            if (x_ww + x_wn > x_wMax)
             {
                 // wetting phase appears
                 std::cout << "wetting phase appears at vertex " << globalIdx
                           << ", coordinates: " << globalPos
-                          << ", xWN/xWNmax: " << vertexData.massfrac[wComp][nPhase]/xWNmax
+                          << ", x_ww + x_wn: " << x_ww + x_wn
                           << std::endl;
-                newPhaseState = bothPhases;
+                newPhasePresence = bothPhases;
                 if (formulation == pNsW)
                     (*globalSol)[globalIdx][switchIdx] = 0.0;
                 else if (formulation == pWsN)
                     (*globalSol)[globalIdx][switchIdx] = 1.0;
             };
         }
-        else if (phaseState == wPhaseOnly)
+        else if (phasePresence == wPhaseOnly)
         {
-            Scalar xAWmax = this->problem_.multicomp().xAW(vertexData.pressure[wPhase], 
-                                                           vertexData.temperature);
-            if (vertexData.massfrac[nComp][wPhase] > xAWmax)
+            // calculate mole fraction in the hypothetic non-wetting phase
+            Scalar x_nw = 
+                vertexData.phaseState().moleFrac(wPhaseIdx, wCompIdx) *
+                vertexData.phaseState().beta(wCompIdx)
+                / 
+                vertexData.pressure(nPhaseIdx);
+            Scalar x_nn = 
+                vertexData.phaseState().moleFrac(wPhaseIdx, nCompIdx) *
+                vertexData.phaseState().beta(nCompIdx)
+                / 
+                vertexData.pressure(nPhaseIdx);
+            
+            Scalar x_nMax = 1.0;
+            if (x_nw + x_nn > x_nMax)
                 wouldSwitch = true;
             if (staticVertexDat_[globalIdx].wasSwitched)
-                xAWmax *= (1.0 + 1e-2);
+                x_nMax *= 1.02;
 
-            if (vertexData.massfrac[nComp][wPhase] > xAWmax)
+            // if the sum of the mole fractions would be larger than
+            // 100%, wetting phase appears
+            if (x_nw + x_nn > x_nMax)
             {
                 // non-wetting phase appears
                 std::cout << "Non-wetting phase appears at vertex " << globalIdx
                           << ", coordinates: " << globalPos
-                          << ", xAW/xAWmax: " << vertexData.massfrac[nComp][wPhase]/xAWmax
+                          << ", x_nw + x_nn:" << x_nw + x_nn
                           << std::endl;
-                newPhaseState = bothPhases;
+                newPhasePresence = bothPhases;
                 if (formulation == pNsW)
-                    (*globalSol)[globalIdx][switchIdx] = 1.0;
+                    (*globalSol)[globalIdx][switchIdx] = 0.999;
                 else if (formulation == pWsN)
-                    (*globalSol)[globalIdx][switchIdx] = 0.0;
+                    (*globalSol)[globalIdx][switchIdx] = 0.001;
             }
         }
-        else if (phaseState == bothPhases) {
+        else if (phasePresence == bothPhases) {
             Scalar Smin = 0.0;
+            if (staticVertexDat_[globalIdx].wasSwitched)
+                Smin = -0.01;
 
-            if (vertexData.saturation[nPhase] <= Smin) {
+            if (vertexData.saturation(nPhaseIdx) <= Smin) {
                 wouldSwitch = true;
                 // non-wetting phase disappears
                 std::cout << "Non-wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos
-                          << ", Sn: " << vertexData.saturation[nPhase]
+                          << ", Sn: " << vertexData.saturation(nPhaseIdx)
                           << std::endl;
-                newPhaseState = wPhaseOnly;
+                newPhasePresence = wPhaseOnly;
+                
                 (*globalSol)[globalIdx][switchIdx]
-                    = this->problem_.multicomp().xAW(vertexData.pressure[nPhase], 
-                                                     vertexData.temperature);
+                    = vertexData.phaseState().massFrac(wPhaseIdx, nCompIdx);
             }
-            else if (vertexData.saturation[wPhase] <= Smin) {
+            else if (vertexData.saturation(wPhaseIdx) <= Smin) {
                 wouldSwitch = true;
                 // wetting phase disappears
                 std::cout << "Wetting phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos
-                          << ", Sw: " << vertexData.saturation[wPhase]
+                          << ", Sw: " << vertexData.saturation(wPhaseIdx)
                           << std::endl;
-                newPhaseState = nPhaseOnly;
+                newPhasePresence = nPhaseOnly;
+
                 (*globalSol)[globalIdx][switchIdx]
-                    = this->problem_.multicomp().xWN(vertexData.pressure[nPhase], 
-                                                     vertexData.temperature);
+                    = vertexData.phaseState().massFrac(nPhaseIdx, wCompIdx);
             }
         }
 
-        staticVertexDat_[globalIdx].phaseState = newPhaseState;
+        staticVertexDat_[globalIdx].phasePresence = newPhasePresence;
         staticVertexDat_[globalIdx].wasSwitched = wouldSwitch;
 
-        return phaseState != newPhaseState;
+        return phasePresence != newPhasePresence;
     }
 
     // parameters given in constructor
     std::vector<StaticVertexData> staticVertexDat_;
     bool                          switchFlag_;
     int                           formulation_;
-    };
+};
 
 
 /*!
