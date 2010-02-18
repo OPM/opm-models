@@ -3,6 +3,7 @@ Makefile.in
 *.o
 .deps
 *.vtu
+*.vtp
 *.pvd
 *.drs
 *.la
