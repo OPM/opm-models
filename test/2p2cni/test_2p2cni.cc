@@ -31,7 +31,7 @@
 int main(int argc, char** argv)
 {
     try {
-         typedef GET_PROP_TYPE(TTAG(WaterAirProblem), PTAG(Scalar))  Scalar;
+        typedef GET_PROP_TYPE(TTAG(WaterAirProblem), PTAG(Scalar))  Scalar;
         typedef GET_PROP_TYPE(TTAG(WaterAirProblem), PTAG(Grid))    Grid;
         typedef GET_PROP_TYPE(TTAG(WaterAirProblem), PTAG(Problem)) Problem;
         typedef Dune::FieldVector<Scalar, Grid::dimensionworld> GlobalPosition;

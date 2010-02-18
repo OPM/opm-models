@@ -190,8 +190,8 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream vertices
             // of the current phase
-            const VertexData &up = this->curElemDat_[vars.upstreamIdx[phaseIdx]];
-            const VertexData &dn = this->curElemDat_[vars.downstreamIdx[phaseIdx]];
+            const VertexData &up = this->curElemDat_[vars.upstreamIdx(phaseIdx)];
+            const VertexData &dn = this->curElemDat_[vars.downstreamIdx(phaseIdx)];
 
             for (int  compIdx = 0; compIdx < numComponents; ++compIdx) {
                 // add advective flux of current component in current
@@ -199,7 +199,7 @@ public:
                 if (mobilityUpwindAlpha > 0.0)
                     // upstream vertex
                     flux[Indices::comp2Mass(compIdx)] +=
-                        vars.KmvpNormal[phaseIdx] *
+                        vars.KmvpNormal(phaseIdx) *
                         mobilityUpwindAlpha*
                         (  up.density(phaseIdx) *
                            up.mobility(phaseIdx) *
@@ -207,7 +207,7 @@ public:
                 if (mobilityUpwindAlpha < 1.0)
                     // downstream vertex
                     flux[Indices::comp2Mass(compIdx)] +=
-                        vars.KmvpNormal[phaseIdx] *
+                        vars.KmvpNormal(phaseIdx) *
                         (1 - mobilityUpwindAlpha)*
                         (  dn.density(phaseIdx) *
                            dn.mobility(phaseIdx) *
@@ -224,14 +224,14 @@ public:
     {
         // add diffusive flux of non-wetting component in wetting phase
         Scalar tmp =
-            vars.diffCoeffPM[wPhaseIdx] * vars.densityAtIP[wPhaseIdx] *
-            (vars.concentrationGrad[wPhaseIdx]*vars.face().normal);
+            vars.porousDiffCoeff(wPhaseIdx) * vars.densityAtIP(wPhaseIdx) *
+            (vars.concentrationGrad(wPhaseIdx)*vars.face().normal);
         flux[Indices::comp2Mass(nCompIdx)] += tmp;
         flux[Indices::comp2Mass(wCompIdx)] -= tmp;
 
         // add diffusive flux of wetting component in non-wetting phase
-        tmp = vars.diffCoeffPM[nPhaseIdx] * vars.densityAtIP[nPhaseIdx] *
-            (vars.concentrationGrad[nPhaseIdx]*vars.face().normal);;
+        tmp = vars.porousDiffCoeff(nPhaseIdx) * vars.densityAtIP(nPhaseIdx) *
+            (vars.concentrationGrad(nPhaseIdx)*vars.face().normal);;
         flux[Indices::comp2Mass(wCompIdx)] += tmp;
         flux[Indices::comp2Mass(nCompIdx)] -= tmp;
 

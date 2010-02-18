@@ -50,6 +50,7 @@ class TwoPTwoCFluxData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
 
+    typedef typename GridView::ctype                     CoordScalar;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef std::vector<VertexData>                      VertexDataArray;
 
@@ -59,8 +60,7 @@ class TwoPTwoCFluxData
         numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
@@ -83,14 +83,14 @@ public:
                      const FVElementGeometry &elemGeom,
                      int faceIdx,
                      const VertexDataArray &elemDat)
-        : fvElemGeom(elemGeom)
+        : fvElemGeom_(elemGeom)
     {
-        scvfIdx = faceIdx;
+        scvfIdx_ = faceIdx;
         
-        densityAtIP = 0;
-        for (int phase = 0; phase < numPhases; ++phase) {
-            potentialGrad[phase] = Scalar(0);
-            concentrationGrad[phase] = Scalar(0);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            densityAtIP_[phaseIdx] = Scalar(0);
+            potentialGrad_[phaseIdx] = Scalar(0);
+            concentrationGrad_[phaseIdx] = Scalar(0);
         }
 
         calculateGradients_(problem, element, elemDat);
@@ -104,26 +104,26 @@ private:
                              const VertexDataArray &elemDat)
     {
         // calculate gradients
-        GlobalPosition tmp(0.0);
+        Vector tmp(0.0);
         for (int idx = 0;
-             idx < fvElemGeom.numVertices;
+             idx < fvElemGeom_.numVertices;
              idx++) // loop over adjacent vertices
         {
             // FE gradient at vertex idx
-            const LocalPosition &feGrad = face().grad[idx];
+            const Vector &feGrad = face().grad[idx];
 
             // compute sum of pressure gradients for each phase
-            for (int phase = 0; phase < numPhases; phase++)
+            for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
             {
                 // the pressure gradient
                 tmp = feGrad;
-                tmp *= elemDat[idx].pressure(phase);
-                potentialGrad[phase] += tmp;
+                tmp *= elemDat[idx].pressure(phaseIdx);
+                potentialGrad_[phaseIdx] += tmp;
 
                 // phase density
-                densityAtIP[phase]
+                densityAtIP_[phaseIdx]
                     +=
-                    elemDat[idx].density(phase) *
+                    elemDat[idx].density(phaseIdx) *
                     face().shapeValue[idx];
             }
 
@@ -131,23 +131,23 @@ private:
             // component in the wetting phase
             tmp = feGrad;
             tmp *= elemDat[idx].phaseState().massFrac(wPhaseIdx, nCompIdx);
-            concentrationGrad[wPhaseIdx] += tmp;
+            concentrationGrad_[wPhaseIdx] += tmp;
 
             // the concentration gradient of the wetting component
             // in the non-wetting phase
             tmp = feGrad;
             tmp *= elemDat[idx].phaseState().massFrac(nPhaseIdx, wCompIdx);
-            concentrationGrad[nPhaseIdx] += tmp;
+            concentrationGrad_[nPhaseIdx] += tmp;
         }
 
         // correct the pressure gradients by the hydrostatic
         // pressure due to gravity
-        for (int phase=0; phase < numPhases; phase++)
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
             tmp = problem.gravity();
-            tmp *= densityAtIP[phase];
+            tmp *= densityAtIP_[phaseIdx];
 
-            potentialGrad[phase] -= tmp;
+            potentialGrad_[phaseIdx] -= tmp;
         }
     }
 
@@ -157,26 +157,26 @@ private:
     {
         // multiply the pressure potential with the intrinsic
         // permeability
-        GlobalPosition Kmvp;
+        Vector Kmvp;
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
             problem.spatialParameters().Kmv(Kmvp,
-                                            potentialGrad[phaseIdx],
+                                            potentialGrad_[phaseIdx],
                                             element,
-                                            fvElemGeom,
-                                            scvfIdx);
-            KmvpNormal[phaseIdx] = Kmvp * face().normal;
+                                            fvElemGeom_,
+                                            scvfIdx_);
+            KmvpNormal_[phaseIdx] = Kmvp * face().normal;
         }
 
         // set the upstream and downstream vertices
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
-            upstreamIdx[phaseIdx] = face().i;
-            downstreamIdx[phaseIdx] = face().j;
+            upstreamIdx_[phaseIdx] = face().i;
+            downstreamIdx_[phaseIdx] = face().j;
 
-            if (KmvpNormal[phaseIdx] < 0) {
-                std::swap(upstreamIdx[phaseIdx],
-                          downstreamIdx[phaseIdx]);
+            if (KmvpNormal_[phaseIdx] < 0) {
+                std::swap(upstreamIdx_[phaseIdx],
+                          downstreamIdx_[phaseIdx]);
             }
         }
     }
@@ -195,7 +195,7 @@ private:
             if (vDat_i.saturation(phaseIdx) <= 0 ||
                 vDat_j.saturation(phaseIdx) <= 0)
             {
-                diffCoeffPM[phaseIdx] = 0.0;
+                porousDiffCoeff_[phaseIdx] = 0.0;
                 continue;
             }
 
@@ -211,7 +211,7 @@ private:
             // Diffusion coefficient in the porous medium
 
             // -> arithmetic mean
-            diffCoeffPM[phaseIdx]
+            porousDiffCoeff_[phaseIdx]
                 = 1./2*(vDat_i.porosity() * vDat_i.saturation(phaseIdx) * tau_i * vDat_i.diffCoeff(phaseIdx) +
                         vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
             // -> harmonic mean
@@ -222,33 +222,79 @@ private:
     }
 
 public:
-    const SCVFace &face() const
-    { return fvElemGeom.subContVolFace[scvfIdx]; }
+    /*!
+     * \brief Return the pressure potential multiplied with the
+     *        intrinsic permeability projected on the face's normal
+     *        vector (vertex i to vertex j).
+     *
+     * Note that the length of the face's normal is the area of the
+     * phase, so this is not the actual velocity by the integral of
+     * the velocity over the face's area. Also note that the phase
+     * mobility is not yet included here since this would require a
+     * decision on the upwinding approach (which is done in the
+     * actual model).
+     */
+    Scalar KmvpNormal(int phaseIdx) const
+    { return KmvpNormal_[phaseIdx]; }
 
-    const FVElementGeometry &fvElemGeom;
-    int                      scvfIdx;
+    /*!
+     * \brief Return the local index of the upstream control volume
+     *        for a given phase.
+     */
+    int upstreamIdx(int phaseIdx) const
+    { return upstreamIdx_[phaseIdx]; }
+
+    /*!
+     * \brief Return the local index of the downstream control volume
+     *        for a given phase.
+     */
+    int downstreamIdx(int phaseIdx) const
+    { return downstreamIdx_[phaseIdx]; }
+
+    /*!
+     * \brief The binary diffusion coefficient for each fluid phase.
+     */
+    Scalar porousDiffCoeff(int phaseIdx) const
+    { return porousDiffCoeff_[phaseIdx]; };
+
+    /*!
+     * \brief Return density [kg/m^3] of a phase at the integration
+     *        point.
+     */
+    Scalar densityAtIP(int phaseIdx) const
+    { return densityAtIP_[phaseIdx]; }
+
+    /*!
+     * \brief The concentration gradient of a component in a phase.
+     */
+    const Vector &concentrationGrad(int phaseIdx) const
+    { return concentrationGrad_[phaseIdx]; };
+
+    const SCVFace &face() const
+    { return fvElemGeom_.subContVolFace[scvfIdx_]; }
+
+protected:
+    const FVElementGeometry &fvElemGeom_;
+    int                      scvfIdx_;
 
     // gradients
-    GlobalPosition potentialGrad[numPhases];
-    GlobalPosition concentrationGrad[numPhases];
+    Vector potentialGrad_[numPhases];
+    Vector concentrationGrad_[numPhases];
 
     // density of each face at the integration point
-    PhasesVector densityAtIP;
-
-    // darcy velocities of each phase (without the mobility)
-    GlobalPosition vDarcy[numPhases];
+    Scalar densityAtIP_[numPhases];
 
     // intrinsic permeability times pressure potential gradient
     // projected on the face normal
-    Scalar KmvpNormal[numPhases];
+    Scalar KmvpNormal_[numPhases];
 
     // local index of the upwind vertex for each phase
-    int upstreamIdx[numPhases];
+    int upstreamIdx_[numPhases];
     // local index of the downwind vertex for each phase
-    int downstreamIdx[numPhases];
+    int downstreamIdx_[numPhases];
 
     // the diffusion coefficient for the porous medium
-    PhasesVector diffCoeffPM;
+    Scalar porousDiffCoeff_[numPhases];
 };
 
 } // end namepace

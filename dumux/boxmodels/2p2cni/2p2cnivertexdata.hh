@@ -1,8 +1,8 @@
 // $Id$
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
- *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Melanie Darcis 								 *
+ *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
@@ -51,20 +51,19 @@ class TwoPTwoCNIVertexData : public TwoPTwoCVertexData<TypeTag>
     enum {
         dim           = GridView::dimension,
         dimWorld      = GridView::dimensionworld,
-
-        numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))     FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
+    enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, PTAG(NumComponents)) };
+    enum { temperatureIdx = Indices::temperatureIdx };
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))                SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements))::Container ReferenceElements;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
-
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-
 
 public:
     /*!
@@ -77,8 +76,6 @@ public:
                 Problem                 &problem,
                 bool                     isOldSol) 
     {
-        typedef Indices I;
-
         // vertex update data for the mass balance
         ParentType::update(sol,
                            element,
@@ -87,47 +84,61 @@ public:
                            problem,
                            isOldSol);
 
-        // data for the energy equation
-        const LocalPosition &local =
-            ReferenceElements::general(element.type()).position(vertIdx,
-                                                                dim);
-        const GlobalPosition &global =
-            element.geometry().corner(vertIdx);
-
-        heatCond = problem.soil().heatCond(global,
-                                           element,
-                                           local,
-                                           this->saturation[I::wPhase]);
-        
-        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(this->temperature,
-                                                              this->pressure[I::wPhase],
-                                                              this->massfrac[I::nComp][I::wPhase]);
-        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(this->temperature,
-                                                                 this->pressure[I::nPhase],
-                                                                 this->massfrac[I::wComp][I::nPhase]);
-        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(this->temperature,
-                                                                this->pressure[I::wPhase],
-                                                                this->massfrac[I::nComp][I::wPhase]);
-        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(this->temperature,
-                                                                   this->pressure[I::nPhase],
-                                                                   this->massfrac[I::wComp][I::nPhase]);
-    }
+        // the internal energies and the enthalpies
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            enthalpy_[phaseIdx] = 
+                FluidSystem::enthalpy(phaseIdx, 
+                                      this->phaseState());
+            internalEnergy_[phaseIdx] =
+                FluidSystem::internalEnergy(phaseIdx, 
+                                            this->phaseState());
+        }
+        Valgrind::CheckDefined(internalEnergy_);
+        Valgrind::CheckDefined(enthalpy_);
+    };
 
     // this method gets called by the parent class
     void updateTemperature_(const PrimaryVarVector  &sol,
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
-                            int                      vertIdx,
+                            int                      scvIdx,
                             const Problem           &problem)
     {
-        typedef Indices I;
-        this->temperature = sol[I::temperatureIdx];
+        // retrieve temperature from solution vector
+        this->temperature_ = sol[temperatureIdx];
+
+        heatCapacity_ =
+            problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
+
+        Valgrind::CheckDefined(this->temperature_);
+        Valgrind::CheckDefined(heatCapacity_);
     }
 
+    /*!
+     * \brief Returns the total internal energy of a phase in the
+     *        sub-control volume.
+     */
+    Scalar internalEnergy(int phaseIdx) const
+    { return internalEnergy_[phaseIdx]; };
 
-    PhasesVector intEnergy; //!< Internal energy.
-    PhasesVector enthalpy;  //!< Enthalpy.
-    Scalar       heatCond; //!< Total heat conductivity.
+    /*!
+     * \brief Returns the total enthalpy of a phase in the sub-control
+     *        volume.
+     */
+    Scalar enthalpy(int phaseIdx) const
+    { return enthalpy_[phaseIdx]; };
+
+    /*!
+     * \brief Returns the total heat capacity [J/(K m^3)] of the rock matrix in
+     *        the sub-control volume.
+     */
+    Scalar heatCapacity() const
+    { return heatCapacity_; };
+    
+protected:
+    Scalar internalEnergy_[numPhases];
+    Scalar enthalpy_[numPhases];
+    Scalar heatCapacity_;
 };
 
 } // end namepace

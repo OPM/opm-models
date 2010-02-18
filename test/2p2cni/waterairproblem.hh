@@ -25,11 +25,11 @@
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
-#include <dumux/material/multicomponentrelations.hh>
-#include <dumux/material/matrixproperties.hh>
-#include <dumux/material/fluids/water_air.hh>
+#include <dumux/new_material/fluidsystems/h2o_n2_system.hh>
 
 #include <dumux/boxmodels/2p2cni/2p2cniboxmodel.hh>
+
+#include "waterairspatialparameters.hh"
 
 #define ISOTHERMAL 0
 
@@ -50,12 +50,7 @@ NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoCNI));
 // Set the grid type
 SET_PROP(WaterAirProblem, Grid)
 {
-#if 0 //HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#else
-    typedef Dune::SGrid<2, 2> type;
-    //typedef Dune::YaspGrid<2> type;
-#endif
+    typedef Dune::YaspGrid<2> type;
 };
 
 #ifdef HAVE_DUNE_PDELAB
@@ -78,24 +73,12 @@ SET_PROP(WaterAirProblem, Problem)
 };
 
 // Set the wetting phase
-SET_TYPE_PROP(WaterAirProblem, WettingPhase, Dune::Liq_WaterAir);
-
-// Set the non-wetting phase
-SET_TYPE_PROP(WaterAirProblem, NonwettingPhase, Dune::Gas_WaterAir);
-
-// Set multi-component relations
-SET_TYPE_PROP(WaterAirProblem, MultiComp, Dune::CWaterAir);
+SET_TYPE_PROP(WaterAirProblem, FluidSystem, Dune::H2O_N2_System<TypeTag>);
 
 // Set the soil properties
-SET_PROP(WaterAirProblem, Soil)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-
-public:
-    typedef Dune::HomogeneousSoil<Grid, Scalar> type;
-};
+SET_TYPE_PROP(WaterAirProblem, 
+              SpatialParameters,
+              Dune::WaterAirSpatialParameters<TypeTag>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
@@ -173,6 +156,7 @@ class WaterAirProblem : public TwoPTwoCNIBoxProblem<TypeTag, WaterAirProblem<Typ
     typedef typename GridView::Intersection                     Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
@@ -181,6 +165,7 @@ public:
     WaterAirProblem(const GridView &gridView)
         : ParentType(gridView)
     {
+        FluidSystem::init();
     }
 
     /*!
@@ -283,7 +268,7 @@ public:
         if (globalPos[0] > 15 && globalPos[0] < 25 &&
             globalPos[1] < eps_)
         {
-            values[Indices::comp2Mass(Indices::nComp)] = -1e-3;
+            values[Indices::comp2Mass(Indices::nCompIdx)] = -1e-3;
         }
     }
 
@@ -335,9 +320,9 @@ public:
     /*!
      * \brief Return the initial phase state inside a control volume.
      */
-    int initialPhaseState(const Vertex         &vert,
-                          int                  &globalIdx,
-                          const GlobalPosition &globalPos) const
+    int initialPhasePresence(const Vertex         &vert,
+                             int                  &globalIdx,
+                             const GlobalPosition &globalPos) const
     {
         return wPhaseOnly;
     }

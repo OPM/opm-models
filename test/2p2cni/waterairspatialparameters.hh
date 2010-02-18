@@ -1,7 +1,7 @@
 // $Id$
 /*****************************************************************************
+ *   Copyright (C) 2008-2010 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_INJECTION_SPATIAL_PARAMETERS_HH
-#define DUNE_INJECTION_SPATIAL_PARAMETERS_HH
+#ifndef DUNE_WATER_AIR_SPATIAL_PARAMETERS_HH
+#define DUNE_WATER_AIR_SPATIAL_PARAMETERS_HH
 
 #include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
@@ -25,11 +25,11 @@ namespace Dune
 {
 
 /**
- * \brief Definition of the soil properties for the injection problem
+ * \brief Definition of the soil properties for the water-air problem
  *
  */
 template<class TypeTag>
-class InjectionSpatialParameters 
+class WaterAirSpatialParameters 
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid))     Grid;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
@@ -71,7 +71,7 @@ public:
     //typedef RawMaterialLaw                                       MaterialLaw;
     typedef AbsoluteSaturationsLaw<RawMaterialLaw>               MaterialLaw;
 
-    InjectionSpatialParameters(const GridView &gv)
+    WaterAirSpatialParameters(const GridView &gv)
     {
         layerBottom_ = 22.0;
 
@@ -96,7 +96,7 @@ public:
         coarseMaterialParams_.setAlpha(2.0);
     }
 
-    ~InjectionSpatialParameters()
+    ~WaterAirSpatialParameters()
     {}
 
     

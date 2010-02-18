@@ -64,8 +64,8 @@ class TwoPTwoCNIBoxJacobian
         numPhases        = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
         temperatureIdx   = Indices::temperatureIdx,
 
-        wPhase   = Indices::wPhase,
-        nPhase   = Indices::nPhase
+        wPhaseIdx   = Indices::wPhaseIdx,
+        nPhaseIdx   = Indices::nPhaseIdx
     };
 
 
@@ -106,18 +106,16 @@ public:
 
         // compute the energy storage
         result[temperatureIdx] =
-            vertDat.porosity*(vertDat.density[wPhase] *
-                              vertDat.intEnergy[wPhase] *
-                              vertDat.saturation[wPhase]
-                              +
-                              vertDat.density[nPhase] *
-                              vertDat.intEnergy[nPhase] *
-                              vertDat.saturation[nPhase])
+            vertDat.porosity()*(vertDat.density(wPhaseIdx) *
+                                vertDat.internalEnergy(wPhaseIdx) *
+                                vertDat.saturation(wPhaseIdx)
+                                +
+                                vertDat.density(nPhaseIdx) *
+                                vertDat.internalEnergy(nPhaseIdx) *
+                                vertDat.saturation(nPhaseIdx))
             +
-            vertDat.temperature *
-            this->problem_.soil().heatCap(this->curElementGeom_.elementGlobal,
-                                          this->curElement_(),
-                                          this->curElementGeom_.elementLocal);
+            vertDat.temperature() *
+            vertDat.heatCapacity();
     }
 
     /*!
@@ -137,20 +135,20 @@ public:
         flux[temperatureIdx] = 0;
         for (int phase = 0; phase < numPhases; ++phase) {
             // vertex data of the upstream and the downstream vertices
-            const VertexData &up = this->curElemDat_[fluxData.upstreamIdx[phase]];
-            const VertexData &dn = this->curElemDat_[fluxData.downstreamIdx[phase]];
+            const VertexData &up = this->curElemDat_[fluxData.upstreamIdx(phase)];
+            const VertexData &dn = this->curElemDat_[fluxData.downstreamIdx(phase)];
 
             flux[temperatureIdx] +=
-                fluxData.vDarcyNormal[phase] * (
+                fluxData.KmvpNormal(phase) * (
                     mobilityUpwindAlpha * // upstream vertex
-                    (  up.density[phase] *
-                       up.mobility[phase] *
-                       up.enthalpy[phase])
+                    (  up.density(phase) *
+                       up.mobility(phase) *
+                       up.enthalpy(phase))
                     +
                     (1-mobilityUpwindAlpha) * // downstream vertex
-                    (  dn.density[phase] *
-                       dn.mobility[phase] *
-                       dn.enthalpy[phase]) );
+                    (  dn.density(phase) *
+                       dn.mobility(phase) *
+                       dn.enthalpy(phase)) );
         }
     }
 
@@ -165,7 +163,8 @@ public:
         ParentType::computeDiffusiveFlux(flux, fluxData);
 
         // diffusive heat flux
-        flux[temperatureIdx] += (fluxData.temperatureGrad*fluxData.face->normal)*fluxData.heatCondAtIp;
+        flux[temperatureIdx] += 
+            fluxData.normalMatrixHeatFlux();
     }
 };
 
