@@ -439,14 +439,14 @@ public:
         // of the problem.
         if (numSteps_ > targetSteps_) {
             Scalar percent = ((Scalar) numSteps_ - targetSteps_)/targetSteps_;
-            return oldTimeStep/(1 + percent);
+            return oldTimeStep/(1.0 + percent);
         }
         else {
             /*Scalar percent = (Scalar(1))/targetSteps_;
               return oldTimeStep*(1 + percent);
             */
             Scalar percent = ((Scalar) targetSteps_ - numSteps_)/targetSteps_;
-            return oldTimeStep*(1 + percent/1.2);
+            return oldTimeStep*(1.0 + percent/1.2);
         }
     }
 
@@ -511,11 +511,18 @@ protected:
         Dune::SuperLU<typename Matrix::BaseT> solver(A, false);
 #else
 
-#ifdef HAVE_DUNE_PDELAB
+#if HAVE_PARDISO
+    	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
+        typedef Dune::LoopSolver<Vector> Solver;
+    	SeqPreCond seqPreCond(A);
+#else // !HAVE_PARDISO
     	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
+        typedef Dune::BiCGSTABSolver<Vector> Solver;
     	SeqPreCond seqPreCond(A, 0.9);
+#endif
 
-    	typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
+#ifdef HAVE_DUNE_PDELAB
+        typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> ParallelHelper;
     	ParallelHelper parallelHelper(model().jacobianAssembler().gridFunctionSpace());
     	typedef Dune::PDELab::NonoverlappingOperator<GridFunctionSpace,Matrix,Vector,Vector> ParallelOperator;
     	ParallelOperator parallelOperator(model().jacobianAssembler().gridFunctionSpace(), A, parallelHelper);
@@ -538,15 +545,6 @@ protected:
 //    								  model().jacobianAssembler().constraintsTrafo(), parallelHelper);
 
 #else // !HAVE_DUNE_PDELAB
-
-#if HAVE_PARDISO
-    	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
-    	SeqPreCond seqPreCond(A);
-#else // !HAVE_PARDISO
-    	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
-    	SeqPreCond seqPreCond(A, 1.0);
-#endif // HAVE_PARDISO
-
         typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
         typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
         Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
@@ -556,15 +554,17 @@ protected:
         Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
         Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
 #endif // HAVE_DUNE_PDELAB
-        const int verbosity = GET_PROP_VALUE(TypeTag,
-                                             PTAG(NewtonLinearSolverVerbosity));
-    	Dune::BiCGSTABSolver<Vector>
-            solver(parallelOperator,
-                   scalarProduct,
-                   parPreCond,
-                   residReduction,
-                   300,
-                   model().gridView().grid().comm().rank() == 0 ? verbosity : 0);
+        int verbosity = GET_PROP_VALUE(TypeTag,
+                                       PTAG(NewtonLinearSolverVerbosity));
+        if (model().gridView().grid().comm().rank() != 0)
+            verbosity = 0;
+                
+    	Solver solver(parallelOperator,
+                      scalarProduct,
+                      parPreCond,
+                      residReduction,
+                      300,
+                      verbosity);
 #endif // HAVE_SUPERLU
 
         Dune::InverseOperatorResult result;
@@ -592,7 +592,7 @@ protected:
 #ifdef HAVE_PARDISO
         SeqPardiso<Matrix,Vector,Vector> pardiso;
         pardiso.factorize(A);
-        BiCGSTABSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
+        LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
 #else // HAVE_PARDISO
         // initialize the preconditioner
         Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);

@@ -116,7 +116,7 @@ protected:
         model_ = &model;
 
         // TODO (?): u shouldn't be hard coded to the model
-        SolutionFunction          &u             = model.curSolFunction();
+        SolutionFunction  &u             = model.curSolFunction();
         LocalJacobian     &localJacobian = model.localJacobian();
         JacobianAssembler &jacobianAsm   = model.jacobianAssembler();
         
