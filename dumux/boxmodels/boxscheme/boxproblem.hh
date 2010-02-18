@@ -66,7 +66,6 @@ public:
         : gridView_(gridView),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          timeManager_(gridView.comm().rank() == 0),
           resultWriter_(asImp_()->name())
     {
         wasRestarted_ = false;
