@@ -114,8 +114,14 @@ public:
         Valgrind::CheckDefined(phaseState_);
 
         // Mobilities
-        Scalar muL = FluidSystem::phaseViscosity(wPhaseIdx, phaseState());
-        Scalar muG = FluidSystem::phaseViscosity(nPhaseIdx, phaseState());
+        Scalar muL = FluidSystem::phaseViscosity(wPhaseIdx, 
+                                                 phaseState().temperature(),
+                                                 phaseState().phasePressure(wPhaseIdx),
+                                                 phaseState());
+        Scalar muG = FluidSystem::phaseViscosity(nPhaseIdx,
+                                                 phaseState().temperature(),
+                                                 phaseState().phasePressure(nPhaseIdx),
+                                                 phaseState());
         mobility_[wPhaseIdx] = Scalar(1.0) / muL * MaterialLaw::krw(materialParams, saturation(wPhaseIdx));
         mobility_[nPhaseIdx] = Scalar(1.0) / muG * MaterialLaw::krn(materialParams, saturation(wPhaseIdx));
         Valgrind::CheckDefined(mobility_[wPhaseIdx]);
@@ -123,9 +129,19 @@ public:
 
         // binary diffusion coefficents
         diffCoeff_[wPhaseIdx] = 
-            FluidSystem::diffCoeff(wPhaseIdx, wCompIdx, nCompIdx, phaseState_);
+            FluidSystem::diffCoeff(wPhaseIdx, 
+                                   wCompIdx,
+                                   nCompIdx,
+                                   phaseState_.temperature(),
+                                   phaseState_.phasePressure(wPhaseIdx),
+                                   phaseState_);
         diffCoeff_[nPhaseIdx] = 
-            FluidSystem::diffCoeff(nPhaseIdx, wCompIdx, nCompIdx, phaseState_);
+            FluidSystem::diffCoeff(nPhaseIdx, 
+                                   wCompIdx, 
+                                   nCompIdx,
+                                   phaseState_.temperature(),
+                                   phaseState_.phasePressure(nPhaseIdx),
+                                   phaseState_);
         Valgrind::CheckDefined(diffCoeff_);
         
         // porosity

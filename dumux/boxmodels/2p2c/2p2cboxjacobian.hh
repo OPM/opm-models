@@ -743,16 +743,12 @@ protected:
         {
             // calculate mole fraction in the hypothetic non-wetting phase
             Scalar x_nw = 
-                vertexData.phaseState().moleFrac(wPhaseIdx, wCompIdx) *
-                vertexData.phaseState().beta(wCompIdx)
-                / 
+                vertexData.phaseState().partialPressure(wCompIdx) / 
                 vertexData.pressure(nPhaseIdx);
             Scalar x_nn = 
-                vertexData.phaseState().moleFrac(wPhaseIdx, nCompIdx) *
-                vertexData.phaseState().beta(nCompIdx)
-                / 
+                vertexData.phaseState().partialPressure(nCompIdx) / 
                 vertexData.pressure(nPhaseIdx);
-            
+
             Scalar x_nMax = 1.0;
             if (x_nw + x_nn > x_nMax)
                 wouldSwitch = true;
