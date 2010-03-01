@@ -69,11 +69,11 @@ class TwoPTwoCVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices))   Indices;
 
     enum {
-        wCompIdx  = Indices::wCompIdx,
-        nCompIdx  = Indices::nCompIdx,
+        lCompIdx  = Indices::lCompIdx,
+        gCompIdx  = Indices::gCompIdx,
 
-        wPhaseIdx  = Indices::wPhaseIdx,
-        nPhaseIdx  = Indices::nPhaseIdx
+        lPhaseIdx  = Indices::lPhaseIdx,
+        gPhaseIdx  = Indices::gPhaseIdx
     };
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))        SolutionTypes;
@@ -114,33 +114,33 @@ public:
         Valgrind::CheckDefined(phaseState_);
 
         // Mobilities
-        Scalar muL = FluidSystem::phaseViscosity(wPhaseIdx, 
+        Scalar muL = FluidSystem::phaseViscosity(lPhaseIdx, 
                                                  phaseState().temperature(),
-                                                 phaseState().phasePressure(wPhaseIdx),
+                                                 phaseState().phasePressure(lPhaseIdx),
                                                  phaseState());
-        Scalar muG = FluidSystem::phaseViscosity(nPhaseIdx,
+        Scalar muG = FluidSystem::phaseViscosity(gPhaseIdx,
                                                  phaseState().temperature(),
-                                                 phaseState().phasePressure(nPhaseIdx),
+                                                 phaseState().phasePressure(gPhaseIdx),
                                                  phaseState());
-        mobility_[wPhaseIdx] = Scalar(1.0) / muL * MaterialLaw::krw(materialParams, saturation(wPhaseIdx));
-        mobility_[nPhaseIdx] = Scalar(1.0) / muG * MaterialLaw::krn(materialParams, saturation(wPhaseIdx));
-        Valgrind::CheckDefined(mobility_[wPhaseIdx]);
-        Valgrind::CheckDefined(mobility_[nPhaseIdx]);
+        mobility_[lPhaseIdx] = Scalar(1.0) / muL * MaterialLaw::krw(materialParams, saturation(lPhaseIdx));
+        mobility_[gPhaseIdx] = Scalar(1.0) / muG * MaterialLaw::krn(materialParams, saturation(lPhaseIdx));
+        Valgrind::CheckDefined(mobility_[lPhaseIdx]);
+        Valgrind::CheckDefined(mobility_[gPhaseIdx]);
 
         // binary diffusion coefficents
-        diffCoeff_[wPhaseIdx] = 
-            FluidSystem::diffCoeff(wPhaseIdx, 
-                                   wCompIdx,
-                                   nCompIdx,
+        diffCoeff_[lPhaseIdx] = 
+            FluidSystem::diffCoeff(lPhaseIdx, 
+                                   lCompIdx,
+                                   gCompIdx,
                                    phaseState_.temperature(),
-                                   phaseState_.phasePressure(wPhaseIdx),
+                                   phaseState_.phasePressure(lPhaseIdx),
                                    phaseState_);
-        diffCoeff_[nPhaseIdx] = 
-            FluidSystem::diffCoeff(nPhaseIdx, 
-                                   wCompIdx, 
-                                   nCompIdx,
+        diffCoeff_[gPhaseIdx] = 
+            FluidSystem::diffCoeff(gPhaseIdx, 
+                                   lCompIdx, 
+                                   gCompIdx,
                                    phaseState_.temperature(),
-                                   phaseState_.phasePressure(nPhaseIdx),
+                                   phaseState_.phasePressure(gPhaseIdx),
                                    phaseState_);
         Valgrind::CheckDefined(diffCoeff_);
         

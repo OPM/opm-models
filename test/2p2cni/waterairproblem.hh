@@ -82,6 +82,9 @@ SET_TYPE_PROP(WaterAirProblem,
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
+
+// Write newton convergence
+SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, true);
 }
 
 
@@ -138,8 +141,8 @@ class WaterAirProblem : public TwoPTwoCNIBoxProblem<TypeTag, WaterAirProblem<Typ
 #endif
 
         // Phase State
-        wPhaseOnly  = Indices::wPhaseOnly,
-        nPhaseOnly  = Indices::nPhaseOnly,
+        lPhaseOnly  = Indices::lPhaseOnly,
+        gPhaseOnly  = Indices::gPhaseOnly,
         bothPhases  = Indices::bothPhases,
 
         // Grid and world dimension
@@ -268,7 +271,7 @@ public:
         if (globalPos[0] > 15 && globalPos[0] < 25 &&
             globalPos[1] < eps_)
         {
-            values[Indices::comp2Mass(Indices::nCompIdx)] = -1e-3;
+            values[Indices::contiGEqIdx] = -1e-3;
         }
     }
 
@@ -324,7 +327,7 @@ public:
                              int                  &globalIdx,
                              const GlobalPosition &globalPos) const
     {
-        return wPhaseOnly;
+        return lPhaseOnly;
     }
 
 private:

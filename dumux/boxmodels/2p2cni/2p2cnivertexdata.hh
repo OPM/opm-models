@@ -88,9 +88,13 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             enthalpy_[phaseIdx] = 
                 FluidSystem::enthalpy(phaseIdx, 
+                                      this->phaseState().temperature(),
+                                      this->phaseState().phasePressure(phaseIdx),
                                       this->phaseState());
             internalEnergy_[phaseIdx] =
                 FluidSystem::internalEnergy(phaseIdx, 
+                                            this->phaseState().temperature(),
+                                            this->phaseState().phasePressure(phaseIdx),
                                             this->phaseState());
         }
         Valgrind::CheckDefined(internalEnergy_);

@@ -64,8 +64,8 @@ class TwoPTwoCNIBoxJacobian
         numPhases        = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
         temperatureIdx   = Indices::temperatureIdx,
 
-        wPhaseIdx   = Indices::wPhaseIdx,
-        nPhaseIdx   = Indices::nPhaseIdx
+        lPhaseIdx   = Indices::lPhaseIdx,
+        gPhaseIdx   = Indices::gPhaseIdx
     };
 
 
@@ -106,13 +106,15 @@ public:
 
         // compute the energy storage
         result[temperatureIdx] =
-            vertDat.porosity()*(vertDat.density(wPhaseIdx) *
-                                vertDat.internalEnergy(wPhaseIdx) *
-                                vertDat.saturation(wPhaseIdx)
+            vertDat.porosity()*(vertDat.density(lPhaseIdx) *
+                                vertDat.internalEnergy(lPhaseIdx) *
+                                //vertDat.enthalpy(lPhaseIdx) *
+                                vertDat.saturation(lPhaseIdx)
                                 +
-                                vertDat.density(nPhaseIdx) *
-                                vertDat.internalEnergy(nPhaseIdx) *
-                                vertDat.saturation(nPhaseIdx))
+                                vertDat.density(gPhaseIdx) *
+                                vertDat.internalEnergy(gPhaseIdx) *
+                                //vertDat.enthalpy(gPhaseIdx) *
+                                vertDat.saturation(gPhaseIdx))
             +
             vertDat.temperature() *
             vertDat.heatCapacity();
@@ -166,6 +168,8 @@ public:
         flux[temperatureIdx] += 
             fluxData.normalMatrixHeatFlux();
     }
+
+    
 };
 
 }

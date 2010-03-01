@@ -42,8 +42,8 @@ class InjectionSpatialParameters
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        lPhaseIdx = Indices::lPhaseIdx,
+        gPhaseIdx = Indices::gPhaseIdx,
     };
 
     typedef Dune::FieldVector<CoordScalar,dim>      LocalPosition;
@@ -229,8 +229,8 @@ public:
         // arithmetic mean of the liquid saturation and the porosity
         const int i = fvElemGeom.subContVolFace[scvfIdx].i;
         const int j = fvElemGeom.subContVolFace[scvfIdx].j;
-        Scalar Sl   = std::max(0.0, (vDat[i].saturation(wPhaseIdx) + 
-                                     vDat[j].saturation(wPhaseIdx)) / 2);
+        Scalar Sl   = std::max(0.0, (vDat[i].saturation(lPhaseIdx) + 
+                                     vDat[j].saturation(lPhaseIdx)) / 2);
         Scalar poro = (porosity(element, fvElemGeom, i) +
                        porosity(element, fvElemGeom, j)) / 2;
 

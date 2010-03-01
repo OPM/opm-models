@@ -71,13 +71,20 @@ public:
         ParentType::newtonEndStep(u, uOld);
     }
 
-    //! Suggest a new time stepsize based either on the number of newton
-    //! iterations required or on the variable switch
-    Scalar suggestTimeStepSize(Scalar oldTimeStep) const
+    void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
     {
-        // use function of the newtoncontroller
-        return ParentType::suggestTimeStepSize(oldTimeStep);
+        this->writeConvergence_(uOld, deltaU);
+        //Scalar oldRelError = this->error_;
+        this->newtonUpdateRelError(uOld, deltaU);
+
+#if 1
+        lineSearchUpdate_(deltaU, uOld);
+#else
+        (*deltaU) *= - 1.0;
+        (*deltaU) += *uOld;
+#endif
     }
+
 
     //! Returns true iff the current solution can be considered to
     //! be acurate enough
@@ -89,11 +96,35 @@ public:
         return ParentType::newtonConverged();
     };
 
-    //! Returns true iff another iteration should be done.
-    bool newtonProceed(SolutionFunction &u)
+private:
+    void lineSearchUpdate_(SolutionFunction &u, const SolutionFunction &uOld)
     {
-        return ParentType::newtonProceed(u);
-    }
+       Scalar lambda = 1.0;
+       Scalar globDef;
+       SolutionFunction tmp(this->model().jacobianAssembler().gridFunctionSpace(), 0.0);
+       Scalar oldGlobDef = this->model().globalResidual(uOld, tmp);
+       
+       int n = 0;
+       while (true) {
+           *u *= -lambda;
+           *u += *uOld;
+           globDef = this->model().globalResidual(u, tmp);
+
+           if (globDef < oldGlobDef || lambda <= 1.0/8) {
+               this->endIterMsg() << ", defect " << oldGlobDef << "->"  << globDef << "@lambda=2^-" << n;
+               return;
+           }
+
+           // undo the last iteration
+           *u -= *uOld;
+           *u /= - lambda;
+
+           // try with a smaller update
+           lambda /= 2;
+           ++n;
+       }
+    };
+
 };
 }
 

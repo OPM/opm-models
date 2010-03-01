@@ -82,6 +82,9 @@ SET_TYPE_PROP(InjectionProblem,
 
 // Enable gravity
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
+
+// Enable gravity
+SET_INT_PROP(InjectionProblem, NewtonLinearSolverVerbosity, 0);
 }
 
 
@@ -116,11 +119,14 @@ class InjectionProblem : public TwoPTwoCBoxProblem<TypeTag, InjectionProblem<Typ
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        lPhaseIdx = Indices::lPhaseIdx,
+        gPhaseIdx = Indices::gPhaseIdx,
 
-        wCompIdx = Indices::wCompIdx,
-        nCompIdx = Indices::nCompIdx,
+        lCompIdx = Indices::lCompIdx,
+        gCompIdx = Indices::gCompIdx,
+
+        contiLEqIdx = Indices::contiLEqIdx,
+        contiGEqIdx = Indices::contiGEqIdx,
     };
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
@@ -233,7 +239,7 @@ public:
 
         values = 0;
         if (globalPos[1] < 15 && globalPos[1] > 5) {
-            values[Indices::comp2Mass(nCompIdx)] = -1e-3;
+            values[contiGEqIdx] = -1e-3;
         }
     }
 
@@ -283,7 +289,7 @@ public:
     int initialPhasePresence(const Vertex       &vert,
                              int                &globalIdx,
                              const GlobalPosition &globalPos) const
-    { return Indices::wPhaseOnly; }
+    { return Indices::lPhaseOnly; }
 
     // \}
 
@@ -294,8 +300,8 @@ private:
     {
         Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
 
-        values[Indices::pW] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
-        values[Indices::sNorX] = 0;
+        values[Indices::plIdx] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
+        values[Indices::SgOrXIdx] = 0;
     }
 
     static const Scalar temperature_ = 273.15 + 10; // [K]

@@ -59,12 +59,6 @@ NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for th
 }
 }
 
-#include "2p2cnewtoncontroller.hh"
-
-#include "2p2cvertexdata.hh"
-#include "2p2celementdata.hh"
-#include "2p2cfluxdata.hh"
-
 namespace Dune {
 
 ////////////////////////////////
@@ -85,80 +79,96 @@ class TwoPTwoCElementData;
 template <class TypeTag>
 class TwoPTwoCFluxData;
 
+template <class TypeTag>
+class TwoPTwoCNewtonController;
+
 /*!
- * \ingroup TwoPTwoCBoxModel
- * \brief The formulation independent indices for the 2p2c model which
- *        do not depend on an offset in the primary variable vector.
+ * \brief Enumerates the formulations which the 2p2c model accepts.
  */
-struct TwoPTwoCCommonIndices
+struct TwoPTwoCFormulation
 {
-    // present phases (-> 'pseudo' primary variable)
-    static const int nPhaseOnly = 0; //!< Only the non-wetting phase is present
-    static const int wPhaseOnly = 1; //!< Only the wetting phase is present
-    static const int bothPhases = 2; //!< Both phases are present
+    enum {
+        plSg,
+        pgSl
+    };
+};
 
-    // Formulations
-    static const int pWsN = 0; //!< Pw and Sn as primary variables
-    static const int pNsW = 1; //!< Pn and Sw as primary variables
+/*!
+ * \brief The indices for the isothermal TwoPTwoC model.
+ *
+ * \tparam PVOffset    The first index in a primary variable vector.
+ */
+template <class TypeTag,
+          int formulation = TwoPTwoCFormulation::plSg,
+          int PVOffset = 0>
+class TwoPTwoCIndices
+{
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 
+public:
     // Phase indices
-    static const int wPhaseIdx = 0; //!< Index of the wetting phase in a phase vector
-    static const int nPhaseIdx = 1; //!< Index of the non-wetting phase in a phase vector
+    static const int lPhaseIdx = FluidSystem::lPhaseIdx; //!< Index of the liquid phase
+    static const int gPhaseIdx = FluidSystem::gPhaseIdx; //!< Index of the gas phase
 
     // Component indices
-    static const int wCompIdx = 0; //!< Index of the wetting component in a component vector
-    static const int nCompIdx = 1; //!< Index of the non-wetting component in a compent vector
-};
-
-/*!
- * \brief The indices for the isothermal TwoPTwoC model.
- *
- * \tparam PVOffset    The first index in a primary variable vector.
- */
-template <int formulation = TwoPTwoCCommonIndices::pWsN, int PVOffset = 0>
-struct TwoPTwoCIndices
-    : public TwoPTwoCCommonIndices
-{
+    static const int lCompIdx = 0; //!< Index of the liquid's primary component
+    static const int gCompIdx = 1; //!< Index of the gas' primary component
+  
+    // present phases (-> 'pseudo' primary variable)
+    static const int lPhaseOnly = 1; //!< Only the non-wetting phase is present
+    static const int gPhaseOnly = 0; //!< Only the wetting phase is present
+    static const int bothPhases = 2; //!< Both phases are present
+    
     // Primary variable indices
     static const int pressureIdx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
     static const int switchIdx   = PVOffset + 1; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
 
-    static const int pW = pressureIdx; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
-    static const int sNorX = switchIdx; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
+    static const int plIdx = pressureIdx; //!< Index for liquid phase pressure in a solution vector
+    static const int SgOrXIdx = switchIdx; //!< Index of the either the saturation of the gas phase or the mass fraction secondary component in the only phase
 
-    /*!
-     * \brief Map a component index to a mass index.
-     *
-     * (The mass index is the index of a component in the result
-     * vector of primary variables in the storage or flux terms.)
-     */
-    static int comp2Mass(int compIdx) { return PVOffset + compIdx; }
+    // equation indices
+    static const int contiLEqIdx = PVOffset + 0; //!< Index of the mass conservation equation for the liquid's primary component
+    static const int contiGEqIdx = PVOffset + 1; //!< Index of the mass conservation equation for the gas' primary component
 };
 
 /*!
- * \brief The indices for the isothermal TwoPTwoC model.
+ * \brief The indices for the isothermal TwoPTwoC model in the pg-Sl
+ *        formulation.
  *
  * \tparam PVOffset    The first index in a primary variable vector.
  */
-template <int PVOffset>
-struct TwoPTwoCIndices<TwoPTwoCCommonIndices::pNsW, PVOffset>
-    : public TwoPTwoCCommonIndices
+template <class TypeTag, int PVOffset>
+class TwoPTwoCIndices<TypeTag, TwoPTwoCFormulation::pgSl, PVOffset>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
+
+public:
+    // Phase indices
+    static const int lPhaseIdx = FluidSystem::lPhaseIdx; //!< Index of the liquid phase
+    static const int gPhaseIdx = FluidSystem::gPhaseIdx; //!< Index of the gas phase
+
+    // Component indices
+    static const int lCompIdx = 0; //!< Index of the liquid's primary component
+    static const int gCompIdx = 1; //!< Index of the gas' primary component
+  
+    // present phases (-> 'pseudo' primary variable)
+    static const int lPhaseOnly = 1; //!< Only the non-wetting phase is present
+    static const int gPhaseOnly = 2; //!< Only the wetting phase is present
+    static const int bothPhases = 3; //!< Both phases are present
+    
     // Primary variable indices
     static const int pressureIdx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
     static const int switchIdx   = PVOffset + 1; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
 
-    static const int pN = pressureIdx; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
-    static const int sWorX = switchIdx; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
+    static const int pgIdx = pressureIdx; //!< Index for gas phase pressure in a solution vector
+    static const int SwOrXIdx = switchIdx; //!< Index of the either the saturation of the liquid phase or the mass fraction secondary component in the only phase
 
-    /*!
-     * \brief Map a component index to a mass index.
-     *
-     * (The mass index is the index of a component in the result
-     * vector of primary variables in the storage or flux terms.)
-     */
-    static int comp2Mass(int compIdx) { return PVOffset + 1 - compIdx; }
+    // Equation indices
+    static const int contiLEqIdx = PVOffset + 1; //!< Index of the mass conservation equation for the liquid's primary component
+    static const int contiGEqIdx = PVOffset + 0; //!< Index of the mass conservation equation for the gas' primary component
 };
+
+
 
 namespace Properties {
 
@@ -203,10 +213,10 @@ public:
 
 SET_INT_PROP(BoxTwoPTwoC, NumEq,         2); //!< set the number of equations to 2
 
-//! Set the default formulation to pWsN
+//! Set the default formulation to pl-Sg
 SET_INT_PROP(BoxTwoPTwoC,
              Formulation,
-             TwoPTwoCCommonIndices::pWsN);
+             TwoPTwoCFormulation::plSg);
 
 /*!
  * \brief Set the property for the material law by retrieving it from
@@ -260,8 +270,10 @@ SET_SCALAR_PROP(BoxTwoPTwoC, MobilityUpwindAlpha, 1.0);
 //! The indices required by the isothermal 2p2c model
 SET_PROP(BoxTwoPTwoC,
          TwoPTwoCIndices)
-{
-    typedef TwoPTwoCIndices<GET_PROP_VALUE(TypeTag, PTAG(Formulation)), 0> type;
+{ private:
+    enum { Formulation = GET_PROP_VALUE(TypeTag, PTAG(Formulation)) };
+public:
+    typedef TwoPTwoCIndices<TypeTag, Formulation, 0> type;
 };
 
 // \}

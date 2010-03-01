@@ -55,8 +55,8 @@ class TwoPTwoCNIFluxData;
 /*!
  * \brief Enumerations for the non-isothermal 2-phase 2-component model
  */
-template <int formulation, int PVOffset>
-class TwoPTwoCNIIndices : public TwoPTwoCIndices<formulation, PVOffset>
+template <class TypeTag, int formulation, int PVOffset>
+class TwoPTwoCNIIndices : public TwoPTwoCIndices<TypeTag, formulation, PVOffset>
 {
 public:
     static const int temperatureIdx = PVOffset + 2; //! The index for temperature in solution vectors.
@@ -106,12 +106,13 @@ SET_TYPE_PROP(BoxTwoPTwoCNI, FluxData, TwoPTwoCNIFluxData<TypeTag>);
 
 //! The indices required by the non-isothermal 2p2c model
 SET_PROP(BoxTwoPTwoCNI, TwoPTwoCIndices)
-{
-    typedef TwoPTwoCNIIndices<TwoPTwoCCommonIndices::pWsN, 0> type;
-};
+{ typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCNIIndices)) type; };
+
 SET_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices)
-{
-    typedef TwoPTwoCNIIndices<TwoPTwoCCommonIndices::pWsN, 0> type;
+{ private:
+    enum { formulation = GET_PROP_VALUE(TypeTag, PTAG(Formulation)) };
+public:  
+    typedef TwoPTwoCNIIndices<TypeTag, formulation, 0> type;
 };
 
 }

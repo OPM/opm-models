@@ -70,11 +70,11 @@ class TwoPTwoCFluxData
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        lPhaseIdx = Indices::lPhaseIdx,
+        gPhaseIdx = Indices::gPhaseIdx,
 
-        wCompIdx = Indices::wCompIdx,
-        nCompIdx = Indices::nCompIdx,
+        lCompIdx = Indices::lCompIdx,
+        gCompIdx = Indices::gCompIdx,
     };
 
 public:
@@ -130,14 +130,14 @@ private:
             // the concentration gradient of the non-wetting
             // component in the wetting phase
             tmp = feGrad;
-            tmp *= elemDat[idx].phaseState().massFrac(wPhaseIdx, nCompIdx);
-            concentrationGrad_[wPhaseIdx] += tmp;
+            tmp *= elemDat[idx].phaseState().massFrac(lPhaseIdx, gCompIdx);
+            concentrationGrad_[lPhaseIdx] += tmp;
 
             // the concentration gradient of the wetting component
             // in the non-wetting phase
             tmp = feGrad;
-            tmp *= elemDat[idx].phaseState().massFrac(nPhaseIdx, wCompIdx);
-            concentrationGrad_[nPhaseIdx] += tmp;
+            tmp *= elemDat[idx].phaseState().massFrac(gPhaseIdx, lCompIdx);
+            concentrationGrad_[gPhaseIdx] += tmp;
         }
 
         // correct the pressure gradients by the hydrostatic
@@ -224,8 +224,8 @@ private:
 public:
     /*!
      * \brief Return the pressure potential multiplied with the
-     *        intrinsic permeability projected on the face's normal
-     *        vector (vertex i to vertex j).
+     *        intrinsic permeability which goes from vertex i to
+     *        vertex j.
      *
      * Note that the length of the face's normal is the area of the
      * phase, so this is not the actual velocity by the integral of
