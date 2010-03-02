@@ -372,9 +372,20 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 }
                 case vt:
                 {
-                    if (this->pressureType == pw || this->pressureType == pn)
+                    switch (this->pressureType)
+                    {
+                    case pw:
                     {
                         this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                        this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                        break;
+                    }
+                    case pn:
+                    {
+                        this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                        this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                        break;
+                    }
                     }
                     break;
                 }
@@ -600,9 +611,20 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     }
                     case vt:
                     {
-                        if (this->pressureType == pw || this->pressureType == pn)
+                        switch (this->pressureType)
+                        {
+                        case pw:
                         {
                             this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                            this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                            break;
+                        }
+                        case pn:
+                        {
+                            this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                            this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                            break;
+                        }
                         }
                         break;
                     }
@@ -640,7 +662,21 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     }
                     case vt:
                     {
-                        this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                        switch (this->pressureType)
+                        {
+                        case pw:
+                        {
+                            this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                            this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityNW;
+                            break;
+                        }
+                        case pn:
+                        {
+                            this->problem().variables().velocity()[globalIdxI][isIndex] = velocityW + velocityNW;
+                            this->problem().variables().velocitySecondPhase()[globalIdxI][isIndex] = velocityW;
+                            break;
+                        }
+                        }
                         break;
                     }
                     }
