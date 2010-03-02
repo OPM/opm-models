@@ -184,8 +184,8 @@ public:
         model().update(t, dt_, k1);
 
         //make sure t_old + dt is not larger than tend
-        dt_ = std::min(dt_, timeManager_.episodeMaxTimeStepSize());
-        timeManager_.setTimeStepSize(dt_);
+        dt_ = std::min(dt_, timeManager().episodeMaxTimeStepSize());
+        timeManager().setTimeStepSize(dt_);
 
         // explicit Euler: Sat <- Sat + dt*N(Sat)
         (*asImp_()).variables().saturation() += (k1 *= dt_);
