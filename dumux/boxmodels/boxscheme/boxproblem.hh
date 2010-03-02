@@ -105,7 +105,7 @@ public:
     {
         // set the initial time step and the time where the simulation ends
         timeManager_.setEndTime(tEnd);
-        timeManager_.setStepSize(dtInitial);
+        timeManager_.setTimeStepSize(dtInitial);
         timeManager_.runSimulation(*asImp_());
         return true;
     };
@@ -127,51 +127,51 @@ public:
     /*!
      * \brief Called by Dune::TimeManager in order to do a time
      *        integration on the model.
-     *
-     * \note \a timeStepSize and \a nextStepSize are references and may
-     *       be modified by the timeIntegration(). On exit of this
-     *       function \a timeStepSize must contain the step size
-     *       actually used by the time integration for the current
-     *       steo, and \a nextStepSize must contain a suggestion for the
-     *       next time step size.
      */
-    void timeIntegration(double &stepSize, double &nextStepSize)
+    void timeIntegration()
     {
-        Scalar cur = stepSize;
-        Scalar next = nextStepSize;
-        model().update(cur,
-                      next,
-                      *newtonMethod_,
-                      newtonCtl_);
-        nextStepSize = next;
-        stepSize = cur;
+        model().update(*newtonMethod_, newtonCtl_);
     }
 
     /*!
      * \brief Called by Dune::TimeManager whenever a solution for a
      *        timestep has been computed and the simulation time has
      *        been updated.
-     *
-     * This is used to do some janitorial tasks like writing the
-     * current solution to disk.
      */
-    void timestepDone()
+    Scalar nextTimeStepSize()
     {
-        asImp_()->writeCurrentResult_();
+        Scalar dt = asImp_()->timeManager().timeStepSize();
+        return newtonCtl_.suggestTimeStepSize(dt);
+    };
+
+
+    /*!
+     * \brief This method is called by the model if the update to the
+     *        next time step failed completely.
+     */
+    void updateSuccessful()
+    {
         wasRestarted_ = false;
+        asImp_()->writeCurrentResult_();
     };
 
     /*!
-     * \brief Returns the current time step size [seconds].
+     * \brief This method is called by the model if the update to the
+     *        next time step failed completely.
      */
-    Scalar timeStepSize() const
-    { return timeManager_.stepSize(); }
+    void updateFailed()
+    { };
 
     /*!
-     * \brief Sets the current time step size [seconds].
+     * \brief This method is called by the model if the update to the
+     *        next time step failed with the curent time step size.
      */
-    void setTimeStepSize(Scalar dt)
-    { return timeManager_.setStepSize(dt); }
+    void updateFailedTry()
+    {
+        Scalar dt = asImp_()->timeManager().timeStepSize();
+        Scalar nextDt = newtonCtl_.suggestTimeStepSize(dt);
+        asImp_()->timeManager().setTimeStepSize(nextDt);
+    };
 
     /*!
      * \brief Returns true if a restart file should be written to
@@ -184,8 +184,8 @@ public:
     bool shouldWriteRestartFile() const
     {
         return !restarted() &&
-            timeManager().stepNum() > 0 &&
-            (timeManager().stepNum() % 5 == 0);
+            timeManager().timeStepNum() > 0 &&
+            (timeManager().timeStepNum() % 5 == 0);
     }
 
     /*!

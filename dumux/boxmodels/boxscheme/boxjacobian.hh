@@ -319,7 +319,10 @@ public:
             this->asImp_().computeStorage(tmp, i, true);
 
             massContrib -= tmp;
-            massContrib *= curElementGeom_.subContVol[i].volume/problem_.timeStepSize();
+            massContrib *= 
+                curElementGeom_.subContVol[i].volume
+                /
+                problem_.timeManager().timeStepSize();
             
             for (int j = 0; j < numEq; ++j)
                 residual[i][j] += massContrib[j];

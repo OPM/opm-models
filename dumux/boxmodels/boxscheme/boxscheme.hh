@@ -263,9 +263,7 @@ public:
     /*!
      * \brief Try to progress the model to the next timestep.
      */
-    void update(Scalar &dt,
-                Scalar &nextDt,
-                NewtonMethod &solver,
+    void update(NewtonMethod &solver,
                 NewtonController &controller)
     {
 #if HAVE_VALGRIND
@@ -280,7 +278,6 @@ public:
         {
             bool converged = solver.execute(this->asImp_(),
                                             controller);
-            nextDt = controller.suggestTimeStepSize(dt);
             if (converged) {
                 std::cout << boost::format("Newton solver converged for rank %d\n")
                     %gridView_.comm().rank();
@@ -288,19 +285,23 @@ public:
             }
 
             ++numRetries;
-            if (numRetries > 10)
+            if (numRetries > 10) {
+                problem_.updateFailed();
+                asImp_().updateFailed();
                 DUNE_THROW(Dune::MathError,
-                           "Newton solver didn't converge after 10 timestep divisions. dt=" << dt);
+                           "Newton solver didn't converge after 10 timestep divisions. dt=" 
+                           << problem_.timeManager().timeStepSize());
+            }
 
-            problem_.setTimeStepSize(nextDt);
-            dt = nextDt;
-
+            problem_.updateFailedTry();
             asImp_().updateFailedTry();
 
             std::cout << boost::format("Newton didn't converge for rank %d. Retrying with timestep of %f\n")
-                %gridView_.comm().rank()%dt;
+                %gridView_.comm().rank()
+                %problem_.timeManager().timeStepSize();
         }
 
+        problem_.updateSuccessful();
         asImp_().updateSuccessful();
 
 #if HAVE_VALGRIND
@@ -331,6 +332,15 @@ public:
     {
         // make the current solution the previous one.
         *(*uPrev_) = *(*uCur_);
+    };
+
+    /*!
+     * \brief Called by the update() method if a try was ultimately
+     *        unsuccessful. This is primary a hook which the
+     *        actual model can overload.
+     */
+    void updateFailed()
+    {
     };
 
     /*!
