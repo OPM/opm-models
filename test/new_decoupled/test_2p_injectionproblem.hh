@@ -250,7 +250,7 @@ Scalar neumannSat(const GlobalPosition& globalPos, const Intersection& intersect
     return 0;
 }
 
-Scalar initSat(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos) const
+Scalar initSat(const GlobalPosition& globalPos, const Element& element) const
 {
     return 1;
 }
