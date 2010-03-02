@@ -217,6 +217,11 @@ public:
     void setTimeStepSize(Scalar dt)
     { return timeManager_.setStepSize(dt); }
 
+    /*!
+     * \brief Called by Dune::TimeManager whenever a solution for a
+     *        timestep has been computed and the simulation time has
+     *        been updated.
+     */
     Scalar nextTimeStepSize()
     { return dt_;}
 

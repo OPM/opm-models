@@ -166,30 +166,24 @@ public:
      *       steo, and \a nextStepSize must contain a suggestion for the
      *       next time step size.
      */
-    void timeIntegration(double &stepSize, double &nextStepSize)
+    void timeIntegration()
     {
         // allocate temporary vectors for the updates
         typedef typename Model::SolutionType Solution;
         Solution k1 = (*asImp_()).variables().saturation();
 
-        Scalar dt = stepSize;
+        dt_ = 1e100;
         Scalar t = timeManager().time();
 
         // obtain the first update and the time step size
-        model().update(t, dt, k1);
-
-        //set next step size -> will be compared with end time in the time manager
-        nextStepSize = dt;
+        model().update(t, dt_, k1);
 
         //make sure t_old + dt is not larger than tend
-        setTimeStepSize(dt);
-        dt = timeStepSize();
-
-        //set current time step right: important for right time accumulation
-        stepSize = dt;
+        dt_ = std::min(dt_, timeManager().episodeMaxTimeStepSize());
+        timeManager().setTimeStepSize(dt_);
 
         // explicit Euler: Sat <- Sat + dt*N(Sat)
-        (*asImp_()).variables().saturation() += (k1 *= dt);
+        (*asImp_()).variables().saturation() += (k1 *= dt_);
     }
 
     /*!
@@ -217,6 +211,14 @@ public:
      */
     void setTimeStepSize(Scalar dt)
     { return timeManager_.setStepSize(dt); }
+
+    /*!
+     * \brief Called by Dune::TimeManager whenever a solution for a
+     *        timestep has been computed and the simulation time has
+     *        been updated.
+     */
+    Scalar nextTimeStepSize()
+    { return dt_;}
 
     /*!
      * \brief Returns true if a restart file should be written to
@@ -443,6 +445,8 @@ private:
     TimeManager     timeManager_;
 
     Variables variables_;
+
+    Scalar dt_;
 
     Model* model_;
 
