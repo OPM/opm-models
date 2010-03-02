@@ -125,6 +125,12 @@ public:
     }
 
     /*!
+     * \brief Called by the time manager before the time integration.
+     */
+    void timeStepBegin()
+    {}
+
+    /*!
      * \brief Called by Dune::TimeManager in order to do a time
      *        integration on the model.
      */
@@ -154,6 +160,7 @@ public:
         wasRestarted_ = false;
         asImp_()->writeCurrentResult_();
     };
+
 
     /*!
      * \brief This method is called by the model if the update to the
@@ -198,6 +205,12 @@ public:
      */
     bool shouldWriteOutputFile() const
     { return !restarted(); }
+
+    /*!
+     * \brief Called by the time manager after the time integration.
+     */
+    void timeStepEnd()
+    {}
 
     // \}
 
