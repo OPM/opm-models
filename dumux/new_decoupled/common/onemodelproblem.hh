@@ -97,6 +97,7 @@ public:
           bboxMax_(-std::numeric_limits<double>::max()),
           timeManager_(0.0, verbose),
           variables_(gridView),
+          dt_(0),
           resultWriter_(asImp_()->name())
     {
         wasRestarted_ = false;
@@ -136,7 +137,7 @@ public:
     {
         // set the initial time step and the time where the simulation ends
         timeManager_.setEndTime(tEnd);
-        timeManager_.setStepSize(dtInitial);
+        timeManager_.setTimeStepSize(dtInitial);
         timeManager_.runSimulation(*asImp_());
         return true;
     };
@@ -154,6 +155,12 @@ public:
         // write the inital solution to disk
         writeCurrentResult_();
     }
+
+    /*!
+     * \brief Called by the time manager before the time integration.
+     */
+    void timeStepBegin()
+    {}
 
     /*!
      * \brief Called by Dune::TimeManager in order to do a time
@@ -194,7 +201,7 @@ public:
      * This is used to do some janitorial tasks like writing the
      * current solution to disk.
      */
-    void timestepDone()
+    void timeStepEnd()
     {
         asImp_()->writeCurrentResult_();
         wasRestarted_ = false;
@@ -204,13 +211,13 @@ public:
      * \brief Returns the current time step size [seconds].
      */
     Scalar timeStepSize() const
-    { return timeManager_.stepSize(); }
+    { return timeManager_.timeStepSize(); }
 
     /*!
      * \brief Sets the current time step size [seconds].
      */
     void setTimeStepSize(Scalar dt)
-    { return timeManager_.setStepSize(dt); }
+    { return timeManager_.setTimeStepSize(dt); }
 
     /*!
      * \brief Called by Dune::TimeManager whenever a solution for a

@@ -90,10 +90,8 @@ public:
     {
     }
 
-    void timeIntegration(double &stepSize, double &nextStepSize)
+    void timeIntegration()
     {
-        stepSize = 0;
-        nextStepSize = 0;
         // set the initial condition of the model
         ParentType::init();
 
