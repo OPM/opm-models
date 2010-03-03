@@ -31,8 +31,10 @@
 #include <dumux/boxmodels/2p2c/2p2cboxmodel.hh>
 
 #include <dumux/new_material/fluidsystems/h2o_n2_system.hh>
+//#include <dumux/new_material/fluidsystems/brine_co2_system.hh>
 
 #include "injectionspatialparameters.hh"
+#include <appl/co2-ifp/ifpco2tables.hh>
 
 
 namespace Dune
@@ -71,9 +73,12 @@ SET_PROP(InjectionProblem, Problem)
 };
 
 // Set fluid configuration
-SET_TYPE_PROP(InjectionProblem, 
-              FluidSystem, 
-              Dune::H2O_N2_System<TypeTag> );
+SET_PROP(InjectionProblem, 
+              FluidSystem)
+{
+    //typedef Dune::Brine_CO2_System<TypeTag, Dune::IFP::CO2Tables> type;
+    typedef Dune::H2O_N2_System<TypeTag> type;
+};
 
 // Set the soil properties
 SET_TYPE_PROP(InjectionProblem, 
@@ -301,11 +306,15 @@ private:
         Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
 
         values[Indices::plIdx] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
-        values[Indices::SgOrXIdx] = 0;
+        values[Indices::SgOrXIdx] = 
+            values[Indices::plIdx]*0.95/
+            FluidSystem::degasPressure(FluidSystem::CO2Idx, 
+                                       temperature_,
+                                       values[Indices::plIdx]);
     }
 
-    static const Scalar temperature_ = 273.15 + 10; // [K]
-    static const Scalar depthBOR_ = 800.0; // [m]
+    static const Scalar temperature_ = 273.15 + 40; // [K]
+    static const Scalar depthBOR_ = 2700.0; // [m]
     static const Scalar eps_ = 1e-6;
 };
 } //end namespace

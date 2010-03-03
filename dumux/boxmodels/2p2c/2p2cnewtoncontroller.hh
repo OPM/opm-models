@@ -77,12 +77,12 @@ public:
         //Scalar oldRelError = this->error_;
         this->newtonUpdateRelError(uOld, deltaU);
 
-#if 1
-        lineSearchUpdate_(deltaU, uOld);
-#else
-        (*deltaU) *= - 1.0;
-        (*deltaU) += *uOld;
-#endif
+        if (GET_PROP_VALUE(TypeTag, PTAG(NewtonUseLineSearch)))
+            lineSearchUpdate_(deltaU, uOld);
+        else {
+            (*deltaU) *= - 1.0;
+            (*deltaU) += *uOld;
+        }
     }
 
 

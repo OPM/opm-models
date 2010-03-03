@@ -58,7 +58,7 @@ template<class TypeTag>
 class FluidSystem2P;
 
 template<class TypeTag>
-class TwoPPhaseState;
+class TwoPFluidState;
 
 /*!
  * \brief The common indices for the isothermal two-phase model.
@@ -168,7 +168,7 @@ NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from t
 NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
 NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
 NEW_PROP_TAG( FluidSystem ); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG( PhaseState ); //!<The phases state
+NEW_PROP_TAG( FluidState ); //!<The phases state
 
 //////////////////////////////////////////////////////////////////
 // Properties
@@ -239,7 +239,7 @@ public:
 
 SET_TYPE_PROP(BoxTwoP, FluidSystem, FluidSystem2P<TypeTag>);
 
-SET_TYPE_PROP(BoxTwoP, PhaseState, TwoPPhaseState<TypeTag>);
+SET_TYPE_PROP(BoxTwoP, FluidState, TwoPFluidState<TypeTag>);
 
 // \}
 }

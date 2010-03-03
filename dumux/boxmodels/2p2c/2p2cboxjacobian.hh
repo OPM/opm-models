@@ -1,6 +1,8 @@
 // $Id$
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
+ *   Copyright (C) 2009-2010 by Andreas Lauser                               *
  *   Institute of Hydraulic Engineering                                      *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -163,7 +165,7 @@ public:
                 result[eqIdx] +=
                     vertDat.density(phaseIdx)*
                     vertDat.saturation(phaseIdx)*
-                    vertDat.phaseState().massFrac(phaseIdx, compIdx);
+                    vertDat.fluidState().massFrac(phaseIdx, compIdx);
             }
         }
         result *= vertDat.porosity();
@@ -217,7 +219,7 @@ public:
                         mobilityUpwindAlpha*
                         (  up.density(phaseIdx) *
                            up.mobility(phaseIdx) *
-                           up.phaseState().massFrac(phaseIdx, compIdx));
+                           up.fluidState().massFrac(phaseIdx, compIdx));
                 if (mobilityUpwindAlpha < 1.0)
                     // downstream vertex
                     flux[eqIdx] +=
@@ -225,7 +227,7 @@ public:
                         (1 - mobilityUpwindAlpha)*
                         (  dn.density(phaseIdx) *
                            dn.mobility(phaseIdx) *
-                           dn.phaseState().massFrac(phaseIdx, compIdx));
+                           dn.fluidState().massFrac(phaseIdx, compIdx));
             }
         }
     }
@@ -565,18 +567,18 @@ public:
                 (*pvap)[globalIdx] = FluidSystem::degasPressure(0,
                                                                 elemDat[i].temperature(),
                                                                 elemDat[i].pressure(gPhaseIdx));
-                (*rhoL)[globalIdx] = elemDat[i].phaseState().density(lPhaseIdx);
-                (*rhoG)[globalIdx] = elemDat[i].phaseState().density(gPhaseIdx);;
+                (*rhoL)[globalIdx] = elemDat[i].fluidState().density(lPhaseIdx);
+                (*rhoG)[globalIdx] = elemDat[i].fluidState().density(gPhaseIdx);;
                 (*mobL)[globalIdx] = elemDat[i].mobility(lPhaseIdx);
                 (*mobG)[globalIdx] = elemDat[i].mobility(gPhaseIdx);
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     (*ppart[compIdx])[globalIdx] = 
-                        elemDat[i].phaseState().partialPressure(compIdx);
+                        elemDat[i].fluidState().partialPressure(compIdx);
                 }
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         (*massFrac[phaseIdx][compIdx]) [globalIdx] = 
-                            elemDat[i].phaseState().massFrac(phaseIdx, compIdx);
+                            elemDat[i].fluidState().massFrac(phaseIdx, compIdx);
                         
                         Valgrind::CheckDefined((*massFrac[phaseIdx][compIdx])[globalIdx][0]);
                     }
@@ -811,11 +813,11 @@ protected:
         {
             // calculate mole fraction in the hypothetic liquid phase
             Scalar xll = 
-                vertexData.phaseState().partialPressure(lCompIdx) /
-                vertexData.phaseState().beta(lCompIdx);
+                vertexData.fluidState().partialPressure(lCompIdx) /
+                vertexData.fluidState().beta(lCompIdx);
             Scalar xlg = 
-                vertexData.phaseState().partialPressure(gCompIdx) /
-                vertexData.phaseState().beta(gCompIdx);
+                vertexData.fluidState().partialPressure(gCompIdx) /
+                vertexData.fluidState().beta(gCompIdx);
             
             Scalar xlMax = 1.0;
             if (xll + xlg > xlMax)
@@ -844,10 +846,10 @@ protected:
             // calculate fractions of the partial pressures in the
             // hypothetic gas phase
             Scalar pgl = 
-                vertexData.phaseState().partialPressure(lCompIdx) / 
+                vertexData.fluidState().partialPressure(lCompIdx) / 
                 vertexData.pressure(gPhaseIdx);
             Scalar pgg = 
-                vertexData.phaseState().partialPressure(gCompIdx) / 
+                vertexData.fluidState().partialPressure(gCompIdx) / 
                 vertexData.pressure(gPhaseIdx);
 
             Scalar pgMax = 1.0;
@@ -887,7 +889,7 @@ protected:
                 newPhasePresence = lPhaseOnly;
                 
                 (*globalSol)[globalIdx][switchIdx]
-                    = vertexData.phaseState().massFrac(lPhaseIdx, gCompIdx);
+                    = vertexData.fluidState().massFrac(lPhaseIdx, gCompIdx);
             }
             else if (vertexData.saturation(lPhaseIdx) <= Smin) {
                 wouldSwitch = true;
@@ -899,7 +901,7 @@ protected:
                 newPhasePresence = gPhaseOnly;
 
                 (*globalSol)[globalIdx][switchIdx]
-                    = vertexData.phaseState().massFrac(gPhaseIdx, lCompIdx);
+                    = vertexData.fluidState().massFrac(gPhaseIdx, lCompIdx);
             }
         }
 

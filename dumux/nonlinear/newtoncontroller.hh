@@ -22,8 +22,6 @@
 #ifndef DUNE_NEWTON_CONTROLLER_HH
 #define DUNE_NEWTON_CONTROLLER_HH
 
-#include "config.h"
-
 #include <dumux/exceptions.hh>
 
 #include <dune/istl/overlappingschwarz.hh>
@@ -59,12 +57,24 @@ NEW_PROP_TAG(NewtonLinearSolverVerbosity);
 //! gets written out to disk for every newton iteration (default is false)
 NEW_PROP_TAG(NewtonWriteConvergence);
 
+//! specifies whether the update should be done using the line search
+//! method instead of the "raw" newton method. whether this property
+//! has any effect depends on wether the line search method is
+//! implemented for the actual model's newton controller's update()
+//! method. By default we do not use line search.
+NEW_PROP_TAG(NewtonUseLineSearch);
+
 SET_PROP_DEFAULT(NewtonLinearSolverVerbosity)
 {public:
     static const int value = 0;
 };
 
 SET_PROP_DEFAULT(NewtonWriteConvergence)
+{public:
+    static const bool value = false;
+};
+
+SET_PROP_DEFAULT(NewtonUseLineSearch)
 {public:
     static const bool value = false;
 };

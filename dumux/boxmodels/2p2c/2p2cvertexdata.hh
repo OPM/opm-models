@@ -32,7 +32,7 @@
 #include <vector>
 #include <iostream>
 
-#include "2p2cphasestate.hh"
+#include "2p2cfluidstate.hh"
 
 namespace Dune
 {
@@ -80,7 +80,7 @@ class TwoPTwoCVertexData
     typedef typename SolutionTypes::PrimaryVarVector               PrimaryVarVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))     FluidSystem;
-    typedef TwoPTwoCPhaseState<TypeTag>                            PhaseState;
+    typedef TwoPTwoCFluidState<TypeTag>                            FluidState;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))       MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLawParams)) MaterialLawParams;
@@ -110,39 +110,41 @@ public:
         int phasePresence = problem.model().localJacobian().phasePresence(globalVertIdx, isOldSol);
 
         // calculate phase state
-        phaseState_.update(sol, materialParams, temperature(), phasePresence);
-        Valgrind::CheckDefined(phaseState_);
+        fluidState_.update(sol, materialParams, temperature(), phasePresence);
+        Valgrind::CheckDefined(fluidState_);
 
-        // Mobilities
-        Scalar muL = FluidSystem::phaseViscosity(lPhaseIdx, 
-                                                 phaseState().temperature(),
-                                                 phaseState().phasePressure(lPhaseIdx),
-                                                 phaseState());
-        Scalar muG = FluidSystem::phaseViscosity(gPhaseIdx,
-                                                 phaseState().temperature(),
-                                                 phaseState().phasePressure(gPhaseIdx),
-                                                 phaseState());
-        mobility_[lPhaseIdx] = Scalar(1.0) / muL * MaterialLaw::krw(materialParams, saturation(lPhaseIdx));
-        mobility_[gPhaseIdx] = Scalar(1.0) / muG * MaterialLaw::krn(materialParams, saturation(lPhaseIdx));
-        Valgrind::CheckDefined(mobility_[lPhaseIdx]);
-        Valgrind::CheckDefined(mobility_[gPhaseIdx]);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (this->fluidState().saturation(phaseIdx) != 0.0) {
+                // Mobilities
+                const Scalar mu = 
+                    FluidSystem::phaseViscosity(phaseIdx, 
+                                                fluidState().temperature(),
+                                                fluidState().phasePressure(lPhaseIdx),
+                                                fluidState());
+                Scalar kr;
+                if (phaseIdx == lPhaseIdx)
+                    kr = MaterialLaw::krw(materialParams, saturation(lPhaseIdx));
+                else // ATTENTION: krn requires the liquid saturation
+                     // as parameter!
+                    kr = MaterialLaw::krn(materialParams, saturation(lPhaseIdx));
+                mobility_[phaseIdx] = kr / mu;
+                Valgrind::CheckDefined(mobility_[phaseIdx]);
 
-        // binary diffusion coefficents
-        diffCoeff_[lPhaseIdx] = 
-            FluidSystem::diffCoeff(lPhaseIdx, 
-                                   lCompIdx,
-                                   gCompIdx,
-                                   phaseState_.temperature(),
-                                   phaseState_.phasePressure(lPhaseIdx),
-                                   phaseState_);
-        diffCoeff_[gPhaseIdx] = 
-            FluidSystem::diffCoeff(gPhaseIdx, 
-                                   lCompIdx, 
-                                   gCompIdx,
-                                   phaseState_.temperature(),
-                                   phaseState_.phasePressure(gPhaseIdx),
-                                   phaseState_);
-        Valgrind::CheckDefined(diffCoeff_);
+                // binary diffusion coefficents
+                diffCoeff_[phaseIdx] = 
+                    FluidSystem::diffCoeff(lPhaseIdx, 
+                                           lCompIdx,
+                                           gCompIdx,
+                                           fluidState_.temperature(),
+                                           fluidState_.phasePressure(phaseIdx),
+                                           fluidState_);
+                Valgrind::CheckDefined(diffCoeff_[phaseIdx]);
+            }
+            else {
+                mobility_[phaseIdx] = 0;
+                diffCoeff_[phaseIdx] = 0;
+            }
+        }
         
         // porosity
         porosity_ = problem.spatialParameters().porosity(element,
@@ -163,29 +165,29 @@ public:
     /*!
      * \brief Returns the phase state for the control-volume.
      */
-    const PhaseState &phaseState() const
-    { return phaseState_; }
+    const FluidState &fluidState() const
+    { return fluidState_; }
 
     /*!
      * \brief Returns the effective saturation of a given phase within
      *        the control volume.
      */
     Scalar saturation(int phaseIdx) const
-    { return phaseState_.saturation(phaseIdx); }
+    { return fluidState_.saturation(phaseIdx); }
 
     /*!
      * \brief Returns the mass density of a given phase within the
      *        control volume.
      */
     Scalar density(int phaseIdx) const
-    { return phaseState_.density(phaseIdx); }
+    { return fluidState_.density(phaseIdx); }
 
     /*!
      * \brief Returns the effective pressure of a given phase within
      *        the control volume.
      */
     Scalar pressure(int phaseIdx) const
-    { return phaseState_.phasePressure(phaseIdx); }
+    { return fluidState_.phasePressure(phaseIdx); }
 
     /*!
      * \brief Returns temperature inside the sub-control volume.
@@ -210,7 +212,7 @@ public:
      * \brief Returns the effective capillary pressure within the control volume.
      */
     Scalar capillaryPressure() const
-    { return phaseState_.capillaryPressure(); }
+    { return fluidState_.capillaryPressure(); }
 
     /*!
      * \brief Returns the average porosity within the control volume.
@@ -230,7 +232,7 @@ protected:
     Scalar porosity_;        //!< Effective porosity within the control volume
     Scalar mobility_[numPhases];  //!< Effective mobility within the control volume
     Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
-    PhaseState phaseState_;
+    FluidState fluidState_;
 
 private:
     Implementation &asImp()

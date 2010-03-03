@@ -60,7 +60,7 @@ class TwoPVertexData
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))        FluidSystem;
-    typedef TwoPPhaseState<TypeTag>                           PhaseState;
+    typedef TwoPFluidState<TypeTag>                                   FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))        MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLawParams))  MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
@@ -112,13 +112,13 @@ public:
             pressure[I::wPhase] = pressure[I::nPhase] - pC;
         }
 
-        phaseState.update(pressure[I::wPhase], pressure[I::nPhase], temperature);
+        fluidState.update(pressure[I::wPhase], pressure[I::nPhase], temperature);
 
-        density[I::wPhase] = FluidSystem::phaseDensity(I::wPhase, phaseState);
-        density[I::nPhase] = FluidSystem::phaseDensity(I::nPhase, phaseState);
+        density[I::wPhase] = FluidSystem::phaseDensity(I::wPhase, fluidState);
+        density[I::nPhase] = FluidSystem::phaseDensity(I::nPhase, fluidState);
 
-        mobility[I::wPhase] =MaterialLaw::krw(materialParams, satW)/FluidSystem::phaseViscosity(I::wPhase, phaseState);
-        mobility[I::nPhase] = MaterialLaw::krn(materialParams, satW)/FluidSystem::phaseViscosity(I::nPhase, phaseState);
+        mobility[I::wPhase] =MaterialLaw::krw(materialParams, satW)/FluidSystem::phaseViscosity(I::wPhase, fluidState);
+        mobility[I::nPhase] = MaterialLaw::krn(materialParams, satW)/FluidSystem::phaseViscosity(I::nPhase, fluidState);
 
         // porosity
         porosity = problem.spatialParameters().porosity(global,
@@ -135,7 +135,7 @@ public:
     }
         
 
-    PhaseState phaseState;
+    FluidState fluidState;
     Scalar satW;
     Scalar satN;
     Scalar pC;

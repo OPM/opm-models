@@ -158,13 +158,10 @@ public:
         }
 
         applyDirichletBoundaries_(*uCur_);
-
+        
         // also set the solution of the "previous" time step to the
         // initial solution.
         *(*uPrev_) = *(*uCur_);
-
-        // update the static vertex data with the initial solution
-        this->localJacobian().updateStaticData(*uCur_, *uPrev_);
     }
 
     Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 

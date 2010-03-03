@@ -130,13 +130,13 @@ private:
             // the concentration gradient of the non-wetting
             // component in the wetting phase
             tmp = feGrad;
-            tmp *= elemDat[idx].phaseState().massFrac(lPhaseIdx, gCompIdx);
+            tmp *= elemDat[idx].fluidState().massFrac(lPhaseIdx, gCompIdx);
             concentrationGrad_[lPhaseIdx] += tmp;
 
             // the concentration gradient of the wetting component
             // in the non-wetting phase
             tmp = feGrad;
-            tmp *= elemDat[idx].phaseState().massFrac(gPhaseIdx, lCompIdx);
+            tmp *= elemDat[idx].fluidState().massFrac(gPhaseIdx, lCompIdx);
             concentrationGrad_[gPhaseIdx] += tmp;
         }
 

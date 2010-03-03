@@ -29,7 +29,7 @@
 #include "2pvertexdata.hh"
 #include "2pelementdata.hh"
 #include "2pfluxdata.hh"
-#include "2pphasestate.hh"
+#include "2pfluidstate.hh"
 
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
