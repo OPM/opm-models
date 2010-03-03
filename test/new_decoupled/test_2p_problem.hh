@@ -25,7 +25,7 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 
-#include <dumux/new_material/components/h2o.hh>
+#include <dumux/new_material/components/simpleh2o.hh>
 #include <dumux/new_material/components/oil.hh>
 
 #include <dumux/new_decoupled/2p/impes/impesproblem2p.hh>
@@ -88,7 +88,7 @@ SET_PROP(TwoPTestProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 public:
-    typedef Dune::LiquidPhase<Scalar, Dune::H2O<Scalar> > type;
+    typedef Dune::LiquidPhase<Scalar, Dune::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -240,7 +240,7 @@ std::vector<Scalar> neumannPress(const GlobalPosition& globalPos, const Intersec
     std::vector<Scalar> neumannFlux(2, 0.0);
     if (globalPos[0] > upperRight_[0] - eps_)
     {
-        neumannFlux[nPhaseIdx] = 5e-5;
+        neumannFlux[nPhaseIdx] = 3e-4;
     }
     return neumannFlux;
 }
