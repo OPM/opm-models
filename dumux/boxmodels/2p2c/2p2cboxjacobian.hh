@@ -511,6 +511,9 @@ public:
         ScalarField *mobG =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *temperature =  writer.template createField<Scalar, 1>(numVertices);
         ScalarField *phasePresence =writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *ppart[numComponents];
+        for (int j = 0; j < numComponents; ++j) 
+            ppart[j] = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *massFrac[numPhases][numComponents];
         for (int i = 0; i < numPhases; ++i)
             for (int j = 0; j < numComponents; ++j) 
@@ -566,6 +569,10 @@ public:
                 (*rhoG)[globalIdx] = elemDat[i].phaseState().density(gPhaseIdx);;
                 (*mobL)[globalIdx] = elemDat[i].mobility(lPhaseIdx);
                 (*mobG)[globalIdx] = elemDat[i].mobility(gPhaseIdx);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    (*ppart[compIdx])[globalIdx] = 
+                        elemDat[i].phaseState().partialPressure(compIdx);
+                }
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         (*massFrac[phaseIdx][compIdx]) [globalIdx] = 
@@ -645,6 +652,11 @@ public:
         writer.addVertexData(pg, "pg");
         writer.addVertexData(pl, "pl");
         writer.addVertexData(pc, "pc");
+        for (int j = 0; j < numComponents; ++j) {
+            std::string name
+                = (boost::format("pg%s")%FluidSystem::componentName(j)).str();
+            writer.addVertexData(ppart[j], name.c_str());
+        }
         writer.addVertexData(rhoL, "rhoL");
         writer.addVertexData(rhoG, "rhoG");
         writer.addVertexData(mobL, "mobL");
