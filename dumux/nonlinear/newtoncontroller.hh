@@ -352,7 +352,7 @@ public:
         // that the initial value for the delta vector u is quite
         // close to the final value, a reduction of 6 orders of
         // magnitute in the defect should be sufficient...
-        Scalar residReduction = 1e-18;
+        Scalar residReduction = 1e-6;
 
         try {
 #if HAVE_MPI
