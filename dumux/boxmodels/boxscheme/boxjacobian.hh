@@ -27,13 +27,15 @@
 #define DUMUX_BOX_JACOBIAN_HH
 
 #include <dune/common/exceptions.hh>
-#include <dune/disc/operators/localstiffness.hh>
 
 #include <dumux/auxiliary/valgrind.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
 
 #include <boost/format.hpp>
+
+#include <dune/common/fmatrix.hh>
+#include <dune/istl/matrix.hh>
 
 #include "boxproperties.hh"
 
@@ -47,17 +49,16 @@ namespace Dune
  *
  * \todo Please doc me more!
  */
-template<class TypeTag, class Implementation = typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) >
-class BoxJacobian : public Dune::LocalStiffness<typename GET_PROP_TYPE(TypeTag, PTAG(GridView)),
-                                                typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)),
-                                                GET_PROP_VALUE(TypeTag, PTAG(NumEq)) >
+template<class TypeTag>
+class BoxJacobian
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))  Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))    Model;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
+    typedef BoxJacobian<TypeTag>                                 ThisType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model))         Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))      GridView;
 
-    typedef BoxJacobian<TypeTag, Implementation> ThisType;
     enum {
         numEq     = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
 
@@ -97,7 +98,11 @@ private:
 
     typedef typename GET_PROP(TypeTag, PTAG(VertexData))::type VertexData;
     typedef typename std::vector<VertexData>                   VertexDataArray;
-    
+
+    typedef std::vector<Dune::BoundaryTypes<numEq> > BoundaryTypeArray;
+    typedef Dune::FieldMatrix<Scalar, numEq, numEq>  MatrixBlock;
+    typedef Dune::Matrix<MatrixBlock>                LocalBlockMatrix;
+
 public:
     BoxJacobian(Problem &problem)
         : problem_(problem),
@@ -125,7 +130,7 @@ public:
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
 
-            asImp_().evalLocalResidual(localResid, true); // with boundary
+            asImp_().evalLocalResidual(localResid);
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
                 int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
@@ -138,160 +143,22 @@ public:
      * \brief Assemble the linear system of equations for the
      *        verts of a element, given a local solution 'localU'.
      */
-    void assemble(const Element &element, const SolutionOnElement& localU, int orderOfShapeFns = 1)
+    void assemble(const Element &element)
     {
         // set the current grid element
         asImp_().setCurrentElement(element);
-
-#if HAVE_VALGRIND
-        for (size_t i = 0; i < localU.size(); ++i)
-            Valgrind::CheckDefined(localU[i]);
-#endif // HAVE_VALGRIND
-
-        SolutionOnElement mutableLocalU(localU);
-        asImp_().assemble_(element, mutableLocalU);
-    }
-
-    /*!
-     * \brief Assemble the linear system of equations for the
-     *        verts of a element.
-     */
-    void assemble(const Element &element, int orderOfShapeFns = 1)
-    {
-        // set the current grid element
-        asImp_().setCurrentElement(element);
-
+        
         int numVertices = curElementGeom_.numVertices;
         SolutionOnElement localU(numVertices);
         restrictToElement(localU, problem_.model().curSolFunction());
         asImp_().assemble_(element, localU);
-    }
-  
-    /*!
-     * \brief Express the boundary conditions for a element in terms
-     *        of a linear equation system.
-     */
-    void assembleBoundaryCondition(const Element &element, int orderOfShapeFns=1)
-    {
-        // set the current grid element
-        asImp_().setCurrentElement(element);
-
-        // reset the right hand side and the boundary
-        // condition type vector
-        asImp_().resetRhs_();
-
-        // set the boundary types
-        asImp_().updateBoundaryTypes_();
-        
-        // apply the neumann conditions
-        asImp_().applyBoundaryCondition_();
-    };
-
-    void updateBoundaryTypes(const Element &element)
-    {
-        // set the current grid element
-        asImp_().setCurrentElement(element);
-        asImp_().updateBoundaryTypes_();
-    }
-
-    void applyBoundaryCondition_()
-    {
-        Dune::GeometryType      geoType = curElement_().geometry().type();
-        const ReferenceElement &refElem = ReferenceElements::general(geoType);
-
-        // evaluate boundary conditions for all intersections of
-        // the current element
-        IntersectionIterator isIt = curElement_().ileafbegin();
-        const IntersectionIterator &endIt = curElement_().ileafend();
-        for (; isIt != endIt; ++isIt)
-        {
-            // handle only faces on boundaries.
-            if (!isIt->boundary())
-                continue;
-
-            // Assemble the boundary for all verts of the
-            // current face
-            int faceIdx = isIt->indexInInside();
-            int numFaceVerts = refElem.size(faceIdx, 1, dim);
-            for (int faceVertIdx = 0;
-                 faceVertIdx < numFaceVerts;
-                 ++faceVertIdx)
-            {
-                int elemVertIdx = refElem.subEntity(faceIdx,
-                                                    1,
-                                                    faceVertIdx,
-                                                    dim);
-                int boundaryFaceIdx =
-                    curElementGeom_.boundaryFaceIndex(faceIdx,
-                                                      faceVertIdx);
-
-                // handle boundary conditions for a single
-                // sub-control volume face
-                applyBoundaryCondition_(isIt,
-                                        elemVertIdx,
-                                        boundaryFaceIdx);
-            }
-        }
-    }
-
-    // handle boundary conditions for a single
-    // sub-control volume face
-    void applyBoundaryCondition_(const IntersectionIterator &isIt,
-                                 int scvIdx,
-                                 int boundaryFaceIdx)
-    {
-        // temporary vector to store the neumann boundaries
-        PrimaryVarVector values(0.0);
-        bool wasEvaluated = false;
-
-        // loop over all primary variables to deal with mixed
-        // boundary conditions
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
-        {
-            if (this->bctype[scvIdx][eqIdx]
-                != BoundaryConditions::neumann)
-            {
-                // dirichlet boundary conditions are treated as
-                // zeros on the right hand side
-                this->b[scvIdx][eqIdx] = 0;
-                continue;
-            }
-
-            // if we are here we've got a neumann boundary condition
-
-            // make sure that we evaluate call the problem's
-            // neumann() method exactly once if
-            if (!wasEvaluated)
-            {
-                // make sure that we only evaluate
-                // the neumann fluxes once
-                wasEvaluated = true;
-
-                problem_.neumann(values,
-                                 curElement_(),
-                                 curElementGeom_,
-                                 *isIt,
-                                 scvIdx,
-                                 boundaryFaceIdx);
-                Valgrind::CheckDefined(values);
-                // TODO (?): multiple integration
-                // points
-                values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
-            }
-
-            Valgrind::CheckDefined(values[eqIdx]);
-
-            this->b[scvIdx][eqIdx] += values[eqIdx];
-            Valgrind::CheckDefined(this->b[scvIdx][eqIdx]);
-        }
     }
 
     /*!
      * \brief Compute the local residual, i.e. the right hand side
      *        of an equation we would like to have zero.
      */
-    void evalLocalResidual(SolutionOnElement &residual,
-                           bool withBoundary = true)
+    void evalLocalResidual(SolutionOnElement &residual)
     {
         // reset residual
         for (int i = 0; i < curElementGeom_.numVertices; i++) {
@@ -299,82 +166,25 @@ public:
                 residual[i][j] = Scalar(0);
         }
         
-        if (withBoundary)
-            this->asImp_().assembleBoundaryCondition(this->curElement_());
+        asImp_().evalFluxes_(residual);
+        asImp_().evalVolumeTerms_(residual);
 
-        this->evalFluxes_(residual);
-
-        // evaluate the local rate
-        for (int i=0; i < curElementGeom_.numVertices; i++)
-        {
-            PrimaryVarVector massContrib(0), tmp(0);
-
-            // mass balance within the element. this is the
-            // $\frac{m}{\partial t}$ term if using implicit
-            // euler as time discretization.
-            //
-            // TODO (?): we might need a more explicit way for
-            // doing the time discretization...
-            this->asImp_().computeStorage(massContrib, i, false);
-            this->asImp_().computeStorage(tmp, i, true);
-
-            massContrib -= tmp;
-            massContrib *= 
-                curElementGeom_.subContVol[i].volume
-                /
-                problem_.timeManager().timeStepSize();
-            
-            for (int j = 0; j < numEq; ++j)
-                residual[i][j] += massContrib[j];
-
-            // subtract the source term from the local rate
-            PrimaryVarVector source;
-            this->asImp_().computeSource(source, i);
-            source *= curElementGeom_.subContVol[i].volume;
-
-            for (int j = 0; j < numEq; ++j) {
-                residual[i][j] -= source[j];
-                
-                // make sure that only defined quantities where used
-                // to calculate the residual.
-                Valgrind::CheckDefined(residual[i][j]);
+        // add the neumann fluxes
+        asImp_().addNeumannFluxes_(residual);
+        // set the defect of the equations used for dirichlet
+        // conditions to 0
+        for (int i = 0; i < curElementGeom_.numVertices; i++) {
+            for (int j = 0; j < numEq; j++) {
+                if (this->bctype[i].isDirichlet(j))
+                    residual[i][j] = 0;
             }
         }
-
-        if (withBoundary) {
-            for (int i = 0; i < curElementGeom_.numVertices; i++) {
-                for (int j = 0; j < numEq; j++) {
-                    if (this->bctype[i][j] == BoundaryConditions::dirichlet)
-                        residual[i][j] = 0;
-                    else
-                        residual[i][j] += this->b[i][j];
-                }
-            }
-        }
-
+    
 #if HAVE_VALGRIND
         for (int i=0; i < curElementGeom_.numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // HAVE_VALGRIND
     }
-
-    /*!
-     * \brief Set the current grid element.
-     */
-    void setCurrentElement(const Element &element)
-    {
-        if (curElementPtr_ != element) {
-            // update the FV element geometry if the current element
-            // is to be changed
-            curElementPtr_ = element;
-            curElementGeom_.update(curElement_());
-
-            // tell LocalStiffness (-> parent class) the current
-            // number of degrees of freedom
-            this->setcurrentsize(curElementGeom_.numVertices);
-	}
-    };
-
 
     /*!
      * \brief Restrict the global function 'globalFn' to the vertices
@@ -392,6 +202,26 @@ public:
             dest[i] = (*globalFn)[dofMapper.map(curElement_(), i, dim)];
         }
     }
+
+    /*!
+     * \brief Set the current grid element.
+     */
+    void setCurrentElement(const Element &element)
+    {
+        if (curElementPtr_ != element) {
+            // update the FV element geometry if the current element
+            // is to be changed
+            curElementPtr_ = element;
+            curElementGeom_.update(curElement_());
+
+            // resize the array for the local jacobian matrix to the
+            // current number of degrees of freedom
+            int n = curElementGeom_.numVertices;
+            A.setSize(n, n);
+            bctype.resize(n);
+            updateBoundaryTypes_();
+        }
+    };
 
     /*!
      * \brief Initialize the static data of all elements. The current
@@ -420,7 +250,8 @@ public:
      */
     void updateElementData_(VertexDataArray &dest, const SolutionOnElement &sol, bool isOldSol)
     {
-        dest.resize(sol.size());
+        int n = sol.size();
+        dest.resize(n);
 
 #ifdef ENABLE_VALGRIND
         for (int i = 0; i < dest.size(); ++i)
@@ -548,6 +379,10 @@ public:
     const ElementMapper &elementMapper() const
     { return model().elementMapper(); };
 
+
+    const MatrixBlock &mat(int i, int j) const
+    { return A[i][j]; }
+
 protected:
     const Element &curElement_() const
     { return *curElementPtr_; }
@@ -568,7 +403,6 @@ protected:
     // temporary variable to store the variable vertex data
     VertexData   curVertexDataStash_;
 
-protected:
     void updateBoundaryTypes_()
     {
         Dune::GeometryType      geoType = curElement_().geometry().type();
@@ -576,8 +410,7 @@ protected:
 
         int numVerts = curElement_().template count<dim>();
         for (int i = 0; i < numVerts; ++i)
-            for (int comp=0; comp < numEq; comp++)
-                this->bctype[i][comp] = BoundaryConditions::neumann;
+            this->bctype[i].reset();
 
         // evaluate boundary conditions
         IntersectionIterator isIt = curElement_().ileafbegin();
@@ -602,47 +435,90 @@ protected:
                 int boundaryFaceIdx =
                     curElementGeom_.boundaryFaceIndex(faceIdx,
                                                       faceVertIdx);
-
                 // set the boundary types
-                BoundaryTypeVector tmp;
-                tmp.reset();
-                problem_.boundaryTypes(tmp,
+                problem_.boundaryTypes(this->bctype[elemVertIdx],
                                        curElement_(),
                                        curFvElementGeometry(),
                                        *isIt,
                                        elemVertIdx,
                                        boundaryFaceIdx);
-                tmp.checkWellPosed();
-                Valgrind::CheckDefined(tmp);
-
-                // copy boundary type to the bctype array.
-                for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                    // make sure that dirichlet boundaries have
-                    // priority over neumann ones
-                    if (this->bctype[elemVertIdx][eqIdx]
-                        == BoundaryConditions::dirichlet)
-                    {
-                        continue;
-                    }
-                    
-                    if (tmp.isDirichlet(eqIdx))
-                        this->bctype[elemVertIdx][eqIdx] = BoundaryConditions::dirichlet;
-                    else
-                        this->bctype[elemVertIdx][eqIdx] = BoundaryConditions::neumann;
-                    Valgrind::CheckDefined(this->bctype[elemVertIdx][eqIdx]);
-                }
+                this->bctype[elemVertIdx].checkWellPosed();
+                Valgrind::CheckDefined(this->bctype[elemVertIdx]);
             }
         }
     };
 
+    void addNeumannFluxes_(SolutionOnElement &result)
+    {
+        Dune::GeometryType      geoType = curElement_().geometry().type();
+        const ReferenceElement &refElem = ReferenceElements::general(geoType);
+
+        // evaluate boundary conditions for all intersections of
+        // the current element
+        IntersectionIterator isIt = curElement_().ileafbegin();
+        const IntersectionIterator &endIt = curElement_().ileafend();
+        for (; isIt != endIt; ++isIt)
+        {
+            // handle only faces on the boundary
+            if (!isIt->boundary())
+                continue;
+
+            // Assemble the boundary for all vertices of the current
+            // face
+            int faceIdx = isIt->indexInInside();
+            int numFaceVerts = refElem.size(faceIdx, 1, dim);
+            for (int faceVertIdx = 0;
+                 faceVertIdx < numFaceVerts;
+                 ++faceVertIdx)
+            {
+                int elemVertIdx = refElem.subEntity(faceIdx,
+                                                    1,
+                                                    faceVertIdx,
+                                                    dim);
+                
+                if (!this->bctype[elemVertIdx].hasNeumann())
+                    // the current boundary segment does not have any
+                    // equation where a neumann condition should be
+                    // applied
+                    continue;
+
+                int boundaryFaceIdx =
+                    curElementGeom_.boundaryFaceIndex(faceIdx,
+                                                      faceVertIdx);
+
+                // add the neuman fluxes of a single boundary segment
+                addSingleNeumannSegment_(result[elemVertIdx],
+                                         isIt,
+                                         elemVertIdx,
+                                         boundaryFaceIdx);
+            }
+        }
+    }
+
+    // handle boundary conditions for a single
+    // sub-control volume face
+    void addSingleNeumannSegment_(PrimaryVarVector &result,
+                                  const IntersectionIterator &isIt,
+                                  int scvIdx,
+                                  int boundaryFaceIdx)
+    {
+        // temporary vector to store the neumann boundary fluxes
+        PrimaryVarVector values(0.0);
+        
+        problem_.neumann(values,
+                         curElement_(),
+                         curElementGeom_,
+                         *isIt,
+                         scvIdx,
+                         boundaryFaceIdx);
+        values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
+        Valgrind::CheckDefined(values);
+        
+        result += values;
+    }
+
     void assemble_(const Element &element, SolutionOnElement& localU)
     {
-        // set the current grid element
-        asImp_().setCurrentElement(element);
-
-        // reset the right hand side and the bctype array
-        resetRhs_();
-
         int numVertices = curElementGeom_.numVertices;
 
         // restrict the previous global solution to the current element
@@ -669,25 +545,8 @@ protected:
                                       partialStiffness);
             }
         }
-
-#if !HAVE_DUNE_PDELAB
-        // calculate the right hand side
-        SolutionOnElement residU(numVertices);
-        asImp_().evalLocalResidual(residU, true); // include boundary conditions for the residual
-
-        for (int i=0; i < numVertices; i++) {
-            for (int eqIdx=0; eqIdx < numEq; eqIdx++) {
-                // TODO: in most cases this is not really a boundary
-                // vertex but an interior vertex, so
-                // Dune::BoundaryConditions::neumann is misleading...
-                if (this->bctype[i][eqIdx] == Dune::BoundaryConditions::neumann)
-                    this->b[i][eqIdx] = residU[i][eqIdx];
-            }
-        }
-#endif
     };
     
-protected:
     void evalFluxes_(SolutionOnElement &residual)
     {
         // calculate the mass flux over the faces and subtract
@@ -703,20 +562,54 @@ protected:
             Valgrind::CheckDefined(flux);
 
             // subtract fluxes from the local mass rates of the
-            // respective sub control volume adjacent to the face. We
-            // ignore dirichlet cells because for them, the mass
-            // change inside the cell is not equal to the flux out of
-            // the cell.
+            // respective sub control volume adjacent to the face.
             for (int eq = 0; eq < numEq; ++ eq) {
-                if (this->bctype[i][eq] == BoundaryConditions::neumann) 
-                    residual[i][eq] -= flux[eq];
-                if (this->bctype[j][eq] == BoundaryConditions::neumann) 
-                    residual[j][eq] += flux[eq];
+                residual[i][eq] -= flux[eq];
+                residual[j][eq] += flux[eq];
             }
         }
     }
 
+    void evalVolumeTerms_(SolutionOnElement &residual)
+    {
+        // evaluate the volume terms (storage + source terms)
+        for (int i=0; i < curElementGeom_.numVertices; i++)
+        {
+            PrimaryVarVector massContrib(0), tmp(0);
 
+            // mass balance within the element. this is the
+            // $\frac{m}{\partial t}$ term if using implicit
+            // euler as time discretization.
+            //
+            // TODO (?): we might need a more explicit way for
+            // doing the time discretization...
+            this->asImp_().computeStorage(massContrib, i, false);
+            this->asImp_().computeStorage(tmp, i, true);
+
+            massContrib -= tmp;
+            massContrib *= 
+                curElementGeom_.subContVol[i].volume
+                /
+                problem_.timeManager().timeStepSize();
+            
+            for (int j = 0; j < numEq; ++j)
+                residual[i][j] += massContrib[j];
+
+            // subtract the source term from the local rate
+            PrimaryVarVector source;
+            this->asImp_().computeSource(source, i);
+            source *= curElementGeom_.subContVol[i].volume;
+
+            for (int j = 0; j < numEq; ++j) {
+                residual[i][j] -= source[j];
+                
+                // make sure that only defined quantities where used
+                // to calculate the residual.
+                Valgrind::CheckDefined(residual[i][j]);
+            }
+        }
+    }
+    
     /*!
      * \brief Update the stiffness matrix for all equations on all
      *        vertices of the current element with the partial
@@ -738,12 +631,12 @@ protected:
         // vertex and calculate the residual, don't include the
         // boundary conditions
         asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ + eps);
-        asImp_().evalLocalResidual(dest, false);
+        asImp_().evalLocalResidual(dest);
         asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
 
         asImp_().deflectCurrentSolution(elemSol, vertexIdx, pvIdx, uJ - eps);
         SolutionOnElement tmp(curElementGeom_.numVertices);
-        asImp_().evalLocalResidual(tmp, false);
+        asImp_().evalLocalResidual(tmp);
         asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
         
         // central differences
@@ -794,23 +687,14 @@ protected:
         }
     }
 
-    // reset the right hand side
-    void resetRhs_()
-    {
-        int numVertices = this->currentsize();
-        for (int i=0; i < numVertices; i++) {
-            for (int j = 0; j < numEq; ++j) {
-                this->bctype[i][j] = Dune::BoundaryConditions::neumann;
-                this->b[i][j] = 0;
-            }
-        }
-    };
-
     Implementation &asImp_()
     { return *static_cast<Implementation*>(this); }
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
+
+    LocalBlockMatrix  A;
+    BoundaryTypeArray bctype;
 };
 }
 

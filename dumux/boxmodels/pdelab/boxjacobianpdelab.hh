@@ -56,7 +56,7 @@ public:
         model_.localJacobian().setPreviousSolution(localUOld);
 
 	    SolutionOnElement localResidual(numVertices);
-	    model_.localJacobian().evalLocalResidual(localResidual, true);
+	    model_.localJacobian().evalLocalResidual(localResidual);
 	    for (size_type comp = 0; comp < r.size(); comp++)
 	    	r[comp] = localResidual[comp%numVertices][comp/numVertices];
 	}

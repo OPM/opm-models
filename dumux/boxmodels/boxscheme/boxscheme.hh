@@ -570,8 +570,8 @@ protected:
             if (!elementIt->hasBoundaryIntersections())
                 continue;
 
-            // evaluate the element's boundary locally
-            localJacobian_.updateBoundaryTypes(*elementIt);
+            // set the current element of the local jacobian
+            localJacobian_.setCurrentElement(*elementIt);
 
             // apply dirichlet boundary for the current element
             applyDirichletElement_(u, *elementIt);
