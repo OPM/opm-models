@@ -42,11 +42,10 @@ namespace Dune
  *        using the two-phase two-component box model.
  */
 template<class TypeTag>
-class TwoPTwoCNIBoxJacobian
-    : public TwoPTwoCBoxJacobianBase<TypeTag, TwoPTwoCNIBoxJacobian<TypeTag> >
+class TwoPTwoCNIBoxJacobian : public TwoPTwoCBoxJacobian<TypeTag>
 {
-    typedef TwoPTwoCNIBoxJacobian<TypeTag>               ThisType;
-    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>   ParentType;
+    typedef TwoPTwoCNIBoxJacobian<TypeTag>  ThisType;
+    typedef TwoPTwoCBoxJacobian<TypeTag>    ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;

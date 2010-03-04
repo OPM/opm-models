@@ -43,12 +43,13 @@ namespace Dune
  *
  * This class is used to fill the gaps in BoxJacobian for the 2P-2C flow.
  */
-template<class TypeTag, class Implementation>
-class TwoPTwoCBoxJacobianBase : public BoxJacobian<TypeTag, Implementation>
+template<class TypeTag>
+class TwoPTwoCBoxJacobian : public BoxJacobian<TypeTag>
 {
 protected:
-    typedef TwoPTwoCBoxJacobianBase<TypeTag, Implementation>   ThisType;
-    typedef BoxJacobian<TypeTag, Implementation>               ParentType;
+    typedef TwoPTwoCBoxJacobian<TypeTag>                     ThisType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) Implementation;
+    typedef BoxJacobian<TypeTag>                                 ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;
@@ -132,7 +133,7 @@ protected:
     };
 
 public:
-    TwoPTwoCBoxJacobianBase(Problem &problem)
+    TwoPTwoCBoxJacobian(Problem &problem)
         : ParentType(problem),
           staticVertexDat_(this->gridView_.size(dim))
     {
@@ -915,30 +916,6 @@ protected:
     std::vector<StaticVertexData> staticVertexDat_;
     bool                          switchFlag_;
     int                           formulation_;
-};
-
-
-/*!
- * \brief The local jacobian operator for the isothermal two-phase,
- *        two-component model.
- *
- * This is basically just a wrapper for \ref TwoPTwoCBoxJacobianBase
- * so that it can be instantiated.
- */
-template<class TypeTag>
-class TwoPTwoCBoxJacobian : public TwoPTwoCBoxJacobianBase<TypeTag,
-                                                           // implementation
-                                                           TwoPTwoCBoxJacobian<TypeTag> >
-{
-    typedef TwoPTwoCBoxJacobian<TypeTag>                   ThisType;
-    typedef TwoPTwoCBoxJacobianBase<TypeTag, ThisType>     ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-
-public:
-    TwoPTwoCBoxJacobian(Problem &problem)
-        : ParentType(problem)
-    {
-    };
 };
 
 } // end namepace

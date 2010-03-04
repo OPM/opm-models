@@ -43,11 +43,10 @@ namespace Dune
  */
 
 template<class TypeTag>
-class TwoPNIBoxJacobian
-    : public TwoPBoxJacobianBase<TypeTag, TwoPNIBoxJacobian<TypeTag> >
+class TwoPNIBoxJacobian : public TwoPBoxJacobian<TypeTag>
 {
-    typedef TwoPNIBoxJacobian<TypeTag>               ThisType;
-    typedef TwoPBoxJacobianBase<TypeTag, ThisType>   ParentType;
+    typedef TwoPNIBoxJacobian<TypeTag> ThisType;
+    typedef TwoPBoxJacobian<TypeTag>   ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;

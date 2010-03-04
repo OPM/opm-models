@@ -45,12 +45,14 @@ namespace Dune
  * This class is also used for the non-isothermal model, which means
  * that it uses static polymorphism.
  */
-template<class TypeTag, class Implementation>
-class TwoPBoxJacobianBase : public BoxJacobian<TypeTag, Implementation>
+template<class TypeTag>
+class TwoPBoxJacobian : public BoxJacobian<TypeTag>
 {
 protected:
-    typedef TwoPBoxJacobianBase<TypeTag, Implementation> ThisType;
-    typedef BoxJacobian<TypeTag, Implementation>         ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) Implementation;
+    typedef TwoPBoxJacobian<TypeTag>                             ThisType;
+    typedef BoxJacobian<TypeTag>                                 ParentType;
+
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))      Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))  Indices;
@@ -97,7 +99,7 @@ protected:
     static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
 
 public:
-    TwoPBoxJacobianBase(Problem &problem)
+    TwoPBoxJacobian(Problem &problem)
         : ParentType(problem)
     {
     };
@@ -462,27 +464,6 @@ protected:
     { return static_cast<Implementation *>(this); }
     const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
-};
-
-/*!
- * \brief Calculate the local Jacobian for the two phase model in the
- *        BOX scheme.
- *
- * This is just a wrapper around TwoPBoxJacobianBase.
- */
-template<class TypeTag>
-class TwoPBoxJacobian : public TwoPBoxJacobianBase<TypeTag,
-                                                   TwoPBoxJacobian<TypeTag> >
-{
-    typedef TwoPBoxJacobian<TypeTag>                       ThisType;
-    typedef TwoPBoxJacobianBase<TypeTag, ThisType>         ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-
-public:
-    TwoPBoxJacobian(Problem &problem)
-        : ParentType(problem)
-    {
-    };
 };
 
 }
