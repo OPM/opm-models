@@ -117,7 +117,7 @@ public:
                            int pvIdx) const
     {
         if (pvIdx == 0)
-            return 0.01; // pressure
+            return 1e-2; // pressure
         else if (pvIdx == 1)
             return 1e-7; // saturation
         
