@@ -36,10 +36,10 @@ namespace Dune
  *        using the one-phase box model.
  */
 template<class TypeTag>
-class OnePBoxJacobian : public BoxJacobian<TypeTag, OnePBoxJacobian<TypeTag> >
+class OnePBoxJacobian : public BoxJacobian<TypeTag>
 {
     typedef OnePBoxJacobian<TypeTag>         ThisType;
-    typedef BoxJacobian<TypeTag, ThisType>   ParentType;
+    typedef BoxJacobian<TypeTag>   ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;
