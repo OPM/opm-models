@@ -59,7 +59,7 @@ private:
       typedef typename SpatialParameters::MaterialLaw MaterialLaw;
 
       typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-      typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+      typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidState)) FluidState;
 
     enum
     {
@@ -126,12 +126,12 @@ public:
         }
         else
         {
-            PhaseState phaseState;
-            phaseState.update(problem_.temperature(globalPos, element));
+            FluidState fluidState;
+            fluidState.update(problem_.temperature(globalPos, element));
             mobilityWI = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            mobilityWI /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+            mobilityWI /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
             mobilityNWI = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            mobilityNWI /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+            mobilityNWI /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
         }
 
         if (isIt->neighbor())
@@ -181,12 +181,12 @@ public:
             }
             else
             {
-                PhaseState phaseState;
-                phaseState.update(problem_.temperature(globalPosNeighbor, *neighborPointer));
+                FluidState fluidState;
+                fluidState.update(problem_.temperature(globalPosNeighbor, *neighborPointer));
                 mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+                mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
                 mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+                mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
             }
             Scalar mobilityWMean = 0.5*(mobilityWI + mobilityWJ);
             Scalar mobilityNWMean = 0.5*(mobilityNWI + mobilityNWJ);
@@ -198,12 +198,12 @@ public:
             Scalar mobilityNWJ = 0;
 
             //calculate lambda_n*f_w at the boundary
-            PhaseState phaseState;
-            phaseState.update(problem_.temperature(globalPos, element));
+            FluidState fluidState;
+            fluidState.update(problem_.temperature(globalPos, element));
             mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+            mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
             mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+            mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
 
             Scalar mobWMean = 0.5 * (mobilityWI + mobilityWJ);
             Scalar mobNWMean = 0.5 * (mobilityNWI + mobilityNWJ);

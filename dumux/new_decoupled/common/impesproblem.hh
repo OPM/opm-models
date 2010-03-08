@@ -482,9 +482,9 @@ private:
 
     TimeManager     timeManager_;
 
-    Scalar dt_;
-
     Variables variables_;
+
+    Scalar dt_;
 
     PressureModel* pressModel_;//!< object including the pressure model
     SaturationModel* satModel_;//!< object including the saturation model

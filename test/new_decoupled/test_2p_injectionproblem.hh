@@ -130,7 +130,7 @@ typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
 typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidState)) FluidState;
 
 enum
 {
@@ -216,9 +216,9 @@ Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& inter
 
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
         {
-            PhaseState phaseState;
-            phaseState.update(temperature(globalPos, *(intersection.inside())));
-            return (1e5 - FluidSystem::phaseDensity(wPhaseIdx, phaseState) * this->gravity()[1] * (depthBOR_ - globalPos[1]));
+            FluidState fluidState;
+            fluidState.update(temperature(globalPos, *(intersection.inside())));
+            return (1e5 - FluidSystem::phaseDensity(wPhaseIdx, fluidState) * this->gravity()[1] * (depthBOR_ - globalPos[1]));
         }
         else
         return 2e5;

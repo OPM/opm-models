@@ -118,7 +118,7 @@ typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
 typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidState)) FluidState;
 
 enum
 {

@@ -17,7 +17,7 @@
 #define DUNE_VARIABLECLASS2P_HH
 
 #include <dumux/new_decoupled/common/variableclass.hh>
-#include <dumux/new_decoupled/2p/2pphasestate.hh>
+#include <dumux/new_decoupled/2p/2pfluidstate.hh>
 #include "2pproperties.hh"
 
 /**

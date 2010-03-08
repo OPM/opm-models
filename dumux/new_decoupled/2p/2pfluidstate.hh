@@ -17,10 +17,10 @@
  *
  * \brief Gives the phase state.
  */
-#ifndef DUMUX_2P_PHASE_STATE_HH
-#define DUMUX_2P_PHASE_STATE_HH
+#ifndef DUMUX_2P_FLUID_STATE_HH
+#define DUMUX_2P_FLUID_STATE_HH
 
-#include <dumux/new_material/phasestate.hh>
+#include <dumux/new_material/fluidstate.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
 namespace Dune
@@ -30,10 +30,10 @@ namespace Dune
  *        2pNc model.
  */
 template <class TypeTag>
-class TwoPPhaseState : public PhaseState<typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)),
-                                           TwoPPhaseState<TypeTag> >
+class TwoPFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)),
+                                           TwoPFluidState<TypeTag> >
 {
-    typedef TwoPPhaseState<TypeTag> ThisType;
+    typedef TwoPFluidState<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))      Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 

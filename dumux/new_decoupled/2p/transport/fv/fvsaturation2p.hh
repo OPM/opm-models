@@ -73,7 +73,7 @@ class FVSaturation2P
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PhaseState)) PhaseState;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidState)) FluidState;
 
     enum
     {
@@ -605,8 +605,8 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                     }
                     }
 
-                    PhaseState phaseState;
-                    phaseState.update(pressW, pressNW, temperature);
+                    FluidState fluidState;
+                    fluidState.update(pressW, pressNW, temperature);
 
                     //get phase potentials
                     Scalar potentialW = problem_.variables().potentialWetting(globalIdxI, isIndex);
@@ -629,7 +629,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         if (compressibility_)
                         {
                             lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt),
-                                    satWBound) / FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
+                                    satWBound) / FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
                         }
                         else
                         {
@@ -652,7 +652,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         {
                             lambdaNW = MaterialLaw::krn(
                                     problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)
-                                    / FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+                                    / FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
                         }
                         else
                         {
@@ -1054,7 +1054,7 @@ template<class TypeTag>
 void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation = *(new RepresentationType(0)),
         bool iterate = false)
 {
-    PhaseState phaseState;
+    FluidState fluidState;
 
     // iterate through leaf grid an evaluate c0 at cell center
     ElementIterator eItEnd = problem_.gridView().template end<0> ();
@@ -1094,12 +1094,12 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation 
 
         Scalar temperature = problem_.temperature(globalPos, *eIt);
 
-        phaseState.update(temperature);
+        fluidState.update(temperature);
 
-        problem_.variables().densityWetting(globalIdx) = FluidSystem::phaseDensity(wPhaseIdx, phaseState);
-        problem_.variables().densityNonwetting(globalIdx) = FluidSystem::phaseDensity(nPhaseIdx, phaseState);
-        problem_.variables().viscosityWetting(globalIdx) = FluidSystem::phaseViscosity(wPhaseIdx, phaseState);
-        problem_.variables().viscosityNonwetting(globalIdx) = FluidSystem::phaseViscosity(nPhaseIdx, phaseState);
+        problem_.variables().densityWetting(globalIdx) = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
+        problem_.variables().densityNonwetting(globalIdx) = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
+        problem_.variables().viscosityWetting(globalIdx) = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+        problem_.variables().viscosityNonwetting(globalIdx) = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
 
         // initialize mobilities
         problem_.variables().mobilityWetting(globalIdx) = MaterialLaw::krw(

@@ -47,7 +47,7 @@ template<class TypeTag>
 class FluidSystem2P;
 
 template<class TypeTag>
-class TwoPPhaseState;
+class TwoPFluidState;
 
 template <class TypeTag>
 struct TwoPCommonIndices;
@@ -85,7 +85,7 @@ NEW_PROP_TAG( EnableCompressibility);// ! Returns whether compressibility is all
 NEW_PROP_TAG( WettingPhase); //!< The wetting phase for two-phase models
 NEW_PROP_TAG( NonwettingPhase); //!< The non-wetting phase for two-phase models
 NEW_PROP_TAG( FluidSystem );
-NEW_PROP_TAG( PhaseState );
+NEW_PROP_TAG( FluidState );
 
 //////////////////////////////////////////////////////////////////
 // Properties
@@ -126,7 +126,7 @@ SET_TYPE_PROP(DecoupledTwoP, Variables, VariableClass2P<TypeTag>);
 
 SET_TYPE_PROP(DecoupledTwoP, FluidSystem, FluidSystem2P<TypeTag>);
 
-SET_TYPE_PROP(DecoupledTwoP, PhaseState, TwoPPhaseState<TypeTag>);
+SET_TYPE_PROP(DecoupledTwoP, FluidState, TwoPFluidState<TypeTag>);
 
 // \}
 }
