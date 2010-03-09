@@ -66,12 +66,12 @@ class TwoPFluidState;
 struct TwoPCommonIndices
 {
     // Formulations
-    static const int pWsN = 0; //!< Pw and Sn as primary variables
-    static const int pNsW = 1; //!< Pn and Sw as primary variables
+    static const int pwSn = 0; //!< Pw and Sn as primary variables
+    static const int pnSw = 1; //!< Pn and Sw as primary variables
 
     // Phase indices
-    static const int wPhase = 0; //!< Index of the wetting phase in a phase vector
-    static const int nPhase = 1; //!< Index of the non-wetting phase in a phase vector
+    static const int wPhaseIdx = 0; //!< Index of the wetting phase in a phase vector
+    static const int nPhaseIdx = 1; //!< Index of the non-wetting phase in a phase vector
 };
 
 /*!
@@ -80,7 +80,7 @@ struct TwoPCommonIndices
  *
  * \tparam PVOffset    The first index in a primary variable vector.
  */
-template <int formulation = TwoPCommonIndices::pWsN, int PVOffset = 0>
+template <int formulation = TwoPCommonIndices::pwSn, int PVOffset = 0>
 struct TwoPIndices : public TwoPCommonIndices
 {
     // Primary variable indices
@@ -88,19 +88,12 @@ struct TwoPIndices : public TwoPCommonIndices
     static const int saturationIdx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
 
     // indices of the primary variables
-    static const int pW = PVOffset + 0; //!< Pressure index of the wetting phase
-    static const int sN = PVOffset + 1; //!< Saturation index of the wetting phase
+    static const int pwIdx = PVOffset + 0; //!< Pressure index of the wetting phase
+    static const int SnIdx = PVOffset + 1; //!< Saturation index of the wetting phase
 
-    /*!
-     * \brief Convert a index in a phase vector to an index in a
-     *        vector of primary variables.
-     *
-     * \todo Come up with a better name for this method!
-     */
-    static int phase2Mass(int phaseIdx)
-    {
-        return PVOffset + phaseIdx;
-    };
+    // indices of the equations
+    static const int contiWEqIdx = PVOffset + 0; //!< Index of the continuity equation of the wetting phase
+    static const int contiNEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase
 };
 
 /*!
@@ -110,7 +103,7 @@ struct TwoPIndices : public TwoPCommonIndices
  * \tparam PVOffset    The first index in a primary variable vector.
  */
 template <int PVOffset>
-struct TwoPIndices<TwoPCommonIndices::pNsW, PVOffset>
+struct TwoPIndices<TwoPCommonIndices::pnSw, PVOffset>
     : public TwoPCommonIndices
 {
     // Primary variable indices
@@ -118,19 +111,12 @@ struct TwoPIndices<TwoPCommonIndices::pNsW, PVOffset>
     static const int saturationIdx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
 
     // indices of the primary variables
-    static const int pN = PVOffset + 0; //!< Pressure index of the wetting phase
-    static const int sW = PVOffset + 1; //!< Saturation index of the wetting phase
+    static const int pnIdx = PVOffset + 0; //!< Pressure index of the wetting phase
+    static const int SwIdx = PVOffset + 1; //!< Saturation index of the wetting phase
 
-    /*!
-     * \brief Convert a index in a phase vector to an index in a
-     *        vector of primary variables.
-     *
-     * \todo Come up with a better name for this method!
-     */
-    static int phase2Mass(int phaseIdx)
-    {
-        return PVOffset + 1 - phaseIdx;
-    };
+    // indices of the equations
+    static const int contiNEqIdx = PVOffset + 0; //!< Index of the continuity equation of the non-wetting phase
+    static const int contiWEqIdx = PVOffset + 1; //!< Index of the continuity equation of the wetting phase
 };
 
 // \}
@@ -180,7 +166,7 @@ SET_INT_PROP(BoxTwoP, NumPhases,     2); //!< The number of phases in the 2p mod
 //! Set the default formulation to pWsN
 SET_INT_PROP(BoxTwoP,
              Formulation,
-             TwoPCommonIndices::pWsN);
+             TwoPCommonIndices::pwSn);
 
 //! Use the 2p local jacobian operator for the 2p model
 SET_TYPE_PROP(BoxTwoP,

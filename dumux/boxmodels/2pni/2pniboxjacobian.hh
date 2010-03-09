@@ -63,9 +63,10 @@ class TwoPNIBoxJacobian : public TwoPBoxJacobian<TypeTag>
 
         numPhases        = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
         temperatureIdx   = Indices::temperatureIdx,
+        energyEqIdx      = Indices::energyEqIdx,
 
-        wPhase   = Indices::wPhase,
-        nPhase   = Indices::nPhase
+        wPhaseIdx   = Indices::wPhaseIdx,
+        nPhaseIdx   = Indices::nPhaseIdx
     };
 
 
@@ -101,23 +102,19 @@ public:
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const VertexDataArray &elemDat = usePrevSol ? this->prevElemDat_  : this->curElemDat_;
-        const VertexData  &vertDat = elemDat[scvIdx];
+        const VertexDataArray &vertDatArray = usePrevSol ? this->prevElemDat_  : this->curElemDat_;
+        const VertexData      &vertDat = vertDatArray[scvIdx];
 
         // compute the energy storage
         result[temperatureIdx] =
-            vertDat.porosity*(vertDat.density[wPhase] *
-                              vertDat.intEnergy[wPhase] *
-                              vertDat.satW
-                              +
-                              vertDat.density[nPhase] *
-                              vertDat.intEnergy[nPhase] *
-                              vertDat.satN)
-            +
-            vertDat.temperature *
-            this->problem_.soil().heatCap(this->curElementGeom_.elementGlobal,
-                                          this->curElement_(),
-                                          this->curElementGeom_.elementLocal);
+            vertDat.porosity()*(vertDat.density(wPhaseIdx) *
+                                vertDat.internalEnergy(wPhaseIdx) *
+                                vertDat.saturation(wPhaseIdx)
+                                +
+                                vertDat.density(nPhaseIdx) *
+                                vertDat.internalEnergy(nPhaseIdx) *
+                                vertDat.saturation(nPhaseIdx));
+        //vertDat.temperature()*vertDat.heatCapacity();
     }
 
     /*!
@@ -134,23 +131,23 @@ public:
         ParentType::computeAdvectiveFlux(flux, fluxData);
 
         // advective heat flux in all phases
-        flux[temperatureIdx] = 0;
+        flux[energyEqIdx] = 0;
         for (int phase = 0; phase < numPhases; ++phase) {
             // vertex data of the upstream and the downstream vertices
-            const VertexData &up = this->curElemDat_[fluxData.upstreamIdx[phase]];
-            const VertexData &dn = this->curElemDat_[fluxData.downstreamIdx[phase]];
+            const VertexData &up = this->curElemDat_[fluxData.upstreamIdx(phase)];
+            const VertexData &dn = this->curElemDat_[fluxData.downstreamIdx(phase)];
 
-            flux[temperatureIdx] +=
-                fluxData.vDarcyNormal[phase] * (
+            flux[energyEqIdx] +=
+                fluxData.KmvpNormal(phase) * (
                     mobilityUpwindAlpha * // upstream vertex
-                    (  up.density[phase] *
-                       up.mobility[phase] *
-                       up.enthalpy[phase])
+                    (  up.density(phase) *
+                       up.mobility(phase) *
+                       up.enthalpy(phase))
                     +
                     (1 - mobilityUpwindAlpha) * // downstream vertex
-                    (  dn.density[phase] *
-                       dn.mobility[phase] *
-                       dn.enthalpy[phase]) );
+                    (  dn.density(phase) *
+                       dn.mobility(phase) *
+                       dn.enthalpy(phase)) );
         }
     }
 
@@ -165,7 +162,7 @@ public:
         ParentType::computeDiffusiveFlux(flux, fluxData);
 
         // diffusive heat flux
-        flux[temperatureIdx] += (fluxData.temperatureGrad*fluxData.face->normal)*fluxData.heatCondAtIp;
+        //flux[energyEqIdx] += fluxData.normalMatrixHeatFlux();
     }
 };
 

@@ -498,7 +498,7 @@ public:
     Scalar concentration_[numPhases][numComponents];
     Scalar totalConcentration_[numPhases];
     Scalar avgMolarMass_[numPhases];
-    Scalar phasePressure_[numComponents];
+    Scalar phasePressure_[numPhases];
     Scalar temperature_;
     Scalar Sg_;
 };

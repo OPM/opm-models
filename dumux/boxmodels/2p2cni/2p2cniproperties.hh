@@ -59,7 +59,8 @@ template <class TypeTag, int formulation, int PVOffset>
 class TwoPTwoCNIIndices : public TwoPTwoCIndices<TypeTag, formulation, PVOffset>
 {
 public:
-    static const int temperatureIdx = PVOffset + 2; //! The index for temperature in solution vectors.
+    static const int temperatureIdx = PVOffset + 2; //! The index for temperature in primary variable vectors.
+    static const int energyEqIdx = PVOffset + 2; //! The index for energy in equation vectors.
 };
 
 ////////////////////////////////

@@ -42,7 +42,7 @@ class TwoPBoxProblem : public BoxProblem<TypeTag, Implementation>
 
     // material properties
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters))            SpatialParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
 
     enum {
         dim = Grid::dimension,

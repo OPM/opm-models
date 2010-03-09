@@ -40,28 +40,107 @@ class TwoPFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTAG(Sc
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
     enum {
-        wPhaseIdx = Indices::wPhase,
-        nPhaseIdx = Indices::nPhase,
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
+
+        wCompIdx = Indices::wPhaseIdx,
+        nCompIdx = Indices::nPhaseIdx,
     };
 
 public:
     enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
     
 public:
-    void update (Scalar pressW, Scalar pressN, Scalar temperature)
+    void update(Scalar Sn, Scalar pressW, Scalar pressN, Scalar temperature)
     {
+        Sn_ = Sn;
         phasePressure_[wPhaseIdx] = pressW;
         phasePressure_[nPhaseIdx] = pressN;
         temperature_=temperature;
+        density_[wPhaseIdx] = FluidSystem::phaseDensity(wPhaseIdx,
+                                                        temperature,
+                                                        pressW,
+                                                        *this);
+        density_[nPhaseIdx] = FluidSystem::phaseDensity(nPhaseIdx,
+                                                        temperature,
+                                                        pressN,
+                                                        *this);
     }
 
-    void update (Scalar temperature)
+    /*!
+     * \brief Returns the saturation of a phase.
+     */
+    Scalar saturation(int phaseIdx) const
+    { 
+        if (phaseIdx == wPhaseIdx)
+            return Scalar(1.0) - Sn_;
+        else
+            return Sn_;
+    };
+
+    /*!
+     * \brief Returns the mass fraction of a component in a phase.
+     */
+    Scalar massFrac(int phaseIdx, int compIdx) const
+    { 
+        if (compIdx == phaseIdx)
+            return 1.0;
+        return 0;
+    }
+    
+    /*!
+     * \brief Returns the molar fraction of a component in a fluid phase.
+     */
+    Scalar moleFrac(int phaseIdx, int compIdx) const
     {
-        phasePressure_[wPhaseIdx] = 1e5;
-        phasePressure_[nPhaseIdx] = 1e5;
-        temperature_ = temperature;
+        return massFrac(phaseIdx, compIdx);
     }
+    
+    /*!
+     * \brief Returns the total concentration of a phase [mol / m^3].
+     *
+     * This is equivalent to the sum of all component concentrations.
+     */
+    Scalar totalConcentration(int phaseIdx) const
+    { 
+        return density_[phaseIdx]/FluidSystem::molarMass(phaseIdx);
+    };
 
+    /*!
+     * \brief Returns the concentration of a component in a phase [mol / m^3].
+     */
+    Scalar concentration(int phaseIdx, int compIdx) const
+    { 
+        if (phaseIdx == compIdx) 
+            return totalConcentration(phaseIdx);
+        return 0;
+    };
+        
+    /*!
+     * \brief Returns the density of a phase [kg / m^3].
+     */
+    Scalar density(int phaseIdx) const
+    { return density_[phaseIdx]; }
+    
+    /*!
+     * \brief Returns mean molar mass of a phase [kg / mol].
+     *
+     * This is equivalent to the sum of all component molar masses
+     * weighted by their respective mole fraction.
+     */
+    Scalar averageMolarMass(int phaseIdx) const
+    { return FluidSystem::molarMass(phaseIdx); };
+    
+    /*!
+     * \brief Returns the partial pressure of a component in the gas phase [Pa].
+     */
+    Scalar partialPressure(int compIdx) const
+    { 
+        if (compIdx == wPhaseIdx)
+            return 0;
+        return phasePressure_[nPhaseIdx];
+    }
+    
     /*!
      * \brief Returns the pressure of a fluid phase [Pa].
      */
@@ -69,14 +148,25 @@ public:
     { return phasePressure_[phaseIdx]; }
 
     /*!
+     * \brief Returns the capillary pressure [Pa]
+     */
+    Scalar capillaryPressure() const
+    { return phasePressure_[nPhaseIdx] - phasePressure_[wPhaseIdx]; }
+
+    /*!
      * \brief Returns the temperature of the fluids [K].
+     *
+     * Note that we assume thermodynamic equilibrium, so all fluids
+     * and the rock matrix exhibit the same temperature.
      */
     Scalar temperature() const
     { return temperature_; };
 
-private:
+public:
+    Scalar density_[numPhases];
     Scalar phasePressure_[numPhases];
     Scalar temperature_;
+    Scalar Sn_;
 };
 
 } // end namepace

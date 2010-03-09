@@ -61,7 +61,8 @@ template <int PVOffset = 0>
 class TwoPNIIndices : public TwoPIndices<PVOffset>
 {
 public:
-    static const int temperatureIdx = PVOffset + 2; //! The index for temperature in solution vectors.
+    static const int temperatureIdx = PVOffset + 2; //! The primary variable index for temperature
+    static const int energyEqIdx = PVOffset + 2; //! The equation index of the energy equation
 };
 
 ////////////////////////////////

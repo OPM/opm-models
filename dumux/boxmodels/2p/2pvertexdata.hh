@@ -54,6 +54,18 @@ class TwoPVertexData
         dimWorld      = GridView::dimensionworld
     };
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+    enum {
+        pwSn = Indices::pwSn,
+        pnSw = Indices::pnSw,
+        
+        pressureIdx = Indices::pressureIdx,
+        saturationIdx = Indices::saturationIdx,
+
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
+    };
+
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
@@ -64,7 +76,6 @@ class TwoPVertexData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLaw))        MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(MaterialLawParams))  MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
 
@@ -82,8 +93,6 @@ public:
                 const Problem           &problem,
                 bool                     isOldSol) 
     {
-        typedef Indices I;
-
         asImp().updateTemperature_(sol,
                                    element, 
                                    elemGeom,
@@ -94,35 +103,44 @@ public:
         const MaterialLawParams &materialParams =
             problem.spatialParameters().materialLawParams(element, elemGeom, vertIdx);
 
-        // coordinates of the vertex
-        const GlobalPosition &global = element.geometry().corner(vertIdx);
-
-        if (formulation == I::pWsN) {
-            satN = sol[I::saturationIdx];
-            satW = 1.0 - satN;
-            pC = MaterialLaw::pC(materialParams, satW);
-            pressure[I::wPhase] = sol[I::pressureIdx];
-            pressure[I::nPhase] = pressure[I::wPhase] + pC;
+        Scalar p[numPhases];
+        Scalar Sn;
+        if (int(formulation) == pwSn) {
+            Sn = sol[saturationIdx];
+            p[wPhaseIdx] = sol[pressureIdx];
+            p[nPhaseIdx] = 
+                p[wPhaseIdx] + 
+                MaterialLaw::pC(materialParams, 1 - Sn);
         }
-        else if (formulation == I::pNsW) {
-            satW = sol[I::saturationIdx];
-            satN = 1.0 - satW;
-            pC = MaterialLaw::pC(materialParams, satW);
-            pressure[I::nPhase] = sol[I::pressureIdx];
-            pressure[I::wPhase] = pressure[I::nPhase] - pC;
+        else if (int(formulation) == pnSw) {
+            Sn = 1 - sol[saturationIdx];
+            p[nPhaseIdx] = sol[pressureIdx];
+            p[wPhaseIdx] = 
+                p[nPhaseIdx] - 
+                MaterialLaw::pC(materialParams, 1 - Sn);
         }
 
-        fluidState.update(pressure[I::wPhase], pressure[I::nPhase], temperature);
+        fluidState_.update(Sn, p[wPhaseIdx], p[nPhaseIdx], temperature_);
 
-        density[I::wPhase] = FluidSystem::phaseDensity(I::wPhase, fluidState);
-        density[I::nPhase] = FluidSystem::phaseDensity(I::nPhase, fluidState);
-
-        mobility[I::wPhase] =MaterialLaw::krw(materialParams, satW)/FluidSystem::phaseViscosity(I::wPhase, fluidState);
-        mobility[I::nPhase] = MaterialLaw::krn(materialParams, satW)/FluidSystem::phaseViscosity(I::nPhase, fluidState);
+        mobility_[wPhaseIdx] = 
+            MaterialLaw::krw(materialParams, 1 - Sn)
+            /
+            FluidSystem::phaseViscosity(wPhaseIdx, 
+                                        temperature_,
+                                        p[wPhaseIdx],
+                                        fluidState_);
+        mobility_[nPhaseIdx] = 
+            MaterialLaw::krn(materialParams, 1 - Sn)
+            /
+            FluidSystem::phaseViscosity(nPhaseIdx, 
+                                        temperature_,
+                                        p[nPhaseIdx],
+                                        fluidState_);
 
         // porosity
-        porosity = problem.spatialParameters().porosity(global,
-                                           element);
+        porosity_ = problem.spatialParameters().porosity(element, 
+                                                         elemGeom,
+                                                         vertIdx);
     }
 
     void updateTemperature_(const PrimaryVarVector  &sol,
@@ -131,20 +149,71 @@ public:
                             int                      vertIdx,
                             const Problem           &problem) 
     {
-        temperature = problem.temperature(element, elemGeom, vertIdx);
+        temperature_ = problem.temperature(element, elemGeom, vertIdx);
     }
         
+    /*!
+     * \brief Returns the phase state for the control-volume.
+     */
+    const FluidState &fluidState() const
+    { return fluidState_; }
 
-    FluidState fluidState;
-    Scalar satW;
-    Scalar satN;
-    Scalar pC;
-    Scalar porosity;
-    Scalar temperature;
+    /*!
+     * \brief Returns the effective saturation of a given phase within
+     *        the control volume.
+     */
+    Scalar saturation(int phaseIdx) const
+    { return fluidState_.saturation(phaseIdx); }
 
-    PhasesVector density;
-    PhasesVector pressure;
-    PhasesVector mobility;
+    /*!
+     * \brief Returns the mass density of a given phase within the
+     *        control volume.
+     */
+    Scalar density(int phaseIdx) const
+    { return fluidState_.density(phaseIdx); }
+
+    /*!
+     * \brief Returns the effective pressure of a given phase within
+     *        the control volume.
+     */
+    Scalar pressure(int phaseIdx) const
+    { return fluidState_.phasePressure(phaseIdx); }
+
+    /*!
+     * \brief Returns temperature inside the sub-control volume.
+     *
+     * Note that we assume thermodynamic equilibrium, i.e. the
+     * temperature of the rock matrix and of all fluid phases are
+     * identical.
+     */
+    Scalar temperature() const
+    { return temperature_; }
+
+    /*!
+     * \brief Returns the effective mobility of a given phase within
+     *        the control volume.
+     */
+    Scalar mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
+
+    /*!
+     * \brief Returns the effective capillary pressure within the control volume.
+     */
+    Scalar capillaryPressure() const
+    { return fluidState_.capillaryPressure(); }
+
+    /*!
+     * \brief Returns the average porosity within the control volume.
+     */
+    Scalar porosity() const
+    { return porosity_; }
+
+protected:
+    FluidState fluidState_;
+    Scalar porosity_;
+    Scalar temperature_;
+
+    Scalar mobility_[numPhases];
 
 private:
     Implementation &asImp()

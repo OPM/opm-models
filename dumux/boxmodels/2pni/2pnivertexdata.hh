@@ -51,17 +51,16 @@ class TwoPNIVertexData : public TwoPVertexData<TypeTag>
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+    enum { temperatureIdx = Indices::temperatureIdx };
+
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))     FluidSystem;
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename GET_PROP(TypeTag, PTAG(ReferenceElements)) RefElemProp;
     typedef typename RefElemProp::Container                     ReferenceElements;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     typedef typename SolutionTypes::PrimaryVarVector  PrimaryVarVector;
     typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
-
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-
 
 public:
     /*!
@@ -84,43 +83,65 @@ public:
                            problem,
                            isOldSol);
 
-        // data for the energy equation
-        const LocalPosition &local =
-            ReferenceElements::general(element.type()).position(vertIdx,
-                                                                dim);
-        const GlobalPosition &global =
-            element.geometry().corner(vertIdx);
-
-        heatCond = problem.soil().heatCond(global,
-                                           element,
-                                           local,
-                                           this->satW);
-
-        enthalpy[I::wPhase] = problem.wettingPhase().enthalpy(this->temperature,
-                                                              this->pressure[I::wPhase]);
-        enthalpy[I::nPhase] = problem.nonwettingPhase().enthalpy(this->temperature,
-                                                                 this->pressure[I::nPhase]);
-        intEnergy[I::wPhase] = problem.wettingPhase().intEnergy(this->temperature,
-                                                                this->pressure[I::wPhase]);
-        intEnergy[I::nPhase] = problem.nonwettingPhase().intEnergy(this->temperature,
-                                                                   this->pressure[I::nPhase]);
+        // the internal energies and the enthalpies
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            enthalpy_[phaseIdx] = 
+                FluidSystem::enthalpy(phaseIdx, 
+                                      this->fluidState().temperature(),
+                                      this->fluidState().phasePressure(phaseIdx),
+                                      this->fluidState());
+            internalEnergy_[phaseIdx] =
+                FluidSystem::internalEnergy(phaseIdx, 
+                                            this->fluidState().temperature(),
+                                            this->fluidState().phasePressure(phaseIdx),
+                                            this->fluidState());
+        }
+        Valgrind::CheckDefined(internalEnergy_);
+        Valgrind::CheckDefined(enthalpy_);
     }
 
     // this method gets called by the parent class
     void updateTemperature_(const PrimaryVarVector  &sol,
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
-                            int                      vertIdx,
-                            const Problem           &problem) 
+                            int                      scvIdx,
+                            const Problem           &problem)
     {
-        typedef Indices I;
-        this->temperature = sol[I::temperatureIdx];
+        // retrieve temperature from solution vector
+        this->temperature_ = sol[temperatureIdx];
+
+        heatCapacity_ =
+            problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
+
+        Valgrind::CheckDefined(this->temperature_);
+        Valgrind::CheckDefined(heatCapacity_);
     }
 
+    /*!
+     * \brief Returns the total internal energy of a phase in the
+     *        sub-control volume.
+     */
+    Scalar internalEnergy(int phaseIdx) const
+    { return internalEnergy_[phaseIdx]; };
 
-    PhasesVector intEnergy; //!< Internal energy.
-    PhasesVector enthalpy;  //!< Enthalpy.
-    Scalar       heatCond; //!< Total heat conductivity.
+    /*!
+     * \brief Returns the total enthalpy of a phase in the sub-control
+     *        volume.
+     */
+    Scalar enthalpy(int phaseIdx) const
+    { return enthalpy_[phaseIdx]; };
+
+    /*!
+     * \brief Returns the total heat capacity [J/(K m^3)] of the rock matrix in
+     *        the sub-control volume.
+     */
+    Scalar heatCapacity() const
+    { return heatCapacity_; };
+    
+protected:
+    Scalar internalEnergy_[numPhases];
+    Scalar enthalpy_[numPhases];
+    Scalar heatCapacity_;
 };
 
 } // end namepace

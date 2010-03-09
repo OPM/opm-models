@@ -70,8 +70,11 @@ protected:
         pressureIdx    = Indices::pressureIdx,
         saturationIdx  = Indices::saturationIdx,
 
-        wPhase         = Indices::wPhase,
-        nPhase         = Indices::nPhase
+        contiWEqIdx         = Indices::contiWEqIdx,
+        contiNEqIdx         = Indices::contiNEqIdx,
+
+        wPhaseIdx         = Indices::wPhaseIdx,
+        nPhaseIdx         = Indices::nPhaseIdx
     };
 
     typedef typename GridView::template Codim<0>::Entity   Element;
@@ -141,16 +144,16 @@ public:
         const VertexData  &vertDat = elemDat[scvIdx];
 
         // wetting phase mass
-        result[Indices::phase2Mass(wPhase)] =
-            vertDat.density[wPhase]
-            * vertDat.porosity
-            * vertDat.satW;
+        result[contiWEqIdx] =
+            vertDat.density(wPhaseIdx)
+            * vertDat.porosity()
+            * vertDat.saturation(wPhaseIdx);
 
         // non-wetting phase mass
-        result[Indices::phase2Mass(nPhase)] =
-            vertDat.density[nPhase]
-            * vertDat.porosity
-            * vertDat.satN;
+        result[contiNEqIdx] =
+            vertDat.density(nPhaseIdx)
+            * vertDat.porosity()
+            * vertDat.saturation(nPhaseIdx);;
     }
 
     /*!
@@ -167,6 +170,7 @@ public:
         flux = 0;
         asImp_()->computeAdvectiveFlux(flux, vars);
         asImp_()->computeDiffusiveFlux(flux, vars);
+        flux *= -1;
     }
 
     /*!
@@ -185,20 +189,21 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream vertices
             // of the current phase
-            const VertexData &up = this->curElemDat_[vars.upstreamIdx[phaseIdx]];
-            const VertexData &dn = this->curElemDat_[vars.downstreamIdx[phaseIdx]];
+            const VertexData &up = this->curElemDat_[vars.upstreamIdx(phaseIdx)];
+            const VertexData &dn = this->curElemDat_[vars.downstreamIdx(phaseIdx)];
 
             // add advective flux of current component in current
             // phase
-            flux[Indices::phase2Mass(phaseIdx)] +=
-                vars.vDarcyNormal[phaseIdx] * (
+            int eqIdx = (phaseIdx==wPhaseIdx)?contiWEqIdx:contiNEqIdx;
+            flux[eqIdx] +=
+                vars.KmvpNormal(phaseIdx) * (
                     mobilityUpwindAlpha* // upstream vertex
-                    (  up.density[phaseIdx] *
-                       up.mobility[phaseIdx])
+                    (  up.density(phaseIdx) *
+                       up.mobility(phaseIdx))
                     +
                     (1 - mobilityUpwindAlpha)* // downstream vertex
-                    (  dn.density[phaseIdx] *
-                       dn.mobility[phaseIdx]));
+                    (  dn.density(phaseIdx) *
+                       dn.mobility(phaseIdx)));
         }
     }
 
@@ -344,12 +349,12 @@ public:
              {
 //             	int globalIdx = dofMapper.map(*elementIt, i, dim);
                  vol = this->curElementGeom_.subContVol[i].volume;
-                 poro = this->curElemDat_[i].porosity;
-                 rhoN = this->curElemDat_[i].density[nPhase];
-                 rhoW = this->curElemDat_[i].density[wPhase];
-                 satW  = this->curElemDat_[i].satW;
-                 satN  = this->curElemDat_[i].satN;
-                 pW = this->curElemDat_[i].pressure[wPhase];
+                 poro = this->curElemDat_[i].porosity();
+                 rhoN = this->curElemDat_[i].density(nPhaseIdx);
+                 rhoW = this->curElemDat_[i].density(wPhaseIdx);
+                 satW  = this->curElemDat_[i].saturation(wPhaseIdx);
+                 satN  = this->curElemDat_[i].saturation(nPhaseIdx);
+                 pW = this->curElemDat_[i].pressure(wPhaseIdx);
 //                 Te = asImp_()->temperature((*globalSol)[globalIdx]);
 
 
@@ -405,6 +410,10 @@ public:
         ScalarField *Sw = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *Sn = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *Te = writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *rhoW = writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *rhoN = writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *mobW = writer.template createField<Scalar, 1>(numVertices);
+        ScalarField *mobN = writer.template createField<Scalar, 1>(numVertices);
 
         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
         SolutionOnElement tmpSol;
@@ -423,21 +432,93 @@ public:
                                               i,
                                               dim);
 
-                (*pW)[globalIdx] = this->curElemDat_[i].pressure[wPhase];
-                (*pN)[globalIdx] = this->curElemDat_[i].pressure[nPhase];
-                (*pC)[globalIdx] = this->curElemDat_[i].pC;
-                (*Sw)[globalIdx] = this->curElemDat_[i].satW;
-                (*Sn)[globalIdx] = this->curElemDat_[i].satN;
-                (*Te)[globalIdx] = this->curElemDat_[i].temperature;
+                (*pW)[globalIdx] = this->curElemDat_[i].pressure(wPhaseIdx);
+                (*pN)[globalIdx] = this->curElemDat_[i].pressure(nPhaseIdx);
+                (*pC)[globalIdx] = this->curElemDat_[i].capillaryPressure();
+                (*Sw)[globalIdx] = this->curElemDat_[i].saturation(wPhaseIdx);
+                (*Sn)[globalIdx] = this->curElemDat_[i].saturation(nPhaseIdx);
+                (*rhoW)[globalIdx] = this->curElemDat_[i].density(wPhaseIdx);
+                (*rhoN)[globalIdx] = this->curElemDat_[i].density(nPhaseIdx);
+                (*mobW)[globalIdx] = this->curElemDat_[i].mobility(wPhaseIdx);
+                (*mobN)[globalIdx] = this->curElemDat_[i].mobility(nPhaseIdx);
+                (*Te)[globalIdx] = this->curElemDat_[i].temperature();
             };
         }
 
-        writer.addVertexData(pW, "pW");
-        writer.addVertexData(pN, "pN");
-        writer.addVertexData(pC, "pC");
-        writer.addVertexData(Sw, "SW");
-        writer.addVertexData(Sn, "SN");
-        writer.addVertexData(Te, "Te");
+        writer.addVertexData(Sn, "Sn");
+        writer.addVertexData(Sw, "Sw");
+        writer.addVertexData(pW, "pg");
+        writer.addVertexData(pN, "pn");
+        writer.addVertexData(pC, "pc");
+        writer.addVertexData(rhoW, "rhoW");
+        writer.addVertexData(rhoN, "rhoN");
+        writer.addVertexData(mobW, "mobW");
+        writer.addVertexData(mobN, "mobN");
+        writer.addVertexData(Te, "temperature");
+    }
+
+    /*!
+     * \brief Add the vector fields for analysing the convergence of
+     *        the newton method to the a VTK multi writer.
+     *
+     * \param writer  The VTK multi writer where the fields should be added.
+     * \param oldSol  The solution function before the Newton update
+     * \param update  The delte of the solution function before and after the Newton update
+     */
+    template <class MultiWriter>
+    void addConvergenceVtkFields(MultiWriter &writer,
+                                 const SolutionFunction &oldSol,
+                                 const SolutionFunction &update)
+    {
+        typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
+
+#if HAVE_DUNE_PDELAB
+        SolutionFunction globalDef(this->model().jacobianAssembler().gridFunctionSpace(), 0.0);
+#else
+        SolutionFunction globalDef(this->gridView(), this->gridView(), false);
+#endif
+        this->model().globalResidual(oldSol, globalDef);
+
+        // create the required scalar fields
+        unsigned numVertices = this->gridView_.size(dim);
+        //unsigned numElements = this->gridView_.size(0);
+        
+        // global defect of the two auxiliary equations
+        ScalarField* gd[numEq];
+        ScalarField* delta[numEq];
+        ScalarField* x[numEq];
+        for (int i = 0; i < numEq; ++i) {
+            x[i] = writer.template createField<Scalar, 1>(numVertices);
+            delta[i] = writer.template createField<Scalar, 1>(numVertices);
+            gd[i] = writer.template createField<Scalar, 1>(numVertices);
+        }
+
+        ElementIterator eIt = this->gridView_.template begin<0>();
+        ElementIterator eEndIt = this->gridView_.template end<0>();
+        
+        for (; eIt != eEndIt; ++ eIt)
+        {
+            this->curElementGeom_.update(*eIt);
+            for (int scvIdx = 0; 
+                 scvIdx < this->curElementGeom_.numVertices;
+                 ++scvIdx)
+            {
+                int globalIdx = this->problem().model().vertexMapper().map(*eIt, scvIdx, dim);
+                for (int i = 0; i < numEq; ++i) {
+                    (*x[i])[globalIdx] = (*oldSol)[globalIdx][i];
+                    (*delta[i])[globalIdx] = - (*update)[globalIdx][i];
+                    (*gd[i])[globalIdx] = (*globalDef)[globalIdx][i];
+                }
+            }
+        }
+
+        for (int i = 0; i < numEq; ++i) {
+            writer.addVertexData(x[i], (boost::format("x_%i")%i).str().c_str());
+            writer.addVertexData(delta[i], (boost::format("delta_%i")%i).str().c_str());
+            writer.addVertexData(gd[i], (boost::format("defect_%i")%i).str().c_str());
+        }
+
+        asImp_()->addOutputVtkFields(writer, oldSol);
     }
 
     /*!

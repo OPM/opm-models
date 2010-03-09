@@ -17,6 +17,7 @@
 #ifndef DUNE_INJECTION_SPATIAL_PARAMETERS_HH
 #define DUNE_INJECTION_SPATIAL_PARAMETERS_HH
 
+#include <dumux/new_material/spatialparameters/boxspatialparameters.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
@@ -29,8 +30,9 @@ namespace Dune
  *
  */
 template<class TypeTag>
-class InjectionSpatialParameters 
+class InjectionSpatialParameters : public BoxSpatialParameters<TypeTag>
 {
+    typedef BoxSpatialParameters<TypeTag>                   ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid))     Grid;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
@@ -40,10 +42,10 @@ class InjectionSpatialParameters
         dimWorld=GridView::dimensionworld,
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
     enum {
-        lPhaseIdx = Indices::lPhaseIdx,
-        gPhaseIdx = Indices::gPhaseIdx,
+        lPhaseIdx = FluidSystem::wPhaseIdx,
+        gPhaseIdx = FluidSystem::nPhaseIdx,
     };
 
     typedef Dune::FieldVector<CoordScalar,dim>      LocalPosition;
@@ -60,8 +62,6 @@ class InjectionSpatialParameters
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity             Element;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-
     typedef RegularizedBrooksCoreyParams<Scalar>                RawMaterialLawParams;
     //typedef LinearMaterialParams<Scalar>                        RawMaterialLawParams;
     typedef AbsoluteSaturationsLawParams<RawMaterialLawParams> MaterialLawParams;
@@ -72,6 +72,7 @@ public:
     typedef AbsoluteSaturationsLaw<RawMaterialLaw>               MaterialLaw;
 
     InjectionSpatialParameters(const GridView &gv)
+        : ParentType(gv)
     {
         layerBottom_ = 22.0;
 
@@ -104,7 +105,7 @@ public:
      * \brief Update the spatial parameters with the flow solution
      *        after a timestep.
      *
-     * \TODO call parameters
+     * \TODO call interface
      */
     void update(const SolutionFunction &globalSolutionFn)
     {
@@ -121,32 +122,14 @@ public:
      * \param scvfIdx       The index sub-control volume face where the 
      *                      intrinsic velocity ought to be calculated.
      */
-    const void Kmv(Vector                  &vIntrinsic,
-                   const Vector            &pGrad,
-                   const Element           &element,
-                   const FVElementGeometry &fvElemGeom,
-                   int                      scvfIdx) const
+    const Scalar intrinsicPermeability(const Element           &element,
+                                       const FVElementGeometry &fvElemGeom,
+                                       int                      scvIdx) const
     {
-        // get the permeabilities for both sub control volumes
-        // adjacent to the sub control volume face
-        int i = fvElemGeom.subContVolFace[scvfIdx].i;
-        int j = fvElemGeom.subContVolFace[scvfIdx].j;
-
-        Scalar Ki = coarseK_;
-        Scalar Kj = coarseK_;
-        
-        if (isFineMaterial_(fvElemGeom.subContVol[i].global))
-            Ki = fineK_;
-        if (isFineMaterial_(fvElemGeom.subContVol[j].global))
-            Kj = fineK_;
-
-        // calculate the harmonic mean of the two intinsic
-        // permeabilities
-        Scalar K = harmonicMean(Ki, Kj);
-        
-        // calculate the intinsic darcy velocity
-        vIntrinsic  = pGrad;
-        vIntrinsic *= - K;
+        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        if (isFineMaterial_(pos))
+            return fineK_;
+        return coarseK_;
     }
 
     /*!
@@ -165,8 +148,7 @@ public:
         const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
         if (isFineMaterial_(pos))
             return finePorosity_;
-        else 
-            return coarsePorosity_;
+        return coarsePorosity_;
     }
 
 
@@ -178,8 +160,7 @@ public:
         const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
         if (isFineMaterial_(pos))
             return fineMaterialParams_;
-        else
-            return coarseMaterialParams_;
+        return coarseMaterialParams_;
     }
 
     /*!

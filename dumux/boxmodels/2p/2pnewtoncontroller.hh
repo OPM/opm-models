@@ -48,6 +48,12 @@ class TwoPNewtonController : public NewtonController<TypeTag>
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+    enum {
+        numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq)), 
+        pressureIdx = Indices::pressureIdx
+    };
 
 public:
     TwoPNewtonController(Scalar tolerance = 1e-8,
@@ -56,47 +62,75 @@ public:
         : ParentType(tolerance, targetSteps, maxSteps)
     {};
 
-protected:
-    friend class NewtonController<TypeTag>;
-    //! called by the base class the get an indication of how physical
-    //! an iterative solution is 1 means "completely physical", 0 means
-    //! "completely unphysical"
-    Scalar physicalness_(SolutionFunction &u)
+#if 0
+    /*!
+     * \brief Update the error of the solution compared to the
+     *        previous iteration.
+     */
+    void newtonUpdateRelError(const SolutionFunction &uOld,
+                              const SolutionFunction &deltaU)
     {
-        const Scalar satNormFactor = 2.5;
+        typedef typename SolutionFunction::BlockType FV;
+        
+        // get the maximum value of each primary in either the old or
+        // the new solution
+        FieldVector<Scalar, numEq> weight(1.0);
 
-        // the maximum distance of a saturation value to a physically
-        // meaningful value.
-        Scalar maxSatDelta = 0;
-        Scalar sat;
-        //                Scalar pressure;
+        // a change in pressure is considered to be less severe by a
+        // factor of 10000 than a change saturation.
+        weight[pressureIdx] = 1;// 1e-4;
 
-        for (int idx = 0; idx < (int) (*u).size(); idx++)  {
-            // TODO: Don't expect the saturation at the second
-            // position in the primary var vector
-            // pressure = (*u)[idx][0];
-            sat = (*u)[idx][1];
+        // calculate the relative error as the maximum relative
+        // deflection in any degree of freedom.
+        this->error_ = 0;
+        int offenderVertIdx = -1;
+        int offenderPVIdx = -1;
+        Scalar offenderDelta = 0;
+        for (int i = 0; i < int((*uOld).size()); ++i) {
+            for (int j = 0; j < FV::size; ++j) {
+                // calculate the relative error at the current vertex
+                // i and the current primary variable j
+                Scalar curErr = std::abs((*deltaU)[i][j] * weight[j]);
+#if 0
+                // make sure that the specified tolerance is not below
+                // machine precision!
+                typedef std::numeric_limits<Scalar> limits;
+                const Scalar machinePrec =
+                    limits::epsilon()*100 
+                    * std::max<Scalar>(Scalar(1e10)/limits::max(),
+                                       std::abs((*uOld)[i][j]));
+                if (this->tolerance_ < machinePrec*weight[j])
+                {
+                    std::cerr << "Allowed tolerance (" 
+                              << this->tolerance_
+                              << ") is below machine precision ("
+                              << machinePrec*weight[j]
+                              << ") at vertex " << i
+                              << ", primary var " << j << "!\n";
+                    if (curErr < machinePrec*weight[j])
+                        // if the machine precision is reached, we
+                        // accept the solution even if we're above the
+                        // tolerance!
+                        curErr = this->tolerance_/100;
+                };
+#endif
 
-            if (sat < 0) {
-                maxSatDelta = std::max(maxSatDelta, std::abs(sat));
+                if (this->error_ < curErr) {
+                    offenderVertIdx = i;
+                    offenderPVIdx = j;
+                    offenderDelta = (*deltaU)[i][j];
+                    this->error_ = curErr;
+                };
             }
-            else if (sat > 1) {
-                maxSatDelta = std::max(maxSatDelta, std::abs(sat - 1));
-            }
+        };
 
-            // (so far we ignore the phase pressure)
-        }
+        this->endIterMsg() << ", worst offender: vertex " << offenderVertIdx 
+                           << ", primary var " << offenderPVIdx
+                           << ", delta: " << offenderDelta;
 
-        // we accept solutions up to 0.2 percent bigger than 1
-        // or smaller than 0 as being physical for numerical
-        // reasons...
-        Scalar phys = 1.002 - maxSatDelta/satNormFactor;
-
-        // we never return exactly zero, since we want to
-        // allow solutions which are "very close" to a
-        // physically meaningful one
-        return std::min(1.0, phys);
+        this->model().gridView().comm().max(this->error_);
     }
+#endif
 };
 }
 

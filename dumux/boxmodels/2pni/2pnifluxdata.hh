@@ -51,13 +51,14 @@ namespace Dune
 template <class TypeTag>
 class TwoPNIFluxData : public TwoPFluxData<TypeTag>
 {
-    typedef TwoPFluxData<TypeTag>                       ParentType;
+    typedef TwoPFluxData<TypeTag>                           ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
 
+    typedef typename GridView::ctype                     CoordScalar;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef std::vector<VertexData>                      VertexDataArray;
 
@@ -68,47 +69,54 @@ class TwoPNIFluxData : public TwoPFluxData<TypeTag>
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
-
-    typedef Dune::FieldVector<Scalar, numPhases>      PhasesVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
+    
+    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
 
 public:
     TwoPNIFluxData(const Problem &problem,
                    const Element &element,
                    const FVElementGeometry &elemGeom,
-                   int faceIdx,
+                   int scvfIdx,
                    const VertexDataArray &elemDat)
-        : ParentType(problem, element, elemGeom, faceIdx, elemDat)
+        : ParentType(problem, element, elemGeom, scvfIdx, elemDat)
     {
-        temperatureGrad = 0;
-
-        // Harmonic mean of the heat conductivities of the
-        // sub control volumes adjacent to the face
-        heatCondAtIp = harmonicMean(elemDat[this->face->i].heatCond,
-                                    elemDat[this->face->j].heatCond);
-
-        // calculate temperature gradient
-        GlobalPosition tmp(0.0);
-        for (int idx = 0; idx < this->fvElemGeom.numVertices; idx++)
+        // calculate temperature gradient using finite element
+        // gradients
+        Vector temperatureGrad(0);
+        Vector tmp(0.0);
+        for (int vertIdx = 0; vertIdx < elemGeom.numVertices; vertIdx++)
         {
-            tmp = this->face->grad[idx];
-            tmp *= elemDat[idx].temperature;
+            tmp = elemGeom.subContVolFace[scvfIdx].grad[vertIdx];
+            tmp *= elemDat[vertIdx].temperature();
             temperatureGrad += tmp;
         }
+
+        // The soil calculates the actual heat flux vector
+        problem.spatialParameters().matrixHeatFlux(tmp,
+                                                   *this,
+                                                   elemDat,
+                                                   temperatureGrad,
+                                                   element,
+                                                   elemGeom,
+                                                   scvfIdx);
+        // project the heat flux vector on the face's normal vector
+        normalMatrixHeatFlux_ = -(tmp*elemGeom.subContVolFace[scvfIdx].normal);
+        normalMatrixHeatFlux_ = 0;
     }
 
-    //! temperature gradient
-    GlobalPosition temperatureGrad;
+    /*!
+     * \brief The total heat flux \f$[J/s]\f$ due to heat conduction
+     *        of the rock matrix over the sub-control volume's face in
+     *        direction of the face normal.
+     */
+    Scalar normalMatrixHeatFlux() const
+    { return normalMatrixHeatFlux_; }
 
-    //! heat conductivity at integration point
-    Scalar heatCondAtIp;
+private:
+    Scalar normalMatrixHeatFlux_;
 };
 
 } // end namepace

@@ -49,6 +49,7 @@ class TwoPFluxData
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
 
+    typedef typename GridView::ctype                     CoordScalar;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef std::vector<VertexData>                      VertexDataArray;
 
@@ -58,41 +59,99 @@ class TwoPFluxData
         numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
 
-    typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
+    typedef Dune::FieldMatrix<CoordScalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
 public:
     TwoPFluxData(const Problem &problem,
-                     const Element &element,
-                     const FVElementGeometry &elemGeom,
-                     int faceIdx,
-                     const VertexDataArray &elemDat)
-        : fvElemGeom(elemGeom)
+                 const Element &element,
+                 const FVElementGeometry &elemGeom,
+                 int faceIdx,
+                 const VertexDataArray &elemDat)
+        : fvElemGeom_(elemGeom)
     {
-        face = &fvElemGeom.subContVolFace[faceIdx];
+        scvfIdx_ = faceIdx;
 
-        int i = face->i;
-        int j = face->j;
-
-        insideSCV = &fvElemGeom.subContVol[i];
-        outsideSCV = &fvElemGeom.subContVol[j];
-
-        densityAtIP = 0;
         for (int phase = 0; phase < numPhases; ++phase) {
-            pressureGrad[phase] = Scalar(0);
+            densityAtIP_[phase] = Scalar(0);
+            potentialGrad_[phase] = Scalar(0);
         }
 
         calculateGradients_(problem, element, elemDat);
         calculateVelocities_(problem, element, elemDat);
     };
+
+public:
+    /*!
+     * \brief Return the pressure potential multiplied with the
+     *        intrinsic permeability which goes from vertex i to
+     *        vertex j.
+     *
+     * Note that the length of the face's normal is the area of the
+     * phase, so this is not the actual velocity by the integral of
+     * the velocity over the face's area. Also note that the phase
+     * mobility is not yet included here since this would require a
+     * decision on the upwinding approach (which is done in the
+     * actual model).
+     */
+    Scalar KmvpNormal(int phaseIdx) const
+    { return KmvpNormal_[phaseIdx]; }
+
+    /*!
+     * \brief Return the local index of the upstream control volume
+     *        for a given phase.
+     */
+    int upstreamIdx(int phaseIdx) const
+    { return upstreamIdx_[phaseIdx]; }
+
+    /*!
+     * \brief Return the local index of the downstream control volume
+     *        for a given phase.
+     */
+    int downstreamIdx(int phaseIdx) const
+    { return downstreamIdx_[phaseIdx]; }
+
+    /*!
+     * \brief Return density [kg/m^3] of a phase at the integration
+     *        point.
+     */
+    Scalar densityAtIP(int phaseIdx) const
+    { return densityAtIP_[phaseIdx]; }
+
+    const SCVFace &face() const
+    { return fvElemGeom_.subContVolFace[scvfIdx_]; }
+
+protected:
+    const FVElementGeometry &fvElemGeom_;
+    int                      scvfIdx_;
+
+    // gradients
+    Vector potentialGrad_[numPhases];
+    Vector concentrationGrad_[numPhases];
+
+    // density of each face at the integration point
+    Scalar densityAtIP_[numPhases];
+
+    // intrinsic permeability times pressure potential gradient
+    // projected on the face normal
+    Scalar KmvpNormal_[numPhases];
+
+    // local index of the upwind vertex for each phase
+    int upstreamIdx_[numPhases];
+    // local index of the downwind vertex for each phase
+    int downstreamIdx_[numPhases];
+
+    // the diffusion coefficient for the porous medium
+    Scalar porousDiffCoeff_[numPhases];
+
 
 private:
     void calculateGradients_(const Problem &problem,
@@ -100,27 +159,27 @@ private:
                              const VertexDataArray &elemDat)
     {
         // calculate gradients
-        GlobalPosition tmp(0.0);
+        Vector tmp(0.0);
         for (int idx = 0;
-             idx < fvElemGeom.numVertices;
+             idx < fvElemGeom_.numVertices;
              idx++) // loop over adjacent vertices
         {
             // FE gradient at vertex idx
-            const LocalPosition &feGrad = face->grad[idx];
+            const Vector &feGrad = face().grad[idx];
 
             // compute sum of pressure gradients for each phase
             for (int phase = 0; phase < numPhases; phase++)
             {
                 // the pressure gradient
                 tmp = feGrad;
-                tmp *= elemDat[idx].pressure[phase];
-                pressureGrad[phase] += tmp;
+                tmp *= elemDat[idx].pressure(phase);
+                potentialGrad_[phase] += tmp;
 
                 // phase density
-                densityAtIP[phase]
+                densityAtIP_[phase]
                     +=
-                    elemDat[idx].density[phase] *
-                    face->shapeValue[idx];
+                    elemDat[idx].density(phase) *
+                    face().shapeValue[idx];
             }
         }
 
@@ -129,9 +188,9 @@ private:
         for (int phase=0; phase < numPhases; phase++)
         {
             tmp = problem.gravity();
-            tmp *= densityAtIP[phase];
+            tmp *= densityAtIP_[phase];
 
-            pressureGrad[phase] -= tmp;
+            potentialGrad_[phase] -= tmp;
         }
     }
 
@@ -139,56 +198,36 @@ private:
                               const Element &element,
                               const VertexDataArray &elemDat)
     {
-        // calculate the permeability tensor. TODO: this should be
-        // more flexible
-        typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
+        const SpatialParameters &spatialParams = problem.spatialParameters();
+        // multiply the pressure potential with the intrinsic
+        // permeability
         Tensor K;
-        const Tensor &Ki = problem.spatialParameters().K(insideSCV->global,
-                                            element);
-        const Tensor &Kj = problem.spatialParameters().K(outsideSCV->global,
-                                            element);
-        Dune::harmonicMeanMatrix(K, Ki, Kj);
-
-        // temporary vector for the Darcy velocity
-        GlobalPosition vDarcy;
-        for (int phase=0; phase < numPhases; phase++)
+        Vector Kmvp;
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
-            K.mv(pressureGrad[phase], vDarcy);  // vDarcy = K * grad p
-            vDarcyNormal[phase] = vDarcy*face->normal;
+            spatialParams.meanIntrinsicPermeability(K,
+                   spatialParams.intrinsicPermeability(element, 
+                                                       fvElemGeom_,
+                                                       face().i),
+                    spatialParams.intrinsicPermeability(element, 
+                                                        fvElemGeom_,
+                                                        face().j));
+            K.mv(potentialGrad_[phaseIdx], Kmvp);
+            KmvpNormal_[phaseIdx] = - (Kmvp * face().normal);
         }
 
         // set the upstream and downstream vertices
-        for (int phase = 0; phase < numPhases; ++phase)
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
-            upstreamIdx[phase] = face->i;
-            downstreamIdx[phase] = face->j;
+            upstreamIdx_[phaseIdx] = face().i;
+            downstreamIdx_[phaseIdx] = face().j;
 
-            if (vDarcyNormal[phase] > 0) {
-                std::swap(upstreamIdx[phase],
-                          downstreamIdx[phase]);
+            if (KmvpNormal_[phaseIdx] < 0) {
+                std::swap(upstreamIdx_[phaseIdx],
+                          downstreamIdx_[phaseIdx]);
             }
         }
     }
-
-public:
-    const FVElementGeometry &fvElemGeom;
-    const SCVFace *face;
-    const SCV     *insideSCV;
-    const SCV     *outsideSCV;
-
-    // gradients
-    GlobalPosition pressureGrad[numPhases];
-
-    // density of each face at the integration point
-    PhasesVector densityAtIP;
-
-    // darcy velocity in direction of the face normal
-    PhasesVector vDarcyNormal;
-
-    // local index of the upwind vertex for each phase
-    int upstreamIdx[numPhases];
-    // local index of the downwind vertex for each phase
-    int downstreamIdx[numPhases];
 };
 
 } // end namepace

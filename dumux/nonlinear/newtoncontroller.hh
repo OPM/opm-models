@@ -109,27 +109,18 @@ struct NewtonConvergenceWriter
 	};
 
 	void beginIteration(const GridView &gv)
+                     const SolutionFunction &uOld,
+                     const SolutionFunction &deltaU)
 	{
 		++ iteration_;
 		vtkMultiWriter_->beginTimestep(timeStepNum_ + iteration_ / 100.0,
 				gv);
-	};
-
-	void writeFields(const SolutionFunction &uOld,
-			const SolutionFunction &deltaU)
-	{
 		ctl_.model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
-	};
-
-	void endIteration()
-	{
 		vtkMultiWriter_->endTimestep();
 	};
 
 	void endTimestep()
 	{
-		++timeStepNum_;
-		iteration_ = 0;
 	};
 
 private:
@@ -155,14 +146,9 @@ struct NewtonConvergenceWriter<TypeTag, false>
 	void beginTimestep()
 	{ };
 
-	void beginIteration(const GridView &gv)
-	{ };
-
-	void writeFields(const SolutionFunction &uOld,
+    void writeFields(const GridView &gv,
+                     const SolutionFunction &uOld,
 			const SolutionFunction &deltaU)
-	{ };
-
-	void endIteration()
 	{ };
 
 	void endTimestep()
@@ -322,15 +308,29 @@ public:
 		// deflection in any degree of freedom.
 		typedef typename SolutionFunction::BlockType FV;
 		error_ = 0;
+        int offenderVertIdx = -1;
+        int offenderPVIdx = -1;
+        Scalar offenderDelta = 0;
 		for (int i = 0; i < int((*uOld).size()); ++i) {
 			for (int j = 0; j < FV::size; ++j) {
-				Scalar tmp
+                Scalar curErr
 				=
 						std::abs((*deltaU)[i][j])
-				/ std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
-				error_ = std::max(error_, tmp);
+                    / std::max(std::abs((*uOld)[i][j]), Scalar(1.0));
+
+                if (this->error_ < curErr) {
+                    offenderVertIdx = i;
+                    offenderPVIdx = j;
+                    offenderDelta = (*deltaU)[i][j];
+                    this->error_ = curErr;
+                };
 			}
 		};
+
+        this->endIterMsg() << ", worst offender: vertex " << offenderVertIdx 
+                           << ", primary var " << offenderPVIdx
+                           << ", delta: " << offenderDelta;
+
 		error_ = model().gridView().comm().max(error_);
 	}
 
@@ -387,7 +387,7 @@ public:
 	{
 		writeConvergence_(uOld, deltaU);
 
-		newtonUpdateRelError(uOld, deltaU);
+        asImp_().newtonUpdateRelError(uOld, deltaU);
 
 		*deltaU *= -1;
 		*deltaU += *uOld;
@@ -502,9 +502,9 @@ protected:
 	void writeConvergence_(const SolutionFunction &uOld,
 			const SolutionFunction &deltaU)
 	{
-		convergenceWriter_.beginIteration(this->model().gridView());
-		convergenceWriter_.writeFields(uOld, deltaU);
-		convergenceWriter_.endIteration();
+        convergenceWriter_.writeFields(this->model().gridView(),
+                                       uOld,
+                                       deltaU);
 	};
 
 

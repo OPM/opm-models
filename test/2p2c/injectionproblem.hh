@@ -32,9 +32,9 @@
 
 #include <dumux/new_material/fluidsystems/h2o_n2_system.hh>
 //#include <dumux/new_material/fluidsystems/brine_co2_system.hh>
+//#include <appl/co2-ifp/ifpco2tables.hh>
 
 #include "injectionspatialparameters.hh"
-#include <appl/co2-ifp/ifpco2tables.hh>
 
 
 namespace Dune
@@ -244,7 +244,7 @@ public:
 
         values = 0;
         if (globalPos[1] < 15 && globalPos[1] > 5) {
-            values[contiGEqIdx] = -1e-3;
+            values[contiGEqIdx] = -1e-3; // kg/(s*m^2)
         }
     }
 
@@ -308,7 +308,7 @@ private:
         values[Indices::plIdx] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
         values[Indices::SgOrXIdx] = 
             values[Indices::plIdx]*0.95/
-            FluidSystem::degasPressure(FluidSystem::CO2Idx, 
+            FluidSystem::degasPressure(FluidSystem::N2Idx, 
                                        temperature_,
                                        values[Indices::plIdx]);
     }

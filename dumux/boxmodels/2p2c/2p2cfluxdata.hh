@@ -63,10 +63,11 @@ class TwoPTwoCFluxData
     typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
 
-    typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
+    typedef Dune::FieldMatrix<CoordScalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
     enum {
@@ -155,17 +156,22 @@ private:
                               const Element &element,
                               const VertexDataArray &elemDat)
     {
+        const SpatialParameters &spatialParams = problem.spatialParameters();
         // multiply the pressure potential with the intrinsic
         // permeability
+        Tensor K;
         Vector Kmvp;
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
-            problem.spatialParameters().Kmv(Kmvp,
-                                            potentialGrad_[phaseIdx],
-                                            element,
-                                            fvElemGeom_,
-                                            scvfIdx_);
-            KmvpNormal_[phaseIdx] = Kmvp * face().normal;
+            spatialParams.meanIntrinsicPermeability(K,
+                   spatialParams.intrinsicPermeability(element, 
+                                                       fvElemGeom_,
+                                                       face().i),
+                    spatialParams.intrinsicPermeability(element, 
+                                                        fvElemGeom_,
+                                                        face().j));
+            K.mv(potentialGrad_[phaseIdx], Kmvp);
+            KmvpNormal_[phaseIdx] = - (Kmvp * face().normal);
         }
 
         // set the upstream and downstream vertices
