@@ -108,13 +108,13 @@ struct NewtonConvergenceWriter
 		iteration_ = 0;
 	};
 
-	void beginIteration(const GridView &gv)
+    void writeFields(const GridView &gv,
                      const SolutionFunction &uOld,
                      const SolutionFunction &deltaU)
 	{
 		++ iteration_;
 		vtkMultiWriter_->beginTimestep(timeStepNum_ + iteration_ / 100.0,
-				gv);
+                                       gv);
 		ctl_.model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
 		vtkMultiWriter_->endTimestep();
 	};
@@ -148,7 +148,7 @@ struct NewtonConvergenceWriter<TypeTag, false>
 
     void writeFields(const GridView &gv,
                      const SolutionFunction &uOld,
-			const SolutionFunction &deltaU)
+                     const SolutionFunction &deltaU)
 	{ };
 
 	void endTimestep()
@@ -156,13 +156,13 @@ struct NewtonConvergenceWriter<TypeTag, false>
 };
 
 /*!
-* \brief The reference implementation of a newton controller.
-*
-* If you want to specialize only some methods but are happy with
-* the defaults of the reference controller, derive your
-* controller from this class and simply overload the required
-* methods.
-*/
+ * \brief The reference implementation of a newton controller.
+ *
+ * If you want to specialize only some methods but are happy with
+ * the defaults of the reference controller, derive your
+ * controller from this class and simply overload the required
+ * methods.
+ */
 template <class TypeTag>
 class NewtonController
 {
@@ -184,10 +184,10 @@ class NewtonController
 
 public:
 	NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
-			int targetSteps   = 8,
-			int maxSteps      = 12)
-	: endIterMsgStream_(std::ostringstream::out),
-	  convergenceWriter_(asImp_())
+                     int targetSteps   = 8,
+                     int maxSteps      = 12)
+        : endIterMsgStream_(std::ostringstream::out),
+          convergenceWriter_(asImp_())
 	{
 		assert(maxSteps > targetSteps + 3);
 		numSteps_ = 0;
@@ -200,8 +200,8 @@ public:
 	};
 
 	/*!
-	* \brief Returns true iff another iteration should be done.
-	*/
+     * \brief Returns true iff another iteration should be done.
+     */
 	bool newtonProceed(SolutionFunction &u)
 	{
 		if (numSteps_ < 2)
@@ -260,18 +260,18 @@ public:
 	}
 
 	/*!
-	* \brief Returns true iff the error of the solution is below the
-	*        tolerance.
-	*/
+     * \brief Returns true iff the error of the solution is below the
+     *        tolerance.
+     */
 	bool newtonConverged()
 	{
 		return (error_ <= tolerance_) && (curPhysicalness_ >= 1.0);
 	}
 
 	/*!
-	* \brief Called before the newton method is applied to an
-	*        non-linear system of equations.
-	*/
+     * \brief Called before the newton method is applied to an
+     *        non-linear system of equations.
+     */
 	void newtonBegin(NewtonMethod *method, SolutionFunction &u)
 	{
 		method_ = method;
@@ -284,25 +284,25 @@ public:
 	}
 
 	/*!
-	* \brief Indidicates the beginning of a newton iteration.
-	*/
+     * \brief Indidicates the beginning of a newton iteration.
+     */
 	void newtonBeginStep()
 	{ lastError_ = error_; }
 
 	/*!
-	* \brief Returns the number of steps done since newtonBegin() was
-	*        called.
-	*/
+     * \brief Returns the number of steps done since newtonBegin() was
+     *        called.
+     */
 	int newtonNumSteps()
 	{ return numSteps_; }
 
 
 	/*!
-	* \brief Update the error of the solution compared to the
-	*        previous iteration.
-	*/
+     * \brief Update the error of the solution compared to the
+     *        previous iteration.
+     */
 	void newtonUpdateRelError(const SolutionFunction &uOld,
-			const SolutionFunction &deltaU)
+                              const SolutionFunction &deltaU)
 	{
 		// calculate the relative error as the maximum relative
 		// deflection in any degree of freedom.
@@ -314,8 +314,8 @@ public:
 		for (int i = 0; i < int((*uOld).size()); ++i) {
 			for (int j = 0; j < FV::size; ++j) {
                 Scalar curErr
-				=
-						std::abs((*deltaU)[i][j])
+                    =
+                    std::abs((*deltaU)[i][j])
                     / std::max(std::abs((*uOld)[i][j]), Scalar(1.0));
 
                 if (this->error_ < curErr) {
@@ -336,16 +336,16 @@ public:
 
 
 	/*!
-	* \brief Solve the linear system of equations \f$ \mathbf{A}x - b
-	*        = 0\f$.
-	*
-	* Throws Dune::NumericalProblem if the linear solver didn't
-	* converge.
-	*/
+     * \brief Solve the linear system of equations \f$ \mathbf{A}x - b
+     *        = 0\f$.
+     *
+     * Throws Dune::NumericalProblem if the linear solver didn't
+     * converge.
+     */
 	template <class Matrix, class Vector>
 	void newtonSolveLinear(Matrix &A,
-			SolutionFunction &u,
-			Vector &b)
+                           SolutionFunction &u,
+                           Vector &b)
 	{
 		// if the deflection of the newton method is large, we do not
 		// need to solve the linear approximation accurately. Assuming
@@ -369,20 +369,20 @@ public:
 	}
 
 	/*!
-	* \brief Update the current solution function with a delta vector.
-	*
-	* The error estimates required for the newtonConverged() and
-	* newtonProceed() methods should be updated here.
-	*
-	* Different update strategies, such as line search and chopped
-	* updates can be implemented. The default behaviour is just to
-	* subtract deltaU from uOld.
-	*
-	* \param deltaU The delta as calculated from solving the linear
-	*               system of equations. This parameter also stores
-	*               the updated solution.
-	* \param uOld   The solution of the last iteration
-	*/
+     * \brief Update the current solution function with a delta vector.
+     *
+     * The error estimates required for the newtonConverged() and
+     * newtonProceed() methods should be updated here.
+     *
+     * Different update strategies, such as line search and chopped
+     * updates can be implemented. The default behaviour is just to
+     * subtract deltaU from uOld.
+     *
+     * \param deltaU The delta as calculated from solving the linear
+     *               system of equations. This parameter also stores
+     *               the updated solution.
+     * \param uOld   The solution of the last iteration
+     */
 	void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
 	{
 		writeConvergence_(uOld, deltaU);
@@ -394,8 +394,8 @@ public:
 	}
 
 	/*!
-	* \brief Indicates that one newton iteration was finished.
-	*/
+     * \brief Indicates that one newton iteration was finished.
+     */
 	void newtonEndStep(SolutionFunction &u, SolutionFunction &uOld)
 	{
 		++numSteps_;
@@ -403,43 +403,43 @@ public:
 		curPhysicalness_ = asImp_().physicalness_(u);
 		if (this->method().verbose())
 			std::cout << "\rNewton iteration " << numSteps_ << " done: "
-			<< "error=" << error_ << endIterMsg().str() << "\n";
+                      << "error=" << error_ << endIterMsg().str() << "\n";
 		endIterMsgStream_.str("");
 	}
 
 	/*!
-	* \brief Indicates that we're done solving the non-linear system of equations.
-	*/
+     * \brief Indicates that we're done solving the non-linear system of equations.
+     */
 	void newtonEnd()
 	{
 		convergenceWriter_.endTimestep();
 	}
 
 	/*!
-	* \brief Called if the newton method broke down.
-	*
-	* This method is called _after_ newtonEnd()
-	*/
+     * \brief Called if the newton method broke down.
+     *
+     * This method is called _after_ newtonEnd()
+     */
 	void newtonFail()
 	{
 		numSteps_ = targetSteps_*2;
 	}
 
 	/*!
-	* \brief Called when the newton method was sucessful.
-	*
-	* This method is called _after_ newtonEnd()
-	*/
+     * \brief Called when the newton method was sucessful.
+     *
+     * This method is called _after_ newtonEnd()
+     */
 	void newtonSucceed()
 	{ }
 
 	/*!
-	* \brief Suggest a new time stepsize based on the old time step size.
-	*
-	* The default behaviour is to suggest the old time step size
-	* scaled by the ratio between the target iterations and the
-	* iterations required to actually solve the last time step.
-	*/
+     * \brief Suggest a new time stepsize based on the old time step size.
+     *
+     * The default behaviour is to suggest the old time step size
+     * scaled by the ratio between the target iterations and the
+     * iterations required to actually solve the last time step.
+     */
 	Scalar suggestTimeStepSize(Scalar oldTimeStep) const
 	{
 		// be agressive reducing the timestep size but
@@ -454,35 +454,35 @@ public:
 		else {
 			/*Scalar percent = (Scalar(1))/targetSteps_;
               return oldTimeStep*(1 + percent);
-			 */
+            */
 			Scalar percent = ((Scalar) targetSteps_ - numSteps_)/targetSteps_;
 			return oldTimeStep*(1.0 + percent/1.2);
 		}
 	}
 
 	/*!
-	* \brief Returns a reference to the current newton method
-	*        which is controlled by this controller.
-	*/
+     * \brief Returns a reference to the current newton method
+     *        which is controlled by this controller.
+     */
 	NewtonMethod &method()
 	{ return *method_; }
 
 	/*!
-	* \brief Returns a reference to the current newton method
-	*        which is controlled by this controller.
-	*/
+     * \brief Returns a reference to the current newton method
+     *        which is controlled by this controller.
+     */
 	const NewtonMethod &method() const
 	{ return *method_; }
 
 	/*!
-	* \brief Returns a reference to the current numeric model.
-	*/
+     * \brief Returns a reference to the current numeric model.
+     */
 	Model &model()
 	{ return method_->model(); }
 
 	/*!
-	* \brief Returns a reference to the current numeric model.
-	*/
+     * \brief Returns a reference to the current numeric model.
+     */
 	const Model &model() const
 	{ return method_->model(); }
 
@@ -500,7 +500,7 @@ protected:
 	{ return *static_cast<const Implementation*>(this); }
 
 	void writeConvergence_(const SolutionFunction &uOld,
-			const SolutionFunction &deltaU)
+                           const SolutionFunction &deltaU)
 	{
         convergenceWriter_.writeFields(this->model().gridView(),
                                        uOld,
@@ -509,111 +509,111 @@ protected:
 
 
 #if HAVE_MPI
-template <class Matrix, class Vector>
-void solveParallel_(Matrix &A,
-		SolutionFunction &u,
-		Vector &b,
-		Scalar residReduction)
-{
-	Vector &x = *u;
+    template <class Matrix, class Vector>
+    void solveParallel_(Matrix &A,
+                        SolutionFunction &u,
+                        Vector &b,
+                        Scalar residReduction)
+    {
+        Vector &x = *u;
 
-	int verbosity = GET_PROP_VALUE(TypeTag,
-			PTAG(NewtonLinearSolverVerbosity));
-	if (model().gridView().grid().comm().rank() != 0)
-		verbosity = 0;
+        int verbosity = GET_PROP_VALUE(TypeTag,
+                                       PTAG(NewtonLinearSolverVerbosity));
+        if (model().gridView().grid().comm().rank() != 0)
+            verbosity = 0;
 
 #ifdef HAVE_DUNE_PDELAB
 
 #if HAVE_PARDISO
-	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
-	Solver solver(model().jacobianAssembler().gridFunctionSpace(),
-			model().jacobianAssembler().constraintsTrafo(), 5000, verbosity);
+        typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
+        Solver solver(model().jacobianAssembler().gridFunctionSpace(),
+                      model().jacobianAssembler().constraintsTrafo(), 5000, verbosity);
 #else // !HAVE_PARDISO
-//	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
-//	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
-	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
-	Solver solver(model().jacobianAssembler().gridFunctionSpace(),
-			model().jacobianAssembler().constraintsTrafo(), 5000, verbosity);
+        //	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
+        //	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
+        //	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
+        //	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
+        typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
+        Solver solver(model().jacobianAssembler().gridFunctionSpace(),
+                      model().jacobianAssembler().constraintsTrafo(), 5000, verbosity);
 #endif // HAVE_PARDISO
-	solver.apply(A, x, b, residReduction);
+        solver.apply(A, x, b, residReduction);
 
-	if (!solver.result().converged)
-		DUNE_THROW(Dune::NumericalProblem,
-				"Solving the linear system of equations did not converge.");
+        if (!solver.result().converged)
+            DUNE_THROW(Dune::NumericalProblem,
+                       "Solving the linear system of equations did not converge.");
 
 #else // !HAVE_DUNE_PDELAB
 
 #if HAVE_PARDISO
-	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
-	typedef Dune::LoopSolver<Vector> Solver;
-	SeqPreCond seqPreCond(A);
+        typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
+        typedef Dune::LoopSolver<Vector> Solver;
+        SeqPreCond seqPreCond(A);
 #else // !HAVE_PARDISO
-	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
-	typedef Dune::BiCGSTABSolver<Vector> Solver;
-	SeqPreCond seqPreCond(A, 0.9);
+        typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
+        typedef Dune::BiCGSTABSolver<Vector> Solver;
+        SeqPreCond seqPreCond(A, 0.9);
 #endif
 
-	typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
-	typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
-	Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
-	u.fillIndexInfoFromGrid(indexinfo);
-	Communication comm(indexinfo, MPIHelper::getCommunicator());
-	Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication> parallelOperator(A, comm);
-	Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
-	Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
-	Solver solver(parallelOperator,
-			scalarProduct,
-			parPreCond,
-			residReduction,
-			300,
-			verbosity);
+        typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
+        typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
+        Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
+        u.fillIndexInfoFromGrid(indexinfo);
+        Communication comm(indexinfo, MPIHelper::getCommunicator());
+        Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication> parallelOperator(A, comm);
+        Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
+        Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
+        Solver solver(parallelOperator,
+                      scalarProduct,
+                      parPreCond,
+                      residReduction,
+                      300,
+                      verbosity);
 
-	Dune::InverseOperatorResult result;
+        Dune::InverseOperatorResult result;
 
-	solver.apply(x, b, result);
+        solver.apply(x, b, result);
 
-	if (!solver.result().converged)
-		DUNE_THROW(Dune::NumericalProblem,
-				"Solving the linear system of equations did not converge.");
+        if (!solver.result().converged)
+            DUNE_THROW(Dune::NumericalProblem,
+                       "Solving the linear system of equations did not converge.");
 
 #endif // HAVE_DUNE_PDELAB
-}
+    }
 
 
 #else // !HAVE_MPI
-template <class Matrix, class Vector>
-void solveSequential_(Matrix &A,
-		Vector &x,
-		Vector &b,
-		Scalar residReduction)
-{
-	typedef typename SolutionTypes::JacobianAssembler::RepresentationType AsmRep;
-	typedef typename SolutionFunction::RepresentationType FnRep;
-	typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  MatrixAdapter;
-	MatrixAdapter opA(A);
+    template <class Matrix, class Vector>
+    void solveSequential_(Matrix &A,
+                          Vector &x,
+                          Vector &b,
+                          Scalar residReduction)
+    {
+        typedef typename SolutionTypes::JacobianAssembler::RepresentationType AsmRep;
+        typedef typename SolutionFunction::RepresentationType FnRep;
+        typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  MatrixAdapter;
+        MatrixAdapter opA(A);
 
 #ifdef HAVE_PARDISO
-	SeqPardiso<Matrix,Vector,Vector> pardiso;
-	pardiso.factorize(A);
-	LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
+        SeqPardiso<Matrix,Vector,Vector> pardiso;
+        pardiso.factorize(A);
+        LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
 #else // HAVE_PARDISO
-	// initialize the preconditioner
-	Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
-	//                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
-	//                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
-	// invert the linear equation system
-	Dune::BiCGSTABSolver<Vector> solver(opA, precond, residReduction, 1000, 0);
+        // initialize the preconditioner
+        Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
+        //                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
+        //                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
+        // invert the linear equation system
+        Dune::BiCGSTABSolver<Vector> solver(opA, precond, residReduction, 1000, 0);
 #endif // HAVE_PARDISO
 
-	Dune::InverseOperatorResult result;
-	solver.apply(x, b, result);
+        Dune::InverseOperatorResult result;
+        solver.apply(x, b, result);
 
-	if (!result.converged)
-		DUNE_THROW(Dune::NumericalProblem,
-				"Solving the linear system of equations did not converge.");
-}
+        if (!result.converged)
+            DUNE_THROW(Dune::NumericalProblem,
+                       "Solving the linear system of equations did not converge.");
+    }
 #endif // HAVE_MPI
 
 //! this function is an indication of how "physically
@@ -628,31 +628,31 @@ void solveSequential_(Matrix &A,
 //! iteration. (The controller assumes that as the method
 //! progresses, the physicallness of the solution must
 //! increase.)
-Scalar physicalness_(SolutionFunction &u)
-{
-	return 1;
-}
+    Scalar physicalness_(SolutionFunction &u)
+    {
+        return 1;
+    }
 
-std::ostringstream endIterMsgStream_;
+    std::ostringstream endIterMsgStream_;
 
-NewtonMethod *method_;
+    NewtonMethod *method_;
 
-ConvergenceWriter convergenceWriter_;
+    ConvergenceWriter convergenceWriter_;
 
-Scalar tolerance_;
+    Scalar tolerance_;
 
-Scalar maxPhysicalness_;
-Scalar curPhysicalness_;
-Scalar error_;
-Scalar lastError_;
-int    probationCount_;
+    Scalar maxPhysicalness_;
+    Scalar curPhysicalness_;
+    Scalar error_;
+    Scalar lastError_;
+    int    probationCount_;
 
 // optimal number of iterations we want to achive
-int    targetSteps_;
+    int    targetSteps_;
 // maximum number of iterations we do before giving up
-int    maxSteps_;
+    int    maxSteps_;
 // actual number of steps done so far
-int    numSteps_;
+    int    numSteps_;
 };
 
 }
