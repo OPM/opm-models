@@ -121,7 +121,7 @@ public:
         model().initial();
 
         // write the inital solution to disk
-        writeCurrentResult_();
+        asImp_()->writeCurrentResult_();
     }
 
     /*!
@@ -365,7 +365,9 @@ protected:
             if (gridView().comm().rank() == 0)
                 std::cout << "Writing result file for current time step\n";
 
-            resultWriter_.beginTimestep(timeManager_.time(),
+            // calculate the time _after_ the time was updated 
+            Scalar t = timeManager_.time() + timeManager_.timeStepSize();
+            resultWriter_.beginTimestep(t,
                                         gridView());
             model().addOutputVtkFields(resultWriter_);
             resultWriter_.endTimestep();
