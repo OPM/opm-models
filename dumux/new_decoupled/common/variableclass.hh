@@ -170,14 +170,7 @@ private:
                     // local number of facet
                     int indexInInside = isIt->indexInInside();
 
-                    // get geometry type of face
-                    Dune::GeometryType faceGT = isIt->geometryInInside().type();
-
-                    // center in face's reference element
-                    const Dune::FieldVector<Scalar, dim - 1>& faceLocal = Dune::GenericReferenceElements<Scalar, dim
-                            - 1>::general(faceGT).position(0, 0);
-
-                    Dune::FieldVector<Scalar, dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
+                    Dune::FieldVector<Scalar, dimWorld> unitOuterNormal = isIt->centerUnitOuterNormal();
 
                     for (int i = 0; i < numPhase; i++) {potential_[globalIdxI][indexInInside][i] = initialVel * unitOuterNormal;}
                 }
