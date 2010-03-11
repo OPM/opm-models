@@ -462,6 +462,10 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
         double lambda1 = 0;
         lambda1 = problem_.variables().mobilityWetting(globalIdx1) + problem_.variables().mobilityNonwetting(globalIdx1);
 
+        //get the densities
+        Scalar densityW = this->problem().variables().densityWetting(globalIdx1);
+        Scalar densityNW = this->problem().variables().densityNonwetting(globalIdx1);
+
         // if K1 is zero, no flux through cell1
         // for 2-D
         if (K1[0][0] == 0 && K1[0][1] == 0 && K1[1][0] == 0 && K1[1][1] == 0)
@@ -916,7 +920,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     {
                         // get Neumann boundary value of 'nextisIt'
                         std::vector<Scalar> J(problem_.neumannPress(globalPosFace13, *nextisIt));
-                        double J3 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                        double J3 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                         // get boundary condition for boundary face (isIt24) center
                         BoundaryConditions::Flags isIt24bctype =
@@ -927,7 +931,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         {
                             // get neumann boundary value of 'isIt24'
                             std::vector<Scalar> J(problem_.neumannPress(globalPosFace24, *isIt24));
-                            double J4 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                            double J4 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1133,8 +1137,49 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         double g3 = problem_.dirichletPress(globalPosFace13, *nextisIt);
 
                         // compute total mobility for Dirichlet boundary 'nextisIt'
+                        //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                         double alambda1 = 0;
-                        alambda1 = lambda1;
+                        if (problem_.bctypeSat(globalPosFace13, *nextisIt) == BoundaryConditions::dirichlet)
+                        {
+                            Scalar satBound = problem_.dirichletSat(globalPosFace13, *nextisIt);
+
+                            //determine phase saturations from primary saturation variable
+                            Scalar satW = 0;
+                            switch (saturationType)
+                            {
+                            case Sw:
+                            {
+                                satW = satBound;
+                                break;
+                            }
+                            case Sn:
+                            {
+                                satW = 1 - satBound;
+                            }
+                            }
+
+                            Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+
+                            Scalar lambdaWBound = 0;
+                            Scalar lambdaNWBound = 0;
+
+                            FluidState fluidState;
+                            fluidState.update(temperature);
+
+                            Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                            Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                            lambdaWBound = MaterialLaw::krw(
+                                    problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                    / viscosityWBound;
+                            lambdaNWBound = MaterialLaw::krn(
+                                    problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                    / viscosityNWBound;
+                            alambda1 = lambdaWBound + lambdaNWBound;
+                        }
+                        else
+                        {
+                            alambda1 = lambda1;
+                        }
 
                         // get boundary condition for boundary face (isIt24) center
                         BoundaryConditions::Flags isIt24bctype =
@@ -1145,7 +1190,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         {
                             // get Neumann boundary value of 'isIt24'
                             std::vector<Scalar> J(problem_.neumannPress(globalPosFace24, *isIt24));
-                            double J4 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                            double J4 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1225,8 +1270,49 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             double g4 = problem_.dirichletPress(globalPosFace24, *isIt24);
 
                             // compute total mobility for Dirichlet boundary 'isIt24'
+                            //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                             double alambda2 = 0;
-                            alambda2 = lambda2;
+                            if (problem_.bctypeSat(globalPosFace24, *isIt24) == BoundaryConditions::dirichlet)
+                            {
+                                Scalar satBound = problem_.dirichletSat(globalPosFace24, *isIt24);
+
+                                //determine phase saturations from primary saturation variable
+                                Scalar satW = 0;
+                                switch (saturationType)
+                                {
+                                case Sw:
+                                {
+                                    satW = satBound;
+                                    break;
+                                }
+                                case Sn:
+                                {
+                                    satW = 1 - satBound;
+                                }
+                                }
+
+                                Scalar temperature = problem_.temperature(globalPosFace24, *eIt);
+
+                                Scalar lambdaWBound = 0;
+                                Scalar lambdaNWBound = 0;
+
+                                FluidState fluidState;
+                                fluidState.update(temperature);
+
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                lambdaWBound = MaterialLaw::krw(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
+                                        / viscosityWBound;
+                                lambdaNWBound = MaterialLaw::krn(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
+                                        / viscosityNWBound;
+                                alambda2 = lambdaWBound + lambdaNWBound;
+                            }
+                            else
+                            {
+                                alambda2 = lambda2;
+                            }
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1302,7 +1388,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                 {
                     // get Neumann boundary value
                     std::vector<Scalar> J(problem_.neumannPress(globalPosFace12, *isIt));
-                    double J1 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                    double J1 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                     // evaluate right hand side
                     f_[globalIdx1] -= face12vol*J1;
@@ -1316,9 +1402,50 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
 
                         if (nextisItbctype == BoundaryConditions::dirichlet)
                         {
-                            // compute total mobility for Dirichlet boundary
+                            // compute total mobility for Dirichlet boundary 'nextisIt'
+                            //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                             double alambda1 = 0;
-                            alambda1 = lambda1;
+                            if (problem_.bctypeSat(globalPosFace13, *nextisIt) == BoundaryConditions::dirichlet)
+                            {
+                                Scalar satBound = problem_.dirichletSat(globalPosFace13, *nextisIt);
+
+                                //determine phase saturations from primary saturation variable
+                                Scalar satW = 0;
+                                switch (saturationType)
+                                {
+                                case Sw:
+                                {
+                                    satW = satBound;
+                                    break;
+                                }
+                                case Sn:
+                                {
+                                    satW = 1 - satBound;
+                                }
+                                }
+
+                                Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+
+                                Scalar lambdaWBound = 0;
+                                Scalar lambdaNWBound = 0;
+
+                                FluidState fluidState;
+                                fluidState.update(temperature);
+
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                lambdaWBound = MaterialLaw::krw(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                        / viscosityWBound;
+                                lambdaNWBound = MaterialLaw::krn(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                        / viscosityNWBound;
+                                alambda1 = lambdaWBound + lambdaNWBound;
+                            }
+                            else
+                            {
+                                alambda1 = lambda1;
+                            }
 
                             // get Dirichlet boundary value
                             double g3 = problem_.dirichletPress(globalPosFace13, *nextisIt);
@@ -1420,7 +1547,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         {
                             // get Neumann boundary value
                             std::vector<Scalar> J(problem_.neumannPress(globalPosFace34, *isIt34));
-                            double J2 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                            double J2 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1520,9 +1647,50 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             // get Dirichlet boundary value
                             double g2 = problem_.dirichletPress(globalPosFace34, *isIt34);
 
-                            // compute total mobility for Dirichlet boundary
+                            // compute total mobility for Dirichlet boundary 'isIt24'
+                            //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                             double alambda3 = 0;
-                            alambda3 = lambda3;
+                            if (problem_.bctypeSat(globalPosFace34, *isIt34) == BoundaryConditions::dirichlet)
+                            {
+                                Scalar satBound = problem_.dirichletSat(globalPosFace34, *isIt34);
+
+                                //determine phase saturations from primary saturation variable
+                                Scalar satW = 0;
+                                switch (saturationType)
+                                {
+                                case Sw:
+                                {
+                                    satW = satBound;
+                                    break;
+                                }
+                                case Sn:
+                                {
+                                    satW = 1 - satBound;
+                                }
+                                }
+
+                                Scalar temperature = problem_.temperature(globalPosFace34, *eIt);
+
+                                Scalar lambdaWBound = 0;
+                                Scalar lambdaNWBound = 0;
+
+                                FluidState fluidState;
+                                fluidState.update(temperature);
+
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                lambdaWBound = MaterialLaw::krw(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
+                                        / viscosityWBound;
+                                lambdaNWBound = MaterialLaw::krn(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
+                                        / viscosityNWBound;
+                                alambda3 = lambdaWBound + lambdaNWBound;
+                            }
+                            else
+                            {
+                                alambda3 = lambda3;
+                            }
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1615,9 +1783,50 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     // get Dirichlet boundary value
                     double g1 = problem_.dirichletPress(globalPosFace12, *isIt);
 
-                    // compute total mobility for Dirichlet boundary
+                    // compute total mobility for Dirichlet boundary 'isIt'
+                    //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                     double alambda1 = 0;
-                    alambda1 = lambda1;
+                    if (problem_.bctypeSat(globalPosFace12, *isIt) == BoundaryConditions::dirichlet)
+                    {
+                        Scalar satBound = problem_.dirichletSat(globalPosFace12, *isIt);
+
+                        //determine phase saturations from primary saturation variable
+                        Scalar satW = 0;
+                        switch (saturationType)
+                        {
+                        case Sw:
+                        {
+                            satW = satBound;
+                            break;
+                        }
+                        case Sn:
+                        {
+                            satW = 1 - satBound;
+                        }
+                        }
+
+                        Scalar temperature = problem_.temperature(globalPosFace12, *eIt);
+
+                        Scalar lambdaWBound = 0;
+                        Scalar lambdaNWBound = 0;
+
+                        FluidState fluidState;
+                        fluidState.update(temperature);
+
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                        lambdaWBound = MaterialLaw::krw(
+                                problem_.spatialParameters().materialLawParams(globalPosFace12, *eIt), satW)
+                                / viscosityWBound;
+                        lambdaNWBound = MaterialLaw::krn(
+                                problem_.spatialParameters().materialLawParams(globalPosFace12, *eIt), satW)
+                                / viscosityNWBound;
+                        alambda1 = lambdaWBound + lambdaNWBound;
+                    }
+                    else
+                    {
+                        alambda1 = lambda1;
+                    }
 
                     // 'nextisIt' is on boundary
                     if (nextisIt->boundary())
@@ -1632,9 +1841,50 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             // get Dirichlet boundary value of 'nextisIt'
                             double g3 = problem_.dirichletPress(globalPosFace13, *nextisIt);
 
-                            // compute total mobility for Dirichlet boundary
+                            // compute total mobility for Dirichlet boundary 'nextisIt'
+                            //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                             double alambda1 = 0;
-                            alambda1 = lambda1;
+                            if (problem_.bctypeSat(globalPosFace13, *nextisIt) == BoundaryConditions::dirichlet)
+                            {
+                                Scalar satBound = problem_.dirichletSat(globalPosFace13, *nextisIt);
+
+                                //determine phase saturations from primary saturation variable
+                                Scalar satW = 0;
+                                switch (saturationType)
+                                {
+                                case Sw:
+                                {
+                                    satW = satBound;
+                                    break;
+                                }
+                                case Sn:
+                                {
+                                    satW = 1 - satBound;
+                                }
+                                }
+
+                                Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+
+                                Scalar lambdaWBound = 0;
+                                Scalar lambdaNWBound = 0;
+
+                                FluidState fluidState;
+                                fluidState.update(temperature);
+
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                lambdaWBound = MaterialLaw::krw(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                        / viscosityWBound;
+                                lambdaNWBound = MaterialLaw::krn(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
+                                        / viscosityNWBound;
+                                alambda1 = lambdaWBound + lambdaNWBound;
+                            }
+                            else
+                            {
+                                alambda1 = lambda1;
+                            }
 
                             // compute normal vectors nu11,nu21;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1674,7 +1924,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         {
                             // get Neumann boundary value of 'nextisIt'
                             std::vector<Scalar> J(problem_.neumannPress(globalPosFace13, *nextisIt));
-                            double J3 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                            double J3 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                             // compute normal vectors nu11,nu21;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1777,9 +2027,50 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             // get Dirichlet boundary value of 'isIt34'
                             double g2 = problem_.dirichletPress(globalPosFace34, *isIt34);
 
-                            // compute total mobility for Dirichlet boundary
+                            // compute total mobility for Dirichlet boundary 'isIt34'
+                            //determine lambda at the boundary -> if no saturation is known directly at the boundary use the cell saturation
                             double alambda3 = 0;
-                            alambda3 = lambda3;
+                            if (problem_.bctypeSat(globalPosFace34, *isIt34) == BoundaryConditions::dirichlet)
+                            {
+                                Scalar satBound = problem_.dirichletSat(globalPosFace34, *isIt34);
+
+                                //determine phase saturations from primary saturation variable
+                                Scalar satW = 0;
+                                switch (saturationType)
+                                {
+                                case Sw:
+                                {
+                                    satW = satBound;
+                                    break;
+                                }
+                                case Sn:
+                                {
+                                    satW = 1 - satBound;
+                                }
+                                }
+
+                                Scalar temperature = problem_.temperature(globalPosFace34, *eIt);
+
+                                Scalar lambdaWBound = 0;
+                                Scalar lambdaNWBound = 0;
+
+                                FluidState fluidState;
+                                fluidState.update(temperature);
+
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                lambdaWBound = MaterialLaw::krw(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
+                                        / viscosityWBound;
+                                lambdaNWBound = MaterialLaw::krn(
+                                        problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
+                                        / viscosityNWBound;
+                                alambda3 = lambdaWBound + lambdaNWBound;
+                            }
+                            else
+                            {
+                                alambda3 = lambda3;
+                            }
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
                             FieldVector<Scalar,dim> nu11(0);
@@ -1846,7 +2137,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         {
                             // get Neumann boundary value of 'isIt34'
                             std::vector<Scalar> J(problem_.neumannPress(globalPosFace34, *isIt34));
-                            double J2 = (J[wPhaseIdx]+J[nPhaseIdx]);
+                            double J2 = (J[wPhaseIdx]/densityW+J[nPhaseIdx]/densityNW);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
                             FieldVector<Scalar,dim> nu11(0);
