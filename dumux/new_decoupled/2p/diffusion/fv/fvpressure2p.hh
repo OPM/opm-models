@@ -352,7 +352,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
         Scalar densityNWI = problem_.variables().densityNonwetting(globalIdxI);
 
         // set right side to zero
-        std::vector<Scalar> source(problem_.source(globalPos, *eIt, localPos));
+        std::vector<Scalar> source(problem_.source(globalPos, *eIt));
         if (!compressibility)
         {
             source[wPhaseIdx] /= densityWI;
@@ -923,6 +923,9 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         }
         }
 
+        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(
+                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
+
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
         Scalar pressNW = 0;
@@ -992,9 +995,6 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         //initialize fractional flow functions
         problem_.variables().fracFlowFuncWetting(globalIdx) = mobilityW / (mobilityW + mobilityNW);
         problem_.variables().fracFlowFuncNonwetting(globalIdx) = mobilityNW / (mobilityW + mobilityNW);
-
-        problem_.variables().capillaryPressure(globalIdx) = MaterialLaw::pC(
-                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
         problem_.spatialParameters().update(satW, *eIt);
     }

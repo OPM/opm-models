@@ -188,7 +188,7 @@ Scalar temperature(const GlobalPosition& globalPos, const Element& element) cons
 // \}
 
 
-std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos)
+std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element)
 {
     return std::vector<Scalar>(2, 0.0);
 }

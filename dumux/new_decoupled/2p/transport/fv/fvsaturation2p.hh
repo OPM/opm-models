@@ -874,18 +874,18 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
         {
         case vw:
         {
-            source = problem_.source(globalPos, *eIt, localPos)[wPhaseIdx] / densityWI;
+            source = problem_.source(globalPos, *eIt)[wPhaseIdx] / densityWI;
             break;
         }
         case vn:
         {
-            source = problem_.source(globalPos, *eIt, localPos)[nPhaseIdx] / densityNWI;
+            source = problem_.source(globalPos, *eIt)[nPhaseIdx] / densityNWI;
             break;
         }
         case vt:
         {
-            source = problem_.source(globalPos, *eIt, localPos)[wPhaseIdx] / densityWI + problem_.source(globalPos,
-                    *eIt, localPos)[nPhaseIdx] / densityNWI;
+            source = problem_.source(globalPos, *eIt)[wPhaseIdx] / densityWI + problem_.source(globalPos,
+                    *eIt)[nPhaseIdx] / densityNWI;
             break;
         }
         }

@@ -29,7 +29,8 @@
 #include <dumux/new_material/components/oil.hh>
 
 #include <dumux/new_decoupled/2p/diffusion/diffusionproblem2p.hh>
-#include <dumux/new_decoupled/2p/diffusion/fv/fvpressure2p.hh>
+//#include <dumux/new_decoupled/2p/diffusion/fv/fvpressure2p.hh>
+#include <dumux/new_decoupled/2p/diffusion/fvmpfa/fvmpfaopressure2p.hh>
 
 
 #include "test_2p_spatialparams.hh"
@@ -45,7 +46,7 @@ class TestDiffusionProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(DiffusionTestProblem, INHERITS_FROM(DecoupledTwoP));
+NEW_TYPE_TAG(DiffusionTestProblem, INHERITS_FROM(DecoupledTwoP, MPFAProperties));
 
 // Set the grid type
 SET_PROP(DiffusionTestProblem, Grid)
@@ -63,7 +64,8 @@ public:
 
 SET_PROP(DiffusionTestProblem, Model)
 {
-    typedef Dune::FVPressure2P<TTAG(DiffusionTestProblem)> type;
+//    typedef Dune::FVPressure2P<TTAG(DiffusionTestProblem)> type;
+    typedef Dune::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
 };
 
 //SET_INT_PROP(DiffusionTestProblem, VelocityFormulation,
@@ -177,7 +179,7 @@ Scalar temperature(const GlobalPosition& globalPos, const Element& element) cons
 // \}
 
 
-std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element, const LocalPosition& localPos)
+std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element)
 {
     return std::vector<Scalar>(2, 0.0);
 }
