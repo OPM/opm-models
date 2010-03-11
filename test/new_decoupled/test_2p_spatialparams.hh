@@ -18,6 +18,7 @@
 
 
 //#include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/new_material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
 
@@ -42,11 +43,12 @@ class Test2PSpatialParams
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
     typedef Dune::FieldMatrix<Scalar,dim,dim> FieldMatrix;
 
-    typedef RegularizedBrooksCoreyParams<Scalar>                RawMaterialLawParams;
-//    typedef LinearMaterialParams<Scalar>                        RawMaterialLawParams;
+//    typedef RegularizedBrooksCoreyParams<Scalar>                RawMaterialLawParams;
+    typedef LinearMaterialParams<Scalar>                        RawMaterialLawParams;
     typedef AbsoluteSaturationsLawParams<RawMaterialLawParams> MaterialLawParams;
-    typedef RegularizedBrooksCorey<MaterialLawParams>           RawMaterialLaw;
-//    typedef LinearMaterial<MaterialLawParams>                   RawMaterialLaw;
+//    typedef RegularizedLinearMaterial<MaterialLawParams>           RawMaterialLaw;
+//    typedef RegularizedBrooksCorey<MaterialLawParams>           RawMaterialLaw;
+    typedef LinearMaterial<MaterialLawParams>                   RawMaterialLaw;
 public:
     //typedef RawMaterialLaw                                       MaterialLaw;
     typedef AbsoluteSaturationsLaw<RawMaterialLaw>               MaterialLaw;
@@ -81,12 +83,17 @@ public:
         materialLawParams_.setSwr(0.2);
         materialLawParams_.setSnr(0.2);
 
-        // parameters for the Brooks-Corey Law
-        // entry pressures
-        materialLawParams_.setPe(0);
+//        // parameters for the Brooks-Corey Law
+//        // entry pressures
+//        materialLawParams_.setPe(0);
+//
+//        // Brooks-Corey shape parameters
+//        materialLawParams_.setAlpha(2);
 
-        // Brooks-Corey shape parameters
-        materialLawParams_.setAlpha(2);
+        // parameters for the linear
+        // entry pressures function
+        materialLawParams_.setEntryPC(0);
+        materialLawParams_.setMaxPC(0);
 
         for(int i = 0; i < dim; i++)
         {

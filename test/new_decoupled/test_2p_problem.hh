@@ -30,6 +30,7 @@
 
 #include <dumux/new_decoupled/2p/impes/impesproblem2p.hh>
 #include <dumux/new_decoupled/2p/diffusion/fv/fvvelocity2p.hh>
+#include <dumux/new_decoupled/2p/diffusion/fvmpfa/fvmpfaovelocity2p.hh>
 #include <dumux/new_decoupled/2p/transport/fv/fvsaturation2p.hh>
 #include <dumux/new_decoupled/2p/transport/fv/capillarydiffusion.hh>
 #include <dumux/new_decoupled/2p/transport/fv/gravitypart.hh>
@@ -47,7 +48,7 @@ class Test2PProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(TwoPTestProblem, INHERITS_FROM(DecoupledTwoP, Transport));
+NEW_TYPE_TAG(TwoPTestProblem, INHERITS_FROM(DecoupledTwoP, MPFAProperties, Transport));
 
 // Set the grid type
 SET_PROP(TwoPTestProblem, Grid)
@@ -73,7 +74,8 @@ SET_TYPE_PROP(TwoPTestProblem, ConvectivePart, Dune::GravityPart<TypeTag>);
 
 SET_PROP(TwoPTestProblem, PressureModel)
 {
-    typedef Dune::FVVelocity2P<TTAG(TwoPTestProblem)> type;
+//    typedef Dune::FVVelocity2P<TTAG(TwoPTestProblem)> type;
+    typedef Dune::FVMPFAOVelocity2P<TTAG(TwoPTestProblem)> type;
 };
 
 //SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
@@ -97,7 +99,7 @@ SET_PROP(TwoPTestProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 public:
-    typedef Dune::LiquidPhase<Scalar, Dune::Oil<Scalar> > type;
+    typedef Dune::LiquidPhase<Scalar, Dune::SimpleH2O<Scalar> > type;
 };
 
 // Set the soil properties
@@ -203,8 +205,8 @@ typename BoundaryConditions::Flags bctypePress(const GlobalPosition& globalPos, 
 
 BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Intersection& intersection) const
 {
-    //        if (globalPos[0] > (upperRight_[0] - eps_) || globalPos[0] < eps_)
-    if (globalPos[0] < eps_)
+    if (globalPos[0] > (upperRight_[0] - eps_) || globalPos[0] < eps_)
+//    if (globalPos[0] < eps_)
     return Dune::BoundaryConditions::dirichlet;
     else
     return Dune::BoundaryConditions::neumann;
@@ -232,7 +234,7 @@ Scalar dirichletSat(const GlobalPosition& globalPos, const Intersection& interse
     if (globalPos[0] < eps_)
     return 0.8;
     // all other boundaries
-    return 0;
+    return 0.2;
 }
 
 std::vector<Scalar> neumannPress(const GlobalPosition& globalPos, const Intersection& intersection) const
