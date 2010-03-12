@@ -336,6 +336,7 @@ private:
 template<class TypeTag>
 class ISTLBackend_NoOverlap_Loop_Pardiso
 {
+	typedef typename GET_PROP_TYPE(TypeTag, PTAG(Model)) Model;
 	typedef typename GET_PROP(TypeTag, PTAG(PDELabTypes))  PDELabTypes;
 	typedef typename PDELabTypes::GridFunctionSpace GridFunctionSpace;
 	typedef typename PDELabTypes::ConstraintsTrafo ConstraintsTrafo;
@@ -348,9 +349,10 @@ public:
 	\param[in] maxiter maximum number of iterations to do
 	\param[in] verbose print messages if true
 	*/
-	explicit ISTLBackend_NoOverlap_Loop_Pardiso (const GridFunctionSpace& gfs_, const ConstraintsTrafo& constraintsTrafo,
-			unsigned maxiter_=5000, int verbose_=1)
-	: gfs(gfs_), phelper(gfs), constraintsTrafo_(constraintsTrafo), maxiter(maxiter_), verbose(verbose_)
+	explicit ISTLBackend_NoOverlap_Loop_Pardiso (Model& model, unsigned maxiter_=5000, int verbose_=1)
+	: gfs(model.jacobianAssembler().gridFunctionSpace()), phelper(gfs),
+	  maxiter(maxiter_), verbose(verbose_), constraintsTrafo_(model.jacobianAssembler().constraintsTrafo()),
+	  exchanger_(model)
 	{}
 
 	/*! \brief compute global norm of a vector
@@ -377,14 +379,17 @@ public:
 	template<class Matrix, class SolVector, class RhsVector>
 	void apply(Matrix& A, SolVector& z, RhsVector& r, typename SolVector::ElementType reduction)
 	{
+		typedef Dune::SeqPardiso<Matrix,SolVector,RhsVector> SeqPreCond;
+		Matrix B(A);
+		exchanger_.sumEntries(B);
+		SeqPreCond seqPreCond(B);
+
 		typedef Dune::PDELab::NonoverlappingOperator<GridFunctionSpace,Matrix,SolVector,RhsVector> POP;
 		POP pop(gfs,A,phelper);
 		typedef Dune::PDELab::NonoverlappingScalarProduct<GridFunctionSpace,SolVector> PSP;
 		PSP psp(gfs,phelper);
-		typedef Dune::SeqPardiso<Matrix,SolVector,SolVector> SeqPreCond;
-		SeqPreCond seqPreCond(A);
 		typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
-		ParPreCond parPreCond(gfs, seqPreCond, phelper);
+		ParPreCond parPreCond(gfs, seqPreCond, constraintsTrafo_, exchanger_.borderIndices(), phelper);
 
 		//		typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace,SolVector,RhsVector> PRICH;
 		//		PRICH prich(gfs,phelper);
@@ -408,10 +413,11 @@ public:
 private:
 	const GridFunctionSpace& gfs;
 	PHELPER phelper;
-	const ConstraintsTrafo& constraintsTrafo_;
 	Dune::PDELab::LinearSolverResult<double> res;
 	unsigned maxiter;
 	int verbose;
+	const ConstraintsTrafo& constraintsTrafo_;
+	Exchanger<TypeTag> exchanger_;
 };
 
 

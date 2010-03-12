@@ -526,16 +526,10 @@ void solveParallel_(Matrix &A,
 
 #if HAVE_PARDISO
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
-	Solver solver(model().jacobianAssembler().gridFunctionSpace(),
-			model().jacobianAssembler().constraintsTrafo(), 5000, verbosity);
-#else // !HAVE_PARDISO
-//	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
-//	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
+#else
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
+#endif
 	Solver solver(model(), 5000, verbosity);
-#endif // HAVE_PARDISO
 	solver.apply(A, x, b, residReduction);
 
 	if (!solver.result().converged)
