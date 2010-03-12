@@ -662,7 +662,7 @@ protected:
                            int vertIdx,
                            int pvIdx) const
     {
-        return std::max(fabs(1e-7*elemSol[vertIdx][pvIdx]), 1e-7);
+        return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-9);
         //return std::max(std::abs(1e-9*elemSol[vertIdx][pvIdx]), Scalar(1e-12));
     }
 
