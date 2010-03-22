@@ -132,9 +132,9 @@ public:
         f_ = 0;
 
         // check grid partitioning if we are parallel
-        assert((prob.gridView().comm().size() == 1) ||
-               (prob.gridView().overlapSize(0) > 0) ||
-               (prob.gridView().ghostSize(0) > 0));
+//        assert((prob.gridView().comm().size() == 1) ||
+//               (prob.gridView().overlapSize(0) > 0) ||
+//               (prob.gridView().ghostSize(0) > 0));
     }
 
     ~BoxScheme()
@@ -480,6 +480,12 @@ public:
     const ElementMapper &elementMapper() const
     { return elementMapper_; };
 
+    void resetJacobianAssembler ()
+    {
+    	delete this->jacAsm_;
+
+        this->jacAsm_ = new JacobianAssembler(this->asImp_(), this->problem_);
+    }
 
 protected:
     //! returns true iff the grid has an overlap
