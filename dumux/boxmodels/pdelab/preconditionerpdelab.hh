@@ -295,7 +295,7 @@ public:
 		typedef Dune::SeqILU0<Matrix,SolVector,RhsVector> SeqPreCond;
 		Matrix B(A);
 		exchanger_.sumEntries(B);
-		SeqPreCond seqPreCond(B, 0.9);
+		SeqPreCond seqPreCond(B, 1.0);
 
 		typedef Dune::PDELab::NonoverlappingOperator<GridFunctionSpace,Matrix,SolVector,RhsVector> POP;
 		POP pop(gfs,A,phelper);
@@ -304,8 +304,6 @@ public:
 		typedef Dune::PDELab::NonoverlappingWrappedPreconditioner<ConstraintsTrafo, GridFunctionSpace, SeqPreCond> ParPreCond;
 		ParPreCond parPreCond(gfs, seqPreCond, constraintsTrafo_, exchanger_.borderIndices(), phelper);
 
-		//		typedef Dune::PDELab::NonoverlappingRichardson<GridFunctionSpace,SolVector,RhsVector> PRICH;
-		//		PRICH prich(gfs,phelper);
 		int verb=0;
 		if (gfs.gridview().comm().rank()==0) verb=verbose;
 		Dune::BiCGSTABSolver<SolVector> solver(pop,psp,parPreCond,reduction,maxiter,verb);
