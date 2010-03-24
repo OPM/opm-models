@@ -413,8 +413,8 @@ protected:
             this->bctype[i].reset();
 
         // evaluate boundary conditions
-        IntersectionIterator isIt = curElement_().ileafbegin();
-        const IntersectionIterator &endIt = curElement_().ileafend();
+        IntersectionIterator isIt = gridView_.template ibegin(curElement_());
+        const IntersectionIterator &endIt = gridView_.template iend(curElement_());
         for (; isIt != endIt; ++isIt)
         {
             // Ignore non- boundary faces.
@@ -455,8 +455,8 @@ protected:
 
         // evaluate boundary conditions for all intersections of
         // the current element
-        IntersectionIterator isIt = curElement_().ileafbegin();
-        const IntersectionIterator &endIt = curElement_().ileafend();
+        IntersectionIterator isIt = gridView_.template ibegin(curElement_());
+        const IntersectionIterator &endIt = gridView_.template iend(curElement_());
         for (; isIt != endIt; ++isIt)
         {
             // handle only faces on the boundary
