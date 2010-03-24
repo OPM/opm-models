@@ -103,8 +103,10 @@ public:
         // get absolute permeability of cell
         FieldMatrix permeability(problem_.spatialParameters().intrinsicPermeability(globalPos,element));
 
+        Scalar temperature = problem_.temperature(globalPos, element);
+        Scalar referencePressure = problem_.referencePressure(globalPos, element);
         FluidState fluidState;
-        fluidState.update(problem_.temperature(globalPos, element));//not for compressible flow -> thus constant
+        fluidState.update(satI, referencePressure, referencePressure, temperature);//not for compressible flow -> thus constant
 
         IntersectionIterator isItEnd = problem_.gridView().template iend(element);
         IntersectionIterator isIt = problem_.gridView().template ibegin(element);
@@ -141,11 +143,11 @@ public:
         else
         {
             lambdaWI = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            lambdaWI /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+            lambdaWI /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
             lambdaNWI = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            lambdaNWI /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
-            densityWI = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-            densityNWI = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
+            lambdaNWI /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
+            densityWI = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState);
+            densityNWI = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
         }
 
         if (isIt->neighbor())
@@ -177,22 +179,22 @@ public:
             else
             {
                 lambdaWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                lambdaWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                lambdaWJ /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
                 lambdaNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                lambdaNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
-                densityWJ = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-                densityNWJ = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
+                lambdaNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
+                densityWJ = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState);
+                densityNWJ = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
             }
         }
         else
         {
             //calculate lambda_n*f_w at the boundary
             lambdaWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            lambdaWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+            lambdaWJ /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
             lambdaNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            lambdaNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
-            densityWJ = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-            densityNWJ = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
+            lambdaNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
+            densityWJ = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState);
+            densityNWJ = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
         }
 
         // set result to K*grad(pc)

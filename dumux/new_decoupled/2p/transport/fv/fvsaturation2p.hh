@@ -606,7 +606,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                     }
 
                     FluidState fluidState;
-                    fluidState.update(pressW, pressNW, temperature);
+                    fluidState.update(satBound, pressW, pressNW, temperature);
 
                     //get phase potentials
                     Scalar potentialW = problem_.variables().potentialWetting(globalIdxI, isIndex);
@@ -629,7 +629,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         if (compressibility_)
                         {
                             lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt),
-                                    satWBound) / FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                                    satWBound) / FluidSystem::phaseViscosity(wPhaseIdx, temperature, pressW, fluidState);
                         }
                         else
                         {
@@ -652,7 +652,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                         {
                             lambdaNW = MaterialLaw::krn(
                                     problem_.spatialParameters().materialLawParams(globalPos, *eIt), satWBound)
-                                    / FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                    / FluidSystem::phaseViscosity(nPhaseIdx, temperature, pressNW, fluidState);
                         }
                         else
                         {
@@ -1093,13 +1093,14 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws(RepresentationType& saturation 
         }
 
         Scalar temperature = problem_.temperature(globalPos, *eIt);
+        Scalar referencePressure =  problem_.referencePressure(globalPos, *eIt);
 
-        fluidState.update(temperature);
+        fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-        problem_.variables().densityWetting(globalIdx) = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-        problem_.variables().densityNonwetting(globalIdx) = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
-        problem_.variables().viscosityWetting(globalIdx) = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-        problem_.variables().viscosityNonwetting(globalIdx) = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+        problem_.variables().densityWetting(globalIdx) = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState);
+        problem_.variables().densityNonwetting(globalIdx) = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
+        problem_.variables().viscosityWetting(globalIdx) = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
+        problem_.variables().viscosityNonwetting(globalIdx) = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
 
         // initialize mobilities
         problem_.variables().mobilityWetting(globalIdx) = MaterialLaw::krw(

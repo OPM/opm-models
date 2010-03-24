@@ -114,6 +114,9 @@ public:
         // get geometry type of face
         GeometryType faceGT = isIt->geometryInInside().type();
 
+        Scalar temperature = problem_.temperature(globalPos, element);
+        Scalar referencePressure = problem_.referencePressure(globalPos, element);
+
         //get lambda_bar = lambda_n*f_w
         Scalar mobBar = 0;
         Scalar mobilityWI = 0;
@@ -127,11 +130,11 @@ public:
         else
         {
             FluidState fluidState;
-            fluidState.update(problem_.temperature(globalPos, element));
+            fluidState.update(satI, referencePressure, referencePressure, temperature);
             mobilityWI = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            mobilityWI /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+            mobilityWI /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
             mobilityNWI = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satI);
-            mobilityNWI /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+            mobilityNWI /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
         }
 
         if (isIt->neighbor())
@@ -182,11 +185,11 @@ public:
             else
             {
                 FluidState fluidState;
-                fluidState.update(problem_.temperature(globalPosNeighbor, *neighborPointer));
+                fluidState.update(satJ, referencePressure, referencePressure, temperature);
                 mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+                mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
                 mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPosNeighbor, *neighborPointer), satJ);
-                mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
             }
             Scalar mobilityWMean = 0.5*(mobilityWI + mobilityWJ);
             Scalar mobilityNWMean = 0.5*(mobilityNWI + mobilityNWJ);
@@ -199,11 +202,11 @@ public:
 
             //calculate lambda_n*f_w at the boundary
             FluidState fluidState;
-            fluidState.update(problem_.temperature(globalPos, element));
+            fluidState.update(satJ, referencePressure, referencePressure, temperature);
             mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
+            mobilityWJ /= FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
             mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, element), satJ);
-            mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+            mobilityNWJ /= FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
 
             Scalar mobWMean = 0.5 * (mobilityWI + mobilityWJ);
             Scalar mobNWMean = 0.5 * (mobilityNWI + mobilityNWJ);

@@ -90,8 +90,6 @@ public:
 
     void calculateVelocity();
 
-private:
-    static const int velocityType_ = GET_PROP_VALUE(TypeTag, PTAG(VelocityFormulation)); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
 }; // end of template
 
 template<class TypeTag>
@@ -137,26 +135,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
         FieldMatrix K1(this->problem().spatialParameters().intrinsicPermeability(globalPos1, *eIt));
 
         // compute total mobility of cell 1
-        double lambda1 = 0;
-        switch (velocityType_)
-        {
-        case vw:
-        {
-            lambda1 = this->problem().variables().mobilityWetting(globalIdx1);
-            break;
-        }
-        case vn:
-        {
-            lambda1 = this->problem().variables().mobilityNonwetting(globalIdx1);
-            break;
-        }
-        case vt:
-        {
-            lambda1 = this->problem().variables().mobilityWetting(globalIdx1)
+        double lambda1 = this->problem().variables().mobilityWetting(globalIdx1)
                     + this->problem().variables().mobilityNonwetting(globalIdx1);
-            break;
-        }
-        }
 
         // this 'for' loop can be deleted since velocity is
         // initiated in variableclass.hh
@@ -304,26 +284,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                 FieldMatrix K2(this->problem().spatialParameters().intrinsicPermeability(globalPos2, *outside));
 
                 // get total mobility of neighbor cell 2
-                double lambda2 = 0;
-                switch (velocityType_)
-                {
-                case vw:
-                {
-                    lambda2 = this->problem().variables().mobilityWetting(globalIdx2);
-                    break;
-                }
-                case vn:
-                {
-                    lambda2 = this->problem().variables().mobilityNonwetting(globalIdx2);
-                    break;
-                }
-                case vt:
-                {
-                    lambda2 = this->problem().variables().mobilityWetting(globalIdx2)
+                double lambda2 = this->problem().variables().mobilityWetting(globalIdx2)
                             + this->problem().variables().mobilityNonwetting(globalIdx2);
-                    break;
-                }
-                }
 
                 // 'nextisIt' is an interior face
                 if (nextisIt->neighbor())
@@ -348,26 +310,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             *nextisItoutside));
 
                     // get total mobility of neighbor cell 3
-                    double lambda3 = 0;
-                    switch (velocityType_)
-                    {
-                    case vw:
-                    {
-                        lambda3 = this->problem().variables().mobilityWetting(globalIdx3);
-                        break;
-                    }
-                    case vn:
-                    {
-                        lambda3 = this->problem().variables().mobilityNonwetting(globalIdx3);
-                        break;
-                    }
-                    case vt:
-                    {
-                        lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
+                    double lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
                                 + this->problem().variables().mobilityNonwetting(globalIdx3);
-                        break;
-                    }
-                    }
 
                     // neighbor cell 4
                     GlobalPosition globalPos4(0);
@@ -403,26 +347,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                     K4 += this->problem().spatialParameters().intrinsicPermeability(globalPos4,
                                             *innerisItoutside);
 
-                                    // get total mobility of neighbor cell 4
-                                    switch (velocityType_)
-                                    {
-                                    case vw:
-                                    {
-                                        lambda4 = this->problem().variables().mobilityWetting(globalIdx4);
-                                        break;
-                                    }
-                                    case vn:
-                                    {
-                                        lambda4 = this->problem().variables().mobilityNonwetting(globalIdx4);
-                                        break;
-                                    }
-                                    case vt:
-                                    {
-                                        lambda4 = this->problem().variables().mobilityWetting(globalIdx4)
+                                    lambda4 = this->problem().variables().mobilityWetting(globalIdx4)
                                                 + this->problem().variables().mobilityNonwetting(globalIdx4);
-                                        break;
-                                    }
-                                    }
                                 }
                             }
                         }
@@ -818,15 +744,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace24, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace24, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
                                         / viscosityWBound;
@@ -942,15 +869,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             }
 
                             Scalar temperature = this->problem().temperature(globalPosFace13, *eIt);
+                            Scalar referencePressure =  this->problem().referencePressure(globalPosFace13, *eIt);
 
                             Scalar lambdaWBound = 0;
                             Scalar lambdaNWBound = 0;
 
                             FluidState fluidState;
-                            fluidState.update(temperature);
+                            fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                            Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                            Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                            Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                            Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                             lambdaWBound = MaterialLaw::krw(
                                     this->problem().spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                     / viscosityWBound;
@@ -1084,15 +1012,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace24, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace24, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
                                         / viscosityWBound;
@@ -1228,15 +1157,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace13, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace13, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                         / viscosityWBound;
@@ -1308,23 +1238,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 *nextisItoutside));
 
                         // get total mobility of neighbor cell 3
-                        double lambda3 = 0;
-                        switch (velocityType_)
-                        {
-                        case vw:
-                        {
-                            lambda3 = this->problem().variables().mobilityWetting(globalIdx3);
-                        }
-                        case vn:
-                        {
-                            lambda3 = this->problem().variables().mobilityNonwetting(globalIdx3);
-                        }
-                        case vt:
-                        {
-                            lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
+                        double lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
                                     + this->problem().variables().mobilityNonwetting(globalIdx3);
-                        }
-                        }
 
                         // get the information of the face 'isIt34' between cell3 and cell4 (locally numbered)
                         IntersectionIterator isIt34 = this->problem().gridView().template ibegin(*nextisItoutside);
@@ -1494,15 +1409,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace34, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace34, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
                                         / viscosityWBound;
@@ -1632,15 +1548,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                         }
 
                         Scalar temperature = this->problem().temperature(globalPosFace12, *eIt);
+                        Scalar referencePressure =  this->problem().referencePressure(globalPosFace12, *eIt);
 
                         Scalar lambdaWBound = 0;
                         Scalar lambdaNWBound = 0;
 
                         FluidState fluidState;
-                        fluidState.update(temperature);
+                        fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                         lambdaWBound = MaterialLaw::krw(
                                 this->problem().spatialParameters().materialLawParams(globalPosFace12, *eIt), satW)
                                 / viscosityWBound;
@@ -1690,15 +1607,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace13, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace13, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                         / viscosityWBound;
@@ -1820,23 +1738,8 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 *nextisItoutside));
 
                         // get total mobility of neighbor cell 3
-                        double lambda3 = 0;
-                        switch (velocityType_)
-                        {
-                        case vw:
-                        {
-                            lambda3 = this->problem().variables().mobilityWetting(globalIdx3);
-                        }
-                        case vn:
-                        {
-                            lambda3 = this->problem().variables().mobilityNonwetting(globalIdx3);
-                        }
-                        case vt:
-                        {
-                            lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
+                        double lambda3 = this->problem().variables().mobilityWetting(globalIdx3)
                                     + this->problem().variables().mobilityNonwetting(globalIdx3);
-                        }
-                        }
 
                         // get the information of the face 'isIt34' between cell3 and cell4 (locally numbered)
                         IntersectionIterator isIt34 = this->problem().gridView().template ibegin(*nextisItoutside);
@@ -1905,15 +1808,16 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                                 }
 
                                 Scalar temperature = this->problem().temperature(globalPosFace34, *eIt);
+                                Scalar referencePressure =  this->problem().referencePressure(globalPosFace34, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         this->problem().spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
                                         / viscosityWBound;
@@ -2093,11 +1997,12 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
         {
             this->problem().variables().potentialWetting(globalIdx1, i) = this->problem().variables().velocity()[globalIdx1][i] * unitOuterNormal[i];
             this->problem().variables().potentialNonwetting(globalIdx1, i) = this->problem().variables().velocity()[globalIdx1][i] * unitOuterNormal[i];
-
+//            std::cout<<"potentialW = "<<this->problem().variables().potentialWetting(globalIdx1, i)
+//                    <<" ,potentialNW = "<<this->problem().variables().potentialNonwetting(globalIdx1, i)<<"\n";
         }
 
         // check if local mass conservative
-        if (dim == 2)
+        if (dim == 2 && GET_PROP_VALUE(TypeTag, PTAG(VelocityFormulation)) == vt)
         {
             double diff = fabs(this->problem().variables().velocity()[globalIdx1][0] * unitOuterNormal[0] * facevol[0]
                     + this->problem().variables().velocity()[globalIdx1][1] * unitOuterNormal[1] * facevol[1]

@@ -26,38 +26,8 @@
 // dumux environment
 #include "dumux/pardiso/pardiso.hh"
 #include <dumux/new_decoupled/2p/2pproperties.hh>
+#include <dumux/new_decoupled/2p/diffusion/fvmpfa/mpfaproperties.hh>
 
-namespace Dune
-{
-/*!
- * \brief Indices denoting the different grid types.
- */
-struct GridTypes
-{
-public:
-    //SGrid
-    static const int sGrid = 0;
-    //YaspGrid
-    static const int yaspGrid = 1;
-    //UGGrid
-    static const int ugGrid = 2;
-    //ALUGrid
-    static const int aluGrid = 3;
-};
-
-namespace Properties
-{
-NEW_TYPE_TAG(MPFAProperties);
-
-NEW_PROP_TAG( GridTypeIndices );
-NEW_PROP_TAG( GridImplementation ); //returns kind of grid implementation
-
-SET_INT_PROP(MPFAProperties, GridImplementation, GridTypes::sGrid);
-
-SET_TYPE_PROP(MPFAProperties, GridTypeIndices, GridTypes);
-
-}
-}
 
 /**
  * @file
@@ -194,15 +164,15 @@ public:
 
     void pressure(bool solveTwice = true)
     {
-        Dune::Timer timer;
+//        Dune::Timer timer;
 
-        timer.reset();
+//        timer.reset();
         assemble();
-        std::cout << "assembling MPFA O-matrix on level" << problem_.gridView().grid().maxLevel() << " took " << timer.elapsed() << " seconds" << std::endl;
+//        std::cout << "assembling MPFA O-matrix on level" << problem_.gridView().grid().maxLevel() << " took " << timer.elapsed() << " seconds" << std::endl;
 
-        timer.reset();
+//        timer.reset();
         solve();
-        std::cout << "solving MPFA O-matrix on level" << problem_.gridView().grid().maxLevel() << " took " << timer.elapsed() << " seconds" << std::endl;
+//        std::cout << "solving MPFA O-matrix on level" << problem_.gridView().grid().maxLevel() << " took " << timer.elapsed() << " seconds" << std::endl;
 
         return;
     }
@@ -1038,15 +1008,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace24, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace24, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
                                         / viscosityWBound;
@@ -1159,15 +1130,17 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             }
 
                             Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+                            Scalar referencePressure =  problem_.referencePressure(globalPosFace13, *eIt);
+
 
                             Scalar lambdaWBound = 0;
                             Scalar lambdaNWBound = 0;
 
                             FluidState fluidState;
-                            fluidState.update(temperature);
+                            fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                            Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                            Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                            Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                            Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                             lambdaWBound = MaterialLaw::krw(
                                     problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                     / viscosityWBound;
@@ -1292,15 +1265,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace24, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace24, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace24, *eIt), satW)
                                         / viscosityWBound;
@@ -1425,15 +1399,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace13, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                         / viscosityWBound;
@@ -1670,15 +1645,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace34, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace34, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
                                         / viscosityWBound;
@@ -1806,15 +1782,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                         }
 
                         Scalar temperature = problem_.temperature(globalPosFace12, *eIt);
+                        Scalar referencePressure =  problem_.referencePressure(globalPosFace12, *eIt);
 
                         Scalar lambdaWBound = 0;
                         Scalar lambdaNWBound = 0;
 
                         FluidState fluidState;
-                        fluidState.update(temperature);
+                        fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                         lambdaWBound = MaterialLaw::krw(
                                 problem_.spatialParameters().materialLawParams(globalPosFace12, *eIt), satW)
                                 / viscosityWBound;
@@ -1864,15 +1841,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace13, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace13, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace13, *eIt), satW)
                                         / viscosityWBound;
@@ -2050,15 +2028,16 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                                 }
 
                                 Scalar temperature = problem_.temperature(globalPosFace34, *eIt);
+                                Scalar referencePressure =  problem_.referencePressure(globalPosFace34, *eIt);
 
                                 Scalar lambdaWBound = 0;
                                 Scalar lambdaNWBound = 0;
 
                                 FluidState fluidState;
-                                fluidState.update(temperature);
+                                fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                                Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+                                Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
                                 lambdaWBound = MaterialLaw::krw(
                                         problem_.spatialParameters().materialLawParams(globalPosFace34, *eIt), satW)
                                         / viscosityWBound;
@@ -2401,6 +2380,7 @@ void FVMPFAOPressure2P<TypeTag>::updateMaterialLaws()
         int globalIdx = problem_.variables().index(*eIt);
 
         Scalar temperature = problem_.temperature(globalPos, *eIt);
+        Scalar referencePressure =  problem_.referencePressure(globalPos, *eIt);
 
         //determine phase saturations from primary saturation variable
         Scalar satW = 0;
@@ -2430,13 +2410,13 @@ void FVMPFAOPressure2P<TypeTag>::updateMaterialLaws()
         Scalar viscosityW = 0;
         Scalar viscosityNW = 0;
 
-        fluidState.update(temperature);
+        fluidState.update(satW, referencePressure, referencePressure, temperature);
 
-        densityW = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-        densityNW = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
+        densityW = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+        densityNW = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState) ;
 
-        viscosityW = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-        viscosityNW = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+        viscosityW = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState) ;
+        viscosityNW = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState) ;
 
         // initialize mobilities
         Scalar mobilityW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)

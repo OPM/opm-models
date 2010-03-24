@@ -484,22 +484,23 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     if (this->compressibility)
                     {
                         FluidState fluidState;
-                        fluidState.update(pressW, pressNW, temperature);
-                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
-                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                        fluidState.update(satW, pressW, pressNW, temperature);
+                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, temperature, pressW, fluidState);
+                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, temperature, pressNW, fluidState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, pressW, fluidState);
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, pressNW, fluidState);
                         lambdaWBound = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound * densityWBound;
                         lambdaNWBound = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound * densityNWBound;
                     }
                     else
                     {
+                        Scalar referencePressure =  this->problem().referencePressure(globalPos, *eIt);
                         FluidState fluidState;
-                        fluidState.update(temperature);
-                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, fluidState);
-                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, fluidState);
-                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, fluidState);
-                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, fluidState);
+                        fluidState.update(satW, referencePressure, referencePressure, temperature);
+                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, referencePressure, temperature, fluidState);
+                        densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
+                        Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
+                        Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
                         lambdaWBound = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityWBound;
                         lambdaNWBound = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNWBound;
                     }
