@@ -28,10 +28,6 @@
 #include <dumux/common/valgrind.hh>
 #include <dumux/operators/boundaryconditions.hh>
 
-#ifndef DUMUX_DEPRECATED
-#define DUMUX_DEPRECATED
-#endif
-
 namespace Dumux
 {
 
@@ -240,14 +236,14 @@ public:
      * In the case of Dirichlet conditions, the equation with the same
      * index is always disabled.
      */
-    BoundaryWrapper operator[](int i) DUMUX_DEPRECATED
+    BoundaryWrapper operator[](int i) DUNE_DEPRECATED
     { return BoundaryWrapper(this, i); }
 
     /*!
      * \brief Allows to assign Dumux::BoundaryCondition to a all
      *        primary varibles or equations.
      */
-    BoundaryTypes &operator=(int bc) DUMUX_DEPRECATED
+    BoundaryTypes &operator=(int bc) DUNE_DEPRECATED
     { 
         switch (bc) {
         case Dumux::BoundaryConditions::neumann:
