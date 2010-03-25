@@ -26,7 +26,7 @@
 #include <dumux/new_material/fluidsystems/2p_system.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup Decoupled

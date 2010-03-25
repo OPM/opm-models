@@ -27,7 +27,7 @@
 #ifndef DUMUX_1P2C_ELEMENT_DATA_HH
 #define DUMUX_1P2C_ELEMENT_DATA_HH
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \brief This template class contains the quantities which are are

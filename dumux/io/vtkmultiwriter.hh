@@ -34,7 +34,7 @@
 #include <iostream>
 #include <string>
 
-namespace Dune {
+namespace Dumux {
 /*!
  * \brief Simplyfies writing multi-file VTK datasets.
  *

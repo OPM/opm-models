@@ -11,10 +11,10 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 
-#include<dumux/boundarytypes.hh>
+#include<dumux/common/boundarytypes.hh>
 #include<dumux/operators/boundaryconditions.hh>
 
-namespace Dune {
+namespace Dumux {
 //! Constraints construction
 // works in any dimension and on all element types
 template <class TypeTag>
@@ -29,7 +29,7 @@ class BoxDirichletConstraints // : public Dune::PDELab::ConformingDirichletConst
 	enum {numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     enum {dim = GridView::dimension};
 
-    typedef Dune::BoundaryTypes<numEq> BoundaryTypeVector;
+    typedef Dumux::BoundaryTypes<numEq> BoundaryTypeVector;
     Problem &problem_;
 
 public:

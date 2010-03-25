@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_FRACTIONALFLOW_HH
-#define DUNE_FRACTIONALFLOW_HH
+#ifndef DUMUX_FRACTIONALFLOW_HH
+#define DUMUX_FRACTIONALFLOW_HH
 
 #include "dumux/diffusion/diffusion.hh"
 #include "dumux/transport/transport.hh"
@@ -34,7 +34,7 @@
  * \defgroup impes IMPES (IMplicit Pressure Explicit Saturation)
  */
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup impes
@@ -81,7 +81,7 @@ public:
      *  \param updateVec  vector for the update values
      *  \param CLFFac     security factor for the time step criterion (0 < CLFFac <= 1)
      *
-     *  Calculates the update. Called from Dune::Timeloop.
+     *  Calculates the update. Called from Dumux::Timeloop.
      */
     virtual int update(const Scalar t, Scalar& dt, RepresentationType& updateVec, Scalar cFLFactor = 1) = 0;
 

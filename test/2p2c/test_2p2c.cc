@@ -15,7 +15,7 @@
  *****************************************************************************/
 #include "config.h"
 #include "injectionproblem.hh"
-#include <dumux/auxiliary/start.hh>
+#include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {

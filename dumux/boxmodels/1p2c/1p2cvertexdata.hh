@@ -26,7 +26,7 @@
 
 #include "1p2cproperties.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
@@ -100,7 +100,7 @@ public:
     Scalar density;
     Scalar viscosity;
     Scalar tortuosity;
-    FieldVector<Scalar,dim> dispersivity;
+    Dune::FieldVector<Scalar,dim> dispersivity;
     Scalar diffCoeff;
     Scalar molefraction;
     Scalar pressure;

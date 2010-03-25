@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_IMPES_HH
-#define DUNE_IMPES_HH
+#ifndef DUMUX_IMPES_HH
+#define DUMUX_IMPES_HH
 
 /**
  * @file
@@ -25,7 +25,7 @@
 
 #include "impesproperties.hh"
 
-namespace Dune
+namespace Dumux
 {
 /**
  * \ingroup impes
@@ -93,7 +93,7 @@ public:
      *  \param CLFFac     security factor for the time step criterion (0 < CLFFac <= 1)
      *
      *  Calculates the new pressure and velocity and determines the time step size and the saturation update for the explicit time step
-     *  Called from Dune::Timestep.
+     *  Called from Dumux::Timestep.
      */
     void update(const Scalar t, Scalar& dt, ScalarSolutionType& updateVec)
     {

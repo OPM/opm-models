@@ -15,8 +15,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_FVPRESSURE2P_HH
-#define DUNE_FVPRESSURE2P_HH
+#ifndef DUMUX_FVPRESSURE2P_HH
+#define DUMUX_FVPRESSURE2P_HH
 
 // dune environent:
 #include <dune/istl/bvector.hh>
@@ -34,7 +34,7 @@
  * @author Bernd Flemisch, Jochen Fritz, Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 //! \ingroup diffusion
 //! Finite Volume Diffusion Model
@@ -104,8 +104,8 @@ template<class TypeTag> class FVPressure2P
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
 
     typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
-    typedef BCRSMatrix<MB> Matrix;
-    typedef BlockVector<FieldVector<Scalar, 1> > Vector;
+    typedef Dune::BCRSMatrix<MB> Matrix;
+    typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > Vector;
 
     //initializes the matrix to store the system of equations
     void initializeMatrix();
@@ -149,12 +149,12 @@ public:
         solve();
         if (solveTwice)
         {
-            BlockVector<FieldVector<Scalar, 1> > pressureOld(this->problem().variables().pressure());
+            Dune::BlockVector<Dune::FieldVector<Scalar, 1> > pressureOld(this->problem().variables().pressure());
 
             assemble(false);
             solve();
 
-            BlockVector<FieldVector<Scalar, 1> > pressureDiff(pressureOld);
+            Dune::BlockVector<Dune::FieldVector<Scalar, 1> > pressureDiff(pressureOld);
             pressureDiff -= this->problem().variables().pressure();
             pressureOld = this->problem().variables().pressure();
             Scalar pressureNorm = pressureDiff.infinity_norm();
@@ -218,16 +218,16 @@ public:
      */
     FVPressure2P(Problem& problem) :
         problem_(problem), A_(problem.variables().gridSize(), problem.variables().gridSize(), (2 * dim + 1)
-                * problem.variables().gridSize(), BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
+                * problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
                 solverName_("BiCGSTAB"), preconditionerName_("SeqILU0"), gravity(problem.gravity())
     {
         if (pressureType != pw && pressureType != pn && pressureType != pglobal)
         {
-            DUNE_THROW(NotImplemented, "Pressure type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
         if (saturationType != Sw && saturationType != Sn)
         {
-            DUNE_THROW(NotImplemented, "Saturation type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
 
         initializeMatrix();
@@ -240,20 +240,20 @@ public:
      * \param pressType a string giving the type of pressure used (could be: pw, pn, pglobal)
      * \param satType a string giving the type of saturation used (could be: Sw, Sn)
      * \param solverName a string giving the type of solver used (could be: CG, BiCGSTAB, Loop)
-     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: SeqILU0, SeqPardiso)
+     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: Dune::SeqILU0, SeqPardiso)
      */
     FVPressure2P(Problem& problem, std::string solverName, std::string preconditionerName) :
         problem_(problem), A_(problem.variables().gridSize(), problem.variables().gridSize(), (2 * dim + 1)
-                * problem.variables().gridSize(), BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
+                * problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
                 solverName_(solverName), preconditionerName_(preconditionerName), gravity(problem.gravity())
     {
         if (pressureType != pw && pressureType != pn && pressureType != pglobal)
         {
-            DUNE_THROW(NotImplemented, "Pressure type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
         if (saturationType != Sw && saturationType != Sn)
         {
-            DUNE_THROW(NotImplemented, "Saturation type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
 
         initializeMatrix();
@@ -262,11 +262,11 @@ public:
 private:
     Problem& problem_;
     Matrix A_;
-    BlockVector<FieldVector<Scalar, 1> > f_;
+    Dune::BlockVector<Dune::FieldVector<Scalar, 1> > f_;
     std::string solverName_;
     std::string preconditionerName_;
 protected:
-    const FieldVector<Scalar, dimWorld>& gravity; //!< vector including the gravity constant
+    const Dune::FieldVector<Scalar, dimWorld>& gravity; //!< vector including the gravity constant
     static const bool compressibility = GET_PROP_VALUE(TypeTag, PTAG(EnableCompressibility));
     static const int pressureType = GET_PROP_VALUE(TypeTag, PTAG(PressureFormulation)); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
     static const int saturationType = GET_PROP_VALUE(TypeTag, PTAG(SaturationFormulation)); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
@@ -334,7 +334,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
     for (ElementIterator eIt = problem_.gridView().template begin<0> (); eIt != eItEnd; ++eIt)
     {
         // cell geometry type
-        GeometryType gt = eIt->geometry().type();
+        Dune::GeometryType gt = eIt->geometry().type();
 
         // cell center in reference element
         const LocalPosition& localPos = ReferenceElementContainer::general(gt).position(0, 0);
@@ -377,10 +377,10 @@ void FVPressure2P<TypeTag>::assemble(bool first)
         {
 
             // get geometry type of face
-            GeometryType faceGT = isIt->geometryInInside().type();
+            Dune::GeometryType faceGT = isIt->geometryInInside().type();
 
             // center in face's reference element
-            const FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0,
+            const Dune::FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0,
                     0);
 
             int isIndex = isIt->indexInInside();
@@ -389,7 +389,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
             const LocalPosition localPosFace(0);
 
             // get normal vector
-            FieldVector<Scalar, dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
+            Dune::FieldVector<Scalar, dimWorld> unitOuterNormal = isIt->unitOuterNormal(faceLocal);
 
             // get face volume
             Scalar faceArea = isIt->geometry().volume();
@@ -402,19 +402,19 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 int globalIdxJ = problem_.variables().index(*neighborPointer);
 
                 // compute factor in neighbor
-                GeometryType neighborGT = neighborPointer->geometry().type();
+                Dune::GeometryType neighborGT = neighborPointer->geometry().type();
                 const LocalPosition& localPosNeighbor = ReferenceElementContainer::general(neighborGT).position(0, 0);
 
                 // neighbor cell center in global coordinates
                 const GlobalPosition& globalPosNeighbor = neighborPointer->geometry().global(localPosNeighbor);
 
                 // distance vector between barycenters
-                FieldVector<Scalar, dimWorld> distVec = globalPosNeighbor - globalPos;
+                Dune::FieldVector<Scalar, dimWorld> distVec = globalPosNeighbor - globalPos;
 
                 // compute distance between cell centers
                 Scalar dist = distVec.two_norm();
 
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor,
@@ -436,7 +436,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                     }
                 }
 
-                FieldVector<Scalar, dim> permeability(0);
+                Dune::FieldVector<Scalar, dim> permeability(0);
                 meanPermeability.mv(unitDistVec, permeability);
 
                 // get mobilities and fractional flow factors
@@ -536,7 +536,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 case pw:
                 {
                     // calculate capillary pressure gradient
-                    FieldVector<Scalar, dim> pCGradient = unitDistVec;
+                    Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
                     pCGradient *= (pcI - pcJ) / dist;
 
                     //add capillary pressure term to right hand side
@@ -546,7 +546,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 case pn:
                 {
                     // calculate capillary pressure gradient
-                    FieldVector<Scalar, dim> pCGradient = unitDistVec;
+                    Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
                     pCGradient *= (pcI - pcJ) / dist;
 
                     //add capillary pressure term to right hand side
@@ -572,9 +572,9 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 // center of face in global coordinates
                 const GlobalPosition& globalPosFace = isIt->geometry().global(faceLocal);
 
-                FieldVector<Scalar, dimWorld> distVec(globalPosFace - globalPos);
+                Dune::FieldVector<Scalar, dimWorld> distVec(globalPosFace - globalPos);
                 Scalar dist = distVec.two_norm();
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 //get boundary condition for boundary face center
@@ -584,7 +584,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 if (bctype == BoundaryConditions::dirichlet)
                 {
                     //permeability vector at boundary
-                    FieldVector<Scalar, dim> permeability(0);
+                    Dune::FieldVector<Scalar, dim> permeability(0);
                     permeabilityI.mv(unitDistVec, permeability);
 
                     //determine saturation at the boundary -> if no saturation is known directly at the boundary use the cell saturation
@@ -765,7 +765,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                     case pw:
                     {
                         // calculate capillary pressure gradient
-                        FieldVector<Scalar, dim> pCGradient = unitDistVec;
+                        Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
                         pCGradient *= (pcI - pcBound) / dist;
 
                         //add capillary pressure term to right hand side
@@ -775,7 +775,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                     case pn:
                     {
                         // calculate capillary pressure gradient
-                        FieldVector<Scalar, dim> pCGradient = unitDistVec;
+                        Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
                         pCGradient *= (pcI - pcBound) / dist;
 
                         //add capillary pressure term to right hand side
@@ -836,47 +836,47 @@ void FVPressure2P<TypeTag>::assemble(bool first)
 template<class TypeTag>
 void FVPressure2P<TypeTag>::solve()
 {
-    MatrixAdapter<Matrix, Vector, Vector> op(A_);
-    InverseOperatorResult r;
+    Dune::MatrixAdapter<Matrix, Vector, Vector> op(A_);
+    Dune::InverseOperatorResult r;
     double reduction = 1E-12;
     int maxIt = 10000;
     int verboseLevel = 0;
-    InverseOperatorResult result;
+    Dune::InverseOperatorResult result;
 
     if (verboseLevel)
         std::cout << "FVPressure2P: solve for pressure" << std::endl;
 
     if (preconditionerName_ == "SeqILU0")
     {
-        SeqILU0<Matrix, Vector, Vector> preconditioner(A_, 1.0);
+        Dune::SeqILU0<Matrix, Vector, Vector> preconditioner(A_, 1.0);
         if (solverName_ == "CG")
         {
-            CGSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
+            Dune::CGSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
             solver.apply(problem_.variables().pressure(), f_, result);
         }
         else if (solverName_ == "BiCGSTAB")
         {
-            BiCGSTABSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
+            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
             solver.apply(problem_.variables().pressure(), f_, result);
         }
         else
-            DUNE_THROW(NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
+            DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
                     << solverName_ << ".");
     }
     else if (preconditionerName_ == "SeqPardiso")
     {
-        SeqPardiso<Matrix, Vector, Vector> preconditioner(A_);
+        Dune::SeqPardiso<Matrix, Vector, Vector> preconditioner(A_);
         if (solverName_ == "Loop")
         {
-            LoopSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
+            Dune::LoopSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
             solver.apply(problem_.variables().pressure(), f_, result);
         }
         else
-            DUNE_THROW(NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
+            DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
                     << solverName_ << ".");
     }
     else
-        DUNE_THROW(NotImplemented, "FVPressure2P :: solve : preconditioner " << preconditionerName_ << ".");
+        DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : preconditioner " << preconditionerName_ << ".");
 //                printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
 //                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
 //                printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);

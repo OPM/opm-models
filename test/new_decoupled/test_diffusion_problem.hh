@@ -15,8 +15,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_TEST_2P_PROBLEM_HH
-#define DUNE_TEST_2P_PROBLEM_HH
+#ifndef DUMUX_TEST_2P_PROBLEM_HH
+#define DUMUX_TEST_2P_PROBLEM_HH
 
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -35,7 +35,7 @@
 
 #include "test_2p_spatialparams.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 template<class TypeTag>
@@ -59,13 +59,13 @@ SET_PROP(DiffusionTestProblem, Grid)
 SET_PROP(DiffusionTestProblem, Problem)
 {
 public:
-    typedef Dune::TestDiffusionProblem<TTAG(DiffusionTestProblem)> type;
+    typedef Dumux::TestDiffusionProblem<TTAG(DiffusionTestProblem)> type;
 };
 
 SET_PROP(DiffusionTestProblem, Model)
 {
-//    typedef Dune::FVPressure2P<TTAG(DiffusionTestProblem)> type;
-    typedef Dune::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
+//    typedef Dumux::FVPressure2P<TTAG(DiffusionTestProblem)> type;
+    typedef Dumux::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
 };
 
 //SET_INT_PROP(DiffusionTestProblem, VelocityFormulation,
@@ -80,7 +80,7 @@ SET_PROP(DiffusionTestProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 public:
-    typedef Dune::LiquidPhase<Scalar, Dune::Water<Scalar> > type;
+    typedef Dumux::LiquidPhase<Scalar, Dumux::Water<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -89,7 +89,7 @@ SET_PROP(DiffusionTestProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 public:
-    typedef Dune::LiquidPhase<Scalar, Dune::Oil<Scalar> > type;
+    typedef Dumux::LiquidPhase<Scalar, Dumux::Oil<Scalar> > type;
 };
 
 // Set the soil properties
@@ -100,7 +100,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 
 public:
-    typedef Dune::Test2PSpatialParams<TypeTag> type;
+    typedef Dumux::Test2PSpatialParams<TypeTag> type;
 };
 
 // Enable gravity
@@ -196,9 +196,9 @@ BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Inter
 {
     //        if (globalPos[0] > (upperRight_[0] - eps_) || globalPos[0] < eps_)
     if (globalPos[0] < eps_ || globalPos[0] > upperRight_[0] - eps_)
-    return Dune::BoundaryConditions::dirichlet;
+    return Dumux::BoundaryConditions::dirichlet;
     else
-    return Dune::BoundaryConditions::neumann;
+    return Dumux::BoundaryConditions::neumann;
 }
 
 Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& intersection) const

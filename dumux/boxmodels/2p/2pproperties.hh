@@ -23,7 +23,7 @@
 #ifndef DUMUX_2PPROPERTIES_HH
 #define DUMUX_2PPROPERTIES_HH
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup TwoPBoxModel

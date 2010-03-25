@@ -22,7 +22,7 @@
 #define DUMUX_BOX_SCHEME_HH
 
 #include <dumux/boxmodels/boxscheme/boxjacobian.hh>
-#include <dumux/auxiliary/valgrind.hh>
+#include <dumux/common/valgrind.hh>
 
 #include <dune/istl/operators.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
@@ -31,7 +31,7 @@
 
 #include "boxproperties.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
@@ -432,7 +432,7 @@ public:
 
         // write phase state
         if (!outstream.good()) {
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Could not serialize vertex "
                        << vertIdx);
         }
@@ -452,7 +452,7 @@ public:
         int vertIdx = dofEntityMapper().map(vert);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                DUNE_THROW(IOError,
+                DUNE_THROW(Dune::IOError,
                            "Could not deserialize vertex "
                            << vertIdx);
             instream >> (*curSolFunction())[vertIdx][eqIdx];

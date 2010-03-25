@@ -25,7 +25,7 @@
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
 #include <dumux/material/twophaserelations.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup OnePTwoCProblems

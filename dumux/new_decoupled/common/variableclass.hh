@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_VARIABLECLASS_HH
-#define DUNE_VARIABLECLASS_HH
+#ifndef DUMUX_VARIABLECLASS_HH
+#define DUMUX_VARIABLECLASS_HH
 
 //#define HACK_SINTEF_RESPROP
 
@@ -28,7 +28,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup fracflow
@@ -178,7 +178,7 @@ private:
         }
         else
         {
-            potential_ = FieldVector<Scalar, numPhase> (0);
+            potential_ = Dune::FieldVector<Scalar, numPhase> (0);
         }
         return;
     }
@@ -231,7 +231,7 @@ public:
     }
 
     //! Return vector of wetting phase potential gradients
-    FieldVector<Scalar, numPhase>& potential(int Idx1, int Idx2)
+    Dune::FieldVector<Scalar, numPhase>& potential(int Idx1, int Idx2)
     {
         return potential_[Idx1][Idx2];
     }

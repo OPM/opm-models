@@ -421,6 +421,6 @@ private:
 
 
 } // namespace PDELab
-} // namespace Dune
+} // namespace Dumux
 
 #endif

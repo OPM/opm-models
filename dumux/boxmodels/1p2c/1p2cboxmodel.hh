@@ -21,7 +21,7 @@
 #include "1p2cboxjacobian.hh"
 #include "1p2cboxproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

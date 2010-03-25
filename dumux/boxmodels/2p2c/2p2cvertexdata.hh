@@ -26,7 +26,7 @@
 #define DUMUX_2P2C_VERTEX_DATA_HH
 
 #include <dumux/boxmodels/boxscheme/boxscheme.hh>
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
@@ -34,7 +34,7 @@
 
 #include "2p2cfluidstate.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

@@ -26,7 +26,7 @@
 #ifndef DUMUX_RICHARDS_ELEMENT_DATA_HH
 #define DUMUX_RICHARDS_ELEMENT_DATA_HH
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup RichardsBoxModel

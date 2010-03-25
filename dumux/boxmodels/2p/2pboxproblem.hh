@@ -23,7 +23,7 @@
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
 #include <dumux/new_material/fluidsystems/2p_system.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPProblems

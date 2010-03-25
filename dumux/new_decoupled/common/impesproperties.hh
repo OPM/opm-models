@@ -23,7 +23,7 @@
  * \brief Specify the shape functions, operator assemblers, etc
  *        used for the BoxScheme.
  */
-namespace Dune
+namespace Dumux
 {
 
 template<class TypeTag>

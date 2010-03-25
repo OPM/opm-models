@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef DUNE_VARIABLECLASS2P2CNI_HH
-#define DUNE_VARIABLECLASS2P2CNI_HH
+#ifndef DUMUX_VARIABLECLASS2P2CNI_HH
+#define DUMUX_VARIABLECLASS2P2CNI_HH
 
 /**
  * @file
@@ -12,7 +12,7 @@
  * two phase two component calculation in one place and to do the output.
  */
 
-namespace Dune {
+namespace Dumux {
 
 /** \todo Please doc me! */
 
@@ -107,7 +107,7 @@ public:
             C2[i] = totalConcentration[i + size];
             U[i] = totalConcentration[i + 2*size];
         }
-        VTKWriter<typename G::LevelGridView> vtkwriter(grid.levelView(0));
+         Dune::VTKWriter<typename G::LevelGridView> vtkwriter(grid.levelView(0));
         char fname[128];
         sprintf(fname, "%s-%05d", name, k);
         vtkwriter.addCellData(saturation, "saturation [-]");
@@ -125,16 +125,16 @@ public:
         vtkwriter.addCellData(U, "Internal energy in cell [J/m^3]");
         vtkwriter.addCellData(enthalpy_l, "hl [J/kg]");
         vtkwriter.addCellData(enthalpy_g, "hg [J/kg]");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
         return;
     }
 
     void vtkoutpressure(const char* name, int k) const {
-        VTKWriter<typename G::LeafGridView> vtkwriter(grid.leafView());
+         Dune::VTKWriter<typename G::LeafGridView> vtkwriter(grid.leafView());
         char fname[128];
         sprintf(fname, "%s-press%05d", name, k);
         vtkwriter.addCellData(pressure, "total pressure p~");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
     }
 };
 }

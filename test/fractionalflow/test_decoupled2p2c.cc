@@ -63,23 +63,23 @@ int main(int argc, char** argv)
     int modulo = 1;
     double cFLFactor = 0.7;
 
-    Dune::Liq_WaterAir wetmat;
-    Dune::Gas_WaterAir nonwetmat;
+    Dumux::Liq_WaterAir wetmat;
+    Dumux::Gas_WaterAir nonwetmat;
 
-    Dune::HomogeneousSoil<Grid, Scalar> soil;
+    Dumux::HomogeneousSoil<Grid, Scalar> soil;
 
-    Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
+    Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
 
-    Dune::VariableClass2p2c<GridView,Scalar> var(gridview);
+    Dumux::VariableClass2p2c<GridView,Scalar> var(gridview);
 
     typedef Dune::Testproblem_2p2c<GridView, Scalar> TransProb;
     TransProb problem(gridview, var, wetmat, nonwetmat, soil, grid.maxLevel(), materialLaw, false);
 
-    typedef Dune::Decoupled2p2c<GridView, Scalar> ModelType;
+    typedef Dumux::Decoupled2p2c<GridView, Scalar> ModelType;
     ModelType model(gridview, problem);
 
-    Dune::ExplicitEulerStep<Grid, ModelType> timestep;
-    Dune::TimeLoop<GridView, ModelType > timeloop(gridview, tStart, tEnd, "2p2c", modulo, cFLFactor, 1e100, 1e100, timestep);
+    Dumux::ExplicitEulerStep<Grid, ModelType> timestep;
+    Dumux::TimeLoop<GridView, ModelType > timeloop(gridview, tStart, tEnd, "2p2c", modulo, cFLFactor, 1e100, 1e100, timestep);
 
     Dune::Timer timer;
     timer.reset();

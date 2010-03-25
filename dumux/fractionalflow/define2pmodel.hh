@@ -13,10 +13,10 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_DEFINE2PMODEL_HH
-#define DUNE_DEFINE2PMODEL_HH
+#ifndef DUMUX_DEFINE2PMODEL_HH
+#define DUMUX_DEFINE2PMODEL_HH
 
-namespace Dune
+namespace Dumux
 {
 struct DefineModel
 {

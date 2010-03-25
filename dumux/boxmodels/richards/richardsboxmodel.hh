@@ -27,7 +27,7 @@
 #include "richardsboxjacobian.hh"
 #include "richardsboxproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup BoxProblems

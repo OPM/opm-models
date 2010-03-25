@@ -24,7 +24,7 @@
 #include <dumux/material/twophaserelations.hh>
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup RichardsProblems
@@ -45,7 +45,7 @@ class RichardsBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(WettingPhase))    WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NonwettingPhase)) NonwettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Soil))            Soil;
-    typedef Dune::TwoPhaseRelations<Grid, Scalar>                  MaterialLaw;
+    typedef Dumux::TwoPhaseRelations<Grid, Scalar>                  MaterialLaw;
 
     enum {
         dim = Grid::dimension,

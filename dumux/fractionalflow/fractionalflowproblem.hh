@@ -14,8 +14,8 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 
-#ifndef DUNE_FRACTIONALFLOWPROBLEM_HH
-#define DUNE_FRACTIONALFLOWPROBLEM_HH
+#ifndef DUMUX_FRACTIONALFLOWPROBLEM_HH
+#define DUMUX_FRACTIONALFLOWPROBLEM_HH
 
 #include<iostream>
 #include<iomanip>
@@ -36,7 +36,7 @@
  * @author Bernd Flemisch
  */
 
-namespace Dune
+namespace Dumux
 {
 /*! \ingroup fracflow
  * @brief base class that defines the parameters of loosely coupled diffusion and transport equations
@@ -168,7 +168,7 @@ public:
     /*! gravity constant
      \return    gravity vector
      */
-    virtual const FieldVector<Scalar,dimWorld>& gravity() const
+    virtual const Dune::FieldVector<Scalar,dimWorld>& gravity() const
     {
         return gravity_;
     }
@@ -249,12 +249,12 @@ public:
     {}
 
 private:
-    VC& variables_;//object of type Dune::VariableClass
+    VC& variables_;//object of type Dumux::VariableClass
     Fluid& wettingPhase_;//object derived from Dune::Fluid
     Fluid& nonWettingPhase_;//object derived from Dune::Fluid
     Matrix2p<Grid, Scalar>& soil_;//object derived from Dune::Matrix2p
-    TwoPhaseRelations<Grid, Scalar>& materialLaw_;//object of type Dune::TwoPhaseRelations or derived
-    FieldVector<Scalar,dimWorld> gravity_;//vector including the gravity constant
+    TwoPhaseRelations<Grid, Scalar>& materialLaw_;//object of type Dumux::TwoPhaseRelations or derived
+    Dune::FieldVector<Scalar,dimWorld> gravity_;//vector including the gravity constant
 
 };
 

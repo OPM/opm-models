@@ -26,7 +26,7 @@
 #include <dumux/material/twophaserelations.hh>
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPTwoCProblems
@@ -74,7 +74,7 @@ public:
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { DUNE_THROW(NotImplemented, "The Problem must implement a temperature() method for isothermal problems!"); };
+    { DUNE_THROW(Dune::NotImplemented, "The Problem must implement a temperature() method for isothermal problems!"); };
 
     /*!
      * \brief Returns the acceleration due to gravity.

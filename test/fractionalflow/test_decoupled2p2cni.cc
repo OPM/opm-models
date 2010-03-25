@@ -14,7 +14,7 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 
-#define DUNE_DEVEL_MODE
+#define DUMUX_DEVEL_MODE
 #include "config.h"
 #include <iostream>
 #include <iomanip>
@@ -53,25 +53,25 @@ int main(int argc, char** argv)
         int modulo = 1;
         double cFLFactor = 0.9;
 
-        Dune::Liq_WaterAir wetmat;
-        Dune::Gas_WaterAir nonwetmat;
-        Dune::HomogeneousSoil<Grid, Scalar> soil;
-        //    Dune::HeterogeneousSoil<Grid, Scalar> soil(grid, "permeab.dat", true);
-        Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
+        Dumux::Liq_WaterAir wetmat;
+        Dumux::Gas_WaterAir nonwetmat;
+        Dumux::HomogeneousSoil<Grid, Scalar> soil;
+        //    Dumux::HeterogeneousSoil<Grid, Scalar> soil(grid, "permeab.dat", true);
+        Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
 
-        Dune::VariableClass2p2cni<Grid,Scalar> var(grid);
+        Dumux::VariableClass2p2cni<Grid,Scalar> var(grid);
 
-        typedef Dune::TestProblem2p2cni<Grid, Scalar> TransProb;
+        typedef Dumux::TestProblem2p2cni<Grid, Scalar> TransProb;
         TransProb problem(var, wetmat, nonwetmat, soil, materialLaw, false);
 
         Dune::DiffusivePart<Grid, Scalar> diffPart;
         const Dune::Upwind<Scalar> numFl;
 
-        typedef Dune::Decoupled2p2cni<Grid, Scalar> ModelType;
+        typedef Dumux::Decoupled2p2cni<Grid, Scalar> ModelType;
         ModelType model(grid, problem, grid.maxLevel(), diffPart, false, 0.8, numFl, "CG");
 
-        Dune::ExplicitEulerStep<Grid, ModelType> timestep;
-        Dune::TimeLoop<Grid, ModelType > timeloop(tStart, tEnd, "2p2cni", modulo, cFLFactor, 1e100, 1e100, timestep);
+        Dumux::ExplicitEulerStep<Grid, ModelType> timestep;
+        Dumux::TimeLoop<Grid, ModelType > timeloop(tStart, tEnd, "2p2cni", modulo, cFLFactor, 1e100, 1e100, timestep);
 
         Dune::Timer timer;
         timer.reset();

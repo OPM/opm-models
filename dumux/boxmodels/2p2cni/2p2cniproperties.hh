@@ -28,7 +28,7 @@
 #include "2p2cnielementdata.hh"
 #include "2p2cnifluxdata.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup TwoPTwoCNIBoxModel

@@ -25,7 +25,7 @@
 
 #include <dumux/boxmodels/boxscheme/boxproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup TwoPTwoCBoxModel
@@ -59,7 +59,7 @@ NEW_PROP_TAG(MobilityUpwindAlpha); //!< The value of the upwind parameter for th
 }
 }
 
-namespace Dune {
+namespace Dumux {
 
 ////////////////////////////////
 // forward declarations

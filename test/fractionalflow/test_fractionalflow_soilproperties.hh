@@ -18,7 +18,7 @@
 
 #include <dumux/material/property_baseclasses.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /** \todo Please doc me! */

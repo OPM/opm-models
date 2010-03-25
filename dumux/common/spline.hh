@@ -23,8 +23,8 @@
  *
  * or any given y1, y2, m1, m2.
  */
-#ifndef DUNE_SPLINE_HH
-#define DUNE_SPLINE_HH
+#ifndef DUMUX_SPLINE_HH
+#define DUMUX_SPLINE_HH
 
 namespace Dumux
 {

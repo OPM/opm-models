@@ -34,7 +34,7 @@
 #include <dumux/boxmodels/2pni/2pnifluxdata.hh>
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPNIBoxModel

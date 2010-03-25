@@ -27,9 +27,9 @@
 #ifndef DUMUX_1P2C_FLUX_DATA_HH
 #define DUMUX_1P2C_FLUX_DATA_HH
 
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
@@ -60,7 +60,7 @@ class OnePTwoCFluxData
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
-    typedef FieldMatrix<Scalar, dim, dim> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
@@ -178,7 +178,7 @@ private:
                                             element,
                                             outsideSCV->local);
         Tensor K;
-        Dune::harmonicMeanMatrix(K, Ki, Kj);
+        Dumux::harmonicMeanMatrix(K, Ki, Kj);
 
         // vector for the Darcy velocity
         K.mv(pressureGrad, vDarcy);  // vDarcy = K * grad p

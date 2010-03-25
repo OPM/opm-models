@@ -29,7 +29,7 @@
 #include "2pnielementdata.hh"
 #include "2pnifluxdata.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup TwoPNIBoxModel

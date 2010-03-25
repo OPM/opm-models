@@ -33,7 +33,7 @@
 #include <sstream>
 
 
-namespace Dune {
+namespace Dumux {
 
 /*!
  * \brief Load or save a state of a model to/from the harddisk.
@@ -177,7 +177,7 @@ public:
         inStream_.seekg(0, std::ios::end);
         int pos = inStream_.tellg();
         if (pos == 0) {
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Restart file '"
                        << fileName_
                        << "' is empty");
@@ -203,12 +203,12 @@ public:
     void deserializeSection(const std::string &cookie)
     {
         if (!inStream_.good())
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Encountered unexpected EOF in restart file.");
         std::string buf;
         std::getline(inStream_, buf);
         if (buf != cookie)
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Could not start section '" << cookie << "'");
     };
 
@@ -233,7 +233,7 @@ public:
         const Iterator &endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             if (!inStream_.good()) {
-                DUNE_THROW(IOError,
+                DUNE_THROW(Dune::IOError,
                            "Restart file is corrupted");
             }
 
@@ -257,8 +257,8 @@ public:
     static void restartFileList(std::list<std::string> &fileList,
                                 const std::string directory=".")
     {
-        DUNE_THROW(NotImplemented,
-                   "Dune::Restart::restartFileList()");
+        DUNE_THROW(Dune::NotImplemented,
+                   "Dumux::Restart::restartFileList()");
     };
 
 

@@ -21,8 +21,8 @@
  * @brief  Definition of a problem, where air is injected under a low permeable layer
  * @author Klaus Mosthaf, Andreas Lauser, Bernd Flemisch
  */
-#ifndef DUNE_INJECTIONPROBLEM_HH
-#define DUNE_INJECTIONPROBLEM_HH
+#ifndef DUMUX_INJECTIONPROBLEM_HH
+#define DUMUX_INJECTIONPROBLEM_HH
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
@@ -37,7 +37,7 @@
 #include "injectionspatialparameters.hh"
 
 
-namespace Dune
+namespace Dumux
 {
 
 template <class TypeTag>
@@ -69,21 +69,21 @@ public:
 // Set the problem property
 SET_PROP(InjectionProblem, Problem)
 {
-    typedef Dune::InjectionProblem<TTAG(InjectionProblem)> type;
+    typedef Dumux::InjectionProblem<TTAG(InjectionProblem)> type;
 };
 
 // Set fluid configuration
 SET_PROP(InjectionProblem, 
               FluidSystem)
 {
-    //typedef Dune::Brine_CO2_System<TypeTag, Dune::IFP::CO2Tables> type;
-    typedef Dune::H2O_N2_System<TypeTag> type;
+    //typedef Dumux::Brine_CO2_System<TypeTag, Dune::IFP::CO2Tables> type;
+    typedef Dumux::H2O_N2_System<TypeTag> type;
 };
 
 // Set the soil properties
 SET_TYPE_PROP(InjectionProblem, 
               SpatialParameters,
-              Dune::InjectionSpatialParameters<TypeTag>);
+              Dumux::InjectionSpatialParameters<TypeTag>);
 
 // Enable gravity
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);

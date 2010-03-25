@@ -28,7 +28,7 @@
 
 #include <dune/common/exceptions.hh>
 
-#include <dumux/auxiliary/valgrind.hh>
+#include <dumux/common/valgrind.hh>
 #include <dumux/fvgeometry/fvelementgeometry.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
 
@@ -40,7 +40,7 @@
 #include "boxproperties.hh"
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup BoxScheme
@@ -99,7 +99,7 @@ private:
     typedef typename GET_PROP(TypeTag, PTAG(VertexData))::type VertexData;
     typedef typename std::vector<VertexData>                   VertexDataArray;
 
-    typedef std::vector<Dune::BoundaryTypes<numEq> > BoundaryTypeArray;
+    typedef std::vector<Dumux::BoundaryTypes<numEq> > BoundaryTypeArray;
     typedef Dune::FieldMatrix<Scalar, numEq, numEq>  MatrixBlock;
     typedef Dune::Matrix<MatrixBlock>                LocalBlockMatrix;
 

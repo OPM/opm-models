@@ -30,7 +30,7 @@
 #include "2p2cniproperties.hh"
 #include "2p2cniboxproblem.hh"
 
-namespace Dune {
+namespace Dumux {
 /*!
  * \ingroup BoxProblems
  * \defgroup TwoPTwoCNIBoxProblems Non-isothermal two-phase two-component box problems

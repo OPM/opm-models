@@ -22,7 +22,7 @@
 #include "1pboxjacobian.hh"
 #include "1pboxproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup BoxProblems

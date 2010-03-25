@@ -26,7 +26,7 @@
 #ifndef DUMUX_1P_ELEMENT_DATA_HH
 #define DUMUX_1P_ELEMENT_DATA_HH
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup OnePBoxModel

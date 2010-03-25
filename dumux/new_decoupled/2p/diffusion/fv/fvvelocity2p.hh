@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_FVVELOCITY2P_HH
-#define DUNE_FVVELOCITY2P_HH
+#ifndef DUMUX_FVVELOCITY2P_HH
+#define DUMUX_FVVELOCITY2P_HH
 
 /**
  * @file
@@ -24,7 +24,7 @@
 
 #include <dumux/new_decoupled/2p/diffusion/fv/fvpressure2p.hh>
 
-namespace Dune
+namespace Dumux
 {
 //! \ingroup diffusion
 //! Finite Volume Diffusion Model
@@ -109,11 +109,11 @@ public:
     {
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableCompressibility)) && velocityType_ == vt)
         {
-            DUNE_THROW(NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
+            DUNE_THROW(Dune::NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
         if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
-            DUNE_THROW(NotImplemented, "Velocity type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Velocity type not supported!");
         }
     }
     //! Constructs a FVNonWettingPhaseVelocity2P object
@@ -123,7 +123,7 @@ public:
      * \param pressureType a string giving the type of pressure used (could be: pw, pn, pglobal)
      * \param satType a string giving the type of saturation used (could be: Sw, Sn)
      * \param solverName a string giving the type of solver used (could be: CG, BiCGSTAB, Loop)
-     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: SeqILU0, SeqPardiso)
+     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: Dune::SeqILU0, SeqPardiso)
      */
     FVVelocity2P(Problem& problem, std::string solverName,
             std::string preconditionerName)
@@ -131,11 +131,11 @@ public:
     {
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableCompressibility)) && velocityType_ == vt)
         {
-            DUNE_THROW(NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
+            DUNE_THROW(Dune::NotImplemented, "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
         if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
-            DUNE_THROW(NotImplemented, "Velocity type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Velocity type not supported!");
         }
     }
 
@@ -232,7 +232,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 // compute distance between cell centers
                 Scalar dist = distVec.two_norm();
 
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 // get absolute permeability
@@ -253,7 +253,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     }
                 }
 
-                FieldVector<Scalar,dim> permeability(0);
+                Dune::FieldVector<Scalar,dim> permeability(0);
                 meanPermeability.mv(unitDistVec,permeability);
 
                 Scalar pressJ = this->problem().variables().pressure()[globalIdxJ];
@@ -318,10 +318,10 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 densityNW = (potentialNW == 0.) ? 0.5 * (densityNWI + densityNWJ) : densityNW;
 
                 //calculate the gravity term
-                FieldVector<Scalar,dimWorld> velocityW(permeability);
-                FieldVector<Scalar,dimWorld> velocityNW(permeability);
-                FieldVector<Scalar,dimWorld> gravityTermW(unitDistVec);
-                FieldVector<Scalar,dimWorld> gravityTermNW(unitDistVec);
+                Dune::FieldVector<Scalar,dimWorld> velocityW(permeability);
+                Dune::FieldVector<Scalar,dimWorld> velocityNW(permeability);
+                Dune::FieldVector<Scalar,dimWorld> gravityTermW(unitDistVec);
+                Dune::FieldVector<Scalar,dimWorld> gravityTermNW(unitDistVec);
 
                 gravityTermW *= (this->gravity*permeability)*(lambdaW * densityW);
                 gravityTermNW *= (this->gravity*permeability)*(lambdaNW * densityNW);
@@ -411,11 +411,11 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 // compute distance between cell centers
                 Scalar dist = distVec.two_norm();
 
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 //multiply with normal vector at the boundary
-                FieldVector<Scalar,dim> permeability(0);
+                Dune::FieldVector<Scalar,dim> permeability(0);
                 permeabilityI.mv(unitDistVec, permeability);
 
                 Scalar satBound = 0;
@@ -449,7 +449,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     }
                     default:
                     {
-                        DUNE_THROW(RangeError, "saturation type not implemented");
+                        DUNE_THROW(Dune::RangeError, "saturation type not implemented");
                     }
                     }
                     Scalar pressBound = this->problem().dirichletPress(globalPosFace, *isIt);
@@ -558,10 +558,10 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                     densityNW = (potentialNW == 0.) ? 0.5 * (densityNWI + densityNWBound) : densityNW;
 
                     //calculate the gravity term
-                    FieldVector<Scalar,dimWorld> velocityW(permeability);
-                    FieldVector<Scalar,dimWorld> velocityNW(permeability);
-                    FieldVector<Scalar,dimWorld> gravityTermW(unitDistVec);
-                    FieldVector<Scalar,dimWorld> gravityTermNW(unitDistVec);
+                    Dune::FieldVector<Scalar,dimWorld> velocityW(permeability);
+                    Dune::FieldVector<Scalar,dimWorld> velocityNW(permeability);
+                    Dune::FieldVector<Scalar,dimWorld> gravityTermW(unitDistVec);
+                    Dune::FieldVector<Scalar,dimWorld> gravityTermNW(unitDistVec);
 
                     gravityTermW *= (this->gravity*permeability)*(lambdaW * densityW);
                     gravityTermNW *= (this->gravity*permeability)*(lambdaNW * densityNW);
@@ -635,8 +635,8 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 else
                 {
                     std::vector<Scalar> J = this->problem().neumannPress(globalPosFace, *isIt);
-                    FieldVector<Scalar,dimWorld> velocityW(unitDistVec);
-                    FieldVector<Scalar,dimWorld> velocityNW(unitDistVec);
+                    Dune::FieldVector<Scalar,dimWorld> velocityW(unitDistVec);
+                    Dune::FieldVector<Scalar,dimWorld> velocityNW(unitDistVec);
 
                     velocityW *= J[wPhaseIdx];
                     velocityNW *= J[nPhaseIdx];

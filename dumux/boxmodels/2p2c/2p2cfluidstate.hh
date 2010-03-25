@@ -27,7 +27,7 @@
 
 #include <dumux/new_material/fluidstate.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \brief Calcultes the phase state from the primary variables in the

@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_CAPILLARYDIFFUSION_HH
-#define DUNE_CAPILLARYDIFFUSION_HH
+#ifndef DUMUX_CAPILLARYDIFFUSION_HH
+#define DUMUX_CAPILLARYDIFFUSION_HH
 
 #include "dumux/new_decoupled/2p/transport/fv/diffusivepart.hh"
 
@@ -24,7 +24,7 @@
  * @brief  Class for defining the diffusive capillary pressure term of a saturation equation
  * @author Bernd Flemisch, Markus Wolff
  */
-namespace Dune
+namespace Dumux
 {
 /*!\ingroup diffPart
  * @brief  Class for defining the diffusive capillary pressure term of a saturation equation
@@ -91,7 +91,7 @@ public:
     FieldVector operator() (const Element& element, const int indexInInside, Scalar satI, Scalar satJ, const FieldVector& pcGradient) const
     {
         // cell geometry type
-        GeometryType gt = element.geometry().type();
+        Dune::GeometryType gt = element.geometry().type();
 
         // cell center in reference element
         const LocalPosition& localPos = ReferenceElementContainer::general(gt).position(0,0);
@@ -112,7 +112,7 @@ public:
         int globalIdxI = problem_.variables().index(element);
 
         // get geometry type of face
-        GeometryType faceGT = isIt->geometryInInside().type();
+        Dune::GeometryType faceGT = isIt->geometryInInside().type();
 
         Scalar temperature = problem_.temperature(globalPos, element);
         Scalar referencePressure = problem_.referencePressure(globalPos, element);
@@ -145,7 +145,7 @@ public:
             int globalIdxJ = problem_.variables().index(*neighborPointer);
 
             // compute factor in neighbor
-            GeometryType neighborGT = neighborPointer->geometry().type();
+            Dune::GeometryType neighborGT = neighborPointer->geometry().type();
             const LocalPosition& localPosNeighbor = ReferenceElementContainer::general(neighborGT).position(0,0);
 
             // neighbor cell center in global coordinates
@@ -225,7 +225,7 @@ public:
     }
 
     /*! @brief Constructs a CapillaryDiffusion object
-     *  @param problem an object of class Dune::TransportProblem or derived
+     *  @param problem an object of class Dumux::TransportProblem or derived
      *  @param soil implementation of the solid matrix
      *  @param preComput if preCompute = true previous calculated mobilities are taken, if preCompute = false new mobilities will be computed (for implicit Scheme)
      */

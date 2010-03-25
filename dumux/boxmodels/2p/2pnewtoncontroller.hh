@@ -26,7 +26,7 @@
 
 #include <dumux/nonlinear/newtoncontroller.hh>
 
-namespace Dune {
+namespace Dumux {
 /*!
  * \ingroup TwoPBoxModel
  * \brief A newton controller for two-phase problems.
@@ -74,7 +74,7 @@ public:
         
         // get the maximum value of each primary in either the old or
         // the new solution
-        FieldVector<Scalar, numEq> weight(1.0);
+        Dune::FieldVector<Scalar, numEq> weight(1.0);
 
         // a change in pressure is considered to be less severe by a
         // factor of 10000 than a change saturation.

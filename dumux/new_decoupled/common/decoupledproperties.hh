@@ -70,7 +70,7 @@ NEW_PROP_TAG( Variables); //!< The type of the container of global variables
 template<class TypeTag>
 class VariableClass;
 
-namespace Dune
+namespace Dumux
 {
 namespace Properties
 {
@@ -101,7 +101,7 @@ public:
  * TODO: Some specialization if the grid only supports one kind of
  *       cells would be nice. this would be better fixed inside DUNE,
  *       though. something like:
- *       GenericReferenceElements<GeometryType<cube, dim> >
+ *       Dune::GenericReferenceElements<Dune::GeometryType<cube, dim> >
  */
 SET_PROP_DEFAULT(ReferenceElements)
 {
@@ -180,8 +180,8 @@ public:
     typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarSolution;//!<type for vector of scalars
     typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhases> > PhaseProperty;//!<type for vector of phase properties
     typedef Dune::BlockVector<Dune::FieldVector<Scalar, numPhases> > FluidProperty;//!<type for vector of fluid properties
-    typedef Dune::BlockVector<FieldVector<FieldVector<Scalar, numPhases>, 2*dim > > PhasePropertyElemFace;//!<type for vector of vectors (of size 2 x dimension) of scalars
-    typedef Dune::BlockVector<FieldVector<FieldVector<Scalar, dim>, 2*dim > > DimVecElemFace;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
+    typedef Dune::BlockVector<Dune::FieldVector<Dune::FieldVector<Scalar, numPhases>, 2*dim > > PhasePropertyElemFace;//!<type for vector of vectors (of size 2 x dimension) of scalars
+    typedef Dune::BlockVector<Dune::FieldVector<Dune::FieldVector<Scalar, dim>, 2*dim > > DimVecElemFace;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 };
 
 // \}

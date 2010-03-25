@@ -19,7 +19,7 @@
 #include "2p2cboxjacobian.hh"
 #include "2p2cboxproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup BoxProblems

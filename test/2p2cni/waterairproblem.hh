@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_WATERAIRPROBLEM_HH
-#define DUNE_WATERAIRPROBLEM_HH
+#ifndef DUMUX_WATERAIRPROBLEM_HH
+#define DUMUX_WATERAIRPROBLEM_HH
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -38,7 +38,7 @@
  * \brief TwoPTwoCNIBoxProblems Non-isothermal two-phase two-component box problems
  */
 
-namespace Dune
+namespace Dumux
 {
 template <class TypeTag>
 class WaterAirProblem;
@@ -69,16 +69,16 @@ public:
 // Set the problem property
 SET_PROP(WaterAirProblem, Problem)
 {
-    typedef Dune::WaterAirProblem<TTAG(WaterAirProblem)> type;
+    typedef Dumux::WaterAirProblem<TTAG(WaterAirProblem)> type;
 };
 
 // Set the wetting phase
-SET_TYPE_PROP(WaterAirProblem, FluidSystem, Dune::H2O_N2_System<TypeTag>);
+SET_TYPE_PROP(WaterAirProblem, FluidSystem, Dumux::H2O_N2_System<TypeTag>);
 
 // Set the soil properties
 SET_TYPE_PROP(WaterAirProblem, 
               SpatialParameters,
-              Dune::WaterAirSpatialParameters<TypeTag>);
+              Dumux::WaterAirSpatialParameters<TypeTag>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);

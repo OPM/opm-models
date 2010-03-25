@@ -24,7 +24,7 @@
 
 #include "richardsproperties.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

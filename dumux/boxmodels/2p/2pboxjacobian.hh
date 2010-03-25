@@ -35,7 +35,7 @@
 #include <vector>
 #include <iostream>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPBoxModel
@@ -80,8 +80,8 @@ protected:
     typedef typename GridView::template Codim<0>::Entity   Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef FieldVector<Scalar, dim>       LocalPosition;
-    typedef FieldVector<Scalar, dimWorld>  GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
@@ -97,7 +97,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))     FluxData;
 
     typedef std::vector<VertexData>        VertexDataArray;
-    typedef FieldMatrix<Scalar, dim, dim>  Tensor;
+    typedef Dune::FieldMatrix<Scalar, dim, dim>  Tensor;
 
     static const Scalar mobilityUpwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(MobilityUpwindAlpha));
 

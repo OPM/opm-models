@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_VARIABLECLASS2P_HH
-#define DUNE_VARIABLECLASS2P_HH
+#ifndef DUMUX_VARIABLECLASS2P_HH
+#define DUMUX_VARIABLECLASS2P_HH
 
 #include <dumux/new_decoupled/common/variableclass.hh>
 #include <dumux/new_decoupled/2p/2pfluidstate.hh>
@@ -26,7 +26,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup DecoupledModel

@@ -19,7 +19,7 @@
 #define DUMUX_NEW_2P2C_BOX_JACOBIAN_BASE_HH
 
 #include <dumux/boxmodels/boxscheme/boxscheme.hh>
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
 #include "2p2cproperties.hh"
 
@@ -34,7 +34,7 @@
 
 //#define VELOCITY_OUTPUT 1 // uncomment this line if an output of the velocity is needed
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPTwoCBoxModel
@@ -760,7 +760,7 @@ public:
 
         // read phase presence
         if (!inStream.good()) {
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Could not deserialize vertex "
                        << vertIdx);
         }
@@ -780,7 +780,7 @@ public:
         int vertIdx = this->problem_.model().dofEntityMapper().map(vert);
 
         if (!outStream.good()) {
-            DUNE_THROW(IOError,
+            DUNE_THROW(Dune::IOError,
                        "Could not serialize vertex "
                        << vertIdx);
         }

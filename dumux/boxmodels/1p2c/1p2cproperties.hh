@@ -25,7 +25,7 @@
 #ifndef DUMUX_1P2C_PROPERTIES_HH
 #define DUMUX_1P2C_PROPERTIES_HH
 
-namespace Dune
+namespace Dumux
 {
 ////////////////////////////////
 // forward declarations
@@ -106,7 +106,7 @@ SET_TYPE_PROP(BoxOnePTwoC, FluxData, OnePTwoCFluxData<TypeTag>);
 SET_SCALAR_PROP(BoxOnePTwoC, UpwindAlpha, 1.0);
 
 //! The indices required by the isothermal 1p2c model
-SET_TYPE_PROP(BoxOnePTwoC, OnePTwoCIndices, Dune::OnePTwoCIndices);
+SET_TYPE_PROP(BoxOnePTwoC, OnePTwoCIndices, Dumux::OnePTwoCIndices);
 }
 
 }

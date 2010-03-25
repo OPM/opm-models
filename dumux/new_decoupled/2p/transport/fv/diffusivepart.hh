@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_DIFFUSIVEPART_HH
-#define DUNE_DIFFUSIVEPART_HH
+#ifndef DUMUX_DIFFUSIVEPART_HH
+#define DUMUX_DIFFUSIVEPART_HH
 
 //! \ingroup transport
 //! \defgroup diffPart Diffusive transport
@@ -24,7 +24,7 @@
  * @brief  Base class for defining the diffusive part of an advection-diffusion equation
  * @author Bernd Flemisch, Markus Wolff
  */
-namespace Dune
+namespace Dumux
 {
 /*!\ingroup diffPart
  * @brief  Base class for defining the diffusive part of an advection-diffusion equation

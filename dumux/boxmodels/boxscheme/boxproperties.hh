@@ -17,14 +17,14 @@
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH
 
-#include <dumux/auxiliary/properties.hh>
+#include <dumux/common/properties.hh>
 
 /*!
  * \file
  * \brief Specify the shape functions, operator assemblers, etc
  *        used for the BoxScheme.
  */
-namespace Dune
+namespace Dumux
 {
 namespace Properties
 {
@@ -90,9 +90,9 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 #include <dune/disc/operators/p1operator.hh>
 #endif
 
-#include <dumux/boundarytypes.hh>
+#include <dumux/common/boundarytypes.hh>
 
-namespace Dune {
+namespace Dumux {
 
 #if HAVE_DUNE_PDELAB
 template<typename TypeTag>
@@ -127,7 +127,7 @@ public:
  * TODO: Some specialization if the grid only supports one kind of
  *       cells would be nice. this would be better fixed inside DUNE,
  *       though. something like:
- *       GenericReferenceElements<GeometryType<cube, dim> >
+ *       Dune::GenericReferenceElements<Dune::GeometryType<cube, dim> >
  */
 SET_PROP_DEFAULT(ReferenceElements)
 {
@@ -155,26 +155,26 @@ public:
 SET_PROP(BoxScheme, FVElementGeometry)
 {
 #if HAVE_DUNE_PDELAB
-    typedef Dune::FVElementGeometry<TypeTag>  type;
+    typedef Dumux::FVElementGeometry<TypeTag>  type;
 
 #else
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
 public:
-    typedef Dune::FVElementGeometry<Grid>  type;
+    typedef Dumux::FVElementGeometry<Grid>  type;
 #endif
 };
 
 //! use the plain newton method for the box scheme by default
 SET_PROP(BoxScheme, NewtonMethod)
 {public:
-    typedef Dune::NewtonMethod<TypeTag> type;
+    typedef Dumux::NewtonMethod<TypeTag> type;
 };
 
 //! use the plain newton controller for the box scheme by default
 SET_PROP(BoxScheme, NewtonController)
 {public:
-    typedef Dune::NewtonController<TypeTag> type;
+    typedef Dumux::NewtonController<TypeTag> type;
 };
 
 /*!
@@ -250,7 +250,7 @@ public:
     /*!
      * \brief Vector of boundary types at a degree of freedom.
      */
-    typedef Dune::BoundaryTypes<numEq>  BoundaryTypeVector;
+    typedef Dumux::BoundaryTypes<numEq>  BoundaryTypeVector;
 
     /*!
      * \brief Assembler for the global jacobian matrix.
@@ -284,7 +284,7 @@ SET_PROP(BoxScheme, PDELabTypes)
     enum{numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
 public:
     //typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
-    typedef typename Dune::NonoverlappingBoxDirichletConstraints<TypeTag> Constraints;
+    typedef typename Dumux::NonoverlappingBoxDirichletConstraints<TypeTag> Constraints;
     typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, Constraints,
 							Dune::PDELab::ISTLVectorBackend<numEq> > ScalarGridFunctionSpace;
     typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace, numEq,

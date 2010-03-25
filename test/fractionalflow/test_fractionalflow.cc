@@ -68,31 +68,31 @@ int main(int argc, char** argv)
         grid.globalRefine(0);
         const GridView gridView(grid.levelView(0));
 
-        Dune::Water wetmat(1000,0.001);
-        Dune::Oil nonwetmat(1000,0.001);
+        Dumux::Water wetmat(1000,0.001);
+        Dumux::Oil nonwetmat(1000,0.001);
 
-        Dune::FractionalFlowTestSoil<Grid, Scalar> soil(entryPressure);
+        Dumux::FractionalFlowTestSoil<Grid, Scalar> soil(entryPressure);
 
-        Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
+        Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, wetmat, nonwetmat);
 
-        typedef Dune::VariableClass<GridView, Scalar> VariableType;
+        typedef Dumux::VariableClass<GridView, Scalar> VariableType;
 
         VariableType variables(gridView);
 
-        typedef Dune::FractionalFlowTestProblem<GridView, Scalar, VariableType> Problem;
+        typedef Dumux::FractionalFlowTestProblem<GridView, Scalar, VariableType> Problem;
         Problem problem(variables, wetmat, nonwetmat, soil, materialLaw,L, H);
 
-        struct Dune::DefineModel modelDef;
+        struct Dumux::DefineModel modelDef;
 //        modelDef.saturationType = modelDef.saturationW;
 //        modelDef.pressureType = modelDef.pressureW;
         modelDef.velocityType = modelDef.velocityTotal;
 
-        typedef Dune::FVVelocity2P<GridView, Scalar, VariableType, Problem> DiffusionType;
+        typedef Dumux::FVVelocity2P<GridView, Scalar, VariableType, Problem> DiffusionType;
         DiffusionType diffusion(gridView, problem, modelDef);
 
         Dune::CapillaryDiffusion<GridView, Scalar, VariableType, Problem> capillaryDiffusion(problem, soil);
 
-        typedef Dune::FVSaturation2P<GridView, Scalar, VariableType, Problem> TransportType;
+        typedef Dumux::FVSaturation2P<GridView, Scalar, VariableType, Problem> TransportType;
 //        TransportType transport(gridView, problem, modelDef);
         TransportType transport(gridView, problem, modelDef, capillaryDiffusion);
 
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
         const char* fileName = "test_fractionalflow";
         int modulo = 1;
         double cFLFactor = 0.8;
-        Dune::TimeLoop<GridView, IMPESType > timeloop(gridView, tStart, tEnd, fileName, modulo, cFLFactor);
+        Dumux::TimeLoop<GridView, IMPESType > timeloop(gridView, tStart, tEnd, fileName, modulo, cFLFactor);
 
         timeloop.execute(impes, false);
 

@@ -26,7 +26,7 @@
 
 #include <dumux/nonlinear/newtoncontroller.hh>
 
-namespace Dune {
+namespace Dumux {
 /*!
  * \ingroup TwoPTwoCBoxModel
  * \brief A 2p2c specific controller for the newton solver.

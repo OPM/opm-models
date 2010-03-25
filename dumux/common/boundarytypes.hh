@@ -28,8 +28,8 @@
 #include <dumux/common/valgrind.hh>
 #include <dumux/operators/boundaryconditions.hh>
 
-#ifndef DUNE_DEPRECATED
-#define DUNE_DEPRECATED
+#ifndef DUMUX_DEPRECATED
+#define DUMUX_DEPRECATED
 #endif
 
 namespace Dumux
@@ -45,14 +45,14 @@ class BoundaryTypes
         
         BoundaryWrapper &operator=(int bc) {
             switch (bc) {
-            case Dune::BoundaryConditions::neumann:
+            case Dumux::BoundaryConditions::neumann:
                 bt_->boundaryInfo_[idx_].visited       = 1;
                 bt_->boundaryInfo_[idx_].isDirichlet = 0;
                 
                 Valgrind::SetDefined(bt_->boundaryInfo_[idx_]);
 
                 break;
-            case Dune::BoundaryConditions::dirichlet:
+            case Dumux::BoundaryConditions::dirichlet:
                 bt_->boundaryInfo_[idx_].visited       = 1;
                 bt_->boundaryInfo_[idx_].isDirichlet = 1;
                 
@@ -234,27 +234,27 @@ public:
     { return eq2pvIdx_[eqIdx]; };
 
     /*!
-     * \brief Allows to assign Dune::BoundaryCondition to a single
+     * \brief Allows to assign Dumux::BoundaryCondition to a single
      *        primary varible or equation.
      *
      * In the case of Dirichlet conditions, the equation with the same
      * index is always disabled.
      */
-    BoundaryWrapper operator[](int i) DUNE_DEPRECATED
+    BoundaryWrapper operator[](int i) DUMUX_DEPRECATED
     { return BoundaryWrapper(this, i); }
 
     /*!
-     * \brief Allows to assign Dune::BoundaryCondition to a all
+     * \brief Allows to assign Dumux::BoundaryCondition to a all
      *        primary varibles or equations.
      */
-    BoundaryTypes &operator=(int bc) DUNE_DEPRECATED
+    BoundaryTypes &operator=(int bc) DUMUX_DEPRECATED
     { 
         switch (bc) {
-        case Dune::BoundaryConditions::neumann:
+        case Dumux::BoundaryConditions::neumann:
             reset();
             setAllNeumann();
             break;
-        case Dune::BoundaryConditions::dirichlet:
+        case Dumux::BoundaryConditions::dirichlet:
             reset();
             setAllDirichlet();
             break;

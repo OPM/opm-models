@@ -25,7 +25,7 @@
 
 #include <dumux/boxmodels/2p/2pelementdata.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPNIBoxModel

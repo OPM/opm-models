@@ -14,15 +14,15 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_INJECTION_SPATIAL_PARAMETERS_HH
-#define DUNE_INJECTION_SPATIAL_PARAMETERS_HH
+#ifndef DUMUX_INJECTION_SPATIAL_PARAMETERS_HH
+#define DUMUX_INJECTION_SPATIAL_PARAMETERS_HH
 
 #include <dumux/new_material/spatialparameters/boxspatialparameters.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /**
@@ -115,8 +115,6 @@ public:
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
      *
-     * \param vIntrinsic    The result vector \f$\mathbf{-K\;v}\f$
-     * \param pGrad         The pressure gradient \f$[Pa / m]\f$
      * \param element       The current finite element
      * \param fvElemGeom    The current finite volume geometry of the element
      * \param scvfIdx       The index sub-control volume face where the 

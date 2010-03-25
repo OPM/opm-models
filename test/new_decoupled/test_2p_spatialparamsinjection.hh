@@ -21,7 +21,7 @@
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /** \todo Please doc me! */

@@ -19,7 +19,7 @@
 
 #include "dumux/transport/decoupled2p2cproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 //! Example problem class for decoupled 2p2c simulations
@@ -30,7 +30,7 @@ class Testproblem_2p2c
     template<int dim>
     struct ElementLayout
     {
-        bool contains (GeometryType gt)
+        bool contains (Dune::GeometryType gt)
         {
             return gt.dim() == dim;
         }
@@ -41,28 +41,28 @@ class Testproblem_2p2c
 
 public:
 
-    virtual const FieldVector<Scalar,dim> gravity()
+    virtual const Dune::FieldVector<Scalar,dim> gravity()
     {
-        FieldVector<Scalar,dim> gravity_(0);
+        Dune::FieldVector<Scalar,dim> gravity_(0);
         gravity_[2] = -10;
         return gravity_;
     }
 
-    Scalar temperature(const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos, double t)
+    Scalar temperature(const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                           const Dune::FieldVector<Scalar, dim>& localPos, double t)
     {
         return 283.15;
     }
 
-    BoundaryConditions2p2c::Flags bc_type (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos, double t) const
+    BoundaryConditions2p2c::Flags bc_type (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                           const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
 
         return BoundaryConditions2p2c::concentration;
     }
 
-    BoundaryConditions2p2c::Flags initcond_type (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                                 const FieldVector<Scalar, dim>& localPos) const
+    BoundaryConditions2p2c::Flags initcond_type (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                                 const Dune::FieldVector<Scalar, dim>& localPos) const
     {
         return BoundaryConditions2p2c::concentration;
     }
@@ -71,25 +71,25 @@ public:
                                              const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
         if (globalPos[0] > 10-1E-6 || globalPos[0] < 1e-6)
-            return Dune::BoundaryConditions::dirichlet;
+            return Dumux::BoundaryConditions::dirichlet;
         // all other boundaries
-        return Dune::BoundaryConditions::neumann;
+        return Dumux::BoundaryConditions::neumann;
     }
 
 
-    Scalar dirichlet (const FieldVector<Scalar, dim>& globalPos, const Entity& element, const FieldVector<Scalar, dim>& localPos, double t) const
+    Scalar dirichlet (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element, const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
         return (globalPos[0] < 1e-6) ? (2.5e5 - 10000 * globalPos[2]) : (2e5 - 10000 * globalPos[2]);
     }
 
-    Scalar dirichletConcentration (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                   const FieldVector<Scalar, dim>& localPos, double t) const
+    Scalar dirichletConcentration (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                   const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
         return 1;
     }
 
-    Scalar dirichletSat (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                         const FieldVector<Scalar, dim>& localPos, double t) const
+    Scalar dirichletSat (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                         const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
         if (globalPos[0] < 15)
             return 0;
@@ -97,34 +97,34 @@ public:
             return 0;
     }
 
-    virtual FieldVector<Scalar,2> neumann (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                           const FieldVector<Scalar, dim>& localPos, double t) const
+    virtual Dune::FieldVector<Scalar,2> neumann (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                           const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
-        FieldVector<Scalar,2> J_(0);
+        Dune::FieldVector<Scalar,2> J_(0);
         return J_;
     }
 
-    virtual FieldVector<Scalar,2> source (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                                          const FieldVector<Scalar, dim>& localPos, double t) const
+    virtual Dune::FieldVector<Scalar,2> source (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                                          const Dune::FieldVector<Scalar, dim>& localPos, double t) const
     {
-        FieldVector<Scalar,2> q_(0);
+        Dune::FieldVector<Scalar,2> q_(0);
         if (fabs(globalPos[0] - 4.5) < 1 && fabs(globalPos[1] - 4.5) < 1) q_[1] = 0.0001;
         return q_;
     }
 
-    Scalar initSat (const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                    const FieldVector<Scalar, dim>& localPos) const
+    Scalar initSat (const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                    const Dune::FieldVector<Scalar, dim>& localPos) const
     {
         return 0.999;
     }
 
-    Scalar initConcentration(const FieldVector<Scalar, dim>& globalPos, const Entity& element,
-                             const FieldVector<Scalar, dim>& localPos) const
+    Scalar initConcentration(const Dune::FieldVector<Scalar, dim>& globalPos, const Entity& element,
+                             const Dune::FieldVector<Scalar, dim>& localPos) const
     {
         return 1;
     }
 
-    Testproblem_2p2c(GridView& gv, Dune::VariableClass2p2c<GridView, Scalar>& var, Liquid_GL& liq, Gas_GL& gas, Matrix2p<typename GridView::Grid, Scalar>& s,
+    Testproblem_2p2c(GridView& gv, Dumux::VariableClass2p2c<GridView, Scalar>& var, Liquid_GL& liq, Gas_GL& gas, Matrix2p<typename GridView::Grid, Scalar>& s,
                      int level, TwoPhaseRelations<typename GridView::Grid, Scalar>& law = *(new TwoPhaseRelations<typename GridView::Grid, Scalar>),const bool cap = false)
         : DecoupledProblem2p2c<GridView, Scalar>(var, liq, gas, s, law, cap), gridview(gv)
     {

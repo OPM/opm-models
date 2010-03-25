@@ -14,8 +14,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_IMPES_HH
-#define DUNE_IMPES_HH
+#ifndef DUMUX_IMPES_HH
+#define DUMUX_IMPES_HH
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include "dumux/fractionalflow/fractionalflow.hh"
@@ -26,7 +26,7 @@
  * @author Bernd Flemisch, Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /**
  * \ingroup impes
@@ -59,7 +59,7 @@ template<class GridView, class Diffusion, class Transport, class VC> class IMPES
     };
     typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef Dune::FractionalFlow<GridView, Diffusion, Transport, VC> FractionalFlow;
+    typedef Dumux::FractionalFlow<GridView, Diffusion, Transport, VC> FractionalFlow;
     typedef typename FractionalFlow::RepresentationType PressType;
     typedef typename Diffusion::ScalarType Scalar;
 
@@ -90,7 +90,7 @@ public:
      *  \param CLFFac     security factor for the time step criterion (0 < CLFFac <= 1)
      *
      *  Calculates the new pressure and velocity and determines the time step size and the saturation update for the explicit time step
-     *  Called from Dune::Timestep.
+     *  Called from Dumux::Timestep.
      */
     virtual int update(const Scalar t, Scalar& dt, RepresentationType& updateVec,
             Scalar cFLFactor = 1)

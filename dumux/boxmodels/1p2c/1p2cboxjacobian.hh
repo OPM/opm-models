@@ -30,19 +30,18 @@
 #include <vector>
 #include <iostream>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \brief Calculate the local Jacobian for the single-phase,
  *        two-component model in the BOX scheme.
  */
 template<class TypeTag>
-class OnePTwoCBoxJacobian: public BoxJacobian<TypeTag, OnePTwoCBoxJacobian<
-        TypeTag> >
+class OnePTwoCBoxJacobian : public BoxJacobian<TypeTag>
 {
 protected:
     typedef OnePTwoCBoxJacobian<TypeTag> ThisType;
-    typedef BoxJacobian<TypeTag, ThisType> ParentType;
+    typedef BoxJacobian<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePTwoCIndices)) Indices;
@@ -66,8 +65,8 @@ protected:
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef FieldVector<Scalar, dim> LocalPosition;
-    typedef FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dim> LocalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::PrimaryVarVector PrimaryVarVector;
@@ -81,7 +80,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData)) FluxData;
 
     typedef std::vector<VertexData> VertexDataArray;
-    typedef FieldMatrix<Scalar, dim, dim> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
 
     static const Scalar upwindAlpha = GET_PROP_VALUE(TypeTag, PTAG(UpwindAlpha));
 
@@ -141,7 +140,7 @@ public:
                 (1 - upwindAlpha)*
                 ( dn.molarDensity * dn.molefraction/dn.viscosity ) );
 
-        FieldVector<Scalar,dim> unitNormal(vars.face->normal);
+        Dune::FieldVector<Scalar,dim> unitNormal(vars.face->normal);
         unitNormal/=vars.face->normal.two_norm();
 
         // diffusive flux
@@ -150,7 +149,7 @@ public:
         (vars.concentrationGrad * vars.face->normal);
 
         //multiply hydrodynamic dispersion tensor with the face normal
-        FieldVector<Scalar,dim> normalDisp;
+        Dune::FieldVector<Scalar,dim> normalDisp;
         vars.dispersionTensor.mv(vars.face->normal, normalDisp);
 
         //add dispersive flux

@@ -24,7 +24,7 @@
 
 #include "2pproperties.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

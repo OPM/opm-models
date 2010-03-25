@@ -25,8 +25,6 @@
 #include <dune/common/timer.hh>
 #include <dune/common/mpihelper.hh>
 
-#include <dumux/common/exceptions.hh>
-
 namespace Dumux
 {
 /*!
@@ -52,13 +50,13 @@ namespace Dumux
  * \todo Change the time manager to the property system (?)
  * \todo Remove the episode identifier stuff
  */
-template <class TypeTag>
+template <class EpisodeIdentiferT>
 class TimeManager
 {
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-    
 public:
-    TimeManager(Scalar endTime = 1e100,
+    typedef EpisodeIdentiferT EpisodeIdentifer;
+
+    TimeManager(double endTime = 1e100,
                 bool verbose = true)
     {
         wasRestarted_ = false;
@@ -91,14 +89,14 @@ public:
      * \brief Set the current simulated time, don't change the
      * current time step number.
      */
-    void setTime(Scalar t)
+    void setTime(double t)
     { time_ = t; }
 
     /*!
      * \brief Set the current simulated time and the time step
      * number.
      */
-    void setTime(Scalar t, int stepNum)
+    void setTime(double t, int stepNum)
     { time_ = t; stepNum_ = stepNum; }
 
     /*!
@@ -110,19 +108,19 @@ public:
     /*!
      * \brief Return the current simulated time.
      */
-    Scalar time() const
+    double time() const
     { return time_; }
 
     /*!
      * \brief Returns the number of (simulated) seconds which the simulation runs.
      */
-    Scalar endTime() const
+    double endTime() const
     { return endTime_; }
 
     /*!
      * \brief Set the time of simulated seconds at which the simulation runs.
      */
-    void setEndTime(Scalar val)
+    void setEndTime(double val)
     { endTime_ = val; }
 
     /*!
@@ -132,15 +130,19 @@ public:
      * episode, the timeStep() method will take care that the
      * step size won't exceed the episode, though.
      */
-    void setTimeStepSize(Scalar stepSize)
-    { stepSize_ = stepSize; }
+    void setTimeStepSize(double stepSize)
+    {
+        stepSize_ = stepSize;
+    }
 
     /*!
      * \brief Returns a suggested timestep length so that we don't
      *        miss the beginning of the next episode.
      */
-    Scalar timeStepSize() const
-    { return stepSize_; }
+    double timeStepSize() const
+    {
+        return stepSize_;
+    }
 
     /*!
      * \brief Returns number of time steps which have been
@@ -178,12 +180,15 @@ public:
      * \param tStart Time when the episode began
      * \param len    Length of the episode
      */
-    void startNextEpisode(Scalar tStart,
-                          Scalar len)
+    void startNextEpisode(const EpisodeIdentifer &id,
+                          double tStart,
+                          double len)
     {
         ++ episodeIndex_;
         episodeStartTime_ = tStart;
         episodeLength_ = len;
+
+        episode_ = id;
     }
 
     /*!
@@ -191,12 +196,40 @@ public:
      *        assuming that the episode starts at the current
      *        time.
      */
-    void startNextEpisode(Scalar len = 1e100)
+    void startNextEpisode(const EpisodeIdentifer &id,
+                          double len = 1e100)
+    {
+        ++ episodeIndex_;
+        episodeStartTime_ = time_;
+        episodeLength_ = len;
+
+        episode_ = id;
+    }
+
+    /*!
+     * \brief Start the next episode, but don't change the episode
+     *        identifier.
+     *
+     * \param len  Length of the episode, infinite if not specified.
+     */
+    void startNextEpisode(double len = 1e100)
     {
         ++ episodeIndex_;
         episodeStartTime_ = time_;
         episodeLength_ = len;
     }
+
+    /*!
+     * \brief Returns the identifier of the current episode
+     */
+    const EpisodeIdentifer &episode() const
+    { return episode_; }
+
+    /*!
+     * \brief Returns the identifier of the current episode
+     */
+    EpisodeIdentifer &episode()
+    { return episode_; }
 
     /*!
      * \brief Returns the index of the current episode.
@@ -210,14 +243,14 @@ public:
      * \brief Returns the absolute time when the current episode
      *        started.
      */
-    Scalar episodeStartTime() const
+    double episodeStartTime() const
     { return episodeStartTime_; }
 
     /*!
      * \brief Returns the length of the current episode in
      *        simulated time.
      */
-    Scalar episodeLength() const
+    double episodeLength() const
     { return std::min(episodeLength_,  endTime_ - episodeStartTime_); }
 
     /*!
@@ -230,7 +263,7 @@ public:
     /*!
      * \brief Aligns dt to the episode boundary if t+dt exceeds the current episode.
      */
-    Scalar episodeMaxTimeStepSize() const
+    double episodeMaxTimeStepSize() const
     {
         // if the current episode is over and the simulation
         // wants to give it some extra time, we will return
@@ -256,8 +289,8 @@ public:
      * This method makes sure that time steps sizes are aligned to
      * episode boundaries, amongst other stuff.
      */
-    template <class GlobalContext>
-    void timeLoop(GlobalContext &context)
+    template <class Problem>
+    void runSimulation(Problem &problem)
     {
         if (verbose_)
             std::cout <<
@@ -268,30 +301,41 @@ public:
 
         // initialize them model and write the initial
         // condition to disk
-        Scalar dtInitial = stepSize_;
+        double dtInitial = stepSize_;
         stepSize_ = 0.0;
-        context.control().initial(context);
+        problem.init();
         stepSize_ = dtInitial;
 
         // do the time steps
         while (!finished())
         {
-            // execute the time integration
-            timeIntegration_(context);
+            problem.timeStepBegin();
+
+            // execute the time integration (i.e. Runge-Kutta
+            // or Euler).
+            problem.timeIntegration();
 
             // advance the simulated time by the current time step
             // size
+            double dt = timeStepSize();
             proceed();
 
-            // post process the current solution (e.g. write output
-            // files, update material laws, etc.)
-            context.control().postProcess(context);
+            problem.timeStepEnd();
+
+            // notify the problem that the timestep is done and ask it
+            // for a suggestion for the next timestep size
+            double nextDt =
+                    std::min(problem.nextTimeStepSize(),
+                             episodeMaxTimeStepSize());
 
             if (verbose_) {
                 std::cout <<
-                    boost::format("Timestep %d done. t_cpu=%.4g, t=%.4g, dt=%.4g\n")
-                    %timeStepNum()%timer.elapsed()%time()%timeStepSize();
+                    boost::format("Timestep %d done. CPUt=%.4g, t=%.4g, StepSize=%.4g, NextStepSize=%.4g\n")
+                    %timeStepNum()%timer.elapsed()%time()%dt%nextDt;
             }
+
+            // set the time step size for the next step
+            setTimeStepSize(nextDt);
         }
 
         if (verbose_)
@@ -313,7 +357,6 @@ public:
         res.serializeSection("TimeManager");
         res.serializeStream() << episodeIndex_ << " "
                               << episodeStartTime_ << " "
-                              << episodeLength_ << " "
                               << time_ << " "
                               << stepNum_ << "\n";
     }
@@ -327,7 +370,6 @@ public:
         res.deserializeSection("TimeManager");
         res.deserializeStream() >> episodeIndex_
                                 >> episodeStartTime_
-                                >> episodeLength_
                                 >> time_
                                 >> stepNum_;
 
@@ -342,46 +384,21 @@ public:
      */
 
 private:
-    template <class GlobalContext>
-    void timeIntegration_(GlobalContext &context)
-    {
-        int numRetries;
-        for (numRetries = 0; numRetries < 10; ++numRetries) {
-            // preprocess the current solution and set the time step
-            // size
-            Scalar oldDt = timeStepSize();
-            Scalar dt = context.control().preProcess(context);
-            dt = std::min(dt, episodeMaxTimeStepSize());
-            setTimeStepSize(dt);
-                        
-            // try the actual time integration (e.g. Runge-Kutta or
-            // Euler)
-            if (context.control().timeIntegration(context))
-                return; // SUCCESS!!!
-
-            std::cout << "Time integration failed with dt="<<oldDt
-                      <<"sec. Retrying with dt="<<dt<<"sec\n"; 
-        }
-        
-        DUNE_THROW(Dumux::NumericalProblem, 
-                   "Time integration failed after "
-                   << numRetries << " retries");
-    }
-
+    
     int              episodeIndex_;
-    Scalar           episodeStartTime_;
-    Scalar           episodeLength_;
+    double           episodeStartTime_;
+    double           episodeLength_;
+    EpisodeIdentifer episode_;
 
-    Scalar time_;
-    Scalar endTime_;
+    double time_;
+    double endTime_;
 
-    Scalar stepSize_;
+    double stepSize_;
     int    stepNum_;
     bool   finished_;
     bool   verbose_;
     bool   wasRestarted_;
 };
-
-} // namespace Dumux
+}
 
 #endif

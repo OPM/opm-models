@@ -24,7 +24,7 @@
 
 #include <dumux/boxmodels/2p/2pvertexdata.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

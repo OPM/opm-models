@@ -24,7 +24,7 @@
 
 #include <dumux/boxmodels/boxscheme/boxproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup OnePBoxModel

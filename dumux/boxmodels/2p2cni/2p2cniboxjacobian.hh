@@ -34,7 +34,7 @@
 
 #include <dumux/boxmodels/2p2cni/2p2cniproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPTwoCNIBoxModel

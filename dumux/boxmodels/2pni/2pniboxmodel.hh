@@ -31,7 +31,7 @@
 #include "2pniboxjacobian.hh"
 #include "2pniboxproblem.hh"
 
-namespace Dune {
+namespace Dumux {
 
 /*!
  * \ingroup BoxProblems

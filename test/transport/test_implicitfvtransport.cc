@@ -44,11 +44,11 @@ int main(int argc, char** argv)
         GridView gridView(grid.levelView(0));
 
         Dune::Uniform mat(0.2);
-        //Dune::HomogeneousLinearSoil<Grid, Scalar> soil;
-        Dune::HomogeneousNonlinearSoil<Grid, Scalar> soil;
-        Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, mat, mat);
+        //Dumux::HomogeneousLinearSoil<Grid, Scalar> soil;
+        Dumux::HomogeneousNonlinearSoil<Grid, Scalar> soil;
+        Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, mat, mat);
 
-        typedef Dune::VariableClass<GridView, Scalar> VariableClass;
+        typedef Dumux::VariableClass<GridView, Scalar> VariableClass;
 
         double initsat=0;
         Dune::FieldVector<double,dim> vel(0);
@@ -56,8 +56,8 @@ int main(int argc, char** argv)
 
         VariableClass variables(gridView,initsat,vel);
 
-        //Dune::SimpleProblem<GridView, Scalar, VariableClass> ProblemType;
-        typedef Dune::SimpleNonlinearProblem<GridView, Scalar, VariableClass> ProblemType;
+        //Dumux::SimpleProblem<GridView, Scalar, VariableClass> ProblemType;
+        typedef Dumux::SimpleNonlinearProblem<GridView, Scalar, VariableClass> ProblemType;
 	ProblemType problem(variables, mat, mat , soil, materialLaw,L,H);
 
         //Dune::DiffusivePart<GridView, Scalar> diffusivePart;
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
 	Dune::RungeKuttaStep<Grid, Transport> timeStep(1);
 	//Dune::ImplicitEulerStep<Grid, Transport> timeStep;
-        Dune::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
+        Dumux::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, dt, "implicitfvtransport", modulo, maxDt, firstDt, timeStep);
 
         timeloop.execute(transport);
 

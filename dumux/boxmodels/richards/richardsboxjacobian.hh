@@ -28,7 +28,7 @@
 #include "richardselementdata.hh"
 #include "richardsfluxdata.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup RichardsBoxModel
@@ -36,10 +36,10 @@ namespace Dune
  *        using the Richards box model.
  */
 template<class TypeTag>
-class RichardsBoxJacobian : public BoxJacobian<TypeTag, RichardsBoxJacobian<TypeTag> >
+class RichardsBoxJacobian : public BoxJacobian<TypeTag>
 {
-    typedef RichardsBoxJacobian<TypeTag>         ThisType;
-    typedef BoxJacobian<TypeTag, ThisType>   ParentType;
+    typedef RichardsBoxJacobian<TypeTag>   ThisType;
+    typedef BoxJacobian<TypeTag>           ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))   Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))  GridView;

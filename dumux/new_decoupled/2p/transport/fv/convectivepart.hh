@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_CONVECTIVEPART_HH
-#define DUNE_CONVECTIVEPART_HH
+#ifndef DUMUX_CONVECTIVEPART_HH
+#define DUMUX_CONVECTIVEPART_HH
 
 //! \ingroup transport
 //! \defgroup convPart Convective transport
@@ -24,7 +24,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 
 /*!\ingroup convPart
@@ -69,9 +69,9 @@ public:
      *  @param[in] indexInInside  face index in reference element
      *  \return     convective term of an advection-diffusion equation
      */
-    FieldVector<Scalar, dimWorld> operator() (const Element& element, const int indexInInside, const Scalar satI, const Scalar satJ) const
+    Dune::FieldVector<Scalar, dimWorld> operator() (const Element& element, const int indexInInside, const Scalar satI, const Scalar satJ) const
     {
-        FieldVector<Scalar, dimWorld> trivial(0);
+        Dune::FieldVector<Scalar, dimWorld> trivial(0);
         return trivial;
     }
 

@@ -28,7 +28,7 @@
 #include "1pelementdata.hh"
 #include "1pfluxdata.hh"
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup OnePBoxModel

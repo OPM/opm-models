@@ -26,7 +26,7 @@
 #include "2pnewtoncontroller.hh"
 #include "2pboxproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 
 /*!

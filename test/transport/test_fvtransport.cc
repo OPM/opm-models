@@ -39,21 +39,21 @@ int main(int argc, char** argv)
 		const GridView gridView(grid.leafView());
 
 		Dune::Uniform fluid;
-		Dune::HomogeneousNonlinearSoil<Grid, Scalar> soil;
-		Dune::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, fluid, fluid);
+		Dumux::HomogeneousNonlinearSoil<Grid, Scalar> soil;
+		Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, fluid, fluid);
 
 		double initsat=0;
 		Dune::FieldVector<double,dim> velocity(0);
 		velocity[0] = 1.0/6.0*1e-6;
-		typedef Dune::VariableClass<GridView, Scalar> VariableClass;
+		typedef Dumux::VariableClass<GridView, Scalar> VariableClass;
 		VariableClass variables(gridView, initsat, velocity);
 
-		Dune::SimpleNonlinearProblem<GridView, Scalar, VariableClass> problem(variables, materialLaw, L, H);
+		Dumux::SimpleNonlinearProblem<GridView, Scalar, VariableClass> problem(variables, materialLaw, L, H);
 
-		typedef Dune::FVSaturation2P<GridView, Scalar, VariableClass> Transport;
+		typedef Dumux::FVSaturation2P<GridView, Scalar, VariableClass> Transport;
 		Transport transport(gridView, problem);
 
-		Dune::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
+		Dumux::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, "timeloop", modulo, cFLFactor, maxDT, maxDT);
 
 		timeloop.execute(transport);
 

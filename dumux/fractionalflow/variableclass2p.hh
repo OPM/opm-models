@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_VARIABLECLASS2P_NEW_HH
-#define DUNE_VARIABLECLASS2P_NEW_HH
+#ifndef DUMUX_VARIABLECLASS2P_NEW_HH
+#define DUMUX_VARIABLECLASS2P_NEW_HH
 
 //#define HACK_SINTEF_RESPROP
 
@@ -32,7 +32,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup fracflow
@@ -70,15 +70,15 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 #ifdef HACK_SINTEF_RESPROP
-    typedef Dune::ReservoirPropertyCapillary<3> ReservoirProperties;
+    typedef Dumux::ReservoirPropertyCapillary<3> ReservoirProperties;
 #endif
 
 public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;//!<type for vector of scalars
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > PhasePropVectorType;//!<type for vector of phase properties
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,2> > FluidPropVectorType;//!<type for vector of fluid properties
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, 2>, maxIntersections> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, maxIntersections> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
+    typedef Dune::BlockVector< Dune::FieldVector<Dune::FieldVector<Scalar, 2>, maxIntersections> > PotType;//!<type for vector of vectors (of size 2 x dimension) of scalars
+    typedef Dune::BlockVector< Dune::FieldVector<Dune::FieldVector<Scalar, dim>, maxIntersections> > VelType;//!<type for vector of vectors (of size 2 x dimension) of vector (of size dimension) of scalars
 
 private:
     const GridView& gridViewDiffusion_;
@@ -286,7 +286,7 @@ private:
         }
         else
         {
-            potential_ = FieldVector<Scalar,2>(0);
+            potential_ = Dune::FieldVector<Scalar,2>(0);
         }
         return;
     }
@@ -320,19 +320,19 @@ private:
         typename GridView::template Codim<0>::Iterator cell = gridViewDiffusion_.template begin<0>();
         for (; cell != gridViewDiffusion_.template end<0>(); ++cell) {
             int cell_index = indexset.index(*cell);
-            FieldVector<Scalar, dim> cellref_centroid = ReferenceElements<Scalar, dim>::general(cell->geometry().type()).position(0,0);
-            FieldVector<Scalar, dim> cell_centroid = cell->geometry().global(cellref_centroid);
-            FieldVector<Scalar, dim> cv(0.0);
-            FieldVector<Scalar, dim> cv2(0.0);
+            Dune::FieldVector<Scalar, dim> cellref_centroid = Dune::ReferenceElements<Scalar, dim>::general(cell->geometry().type()).position(0,0);
+            Dune::FieldVector<Scalar, dim> cell_centroid = cell->geometry().global(cellref_centroid);
+            Dune::FieldVector<Scalar, dim> cv(0.0);
+            Dune::FieldVector<Scalar, dim> cv2(0.0);
             typename GridView::IntersectionIterator face = gridViewDiffusion_.ibegin(*cell);
             int fcount = 0;
             for (; face != gridViewDiffusion_.iend(*cell); ++face, ++fcount) {
-                FieldVector<Scalar, dim-1> faceref_centroid = ReferenceElements<Scalar, dim - 1>::general(face->geometry().type()).position(0,0);
-                FieldVector<Scalar, dim> v = face->geometry().global(faceref_centroid);
-                FieldVector<Scalar, dim> normal = face->unitOuterNormal(faceref_centroid);
+                Dune::FieldVector<Scalar, dim-1> faceref_centroid = Dune::ReferenceElements<Scalar, dim - 1>::general(face->geometry().type()).position(0,0);
+                Dune::FieldVector<Scalar, dim> v = face->geometry().global(faceref_centroid);
+                Dune::FieldVector<Scalar, dim> normal = face->unitOuterNormal(faceref_centroid);
 
                 v -= cell_centroid;
-                FieldVector<Scalar, dim> v2 = v;
+                Dune::FieldVector<Scalar, dim> v2 = v;
                 double flux = -(velocity_[cell_index][fcount]*normal)*face->geometry().volume();
                 double flux2 = -(velocitySecondPhase_[cell_index][fcount]*normal)*face->geometry().volume();
                 v *= flux/cell->geometry().volume();
@@ -361,11 +361,11 @@ private:
                 Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
                 sprintf(fname, "%s-%05d", name, k);
                 vtkwritersaturation.addCellData(saturation_, "saturation");
-                vtkwritersaturation.write(fname, VTKOptions::ascii);
+                vtkwritersaturation.write(fname, Dune::VTKOptions::ascii);
             }
             else
             {
-                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
+                 Dune::VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
                 char fname[128];
                 sprintf(fname, "%s-%05d", name, k);
                 vtkwriter.addCellData(pressure_, "pressure");
@@ -404,7 +404,7 @@ private:
                 vtkwriter.addCellData(cell_velocity, "velocity magnitude (cell)");
                 vtkwriter.addCellData(cell_velocity_second_phase, "velocity magnitude (cell, second phase)");
 
-                vtkwriter.write(fname, VTKOptions::ascii);
+                vtkwriter.write(fname, Dune::VTKOptions::ascii);
             }
         }
         if (codim_ == dim)
@@ -420,17 +420,17 @@ private:
                 Dune::VTKWriter<GridView> vtkwritersaturation(gridViewTransport_);
                 sprintf(fname, "%s-%05d", name, k);
                 vtkwritersaturation.addVertexData(saturation_, "saturation");
-                vtkwritersaturation.write(fname, VTKOptions::ascii);
+                vtkwritersaturation.write(fname, Dune::VTKOptions::ascii);
             }
             else
             {
-                VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
+                 Dune::VTKWriter<GridView> vtkwriter(gridViewDiffusion_);
                 char fname[128];
                 sprintf(fname, "%s-%05d", name, k);
                 vtkwriter.addVertexData(pressure_, "pressure");
                 vtkwriter.addVertexData(saturation_, "saturation");
 
-                vtkwriter.write(fname, VTKOptions::ascii);
+                vtkwriter.write(fname, Dune::VTKOptions::ascii);
             }
         }
 

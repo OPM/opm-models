@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_FVSATURATION2P_HH
-#define DUNE_FVSATURATION2P_HH
+#ifndef DUMUX_FVSATURATION2P_HH
+#define DUMUX_FVSATURATION2P_HH
 
 #include "dumux/new_decoupled/2p/transport/fv/diffusivepart.hh"
 #include "dumux/new_decoupled/2p/transport/fv/convectivepart.hh"
@@ -27,7 +27,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 //! \ingroup transport
 //! The finite volume model for the solution of the non-wetting phase saturation equation
@@ -160,7 +160,7 @@ public:
     //! Update the values of the material laws and constitutive relations.
     /*!
      *  Constitutive relations like capillary pressure-saturation relationships, mobility-saturation relationships... are updated and stored in the variable class
-     *  of type Dune::VariableClass2P. The update has to be done when new saturation are available.
+     *  of type Dumux::VariableClass2P. The update has to be done when new saturation are available.
      */
     void updateMaterialLaws(RepresentationType& saturation, bool iterate);
 
@@ -177,20 +177,20 @@ public:
     {
         if (compressibility_ && velocityType_ == vt)
         {
-            DUNE_THROW(NotImplemented,
+            DUNE_THROW(Dune::NotImplemented,
                     "Total velocity - global pressure - model cannot be used with compressible fluids!");
         }
         if (saturationType_ != Sw && saturationType_ != Sn)
         {
-            DUNE_THROW(NotImplemented, "Saturation type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
         if (pressureType_ != pw && pressureType_ != pn && pressureType_ != pglobal)
         {
-            DUNE_THROW(NotImplemented, "Pressure type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
         if (velocityType_ != vw && velocityType_ != vn && velocityType_ != vt)
         {
-            DUNE_THROW(NotImplemented, "Velocity type not supported!");
+            DUNE_THROW(Dune::NotImplemented, "Velocity type not supported!");
         }
 
 
@@ -233,7 +233,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
     updateVec = 0;
 
     // some phase properties
-    FieldVector<Scalar, dimWorld> gravity = problem_.gravity();
+    Dune::FieldVector<Scalar, dimWorld> gravity = problem_.gravity();
 
     // compute update vector
     ElementIterator eItEnd = problem_.gridView().template end<0> ();
@@ -326,7 +326,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                 // compute distance between cell centers
                 Scalar dist = distVec.two_norm();
 
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 //get phase potentials
@@ -545,7 +545,7 @@ int FVSaturation2P<TypeTag>::update(const Scalar t, Scalar& dt, RepresentationTy
                 // compute distance between cell centers
                 Scalar dist = distVec.two_norm();
 
-                FieldVector<Scalar, dimWorld> unitDistVec(distVec);
+                Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
                 //get boundary type

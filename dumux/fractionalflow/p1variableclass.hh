@@ -13,8 +13,8 @@
  *                                                                           *
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
-#ifndef DUNE_P1VARIABLECLASS_HH
-#define DUNE_P1VARIABLECLASS_HH
+#ifndef DUMUX_P1VARIABLECLASS_HH
+#define DUMUX_P1VARIABLECLASS_HH
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -26,7 +26,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /** \todo Please doc me! */
 
@@ -68,7 +68,7 @@ class P1VariableClass
 
 public:
     typedef Dune::BlockVector< Dune::FieldVector<Scalar,1> > ScalarVectorType;
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, 2*dim> > VelType;
+    typedef Dune::BlockVector< Dune::FieldVector<Dune::FieldVector<Scalar, dim>, 2*dim> > VelType;
 
     Grid& grid;
     int transLevel;
@@ -166,7 +166,7 @@ public:
     {
         vtkoutMultiLevel(name,k,diffLevel,transLevel);
     }
-    void vtkout(const char* name, int k,BlockVector<FieldVector<Scalar, 2> > uEx)
+    void vtkout(const char* name, int k,Dune::BlockVector<Dune::FieldVector<Scalar, 2> > uEx)
     {
         vtkOutWithExSol(name,k,uEx);
     }
@@ -175,12 +175,12 @@ public:
     {
         if (pressureLevel == satLevel)
         {
-            VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
+             Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
             char fname[128];
             sprintf(fname, "%s-%05d", name, k);
             vtkwriter.addCellData(saturation, "saturation");
             vtkwriter.addVertexData(pressure, "total pressure p~");
-            vtkwriter.write(fname, VTKOptions::ascii);
+            vtkwriter.write(fname, Dune::VTKOptions::ascii);
         }
         else
         {
@@ -195,12 +195,12 @@ public:
                 vtkwritersaturation(grid.levelView(satLevel));
             sprintf(fname, "%s-%05d", name, k);
             vtkwritersaturation.addCellData(saturation, "saturation");
-            vtkwritersaturation.write(fname, VTKOptions::ascii);
+            vtkwritersaturation.write(fname, Dune::VTKOptions::ascii);
         }
         return;
     }
 
-    void vtkOutWithExSol(const char* name, int k, BlockVector<FieldVector<Scalar, 2> > uEx)
+    void vtkOutWithExSol(const char* name, int k, Dune::BlockVector<Dune::FieldVector<Scalar, 2> > uEx)
     {
         ScalarVectorType saturationEx(transSize);
         ScalarVectorType error(transSize);
@@ -210,14 +210,14 @@ public:
             saturationEx[i] = uEx[i][0];
             error[i]=uEx[i][1];
         }
-        VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
+         Dune::VTKWriter<typename Grid::LeafGridView> vtkwriter(grid.leafView());
         char fname[128];
         sprintf(fname, "%s-%05d", name, k);
         vtkwriter.addCellData(saturation, "saturation");
         vtkwriter.addVertexData(pressure, "total pressure p~");
         vtkwriter.addCellData(saturationEx, "saturation (exact solution)");
         vtkwriter.addCellData(error, "error");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
     }
 };
 }

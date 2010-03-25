@@ -26,9 +26,9 @@
 #ifndef DUMUX_2P_FLUX_DATA_HH
 #define DUMUX_2P_FLUX_DATA_HH
 
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
@@ -205,7 +205,7 @@ private:
         Vector Kmvp;
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
-            spatialParams.meanIntrinsicPermeability(K,
+            spatialParams.meanK(K,
                    spatialParams.intrinsicPermeability(element, 
                                                        fvElemGeom_,
                                                        face().i),

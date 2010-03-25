@@ -14,14 +14,14 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 
-#ifndef DUNE_IMPESPROBLEM_HH
-#define DUNE_IMPESPROBLEM_HH
+#ifndef DUMUX_IMPESPROBLEM_HH
+#define DUMUX_IMPESPROBLEM_HH
 
 #include "impesproperties.hh"
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/io/restart.hh>
 
-#include <dumux/auxiliary/timemanager.hh>
+#include <dumux/common/timemanager.hh>
 
 /**
  * @file
@@ -29,7 +29,7 @@
  * @author Bernd Flemisch
  */
 
-namespace Dune
+namespace Dumux
 {
 
 /*! \ingroup fracflow
@@ -57,9 +57,9 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 
     enum Episode {}; // the type of an episode of the simulation
-    typedef Dune::TimeManager<Episode>      TimeManager;
+    typedef Dumux::TimeManager<Episode>      TimeManager;
 
-    typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+    typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Variables)) Variables;
 
@@ -135,7 +135,7 @@ public:
      * \brief Start the simulation procedure.
      *
      * This method is usually called by the main() function and simply
-     * uses Dune::TimeManager::runSimulation() to do the actual
+     * uses Dumux::TimeManager::runSimulation() to do the actual
      * work.
      */
     bool simulate(Scalar dtInitial, Scalar tEnd)
@@ -149,7 +149,7 @@ public:
 
 
     /*!
-     * \brief Called by the Dune::TimeManager in order to
+     * \brief Called by the Dumux::TimeManager in order to
      *        initialize the problem.
      */
     void init()
@@ -168,7 +168,7 @@ public:
     {}
 
     /*!
-     * \brief Called by Dune::TimeManager in order to do a time
+     * \brief Called by Dumux::TimeManager in order to do a time
      *        integration on the model.
      *
      * \note \a timeStepSize and \a nextStepSize are references and may
@@ -199,7 +199,7 @@ public:
     }
 
     /*!
-     * \brief Called by Dune::TimeManager whenever a solution for a
+     * \brief Called by Dumux::TimeManager whenever a solution for a
      *        timestep has been computed and the simulation time has
      *        been updated.
      *
@@ -225,7 +225,7 @@ public:
     { return timeManager_.setTimeStepSize(dt); }
 
     /*!
-     * \brief Called by Dune::TimeManager whenever a solution for a
+     * \brief Called by Dumux::TimeManager whenever a solution for a
      *        timestep has been computed and the simulation time has
      *        been updated.
      */
@@ -386,11 +386,11 @@ public:
      * The file will start with the prefix returned by the name()
      * method, has the current time of the simulation clock in it's
      * name and uses the extension <tt>.drs</tt>. (Dumux ReStart
-     * file.)  See Dune::Restart for details.
+     * file.)  See Dumux::Restart for details.
      */
     void serialize()
     {
-        typedef Dune::Restart<GridView> Restarter;
+        typedef Dumux::Restart<GridView> Restarter;
 
         Restarter res;
         res.serializeBegin(gridView(),
@@ -413,7 +413,7 @@ public:
      */
     void deserialize(double t)
     {
-        typedef Dune::Restart<GridView> Restarter;
+        typedef Dumux::Restart<GridView> Restarter;
 
         Restarter res;
         res.deserializeBegin(gridView(),

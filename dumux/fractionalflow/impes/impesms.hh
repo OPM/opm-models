@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef DUNE_IMPESMS_HH
-#define DUNE_IMPESMS_HH
+#ifndef DUMUX_IMPESMS_HH
+#define DUMUX_IMPESMS_HH
 
 #include "dumux/fractionalflow/impes/impes_deprecated.hh"
 #include "dumux/transport/fv/diffusivepart.hh"
@@ -12,7 +12,7 @@
  * @author Bernd Flemisch, Jochen Fritz
  */
 
-namespace Dune
+namespace Dumux
 {
 /** \todo Please doc me! */
 
@@ -138,7 +138,7 @@ public:
         //      vtkWriterSat.addCellData(this->sat,"saturation");
         //      vtkWriterSat.write(fname,Dune::VTKOptions::ascii);
 
-        VTKWriter<typename G::LevelGridView> vtkWriterPress(this->Diffusion::grid().levelView(this->Diffusion::level()));
+         Dune::VTKWriter<typename G::LevelGridView> vtkWriterPress(this->Diffusion::grid().levelView(this->Diffusion::level()));
         sprintf(fname,"%s-press.%05d",name,k);
         vtkWriterPress.addCellData(this->diffproblem.variables.pressure,"total pressure p~");
         vtkWriterPress.write(fname,Dune::VTKOptions::ascii);

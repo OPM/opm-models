@@ -23,7 +23,7 @@
 #include <dumux/new_material/fluidstate.hh>
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \brief Calcultes the phase state from the primary variables in the

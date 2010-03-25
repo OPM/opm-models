@@ -23,9 +23,9 @@
 #ifndef DUMUX_1P_FLUX_DATA_HH
 #define DUMUX_1P_FLUX_DATA_HH
 
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
@@ -133,7 +133,7 @@ private:
         const Tensor &Kj = problem.soil().K(outsideSCV->global,
                                             element,
                                             outsideSCV->local);
-        Dune::harmonicMeanMatrix(K, Ki, Kj);
+        Dumux::harmonicMeanMatrix(K, Ki, Kj);
 
         // temporary vector for the Darcy velocity
         GlobalPosition vDarcy;

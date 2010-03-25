@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef DUNE_IMPESPOSTPROCESS_HH
-#define DUNE_IMPESPOSTPROCESS_HH
+#ifndef DUMUX_IMPESPOSTPROCESS_HH
+#define DUMUX_IMPESPOSTPROCESS_HH
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include "dumux/fractionalflow/impes/impes.hh"
@@ -12,7 +12,7 @@
  * @author Markus Wolff
  */
 
-namespace Dune
+namespace Dumux
 {
 /**
  * \ingroup MultiMulti
@@ -28,7 +28,7 @@ template<class Grid, class Diffusion, class Transport, class VC> class IMPESPost
         dim = Grid::dimension, dimWorld = Grid::dimensionworld
     };
 
-    typedef Dune::FractionalFlow<Grid, Diffusion, Transport, VC> FractionalFlow;
+    typedef Dumux::FractionalFlow<Grid, Diffusion, Transport, VC> FractionalFlow;
     typedef Dune::IMPES<Grid, Diffusion, Transport, VC> IMPES;
 
 typedef    typename Grid::LevelGridView GridView;
@@ -45,7 +45,7 @@ typedef    typename Grid::LevelGridView GridView;
     typedef Dune::FieldMatrix<Scalar,dim,dim> FieldMatrix;
     typedef Dune::FieldVector<Scalar,dim> LocalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
-    typedef Dune::BlockVector< FieldVector<FieldVector<Scalar, dim>, 2*dim> > VelType;
+    typedef Dune::BlockVector< Dune::FieldVector<Dune::FieldVector<Scalar, dim>, 2*dim> > VelType;
 
     Scalar calcQT()
     {
@@ -69,15 +69,15 @@ typedef    typename Grid::LevelGridView GridView;
                     Scalar faceAreaCoarse = (*isItCoarse).geometry().volume();
                     // get normal vector scaled with volume
 
-                    GeometryType faceGTCoarse = isItCoarse->geometryInInside().type();
+                    Dune::GeometryType faceGTCoarse = isItCoarse->geometryInInside().type();
 
-                    const FieldVector<Scalar,dim-1>& faceLocalCoarse
-                    = ReferenceElements<Scalar,dim-1>::general(faceGTCoarse).position(0,0);
+                    const Dune::FieldVector<Scalar,dim-1>& faceLocalCoarse
+                    = Dune::ReferenceElements<Scalar,dim-1>::general(faceGTCoarse).position(0,0);
 
                     const GlobalPosition& globalPosFaceCoarse= isItCoarse->geometry().global(faceLocalCoarse); // globalPosFace coordinate of face center
 
                     const LocalPosition&
-                    localPosFaceCoarse = ReferenceElements<Scalar,dim>::general(faceGTCoarse).position(faceNumberCoarse,1);
+                    localPosFaceCoarse = Dune::ReferenceElements<Scalar,dim>::general(faceGTCoarse).position(faceNumberCoarse,1);
 
                     //get boundary condition for boundary face center
                     BoundaryConditions::Flags bctypePressCoarse = this->transProblem.bctypePress(globalPosFaceCoarse, *eItCoarse, localPosFaceCoarse);
@@ -99,7 +99,7 @@ typedef    typename Grid::LevelGridView GridView;
     {
         const GridView& gridView = grid_.levelView(transLevel_);
 
-        FieldVector<Scalar,dim> fluxCoarse(0);
+        Dune::FieldVector<Scalar,dim> fluxCoarse(0);
 
         ElementIterator eItCoarseEnd = gridView.template end<0>();
         for (ElementIterator eItCoarse = gridView.template begin<0>(); eItCoarse != eItCoarseEnd; ++eItCoarse)
@@ -109,9 +109,9 @@ typedef    typename Grid::LevelGridView GridView;
             if (transLevel_ == diffLevel_)
             {
                 //get some cell properties
-                GeometryType gt = eItCoarse->geometry().type();
+                Dune::GeometryType gt = eItCoarse->geometry().type();
                 const LocalPosition&
-                localPos = ReferenceElements<Scalar,dim>::general(gt).position(0,0);
+                localPos = Dune::ReferenceElements<Scalar,dim>::general(gt).position(0,0);
                 const GlobalPosition& globalPos = eItCoarse->geometry().global(localPos); //globalPosFace coordinates of cell center
                 int globalIdxI = indexSetFine_.index(*eItCoarse); // index of fine-scale cell
 
@@ -122,10 +122,10 @@ typedef    typename Grid::LevelGridView GridView;
                     // boundary face
                     if (isIt->boundary())
                     {
-                        GeometryType faceGT = isIt->geometryInInside().type();
+                        Dune::GeometryType faceGT = isIt->geometryInInside().type();
 
-                        const FieldVector<Scalar,dim-1>& faceLocal
-                        = ReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
+                        const Dune::FieldVector<Scalar,dim-1>& faceLocal
+                        = Dune::ReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
 
                         const GlobalPosition& globalPosFace= isIt->geometry().global(faceLocal); // globalPosFace coordinate of face center
 
@@ -141,13 +141,13 @@ typedef    typename Grid::LevelGridView GridView;
 
                         Scalar faceAreaFine=isIt->geometry().volume(); // volume of face
 
-                        FieldVector<Scalar,dim> unitOuterNormal
+                        Dune::FieldVector<Scalar,dim> unitOuterNormal
                         = isIt->unitOuterNormal(faceLocal); // normal vector of unit length
 
                         const LocalPosition&
-                        localPosFace = ReferenceElements<Scalar,dim>::general(faceGT).position(faceNumberFine,1);
+                        localPosFace = Dune::ReferenceElements<Scalar,dim>::general(faceGT).position(faceNumberFine,1);
 
-                        FieldVector<Scalar,dim> velocityFine(0);
+                        Dune::FieldVector<Scalar,dim> velocityFine(0);
 
                         //get boundary condition for boundary face center
                         BoundaryConditions::Flags bctypePress = this->transProblem.bctypePress(globalPosFace, *eItCoarse, localPosFace);
@@ -156,14 +156,14 @@ typedef    typename Grid::LevelGridView GridView;
                         if (bctypePress == BoundaryConditions::dirichlet && bctypeSat == BoundaryConditions::neumann)
                         {
                             // distance vector between barycenters
-                            FieldVector<Scalar,dimWorld> distVec = globalPos - globalPosFace;
+                            Dune::FieldVector<Scalar,dimWorld> distVec = globalPos - globalPosFace;
                             Scalar dist = distVec.two_norm();
 
                             //normalise distVec for multiplication with the permeability
                             distVec /= dist;
 
                             // compute directed permeability vector permeabilityI.n
-                            FieldVector<Scalar,dim> normalPermeabilityI(0);
+                            Dune::FieldVector<Scalar,dim> normalPermeabilityI(0);
                             permeabilityI.umv(distVec, normalPermeabilityI);
 
                             // compute averaged total mobility
@@ -188,9 +188,9 @@ typedef    typename Grid::LevelGridView GridView;
                     if (eIt->level() != diffLevel_) continue;
 
                     //get some cell properties
-                    GeometryType gt = eIt->geometry().type();
+                    Dune::GeometryType gt = eIt->geometry().type();
                     const LocalPosition&
-                    localPos = ReferenceElements<Scalar,dim>::general(gt).position(0,0);
+                    localPos = Dune::ReferenceElements<Scalar,dim>::general(gt).position(0,0);
                     const GlobalPosition& globalPos = eIt->geometry().global(localPos); //globalPosFace coordinates of cell center
                     int globalIdxI = indexSetFine_.index(*eIt); // index of fine-scale cell
 
@@ -201,10 +201,10 @@ typedef    typename Grid::LevelGridView GridView;
                         // boundary face
                         if (isIt->boundary())
                         {
-                            GeometryType faceGT = isIt->geometryInInside().type();
+                            Dune::GeometryType faceGT = isIt->geometryInInside().type();
 
-                            const FieldVector<Scalar,dim-1>& faceLocal
-                            = ReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
+                            const Dune::FieldVector<Scalar,dim-1>& faceLocal
+                            = Dune::ReferenceElements<Scalar,dim-1>::general(faceGT).position(0,0);
 
                             const GlobalPosition& globalPosFace= isIt->geometry().global(faceLocal); // globalPosFace coordinate of face center
 
@@ -220,13 +220,13 @@ typedef    typename Grid::LevelGridView GridView;
 
                             Scalar faceAreaFine=isIt->geometry().volume(); // volume of face
 
-                            FieldVector<Scalar,dim> unitOuterNormal
+                            Dune::FieldVector<Scalar,dim> unitOuterNormal
                             = isIt->unitOuterNormal(faceLocal); // normal vector of unit length
 
                             const LocalPosition&
-                            localPosFace = ReferenceElements<Scalar,dim>::general(faceGT).position(faceNumberFine,1);
+                            localPosFace = Dune::ReferenceElements<Scalar,dim>::general(faceGT).position(faceNumberFine,1);
 
-                            FieldVector<Scalar,dim> velocityFine(0);
+                            Dune::FieldVector<Scalar,dim> velocityFine(0);
 
                             //get boundary condition for boundary face center
                             BoundaryConditions::Flags bctypePress = this->transProblem.bctypePress(globalPosFace, *eIt, localPosFace);
@@ -235,14 +235,14 @@ typedef    typename Grid::LevelGridView GridView;
                             if (bctypePress == BoundaryConditions::dirichlet && bctypeSat == BoundaryConditions::neumann)
                             {
                                 // distance vector between barycenters
-                                FieldVector<Scalar,dimWorld> distVec = globalPos - globalPosFace;
+                                Dune::FieldVector<Scalar,dimWorld> distVec = globalPos - globalPosFace;
                                 Scalar dist = distVec.two_norm();
 
                                 //normalise distVec for multiplication with the permeability
                                 distVec /= dist;
 
                                 // compute directed permeability vector permeabilityI.n
-                                FieldVector<Scalar,dim> normalPermeabilityI(0);
+                                Dune::FieldVector<Scalar,dim> normalPermeabilityI(0);
                                 permeabilityI.umv(distVec, normalPermeabilityI);
 
                                 // compute averaged total mobility
@@ -280,10 +280,10 @@ typedef    typename Grid::LevelGridView GridView;
         {
             const Geometry& geometry = eIt->geometry();
 
-            GeometryType gt = geometry.type();
+            Dune::GeometryType gt = geometry.type();
 
             // cell center in reference element
-            const LocalPosition& localPos = ReferenceElements<Scalar,dim>::general(gt).position(0, 0);
+            const LocalPosition& localPos = Dune::ReferenceElements<Scalar,dim>::general(gt).position(0, 0);
 
             const GlobalPosition& globalPos = geometry.global(localPos);
 
@@ -321,12 +321,12 @@ public:
 
     void vtkout(const char* name, int k) const
     {
-        VTKWriter<GridView> vtkwriter(grid_.levelView(transLevel_));
+         Dune::VTKWriter<GridView> vtkwriter(grid_.levelView(transLevel_));
         char fname[128];
         sprintf(fname, "%s-postprocess-%05d", name, k);
         vtkwriter.addCellData(pVI_, "PVI");
         vtkwriter.addCellData(oilCut_, "oil cut");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
 
         this->variables.vtkout(name, k);
         return;

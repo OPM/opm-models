@@ -28,7 +28,7 @@
 #include <dumux/boxmodels/2p/2pboxproblem.hh>
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup TwoPNIProblems

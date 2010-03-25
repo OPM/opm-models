@@ -18,7 +18,7 @@
 
 #include "dumux/fractionalflow/fractionalflowproblem.hh"
 
-namespace Dune
+namespace Dumux
 {
 //! \ingroup diffusionProblems
 //! example class for diffusion problems
@@ -68,9 +68,9 @@ public:
     {
         //        if (globalPos[0] > (Right_ - eps_) || globalPos[0] < eps_)
         if (globalPos[0] < eps_)
-        return Dune::BoundaryConditions::dirichlet;
+        return Dumux::BoundaryConditions::dirichlet;
         else
-        return Dune::BoundaryConditions::neumann;
+        return Dumux::BoundaryConditions::neumann;
     }
 
     Scalar dirichletPress(const GlobalPosition& globalPos,

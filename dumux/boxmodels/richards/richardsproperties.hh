@@ -21,7 +21,7 @@
 #ifndef DUMUX_RICHARDS_PROPERTIES_DATA_HH
 #define DUMUX_RICHARDS_PROPERTIES_DATA_HH
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \addtogroup RichardsBoxModel
@@ -108,7 +108,7 @@ SET_SCALAR_PROP(BoxRichards,
                 1.0);
 
 //! The indices required by the isothermal single-phase model
-SET_TYPE_PROP(BoxRichards, RichardsIndices, Dune::RichardsIndices);
+SET_TYPE_PROP(BoxRichards, RichardsIndices, Dumux::RichardsIndices);
 
 // \}
 };

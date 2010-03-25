@@ -26,7 +26,7 @@
 #include <dumux/material/twophaserelations.hh>
 
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup OnePProblems

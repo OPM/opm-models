@@ -15,10 +15,10 @@
 * This program is distributed WITHOUT ANY WARRANTY.                          *
 *****************************************************************************/
 
-#ifndef DUNE_VARIABLECLASS2P2C_HH
-#define DUNE_VARIABLECLASS2P2C_HH
+#ifndef DUMUX_VARIABLECLASS2P2C_HH
+#define DUMUX_VARIABLECLASS2P2C_HH
 
-namespace Dune {
+namespace Dumux {
 
 /** \ingroup decoupled2p2c
  *  \brief container for the variables needed for decoupled 2p2c computations.
@@ -170,18 +170,18 @@ public:
     	Scalar dissolvedMass = 0;
     	Scalar trappedMass = 0;
         Scalar extent = 0;
-        FieldVector<Scalar,dim> injectionPoint(0);
+        Dune::FieldVector<Scalar,dim> injectionPoint(0);
         injectionPoint[0] = 5e4; injectionPoint[2] = 5e2;
         ElementIterator eItEnd = gridview.template end<0>();
-        FieldVector<Scalar,dim> centerOfMass(0);
-        FieldVector<Scalar,dim> squaredVec(0);
+        Dune::FieldVector<Scalar,dim> centerOfMass(0);
+        Dune::FieldVector<Scalar,dim> squaredVec(0);
         for (ElementIterator eIt = gridview.template begin<0>(); eIt != eItEnd; ++eIt)
         {
             int i = indexset.index(*eIt);
 
-        	GeometryType gt = eIt->geometry().type();
-        	const FieldVector<Scalar,dim>& localPos = ReferenceElements<Scalar,dim>::general(gt).position(0,0);
-        	FieldVector<Scalar,dim> globalPos = eIt->geometry().global(localPos);
+        	Dune::GeometryType gt = eIt->geometry().type();
+        	const Dune::FieldVector<Scalar,dim>& localPos = Dune::ReferenceElements<Scalar,dim>::general(gt).position(0,0);
+        	Dune::FieldVector<Scalar,dim> globalPos = eIt->geometry().global(localPos);
 
     		C1[i] = totalConcentration[i];
     		C2[i] = totalConcentration[i + size];
@@ -198,7 +198,7 @@ public:
 
         		if (saturation[i] < 0.99)
         		{
-        			FieldVector<Scalar,dim> distanceVec = globalPos;
+        			Dune::FieldVector<Scalar,dim> distanceVec = globalPos;
         			distanceVec -= injectionPoint;
         			// extent only in upslope (= x) direction
         			extent = std::max(extent, std::abs(distanceVec[0]));
@@ -210,9 +210,9 @@ public:
         			Scalar trappedMassI = 0.15*elementVolumes[i]*((1-nonwet_X1[i])*trappedI*density_nonwet[i]);
         			Scalar freeMassI = massXI - dissolvedMassI - trappedMassI;
 
-        			FieldVector<Scalar,dim> centerI = globalPos;
+        			Dune::FieldVector<Scalar,dim> centerI = globalPos;
         			centerI -= injectionPoint;
-        			FieldVector<Scalar,dim> centerI2(0);
+        			Dune::FieldVector<Scalar,dim> centerI2(0);
         			for (int comp = 0; comp < dim; comp++)
         				centerI2[comp] = centerI[comp]*centerI[comp];
 
@@ -228,11 +228,11 @@ public:
         }
         Scalar freeMass = totalMassX - dissolvedMass - trappedMass;
         centerOfMass /= freeMass;
-    	FieldVector<Scalar,dim> centerOfMass2(0);
+    	Dune::FieldVector<Scalar,dim> centerOfMass2(0);
     	for (int comp = 0; comp < dim; comp++)
     		centerOfMass2[comp] = centerOfMass[comp]*centerOfMass[comp];
 
-        FieldVector<Scalar,dim> standardDev = squaredVec;
+        Dune::FieldVector<Scalar,dim> standardDev = squaredVec;
         standardDev /= freeMass;
         standardDev -= centerOfMass2;
     	for (int comp = 0; comp < dim; comp++)
@@ -247,7 +247,7 @@ public:
         std::cout << "\tExtent " << extent << "m, center of mass " << centerOfMass
 				  << ", standard deviation " << standardDev << std::endl;
 
-        VTKWriter<GridView> vtkwriter(gridview);
+        Dune::VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
         sprintf(fname, "%s-%05d", name, k);
         vtkwriter.addCellData(saturation, "saturation [-]");
@@ -262,10 +262,10 @@ public:
         vtkwriter.addCellData(mobility_wet, "wetting phase mobility [m*s/kg]");
         vtkwriter.addCellData(mobility_nonwet, "non-wetting phase mobility [m*s/kg]");
         vtkwriter.addCellData(Srn, "residual nonwetting phase saturation [-]");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
 
         if (std::abs(trappedMass + dissolvedMass - totalMassX) < 1e-2*totalMassX && time_ > 6.3e9)
-        	DUNE_THROW(MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
+        	DUNE_THROW(Dune::MathError, "99 % TRAPPED OR DISSOLVED! No need to go further.");
 
         return;
     }
@@ -277,11 +277,11 @@ public:
      *  @param k specifies a number
      */
     void vtkoutpressure(const char* name, int k) const {
-        VTKWriter<GridView> vtkwriter(gridview);
+         Dune::VTKWriter<GridView> vtkwriter(gridview);
         char fname[128];
         sprintf(fname, "%s-press%05d", name, k);
         vtkwriter.addCellData(pressure, "total pressure p~");
-        vtkwriter.write(fname, VTKOptions::ascii);
+        vtkwriter.write(fname, Dune::VTKOptions::ascii);
     }
 };
 }

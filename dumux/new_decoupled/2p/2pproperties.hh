@@ -27,7 +27,7 @@
 #include <dumux/new_decoupled/common/impesproperties.hh>
 #include <dumux/new_decoupled/2p/transport/transportproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \ingroup fracflow

@@ -34,9 +34,9 @@
 #ifndef DUMUX_2PNI_FLUX_DATA_HH
 #define DUMUX_2PNI_FLUX_DATA_HH
 
-#include <dumux/auxiliary/math.hh>
+#include <dumux/common/math.hh>
 
-namespace Dune
+namespace Dumux
 {
 
 /*!
