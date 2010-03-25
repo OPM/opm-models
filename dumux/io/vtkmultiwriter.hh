@@ -21,8 +21,9 @@
 #ifndef VTK_MULTI_WRITER_HH
 #define VTK_MULTI_WRITER_HH
 
-#include <dune/grid/common/referenceelements.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
+#include <dune/grid/common/genericreferenceelements.hh>
+
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
@@ -201,8 +202,8 @@ public:
         typedef typename Function::RT                                        Scalar;
         typedef typename GridView::template Codim<0>::Entity                 Cell;
         typedef typename GridView::template Codim<0>::Iterator               CellIterator;
-        typedef Dune::ReferenceElement<typename GridView::ctype, GridView::dimgrid>  CellReferenceElement;
-        typedef Dune::ReferenceElements<typename GridView::ctype, GridView::dimgrid> CellReferenceElements;
+        typedef Dune::GenericReferenceElement<typename GridView::ctype, GridView::dimgrid>  CellReferenceElement;
+        typedef Dune::GenericReferenceElements<typename GridView::ctype, GridView::dimgrid> CellReferenceElements;
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> >             ScalarField;
 
         // create a cell based scalar field.

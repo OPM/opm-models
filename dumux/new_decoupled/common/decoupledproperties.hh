@@ -16,14 +16,14 @@
 #ifndef DUMUX_DECOUPLED_PROPERTIES_HH
 #define DUMUX_DECOUPLED_PROPERTIES_HH
 
-#include <dumux/auxiliary/properties.hh>
+#include <dumux/common/properties.hh>
 
 /*!
  * \file
  * \brief Specify the shape functions, operator assemblers, etc
  *        used for the BoxScheme.
  */
-namespace Dune
+namespace Dumux
 {
 namespace Properties
 {
@@ -63,7 +63,7 @@ NEW_PROP_TAG( Variables); //!< The type of the container of global variables
 }
 }
 
-#include <dumux/boundarytypes.hh>
+#include <dumux/common/boundarytypes.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/istl/bvector.hh>
 

@@ -1,3 +1,5 @@
+// $Id$
+
 /*****************************************************************************
  *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Institute of Hydraulic Engineering                                      *
@@ -14,63 +16,21 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A default implementation of the params for the material law
- *        for absolute saturations.
+ * \brief Some exceptions thrown in DUMUX
  */
-#ifndef ABSOLUTE_SATURATIONS_LAW_PARAMS_HH
-#define ABSOLUTE_SATURATIONS_LAW_PARAMS_HH
+#ifndef DUMUX_EXCEPTIONS_HH
+#define DUMUX_EXCEPTIONS_HH
 
-namespace Dumux
-{
+#include <dune/common/exceptions.hh>
+
+namespace Dumux {
 /*!
- * \ingroup material
+ * \brief Exception thrown if a fixable numerical problem occurs.
  *
- * \brief A default implementation of the params for the material law
- *        for absolute saturations.
+ * (e.g. time step too big, etc.)
  */
-template <class RawLawParamsT>
-class AbsoluteSaturationsLawParams : public RawLawParamsT
-{
-    typedef RawLawParamsT  RawLawParams;
-public:
-    typedef typename RawLawParams::Scalar   Scalar;
-
-    AbsoluteSaturationsLawParams()
-        : RawLawParams()
-    {
-        Swr_ = Snr_ = 0;
-    }
-
-    /*!
-     * \brief Return the residual wetting saturation.
-     */
-    Scalar Swr() const
-    { return Swr_; }
-
-    /*!
-     * \brief Set the residual wetting saturation.
-     */
-    void setSwr(Scalar v)
-    { Swr_ = v; }
-
-    /*!
-     * \brief Return the residual non-wetting saturation.
-     */
-    Scalar Snr() const
-    { return Snr_; }
-
-    /*!
-     * \brief Set the residual non-wetting saturation.
-     */
-    void setSnr(Scalar v)
-    { Snr_ = v; }
-
-private:
-    Scalar Swr_;
-    Scalar Snr_;
-};
-
+class NumericalProblem : public Dune::Exception
+{ };
 }
 
 #endif
