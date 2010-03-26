@@ -19,10 +19,10 @@
 *
 * Usually for most cases this controller should be sufficient.
 */
-#ifndef DUNE_NEWTON_CONTROLLER_HH
-#define DUNE_NEWTON_CONTROLLER_HH
+#ifndef DUMUX_NEWTON_CONTROLLER_HH
+#define DUMUX_NEWTON_CONTROLLER_HH
 
-#include <dumux/exceptions.hh>
+#include <dumux/common/exceptions.hh>
 
 #include <dune/istl/overlappingschwarz.hh>
 #include <dune/istl/schwarz.hh>
@@ -45,7 +45,7 @@
 #endif
 
 
-namespace Dune
+namespace Dumux
 {
 namespace Properties
 {
@@ -89,7 +89,7 @@ struct NewtonConvergenceWriter
 
 	typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
 	typedef typename SolutionTypes::SolutionFunction SolutionFunction;
-	typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+	typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
 	NewtonConvergenceWriter(NewtonController &ctl)
 	: ctl_(ctl)
@@ -147,7 +147,7 @@ struct NewtonConvergenceWriter<TypeTag, false>
 
 	typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
 	typedef typename SolutionTypes::SolutionFunction SolutionFunction;
-	typedef Dune::VtkMultiWriter<GridView>  VtkMultiWriter;
+	typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
 	NewtonConvergenceWriter(NewtonController &ctl)
 	{};
@@ -339,7 +339,7 @@ public:
 	* \brief Solve the linear system of equations \f$ \mathbf{A}x - b
 	*        = 0\f$.
 	*
-	* Throws Dune::NumericalProblem if the linear solver didn't
+	* Throws Dumux::NumericalProblem if the linear solver didn't
 	* converge.
 	*/
 	template <class Matrix, class Vector>
@@ -361,8 +361,8 @@ public:
 			solveSequential_(A, *u, b, residReduction);
 #endif
 		}
-		catch (MatrixBlockError e) {
-			Dune::NumericalProblem p;
+		catch (Dune::MatrixBlockError e) {
+			Dumux::NumericalProblem p;
 			p.message(e.what());
 			throw p;
 		}
@@ -526,16 +526,19 @@ void solveParallel_(Matrix &A,
 
 #if HAVE_PARDISO
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
-#else
-	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
+#else // !HAVE_PARDISO
+//	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
+//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
 //	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
-#endif
+	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
+#endif // HAVE_PARDISO
+
+	//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
 	Solver solver(model(), 5000, verbosity);
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
 	solver.apply(A, x, b, residReduction);
 
 	if (!solver.result().converged)
-		DUNE_THROW(Dune::NumericalProblem,
+		DUNE_THROW(Dumux::NumericalProblem,
 				"Solving the linear system of equations did not converge.");
 
 #else // !HAVE_DUNE_PDELAB
@@ -570,7 +573,7 @@ void solveParallel_(Matrix &A,
 	solver.apply(x, b, result);
 
 	if (!solver.result().converged)
-		DUNE_THROW(Dune::NumericalProblem,
+		DUNE_THROW(Dumux::NumericalProblem,
 				"Solving the linear system of equations did not converge.");
 
 #endif // HAVE_DUNE_PDELAB
@@ -586,13 +589,13 @@ void solveSequential_(Matrix &A,
 {
 	typedef typename SolutionTypes::JacobianAssembler::RepresentationType AsmRep;
 	typedef typename SolutionFunction::RepresentationType FnRep;
-	typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  MatrixAdapter;
-	MatrixAdapter opA(A);
+	typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  Dune::MatrixAdapter;
+	Dune::MatrixAdapter opA(A);
 
 #ifdef HAVE_PARDISO
-	SeqPardiso<Matrix,Vector,Vector> pardiso;
+	Dune::SeqPardiso<Matrix,Vector,Vector> pardiso;
 	pardiso.factorize(A);
-	LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
+	Dune::LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
 #else // HAVE_PARDISO
 	// initialize the preconditioner
 	Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
@@ -606,7 +609,7 @@ void solveSequential_(Matrix &A,
 	solver.apply(x, b, result);
 
 	if (!result.converged)
-		DUNE_THROW(Dune::NumericalProblem,
+		DUNE_THROW(Dumux::NumericalProblem,
 				"Solving the linear system of equations did not converge.");
 }
 #endif // HAVE_MPI
