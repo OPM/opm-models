@@ -6,7 +6,6 @@
 namespace Dune {
 namespace PDELab {
 
-
 template<class TypeTag>
 class Exchanger
 {
@@ -41,6 +40,10 @@ public:
         VertexIterator vertexEndIt = gridView_.template end<dim>();
         for (VertexIterator vertexIt = gridView_.template begin<dim>(); vertexIt != vertexEndIt; ++vertexIt)
         {
+//        	std::cout << gridView_.comm().rank() << ": node " << vertexMapper_.map(*vertexIt)
+//        			<< " at (" << vertexIt->geometry().corner(0) << ") is of type "
+//        			<< vertexIt->partitionType() << ", GID = "
+//        			<< gridView_.grid().globalIdSet().id(*vertexIt) << std::endl;
             if (vertexIt->partitionType() == BorderEntity)
             {
                 int localIdx = vertexMapper_.map(*vertexIt);
@@ -93,16 +96,31 @@ public:
     template<class EntityType>
     size_t size (EntityType& e) const
     {
+//    	std::cout << gridView_.comm().rank() << ": begin loop over vertices.\n";
+//        VertexIterator vertexEndIt = gridView_.template end<dim>();
+//        for (VertexIterator vertexIt = gridView_.template begin<dim>(); vertexIt != vertexEndIt; ++vertexIt)
+//        {
+//        	std::cout << gridView_.comm().rank() << ": node " << vertexMapper_.map(*vertexIt)
+//        			<< " at (" << vertexIt->geometry().corner(0) << ") is of type "
+//        			<< vertexIt->partitionType() << ", GID = "
+//        			<< gridView_.grid().globalIdSet().id(*vertexIt) << std::endl;
+//        }
+//    	std::cout << gridView_.comm().rank() << ": end loop over vertices.\n";
+//    	std::cout.flush();
+//    	std::cout << gridView_.comm().rank() << ": node " << vertexMapper_.map(e)
+//    			<< " on level " << e.level() << " at (" << e.geometry().corner(0) << ") is of type "
+//    			<< e.partitionType() << ", GID = "
+//    			<< gridView_.grid().globalIdSet().id(e) << std::endl;;
         int i = vertexMapper_.map(e);
         int n = 0;
-        for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
-        {
-            // only count those entries corresponding to border entities
-            typename std::map<int,IdType>::const_iterator it = index2GID_.find(j.index());
-            if (it != index2GID_.end())
-                n++;
-        }
-        
+        	for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
+        	{
+        		// only count those entries corresponding to border entities
+        		typename std::map<int,IdType>::const_iterator it = index2GID_.find(j.index());
+        		if (it != index2GID_.end())
+        			n++;
+        	}
+//    	std::cout << gridView_.comm().rank() << ": node " << i << " has sending size " << n << std::endl;
         return n;
     }
 
@@ -110,14 +128,17 @@ public:
     template<class MessageBuffer, class EntityType>
     void gather (MessageBuffer& buff, const EntityType& e) const
     {
-        int i = vertexMapper_.map(e);
-        for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
-        {
-            // only send those entries corresponding to border entities
-            typename std::map<int,IdType>::const_iterator it=index2GID_.find(j.index());
-            if (it != index2GID_.end())
-                buff.write(MatEntry(it->second,*j));
-        }
+    		int i = vertexMapper_.map(e);
+    		for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
+    		{
+    			// only send those entries corresponding to border entities
+    			typename std::map<int,IdType>::const_iterator it=index2GID_.find(j.index());
+    			if (it != index2GID_.end()) {
+    				buff.write(MatEntry(it->second,*j));
+//    		    	std::cout << gridView_.comm().rank() << ": node " << i << " gathers (" << it->second
+//    		    			<< ", " << *j << ") for j = " << j.index() << std::endl;
+    			}
+    		}
     }
 
     /*! unpack data from message buffer to user
@@ -127,27 +148,32 @@ public:
     template<class MessageBuffer, class EntityType>
     void scatter (MessageBuffer& buff, const EntityType& e, size_t n)
     {
-        int i = vertexMapper_.map(e);
-        for (size_t k = 0; k < n; k++)
-        {
-            MatEntry m;
-            buff.read(m);
-            // only add entries corresponding to border entities
-            typename std::map<IdType,int>::const_iterator it = gid2Index_.find(m.first);
-            if (it != gid2Index_.end())
-                A_[i][it->second] += m.second;
-        }
+   		int i = vertexMapper_.map(e);
+    		for (size_t k = 0; k < n; k++)
+    		{
+    			MatEntry m;
+    			buff.read(m);
+    			// only add entries corresponding to border entities
+    			typename std::map<IdType,int>::const_iterator it = gid2Index_.find(m.first);
+    			if (it != gid2Index_.end())
+    			{
+//    		    	std::cout << gridView_.comm().rank() << ": node " << i << " adds " << m.second
+//    		    			<< " to j = " << it->second << ", GID = " << m.first << std::endl;
+    				A_[i][it->second] += m.second;
+    			}
+    		}
     }
 
     //! constructor
-    MatEntryExchange (const std::map<IdType,int>& g2i, 
+    MatEntryExchange (const GridView& gridView, const std::map<IdType,int>& g2i,
             const std::map<int,IdType>& i2g,
             const VertexMapper& vm,
             Matrix& A)
-            : gid2Index_(g2i), index2GID_(i2g), vertexMapper_(vm), A_(A) 
+            : gridView_(gridView), gid2Index_(g2i), index2GID_(i2g), vertexMapper_(vm), A_(A)
             {}
 
 private:
+    const GridView& gridView_;
     const std::map<IdType,int>& gid2Index_;
     const std::map<int,IdType>& index2GID_;
     const VertexMapper& vertexMapper_;
@@ -158,7 +184,7 @@ private:
     {
       if (gridView_.comm().size() > 1) 
       {
-          MatEntryExchange datahandle(gid2Index_, index2GID_, vertexMapper_, A);
+          MatEntryExchange datahandle(gridView_, gid2Index_, index2GID_, vertexMapper_, A);
           gridView_.communicate(datahandle, InteriorBorder_InteriorBorder_Interface, ForwardCommunication);
       }
     }

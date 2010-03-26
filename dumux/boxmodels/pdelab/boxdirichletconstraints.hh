@@ -57,7 +57,7 @@ public:
                    T& trafo) const
     {
 		const Element& element = *(ig.inside());
-        FVElementGeometry fvElemGeom;
+        FVElementGeometry fvElemGeom(problem_.gridView());
         fvElemGeom.update(element);
 		BoundaryTypeVector bcTypes;
 

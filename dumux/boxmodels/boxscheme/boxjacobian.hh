@@ -107,7 +107,8 @@ public:
     BoxJacobian(Problem &problem)
         : problem_(problem),
           gridView_(problem.gridView()),
-          curElementPtr_(* ++gridView_.template begin<0>())
+          curElementPtr_(* ++gridView_.template begin<0>()),
+          curElementGeom_(gridView_)
     {
     }
 
