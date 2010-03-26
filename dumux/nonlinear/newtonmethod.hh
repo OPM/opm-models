@@ -90,6 +90,13 @@ public:
         try {
             return execute_(model, ctl);
         }
+        catch (const Dune::ISTLError &e) {
+            if (verbose())
+                std::cout << "Newton: Caught exception: \"" << e.what() << "\"\n";
+            ctl.newtonFail();
+            model_ = NULL;
+            return false;
+        }
         catch (const Dumux::NumericalProblem &e) {
             if (verbose())
                 std::cout << "Newton: Caught exception: \"" << e.what() << "\"\n";

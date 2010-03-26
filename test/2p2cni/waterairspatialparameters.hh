@@ -20,7 +20,7 @@
 #include <dumux/new_material/spatialparameters/boxspatialparameters.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
+#include <dumux/new_material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 namespace Dumux
 {
@@ -65,14 +65,10 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 
-    typedef RegularizedBrooksCoreyParams<Scalar>                RawMaterialLawParams;
-    //typedef LinearMaterialParams<Scalar>                        RawMaterialLawParams;
-    typedef AbsoluteSaturationsLawParams<RawMaterialLawParams> MaterialLawParams;
-    typedef RegularizedBrooksCorey<MaterialLawParams>           RawMaterialLaw;
-    //typedef LinearMaterial<MaterialLawParams>                   RawMaterialLaw;
+    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
 public:
-    //typedef RawMaterialLaw                                       MaterialLaw;
-    typedef AbsoluteSaturationsLaw<RawMaterialLaw>               MaterialLaw;
+    typedef EffToAbsLaw<EffMaterialLaw> MaterialLaw;
+    typedef typename MaterialLaw::Params MaterialLawParams;
 
     WaterAirSpatialParameters(const GridView &gv)
         : ParentType(gv)

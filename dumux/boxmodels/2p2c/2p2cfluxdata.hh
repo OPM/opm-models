@@ -60,13 +60,12 @@ class TwoPTwoCFluxData
         numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases))
     };
 
-    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
-
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
 
+    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
     typedef Dune::FieldMatrix<CoordScalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
