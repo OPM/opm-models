@@ -355,11 +355,7 @@ public:
 		Scalar residReduction = 1e-6;
 
 		try {
-#if HAVE_MPI
-			solveParallel_(A, u, b, residReduction);
-#else
-			solveSequential_(A, *u, b, residReduction);
-#endif
+		  solveLinear_(A, u, b, residReduction);
 		}
 		catch (Dune::MatrixBlockError e) {
 			Dumux::NumericalProblem p;
@@ -508,12 +504,11 @@ protected:
 	};
 
 
-#if HAVE_MPI
 template <class Matrix, class Vector>
-void solveParallel_(Matrix &A,
-		SolutionFunction &u,
-		Vector &b,
-		Scalar residReduction)
+void solveLinear_(Matrix &A,
+		  SolutionFunction &u,
+		  Vector &b,
+		  Scalar residReduction)
 {
 	Vector &x = *u;
 
@@ -522,15 +517,17 @@ void solveParallel_(Matrix &A,
 	if (model().gridView().grid().comm().rank() != 0)
 		verbosity = 0;
 
-#ifdef HAVE_DUNE_PDELAB
-
 #if HAVE_PARDISO
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
 #else // !HAVE_PARDISO
 //	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
 //	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
 //	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
+#if HAVE_MPI
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
+#else
+	typedef  Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU<TypeTag> Solver;
+#endif // HAVE_MPI
 #endif // HAVE_PARDISO
 
 	//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
@@ -540,79 +537,7 @@ void solveParallel_(Matrix &A,
 	if (!solver.result().converged)
 		DUNE_THROW(Dumux::NumericalProblem,
 				"Solving the linear system of equations did not converge.");
-
-#else // !HAVE_DUNE_PDELAB
-
-#if HAVE_PARDISO
-	typedef Dune::SeqPardiso<Matrix,Vector,Vector> SeqPreCond;
-	typedef Dune::LoopSolver<Vector> Solver;
-	SeqPreCond seqPreCond(A);
-#else // !HAVE_PARDISO
-	typedef Dune::SeqILU0<Matrix,Vector,Vector> SeqPreCond;
-	typedef Dune::BiCGSTABSolver<Vector> Solver;
-	SeqPreCond seqPreCond(A, 0.9);
-#endif
-
-	typedef typename Grid::Traits::GlobalIdSet::IdType GlobalId;
-	typedef Dune::OwnerOverlapCopyCommunication<GlobalId,int> Communication;
-	Dune::IndexInfoFromGrid<GlobalId,int> indexinfo;
-	u.fillIndexInfoFromGrid(indexinfo);
-	Communication comm(indexinfo, MPIHelper::getCommunicator());
-	Dune::OverlappingSchwarzOperator<Matrix,Vector,Vector,Communication> parallelOperator(A, comm);
-	Dune::OverlappingSchwarzScalarProduct<Vector,Communication> scalarProduct(comm);
-	Dune::BlockPreconditioner<Vector,Vector,Communication> parPreCond(seqPreCond, comm);
-	Solver solver(parallelOperator,
-			scalarProduct,
-			parPreCond,
-			residReduction,
-			300,
-			verbosity);
-
-	Dune::InverseOperatorResult result;
-
-	solver.apply(x, b, result);
-
-	if (!solver.result().converged)
-		DUNE_THROW(Dumux::NumericalProblem,
-				"Solving the linear system of equations did not converge.");
-
-#endif // HAVE_DUNE_PDELAB
 }
-
-
-#else // !HAVE_MPI
-template <class Matrix, class Vector>
-void solveSequential_(Matrix &A,
-		Vector &x,
-		Vector &b,
-		Scalar residReduction)
-{
-	typedef typename SolutionTypes::JacobianAssembler::RepresentationType AsmRep;
-	typedef typename SolutionFunction::RepresentationType FnRep;
-	typedef Dune::MatrixAdapter<AsmRep, FnRep, FnRep>  Dune::MatrixAdapter;
-	Dune::MatrixAdapter opA(A);
-
-#ifdef HAVE_PARDISO
-	Dune::SeqPardiso<Matrix,Vector,Vector> pardiso;
-	pardiso.factorize(A);
-	Dune::LoopSolver<Vector> solver(opA, pardiso, residReduction, 100, 0);         // an inverse operator
-#else // HAVE_PARDISO
-	// initialize the preconditioner
-	Dune::SeqILU0<Matrix,Vector,Vector> precond(A, 1.0);
-	//                Dune::SeqSSOR<OpAsmRep,FnRep,FnRep> precond(*opAsm, 3, 1.0);
-	//                SeqIdentity<OpAsmRep,FnRep,FnRep> precond(*opAsm);
-	// invert the linear equation system
-	Dune::BiCGSTABSolver<Vector> solver(opA, precond, residReduction, 1000, 0);
-#endif // HAVE_PARDISO
-
-	Dune::InverseOperatorResult result;
-	solver.apply(x, b, result);
-
-	if (!result.converged)
-		DUNE_THROW(Dumux::NumericalProblem,
-				"Solving the linear system of equations did not converge.");
-}
-#endif // HAVE_MPI
 
 //! this function is an indication of how "physically
 //! meaningful" a temporary solution is. 0 means it isn't
