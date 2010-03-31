@@ -526,12 +526,12 @@ void solveLinear_(Matrix &A,
 #if HAVE_MPI
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
 #else
-	typedef  Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU<TypeTag> Solver;
+	typedef  Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR Solver;
 #endif // HAVE_MPI
 #endif // HAVE_PARDISO
 
 	//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
-	Solver solver(model(), 5000, verbosity);
+	Solver solver(5000, verbosity);
 	solver.apply(A, x, b, residReduction);
 
 	if (!solver.result().converged)
