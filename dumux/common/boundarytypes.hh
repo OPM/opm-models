@@ -242,6 +242,15 @@ public:
     /*!
      * \brief Allows to assign Dumux::BoundaryCondition to a all
      *        primary varibles or equations.
+     *
+     * To get rid of the "deprecated warning" do the following:
+     * 	boundaryTypeVector is now a class, which has the methods
+     * 	setAllNeumann() and setAllDirichlet().
+     *
+     * 		deprecated System				->		current System
+     *
+     * 	values=BoundaryConditions::neumann;	->	values.setAllNeumann();
+     *
      */
     BoundaryTypes &operator=(int bc) DUNE_DEPRECATED
     { 
