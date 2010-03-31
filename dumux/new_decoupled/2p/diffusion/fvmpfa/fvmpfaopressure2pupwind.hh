@@ -39,7 +39,7 @@
  * @author Yufei Cao
  */
 
-namespace Dune
+namespace Dumux
 {
 //! \ingroup diffusion
 //! Base class for defining an instance of a numerical diffusion model.
@@ -103,10 +103,11 @@ class FVMPFAOPressure2PUpwind
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
+    typedef Dune::FieldVector<Scalar, dim> FieldVector;
 
     typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
-    typedef BCRSMatrix<MB> Matrix;
-    typedef BlockVector<FieldVector<Scalar, 1> > Vector;
+    typedef Dune::BCRSMatrix<MB> Matrix;
+    typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > Vector;
 
     //initializes the matrix to store the system of equations
     void initializeMatrix();
@@ -137,7 +138,7 @@ public:
     {
         updateMaterialLaws(true);
 
-        Dune::FVMPFAOVelocity2P<TypeTag> firstVelocity(problem_);
+        FVMPFAOVelocity2P<TypeTag> firstVelocity(problem_);
         firstVelocity.pressure();
         firstVelocity.calculateVelocity();
 
@@ -259,6 +260,25 @@ void FVMPFAOPressure2PUpwind<TypeTag>::initializeMatrix()
 
                 break;
             }
+            // for YaspGrid
+            case GridTypeIndices::yaspGrid:
+            {
+                if (nextisIt == isItEnd)
+                {
+                    nextisIt = isItBegin;
+                }
+                else
+                {
+                    nextisIt = ++tempisIt;
+
+                    if (nextisIt == isItEnd)
+                    {
+                        nextisIt = ++tempisItBegin;
+                    }
+                }
+
+                break;
+            }
                 // for UGGrid
             case GridTypeIndices::ugGrid:
             {
@@ -314,6 +334,25 @@ void FVMPFAOPressure2PUpwind<TypeTag>::initializeMatrix()
             {
             // for SGrid
             case GridTypeIndices::sGrid:
+            {
+                if (nextisIt == isItEnd)
+                {
+                    nextisIt = isItBegin;
+                }
+                else
+                {
+                    nextisIt = ++tempisIt;
+
+                    if (nextisIt == isItEnd)
+                    {
+                        nextisIt = ++tempisItBegin;
+                    }
+                }
+
+                break;
+            }
+            // for YaspGrid
+            case GridTypeIndices::yaspGrid:
             {
                 if (nextisIt == isItEnd)
                 {
@@ -463,6 +502,25 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
             {
             // for SGrid
             case GridTypeIndices::sGrid:
+            {
+                if (nextisIt == isItEnd)
+                {
+                    nextisIt = isItBegin;
+                }
+                else
+                {
+                    nextisIt = ++tempisIt;
+
+                    if (nextisIt == isItEnd)
+                    {
+                        nextisIt = ++tempisItBegin;
+                    }
+                }
+
+                break;
+            }
+            // for YaspGrid
+            case GridTypeIndices::yaspGrid:
             {
                 if (nextisIt == isItEnd)
                 {
@@ -729,63 +787,63 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                     integrationOuterNormaln2 *= face34vol / 2.0;
 
                     // compute normal vectors nu11,nu21; nu12, nu22; nu13, nu23; nu14, nu24;
-                    FieldVector<Scalar, dim> nu11(0);
+                    FieldVector nu11(0);
                     R.umv(globalPosFace13 - globalPos1, nu11);
 
-                    FieldVector<Scalar, dim> nu21(0);
+                    FieldVector nu21(0);
                     R.umv(globalPos1 - globalPosFace12, nu21);
 
-                    FieldVector<Scalar, dim> nu12(0);
+                    FieldVector nu12(0);
                     R.umv(globalPosFace24 - globalPos2, nu12);
 
-                    FieldVector<Scalar, dim> nu22(0);
+                    FieldVector nu22(0);
                     R.umv(globalPosFace12 - globalPos2, nu22);
 
-                    FieldVector<Scalar, dim> nu13(0);
+                    FieldVector nu13(0);
                     R.umv(globalPos3 - globalPosFace13, nu13);
 
-                    FieldVector<Scalar, dim> nu23(0);
+                    FieldVector nu23(0);
                     R.umv(globalPos3 - globalPosFace34, nu23);
 
-                    FieldVector<Scalar, dim> nu14(0);
+                    FieldVector nu14(0);
                     R.umv(globalPos4 - globalPosFace24, nu14);
 
-                    FieldVector<Scalar, dim> nu24(0);
+                    FieldVector nu24(0);
                     R.umv(globalPosFace34 - globalPos4, nu24);
 
                     // compute dF1, dF2, dF3, dF4 i.e., the area of quadrilateral made by normal vectors 'nu'
-                    FieldVector<Scalar, dim> Rnu21(0);
+                    FieldVector Rnu21(0);
                     R.umv(nu21, Rnu21);
                     Scalar dF1 = fabs(nu11 * Rnu21);
 
-                    FieldVector<Scalar, dim> Rnu22(0);
+                    FieldVector Rnu22(0);
                     R.umv(nu22, Rnu22);
                     Scalar dF2 = fabs(nu12 * Rnu22);
 
-                    FieldVector<Scalar, dim> Rnu23(0);
+                    FieldVector Rnu23(0);
                     R.umv(nu23, Rnu23);
                     Scalar dF3 = fabs(nu13 * Rnu23);
 
-                    FieldVector<Scalar, dim> Rnu24(0);
+                    FieldVector Rnu24(0);
                     R.umv(nu24, Rnu24);
                     Scalar dF4 = fabs(nu14 * Rnu24);
 
                     // compute components needed for flux calculation, denoted as 'g'
-                    FieldVector<Scalar, dim> K1nu11(0);
+                    FieldVector K1nu11(0);
                     K1.umv(nu11, K1nu11);
-                    FieldVector<Scalar, dim> K1nu21(0);
+                    FieldVector K1nu21(0);
                     K1.umv(nu21, K1nu21);
-                    FieldVector<Scalar, dim> K2nu12(0);
+                    FieldVector K2nu12(0);
                     K2.umv(nu12, K2nu12);
-                    FieldVector<Scalar, dim> K2nu22(0);
+                    FieldVector K2nu22(0);
                     K2.umv(nu22, K2nu22);
-                    FieldVector<Scalar, dim> K3nu13(0);
+                    FieldVector K3nu13(0);
                     K3.umv(nu13, K3nu13);
-                    FieldVector<Scalar, dim> K3nu23(0);
+                    FieldVector K3nu23(0);
                     K3.umv(nu23, K3nu23);
-                    FieldVector<Scalar, dim> K4nu14(0);
+                    FieldVector K4nu14(0);
                     K4.umv(nu14, K4nu14);
-                    FieldVector<Scalar, dim> K4nu24(0);
+                    FieldVector K4nu24(0);
                     K4.umv(nu24, K4nu24);
                     Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                     Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -919,35 +977,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar J4 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             Scalar dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1001,35 +1059,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g4 = problem_.dirichletPress(globalPosFace24, *isIt24);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             Scalar dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1040,7 +1098,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute the matrix T & vector r in v = A^{-1}(Bu + r1) = Tu + r
                             FieldMatrix A(0), B(0);
-                            Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                            FieldVector r1(0), r(0);
 
                             // evaluate matrix A, B
                             A[0][0] = g111 + g112;
@@ -1087,35 +1145,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar J4 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             Scalar dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1128,7 +1186,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute the matrix T & vector r in v = A^{-1}(Bu + r1) = Tu + r
                             FieldMatrix A(0), B(0);
-                            Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                            FieldVector r1(0), r(0);
 
                             // evaluate matrix A, B
                             A[0][0] = g111 + g112;
@@ -1165,35 +1223,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g4 = problem_.dirichletPress(globalPosFace24, *isIt24);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             Scalar dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1204,7 +1262,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute the matrix T & vector r
                             FieldMatrix T(0);
-                            Dune::FieldVector<Scalar, dim> r(0);
+                            FieldVector r(0);
 
                             Scalar coe = g111 + g112;
 
@@ -1255,21 +1313,21 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g3 = problem_.dirichletPress(globalPosFace13, *nextisIt);
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1347,35 +1405,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar J2 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             Scalar dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1445,35 +1503,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g2 = problem_.dirichletPress(globalPosFace34, *isIt34);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             Scalar dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1510,13 +1568,13 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute vector r
                             // evaluate r1, r2
-                            Dune::FieldVector<Scalar, dim> r1(0), r2(0);
+                            FieldVector r1(0), r2(0);
                             r1[1] = -g213 * g2;
                             r2[0] = -J1 * face12vol / 2.0;
                             r2[1] = g213 * g2;
 
                             // compute  r = CA^{-1}r1
-                            Dune::FieldVector<Scalar, dim> r(0);
+                            FieldVector r(0);
                             CAinv.umv(r2, r);
                             r += r1;
 
@@ -1548,21 +1606,21 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g3 = problem_.dirichletPress(globalPosFace13, *nextisIt);
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1588,21 +1646,21 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar J3 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1681,35 +1739,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar g2 = problem_.dirichletPress(globalPosFace34, *isIt34);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             Scalar dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1720,7 +1778,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute the matrix T & vector r
                             FieldMatrix T(0);
-                            Dune::FieldVector<Scalar, dim> r(0);
+                            FieldVector r(0);
 
                             Scalar coe = g221 + g223;
 
@@ -1748,35 +1806,35 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
                             Scalar J2 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             Scalar dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             Scalar dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             Scalar g111 = lambda1 * (integrationOuterNormaln1 * K1nu11) / dF1;
                             Scalar g121 = lambda1 * (integrationOuterNormaln1 * K1nu21) / dF1;
@@ -1789,7 +1847,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
 
                             // compute the matrix T & vector r in v = A^{-1}(Bu + r1) = Tu + r
                             FieldMatrix A(0), B(0);
-                            Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                            FieldVector r1(0), r(0);
 
                             // evaluate matrix A, B
                             A[0][0] = g113;
@@ -1855,6 +1913,25 @@ void FVMPFAOPressure2PUpwind<TypeTag>::assemble()
             {
             // for SGrid
             case GridTypeIndices::sGrid:
+            {
+                if (nextisIt == isItEnd)
+                {
+                    nextisIt = isItBegin;
+                }
+                else
+                {
+                    nextisIt = ++tempisIt;
+
+                    if (nextisIt == isItEnd)
+                    {
+                        nextisIt = ++tempisItBegin;
+                    }
+                }
+
+                break;
+            }
+            // for YaspGrid
+            case GridTypeIndices::yaspGrid:
             {
                 if (nextisIt == isItEnd)
                 {
@@ -1945,41 +2022,41 @@ void FVMPFAOPressure2PUpwind<TypeTag>::solve()
     if (preconditionerName_ == "SeqILU0")
     {
         // preconditioner object
-        SeqILU0<Matrix, Vector, Vector> preconditioner(M_, 1.0);
+        Dune::SeqILU0<Matrix, Vector, Vector> preconditioner(M_, 1.0);
         if (solverName_ == "CG")
         {
             // an inverse operator
-            CGSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
+            Dune::CGSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
             solver.apply(problem_.variables().pressure(), f_, r);
         }
         else if (solverName_ == "BiCGSTAB")
         {
-            BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
+            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
             solver.apply(problem_.variables().pressure(), f_, r);
         }
         else
-            DUNE_THROW(NotImplemented, "FVMPFAOPressure2PUpwind :: solve : combination " << preconditionerName_
+            DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2PUpwind :: solve : combination " << preconditionerName_
                     << " and " << solverName_ << ".");
     }
     else if (preconditionerName_ == "SeqPardiso")
     {
-        SeqPardiso<Matrix, Vector, Vector> preconditioner(M_);
+        Dune::SeqPardiso<Matrix, Vector, Vector> preconditioner(M_);
         if (solverName_ == "Loop")
         {
-            LoopSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
+            Dune::LoopSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
             solver.apply(problem_.variables().pressure(), f_, r);
         }
         else if (solverName_ == "BiCGSTAB")
         {
-            BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
+            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
             solver.apply(problem_.variables().pressure(), f_, r);
         }
         else
-            DUNE_THROW(NotImplemented, "FVMPFAOPressure2PUpwind :: solve : combination " << preconditionerName_
+            DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2PUpwind :: solve : combination " << preconditionerName_
                     << " and " << solverName_ << ".");
     }
     else
-        DUNE_THROW(NotImplemented, "FVMPFAOPressure2PUpwind :: solve : preconditioner " << preconditionerName_ << ".");
+        DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2PUpwind :: solve : preconditioner " << preconditionerName_ << ".");
 
     //                printmatrix(std::cout, M_, "global stiffness matrix", "row", 11, 3);
     //                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
@@ -2099,6 +2176,25 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
 
                     break;
                 }
+                // for YaspGrid
+                case GridTypeIndices::yaspGrid:
+                {
+                    if (nextIsIt == isItEnd)
+                    {
+                        nextIsIt = isItBegin;
+                    }
+                    else
+                    {
+                        nextIsIt = ++tempIsIt;
+
+                        if (nextIsIt == isItEnd)
+                        {
+                            nextIsIt = ++tempIsItBegin;
+                        }
+                    }
+
+                    break;
+                }
                     // for UGGrid
                 case GridTypeIndices::ugGrid:
                 {
@@ -2189,23 +2285,23 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                         Scalar faceArea14 = 0.5 * isItTwo->geometry().volume();
                                         Scalar faceArea24 = 0.5 * isItThree->geometry().volume();
 
-                                        FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                        FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                        FieldVector<Scalar, dim> unitOuterNormal12(isItTwo->centerUnitOuterNormal());
-                                        FieldVector<Scalar, dim> unitOuterNormal22(isIt->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal12(isItTwo->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal22(isIt->centerUnitOuterNormal());
                                         unitOuterNormal22 *= -1;
-                                        FieldVector<Scalar, dim> unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
                                         unitOuterNormal13 *= -1;
-                                        FieldVector<Scalar, dim> unitOuterNormal23(isItThree->centerUnitOuterNormal());
-                                        FieldVector<Scalar, dim> unitOuterNormal14(isItTwo->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal23(isItThree->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal14(isItTwo->centerUnitOuterNormal());
                                         unitOuterNormal14 *= -1;
-                                        FieldVector<Scalar, dim> unitOuterNormal24(isItThree->centerUnitOuterNormal());
+                                        FieldVector unitOuterNormal24(isItThree->centerUnitOuterNormal());
                                         unitOuterNormal24 *= -1;
 
-                                        FieldVector<Scalar, dim> velocity12(0);
-                                        FieldVector<Scalar, dim> velocity13(0);
-                                        FieldVector<Scalar, dim> velocity42(0);
-                                        FieldVector<Scalar, dim> velocity43(0);
+                                        FieldVector velocity12(0);
+                                        FieldVector velocity13(0);
+                                        FieldVector velocity42(0);
+                                        FieldVector velocity43(0);
 
                                         switch (velocityType_)
                                         {
@@ -2246,7 +2342,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                         }
                                         }
 
-                                        FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                        FieldVector velocityInteractionVol(0);
                                         if (unitOuterNormal21[0] != 0)
                                         {
                                             velocityInteractionVol[0] += faceArea21 * velocity12[0]
@@ -2491,12 +2587,12 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                         // center of face in global coordinates, i.e., the midpoint of edge 'isIt24'
                         const GlobalPosition& globalPosFace24 = isIt24->geometry().center();
 
-                        // get boundary condition for boundary face (nextisIt) center
+                        // get boundary condition for boundary face (nextIsIt) center
                         BoundaryConditions::Flags nextIsItBCType = problem_.bctypeSat(globalPosFace13, *nextIsIt);
                         // get boundary condition for boundary face (isIt24) center
                         BoundaryConditions::Flags isIt24BCType = problem_.bctypeSat(globalPosFace24, *isIt24);
 
-                        // 'nextisIt': Dirichlet boundary
+                        // 'nextIsIt': Dirichlet boundary
                         if (nextIsItBCType == BoundaryConditions::dirichlet)
                         {
                             // 'isIt24': Neumann boundary
@@ -2511,16 +2607,16 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea12 = 0.5 * isIt24->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal12(isIt24->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal22(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal12(isIt24->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal22(isIt->centerUnitOuterNormal());
                                 unitOuterNormal22 *= -1;
 
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity24(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity24(0);
 
                                 switch (velocityType_)
                                 {
@@ -2553,7 +2649,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -2686,15 +2782,15 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea12 = 0.5 * isIt24->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal12(isIt24->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal22(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal12(isIt24->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal22(isIt->centerUnitOuterNormal());
                                 unitOuterNormal22 *= -1;
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity24(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity24(0);
 
                                 switch (velocityType_)
                                 {
@@ -2727,7 +2823,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -2864,15 +2960,15 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea12 = 0.5 * isIt24->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal12(isIt24->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal22(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal12(isIt24->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal22(isIt->centerUnitOuterNormal());
                                 unitOuterNormal22 *= -1;
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity24(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity24(0);
 
                                 switch (velocityType_)
                                 {
@@ -2905,7 +3001,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -3082,7 +3178,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                     // center of face in global coordinates, i.e., the midpoint of edge 'isIt'
                     const GlobalPosition& globalPosFace12 = isIt->geometry().center();
 
-                    // get boundary condition for boundary face (nextisIt) center
+                    // get boundary condition for boundary face (nextIsIt) center
                     BoundaryConditions::Flags isItBCType = problem_.bctypeSat(globalPosFace12, *isIt);
 
                     if (nextIsIt->neighbor())
@@ -3136,15 +3232,15 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea23 = 0.5 * isIt34->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
                                 unitOuterNormal13 *= -1;
-                                FieldVector<Scalar, dim> unitOuterNormal23(isIt34->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal23(isIt34->centerUnitOuterNormal());
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity34(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity34(0);
 
                                 switch (velocityType_)
                                 {
@@ -3177,7 +3273,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -3373,15 +3469,15 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea23 = 0.5 * isIt34->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
                                 unitOuterNormal13 *= -1;
-                                FieldVector<Scalar, dim> unitOuterNormal23(isIt34->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal23(isIt34->centerUnitOuterNormal());
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity34(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity34(0);
 
                                 switch (velocityType_)
                                 {
@@ -3414,7 +3510,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -3547,15 +3643,15 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 Scalar faceArea21 = 0.5 * isIt->geometry().volume();
                                 Scalar faceArea23 = 0.5 * isIt34->geometry().volume();
 
-                                FieldVector<Scalar, dim> unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal21(isIt->centerUnitOuterNormal());
-                                FieldVector<Scalar, dim> unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal11(nextIsIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal21(isIt->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal13(nextIsIt->centerUnitOuterNormal());
                                 unitOuterNormal13 *= -1;
-                                FieldVector<Scalar, dim> unitOuterNormal23(isIt34->centerUnitOuterNormal());
+                                FieldVector unitOuterNormal23(isIt34->centerUnitOuterNormal());
 
-                                FieldVector<Scalar, dim> velocity12(0);
-                                FieldVector<Scalar, dim> velocity13(0);
-                                FieldVector<Scalar, dim> velocity34(0);
+                                FieldVector velocity12(0);
+                                FieldVector velocity13(0);
+                                FieldVector velocity34(0);
 
                                 switch (velocityType_)
                                 {
@@ -3588,7 +3684,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                 }
                                 }
 
-                                FieldVector<Scalar, dim> velocityInteractionVol(0);
+                                FieldVector velocityInteractionVol(0);
                                 if (unitOuterNormal21[0] != 0)
                                 {
                                     velocityInteractionVol[0] += faceArea21
@@ -3717,7 +3813,7 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                         // center of face in global coordinates, i.e., the midpoint of edge 'nextIsIt'
                         const GlobalPosition& globalPosFace13 = nextIsIt->geometry().center();
 
-                        // get boundary condition for boundary face (nextisIt) center
+                        // get boundary condition for boundary face (nextIsIt) center
                         BoundaryConditions::Flags nextIsItBCType = problem_.bctypeSat(globalPosFace13, *nextIsIt);
 
                         // 'isIt': Dirichlet boundary

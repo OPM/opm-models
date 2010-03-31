@@ -26,7 +26,7 @@
  * @author Yufei Cao
  */
 
-namespace Dune
+namespace Dumux
 {
 
 template<class TypeTag> class FVMPFAOVelocities2P: public FVMPFAOPressure2PUpwind<TypeTag>
@@ -77,6 +77,7 @@ template<class TypeTag> class FVMPFAOVelocities2P: public FVMPFAOPressure2PUpwin
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
+    typedef Dune::FieldVector<Scalar, dim> FieldVector;
 
 public:
     FVMPFAOVelocities2P(Problem& problem) :
@@ -149,7 +150,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
 
         // the following two variables are used to check local conservation
         double facevol[2 * dim];
-        FieldVector<Scalar, dimWorld> unitOuterNormal[2 * dim];
+        Dune::FieldVector<Scalar, dimWorld> unitOuterNormal[2 * dim];
 
         IntersectionIterator isItBegin = this->problem().gridView().template ibegin(*eIt);
         IntersectionIterator isItEnd = this->problem().gridView().template iend(*eIt);
@@ -183,6 +184,26 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
 
                 break;
             }
+            // for YaspGrid
+            case GridTypeIndices::yaspGrid:
+            {
+                if (nextisIt == isItEnd)
+                {
+                    nextisIt = isItBegin;
+                }
+                else
+                {
+                    nextisIt = ++tempisIt;
+
+                    if (nextisIt == isItEnd)
+                    {
+                        nextisIt = ++tempisItBegin;
+                    }
+                }
+
+                break;
+            }
+
                 // for UGGrid
             case GridTypeIndices::ugGrid:
             {
@@ -201,7 +222,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
             int indexInInside = isIt->indexInInside();
 
             // compute total mobility of cell 1
-            FieldVector<Scalar, numPhases> lambda1(0);
+            Dune::FieldVector<Scalar, numPhases> lambda1(0);
 
             lambda1[0] = this->problem().variables().upwindMobilitiesWetting(globalIdx1, indexInInside, 0);
             lambda1[1] = this->problem().variables().upwindMobilitiesNonwetting(globalIdx1, indexInInside, 0);
@@ -278,14 +299,14 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
             int globalIdx3 = this->problem().variables().index(*nextisItoutside);
 
             // get total mobility of neighbor cell 2
-            FieldVector<Scalar, numPhases> lambda2(0);
-            FieldVector<Scalar, numPhases> lambda3(0);
+            Dune::FieldVector<Scalar, numPhases> lambda2(0);
+            Dune::FieldVector<Scalar, numPhases> lambda3(0);
 
             lambda2[0] = this->problem().variables().upwindMobilitiesWetting(globalIdx1, indexInInside, 1);
             lambda2[1] = this->problem().variables().upwindMobilitiesNonwetting(globalIdx1, indexInInside, 1);
 
             // get total mobility of neighbor cell 3
-            FieldVector<Scalar, numPhases> lambda13(0);
+            Dune::FieldVector<Scalar, numPhases> lambda13(0);
 
             lambda3[0] = this->problem().variables().upwindMobilitiesWetting(globalIdx1, indexInInside, 2);
             lambda3[1] = this->problem().variables().upwindMobilitiesNonwetting(globalIdx1, indexInInside, 2);
@@ -329,7 +350,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                     GlobalPosition globalPos4(0);
                     FieldMatrix K4(0);
 
-                    FieldVector<Scalar, numPhases> lambda4(0);
+                    Dune::FieldVector<Scalar, numPhases> lambda4(0);
 
                     int globalIdx4 = 0;
 
@@ -458,63 +479,63 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                     integrationOuterNormaln2 *= face34vol / 2.0;
 
                     // compute normal vectors nu11,nu21; nu12, nu22; nu13, nu23; nu14, nu24;
-                    FieldVector<Scalar, dim> nu11(0);
+                    FieldVector nu11(0);
                     R.umv(globalPosFace13 - globalPos1, nu11);
 
-                    FieldVector<Scalar, dim> nu21(0);
+                    FieldVector nu21(0);
                     R.umv(globalPos1 - globalPosFace12, nu21);
 
-                    FieldVector<Scalar, dim> nu12(0);
+                    FieldVector nu12(0);
                     R.umv(globalPosFace24 - globalPos2, nu12);
 
-                    FieldVector<Scalar, dim> nu22(0);
+                    FieldVector nu22(0);
                     R.umv(globalPosFace12 - globalPos2, nu22);
 
-                    FieldVector<Scalar, dim> nu13(0);
+                    FieldVector nu13(0);
                     R.umv(globalPos3 - globalPosFace13, nu13);
 
-                    FieldVector<Scalar, dim> nu23(0);
+                    FieldVector nu23(0);
                     R.umv(globalPos3 - globalPosFace34, nu23);
 
-                    FieldVector<Scalar, dim> nu14(0);
+                    FieldVector nu14(0);
                     R.umv(globalPos4 - globalPosFace24, nu14);
 
-                    FieldVector<Scalar, dim> nu24(0);
+                    FieldVector nu24(0);
                     R.umv(globalPosFace34 - globalPos4, nu24);
 
                     // compute dF1, dF2, dF3, dF4 i.e., the area of quadrilateral made by normal vectors 'nu'
-                    FieldVector<Scalar, dim> Rnu21(0);
+                    FieldVector Rnu21(0);
                     R.umv(nu21, Rnu21);
                     double dF1 = fabs(nu11 * Rnu21);
 
-                    FieldVector<Scalar, dim> Rnu22(0);
+                    FieldVector Rnu22(0);
                     R.umv(nu22, Rnu22);
                     double dF2 = fabs(nu12 * Rnu22);
 
-                    FieldVector<Scalar, dim> Rnu23(0);
+                    FieldVector Rnu23(0);
                     R.umv(nu23, Rnu23);
                     double dF3 = fabs(nu13 * Rnu23);
 
-                    FieldVector<Scalar, dim> Rnu24(0);
+                    FieldVector Rnu24(0);
                     R.umv(nu24, Rnu24);
                     double dF4 = fabs(nu14 * Rnu24);
 
                     // compute components needed for flux calculation, denoted as 'g'
-                    FieldVector<Scalar, dim> K1nu11(0);
+                    FieldVector K1nu11(0);
                     K1.umv(nu11, K1nu11);
-                    FieldVector<Scalar, dim> K1nu21(0);
+                    FieldVector K1nu21(0);
                     K1.umv(nu21, K1nu21);
-                    FieldVector<Scalar, dim> K2nu12(0);
+                    FieldVector K2nu12(0);
                     K2.umv(nu12, K2nu12);
-                    FieldVector<Scalar, dim> K2nu22(0);
+                    FieldVector K2nu22(0);
                     K2.umv(nu22, K2nu22);
-                    FieldVector<Scalar, dim> K3nu13(0);
+                    FieldVector K3nu13(0);
                     K3.umv(nu13, K3nu13);
-                    FieldVector<Scalar, dim> K3nu23(0);
+                    FieldVector K3nu23(0);
                     K3.umv(nu23, K3nu23);
-                    FieldVector<Scalar, dim> K4nu14(0);
+                    FieldVector K4nu14(0);
                     K4.umv(nu14, K4nu14);
-                    FieldVector<Scalar, dim> K4nu24(0);
+                    FieldVector K4nu24(0);
                     K4.umv(nu24, K4nu24);
                     for (int i = 0; i < numPhases; i++)
                     {
@@ -585,18 +606,18 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         B[3][3] = g214 + g224;
 
                         // use the pressure values to compute the fluxes
-                        FieldVector<Scalar, 2 * dim> u(0);
+                        Dune::FieldVector<Scalar, 2 * dim> u(0);
                         u[0] = press1;
                         u[1] = press2;
                         u[2] = press3;
                         u[3] = press4;
 
                         // evaluate part of velocity of facet 'isIt'
-                        FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                        FieldVector vector1 = unitOuterNormaln1;
                         vector1 /= face12vol;
 
                         // evaluate  part of velocity of facet 'nextisIt'
-                        FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                        FieldVector vector3 = unitOuterNormaln3;
                         vector3 /= face13vol;
 
                         // compute T
@@ -605,7 +626,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         Dune::FieldMatrix<Scalar, 2 * dim, 2 * dim> T(F);
 
                         // use the pressure values to compute the fluxes
-                        FieldVector<Scalar, 2 * dim> Tu(0);
+                        Dune::FieldVector<Scalar, 2 * dim> Tu(0);
 
                         T.umv(u, Tu);
 
@@ -732,35 +753,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             J4[nPhaseIdx] /= densityNW;
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             double dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -816,7 +837,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                         * T[1][1]) * press2 - (g111 * r[0] + g121 * r[1]);
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 if (verbose && verbose > 1)
@@ -876,35 +897,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g4 = this->problem().dirichletPress(globalPosFace24, *isIt24);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             double dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -933,7 +954,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 B[0][1] = g112 - g122;
                                 B[1][0] = g211 + g221;
 
-                                Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                                FieldVector r1(0), r(0);
                                 // evaluate vector r1
                                 r1[0] = g122 * g4;
                                 r1[1] = -J3[i] * nextisIt->geometry().volume() / 2.0;
@@ -949,7 +970,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                         + g121 * T[1][1]) * press2 - (g111 * r[0] + g121 * r[1]);
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 if (verbose && verbose > 1)
@@ -1020,35 +1041,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             J4[nPhaseIdx] /= densityNW;
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             double dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1082,7 +1103,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 B[0][1] = g112 - g122;
                                 B[1][1] = g222 - g212;
 
-                                Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                                FieldVector r1(0), r(0);
                                 // evaluate vector r1
                                 r1[0] = -g121 * g3;
                                 r1[1] = -J4[i] * isIt24->geometry().volume() / 2.0;
@@ -1100,11 +1121,11 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                         - g211 * r[0];
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1176,40 +1197,40 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g4 = this->problem().dirichletPress(globalPosFace24, *isIt24);
 
                             // compute normal vectors nu11,nu21; nu12, nu22;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu12(0);
+                            FieldVector nu12(0);
                             R.umv(globalPosFace24 - globalPos2, nu12);
 
-                            FieldVector<Scalar, dim> nu22(0);
+                            FieldVector nu22(0);
                             R.umv(globalPosFace12 - globalPos2, nu22);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu22(0);
+                            FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
                             double dF2 = fabs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K2nu12(0);
+                            FieldVector K2nu12(0);
                             K2.umv(nu12, K2nu12);
-                            FieldVector<Scalar, dim> K2nu22(0);
+                            FieldVector K2nu22(0);
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
                                 FieldMatrix T(0);
-                                Dune::FieldVector<Scalar, dim> r(0);
+                                FieldVector r(0);
 
                                 if (lambda1[i] != 0 || lambda2[i] != 0)
                                 {
@@ -1239,11 +1260,11 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f3 = T[1][0] * press1 + T[1][1] * press2 + r[1];
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1325,8 +1346,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                     J1[nPhaseIdx] /= densityNW;
 
                     // evaluate velocity of facet 'isIt'
-                    FieldVector<Scalar, dim> vector1W = unitOuterNormaln1;
-                    FieldVector<Scalar, dim> vector1NW = unitOuterNormaln1;
+                    FieldVector vector1W = unitOuterNormaln1;
+                    FieldVector vector1NW = unitOuterNormaln1;
                     switch (velocityType_)
                     {
                     case vw:
@@ -1371,21 +1392,21 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g3 = this->problem().dirichletPress(globalPosFace13, *nextisIt);
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1405,7 +1426,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                         - (g211 * (-J1[i]) * face12vol) / (2.0 * g111);
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1527,35 +1548,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             J2[nPhaseIdx] /= densityNW;
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             double dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1623,7 +1644,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f3 = T[2][0] * press1 + T[2][1] * press3 + r[2];
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1684,35 +1705,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g2 = this->problem().dirichletPress(globalPosFace34, *isIt34);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             double dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1756,13 +1777,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
 
                                 // compute vector r
                                 // evaluate r1, r2
-                                Dune::FieldVector<Scalar, dim> r1(0), r2(0);
+                                FieldVector r1(0), r2(0);
                                 r1[1] = -g213 * g2;
                                 r2[0] = -J1[i] * face12vol / 2.0;
                                 r2[1] = g213 * g2;
 
                                 // compute  r = CA^{-1}r1
-                                Dune::FieldVector<Scalar, dim> r(0);
+                                FieldVector r(0);
                                 CAinv.umv(r2, r);
                                 r += r1;
 
@@ -1770,7 +1791,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f3 = T[1][0] * press1 + T[1][1] * press3 + r[1];
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1846,21 +1867,21 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g3 = this->problem().dirichletPress(globalPosFace13, *nextisIt);
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1884,12 +1905,12 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f3 = T3 * press1 - r3;
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
                                 this->problem().variables().velocity()[globalIdx1][indexInInside] += vector1;
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -1952,21 +1973,21 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             J3[nPhaseIdx] /= densityNW;
 
                             // compute normal vectors nu11,nu21;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -1991,7 +2012,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f1 = T * press1 + r;
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 if (verbose && verbose > 1)
@@ -2110,40 +2131,40 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             double g2 = this->problem().dirichletPress(globalPosFace34, *isIt34);
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             double dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
                                 FieldMatrix T(0);
-                                Dune::FieldVector<Scalar, dim> r(0);
+                                FieldVector r(0);
 
                                 if (lambda1[i] != 0 || lambda3[i] != 0)
                                 {
@@ -2173,11 +2194,11 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                 double f3 = T[1][0] * press1 + T[1][1] * press3 + r[1];
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)
@@ -2251,35 +2272,35 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             J2[nPhaseIdx] /= densityNW;
 
                             // compute normal vectors nu11,nu21; nu13, nu23;
-                            FieldVector<Scalar, dim> nu11(0);
+                            FieldVector nu11(0);
                             R.umv(globalPosFace13 - globalPos1, nu11);
 
-                            FieldVector<Scalar, dim> nu21(0);
+                            FieldVector nu21(0);
                             R.umv(globalPos1 - globalPosFace12, nu21);
 
-                            FieldVector<Scalar, dim> nu13(0);
+                            FieldVector nu13(0);
                             R.umv(globalPos3 - globalPosFace13, nu13);
 
-                            FieldVector<Scalar, dim> nu23(0);
+                            FieldVector nu23(0);
                             R.umv(globalPos3 - globalPosFace34, nu23);
 
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
-                            FieldVector<Scalar, dim> Rnu21(0);
+                            FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
                             double dF1 = fabs(nu11 * Rnu21);
 
-                            FieldVector<Scalar, dim> Rnu23(0);
+                            FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
                             double dF3 = fabs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
-                            FieldVector<Scalar, dim> K1nu11(0);
+                            FieldVector K1nu11(0);
                             K1.umv(nu11, K1nu11);
-                            FieldVector<Scalar, dim> K1nu21(0);
+                            FieldVector K1nu21(0);
                             K1.umv(nu21, K1nu21);
-                            FieldVector<Scalar, dim> K3nu13(0);
+                            FieldVector K3nu13(0);
                             K3.umv(nu13, K3nu13);
-                            FieldVector<Scalar, dim> K3nu23(0);
+                            FieldVector K3nu23(0);
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
@@ -2299,7 +2320,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
 
                                 // compute the matrix T & vector r in v = A^{-1}(Bu + r1) = Tu + r
                                 FieldMatrix A(0), B(0);
-                                Dune::FieldVector<Scalar, dim> r1(0), r(0);
+                                FieldVector r1(0), r(0);
 
                                 // evaluate matrix A, B
                                 A[0][0] = g113;
@@ -2328,11 +2349,11 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                                         * g1 + g221 * r[1]);
 
                                 // evaluate velocity of facet 'isIt'
-                                FieldVector<Scalar, dim> vector1 = unitOuterNormaln1;
+                                FieldVector vector1 = unitOuterNormaln1;
                                 vector1 *= f1 / face12vol;
 
                                 // evaluate velocity of facet 'nextisIt'
-                                FieldVector<Scalar, dim> vector3 = unitOuterNormaln3;
+                                FieldVector vector3 = unitOuterNormaln3;
                                 vector3 *= f3 / face13vol;
 
                                 if (verbose && verbose > 1)

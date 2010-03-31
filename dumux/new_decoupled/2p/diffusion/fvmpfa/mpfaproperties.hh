@@ -20,7 +20,7 @@
 // dumux environment
 #include <dumux/new_decoupled/2p/2pproperties.hh>
 
-namespace Dune
+namespace Dumux
 {
 /*!
  * \brief Indices denoting the different grid types.
