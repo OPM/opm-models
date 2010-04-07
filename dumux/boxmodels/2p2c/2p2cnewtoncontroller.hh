@@ -24,6 +24,8 @@
 #ifndef DUMUX_2P2C_NEWTON_CONTROLLER_HH
 #define DUMUX_2P2C_NEWTON_CONTROLLER_HH
 
+#include "2p2cproperties.hh"
+
 #include <dumux/nonlinear/newtoncontroller.hh>
 
 namespace Dumux {

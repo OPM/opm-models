@@ -243,7 +243,6 @@ public:
         Scalar tmp =
             vars.porousDiffCoeff(lPhaseIdx) * vars.densityAtIP(lPhaseIdx) *
             (vars.concentrationGrad(lPhaseIdx)*vars.face().normal);
-        
         flux[contiGEqIdx] += tmp;
         flux[contiLEqIdx] -= tmp;
 
@@ -373,8 +372,10 @@ public:
     void resetPhasePresence()
     {
         int numVertices = this->gridView_.size(dim);
-        for (int i = 0; i < numVertices; ++i)
+        for (int i = 0; i < numVertices; ++i) {
             staticVertexDat_[i].phasePresence = staticVertexDat_[i].oldPhasePresence;
+            staticVertexDat_[i].wasSwitched = false;
+        }
     }
 
     /*!

@@ -123,8 +123,9 @@ public:
 
         this->localJacobian().setSwitched(false);
         this->localJacobian().resetPhasePresence();
-        this->localJacobian().updateStaticData(this->curSolFunction(),
+        /*this->localJacobian().updateStaticData(this->curSolFunction(),
                                                 this->prevSolFunction());
+        */
     };
 
     /*!

@@ -161,7 +161,7 @@ public:
     static const int switchIdx   = PVOffset + 1; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
 
     static const int pgIdx = pressureIdx; //!< Index for gas phase pressure in a solution vector
-    static const int SwOrXIdx = switchIdx; //!< Index of the either the saturation of the liquid phase or the mass fraction secondary component in the only phase
+    static const int SlOrXIdx = switchIdx; //!< Index of the either the saturation of the liquid phase or the mass fraction secondary component in the only phase
 
     // Equation indices
     static const int contiLEqIdx = PVOffset + 1; //!< Index of the mass conservation equation for the liquid's primary component
