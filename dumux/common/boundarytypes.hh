@@ -162,8 +162,7 @@ public:
      *              as a consequence
      */
     void setDirichlet(int pvIdx, 
-                      int eqIdx,
-                      bool yesno = true)
+                      int eqIdx)
     { 
         boundaryInfo_[eqIdx].visited = 1;
         boundaryInfo_[eqIdx].isDirichlet = 1;
