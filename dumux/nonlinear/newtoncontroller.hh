@@ -519,21 +519,21 @@ void solveLinear_(Matrix &A,
 
 #if HAVE_PARDISO
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
-        Solver solver(model(), 5000, verbosity);
+        Solver solver(model(), 500, verbosity);
 #else // !HAVE_PARDISO
 //	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
 //	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
 //	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
 #if HAVE_MPI
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
-        Solver solver(model(), 5000, verbosity);
+        Solver solver(model(), 500, verbosity);
 #else
 	typedef  Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR Solver;
-        Solver solver(5000, verbosity);
+        Solver solver(500, verbosity);
 #endif // HAVE_MPI
 #endif // HAVE_PARDISO
 
-	//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 5000, verbosity);
+	//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), 500, verbosity);
 	solver.apply(A, x, b, residReduction);
 
 	if (!solver.result().converged)
