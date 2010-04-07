@@ -161,7 +161,7 @@ public:
                               const FluxData &fluxData) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, fluxData);
+        //ParentType::computeDiffusiveFlux(flux, fluxData);
 
         // diffusive heat flux
         flux[temperatureIdx] += 

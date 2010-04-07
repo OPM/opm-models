@@ -48,8 +48,6 @@ class TwoPTwoCNINewtonController : public NewtonController<TypeTag >
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
     
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIAIndices)) Indices;
-
 public:
     TwoPTwoCNINewtonController(Scalar tolerance = 1e-5,
                                int targetSteps = 9,
