@@ -497,7 +497,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                         Scalar referencePressure =  this->problem().referencePressure(globalPos, *eIt);
                         FluidState fluidState;
                         fluidState.update(satW, referencePressure, referencePressure, temperature);
-                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, referencePressure, temperature, fluidState);
+                        densityWBound = FluidSystem::phaseDensity(wPhaseIdx, temperature, referencePressure, fluidState);
                         densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
                         Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
                         Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
