@@ -18,9 +18,9 @@
 
 
 //#include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/new_material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
+#include <dumux/new_material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/new_material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/new_material/fluidmatrixinteractions/2p/absolutesaturationslaw.hh>
+#include <dumux/new_material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 namespace Dumux
 {
@@ -43,15 +43,11 @@ class Test2PSpatialParams
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
     typedef Dune::FieldMatrix<Scalar,dim,dim> FieldMatrix;
 
-//    typedef RegularizedBrooksCoreyParams<Scalar>                RawMaterialLawParams;
-    typedef LinearMaterialParams<Scalar>                        RawMaterialLawParams;
-    typedef AbsoluteSaturationsLawParams<RawMaterialLawParams> MaterialLawParams;
-//    typedef RegularizedLinearMaterial<MaterialLawParams>           RawMaterialLaw;
-//    typedef RegularizedBrooksCorey<MaterialLawParams>           RawMaterialLaw;
-    typedef LinearMaterial<MaterialLawParams>                   RawMaterialLaw;
+//    typedef RegularizedBrooksCorey<Scalar>                RawMaterialLaw;
+    typedef LinearMaterial<Scalar>                        RawMaterialLaw;
 public:
-    //typedef RawMaterialLaw                                       MaterialLaw;
-    typedef AbsoluteSaturationsLaw<RawMaterialLaw>               MaterialLaw;
+    typedef EffToAbsLaw<RawMaterialLaw>               MaterialLaw;
+    typedef typename MaterialLaw::Params MaterialLawParams;
 
     void update (Scalar saturationW, const Element& element)
     {

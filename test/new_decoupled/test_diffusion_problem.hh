@@ -178,6 +178,10 @@ Scalar temperature(const GlobalPosition& globalPos, const Element& element) cons
 
 // \}
 
+Scalar referencePressure(const GlobalPosition& globalPos, const Element& element) const
+{
+    return 1e5; // -> 10°C
+}
 
 std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element)
 {

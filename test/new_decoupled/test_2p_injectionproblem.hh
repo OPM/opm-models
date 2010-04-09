@@ -68,8 +68,8 @@ SET_PROP(TwoPTestProblem, SaturationModel)
 {
     typedef Dumux::FVSaturation2P<TTAG(TwoPTestProblem)> type;
 };
-SET_TYPE_PROP(TwoPTestProblem, DiffusivePart, Dune::CapillaryDiffusion<TypeTag>);
-SET_TYPE_PROP(TwoPTestProblem, ConvectivePart, Dune::GravityPart<TypeTag>);
+SET_TYPE_PROP(TwoPTestProblem, DiffusivePart, Dumux::CapillaryDiffusion<TypeTag>);
+SET_TYPE_PROP(TwoPTestProblem, ConvectivePart, Dumux::GravityPart<TypeTag>);
 
 SET_PROP(TwoPTestProblem, PressureModel)
 {
@@ -187,6 +187,10 @@ Scalar temperature(const GlobalPosition& globalPos, const Element& element) cons
 
 // \}
 
+Scalar referencePressure(const GlobalPosition& globalPos, const Element& element) const
+{
+    return 1e5; // -> 10°C
+}
 
 std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element)
 {
@@ -216,9 +220,15 @@ Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& inter
 
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
         {
+            const Element& element = *(intersection.inside());
+
+            Scalar pRef = referencePressure(globalPos, element);
+            Scalar temp = temperature(globalPos, element);
+            Scalar sat = this->variables().satElement(element);
+
             FluidState fluidState;
-            fluidState.update(temperature(globalPos, *(intersection.inside())));
-            return (1e5 - FluidSystem::phaseDensity(wPhaseIdx, fluidState) * this->gravity()[1] * (depthBOR_ - globalPos[1]));
+            fluidState.update(sat, pRef, pRef, temp);
+            return (1e5 - FluidSystem::phaseDensity(wPhaseIdx, temp, pRef, fluidState) * this->gravity()[1] * (depthBOR_ - globalPos[1]));
         }
         else
         return 2e5;
