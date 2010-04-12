@@ -209,7 +209,7 @@ public:
      */
     void setCurrentElement(const Element &element)
     {
-        if (curElementPtr_ != element) {
+        if (curElementPtr_ != ElementPointer(element)) {
             // update the FV element geometry if the current element
             // is to be changed
             curElementPtr_ = element;
