@@ -61,7 +61,21 @@ int main(int argc, char** argv)
     double tStart = 0;
     double tEnd = 3e4;
     int modulo = 1;
-    double cFLFactor = 0.7;
+    double cFLFactor = 0.5;
+    double maxDt = 5e6;
+    double firstDt = 2e3;
+
+    // parse the command line arguments for the program
+    if (argc != 3) {
+        std::cout << boost::format("usage: %s tEnd firstDt \n")%argv[0]
+				<< "proceeding with predefs" << std::endl;
+    }
+    else
+    {
+    	std::istringstream(argv[1]) >> tEnd;
+    	std::istringstream(argv[2]) >> firstDt;
+    }
+
 
     Dumux::Liq_WaterAir wetmat;
     Dumux::Gas_WaterAir nonwetmat;
@@ -72,7 +86,7 @@ int main(int argc, char** argv)
 
     Dumux::VariableClass2p2c<GridView,Scalar> var(gridview);
 
-    typedef Dune::Testproblem_2p2c<GridView, Scalar> TransProb;
+    typedef Dumux::Testproblem_2p2c<GridView, Scalar> TransProb;
     TransProb problem(gridview, var, wetmat, nonwetmat, soil, grid.maxLevel(), materialLaw, false);
 
     typedef Dumux::Decoupled2p2c<GridView, Scalar> ModelType;
@@ -83,7 +97,7 @@ int main(int argc, char** argv)
 
     Dune::Timer timer;
     timer.reset();
-    timeloop.execute(model);
+    timeloop.execute(model, false);
     std::cout << "timeloop.execute took " << timer.elapsed() << " seconds" << std::endl;
 
     return 0;
