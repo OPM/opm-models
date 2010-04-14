@@ -275,7 +275,7 @@ public:
         {
             bool converged = solver.execute(this->asImp_(),
                                             controller);
-            if (converged) {
+            if (converged && solver.verbose()) {
                 std::cout << boost::format("Newton solver converged for rank %d\n")
                     %gridView_.comm().rank();
                 break;
@@ -293,9 +293,10 @@ public:
             problem_.updateFailedTry();
             asImp_().updateFailedTry();
 
-            std::cout << boost::format("Newton didn't converge for rank %d. Retrying with timestep of %f\n")
-                %gridView_.comm().rank()
-                %problem_.timeManager().timeStepSize();
+            if (solver.verbose())
+                std::cout << boost::format("Newton didn't converge for rank %d. Retrying with timestep of %f\n")
+                    %gridView_.comm().rank()
+                    %problem_.timeManager().timeStepSize();
         }
 
         problem_.updateSuccessful();
