@@ -275,7 +275,7 @@ public:
         {
             bool converged = solver.execute(this->asImp_(),
                                             controller);
-            if (converged && solver.verbose()) {
+            if (converged && verbose_()) {
                 std::cout << boost::format("Newton solver converged for rank %d\n")
                     %gridView_.comm().rank();
                 break;
@@ -293,7 +293,7 @@ public:
             problem_.updateFailedTry();
             asImp_().updateFailedTry();
 
-            if (solver.verbose())
+            if (verbose_())
                 std::cout << boost::format("Newton didn't converge for rank %d. Retrying with timestep of %f\n")
                     %gridView_.comm().rank()
                     %problem_.timeManager().timeStepSize();
@@ -678,6 +678,9 @@ protected:
             (*u)[globalVertexIdx][eqIdx] = dirichletVal[boundaryTypes.eqToDirichletIndex(eqIdx)];
         }
     }
+
+    bool verbose_() const 
+    { return gridView_.comm().rank() == 0; };
 
     Implementation &asImp_()
     { return *static_cast<Implementation*>(this); }
