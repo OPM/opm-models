@@ -59,7 +59,7 @@ public:
           gravity_(0)
     {
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
-            gravity_[dim - 1] = - 9.81;
+            gravity_[(dim==1)?0:1] = -9.81;
     }
 
     /*!
