@@ -322,15 +322,27 @@ public:
 		// deflection in any degree of freedom.
 		typedef typename SolutionFunction::BlockType FV;
 		error_ = 0;
+		int idxI = -1;
+		int idxJ = -1;
 		for (int i = 0; i < int((*uOld).size()); ++i) {
 			for (int j = 0; j < FV::size; ++j) {
 				Scalar tmp
 				=
 						std::abs((*deltaU)[i][j])
 				/ std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
+				if (tmp > error_)
+				{
+				  idxI = i;
+				  idxJ = j;
+				}
 				error_ = std::max(error_, tmp);
 			}
-		};
+		}
+//		std::cout.flush();
+//		std::cout << method().model().gridView().comm().rank() << ": i = " << idxI << ", j = " << idxJ
+//		    << ", deltaU = " << (*deltaU)[idxI][idxJ] << ", uOld = " << (*uOld)[idxI][idxJ]
+//		    << ", err = " << error_ << std::endl;
+//                std::cout.flush();
 		error_ = model().gridView().comm().max(error_);
 	}
 
@@ -352,7 +364,7 @@ public:
 		// that the initial value for the delta vector u is quite
 		// close to the final value, a reduction of 6 orders of
 		// magnitute in the defect should be sufficient...
-		Scalar residReduction = 1e-6;
+		Scalar residReduction = 1e-10;
 
 		try {
 		  solveLinear_(A, u, b, residReduction);
@@ -512,8 +524,7 @@ void solveLinear_(Matrix &A,
 {
 	Vector &x = *u;
 
-	int verbosity = GET_PROP_VALUE(TypeTag,
-			PTAG(NewtonLinearSolverVerbosity));
+	int verbosity = GET_PROP_VALUE(TypeTag, PTAG(NewtonLinearSolverVerbosity));
 	if (model().gridView().grid().comm().rank() != 0)
 		verbosity = 0;
 
@@ -521,10 +532,9 @@ void solveLinear_(Matrix &A,
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_Loop_Pardiso<TypeTag> Solver;
         Solver solver(model(), 500, verbosity);
 #else // !HAVE_PARDISO
-//	typedef  Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GridFunctionSpace> Solver;
-//	Solver solver(model().jacobianAssembler().gridFunctionSpace(), verbosity);
-//	typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
 #if HAVE_MPI
+//        typedef  Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GridFunctionSpace> Solver;
+//        Solver solver(model().jacobianAssembler().gridFunctionSpace(), 50000, verbosity);
 	typedef  Dune::PDELab::ISTLBackend_NoOverlap_BCGS_ILU<TypeTag> Solver;
         Solver solver(model(), 500, verbosity);
 #else

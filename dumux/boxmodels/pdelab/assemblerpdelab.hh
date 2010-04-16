@@ -96,6 +96,15 @@ public:
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
 
 #if 1
+//    	Vector numProcessesVec(*f);
+//    	numProcessesVec = 1.0;
+//    	Dune::PDELab::AddDataHandle<GridFunctionSpace,Vector> adddh(*gridFunctionSpace_, numProcessesVec);
+//    	if (gridFunctionSpace_->gridview().comm().size()>1)
+//    	  gridFunctionSpace_->gridview().communicate(adddh,
+//    	      Dune::InteriorBorder_InteriorBorder_Interface,
+//    	      Dune::ForwardCommunication);
+
+
         // rescale jacobian and right hand side to the largest 
         // entry on the main diagonal block matrix
     	typedef typename Matrix::RowIterator RowIterator;
@@ -104,6 +113,7 @@ public:
     	const typename Matrix::block_type::size_type rowsInBlock = Matrix::block_type::rows;
     	const typename Matrix::block_type::size_type colsInBlock = Matrix::block_type::cols;
         Scalar diagonalEntry[rowsInBlock];
+        Vector diagonalEntries(*f);
     	RowIterator endIBlock = matrix_->end();
     	for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock) {
             BlockType &diagBlock = (*iBlock)[iBlock.index()];
@@ -117,11 +127,21 @@ public:
 
                 if (diagonalEntry[i] < 1e-14)
                     diagonalEntry[i] = 1.0;
-            }
 
+                diagonalEntries[iBlock.index()][i] = diagonalEntry[i];
+            }
+    	}
+
+        Dune::PDELab::AddDataHandle<GridFunctionSpace,Vector> adddh(*gridFunctionSpace_, diagonalEntries);
+        if (gridFunctionSpace_->gridview().comm().size()>1)
+          gridFunctionSpace_->gridview().communicate(adddh,
+              Dune::InteriorBorder_InteriorBorder_Interface,
+              Dune::ForwardCommunication);
+
+        for (RowIterator iBlock = matrix_->begin(); iBlock != endIBlock; ++iBlock) {
             // divide right-hand side
             for (int i = 0; i < rowsInBlock; i++) {
-                (*f)[iBlock.index()][i] /= diagonalEntry[i];
+                (*f)[iBlock.index()][i] /= diagonalEntries[iBlock.index()][i];
             }
             
             // divide row of the jacobian
@@ -129,7 +149,7 @@ public:
             for (ColIterator jBlock = iBlock->begin(); jBlock != endJBlock; ++jBlock) {
                 for (int i = 0; i < rowsInBlock; i++) {
                     for (int j = 0; j < colsInBlock; j++) {
-                        (*jBlock)[i][j] /= diagonalEntry[i];
+                        (*jBlock)[i][j] /= diagonalEntries[iBlock.index()][i];
                     }
                 }
             }
