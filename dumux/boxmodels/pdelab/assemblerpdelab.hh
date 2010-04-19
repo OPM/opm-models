@@ -72,6 +72,19 @@ public:
     	*matrix_ = 0;
     }
 
+    ~AssemblerPDELab()
+    {
+    	delete matrix_;
+    	delete gridOperatorSpace_;
+    	delete localOperator_;
+    	delete constraintsTrafo_;
+    	delete bTypes_;
+    	delete gridFunctionSpace_;
+    	delete scalarGridFunctionSpace_;
+    	delete cn_;
+    	delete fem_;
+    }
+
     //! return const reference to matrix
     const Matrix& operator* () const
     {
@@ -165,19 +178,6 @@ public:
     const ConstraintsTrafo& constraintsTrafo() const
     {
         return *constraintsTrafo_;
-    }
-
-    ~AssemblerPDELab()
-    {
-    	delete matrix_;
-    	delete gridOperatorSpace_;
-    	delete localOperator_;
-    	delete constraintsTrafo_;
-    	delete bTypes_;
-    	delete gridFunctionSpace_;
-    	delete scalarGridFunctionSpace_;
-    	delete fem_;
-    	delete cn_;
     }
 
 private:
