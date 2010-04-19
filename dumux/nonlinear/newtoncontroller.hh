@@ -371,7 +371,10 @@ public:
 		}
 		catch (Dune::MatrixBlockError e) {
 			Dumux::NumericalProblem p;
-			p.message(e.what());
+            std::string msg;
+            std::ostringstream ms(msg);
+            ms << e.what() << "M=" << A[e.r][e.c];
+			p.message(ms.str());
 			throw p;
 		}
 	}
