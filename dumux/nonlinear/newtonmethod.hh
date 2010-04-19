@@ -112,13 +112,8 @@ protected:
     {
     	if (!uOld)
     	{
-#ifdef HAVE_DUNE_PDELAB
             uOld = new SolutionFunction(model.jacobianAssembler().gridFunctionSpace(), 0.0);
             f = new SolutionFunction(model.jacobianAssembler().gridFunctionSpace(), 0.0);
-#else
-            uOld = new SolutionFunction(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
-            f = new SolutionFunction(model.gridView(), model.gridView(), model.gridView().overlapSize(0) == 0);
-#endif
     	}
         model_ = &model;
 
