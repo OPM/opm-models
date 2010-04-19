@@ -49,7 +49,9 @@ void printUsage(const char *progname)
 template <class ProblemTypeTag>
 int startFromDGF(int argc, char **argv)
 {    
+#ifdef NDEBUG
     try {
+#endif
         typedef typename GET_PROP_TYPE(ProblemTypeTag, PTAG(Scalar))  Scalar;
         typedef typename GET_PROP_TYPE(ProblemTypeTag, PTAG(Grid))    Grid;
         typedef typename GET_PROP_TYPE(ProblemTypeTag, PTAG(Problem)) Problem;
@@ -97,6 +99,7 @@ int startFromDGF(int argc, char **argv)
             return 2;
 
         return 0;
+#ifdef NDEBUG
     }
     catch (Dune::Exception &e) {
         std::cerr << "Dune reported error: " << e << std::endl;
@@ -104,6 +107,7 @@ int startFromDGF(int argc, char **argv)
     catch (...) {
         std::cerr << "Unknown exception thrown!\n";
     }
+#endif
 
     return 3;
 };
