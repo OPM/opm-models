@@ -52,8 +52,10 @@ public:
     {
         simName_ = (simName.empty())?"sim":simName;
         multiFileName_ = multiFileName;
-        if (multiFileName_.empty())
-            multiFileName_ = (boost::format("%s.pvd")%simName_).str();
+        if (multiFileName_.empty()) {
+            multiFileName_ = simName_;
+            multiFileName_ += ".pvd";
+        }
 
         writerNum_ = 0;
         commRank_ = 0;
@@ -245,15 +247,21 @@ public:
             std::string suffix = fileSuffix_();
             if (commSize_ == 1) {
                 fileName = curOutFileName_;
-                multiFile_ << (boost::format("   <DataSet timestep=\"%lg\" file=\"%s.%s\"/>\n")
-                               %curTime_%fileName%suffix);
+                multiFile_.precision(16);
+                multiFile_ << "   <DataSet timestep=\""
+                           << curTime_ 
+                           << "\" file=\""
+                           << fileName << "." << suffix << "\"/>\n";
             }
             if (commSize_ > 1 && commRank_ == 0)  {
                 // only the first process updates the multi-file
                 for (int part=0; part < commSize_; ++part) {
                     fileName = fileName_(part);
-                    multiFile_ << (boost::format("   <DataSet part=\"%d\" timestep=\"%lg\" file=\"%s.%s\"/>\n")
-                                   %part%curTime_%fileName%suffix);
+                    multiFile_.precision(16);
+                    multiFile_ << "   <DataSet "
+                               << " part=\"" << part << "\""
+                               << " timestep=\"" << curTime_ << "\""
+                               << " file=\"" << fileName << "." << suffix << "\"/>\n";
                 }
             }
 
@@ -283,19 +291,25 @@ public:
         res.serializeStream() << writerNum_ - 1 << "\n";
 
         if (commRank_ == 0) {
-            // write the meta file into the restart file
-            size_t filePos = multiFile_.tellp();
-            multiFile_.seekp(0, std::ios::end);
-            size_t fileLen = multiFile_.tellp();
-            multiFile_.seekp(filePos);
+            size_t fileLen = 0;
+            size_t filePos = 0;
+            if (multiFile_.is_open()) {
+                // write the meta file into the restart file
+                filePos = multiFile_.tellp();
+                multiFile_.seekp(0, std::ios::end);
+                fileLen = multiFile_.tellp();
+                multiFile_.seekp(filePos);
+            }
 
             res.serializeStream() << fileLen << "  " << filePos << "\n";
 
-            std::ifstream multiFileIn(multiFileName_.c_str());
-            char *tmp = new char[fileLen];
-            multiFileIn.read(tmp, fileLen);
-            res.serializeStream().write(tmp, fileLen);
-            delete[] tmp;
+            if (fileLen > 0) {
+                std::ifstream multiFileIn(multiFileName_.c_str());
+                char *tmp = new char[fileLen];
+                multiFileIn.read(tmp, fileLen);
+                res.serializeStream().write(tmp, fileLen);
+                delete[] tmp;
+            }
         }
     }
 
@@ -318,14 +332,17 @@ public:
             size_t filePos, fileLen;
             res.deserializeStream() >> fileLen >> filePos;
             std::getline(res.deserializeStream(), dummy);
-
-            multiFile_.close();
-            multiFile_.open(multiFileName_.c_str());
-
-            char *tmp = new char[fileLen];
-            res.deserializeStream().read(tmp, fileLen);
-            multiFile_.write(tmp, fileLen);
-            delete[] tmp;
+            if (multiFile_.is_open())
+                multiFile_.close();
+            
+            if (fileLen > 0) {
+                multiFile_.open(multiFileName_.c_str());
+                
+                char *tmp = new char[fileLen];
+                res.deserializeStream().read(tmp, fileLen);
+                multiFile_.write(tmp, fileLen);
+                delete[] tmp;
+            }
 
             multiFile_.seekp(filePos);
         }
