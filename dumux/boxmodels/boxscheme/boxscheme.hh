@@ -483,9 +483,9 @@ public:
 
     void resetJacobianAssembler ()
     {
-    	delete this->jacAsm_;
+    	delete jacAsm_;
 
-        this->jacAsm_ = new JacobianAssembler(this->asImp_(), this->problem_);
+        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
     }
 
 protected:

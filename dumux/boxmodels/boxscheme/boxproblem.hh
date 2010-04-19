@@ -161,7 +161,6 @@ public:
         asImp_()->writeCurrentResult_();
     };
 
-
     /*!
      * \brief This method is called by the model if the update to the
      *        next time step failed completely.
@@ -210,7 +209,11 @@ public:
      * \brief Called by the time manager after the time integration.
      */
     void timeStepEnd()
-    {}
+    {
+        // write restart file if necessary
+        if (asImp_()->shouldWriteRestartFile())
+            serialize();
+    }
 
     // \}
 
@@ -372,10 +375,6 @@ protected:
             model().addOutputVtkFields(resultWriter_);
             resultWriter_.endTimestep();
         }
-
-        // write restart file if necessary
-        if (asImp_()->shouldWriteRestartFile())
-            serialize();
     }
 
 private:
