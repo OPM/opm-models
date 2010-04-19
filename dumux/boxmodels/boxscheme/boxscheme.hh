@@ -275,12 +275,9 @@ public:
         {
             bool converged = solver.execute(this->asImp_(),
                                             controller);
-            if (converged && verbose_()) {
-                std::cout << boost::format("Newton solver converged for rank %d\n")
-                    %gridView_.comm().rank();
+            if (converged)
                 break;
-            }
-
+            
             ++numRetries;
             if (numRetries > 10) {
                 problem_.updateFailed();
