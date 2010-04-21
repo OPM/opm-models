@@ -67,6 +67,8 @@ protected:
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 
+    typedef TwoPTwoCFluidState<TypeTag> FluidState;
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
@@ -401,19 +403,24 @@ public:
      *         and get minimum and maximum values of primary variables
      *
      */
-    void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 4> &mass)
+    void calculateMass(const SolutionFunction &globalSol,
+		       Dune::FieldVector<Scalar, 2> &massGas,
+		       Dune::FieldVector<Scalar, 2> &massLiquid)
     {
-        ElementIterator elementIt = this->problem_.elementBegin();
-        ElementIterator endit = this->problem_.elementEnd();
-        unsigned numVertices = this->problem_.numVertices();
-        SolutionOnElement curSol(numVertices);
+        massGas = 0;
+        massLiquid = 0;
+
+        ElementIterator elementIt = this->model().gridView().template begin<0>();
+        ElementIterator endit = this->model().gridView().template end<0>();
+
+        SolutionOnElement curSol;
         VertexDataArray elemDat;
+	/*
         VertexData tmp;
         int state;
         Scalar vol, poro, rhoN, rhoW, satN, satW, xAW, xWW, xWN, xAN, pW, Te;
         Scalar massNComp(0.), massNCompNPhase(0.), massWComp(0.), massWCompWPhase(0.);
-
-        mass = 0;
+*/
         Scalar minSat = 1e100;
         Scalar maxSat = -1e100;
         Scalar minP = 1e100;
@@ -422,24 +429,34 @@ public:
         Scalar maxTe = -1e100;
         Scalar minX = 1e100;
         Scalar maxX = -1e100;
-
-        // Loop over elements
+        
+	// Loop over elements
         for (; elementIt != endit; ++elementIt)
         {
             setCurrentElement(*elementIt);
+
+            int numLocalVerts = elementIt->template count<dim>();
+	    curSol.resize(numLocalVerts);
+	    elemDat.resize(numLocalVerts);
             this->restrictToElement(curSol, globalSol);
             this->updateElementData_(elemDat, curSol, false);
             // get geometry type
 
-            int numLocalVerts = elementIt->template count<dim>();
 
             // Loop over element vertices
             for (int i = 0; i < numLocalVerts; ++i)
             {
-                int globalIdx = this->problem_.vertexIdx(*elementIt, i);
+  	        //int globalIdx = this->vertexMapper().map(*elementIt, i, dim);
 
-                vol = this->curElementGeom_.subContVol[i].volume;
-
+		const VertexData &vdat = elemDat[i];
+		const FluidState &fs = vdat.fluidState();
+                Scalar vol = this->curElementGeom_.subContVol[i].volume;
+		
+		Scalar satN = fs.saturation(gPhaseIdx);
+		Scalar xAW = fs.massFrac(lPhaseIdx, gCompIdx);
+		Scalar pW = fs.phasePressure(lPhaseIdx);
+		Scalar T = fs.temperature();
+		/*
                 poro = this->problem_.porosity(this->curElement_(), i);
                 rhoN = elemDat[i].density[gPhaseIdx];
                 rhoW = elemDat[i].density[lPhaseIdx];
@@ -455,7 +472,7 @@ public:
                 massNCompNPhase = vol * poro * satN * rhoN * xAN;
                 massWComp = vol * poro * (satW * rhoW * xWW + satN * rhoN * xWN);
                 massWCompWPhase = vol * poro * satW * rhoW * xWW;
-
+*/
                 // get minimum and maximum values of primary variables
                 minSat = std::min(minSat, satN);
                 maxSat = std::max(maxSat, satN);
@@ -463,19 +480,31 @@ public:
                 maxP = std::max(maxP, pW);
                 minX = std::min(minX, xAW);
                 maxX = std::max(maxX, xAW);
-                minTe = std::min(minTe, Te);
-                maxTe = std::max(maxTe, Te);
+                minTe = std::min(minTe, T);
+                maxTe = std::max(maxTe, T);
+                
+		// calculate total mass
+		Scalar mGas =
+		  vdat.porosity()
+		  * fs.saturation(gPhaseIdx)
+		  * fs.density(gPhaseIdx)
+		  * vol;	
+		massGas[lCompIdx] += mGas * fs.massFrac(gPhaseIdx, lCompIdx);
+		massGas[gCompIdx] += mGas * fs.massFrac(gPhaseIdx, gCompIdx);
 
-                // calculate total mass
-                mass[0] += massNComp;       // total mass of gas component
-                mass[1] += massNCompNPhase; // mass of gas component in gas phase
-                mass[2] += massWComp;       // total mass of liquid component
-                mass[3] += massWCompWPhase; // mass of liquid component in liquid phase
+		Scalar mLiquid =
+		  vdat.porosity()
+		  * fs.saturation(lPhaseIdx)
+		  * fs.density(lPhaseIdx)
+		  * vol;	
+		massLiquid[lCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, lCompIdx);
+		massLiquid[gCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, gCompIdx);
             }
         }
 
         // IF PARALLEL: mass calculation still needs to be adjusted
-        mass = this->gridView_.comm().sum(mass);
+//        massGas = this->gridView_.comm().sum(massGas);
+//        massLiquid = this->gridView_.comm().sum(massLiquid);
 
         if(this->gridView_.comm().rank() == 0) // IF PARALLEL: only print by processor with rank() == 0
         {
