@@ -197,21 +197,41 @@ class NewtonController
 	typedef NewtonConvergenceWriter<TypeTag, GET_PROP_VALUE(TypeTag, PTAG(NewtonWriteConvergence))>  ConvergenceWriter;
 
 public:
-	NewtonController(Scalar tolerance  = 1e-7, // maximum tolerated deflection between two iterations
-			int targetSteps   = 8,
-			int maxSteps      = 12)
+	NewtonController()
 	: endIterMsgStream_(std::ostringstream::out),
 	  convergenceWriter_(asImp_())
 	{
-		assert(maxSteps > targetSteps + 3);
-		numSteps_ = 0;
-		tolerance_ = tolerance;
-		targetSteps_ = targetSteps;
-		maxSteps_ = maxSteps;
+        numSteps_ = 0;
+
+        // maximum tolerated deflection between two iterations
+        setRelTolerance(1e-7);
+        setTargetSteps(8);
+        setMaxSteps(12);
 
 		curPhysicalness_ = 0;
 		maxPhysicalness_ = 0;
 	};
+
+    /*!
+     * \brief Set the relative deflection of any degree of freedom
+     *        between two iterations which is tolerated.
+     */
+    void setRelTolerance(Scalar tolerance)
+    { tolerance_ = tolerance; }
+
+    /*!
+     * \brief Set the number of iterations at which the Newton method
+     *        should aim at.
+     */
+    void setTargetSteps(int targetSteps)
+    { targetSteps_ = targetSteps; }
+
+    /*!
+     * \brief Set the number of iterations after which the Newton
+     *        method gives up.
+     */
+    void setMaxSteps(int maxSteps)
+    { maxSteps_ = maxSteps; }
 
 	/*!
 	* \brief Returns true iff another iteration should be done.
@@ -277,7 +297,7 @@ public:
 	* \brief Returns true iff the error of the solution is below the
 	*        tolerance.
 	*/
-	bool newtonConverged()
+	bool newtonConverged() const
 	{
 		return (error_ <= tolerance_) && (curPhysicalness_ >= 1.0);
 	}
@@ -322,14 +342,15 @@ public:
 		// deflection in any degree of freedom.
 		typedef typename SolutionFunction::BlockType FV;
 		error_ = 0;
+        
 		int idxI = -1;
 		int idxJ = -1;
 		for (int i = 0; i < int((*uOld).size()); ++i) {
 			for (int j = 0; j < FV::size; ++j) {
 				Scalar tmp
-				=
-						std::abs((*deltaU)[i][j])
-				/ std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
+                    =
+                    std::abs((*deltaU)[i][j])
+                    / std::max(std::abs((*uOld)[i][j]), Scalar(1e-4));
 				if (tmp > error_)
 				{
 				  idxI = i;
@@ -338,11 +359,6 @@ public:
 				error_ = std::max(error_, tmp);
 			}
 		}
-//		std::cout.flush();
-//		std::cout << method().model().gridView().comm().rank() << ": i = " << idxI << ", j = " << idxJ
-//		    << ", deltaU = " << (*deltaU)[idxI][idxJ] << ", uOld = " << (*uOld)[idxI][idxJ]
-//		    << ", err = " << error_ << std::endl;
-//                std::cout.flush();
 		error_ = model().gridView().comm().max(error_);
 	}
 
@@ -362,9 +378,9 @@ public:
 		// if the deflection of the newton method is large, we do not
 		// need to solve the linear approximation accurately. Assuming
 		// that the initial value for the delta vector u is quite
-		// close to the final value, a reduction of 4 orders of
+		// close to the final value, a reduction of 6 orders of
 		// magnitude in the defect should be sufficient...
-                Scalar residReduction = 1e-4;
+		Scalar residReduction = 1e-6;
 
 		try {
 		  solveLinear_(A, u, b, residReduction);

@@ -58,11 +58,12 @@ class TwoPTwoCNewtonController : public NewtonController<TypeTag>
     };
 
 public:
-    TwoPTwoCNewtonController(Scalar tolerance = 1e-7,
-                             int targetSteps = 9,
-                             int maxSteps = 18)
-        : ParentType(tolerance, targetSteps, maxSteps)
-    {};
+    TwoPTwoCNewtonController()
+    {
+        this->setRelTolerance(1e-7);
+        this->setTargetSteps(9);
+        this->setMaxSteps(18);
+    };
 
     //! Suggest a new time stepsize based either on the number of newton
     //! iterations required or on the variable switch
