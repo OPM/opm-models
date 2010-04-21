@@ -362,9 +362,9 @@ public:
 		// if the deflection of the newton method is large, we do not
 		// need to solve the linear approximation accurately. Assuming
 		// that the initial value for the delta vector u is quite
-		// close to the final value, a reduction of 6 orders of
-		// magnitute in the defect should be sufficient...
-		Scalar residReduction = 1e-10;
+		// close to the final value, a reduction of 4 orders of
+		// magnitude in the defect should be sufficient...
+                Scalar residReduction = 1e-4;
 
 		try {
 		  solveLinear_(A, u, b, residReduction);

@@ -321,7 +321,7 @@ public:
 		typedef Dune::SeqILU0<Matrix,SolVector,RhsVector> SeqPreCond;
 		Matrix B(A);
 		exchanger_.sumEntries(B);
-		SeqPreCond seqPreCond(B, 1.0);
+		SeqPreCond seqPreCond(B, 0.9);
 
 		typedef Dune::PDELab::NonoverlappingOperator<GridFunctionSpace,Matrix,SolVector,RhsVector> POP;
 		POP pop(gfs,A,phelper);

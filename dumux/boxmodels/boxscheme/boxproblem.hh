@@ -79,6 +79,10 @@ public:
                 bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
             }
         }
+        for (int i=0; i<dim; i++) {
+            bboxMin_[i] = gridView.comm().min(bboxMin_[i]);
+            bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
+        }
         model_ = new Model(*asImp_());
         newtonMethod_ = new NewtonMethod(*model_);
     }

@@ -90,7 +90,8 @@ public:
             for (int j = 0; j < FV::size; ++j) {
                 // calculate the relative error at the current vertex
                 // i and the current primary variable j
-                Scalar curErr = std::abs((*deltaU)[i][j] * weight[j]);
+//              Scalar curErr = std::abs((*deltaU)[i][j] * weight[j]);
+              Scalar curErr = std::abs((*deltaU)[i][j]/(1.0 + std::abs((*uOld)[i][j])));
 #if 0
                 // make sure that the specified tolerance is not below
                 // machine precision!
