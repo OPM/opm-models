@@ -181,6 +181,18 @@ public:
 
         this->localJacobian().deserializeEntity(inStream, vert);
     };
+
+    /*!
+     * \brief Calculates the total mass of all components in the
+     *        system.
+     */
+    void calculateMass(Dune::FieldVector<Scalar, 2> &massGas,
+		       Dune::FieldVector<Scalar, 2> &massLiquid)
+    {
+        this->localJacobian().calculateMass(this->curSolFunction(),
+					    massGas,
+					    massLiquid);
+    };
 };
 
 /**
