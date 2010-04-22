@@ -8,15 +8,17 @@ Include(DumuxMacros)
 
 DumuxSetup("METIS" "METIS" "METIS")
 
-set(MyIncludeSuffixes "include")
-set(MyLibSuffixes "build/Linux-x86_64/" "build/Linux-i686/" "GKlib/builds/Linux-x86_64/" "GKlib/builds/Linux-i686/")
+set(MyIncludeSuffixes "METISLib")
+#set(MyLibSuffixes "build/Linux-x86_64/" "build/Linux-i686/" "GKlib/builds/Linux-x86_64/" "GKlib/builds/Linux-i686/")
 
-DumuxAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}")
+#DumuxAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}")
+DumuxAddPathSuffixes("${MyIncludeSuffixes}" "")
 
 DumuxFindIncludeDir("metis.h")
 DumuxFindLibrary("metis")
-DumuxFindLibrary("GKlib")
+#DumuxFindLibrary("GKlib")
 
-DumuxRequiredLibsFound("metis" "GKlib")
+#DumuxRequiredLibsFound("metis" "GKlib")
+DumuxRequiredLibsFound("metis")
 DumuxIncludeDirsFound()
 DumuxCheckFound()
