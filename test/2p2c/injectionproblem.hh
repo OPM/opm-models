@@ -31,8 +31,9 @@
 #include <dumux/boxmodels/2p2c/2p2cboxmodel.hh>
 
 #include <dumux/new_material/fluidsystems/h2o_n2_system.hh>
+
 //#include <dumux/new_material/fluidsystems/brine_co2_system.hh>
-//#include <appl/co2-ifp/ifpco2tables.hh>
+//#include <appl/co2/ifp/ifpco2tables.hh>
 
 #include "injectionspatialparameters.hh"
 
@@ -76,7 +77,7 @@ SET_PROP(InjectionProblem, Problem)
 SET_PROP(InjectionProblem, 
               FluidSystem)
 {
-    //typedef Dumux::Brine_CO2_System<TypeTag, Dune::IFP::CO2Tables> type;
+    //typedef Dumux::Brine_CO2_System<TypeTag, Dumux::IFP::CO2Tables> type;
     typedef Dumux::H2O_N2_System<TypeTag> type;
 };
 
@@ -202,9 +203,9 @@ public:
         const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
 
         if (globalPos[0] < eps_)
-            values = BoundaryConditions::dirichlet;
+            values.setAllDirichlet();
         else
-            values = BoundaryConditions::neumann;
+            values.setAllNeumann();
     }
 
     /*!
@@ -308,9 +309,7 @@ private:
         values[Indices::plIdx] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
         values[Indices::SgOrXIdx] = 
             values[Indices::plIdx]*0.95/
-            FluidSystem::degasPressure(FluidSystem::N2Idx, 
-                                       temperature_,
-                                       values[Indices::plIdx]);
+            BinaryCoeff::H2O_N2::henry(temperature_);
     }
 
     static const Scalar temperature_ = 273.15 + 40; // [K]

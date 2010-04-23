@@ -537,16 +537,12 @@ public:
         ScalarField *pg =           writer.template createField<Scalar, 1>(numVertices);
         ScalarField *pl =           writer.template createField<Scalar, 1>(numVertices);
         ScalarField *pc =           writer.template createField<Scalar, 1>(numVertices);
-        ScalarField *pvap =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *rhoL =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *rhoG =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *mobL =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *mobG =         writer.template createField<Scalar, 1>(numVertices);
         ScalarField *temperature =  writer.template createField<Scalar, 1>(numVertices);
         ScalarField *phasePresence =writer.template createField<Scalar, 1>(numVertices);
-        ScalarField *ppart[numComponents];
-        for (int j = 0; j < numComponents; ++j) 
-            ppart[j] = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *massFrac[numPhases][numComponents];
         for (int i = 0; i < numPhases; ++i)
             for (int j = 0; j < numComponents; ++j) 
@@ -595,17 +591,10 @@ public:
                 (*pg)[globalIdx] = elemDat[i].pressure(gPhaseIdx);
                 (*pl)[globalIdx] = elemDat[i].pressure(lPhaseIdx);
                 (*pc)[globalIdx] = elemDat[i].capillaryPressure();
-                (*pvap)[globalIdx] = FluidSystem::degasPressure(0,
-                                                                elemDat[i].temperature(),
-                                                                elemDat[i].pressure(gPhaseIdx));
                 (*rhoL)[globalIdx] = elemDat[i].fluidState().density(lPhaseIdx);
                 (*rhoG)[globalIdx] = elemDat[i].fluidState().density(gPhaseIdx);;
                 (*mobL)[globalIdx] = elemDat[i].mobility(lPhaseIdx);
                 (*mobG)[globalIdx] = elemDat[i].mobility(gPhaseIdx);
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    (*ppart[compIdx])[globalIdx] = 
-                        elemDat[i].fluidState().partialPressure(compIdx);
-                }
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         (*massFrac[phaseIdx][compIdx]) [globalIdx] = 
@@ -685,12 +674,7 @@ public:
         writer.addVertexData(pg, "pg");
         writer.addVertexData(pl, "pl");
         writer.addVertexData(pc, "pc");
-        for (int j = 0; j < numComponents; ++j) {
-            std::string name
-                = (boost::format("pg%s")%FluidSystem::componentName(j)).str();
-            writer.addVertexData(ppart[j], name.c_str());
-        }
-        writer.addVertexData(rhoL, "rhoL");
+       writer.addVertexData(rhoL, "rhoL");
         writer.addVertexData(rhoG, "rhoG");
         writer.addVertexData(mobL, "mobL");
         writer.addVertexData(mobG, "mobG");
@@ -843,12 +827,8 @@ protected:
         if (phasePresence == gPhaseOnly)
         {
             // calculate mole fraction in the hypothetic liquid phase
-            Scalar xll = 
-                vertexData.fluidState().partialPressure(lCompIdx) /
-                vertexData.fluidState().beta(lCompIdx);
-            Scalar xlg = 
-                vertexData.fluidState().partialPressure(gCompIdx) /
-                vertexData.fluidState().beta(gCompIdx);
+            Scalar xll = vertexData.fluidState().moleFrac(lPhaseIdx, lCompIdx);
+            Scalar xlg = vertexData.fluidState().moleFrac(lPhaseIdx, gCompIdx);
             
             Scalar xlMax = 1.0;
             if (xll + xlg > xlMax)
@@ -876,27 +856,23 @@ protected:
         {
             // calculate fractions of the partial pressures in the
             // hypothetic gas phase
-            Scalar pgl = 
-                vertexData.fluidState().partialPressure(lCompIdx) / 
-                vertexData.pressure(gPhaseIdx);
-            Scalar pgg = 
-                vertexData.fluidState().partialPressure(gCompIdx) / 
-                vertexData.pressure(gPhaseIdx);
+            Scalar xgl = vertexData.fluidState().moleFrac(gPhaseIdx, lCompIdx);
+            Scalar xgg = vertexData.fluidState().moleFrac(gPhaseIdx, gCompIdx);
 
-            Scalar pgMax = 1.0;
-            if (pgl + pgg > pgMax)
+            Scalar xgMax = 1.0;
+            if (xgl + xgg > xgMax)
                 wouldSwitch = true;
             if (staticVertexDat_[globalIdx].wasSwitched)
-                pgMax *= 1.02;
+                xgMax *= 1.02;
 
             // if the sum of the mole fractions would be larger than
-            // 100%, liquid phase appears
-            if (pgl + pgg > pgMax)
+            // 100%, gas phase appears
+            if (xgl + xgg > xgMax)
             {
                 // gas phase appears
                 std::cout << "gas phase appears at vertex " << globalIdx
                           << ", coordinates: " << globalPos
-                          << ", (pgn + pgl)/pg: " << pgl + pgg
+                          << ", x_gl + x_gg: " << xgl + xgg
                           << std::endl;
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)

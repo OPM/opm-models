@@ -89,7 +89,15 @@ public:
     {
         Valgrind::CheckDefined(primaryVars);
 
+        Valgrind::SetUndefined(concentration_);
+        Valgrind::SetUndefined(totalConcentration_);
+        Valgrind::SetUndefined(avgMolarMass_);
+        Valgrind::SetUndefined(phasePressure_);
+        Valgrind::SetUndefined(temperature_);
+        Valgrind::SetUndefined(Sg_);
+
         temperature_ = temperature;
+        Valgrind::CheckDefined(temperature_);
         
         // extract non-wetting phase pressure
         if (phasePresence == gPhaseOnly)
@@ -120,99 +128,19 @@ public:
             phasePressure_[lPhaseIdx] = phasePressure_[gPhaseIdx] - pC;
         }
         else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
-
         Valgrind::CheckDefined(phasePressure_);
-        Valgrind::CheckDefined(temperature_);
-        Valgrind::CheckDefined(Sg_);
 
         // now comes the tricky part: calculate phase composition
         if (phasePresence == bothPhases) {
             // both phases are present, phase composition results from
             // the gas <-> liquid equilibrium.
-            Scalar pn = phasePressure_[gPhaseIdx];
-            Scalar beta0 = FluidSystem::degasPressure(lCompIdx, temperature_, pn);
-            Scalar beta1 = FluidSystem::degasPressure(gCompIdx, temperature_, pn);
-
-            // calculate _mole_ (!) fractions in wetting phase,
-            // mis-use the concentration_ array temporary storage
-            concentration_[lPhaseIdx][lCompIdx] = (pn - beta1)/(beta0 - beta1);
-            concentration_[lPhaseIdx][gCompIdx] = 1 - concentration_[lPhaseIdx][lCompIdx];
-
-            // calculate the partial pressures
-            partialPressure_[lCompIdx] = beta0*concentration_[lPhaseIdx][lCompIdx];
-            partialPressure_[gCompIdx] = beta1*concentration_[lPhaseIdx][gCompIdx];
-
-            // calculate the average molar mass of the wetting
-            // phase. keep in mind that concentration_ still stores
-            // the mole fractions at this point
-            avgMolarMass_[lPhaseIdx] = 
-                concentration_[lPhaseIdx][lCompIdx] * FluidSystem::molarMass(lCompIdx) +
-                concentration_[lPhaseIdx][gCompIdx] * FluidSystem::molarMass(gCompIdx);
-            
-            // temporarily set totalConcentration_ to 1, so that the
-            // moleFrac() and massFrac() methods return correct values
-            // which is a requisite of calculating the phase density
-            totalConcentration_[lPhaseIdx] = 1.0;
-            // ask the fluid system to calculate the density of the
-            // wetting phase
-            Scalar lPhaseDensity = 
-                FluidSystem::phaseDensity(lPhaseIdx,
-                                          temperature_,
-                                          phasePressure_[lPhaseIdx],
-                                          *this);
-            // calculate the real total concentration from the phase density
-            totalConcentration_[lPhaseIdx] = lPhaseDensity / avgMolarMass_[lPhaseIdx];
-
-            // finally undo the mis-use of concentration_ by
-            // converting the mole fractions into concentrations
-            concentration_[lPhaseIdx][lCompIdx] = 
-                concentration_[lPhaseIdx][lCompIdx] * totalConcentration_[lPhaseIdx];
-            concentration_[lPhaseIdx][gCompIdx] = 
-                concentration_[lPhaseIdx][gCompIdx] * totalConcentration_[lPhaseIdx];
-            
-            // now we deal with the gas phase. we already have the
-            // partial pressures, we now let the fluid system convert
-            // these to concentrations. Generally, this involves to
-            // resolve the gas' equation of state to the specific
-            // volume.
-            concentration_[gPhaseIdx][lCompIdx] = 
-                FluidSystem::componentDensity(gPhaseIdx,
-                                              lCompIdx,
-                                              temperature_, 
-                                              partialPressure_[lCompIdx])
-                /
-                FluidSystem::molarMass(lCompIdx);
-            concentration_[gPhaseIdx][gCompIdx] = 
-                FluidSystem::componentDensity(gPhaseIdx,
-                                              gCompIdx,
-                                              temperature_, 
-                                              partialPressure_[gCompIdx])
-                /
-                FluidSystem::molarMass(gCompIdx);
-
-            // Using the component concentrations, we can calculate
-            // the total concentration in the gas phase
-            totalConcentration_[gPhaseIdx] = 
-                concentration_[gPhaseIdx][lCompIdx] +
-                concentration_[gPhaseIdx][gCompIdx];
-            // the total concentration now allows us to calculate the
-            // average molar mass in the gas phase
-            avgMolarMass_[gPhaseIdx] = 
-                FluidSystem::molarMass(lCompIdx)*moleFrac(gPhaseIdx, lCompIdx) +
-                FluidSystem::molarMass(gCompIdx)*moleFrac(gPhaseIdx, gCompIdx);
-            
-            // make sure everything was initialized from a defined
-            // memory
-            Valgrind::CheckDefined(partialPressure_);
-            Valgrind::CheckDefined(concentration_);
-            Valgrind::CheckDefined(totalConcentration_);
-            Valgrind::CheckDefined(avgMolarMass_);
+            FluidSystem::computeEquilibrium(*this, -1);
         }
         else if (phasePresence == gPhaseOnly) {
             // only the gas phase is present, gas phase composition is
             // stored explicitly.
 
-            // extract _mass_ (!) fraction in the gas phase, misuse
+            // extract _mass_ (!) fractions in the gas phase, misuse
             // the concentration_ array for temporary storage
             concentration_[gPhaseIdx][lCompIdx] = primaryVars[switchIdx];
             concentration_[gPhaseIdx][gCompIdx] = 1 - concentration_[gPhaseIdx][lCompIdx];
@@ -227,168 +155,80 @@ public:
             concentration_[gPhaseIdx][lCompIdx] *= avgMolarMass_[gPhaseIdx]/M1;
             concentration_[gPhaseIdx][gCompIdx] *= avgMolarMass_[gPhaseIdx]/M2;
             
-            // temporary set the total concentration 1.0 to make the
-            // massFrac() and moleFrac() methods return correct values
+            // convert to real concentrations
             totalConcentration_[gPhaseIdx] = 1.0;
+            Scalar rhog = FluidSystem::phaseDensity(gPhaseIdx,
+                                                    temperature_,
+                                                    phasePressure_[gPhaseIdx], 
+                                                    *this);
+            totalConcentration_[gPhaseIdx] = rhog / avgMolarMass_[gPhaseIdx];
+            concentration_[gPhaseIdx][lCompIdx] *= totalConcentration_[gPhaseIdx];
+            concentration_[gPhaseIdx][gCompIdx] *= totalConcentration_[gPhaseIdx];
 
-            // ask the fluid system to calculate the partial pressures
-            // of the components. The FluidSystem calls
-            // setPartialPressure().
-            FluidSystem::computePartialPressures(temperature_,
-                                                 phasePressure_[gPhaseIdx],
-                                                 *this);
-
-            // Ask the fluid system for the total gas density
-            Scalar gPhaseDensity = 
-                FluidSystem::phaseDensity(gPhaseIdx,
-                                          temperature_,
-                                          phasePressure_[gPhaseIdx],
-                                          *this);
-            
-            // convert mole fractions to concentrations
-            concentration_[gPhaseIdx][lCompIdx] *= gPhaseDensity/avgMolarMass_[gPhaseIdx];
-            concentration_[gPhaseIdx][gCompIdx] *= gPhaseDensity/avgMolarMass_[gPhaseIdx];
-
-            // calculate the real total concentration
-            totalConcentration_[gPhaseIdx]  = concentration_[gPhaseIdx][lCompIdx];
-            totalConcentration_[gPhaseIdx] += concentration_[gPhaseIdx][gCompIdx];
-
-            ////////////////////////////////////////////////////////
-            // calculate values for the non-existing liquid phase. we
-            // need this for example for meaningful pressure potential
-            // gradients in the case where liquid is present in one cell
-            // and not pressent in the neighboring one.
-            ////////////////////////////////////////////////////////
-            Scalar beta0 = FluidSystem::degasPressure(lCompIdx,
-                                                      temperature_,
-                                                      phasePressure_[gPhaseIdx]);
-            Scalar beta1 = FluidSystem::degasPressure(gCompIdx,
-                                                      temperature_,
-                                                      phasePressure_[gPhaseIdx]);
-            concentration_[lPhaseIdx][lCompIdx] =
-                partialPressure_[lCompIdx] / beta0;
-            concentration_[lPhaseIdx][gCompIdx] =
-                partialPressure_[gCompIdx] / beta1;
-            // average molar mass in liquid "phase". keep in mind that
-            // concentration_[lPhase] stores the mole fractions at
-            // this point.
-            avgMolarMass_[lPhaseIdx]  = concentration_[lPhaseIdx][lCompIdx]*FluidSystem::molarMass(lCompIdx);
-            avgMolarMass_[lPhaseIdx] += concentration_[lPhaseIdx][gCompIdx]*FluidSystem::molarMass(gCompIdx);
-            avgMolarMass_[lPhaseIdx] /=
-                concentration_[lPhaseIdx][lCompIdx] + 
-                concentration_[lPhaseIdx][gCompIdx];
-
-            // set total concentration of liquid phase to 1, so that
-            // massFrac() and moleFrac() return meaningful values, and
-            // ask the fluid system to return the total density of the
-            // liquid phase
-            totalConcentration_[lPhaseIdx] = 1.0;
-            Scalar lPhaseDensity = FluidSystem::phaseDensity(lPhaseIdx,
-                                                             temperature_,
-                                                             phasePressure_[lPhaseIdx],
-                                                             *this);
-            // convert totalConcentration_ to the real value
-            totalConcentration_[lPhaseIdx] = lPhaseDensity/avgMolarMass_[lPhaseIdx];
-
-            // calculate the "real" concentrations in the non-existing
-            // liquid phase
-            concentration_[lPhaseIdx][lCompIdx] *= totalConcentration_[lPhaseIdx];
-            concentration_[lPhaseIdx][gCompIdx] *= totalConcentration_[lPhaseIdx];
-
-            // make sure everything was initialized from a defined
-            // memory
-            Valgrind::CheckDefined(partialPressure_);
-            Valgrind::CheckDefined(concentration_);
-            Valgrind::CheckDefined(totalConcentration_);
-            Valgrind::CheckDefined(avgMolarMass_);
+            // tell the fluid system to calculate the composition of
+            // the remaining phases
+            FluidSystem::computeEquilibrium(*this, gPhaseIdx);
         }
         else if (phasePresence == lPhaseOnly) {
-            // only the liquid phase is present, i.e. liquid phase
-            // composition is stored explicitly.
+            // only the gas phase is present, liquid phase composition is
+            // stored explicitly.
 
-            // extract _mass_ (!) fraction in the liquid phase, mis-use
+            // extract _mass_ (!) fractions in the liquid phase, misuse
             // the concentration_ array for temporary storage
             concentration_[lPhaseIdx][gCompIdx] = primaryVars[switchIdx];
             concentration_[lPhaseIdx][lCompIdx] = 1 - concentration_[lPhaseIdx][gCompIdx];
 
-            // calculate average molar mass of the liquid phase
             Scalar M1 = FluidSystem::molarMass(lCompIdx);
             Scalar M2 = FluidSystem::molarMass(gCompIdx);
-            Scalar X2 = concentration_[lPhaseIdx][gCompIdx]; // mass fraction of gas in liquid
+            Scalar X2 = concentration_[lPhaseIdx][gCompIdx]; // mass fraction of solvent in gas
             avgMolarMass_[lPhaseIdx] = M1*M2/(M2 + X2*(M1 - M2));
 
-            // convert mass fractions to mole fractions
+            // convert mass to mole fractions
             concentration_[lPhaseIdx][lCompIdx] *= avgMolarMass_[lPhaseIdx]/M1;
             concentration_[lPhaseIdx][gCompIdx] *= avgMolarMass_[lPhaseIdx]/M2;
-
-            // set the total concentration to 1 to make the moleFrac()
-            // and massFrac() methods return meaningful values
+            
+            // convert to real concentrations
             totalConcentration_[lPhaseIdx] = 1.0;
+            Scalar rhol = FluidSystem::phaseDensity(lPhaseIdx,
+                                                    temperature_,
+                                                    phasePressure_[lPhaseIdx], 
+                                                    *this);
+            totalConcentration_[lPhaseIdx] = rhol / avgMolarMass_[lPhaseIdx];
+            concentration_[lPhaseIdx][lCompIdx] *= totalConcentration_[lPhaseIdx];
+            concentration_[lPhaseIdx][gCompIdx] *= totalConcentration_[lPhaseIdx];
 
-            // ask the fluid system for the liquid density
-            Scalar lPhaseDensity = 
-                FluidSystem::phaseDensity(lPhaseIdx,
-                                          temperature_,
-                                          phasePressure_[lPhaseIdx],
-                                          *this);
-            
-            // convert mole fractions to concentrations
-            concentration_[lPhaseIdx][lCompIdx] *= lPhaseDensity/avgMolarMass_[lPhaseIdx];
-            concentration_[lPhaseIdx][gCompIdx] *= lPhaseDensity/avgMolarMass_[lPhaseIdx];
-            
-            // calculate the real total concentration
-            totalConcentration_[lPhaseIdx]  = concentration_[lPhaseIdx][lCompIdx];
-            totalConcentration_[lPhaseIdx] += concentration_[lPhaseIdx][gCompIdx];
-            
-            ////////////////////////////////////////////////////////
-            // calculate values for the non-existing gas phase. we
-            // need this for example for meaningful pressure potential
-            // gradients in the case where gas is present in one cell
-            // and not pressent in the neighboring one.
-            ////////////////////////////////////////////////////////
-            
-            // calculate partial pressures.
-            Scalar beta0 = FluidSystem::degasPressure(lCompIdx, temperature_, phasePressure_[gPhaseIdx]);
-            Scalar beta1 = FluidSystem::degasPressure(gCompIdx, temperature_, phasePressure_[gPhaseIdx]);
-            partialPressure_[lCompIdx] = beta0*moleFrac(lPhaseIdx, lCompIdx);
-            partialPressure_[gCompIdx] = beta1*moleFrac(lPhaseIdx, gCompIdx);
-            
-            // calculate concentrations in the (non-existing) gas
-            // phase by inverting each partial pressure
-            // individually. this assumes that dalton's law holds.
-            concentration_[gPhaseIdx][lCompIdx] = 
-                FluidSystem::componentDensity(gPhaseIdx,
-                                              lCompIdx,
-                                              temperature_, 
-                                              partialPressure_[lCompIdx])
-                /
-                FluidSystem::molarMass(lCompIdx);
-            concentration_[gPhaseIdx][gCompIdx] =
-                FluidSystem::componentDensity(gPhaseIdx,
-                                              gCompIdx,
-                                              temperature_, 
-                                              partialPressure_[gCompIdx])
-                /
-                FluidSystem::molarMass(gCompIdx);
-
-            // calculate the real total concentration in the gas phase
-            totalConcentration_[gPhaseIdx]  = concentration_[gPhaseIdx][lCompIdx];
-            totalConcentration_[gPhaseIdx] += concentration_[gPhaseIdx][gCompIdx];
-            
-            // average molar mass in gas phase.
-            avgMolarMass_[gPhaseIdx]  = moleFrac(gPhaseIdx, lCompIdx)*FluidSystem::molarMass(lCompIdx);
-            avgMolarMass_[gPhaseIdx] += moleFrac(gPhaseIdx, gCompIdx)*FluidSystem::molarMass(gCompIdx);
-
-            // make sure everything was initialized from a defined
-            // memory
-            Valgrind::CheckDefined(partialPressure_);
-            Valgrind::CheckDefined(concentration_);
-            Valgrind::CheckDefined(totalConcentration_);
-            Valgrind::CheckDefined(avgMolarMass_);
+            // tell the fluid system to calculate the composition of
+            // the remaining phases
+            FluidSystem::computeEquilibrium(*this, lPhaseIdx);
         }
+
+        Valgrind::CheckDefined(concentration_);
+        Valgrind::CheckDefined(totalConcentration_);
+        Valgrind::CheckDefined(avgMolarMass_);
+        Valgrind::CheckDefined(phasePressure_);
+        Valgrind::CheckDefined(temperature_);
+        Valgrind::CheckDefined(Sg_);
     }
 
 public:
+    /*!
+     * \brief Retrieves the phase composition and pressure from a
+     *        phase composition class.
+     *
+     * This method is called by the fluid system's
+     * computeEquilibrium()
+     */
+    template <class PhaseCompo>
+    void assignPhase(int phaseIdx, const PhaseCompo &compo)
+    {
+        avgMolarMass_[phaseIdx] = compo.meanMolarMass();
+        phasePressure_[phaseIdx] = compo.pressure();
+
+        totalConcentration_[phaseIdx] = compo.totalConcentration();
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            concentration_[phaseIdx][compIdx] = compo.concentration(compIdx);
+    };
+
     /*!
      * \brief Returns the saturation of a phase.
      */
@@ -450,22 +290,6 @@ public:
     { return avgMolarMass_[phaseIdx]; };
     
     /*!
-     * \brief Returns the partial pressure of a component in the gas phase [Pa].
-     */
-    Scalar partialPressure(int compIdx) const
-    { return partialPressure_[compIdx]; }
-
-    /*!
-     * \brief Set the partial pressure of a component in the gas phase
-     *        [Pa].
-     *
-     * This method is required in order to use
-     * FluidSystem::computePartialPressures().
-     */
-    void setPartialPressure(int compIdx, Scalar value)
-    { partialPressure_[compIdx] = value; }
-    
-    /*!
      * \brief Returns the pressure of a fluid phase [Pa].
      */
     Scalar phasePressure(int phaseIdx) const
@@ -486,15 +310,7 @@ public:
     Scalar temperature() const
     { return temperature_; };
 
-    /*!
-     * \brief Return henry coefficent or vapor pressure, depending on wether
-     *        the component is the solvent or a solute.
-     */
-    Scalar beta(int compIdx) const
-    { return partialPressure_[compIdx]/moleFrac(lPhaseIdx, compIdx); }
-
 public:
-    Scalar partialPressure_[numComponents];
     Scalar concentration_[numPhases][numComponents];
     Scalar totalConcentration_[numPhases];
     Scalar avgMolarMass_[numPhases];
