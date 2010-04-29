@@ -257,7 +257,7 @@ public:
      * \brief Returns true if the current episode is over.
      */
     bool episodeIsOver() const
-    { return time() >= episodeStartTime_ + (1-1e-6)*episodeLength(); }
+    { return time() >= episodeStartTime_ + (1 - 1e-14)*episodeLength(); }
 
 
     /*!
