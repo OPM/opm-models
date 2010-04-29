@@ -190,7 +190,7 @@ public:
      * In the corner case where the whole spline is flat, it returns
      * 2.
      */
-    int monotonical(Scalar x0, Scalar x1) const
+    int monotonic(Scalar x0, Scalar x1) const
     {
         assert(applies(x0));
         assert(applies(x1));
@@ -211,34 +211,34 @@ public:
         if (x_[i] <= x0 && x1 <= x_[i+1]) {
             // the interval to check is completely included in a
             // single segment
-            return monotonical_(i, x0, x1);
+            return monotonic_(i, x0, x1);
         }
 
         // make sure that the segments which are completly in the
         // interval [x0, x1] all exhibit the same monotonicity.
         int iEnd = findIntervalIdx_(x1);
-        int r = monotonical_(i, x0, x_[1]);
+        int r = monotonic_(i, x0, x_[1]);
         for (; i < iEnd - 1; ++i)
-            if (r != monotonical_(i, x_[i], x_[i + 1]))
+            if (r != monotonic_(i, x_[i], x_[i + 1]))
                 return 0;
         
         // check for the last segment
-        if (x_[iEnd] < x1 && r != monotonical_(iEnd, x_[iEnd], x1))
+        if (x_[iEnd] < x1 && r != monotonic_(iEnd, x_[iEnd], x1))
         { return 0; }
         
         return r;
     }
 
     /*!
-     * \brief Same as monotonical(x0, x1), but with the entire range of the
+     * \brief Same as monotonic(x0, x1), but with the entire range of the
      *        spline as interval.
      */
-    int monotonical() const
-    { return monotonical(x_[0], x_[numSamples - 1]); }
+    int monotonic() const
+    { return monotonic(x_[0], x_[numSamples - 1]); }
 
 private:
     // returns the monotonicality of an interval of a spline segment
-    int monotonical_(int i, Scalar x0, Scalar x1) const
+    int monotonic_(int i, Scalar x0, Scalar x1) const
     {
         // shift the interval so that it is consistent with the
         // definitions by Stoer
@@ -448,7 +448,7 @@ public:
      * In the corner case where the whole spline is flat, it returns
      * 2.
      */
-    int monotonical(Scalar x0, Scalar x1) const
+    int monotonic(Scalar x0, Scalar x1) const
     {
         // corner case: flat line
         if (a_ == 0 && b_ == 0 && c_ == 0)
