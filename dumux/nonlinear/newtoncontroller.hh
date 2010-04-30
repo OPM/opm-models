@@ -141,7 +141,7 @@ private:
 
 template <class TypeTag>
 struct NewtonConvergenceWriter<TypeTag, false>
-{ 
+{
 	typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 	typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonController)) NewtonController;
 
@@ -234,7 +234,7 @@ public:
     { maxSteps_ = maxSteps; }
 
 	/*!
-	* \brief Returns true iff another iteration should be done.
+	* \brief Returns true if another iteration should be done.
 	*/
 	bool newtonProceed(SolutionFunction &u)
 	{
