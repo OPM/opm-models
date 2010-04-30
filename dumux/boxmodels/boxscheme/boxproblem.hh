@@ -105,12 +105,11 @@ public:
      * uses Dumux::TimeManager::runSimulation() to do the actual
      * work.
      */
-    bool simulate(Scalar dtInitial, Scalar tEnd, Scalar aux)
+    bool simulate(Scalar dtInitial, Scalar tEnd)
     {
         // set the initial time step and the time where the simulation ends
         timeManager_.setEndTime(tEnd);
         timeManager_.setTimeStepSize(dtInitial);
-        asImp_()->setTSwitch(aux);
         timeManager_.runSimulation(*asImp_());
         return true;
     };
