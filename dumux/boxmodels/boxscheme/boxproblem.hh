@@ -105,11 +105,12 @@ public:
      * uses Dumux::TimeManager::runSimulation() to do the actual
      * work.
      */
-    bool simulate(Scalar dtInitial, Scalar tEnd)
+    bool simulate(Scalar dtInitial, Scalar tEnd, Scalar aux)
     {
         // set the initial time step and the time where the simulation ends
         timeManager_.setEndTime(tEnd);
         timeManager_.setTimeStepSize(dtInitial);
+        asImp_()->setTSwitch(aux);
         timeManager_.runSimulation(*asImp_());
         return true;
     };
@@ -372,7 +373,7 @@ protected:
             if (gridView().comm().rank() == 0)
                 std::cout << "Writing result file for current time step\n";
 
-            // calculate the time _after_ the time was updated 
+            // calculate the time _after_ the time was updated
             Scalar t = timeManager_.time() + timeManager_.timeStepSize();
             resultWriter_.beginTimestep(t,
                                         gridView());
