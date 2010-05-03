@@ -236,6 +236,58 @@ public:
     int monotonic() const
     { return monotonic(x_[0], x_[numSamples - 1]); }
 
+    /*!
+     * \brief Prints k tuples of the format (x, y, dx/dy, isMonotonic)
+     *        to stdout.
+     *
+     * If the spline does not apply for parts of [x0, x1] it is
+     * extrapolated using a straight line. The result can be inspected
+     * using the following commands:
+     *
+     ----------- snip -----------
+     ./yourProgramm > spline.csv
+     gnuplot
+     
+     gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
+     "spline.csv" using 1:3 w l ti "Derivative",          \
+     "spline.csv" using 1:4 w p ti "Monotonic"
+     ----------- snap -----------
+     */   
+    void printCSV(Scalar x0, Scalar x1, int k) const
+    {
+        const int n = numSamples - 1;
+        for (int i = 0; i <= k; ++i) {
+            double x = i*(x1 - x0)/k + x0;
+            double x_p1 = x + (x1 - x0)/k;
+            double y;
+            double dy_dx;
+            double mono = 1;
+            if (!applies(x)) {
+                if (x < 0) {
+                    dy_dx = evalDerivative(x_[0]);
+                    y = (x - x_[0])*dy_dx + y_[0];
+                    mono = (dy_dx>0)?1:-1;
+                }
+                else if (x > x_[n]) {
+                    dy_dx = evalDerivative(x_[n]);
+                    y = (x - x_[n])*dy_dx + y_[n];
+                    mono = (dy_dx>0)?1:-1;
+                }
+                else {
+                    std::cerr << "ooops: " << x << "\n";
+                    exit(1);
+                }
+            }
+            else {
+                y = eval(x);
+                dy_dx = evalDerivative(x);
+                mono = monotonic(std::max(x_[0], x), std::min(x_[n], x_p1));
+            }
+            
+            std::cout << x << " " << y << " " << dy_dx << " " << mono << "\n";
+        }
+    }
+
 private:
     // returns the monotonicality of an interval of a spline segment
     int monotonic_(int i, Scalar x0, Scalar x1) const
@@ -497,6 +549,57 @@ public:
      */
     int monotonic() const
     { return monotonic(x1_, x2_); }
+
+    /*!
+     * \brief Prints k tuples of the format (x, y, dx/dy, isMonotonic)
+     *        to stdout.
+     *
+     * If the spline does not apply for parts of [x0, x1] it is
+     * extrapolated using a straight line. The result can be inspected
+     * using the following commands:
+     *
+     ----------- snip -----------
+     ./yourProgramm > spline.csv
+     gnuplot
+     
+     gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
+     "spline.csv" using 1:3 w l ti "Derivative",          \
+     "spline.csv" using 1:4 w p ti "Monotonic"
+     ----------- snap -----------
+     */   
+    void printCSV(Scalar x0, Scalar x1, int k) const
+    {
+        for (int i = 0; i <= k; ++i) {
+            double x = i*(x1 - x0)/k + x0;
+            double x_p1 = x + (x1 - x0)/k;
+            double y;
+            double dy_dx;
+            double mono = 1;
+            if (!applies(x)) {
+                if (x < 0) {
+                    dy_dx = evalDerivative(x1_);
+                    y = (x - x1_)*dy_dx + eval(x1_);
+                    mono = (dy_dx>0)?1:-1;
+                }
+                else if (x > x2_) {
+                    dy_dx = evalDerivative(x2_);
+                    y = (x - x2_)*dy_dx + eval(x2_);
+                    mono = (dy_dx>0)?1:-1;
+                }
+                else {
+                    std::cerr << "ooops: " << x << "\n";
+                    exit(1);
+                }
+            }
+            else {
+                y = eval(x);
+                dy_dx = evalDerivative(x);
+                mono = monotonic(std::max(x1_, x), std::min(x2_, x_p1));
+            }
+            
+            std::cout << x << " " << y << " " << dy_dx << " " << mono << "\n";
+        }
+    }
 
 private:
     Scalar a_;
