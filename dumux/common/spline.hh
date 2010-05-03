@@ -486,6 +486,18 @@ public:
         return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;       
     };
 
+    /*!
+     * \brief Returns 1 if the spline is monotonically increasing, -1
+     *        if the spline is mononously decreasing and 0 if the
+     *        spline is not monotonous over the whole interval where
+     *        it applies.
+     *
+     * In the corner case where the whole spline is flat, it returns
+     * 2.
+     */
+    int monotonic() const
+    { return monotonic(x1_, x2_); }
+
 private:
     Scalar a_;
     Scalar b_;
