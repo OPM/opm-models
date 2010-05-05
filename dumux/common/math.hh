@@ -31,9 +31,20 @@ namespace Dumux
 template <class Scalar>
 Scalar harmonicMean(Scalar x, Scalar y)
 {
-    if (x == 0 || y == 0)
+    if (x*y <= 0)
         return 0;
     return (2*x*y)/(x + y);
+}
+
+/*!
+ * \brief Calculate the geometric mean of two scalar values.
+ */
+template <class Scalar>
+Scalar geometricMean(Scalar x, Scalar y)
+{
+    if (x*y <= 0)
+        return 0;
+    return std::sqrt(x*y)*((x < 0)?-1:1);
 }
 
 /*!
