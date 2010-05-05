@@ -662,10 +662,7 @@ protected:
     Scalar numericEpsilon_(const SolutionOnElement &elemSol,
                            int vertIdx,
                            int pvIdx) const
-    {
-        return std::max(fabs(1e-9*elemSol[vertIdx][pvIdx]), 1e-9);
-        //return std::max(std::abs(1e-9*elemSol[vertIdx][pvIdx]), Scalar(1e-12));
-    }
+    { return 1e-9*(std::abs(elemSol[vertIdx][pvIdx]) + 1); }
 
     /*!
      * \brief Updates the current local stiffness matrix with the
