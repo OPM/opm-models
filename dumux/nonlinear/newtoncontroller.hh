@@ -39,10 +39,8 @@
 
 #include <dumux/pardiso/pardiso.hh>
 
-#if HAVE_DUNE_PDELAB
 #include <dumux/boxmodels/pdelab/preconditionerpdelab.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
-#endif
 
 
 namespace Dumux
