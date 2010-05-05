@@ -63,6 +63,14 @@ public:
     {
         set(x, y, m0, m1);
     }
+
+    Spline(const Scalar *x,
+           const Scalar *y,
+           Scalar m0,
+           Scalar m1)
+    {
+        set(x, y, m0, m1);
+    }
     
     /*!
      * \brief Set the sampling points and the boundary slopes of the
@@ -114,7 +122,21 @@ public:
         // solve for the moments
         M.solve(moments_, d);   
     }
-    
+
+    /*!
+     * \brief Set the sampling points and the boundary slopes of the
+     *        spline function.
+     */
+    void set(const Scalar *x,
+             const Scalar *y,
+             Scalar m0,
+             Scalar m1)
+    {
+        set(toFieldVector_(x),
+            toFieldVector_(y),
+            m0, m1);
+    };
+
     /*!
      * \brief Return true iff the given x is in range [x1, xn].
      */
@@ -371,6 +393,9 @@ private:
     Scalar d_(int i) const
     { return y_[i]; }
 
+    const FieldVector &toFieldVector_(const Scalar *v) const
+    { return *reinterpret_cast<const FieldVector*>(v); };
+
     FieldVector moments_; // moments
     FieldVector x_; // x positions of the sampling points
     FieldVector y_; // y positions of the sampling points
@@ -414,6 +439,14 @@ public:
            Scalar m2)
     { set(x, y, m1, m2); }
 
+    Spline(const Scalar *x,
+           const Scalar *y,
+           Scalar m0,
+           Scalar m1)
+    {
+        set(x, y, m0, m1);
+    }
+
     /*!
      * \brief Set the parameters of the spline.
      *
@@ -425,6 +458,18 @@ public:
              Scalar m1,
              Scalar m2)
     { set(x[0], x[1], y[0], y[1], m1, m2); }
+
+    /*!
+     * \brief Set the parameters of the spline.
+     *
+     * This method is the same as in the generic case of more than 2
+     * sampling points.
+     */
+    void set(const Scalar *x,
+             const Scalar *y,
+             Scalar m1,
+             Scalar m2)
+    { set(x[0], x[1], y[0], y[1], m1, m2); };
     
     /*!
      * \brief Set the parameters of the spline.
