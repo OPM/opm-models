@@ -188,7 +188,7 @@ public:
 
         flux = 0;
         asImp_()->computeAdvectiveFlux(flux, vars);
-        //asImp_()->computeDiffusiveFlux(flux, vars);
+        asImp_()->computeDiffusiveFlux(flux, vars);
 
         // the face normal points into the outward direction, so we
         // have to multiply all fluxes with -1
@@ -243,21 +243,17 @@ public:
     {
         // add diffusive flux of gas component in liquid phase
         Scalar tmp =
-            vars.porousDiffCoeff(lPhaseIdx) * vars.densityAtIP(lPhaseIdx) *
-            (vars.concentrationGrad(lPhaseIdx)*vars.face().normal);
-        flux[contiGEqIdx] += tmp;
-        flux[contiLEqIdx] -= tmp;
+            - vars.porousDiffCoeff(lPhaseIdx) * vars.molarDensityAtIP(lPhaseIdx) *
+            (vars.molarConcGrad(lPhaseIdx)*vars.face().normal);
+        flux[contiGEqIdx] += tmp * FluidSystem::molarMass(gCompIdx);
+        flux[contiLEqIdx] -= tmp * FluidSystem::molarMass(lCompIdx);;
 
         // add diffusive flux of liquid component in gas phase
-        tmp = vars.porousDiffCoeff(gPhaseIdx) * vars.densityAtIP(gPhaseIdx) *
-            (vars.concentrationGrad(gPhaseIdx)*vars.face().normal);;
-        flux[contiLEqIdx] += tmp;
-        flux[contiGEqIdx] -= tmp;
-
-        // TODO: the diffusive flux of the liquid component in the
-        // liquid phase does rarly exhibit the same mass as the flux
-        // of the gas component, which means that it is not
-        // equivalent to -tmp.
+        tmp =
+        	- vars.porousDiffCoeff(gPhaseIdx) * vars.molarDensityAtIP(gPhaseIdx) *
+            (vars.molarConcGrad(gPhaseIdx)*vars.face().normal);
+        flux[contiLEqIdx] += tmp * FluidSystem::molarMass(lCompIdx);
+        flux[contiGEqIdx] -= tmp * FluidSystem::molarMass(gCompIdx);
     }
 
     /*!

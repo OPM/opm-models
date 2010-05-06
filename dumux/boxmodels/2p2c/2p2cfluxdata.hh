@@ -91,6 +91,7 @@ public:
             densityAtIP_[phaseIdx] = Scalar(0);
             potentialGrad_[phaseIdx] = Scalar(0);
             concentrationGrad_[phaseIdx] = Scalar(0);
+            molarConcGrad_[phaseIdx] = Scalar(0);
         }
 
         calculateGradients_(problem, element, elemDat);
@@ -125,6 +126,12 @@ private:
                     +=
                     elemDat[idx].density(phaseIdx) *
                     face().shapeValue[idx];
+
+                // phase density
+                molarDensityAtIP_[phaseIdx]
+                    +=
+                    elemDat[idx].molarDensity(phaseIdx) *
+                    face().shapeValue[idx];
             }
 
             // the concentration gradient of the non-wetting
@@ -133,11 +140,19 @@ private:
             tmp *= elemDat[idx].fluidState().massFrac(lPhaseIdx, gCompIdx);
             concentrationGrad_[lPhaseIdx] += tmp;
 
+            tmp = feGrad;
+            tmp *= elemDat[idx].fluidState().moleFrac(lPhaseIdx, gCompIdx);
+            molarConcGrad_[lPhaseIdx] += tmp;
+
             // the concentration gradient of the wetting component
             // in the non-wetting phase
             tmp = feGrad;
             tmp *= elemDat[idx].fluidState().massFrac(gPhaseIdx, lCompIdx);
             concentrationGrad_[gPhaseIdx] += tmp;
+
+            tmp = feGrad;
+            tmp *= elemDat[idx].fluidState().moleFrac(gPhaseIdx, lCompIdx);
+            molarConcGrad_[gPhaseIdx] += tmp;
         }
 
         // correct the pressure gradients by the hydrostatic
@@ -270,10 +285,23 @@ public:
     { return densityAtIP_[phaseIdx]; }
 
     /*!
+     * \brief Return molar density [mol/m^3] of a phase at the integration
+     *        point.
+     */
+    Scalar molarDensityAtIP(int phaseIdx) const
+    { return molarDensityAtIP_[phaseIdx]; }
+
+    /*!
      * \brief The concentration gradient of a component in a phase.
      */
     const Vector &concentrationGrad(int phaseIdx) const
     { return concentrationGrad_[phaseIdx]; };
+
+    /*!
+     * \brief The molar concentration gradient of a component in a phase.
+     */
+    const Vector &molarConcGrad(int phaseIdx) const
+    { return molarConcGrad_[phaseIdx]; };
 
     const SCVFace &face() const
     { return fvElemGeom_.subContVolFace[scvfIdx_]; }
@@ -285,9 +313,10 @@ protected:
     // gradients
     Vector potentialGrad_[numPhases];
     Vector concentrationGrad_[numPhases];
+    Vector molarConcGrad_[numPhases];
 
     // density of each face at the integration point
-    Scalar densityAtIP_[numPhases];
+    Scalar densityAtIP_[numPhases], molarDensityAtIP_[numPhases];
 
     // intrinsic permeability times pressure potential gradient
     // projected on the face normal

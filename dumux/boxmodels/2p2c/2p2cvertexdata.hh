@@ -132,7 +132,7 @@ public:
 
                 // binary diffusion coefficents
                 diffCoeff_[phaseIdx] = 
-                    FluidSystem::diffCoeff(lPhaseIdx, 
+                    FluidSystem::diffCoeff(phaseIdx,
                                            lCompIdx,
                                            gCompIdx,
                                            fluidState_.temperature(),
@@ -181,6 +181,13 @@ public:
      */
     Scalar density(int phaseIdx) const
     { return fluidState_.density(phaseIdx); }
+
+    /*!
+     * \brief Returns the mass density of a given phase within the
+     *        control volume.
+     */
+    Scalar molarDensity(int phaseIdx) const
+    { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
 
     /*!
      * \brief Returns the effective pressure of a given phase within
