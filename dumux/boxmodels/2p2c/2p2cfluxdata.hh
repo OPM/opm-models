@@ -29,6 +29,7 @@
 #define DUMUX_2P2C_FLUX_DATA_HH
 
 #include <dumux/common/math.hh>
+#include <dumux/common/spline.hh>
 
 namespace Dumux
 {
@@ -122,12 +123,6 @@ private:
                 potentialGrad_[phaseIdx] += tmp;
 
                 // phase density
-                densityAtIP_[phaseIdx]
-                    +=
-                    elemDat[idx].density(phaseIdx) *
-                    face().shapeValue[idx];
-
-                // phase density
                 molarDensityAtIP_[phaseIdx]
                     +=
                     elemDat[idx].molarDensity(phaseIdx) *
@@ -159,11 +154,38 @@ private:
         // pressure due to gravity
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
+            int i = face().i;
+            int j = face().j;
+            Scalar fI = rhoFactor_(phaseIdx, i, elemDat);
+            Scalar fJ = rhoFactor_(phaseIdx, j, elemDat);
+            if (fI + fJ == 0)
+                fI = fJ = 0.5; // doesn't matter because no phase is
+                               // present in both cells!
+            densityAtIP_[phaseIdx] =
+                (fI*elemDat[i].density(phaseIdx) + 
+                 fJ*elemDat[j].density(phaseIdx))
+                /
+                (fI + fJ);
             tmp = problem.gravity();
             tmp *= densityAtIP_[phaseIdx];
 
             potentialGrad_[phaseIdx] -= tmp;
         }
+    }
+
+    Scalar rhoFactor_(int phaseIdx, int scvIdx, const VertexDataArray &vDat)
+    {
+        static const Scalar eps = 1e-2;
+        const Scalar sat = vDat[scvIdx].density(phaseIdx);
+        if (sat > eps)
+            return 0.5;
+        if (sat <= 0)
+            return 0;
+
+        static const Dumux::Spline<Scalar> sp(0, eps, // x0, x1
+                                              0, 0.5, // y0, y1
+                                              0, 0); // m0, m1
+        return sp.eval(sat);
     }
 
     void calculateVelocities_(const Problem &problem,
