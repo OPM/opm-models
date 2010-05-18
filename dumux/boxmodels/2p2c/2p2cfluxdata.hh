@@ -121,12 +121,6 @@ private:
                 tmp = feGrad;
                 tmp *= elemDat[idx].pressure(phaseIdx);
                 potentialGrad_[phaseIdx] += tmp;
-
-                // phase density
-                molarDensityAtIP_[phaseIdx]
-                    +=
-                    elemDat[idx].molarDensity(phaseIdx) *
-                    face().shapeValue[idx];
             }
 
             // the concentration gradient of the non-wetting
@@ -166,6 +160,14 @@ private:
                  fJ*elemDat[j].density(phaseIdx))
                 /
                 (fI + fJ);
+            // phase density
+            molarDensityAtIP_[phaseIdx]
+                =
+                (fI*elemDat[i].molarDensity(phaseIdx) + 
+                 fJ*elemDat[j].molarDensity(phaseIdx))
+                /
+                (fI + fJ);
+
             tmp = problem.gravity();
             tmp *= densityAtIP_[phaseIdx];
 
