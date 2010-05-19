@@ -90,6 +90,7 @@ public:
         
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             densityAtIP_[phaseIdx] = Scalar(0);
+            molarDensityAtIP_[phaseIdx] = Scalar(0);
             potentialGrad_[phaseIdx] = Scalar(0);
             concentrationGrad_[phaseIdx] = Scalar(0);
             molarConcGrad_[phaseIdx] = Scalar(0);
@@ -133,8 +134,8 @@ private:
             tmp *= elemDat[idx].fluidState().moleFrac(lPhaseIdx, gCompIdx);
             molarConcGrad_[lPhaseIdx] += tmp;
 
-            // the concentration gradient of the wetting component
-            // in the non-wetting phase
+//            // the concentration gradient of the wetting component
+//            // in the non-wetting phase
             tmp = feGrad;
             tmp *= elemDat[idx].fluidState().massFrac(gPhaseIdx, lCompIdx);
             concentrationGrad_[gPhaseIdx] += tmp;
@@ -254,13 +255,9 @@ private:
                 pow(vDat_j.porosity() * vDat_j.saturation(phaseIdx), 7.0/3);
             // Diffusion coefficient in the porous medium
 
-            // -> arithmetic mean
-            porousDiffCoeff_[phaseIdx]
-                = 1./2*(vDat_i.porosity() * vDat_i.saturation(phaseIdx) * tau_i * vDat_i.diffCoeff(phaseIdx) +
-                        vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
             // -> harmonic mean
-            // = harmonicMean_(vDat_i.porosity * vDat_i.saturation[phaseIdx] * tau_i * vDat_i.diffCoeff[phaseIdx],
-            //                 vDat_j.porosity * vDat_j.saturation[phaseIdx] * tau_j * vDat_j.diffCoeff[phaseIdx]);
+            porousDiffCoeff_[phaseIdx] = harmonicMean(vDat_i.porosity() * vDat_i.saturation(phaseIdx) * tau_i * vDat_i.diffCoeff(phaseIdx),
+										 vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
 
         }
     }
