@@ -25,6 +25,7 @@ class BoxDirichletConstraints // : public Dune::PDELab::ConformingDirichletConst
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
 
 	enum {numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     enum {dim = GridView::dimension};
@@ -56,10 +57,11 @@ public:
                    const LFS& lfs,
                    T& trafo) const
     {
-		const Element& element = *(ig.inside());
+        const ElementPointer& elementPointer = ig.inside();
         FVElementGeometry fvElemGeom(problem_.gridView());
-        fvElemGeom.update(element);
-		BoundaryTypeVector bcTypes;
+
+        fvElemGeom.update(*elementPointer);
+        BoundaryTypeVector bcTypes;
 
         //problem_.boundaryTypes(values, element, fvElemGeom, ig.intersection(), scvIdx, boundaryFaceIdx);
         //typename F::Traits::RangeType bctype;
@@ -80,7 +82,7 @@ public:
             int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(face, faceVertIdx);
             
             bcTypes.reset();
-            problem_.boundaryTypes(bcTypes, element, fvElemGeom, ig.intersection(), elemVertIdx, boundaryFaceIdx);
+            problem_.boundaryTypes(bcTypes, *elementPointer, fvElemGeom, ig.intersection(), elemVertIdx, boundaryFaceIdx);
             bcTypes.checkWellPosed();
             
             for (std::size_t i = 0; i < lfs.localFiniteElement().localCoefficients().size(); i++) {
