@@ -51,7 +51,7 @@ NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxTwoPTwoC));
 // Set the grid type
 SET_PROP(InjectionProblem, Grid)
 {
-    typedef Dune::YaspGrid<2> type;
+    typedef Dune::SGrid<2,2> type;
 };
 
 #ifdef HAVE_DUNE_PDELAB
