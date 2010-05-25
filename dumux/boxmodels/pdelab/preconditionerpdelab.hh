@@ -157,9 +157,10 @@ public:
     			typename std::map<IdType,int>::const_iterator it = gid2Index_.find(m.first);
     			if (it != gid2Index_.end())
     			{
-//    		    	std::cout << gridView_.comm().rank() << ": node " << i << " adds " << m.second
-//    		    			<< " to j = " << it->second << ", GID = " << m.first << std::endl;
-    				A_[i][it->second] += m.second;
+//    			    std::cout << gridView_.comm().rank() << ": node " << i << " adds " << m.second
+//    			            << " to j = " << it->second << ", GID = " << m.first << std::endl;
+    			    if (A_[i].find(it->second) != A_[i].end())
+    			        A_[i][it->second] += m.second;
     			}
     		}
     }
