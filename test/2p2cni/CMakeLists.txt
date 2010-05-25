@@ -1,8 +1,6 @@
-add_definitions(-DENABLE_ALUGRID -DENABLE_UG)
+add_definitions(-DENABLE_UG)
 
-#ADD_EXECUTABLE("test_2p2cni" test_2p2cni.cc)
-#TARGET_LINK_LIBRARIES("test_2p2cni" ${DumuxLinkLibraries})
-
+# build target for the 2p2cni test problem
 ADD_EXECUTABLE("test_2p2cni" test_2p2cni.cc)
 TARGET_LINK_LIBRARIES("test_2p2cni" ${DumuxLinkLibraries})
 
