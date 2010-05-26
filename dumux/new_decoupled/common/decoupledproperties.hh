@@ -62,7 +62,6 @@ NEW_PROP_TAG( Problem); //!< The type of the problem
 NEW_PROP_TAG( Model); //!< The type of the discretizations
 NEW_PROP_TAG( NumPhases); //!< Number of phases in the system
 NEW_PROP_TAG( Variables); //!< The type of the container of global variables
-NEW_PROP_TAG( Communication); //!< The type of communication needed for the mimetic operator
 NEW_PROP_TAG( LocalStiffness); //!< The type of communication needed for the mimetic operator
 }
 }
@@ -132,15 +131,6 @@ public:
 //////////////////////////////////////////////////////////////////
 
 SET_TYPE_PROP(DecoupledModel, Variables, VariableClass<TypeTag>);
-
-SET_PROP_DEFAULT(Communication)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
-
-public:
-    typedef LeafCommunicateCR<Grid> type;
-};
 
 SET_PROP_DEFAULT(LocalStiffness)
 {

@@ -104,10 +104,9 @@ template<class TypeTag> class MimeticPressure2P
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalStiffness)) LocalStiffness;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Communication)) Communication;
-    typedef CRFunction<Grid,Scalar,GridView,Communication,1> TraceType;
+    typedef Dune::BlockVector< Dune::FieldVector<Scalar, 1> > TraceType;
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 2*dim> > NormalVelType;
-    typedef MimeticOperatorAssembler<Grid,Scalar,GridView,Communication,1> OperatorAssembler;
+    typedef MimeticOperatorAssembler<Grid,Scalar,GridView,1> OperatorAssembler;
 
     typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
     typedef Dune::BCRSMatrix<MB> Matrix;
@@ -198,11 +197,11 @@ public:
      * \param satType a string giving the type of saturation used (could be: Sw, Sn)
      */
     MimeticPressure2P(Problem& problem) :
-    problem_(problem), comm_(problem.gridView().grid()),
-    pressTrace_(problem.gridView().grid(), problem.gridView(), comm_),
+    problem_(problem),
+    pressTrace_(problem.gridView().size(1)),
     normalVelocity_(problem.gridView().size(0)),
-    f_(problem.gridView().grid(), problem.gridView(), comm_),
-    A_(problem.gridView().grid(), problem.gridView(), comm_),
+    f_(problem.gridView().size(1)),
+    A_(problem.gridView().grid(), problem.gridView()),
     solverName_("BiCGSTAB"), preconditionerName_("SeqILU0")
     {
         if (pressureType != pglobal)
@@ -225,11 +224,11 @@ public:
      * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: Dune::SeqILU0, SeqPardiso)
      */
     MimeticPressure2P(Problem& problem, std::string solverName, std::string preconditionerName) :
-    problem_(problem), comm_(problem.gridView().grid()),
-    pressTrace_(problem.gridView().grid(), problem.gridView(), comm_),
+    problem_(problem),
+    pressTrace_(problem.gridView().size(1)),
     normalVelocity_(problem.gridView().size(0)),
-    f_(problem.gridView().grid(), problem.gridView(), comm_),
-    A_(problem.gridView().grid(), problem.gridView(), comm_),
+    f_(problem.gridView().size(1)),
+    A_(problem.gridView().grid(), problem.gridView()),
     solverName_(solverName), preconditionerName_(preconditionerName)
     {
         if (pressureType != pglobal)
@@ -244,7 +243,6 @@ public:
 
 private:
     Problem& problem_;
-    Communication comm_;
     TraceType pressTrace_; //!< vector of pressure traces
     NormalVelType normalVelocity_;
     TraceType f_;
@@ -262,8 +260,8 @@ void MimeticPressure2P<TypeTag>::solve()
 {
     std::cout << "MimeticPressure2P: solve for pressure" << std::endl;
 
-    typedef typename CRFunction<Grid,Scalar,GridView,Communication,1>::RepresentationType Vector;
-    typedef typename CROperatorAssembler<Grid,Scalar,GridView,Communication,1>::RepresentationType Matrix;
+    typedef TraceType Vector;
+    typedef typename CROperatorAssembler<Grid,Scalar,GridView,1>::RepresentationType Matrix;
     typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
 
     Operator op(*A_);
@@ -278,12 +276,12 @@ void MimeticPressure2P<TypeTag>::solve()
         if (solverName_ == "CG")
         {
             Dune::CGSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(*pressTrace_, *f_, result);
+            solver.apply(pressTrace_, f_, result);
         }
         else if (solverName_ == "BiCGSTAB")
         {
             Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(*pressTrace_, *f_, result);
+            solver.apply(pressTrace_, f_, result);
         }
         else
             DUNE_THROW(Dune::NotImplemented, "MimeticPressure2P :: solve : combination "
@@ -295,7 +293,7 @@ void MimeticPressure2P<TypeTag>::solve()
         if (solverName_ == "Loop")
         {
             Dune::LoopSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(*pressTrace_, *f_, result);
+            solver.apply(pressTrace_, f_, result);
         }
         else
             DUNE_THROW(Dune::NotImplemented, "MimeticPressure2P :: solve : combination "
