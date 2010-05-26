@@ -34,7 +34,7 @@
 #include <dumux/new_decoupled/2p/diffusion/mimetic/mimeticpressure2p.hh>
 
 
-#include "test_2p_spatialparams.hh"
+#include "test_diffusion_spatialparams.hh"
 
 namespace Dumux
 {
@@ -57,18 +57,11 @@ SET_PROP(DiffusionTestProblem, Grid)
 };
 
 // Set the problem property
-SET_PROP(DiffusionTestProblem, Problem)
-{
-public:
-    typedef Dumux::TestDiffusionProblem<TTAG(DiffusionTestProblem)> type;
-};
+SET_TYPE_PROP(DiffusionTestProblem, Problem, Dumux::TestDiffusionProblem<TTAG(DiffusionTestProblem)>);
 
-SET_PROP(DiffusionTestProblem, Model)
-{
-    //    typedef Dumux::FVPressure2P<TTAG(DiffusionTestProblem)> type;
-    typedef Dumux::MimeticPressure2P<TTAG(DiffusionTestProblem)> type;
-    //    typedef Dumux::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
-};
+SET_TYPE_PROP(DiffusionTestProblem, Model, Dumux::FVPressure2P<TTAG(DiffusionTestProblem)>);
+//SET_TYPE_PROP(DiffusionTestProblem, Model, Dumux::MimeticPressure2P<TTAG(DiffusionTestProblem)>);
+//SET_TYPE_PROP(DiffusionTestProblem, Model, Dumux::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)>);
 
 //SET_INT_PROP(DiffusionTestProblem, VelocityFormulation,
 //        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
@@ -102,7 +95,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
 
 public:
-    typedef Dumux::Test2PSpatialParams<TypeTag> type;
+    typedef Dumux::TestDiffusionSpatialParams<TypeTag> type;
 };
 
 // Enable gravity
@@ -142,10 +135,10 @@ class TestDiffusionProblem: public DiffusionProblem2P<TypeTag, TestDiffusionProb
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
 public:
-    TestDiffusionProblem(const GridView &gridView, const GlobalPosition lowerLeft = 0, const GlobalPosition upperRight = 0) :
-        ParentType(gridView), lowerLeft_(lowerLeft), upperRight_(upperRight)
+    TestDiffusionProblem(const GridView &gridView, const double delta = 1.0) :
+        ParentType(gridView), delta_(delta)
     {
-        this->variables().saturation()=1;
+        this->variables().saturation() = 1.0;
     }
 
     /*!
@@ -168,6 +161,15 @@ public:
         return false;
     }
 
+    void init()
+    {
+        // set the initial condition of the model
+        this->model().initial();
+
+        // write the inital solution to disk
+        this->writeCurrentResult_();
+    }
+
     /*!
     * \brief Returns the temperature within the domain.
     *
@@ -186,39 +188,43 @@ public:
     }
 
     std::vector<Scalar> source(const GlobalPosition& globalPos, const Element& element)
-        {
-        return std::vector<Scalar>(2, 0.0);
-        }
+    {
+        double pi = 4.0*atan(1.0);
+        double rt = globalPos[0]*globalPos[0]+globalPos[1]*globalPos[1];
+        double ux = pi*cos(pi*globalPos[0])*sin(pi*globalPos[1]);
+        double uy = pi*cos(pi*globalPos[1])*sin(pi*globalPos[0]);
+        double kxx = (delta_*globalPos[0]*globalPos[0] + globalPos[1]*globalPos[1])/rt;
+        double kxy = -(1.0 - delta_)*globalPos[0]*globalPos[1]/rt;
+        double kyy = (globalPos[0]*globalPos[0] + delta_*globalPos[1]*globalPos[1])/rt;
+        double f0 = sin(pi*globalPos[0])*sin(pi*globalPos[1])*pi*pi*(1.0 + delta_)*(globalPos[0]*globalPos[0] + globalPos[1]*globalPos[1])
+            + cos(pi*globalPos[0])*sin(pi*globalPos[1])*pi*(1.0 - 3.0*delta_)*globalPos[0]
+            + cos(pi*globalPos[1])*sin(pi*globalPos[0])*pi*(1.0 - 3.0*delta_)*globalPos[1]
+            + cos(pi*globalPos[1])*cos(pi*globalPos[0])*2.0*pi*pi*(1.0 - delta_)*globalPos[0]*globalPos[1];
+
+        std::vector<double> result(2, 0.0);
+        result[wPhaseIdx]=(f0 + 2.0*(globalPos[0]*(kxx*ux + kxy*uy) + globalPos[1]*(kxy*ux + kyy*uy)))/rt;
+
+        return (result);
+    }
 
     typename BoundaryConditions::Flags bctypePress(const GlobalPosition& globalPos, const Intersection& intersection) const
     {
-        if ((globalPos[0] < lowerLeft_[0] + eps_) || globalPos[0] > upperRight_[0] - eps_)
-            return BoundaryConditions::dirichlet;
-        // all other boundaries
-        return BoundaryConditions::neumann;
-    }
-
-    BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Intersection& intersection) const
-    {
-        if (globalPos[0] < lowerLeft_[0] + eps_ || globalPos[0] > upperRight_[0] - eps_)
-            return Dumux::BoundaryConditions::dirichlet;
-        else
-            return Dumux::BoundaryConditions::neumann;
+        return BoundaryConditions::dirichlet;
     }
 
     Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& intersection) const
     {
-        if (globalPos[0] < lowerLeft_[0] + eps_)
-        {
-            return 2e5;
-        }
-        // all other boundaries
-        return 1.99e5;
+        return (exact(globalPos));
+    }
+
+    typename BoundaryConditions::Flags bctypeSat(const GlobalPosition& globalPos, const Intersection& intersection) const
+    {
+        return BoundaryConditions::dirichlet;
     }
 
     Scalar dirichletSat(const GlobalPosition& globalPos, const Intersection& intersection) const
     {
-        return 1;
+        return 1.0;
     }
 
     std::vector<Scalar> neumannPress(const GlobalPosition& globalPos, const Intersection& intersection) const
@@ -228,11 +234,25 @@ public:
         return neumannFlux;
     }
 
-private:
-    GlobalPosition lowerLeft_;
-    GlobalPosition upperRight_;
+    Scalar exact (const GlobalPosition& globalPos) const
+    {
+        double pi = 4.0*atan(1.0);
 
-    static const Scalar eps_ = 1e-6;
+        return (sin(pi*globalPos[0])*sin(pi*globalPos[1]));
+    }
+
+    Dune::FieldVector<Scalar,dim> exactGrad (const GlobalPosition& globalPos) const
+    {
+        Dune::FieldVector<Scalar,dim> grad(0);
+        double pi = 4.0*atan(1.0);
+        grad[0] = pi*cos(pi*globalPos[0])*sin(pi*globalPos[1]);
+        grad[1] = pi*cos(pi*globalPos[1])*sin(pi*globalPos[0]);
+
+        return grad;
+    }
+
+private:
+    double delta_;
 };
 } //end namespace
 

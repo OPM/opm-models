@@ -33,7 +33,7 @@
 ////////////////////////
 void usage(const char *progname)
 {
-    std::cout << boost::format("usage: %s [--restart restartTime] tEnd\n")%progname;
+    std::cout << boost::format("usage: %s #refine [delta]\n")%progname;
     exit(1);
 }
 
@@ -44,9 +44,8 @@ int main(int argc, char** argv)
         typedef GET_PROP_TYPE(TypeTag, PTAG(Scalar))  Scalar;
         typedef GET_PROP_TYPE(TypeTag, PTAG(Grid))    Grid;
         typedef GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-        typedef Dune::FieldVector<Scalar, Grid::dimensionworld> GlobalPosition;
-
         static const int dim = Grid::dimension;
+        typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
         // initialize MPI, finalize is done automatically on exit
         Dune::MPIHelper::instance(argc, argv);
@@ -54,50 +53,33 @@ int main(int argc, char** argv)
         ////////////////////////////////////////////////////////////
         // parse the command line arguments
         ////////////////////////////////////////////////////////////
-        if (argc < 2)
+        if (argc != 2 && argc != 3)
             usage(argv[0]);
 
-        // deal with the restart stuff
-        int argPos = 1;
-        bool restart = false;
-        double restartTime = 0;
-        if (std::string("--restart") == argv[argPos]) {
-            restart = true;
-            ++argPos;
+        int numRefine;
+        std::istringstream(argv[1]) >> numRefine;
 
-            std::istringstream(argv[argPos++]) >> restartTime;
-        }
-
-        if (argc - argPos != 1) {
-            usage(argv[0]);
-        }
-
-        // read the initial time step and the end time
-        double tEnd, dt;
-        std::istringstream(argv[argPos++]) >> tEnd;
-        dt = tEnd;
+        double delta = 1e-3;
+        if (argc == 3)
+            std::istringstream(argv[2]) >> delta;
 
         ////////////////////////////////////////////////////////////
         // create the grid
         ////////////////////////////////////////////////////////////
-        Dune::FieldVector<int,dim> N(6); N[0] = 30;
-        Dune::FieldVector<double ,dim> L(0);
-        Dune::FieldVector<double,dim> H(60); H[0] = 300;
+        Dune::FieldVector<int,dim> N(4);
+        GlobalPosition L(0.0);
+        GlobalPosition H(1.0);
         Grid grid(N,L,H);
+        grid.globalRefine(numRefine);
 
         ////////////////////////////////////////////////////////////
         // instantiate and run the concrete problem
         ////////////////////////////////////////////////////////////
 
-        Problem problem(grid.leafView(), L, H);
+        Problem problem(grid.leafView(), delta);
 
-        // load restart file if necessarry
-        if (restart)
-            problem.deserialize(restartTime);
-
-        // run the simulation
-        if (!problem.simulate(dt, tEnd))
-            return 2;
+        // calculate the pressure and write the result
+        problem.init();
 
         return 0;
     }
