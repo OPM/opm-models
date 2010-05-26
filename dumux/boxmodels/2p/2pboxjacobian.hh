@@ -415,12 +415,18 @@ public:
         ScalarField *mobW = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *mobN = writer.template createField<Scalar, 1>(numVertices);
 
+        unsigned numElements = this->gridView_.size(0);
+        ScalarField *rank = writer.template createField<Scalar, 1>(numElements);
+
         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
         SolutionOnElement tmpSol;
         ElementIterator elementIt = this->problem_.gridView().template begin<0>();
         ElementIterator endit = this->problem_.gridView().template end<0>();
         for (; elementIt != endit; ++elementIt)
         {
+            int idx = this->problem_.model().elementMapper().map(*elementIt);
+            (*rank)[idx] = this->gridView_.comm().rank();
+
             setCurrentElement(*elementIt);
             this->restrictToElement(tmpSol, globalSol);
             this->setCurrentSolution(tmpSol);
@@ -455,6 +461,7 @@ public:
         writer.addVertexData(mobW, "mobW");
         writer.addVertexData(mobN, "mobN");
         writer.addVertexData(Te, "temperature");
+        writer.addCellData(rank, "process rank");
     }
 
     /*!

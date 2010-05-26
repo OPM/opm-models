@@ -145,11 +145,17 @@ public:
         unsigned numVertices = this->gridView_.size(dim);
         ScalarField *p = writer.template createField<Scalar, 1>(numVertices);
 
+        unsigned numElements = this->gridView_.size(0);
+        ScalarField *rank = writer.template createField<Scalar, 1>(numElements);
+
         SolutionOnElement tmpSol;
         ElementIterator elementIt = this->gridView_.template begin<0>();
         const ElementIterator &endit = this->gridView_.template end<0>();;
         for (; elementIt != endit; ++elementIt)
         {
+            int idx = this->problem_.model().elementMapper().map(*elementIt);
+            (*rank)[idx] = this->gridView_.comm().rank();
+
             setCurrentElement(*elementIt);
             this->restrictToElement(tmpSol, globalSol);
             this->setCurrentSolution(tmpSol);
@@ -163,6 +169,7 @@ public:
         }
 
         writer.addVertexData(p, "p");
+        writer.addCellData(rank, "process rank");
     }
 
 private:

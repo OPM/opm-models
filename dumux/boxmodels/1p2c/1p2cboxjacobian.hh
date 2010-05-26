@@ -183,6 +183,9 @@ public:
         ScalarField *pressure = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *molefraction = writer.template createField<Scalar, 1>(numVertices);
 
+        unsigned numElements = this->gridView_.size(0);
+        ScalarField *rank = writer.template createField<Scalar, 1>(numElements);
+
         SolutionOnElement tmpSol;
         VertexDataArray elemDat;
 
@@ -190,6 +193,9 @@ public:
         const ElementIterator &endit = this->gridView_.template end<0>();
         for (; elementIt != endit; ++elementIt)
         {
+            int idx = this->problem_.model().elementMapper().map(*elementIt);
+            (*rank)[idx] = this->gridView_.comm().rank();
+
             int numLocalVerts = elementIt->template count<dim>();
             tmpSol.resize(numLocalVerts);
 
@@ -209,6 +215,7 @@ public:
 
         writer.addVertexData(pressure, "pressure");
         writer.addVertexData(molefraction, "molefraction");
+        writer.addCellData(rank, "process rank");
 
     }
 };

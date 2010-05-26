@@ -562,6 +562,8 @@ public:
         }
 #endif
 
+        unsigned numElements = this->gridView_.size(0);
+        ScalarField *rank = writer.template createField<Scalar, 1>(numElements);
 
         SolutionOnElement tmpSol;
         VertexDataArray   elemDat;
@@ -571,6 +573,9 @@ public:
 
         for (; elementIt != endit; ++elementIt)
         {
+            int idx = this->problem_.model().elementMapper().map(*elementIt);
+            (*rank)[idx] = this->gridView_.comm().rank();
+
             int numLocalVerts = elementIt->template count<dim>();
             tmpSol.resize(numLocalVerts);
 
@@ -691,6 +696,7 @@ public:
         if (dim == 3)
             writer.addVertexData(velocityZ, "Vz");
 #endif
+        writer.addCellData(rank, "process rank");
     }
 
     /*!
