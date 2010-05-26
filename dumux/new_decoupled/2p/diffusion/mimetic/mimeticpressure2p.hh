@@ -106,7 +106,7 @@ template<class TypeTag> class MimeticPressure2P
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalStiffness)) LocalStiffness;
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 1> > TraceType;
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 2*dim> > NormalVelType;
-    typedef MimeticOperatorAssembler<Grid,Scalar,GridView,1> OperatorAssembler;
+    typedef MimeticOperatorAssembler<Scalar,GridView> OperatorAssembler;
 
     typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
     typedef Dune::BCRSMatrix<MB> Matrix;
@@ -201,7 +201,7 @@ public:
     pressTrace_(problem.gridView().size(1)),
     normalVelocity_(problem.gridView().size(0)),
     f_(problem.gridView().size(1)),
-    A_(problem.gridView().grid(), problem.gridView()),
+    A_(problem.gridView()),
     solverName_("BiCGSTAB"), preconditionerName_("SeqILU0")
     {
         if (pressureType != pglobal)
@@ -261,7 +261,7 @@ void MimeticPressure2P<TypeTag>::solve()
     std::cout << "MimeticPressure2P: solve for pressure" << std::endl;
 
     typedef TraceType Vector;
-    typedef typename CROperatorAssembler<Grid,Scalar,GridView,1>::RepresentationType Matrix;
+    typedef typename CROperatorAssembler<Scalar,GridView>::RepresentationType Matrix;
     typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
 
     Operator op(*A_);
