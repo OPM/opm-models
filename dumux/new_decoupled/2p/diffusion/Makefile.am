@@ -1,4 +1,4 @@
-SUBDIRS = fv
+SUBDIRS = fv fvmpfa mimetic
 
 diffusion_HEADERS = diffusion.hh diffusionproblem.hh
 

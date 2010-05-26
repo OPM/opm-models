@@ -29,8 +29,9 @@
 #include <dumux/new_material/components/oil.hh>
 
 #include <dumux/new_decoupled/2p/diffusion/diffusionproblem2p.hh>
-//#include <dumux/new_decoupled/2p/diffusion/fv/fvpressure2p.hh>
+#include <dumux/new_decoupled/2p/diffusion/fv/fvpressure2p.hh>
 #include <dumux/new_decoupled/2p/diffusion/fvmpfa/fvmpfaopressure2p.hh>
+#include <dumux/new_decoupled/2p/diffusion/mimetic/mimeticpressure2p.hh>
 
 
 #include "test_2p_spatialparams.hh"
@@ -65,14 +66,15 @@ public:
 SET_PROP(DiffusionTestProblem, Model)
 {
 //    typedef Dumux::FVPressure2P<TTAG(DiffusionTestProblem)> type;
-    typedef Dumux::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
+    typedef Dumux::MimeticPressure2P<TTAG(DiffusionTestProblem)> type;
+//    typedef Dumux::FVMPFAOPressure2P<TTAG(DiffusionTestProblem)> type;
 };
 
 //SET_INT_PROP(DiffusionTestProblem, VelocityFormulation,
 //        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::velocityW);
 
-//SET_INT_PROP(DiffusionTestProblem, PressureFormulation,
-//        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::pressureGlobal);
+SET_INT_PROP(DiffusionTestProblem, PressureFormulation,
+        GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices))::pressureGlobal);
 
 // Set the wetting phase
 SET_PROP(DiffusionTestProblem, WettingPhase)
