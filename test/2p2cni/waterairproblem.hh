@@ -138,6 +138,7 @@ class WaterAirProblem : public TwoPTwoCNIBoxProblem<TypeTag, WaterAirProblem<Typ
         switchIdx   = Indices::switchIdx,
 #if !ISOTHERMAL
         temperatureIdx = Indices::temperatureIdx,
+        energyEqIdx = Indices::energyEqIdx,
 #endif
 
         // Phase State
@@ -219,12 +220,12 @@ public:
         const GlobalPosition &globalPos  = element.geometry().corner(scvIdx);
 
         if(globalPos[0] > 40 - eps_ || globalPos[0] < eps_)
-            values = BoundaryConditions::dirichlet;
+            values.setAllDirichlet();
         else
-            values = BoundaryConditions::neumann;
+            values.setAllNeumann();
 
 #if !ISOTHERMAL
-        values[temperatureIdx] = BoundaryConditions::dirichlet;
+        values.setDirichlet(temperatureIdx, energyEqIdx);
 #endif
     }
 

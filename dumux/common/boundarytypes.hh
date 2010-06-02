@@ -175,6 +175,18 @@ public:
     }
     
     /*!
+     * \brief Set a dirichlet boundary condition for a single primary
+     *        variable
+     *
+     * \param eqIdx The index of the equation which is assumed to be
+     *              equal to the index of the primary variable
+     */
+    void setDirichlet(int eqIdx)
+    {
+        setDirichlet(eqIdx, eqIdx);
+    }
+
+    /*!
      * \brief Returns true if an equation is used to specify a
      *        dirichlet condition.
      */
