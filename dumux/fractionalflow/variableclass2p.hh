@@ -16,7 +16,7 @@
 #ifndef DUMUX_VARIABLECLASS2P_NEW_HH
 #define DUMUX_VARIABLECLASS2P_NEW_HH
 
-//#define HACK_SINTEF_RESPROP
+#define HACK_SINTEF_RESPROP
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -70,7 +70,7 @@ typedef    typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 #ifdef HACK_SINTEF_RESPROP
-    typedef Dumux::ReservoirPropertyCapillary<3> ReservoirProperties;
+    typedef Dune::ReservoirPropertyCapillary<3> ReservoirProperties;
 #endif
 
 public:
