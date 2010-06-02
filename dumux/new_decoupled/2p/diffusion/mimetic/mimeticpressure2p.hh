@@ -167,6 +167,8 @@ public:
         return;
     }
 
+    void calculateVelocity();
+
     // serialization methods
     template<class Restarter>
     void serialize(Restarter &res)
@@ -345,6 +347,24 @@ void MimeticPressure2P<TypeTag>::updateMaterialLaws()
         Scalar mobilityT = mobilityW + mobilityN;
         problem_.variables().fracFlowFuncWetting(globalIdx)= mobilityW/mobilityT;
         problem_.variables().fracFlowFuncNonwetting(globalIdx)= mobilityN/mobilityT;
+    }
+    return;
+}
+
+template<class TypeTag>
+void MimeticPressure2P<TypeTag>::calculateVelocity()
+{
+    // ASSUMES axiparallel grids in 2D
+    for (int i = 0; i < problem_.gridView().size(0); i++)
+    {
+        problem_.variables().velocity()[i][0][0] = -normalVelocity_[i][0];
+        problem_.variables().velocity()[i][0][1] = 0;
+        problem_.variables().velocity()[i][1][0] = normalVelocity_[i][1];
+        problem_.variables().velocity()[i][1][1] = 0;
+        problem_.variables().velocity()[i][2][0] = 0;
+        problem_.variables().velocity()[i][2][1] = -normalVelocity_[i][2];
+        problem_.variables().velocity()[i][3][0] = 0;
+        problem_.variables().velocity()[i][3][1] = normalVelocity_[i][3];
     }
     return;
 }
