@@ -7,3 +7,4 @@ Version: 1.0-unstable
 Maintainer: "Bernd Flemisch <bernd.flemisch@iws.uni-stuttgart.de>"
 #depending on 
 Depends: dune-pdelab
+Suggests: dune-multidomaingrid
