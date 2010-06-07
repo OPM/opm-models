@@ -93,6 +93,7 @@ public:
     void calculateVelocity();
 
 private:
+    static const Scalar threshold_ = 1e-15;
     static const int velocityType_ = GET_PROP_VALUE(TypeTag, PTAG(VelocityFormulation)); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
 }; // end of template
 
@@ -539,7 +540,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                     K4.umv(nu24, K4nu24);
                     for (int i = 0; i < numPhases; i++)
                     {
-                        if (lambda1[i] == 0 && lambda2[i] == 0 && lambda3[i] == 0 && lambda4[i] == 0)
+                        if (lambda1[i] < threshold_ && lambda2[i] < threshold_ && lambda3[i] < threshold_ && lambda4[i] < threshold_)
                         {
                             continue;
                         }
@@ -785,7 +786,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda2[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda2[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -929,7 +930,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda2[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda2[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1073,7 +1074,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K2.umv(nu22, K2nu22);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda2[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda2[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1410,7 +1411,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0)
+                                if (lambda1[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1580,7 +1581,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda3[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda3[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1737,7 +1738,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda3[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda3[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1885,7 +1886,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0)
+                                if (lambda1[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -1991,7 +1992,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K1.umv(nu21, K1nu21);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0)
+                                if (lambda1[i] < threshold_)
                                 {
                                     continue;
                                 }
@@ -2304,7 +2305,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             K3.umv(nu23, K3nu23);
                             for (int i = 0; i < numPhases; i++)
                             {
-                                if (lambda1[i] == 0 && lambda3[i] == 0)
+                                if (lambda1[i] < threshold_ && lambda3[i] < threshold_)
                                 {
                                     continue;
                                 }

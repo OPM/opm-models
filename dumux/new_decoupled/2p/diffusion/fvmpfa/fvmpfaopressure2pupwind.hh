@@ -2528,6 +2528,11 @@ void FVMPFAOPressure2PUpwind<TypeTag>::updateMaterialLaws(bool first = false)
                                         //                                    std::cout << "satUpw1 = " << satUpw1 << "satUpw2 = " << satUpw2 << "satUpw3 = "
                                         //                                            << satUpw3 << "satUpw4 = " << satUpw4 << "\n";
 
+                                        satUpw1 = (satUpw1 + satUpw2 + satUpw3 + satUpw4)/4;
+                                        satUpw2 = satUpw1;
+                                        satUpw3 = satUpw1;
+                                        satUpw4 = satUpw1;
+
                                         problem_.variables().upwindMobilitiesWetting(globalIdx, indexInInside, 0)
                                                 = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(
                                                         globalPos, *eIt), satUpw1) / viscosityW;
