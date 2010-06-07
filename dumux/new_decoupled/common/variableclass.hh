@@ -61,6 +61,7 @@ private:
 
     typedef typename GridView::Grid Grid;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
+    typedef typename GridView::Traits::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
@@ -79,6 +80,7 @@ public:
 private:
     const GridView& gridView_;
     const ElementMapper elementMapper_;
+    const VertexMapper vertexMapper_;
     const int gridSize_;
 
     const int codim_;
@@ -97,7 +99,7 @@ public:
      */
 
     VariableClass(const GridView& gridView, Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim>(0))) :
-        gridView_(gridView), elementMapper_(gridView), gridSize_(gridView_.size(0)), codim_(0)
+        gridView_(gridView), elementMapper_(gridView), vertexMapper_(gridView), gridSize_(gridView_.size(0)), codim_(0)
     {
         initializeGlobalVariables(initialVel);
     }
@@ -111,7 +113,7 @@ public:
      */
     VariableClass(const GridView& gridView, int codim, Dune::FieldVector<Scalar,
             dim>& initialVel = *(new Dune::FieldVector<Scalar, dim>(0))) :
-        gridView_(gridView), elementMapper_(gridView), gridSize_(gridView_.size(codim)), codim_(codim)
+        gridView_(gridView), elementMapper_(gridView), vertexMapper_(gridView), gridSize_(gridView_.size(codim)), codim_(codim)
     {
         initializeGlobalVariables(initialVel);
     }
@@ -249,6 +251,21 @@ public:
     int index(const Element& element) const
     {
         return elementMapper_.map(element);
+    }
+
+    //! Get index of vertex (codim dim entity)
+    /*! Get index of vertex (codim dim entity).
+     * @param vertex codim dim entity
+     * \return vertex index
+     */
+    int index(const Vertex& vertex)
+    {
+        return vertexMapper_.map(vertex);
+    }
+
+    int index(const Vertex& vertex) const
+    {
+        return vertexMapper_.map(vertex);
     }
 
     //!Return the number of data elements
