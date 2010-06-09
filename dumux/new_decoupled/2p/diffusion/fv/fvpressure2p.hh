@@ -36,6 +36,7 @@
 
 namespace Dumux
 {
+
 //! \ingroup diffusion
 //! Finite Volume Diffusion Model
 /*! Provides a Finite Volume implementation for the evaluation
@@ -73,7 +74,7 @@ template<class TypeTag> class FVPressure2P
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem))       FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidState)) FluidState;
 
     enum
@@ -103,9 +104,8 @@ template<class TypeTag> class FVPressure2P
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
 
-    typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
-    typedef Dune::BCRSMatrix<MB> Matrix;
-    typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > Vector;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureCoefficientMatrix)) Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureRHSVector)) Vector;
 
     //initializes the matrix to store the system of equations
     void initializeMatrix();
@@ -143,7 +143,7 @@ public:
     void initial(bool solveTwice = true)
     {
 
-            updateMaterialLaws();
+        updateMaterialLaws();
 
         assemble(true);
         solve();
@@ -191,7 +191,7 @@ public:
     template<class Restarter>
     void serialize(Restarter &res)
     {
-       return;
+        return;
     }
 
     template<class Restarter>
@@ -201,7 +201,7 @@ public:
     }
 
     //! \brief Write data files
-     /*  \param name file name */
+    /*  \param name file name */
     template<class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
@@ -218,34 +218,8 @@ public:
      */
     FVPressure2P(Problem& problem) :
         problem_(problem), A_(problem.variables().gridSize(), problem.variables().gridSize(), (2 * dim + 1)
-                * problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
-                solverName_("BiCGSTAB"), preconditionerName_("SeqILU0"), gravity(problem.gravity())
-    {
-        if (pressureType != pw && pressureType != pn && pressureType != pglobal)
-        {
-            DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
-        }
-        if (saturationType != Sw && saturationType != Sn)
-        {
-            DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
-        }
-
-        initializeMatrix();
-    }
-
-    //! Constructs a FVPressure2P object
-    /**
-     * \param gridView gridView object of type GridView
-     * \param problem a problem class object
-     * \param pressType a string giving the type of pressure used (could be: pw, pn, pglobal)
-     * \param satType a string giving the type of saturation used (could be: Sw, Sn)
-     * \param solverName a string giving the type of solver used (could be: CG, BiCGSTAB, Loop)
-     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: Dune::SeqILU0, SeqPardiso)
-     */
-    FVPressure2P(Problem& problem, std::string solverName, std::string preconditionerName) :
-        problem_(problem), A_(problem.variables().gridSize(), problem.variables().gridSize(), (2 * dim + 1)
-                * problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random), f_(problem.variables().gridSize()),
-                solverName_(solverName), preconditionerName_(preconditionerName), gravity(problem.gravity())
+                * problem.variables().gridSize(), Matrix::random), f_(problem.variables().gridSize()),
+                gravity(problem.gravity())
     {
         if (pressureType != pw && pressureType != pn && pressureType != pglobal)
         {
@@ -263,8 +237,6 @@ private:
     Problem& problem_;
     Matrix A_;
     Dune::BlockVector<Dune::FieldVector<Scalar, 1> > f_;
-    std::string solverName_;
-    std::string preconditionerName_;
 protected:
     const Dune::FieldVector<Scalar, dimWorld>& gravity; //!< vector including the gravity constant
     static const bool compressibility = GET_PROP_VALUE(TypeTag, PTAG(EnableCompressibility));
@@ -380,8 +352,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
             Dune::GeometryType faceGT = isIt->geometryInInside().type();
 
             // center in face's reference element
-            const Dune::FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0,
-                    0);
+            const Dune::FieldVector<Scalar, dim - 1>& faceLocal = ReferenceElementFaceContainer::general(faceGT).position(0, 0);
 
             int isIndex = isIt->indexInInside();
 
@@ -417,8 +388,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 Dune::FieldVector<Scalar, dimWorld> unitDistVec(distVec);
                 unitDistVec /= dist;
 
-                FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor,
-                        *neighborPointer);
+                FieldMatrix permeabilityJ = problem_.spatialParameters().intrinsicPermeability(globalPosNeighbor, *neighborPointer);
 
                 // compute vectorized permeabilities
                 FieldMatrix meanPermeability(0);
@@ -426,12 +396,13 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 // harmonic mean of permeability
                 for (int x = 0; x < dim; x++)
                 {
+                    meanPermeability[x][x] = 2 * permeabilityI[x][x] * permeabilityJ[x][x] / (permeabilityI[x][x]
+                            + permeabilityJ[x][x]);
                     for (int y = 0; y < dim; y++)
                     {
-                        if (permeabilityI[x][y] && permeabilityJ[x][y])
-                        {
-                            meanPermeability[x][y] = 2 * permeabilityI[x][y] * permeabilityJ[x][y]
-                                    / (permeabilityI[x][y] + permeabilityJ[x][y]);
+                        if (x != y)
+                        {//use arithmetic mean for the off-diagonal entries to keep the tensor property!
+                            meanPermeability[x][y] = 0.5 * (permeabilityI[x][y] + permeabilityJ[x][y]);
                         }
                     }
                 }
@@ -480,26 +451,25 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                     {
                     case pw:
                     {
-                        potentialW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ]) / dist;
-                        potentialNW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ] + pcI - pcJ) / dist;
+                        potentialW = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ]) / dist;
+                        potentialNW = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ] + pcI
+                                - pcJ) / dist;
                         break;
                     }
                     case pn:
                     {
-                        potentialW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ] - pcI + pcJ) / dist;
-                        potentialNW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ]) / dist;
+                        potentialW
+                                = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ] - pcI + pcJ)
+                                        / dist;
+                        potentialNW = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ]) / dist;
                         break;
                     }
                     case pglobal:
                     {
-                        potentialW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ] - fMeanNW * (pcI - pcJ)) / dist;
-                        potentialNW = (problem_.variables().pressure()[globalIdxI]
-                                - problem_.variables().pressure()[globalIdxJ] + fMeanW * (pcI - pcJ)) / dist;
+                        potentialW = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ] - fMeanNW
+                                * (pcI - pcJ)) / dist;
+                        potentialNW = (problem_.variables().pressure()[globalIdxI] - problem_.variables().pressure()[globalIdxJ] + fMeanW
+                                * (pcI - pcJ)) / dist;
                         break;
                     }
                     }
@@ -525,8 +495,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                 densityNW = (potentialNW == 0) ? rhoMeanNW : densityNW;
 
                 //calculate current matrix entry
-                entry = (lambdaW + lambdaNW) * ((permeability * unitDistVec) / dist) * faceArea * (unitOuterNormal
-                        * unitDistVec);
+                entry = (lambdaW + lambdaNW) * ((permeability * unitDistVec) / dist) * faceArea * (unitOuterNormal * unitDistVec);
 
                 //calculate right hand side
                 Scalar rightEntry = (lambdaW * densityW + lambdaNW * densityNW) * (permeability * gravity) * faceArea;
@@ -622,8 +591,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                     }
 
                     Scalar pcI = problem_.variables().capillaryPressure(globalIdxI);
-                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt),
-                            satW);
+                    Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW);
 
                     //determine phase pressures from primary pressure variable
                     Scalar pressW = 0;
@@ -657,16 +625,14 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                         densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, temperature, pressNW, fluidState);
                         Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, pressW, fluidState);
                         Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, pressNW, fluidState);
-                        lambdaWBound = MaterialLaw::krw(
-                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
                                 / viscosityWBound * densityWBound;
-                        lambdaNWBound = MaterialLaw::krn(
-                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
                                 / viscosityNWBound * densityNWBound;
                     }
                     else
                     {
-                        Scalar referencePressure =  problem_.referencePressure(globalPos, *eIt);
+                        Scalar referencePressure = problem_.referencePressure(globalPos, *eIt);
                         FluidState fluidState;
                         fluidState.update(satW, referencePressure, referencePressure, temperature);
 
@@ -674,11 +640,9 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                         densityNWBound = FluidSystem::phaseDensity(nPhaseIdx, temperature, referencePressure, fluidState);
                         Scalar viscosityWBound = FluidSystem::phaseViscosity(wPhaseIdx, temperature, referencePressure, fluidState);
                         Scalar viscosityNWBound = FluidSystem::phaseViscosity(nPhaseIdx, temperature, referencePressure, fluidState);
-                        lambdaWBound = MaterialLaw::krw(
-                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                        lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
                                 / viscosityWBound;
-                        lambdaNWBound = MaterialLaw::krn(
-                                problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
+                        lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
                                 / viscosityNWBound;
                     }
                     Scalar fractionalWBound = lambdaWBound / (lambdaWBound + lambdaNWBound);
@@ -712,23 +676,19 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                         case pw:
                         {
                             potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound) / dist;
-                            potentialNW = (problem_.variables().pressure()[globalIdxI] + pcI - pressBound - pcBound)
-                                    / dist;
+                            potentialNW = (problem_.variables().pressure()[globalIdxI] + pcI - pressBound - pcBound) / dist;
                             break;
                         }
                         case pn:
                         {
-                            potentialW = (problem_.variables().pressure()[globalIdxI] - pcI - pressBound + pcBound)
-                                    / dist;
+                            potentialW = (problem_.variables().pressure()[globalIdxI] - pcI - pressBound + pcBound) / dist;
                             potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound) / dist;
                             break;
                         }
                         case pglobal:
                         {
-                            potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound - fMeanNW * (pcI
-                                    - pcBound)) / dist;
-                            potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound + fMeanW * (pcI
-                                    - pcBound)) / dist;
+                            potentialW = (problem_.variables().pressure()[globalIdxI] - pressBound - fMeanNW * (pcI - pcBound)) / dist;
+                            potentialNW = (problem_.variables().pressure()[globalIdxI] - pressBound + fMeanW * (pcI - pcBound)) / dist;
                             break;
                         }
                         }
@@ -757,8 +717,7 @@ void FVPressure2P<TypeTag>::assemble(bool first)
                             * (unitOuterNormal * unitDistVec);
 
                     //calculate right hand side
-                    Scalar rightEntry = (lambdaW * densityW + lambdaNW * densityNW) * (permeability * gravity)
-                            * faceArea;
+                    Scalar rightEntry = (lambdaW * densityW + lambdaNW * densityNW) * (permeability * gravity) * faceArea;
 
                     switch (pressureType)
                     {
@@ -816,14 +775,12 @@ void FVPressure2P<TypeTag>::assemble(bool first)
             {
             case Sw:
             {
-                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityWI
-                        - densityNWI);
+                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityWI - densityNWI);
                 break;
             }
             case Sn:
             {
-                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityNWI
-                        - densityWI);
+                f_[globalIdxI] -= problem_.variables().volumecorrection(globalIdxI) * porosity * volume * (densityNWI - densityWI);
                 break;
             }
             }
@@ -836,50 +793,29 @@ void FVPressure2P<TypeTag>::assemble(bool first)
 template<class TypeTag>
 void FVPressure2P<TypeTag>::solve()
 {
-    Dune::MatrixAdapter<Matrix, Vector, Vector> op(A_);
-    Dune::InverseOperatorResult r;
-    double reduction = 1E-12;
-    int maxIt = 10000;
-    int verboseLevel = 0;
+    typedef typename GET_PROP(TypeTag, PTAG(SolverParameters)) SolverParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressurePreconditioner)) Preconditioner;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureSolver)) Solver;
+
+    Dune::MatrixAdapter<Matrix, Vector, Vector> op(A_); // make linear operator from A_
     Dune::InverseOperatorResult result;
 
-    if (verboseLevel)
-        std::cout << "FVPressure2P: solve for pressure" << std::endl;
+    double reduction = SolverParameters::reductionSolver;
+    int maxItSolver = SolverParameters::maxIterationNumberSolver;
+    int iterPreconditioner = SolverParameters::iterationNumberPreconditioner;
+    int verboseLevelSolver = SolverParameters::verboseLevelSolver;
+    double relaxation = SolverParameters::relaxationPreconditioner;
 
-    if (preconditionerName_ == "SeqILU0")
-    {
-        Dune::SeqILU0<Matrix, Vector, Vector> preconditioner(A_, 1.0);
-        if (solverName_ == "CG")
-        {
-            Dune::CGSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(problem_.variables().pressure(), f_, result);
-        }
-        else if (solverName_ == "BiCGSTAB")
-        {
-            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(problem_.variables().pressure(), f_, result);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
-                    << solverName_ << ".");
-    }
-    else if (preconditionerName_ == "SeqPardiso")
-    {
-        Dune::SeqPardiso<Matrix, Vector, Vector> preconditioner(A_);
-        if (solverName_ == "Loop")
-        {
-            Dune::LoopSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(problem_.variables().pressure(), f_, result);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : combination " << preconditionerName_ << " and "
-                    << solverName_ << ".");
-    }
-    else
-        DUNE_THROW(Dune::NotImplemented, "FVPressure2P :: solve : preconditioner " << preconditionerName_ << ".");
-//                printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
-//                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
-//                printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
+    if (verboseLevelSolver)
+    std::cout << "FVPressure2P: solve for pressure" << std::endl;
+
+    Preconditioner preconditioner(A_, iterPreconditioner, relaxation);
+    Solver solver(op, preconditioner, reduction, maxItSolver, verboseLevelSolver);
+    solver.apply(problem_.variables().pressure(), f_, result);
+
+    //                printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
+    //                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
+    //                printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
 
     return;
 }
@@ -958,8 +894,8 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         }
         else
         {
-            pressW =  problem_.referencePressure(globalPos, *eIt);
-            pressNW =  problem_.referencePressure(globalPos, *eIt);
+            pressW = problem_.referencePressure(globalPos, *eIt);
+            pressNW = problem_.referencePressure(globalPos, *eIt);
             fluidState.update(satW, pressW, pressNW, temperature);
         }
 
@@ -970,12 +906,10 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         viscosityNW = FluidSystem::phaseViscosity(nPhaseIdx, temperature, pressNW, fluidState);
 
         // initialize mobilities
-        Scalar mobilityW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
-                / viscosityW;
-        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW)
-                / viscosityNW;
-//        std::cout<<"MobilityW: "<<mobilityW <<"\n"
-//                "MobilityNW"<< mobilityNW<<"\n";
+        Scalar mobilityW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityW;
+        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(globalPos, *eIt), satW) / viscosityNW;
+        //        std::cout<<"MobilityW: "<<mobilityW <<"\n"
+        //                "MobilityNW"<< mobilityNW<<"\n";
 
 
         if (compressibility)

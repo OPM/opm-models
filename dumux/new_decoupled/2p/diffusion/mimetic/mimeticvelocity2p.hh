@@ -685,7 +685,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
             }//end boundary
         }// end all intersections
     }// end grid traversal
-//                        printvector(std::cout, this->problem().variables().velocity(), "velocity", "row", 4, 1, 3);
+                        printvector(std::cout, this->problem().variables().velocity(), "velocity", "row", 4, 1, 3);
     return;
 }
 }

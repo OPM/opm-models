@@ -241,14 +241,16 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
                 // compute vectorized permeabilities
                 FieldMatrix meanPermeability(0);
 
-                // harmonic mean of permeability
-                for (int x = 0;x<dim;x++)
+//                // harmonic mean of permeability
+                for (int x = 0; x < dim; x++)
                 {
-                    for (int y = 0; y < dim;y++)
+                    meanPermeability[x][x] = 2 * permeabilityI[x][x] * permeabilityJ[x][x] / (permeabilityI[x][x]
+                            + permeabilityJ[x][x]);
+                    for (int y = 0; y < dim; y++)
                     {
-                        if (permeabilityI[x][y] && permeabilityJ[x][y])
-                        {
-                            meanPermeability[x][y]= 2*permeabilityI[x][y]*permeabilityJ[x][y]/(permeabilityI[x][y]+permeabilityJ[x][y]);
+                        if (x != y)
+                        {//use arithmetic mean for the off-diagonal entries to keep the tensor property!
+                            meanPermeability[x][y] = 0.5 * (permeabilityI[x][y] + permeabilityJ[x][y]);
                         }
                     }
                 }

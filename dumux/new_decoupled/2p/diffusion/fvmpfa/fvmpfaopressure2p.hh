@@ -101,9 +101,8 @@ class FVMPFAOPressure2P
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
 
-    typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
-    typedef Dune::BCRSMatrix<MB> Matrix;
-    typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > Vector;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureCoefficientMatrix)) Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureRHSVector)) Vector;
     typedef Dune::FieldVector<Scalar, dim> FieldVector;
 
     //initializes the matrix to store the system of equations
@@ -180,29 +179,16 @@ public:
 
 
     FVMPFAOPressure2P(Problem& problem)
-    : problem_(problem), M_(problem.variables().gridSize(), problem.variables().gridSize(), (4*dim+(dim-1))*problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random),
-    f_(problem.variables().gridSize()),
-    solverName_("BiCGSTAB"),
-    preconditionerName_("SeqILU0")
-    {
-        initializeMatrix();
-    }
-
-    FVMPFAOPressure2P(Problem& problem, std::string solverName, std::string preconditionerName)
-    :problem_(problem), M_(problem.variables().gridSize(), problem.variables().gridSize(), (4*dim+(dim-1))*problem.variables().gridSize(), Dune::BCRSMatrix<MB>::random),
-    f_(problem.variables().gridSize()),
-    solverName_(solverName),
-    preconditionerName_(preconditionerName)
+    : problem_(problem), A_(problem.variables().gridSize(), problem.variables().gridSize(), (4*dim+(dim-1))*problem.variables().gridSize(), Matrix::random),
+    f_(problem.variables().gridSize())
     {
         initializeMatrix();
     }
 
 private:
     Problem& problem_;
-    Matrix M_;
+    Matrix A_;
     Vector f_;
-    std::string solverName_;
-    std::string preconditionerName_;
 protected:
     static const int saturationType = GET_PROP_VALUE(TypeTag, PTAG(SaturationFormulation)); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
 };
@@ -293,12 +279,12 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
         } // end of 'for' IntersectionIterator
 
         // set number of indices in row globalIdxI to rowSize
-        M_.setrowsize(globalIdxI, rowSize);
+        A_.setrowsize(globalIdxI, rowSize);
 
     } // end of 'for' ElementIterator
 
     // indicate that size of all rows is defined
-    M_.endrowsizes();
+    A_.endrowsizes();
 
     // determine position of matrix entries
     for (ElementIterator eIt = eItBegin; eIt != eItEnd; ++eIt)
@@ -307,7 +293,7 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
         int globalIdxI = problem_.variables().index(*eIt);
 
         // add diagonal index
-        M_.addindex(globalIdxI, globalIdxI);
+        A_.addindex(globalIdxI, globalIdxI);
 
         // run through all intersections with neighbors
         IntersectionIterator isItBegin = problem_.gridView().template ibegin(*eIt);
@@ -384,7 +370,7 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
 
                 // add off diagonal index
                 // add index (row,col) to the matrix
-                M_.addindex(globalIdxI, globalIdxJ);
+                A_.addindex(globalIdxI, globalIdxJ);
             }
 
             if (isIt->neighbor() && nextisIt->neighbor())
@@ -410,7 +396,7 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
                         {
                             int globalIdxJ = problem_.variables().index(*innerisItoutside);
 
-                            M_.addindex(globalIdxI, globalIdxJ);
+                            A_.addindex(globalIdxI, globalIdxJ);
                         }
                     }
                 }
@@ -419,7 +405,7 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
     } // end of 'for' ElementIterator
 
     // indicate that all indices are defined, check consistency
-    M_.endindices();
+    A_.endindices();
 
     return;
 }
@@ -428,8 +414,8 @@ void FVMPFAOPressure2P<TypeTag>::initializeMatrix()
 template<class TypeTag>
 void FVMPFAOPressure2P<TypeTag>::assemble()
 {
-    // initialization: set global matrix M_ to zero
-    M_ = 0;
+    // initialization: set global matrix A_ to zero
+    A_ = 0;
 
     // introduce matrix R for vector rotation and R is initialized as zero matrix
     FieldMatrix R(0);
@@ -479,7 +465,7 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
         // for 2-D
         if (K1[0][0] == 0 && K1[0][1] == 0 && K1[1][0] == 0 && K1[1][1] == 0)
         {
-            M_[globalIdx1][globalIdx1] += 1.0;
+            A_[globalIdx1][globalIdx1] += 1.0;
             continue;
         }
 
@@ -888,11 +874,11 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     F += B.leftmultiply(C.rightmultiply(A));
                     Dune::FieldMatrix<Scalar,2*dim,2*dim> T(F);
 
-                    // assemble the global matrix M_ and right hand side f
-                    M_[globalIdx1][globalIdx1] += T[0][0] + T[2][0];
-                    M_[globalIdx1][globalIdx2] += T[0][1] + T[2][1];
-                    M_[globalIdx1][globalIdx3] += T[0][2] + T[2][2];
-                    M_[globalIdx1][globalIdx4] += T[0][3] + T[2][3];
+                    // assemble the global matrix A_ and right hand side f
+                    A_[globalIdx1][globalIdx1] += T[0][0] + T[2][0];
+                    A_[globalIdx1][globalIdx2] += T[0][1] + T[2][1];
+                    A_[globalIdx1][globalIdx3] += T[0][2] + T[2][2];
+                    A_[globalIdx1][globalIdx4] += T[0][3] + T[2][3];
 
                 }
                 // 'nextisIt' is on the boundary
@@ -1030,9 +1016,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             Dune::FieldMatrix<Scalar,2*dim-1,dim> T(B);
                             A.umv(r1, r);
 
-                            // assemble the global matrix M_ and right hand side f
-                            M_[globalIdx1][globalIdx1] += g111 + g121 - g111 * T[0][0] - g121 * T[1][0];
-                            M_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g121 * T[1][1];
+                            // assemble the global matrix A_ and right hand side f
+                            A_[globalIdx1][globalIdx1] += g111 + g121 - g111 * T[0][0] - g121 * T[1][0];
+                            A_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g121 * T[1][1];
                             f_[globalIdx1] += g111 * r[0] + g121 * r[1];
 
                         }
@@ -1151,9 +1137,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             FieldMatrix T(B);
                             A.umv(r1, r);
 
-                            // assemble the global matrix M_ and right hand side f
-                            M_[globalIdx1][globalIdx1] += g111 + g121 - g111 * T[0][0] - g121 * T[1][0];
-                            M_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g121 * T[1][1];
+                            // assemble the global matrix A_ and right hand side f
+                            A_[globalIdx1][globalIdx1] += g111 + g121 - g111 * T[0][0] - g121 * T[1][0];
+                            A_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g121 * T[1][1];
                             f_[globalIdx1] += g111 * r[0] + g121 * r[1];
 
                         }
@@ -1287,9 +1273,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             FieldMatrix T(B);
                             A.umv(r1, r);
 
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += (g111 + g121 - g111 * T[0][0]) + (g211 + g221 - g211 * T[0][0]);
-                            M_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g211 * T[0][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += (g111 + g121 - g111 * T[0][0]) + (g211 + g221 - g211 * T[0][0]);
+                            A_[globalIdx1][globalIdx2] += -g111 * T[0][1] - g211 * T[0][1];
                             f_[globalIdx1] += (g121 + g221) * g3 + (g111 + g211) * r[0];
 
                         }
@@ -1399,9 +1385,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             // evaluate vector r
                             r[0] = -(g4 * g122 * g111 + g3 * g112 * g121)/coe;
                             r[1] = -g221 * g3 + (g3 * g211 * g121 - g4 * g211 * g122)/coe;
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T[0][0] + T[1][0];
-                            M_[globalIdx1][globalIdx2] += T[0][1] + T[1][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T[0][0] + T[1][0];
+                            A_[globalIdx1][globalIdx2] += T[0][1] + T[1][1];
                             f_[globalIdx1] -= r[0] + r[1];
 
                         }
@@ -1505,8 +1491,8 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             double g211 = alambda1 * (integrationOuterNormaln3 * K1nu11)/dF1;
                             double g221 = alambda1 * (integrationOuterNormaln3 * K1nu21)/dF1;
 
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += g221 - g211 * g121/g111;
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += g221 - g211 * g121/g111;
                             f_[globalIdx1] -= (g211 * g121/g111 - g221) * g3 - (g211 * (-J1) * face12vol)/(2.0 * g111);
 
                         }
@@ -1667,9 +1653,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             Dune::FieldVector<Scalar,2*dim-1> r(0);
                             CAinv.umv(r1, r);
 
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T[2][0];
-                            M_[globalIdx1][globalIdx3] += T[2][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T[2][0];
+                            A_[globalIdx1][globalIdx3] += T[2][1];
                             f_[globalIdx1] -= r[2];
 
                         }
@@ -1802,9 +1788,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             CAinv.umv(r2, r);
                             r += r1;
 
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T[1][0];
-                            M_[globalIdx1][globalIdx3] += T[1][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T[1][0];
+                            A_[globalIdx1][globalIdx3] += T[1][1];
                             f_[globalIdx1] -= r[1];
 
                         }
@@ -1950,8 +1936,8 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             double r1 = g111 * g1 + g121 * g3;
                             double r3 = g211 * g1 + g221 * g3;
 
-                            // assemble matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T1 + T3;
+                            // assemble matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T1 + T3;
                             f_[globalIdx1] += r1 + r3;
                         }
                         // 'nextisIt': Neumann boundary
@@ -1988,8 +1974,8 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             double T = g111 - g211 * g121/g221;
                             double r = -T * g1 - g121 * (-J3) * nextisIt->geometry().volume()/ (2.0 * g221);
 
-                            // assemble matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T;
+                            // assemble matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T;
                             f_[globalIdx1] -= r;
                         }
                     }
@@ -2162,9 +2148,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             // evaluate vector r
                             r[0] = -g111 * g1 + (g1 * g121 * g211 - g2 * g213 * g121)/coe;
                             r[1] = -(g1 * g211 * g223 + g2 * g221 * g213)/coe;
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += T[0][0] + T[1][0];
-                            M_[globalIdx1][globalIdx3] += T[0][1] + T[1][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += T[0][0] + T[1][0];
+                            A_[globalIdx1][globalIdx3] += T[0][1] + T[1][1];
                             f_[globalIdx1] -= r[0] + r[1];
 
                         }
@@ -2240,9 +2226,9 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             FieldMatrix T(B);
                             A.umv(r1, r);
 
-                            // assemble the global matrix M_ and right hand side f_
-                            M_[globalIdx1][globalIdx1] += (g111 + g121 - g121 * T[1][0]) + (g211 + g221 - g221 * T[1][0]);
-                            M_[globalIdx1][globalIdx3] += -g121 * T[1][1] - g221 * T[1][1];
+                            // assemble the global matrix A_ and right hand side f_
+                            A_[globalIdx1][globalIdx1] += (g111 + g121 - g121 * T[1][0]) + (g211 + g221 - g221 * T[1][0]);
+                            A_[globalIdx1][globalIdx3] += -g121 * T[1][1] - g221 * T[1][1];
                             f_[globalIdx1] += (g111 + g211) * g1 + (g121 + g221) * r[1];
 
                         }
@@ -2254,128 +2240,128 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
 
     } // end grid traversal
 
-    // get the number of nonzero terms in the matrix
-    double num_nonzero = 0;
-
-    // determine position of matrix entries
-    for (ElementIterator eIt = problem_.gridView().template begin<0>(); eIt != problem_.gridView().template end<0>(); ++eIt)
-    {
-        // cell index
-        int globalIdxI = problem_.variables().index(*eIt);
-
-        if (M_[globalIdxI][globalIdxI] != 0)
-        ++num_nonzero;
-
-        // run through all intersections with neighbors
-        IntersectionIterator isItBegin = problem_.gridView().template ibegin(*eIt);
-        IntersectionIterator isItEnd = problem_.gridView().template iend(*eIt);
-        for (IntersectionIterator isIt = isItBegin; isIt!=isItEnd; ++isIt)
-        {
-            IntersectionIterator tempisIt = isIt;
-            IntersectionIterator tempisItBegin = isItBegin;
-
-            // 'nextisIt' iterates over next codimension 1 intersection neighboring with 'isIt'
-            // sequence of next is anticlockwise of 'isIt'
-            IntersectionIterator nextisIt = ++tempisIt;
-
-            // get 'nextisIt'
-            switch (GET_PROP_VALUE(TypeTag, PTAG(GridImplementation)))
-            {
-                // for SGrid
-                case GridTypeIndices::sGrid:
-                {
-                    if (nextisIt == isItEnd)
-                    {
-                        nextisIt = isItBegin;
-                    }
-                    else
-                    {
-                        nextisIt = ++tempisIt;
-
-                        if (nextisIt == isItEnd)
-                        {
-                            nextisIt = ++tempisItBegin;
-                        }
-                    }
-
-                    break;
-                }
-                // for YaspGrid
-                case GridTypeIndices::yaspGrid:
-                {
-                    if (nextisIt == isItEnd)
-                    {
-                        nextisIt = isItBegin;
-                    }
-                    else
-                    {
-                        nextisIt = ++tempisIt;
-
-                        if (nextisIt == isItEnd)
-                        {
-                            nextisIt = ++tempisItBegin;
-                        }
-                    }
-
-                    break;
-                }
-                // for UGGrid
-                case GridTypeIndices::ugGrid:
-                {
-                    if (nextisIt == isItEnd)
-                    nextisIt = isItBegin;
-
-                    break;
-                }
-                default:
-                {
-                    DUNE_THROW(Dune::NotImplemented, "GridType can not be used with MPFAO implementation!");
-                }
-            }
-
-            if (isIt->neighbor())
-            {
-                // access neighbor
-                ElementPointer outside = isIt->outside();
-                int globalIdxJ = problem_.variables().index(*outside);
-
-                if (M_[globalIdxI][globalIdxJ] != 0)
-                ++num_nonzero;
-            }
-
-            if (isIt->neighbor() && nextisIt->neighbor())
-            {
-                // access the common neighbor of isIt's and nextisIt's outside
-                ElementPointer outside = isIt->outside();
-                ElementPointer nextisItoutside = nextisIt->outside();
-
-                IntersectionIterator innerisItEnd = problem_.gridView().template iend(*outside);
-                IntersectionIterator innernextisItEnd = problem_.gridView().template iend(*nextisItoutside);
-
-                for (IntersectionIterator innerisIt = problem_.gridView().template ibegin(*outside);
-                        innerisIt!=innerisItEnd; ++innerisIt )
-                for (IntersectionIterator innernextisIt = problem_.gridView().template ibegin(*nextisItoutside);
-                        innernextisIt!=innernextisItEnd; ++innernextisIt)
-                {
-                    if (innerisIt->neighbor() && innernextisIt->neighbor())
-                    {
-                        ElementPointer innerisItoutside = innerisIt->outside();
-                        ElementPointer innernextisItoutside = innernextisIt->outside();
-
-                        if (innerisItoutside == innernextisItoutside && innerisItoutside != isIt->inside())
-                        {
-                            int globalIdxJ = problem_.variables().index(*innerisItoutside);
-
-                            if (M_[globalIdxI][globalIdxJ] != 0)
-                            ++num_nonzero;
-                        }
-                    }
-                }
-            }
-        } // end of 'for' IntersectionIterator
-    } // end of 'for' ElementIterator
-
-    std::cout << "number of nonzero terms in the MPFA O-matrix on level " << problem_.gridView().grid().maxLevel() <<" nnmat: " << num_nonzero << std::endl;
+//    // get the number of nonzero terms in the matrix
+//    double num_nonzero = 0;
+//
+//    // determine position of matrix entries
+//    for (ElementIterator eIt = problem_.gridView().template begin<0>(); eIt != problem_.gridView().template end<0>(); ++eIt)
+//    {
+//        // cell index
+//        int globalIdxI = problem_.variables().index(*eIt);
+//
+//        if (A_[globalIdxI][globalIdxI] != 0)
+//        ++num_nonzero;
+//
+//        // run through all intersections with neighbors
+//        IntersectionIterator isItBegin = problem_.gridView().template ibegin(*eIt);
+//        IntersectionIterator isItEnd = problem_.gridView().template iend(*eIt);
+//        for (IntersectionIterator isIt = isItBegin; isIt!=isItEnd; ++isIt)
+//        {
+//            IntersectionIterator tempisIt = isIt;
+//            IntersectionIterator tempisItBegin = isItBegin;
+//
+//            // 'nextisIt' iterates over next codimension 1 intersection neighboring with 'isIt'
+//            // sequence of next is anticlockwise of 'isIt'
+//            IntersectionIterator nextisIt = ++tempisIt;
+//
+//            // get 'nextisIt'
+//            switch (GET_PROP_VALUE(TypeTag, PTAG(GridImplementation)))
+//            {
+//                // for SGrid
+//                case GridTypeIndices::sGrid:
+//                {
+//                    if (nextisIt == isItEnd)
+//                    {
+//                        nextisIt = isItBegin;
+//                    }
+//                    else
+//                    {
+//                        nextisIt = ++tempisIt;
+//
+//                        if (nextisIt == isItEnd)
+//                        {
+//                            nextisIt = ++tempisItBegin;
+//                        }
+//                    }
+//
+//                    break;
+//                }
+//                // for YaspGrid
+//                case GridTypeIndices::yaspGrid:
+//                {
+//                    if (nextisIt == isItEnd)
+//                    {
+//                        nextisIt = isItBegin;
+//                    }
+//                    else
+//                    {
+//                        nextisIt = ++tempisIt;
+//
+//                        if (nextisIt == isItEnd)
+//                        {
+//                            nextisIt = ++tempisItBegin;
+//                        }
+//                    }
+//
+//                    break;
+//                }
+//                // for UGGrid
+//                case GridTypeIndices::ugGrid:
+//                {
+//                    if (nextisIt == isItEnd)
+//                    nextisIt = isItBegin;
+//
+//                    break;
+//                }
+//                default:
+//                {
+//                    DUNE_THROW(Dune::NotImplemented, "GridType can not be used with MPFAO implementation!");
+//                }
+//            }
+//
+//            if (isIt->neighbor())
+//            {
+//                // access neighbor
+//                ElementPointer outside = isIt->outside();
+//                int globalIdxJ = problem_.variables().index(*outside);
+//
+//                if (A_[globalIdxI][globalIdxJ] != 0)
+//                ++num_nonzero;
+//            }
+//
+//            if (isIt->neighbor() && nextisIt->neighbor())
+//            {
+//                // access the common neighbor of isIt's and nextisIt's outside
+//                ElementPointer outside = isIt->outside();
+//                ElementPointer nextisItoutside = nextisIt->outside();
+//
+//                IntersectionIterator innerisItEnd = problem_.gridView().template iend(*outside);
+//                IntersectionIterator innernextisItEnd = problem_.gridView().template iend(*nextisItoutside);
+//
+//                for (IntersectionIterator innerisIt = problem_.gridView().template ibegin(*outside);
+//                        innerisIt!=innerisItEnd; ++innerisIt )
+//                for (IntersectionIterator innernextisIt = problem_.gridView().template ibegin(*nextisItoutside);
+//                        innernextisIt!=innernextisItEnd; ++innernextisIt)
+//                {
+//                    if (innerisIt->neighbor() && innernextisIt->neighbor())
+//                    {
+//                        ElementPointer innerisItoutside = innerisIt->outside();
+//                        ElementPointer innernextisItoutside = innernextisIt->outside();
+//
+//                        if (innerisItoutside == innernextisItoutside && innerisItoutside != isIt->inside())
+//                        {
+//                            int globalIdxJ = problem_.variables().index(*innerisItoutside);
+//
+//                            if (A_[globalIdxI][globalIdxJ] != 0)
+//                            ++num_nonzero;
+//                        }
+//                    }
+//                }
+//            }
+//        } // end of 'for' IntersectionIterator
+//    } // end of 'for' ElementIterator
+//
+//    std::cout << "number of nonzero terms in the MPFA O-matrix on level " << problem_.gridView().grid().maxLevel() <<" nnmat: " << num_nonzero << std::endl;
 
     return;
 }
@@ -2383,52 +2369,27 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
 template<class TypeTag>
 void FVMPFAOPressure2P<TypeTag>::solve()
 {
+    typedef typename GET_PROP(TypeTag, PTAG(SolverParameters)) SolverParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressurePreconditioner)) Preconditioner;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureSolver)) Solver;
+
+    Dune::MatrixAdapter<Matrix, Vector, Vector> op(A_); // make linear operator from A_
+    Dune::InverseOperatorResult result;
+
+    double reduction = SolverParameters::reductionSolver;
+    int maxItSolver = SolverParameters::maxIterationNumberSolver;
+    int iterPreconditioner = SolverParameters::iterationNumberPreconditioner;
+    int verboseLevelSolver = SolverParameters::verboseLevelSolver;
+    double relaxation = SolverParameters::relaxationPreconditioner;
+
+    if (verboseLevelSolver)
     std::cout << "FVMPFAOPressure2P: solve for pressure" << std::endl;
 
-    Dune::MatrixAdapter<Matrix,Vector,Vector> op(M_); // make linear operator from M_
-    Dune::InverseOperatorResult r;
+    Preconditioner preconditioner(A_, iterPreconditioner, relaxation);
+    Solver solver(op, preconditioner, reduction, maxItSolver, verboseLevelSolver);
+    solver.apply(problem_.variables().pressure(), f_, result);
 
-    if (preconditionerName_ == "SeqILU0")
-    {
-        // preconditioner object
-        Dune::SeqILU0<Matrix,Vector,Vector> preconditioner(M_, 1.0);
-        if (solverName_ == "CG")
-        {
-            // an inverse operator
-            Dune::CGSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
-            solver.apply(problem_.variables().pressure(), f_, r);
-        }
-        else if (solverName_ == "BiCGSTAB")
-        {
-            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
-            solver.apply(problem_.variables().pressure(), f_, r);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2P :: solve : combination "
-                << preconditionerName_<< " and "<< solverName_ << ".");
-    }
-    else if (preconditionerName_ == "SeqPardiso")
-    {
-        Dune::SeqPardiso<Matrix,Vector,Vector> preconditioner(M_);
-        if (solverName_ == "Loop")
-        {
-            Dune::LoopSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
-            solver.apply(problem_.variables().pressure(), f_, r);
-        }
-        else if (solverName_ == "BiCGSTAB")
-        {
-            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, 1E-14, 1000, 1);
-            solver.apply(problem_.variables().pressure(), f_, r);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2P :: solve : combination "
-                << preconditionerName_<< " and "<< solverName_ << ".");
-    }
-    else
-        DUNE_THROW(Dune::NotImplemented, "FVMPFAOPressure2P :: solve : preconditioner "
-            << preconditionerName_ << ".");
-
-    //                printmatrix(std::cout, M_, "global stiffness matrix", "row", 11, 3);
+    //                printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
     //                printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
 //                    printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
 

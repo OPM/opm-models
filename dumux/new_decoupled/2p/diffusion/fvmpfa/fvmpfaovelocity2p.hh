@@ -84,11 +84,6 @@ public:
     {
     }
 
-    FVMPFAOVelocity2P(Problem& problem, std::string solverName, std::string preconditionerName) :
-        ParentType(problem, solverName, preconditionerName)
-    {
-    }
-
     void calculateVelocity();
 
 }; // end of template

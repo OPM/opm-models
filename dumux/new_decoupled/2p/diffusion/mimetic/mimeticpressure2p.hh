@@ -36,6 +36,7 @@
 
 namespace Dumux
 {
+
 //! \ingroup diffusion
 //! mimetic Diffusion Model
 /*! Provides a mimetic implementation for the evaluation
@@ -108,9 +109,8 @@ template<class TypeTag> class MimeticPressure2P
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 2*dim> > NormalVelType;
     typedef MimeticOperatorAssembler<Scalar,GridView> OperatorAssembler;
 
-    typedef Dune::FieldMatrix<Scalar, 1, 1> MB;
-    typedef Dune::BCRSMatrix<MB> Matrix;
-    typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > Vector;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureCoefficientMatrix)) Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureRHSVector)) Vector;
 
     //initializes the matrix to store the system of equations
     void initializeMatrix();
@@ -203,35 +203,7 @@ public:
     pressTrace_(problem.gridView().size(1)),
     normalVelocity_(problem.gridView().size(0)),
     f_(problem.gridView().size(1)),
-    A_(problem.gridView()),
-    solverName_("BiCGSTAB"), preconditionerName_("SeqILU0")
-    {
-        if (pressureType != pglobal)
-        {
-            DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
-        }
-        if (saturationType != Sw)
-        {
-            DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
-        }
-    }
-
-    //! Constructs a MimeticPressure2P object
-    /**
-     * \param gridView gridView object of type GridView
-     * \param problem a problem class object
-     * \param pressType a string giving the type of pressure used (could be: pw, pn, pglobal)
-     * \param satType a string giving the type of saturation used (could be: Sw, Sn)
-     * \param solverName a string giving the type of solver used (could be: CG, BiCGSTAB, Loop)
-     * \param preconditionerName a string giving the type of the matrix preconditioner used (could be: Dune::SeqILU0, SeqPardiso)
-     */
-    MimeticPressure2P(Problem& problem, std::string solverName, std::string preconditionerName) :
-    problem_(problem),
-    pressTrace_(problem.gridView().size(1)),
-    normalVelocity_(problem.gridView().size(0)),
-    f_(problem.gridView().size(1)),
-    A_(problem.gridView().grid(), problem.gridView()),
-    solverName_(solverName), preconditionerName_(preconditionerName)
+    A_(problem.gridView())
     {
         if (pressureType != pglobal)
         {
@@ -249,8 +221,6 @@ private:
     NormalVelType normalVelocity_;
     TraceType f_;
     OperatorAssembler A_;
-    std::string solverName_;
-    std::string preconditionerName_;
 protected:
     static const int pressureType = GET_PROP_VALUE(TypeTag, PTAG(PressureFormulation)); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
     static const int saturationType = GET_PROP_VALUE(TypeTag, PTAG(SaturationFormulation)); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
@@ -260,50 +230,29 @@ protected:
 template<class TypeTag>
 void MimeticPressure2P<TypeTag>::solve()
 {
-    std::cout << "MimeticPressure2P: solve for pressure" << std::endl;
+    typedef typename GET_PROP(TypeTag, PTAG(SolverParameters)) SolverParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressurePreconditioner)) Preconditioner;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureSolver)) Solver;
 
     typedef TraceType Vector;
     typedef typename CROperatorAssembler<Scalar,GridView>::RepresentationType Matrix;
     typedef Dune::MatrixAdapter<Matrix,Vector,Vector> Operator;
 
     Operator op(*A_);
-    double reduction = 1E-12;
-    int maxIt = 10000;
-    int verboseLevel = 1;
     Dune::InverseOperatorResult result;
 
-    if (preconditionerName_ == "SeqILU0")
-    {
-        Dune::SeqILU0<Matrix,Vector,Vector> preconditioner(*A_, 1.0);
-        if (solverName_ == "CG")
-        {
-            Dune::CGSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(pressTrace_, f_, result);
-        }
-        else if (solverName_ == "BiCGSTAB")
-        {
-            Dune::BiCGSTABSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(pressTrace_, f_, result);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "MimeticPressure2P :: solve : combination "
-                    << preconditionerName_<< " and "<< solverName_ << ".");
-    }
-    else if (preconditionerName_ == "SeqPardiso")
-    {
-        Dune::SeqPardiso<Matrix,Vector,Vector> preconditioner(*A_);
-        if (solverName_ == "Loop")
-        {
-            Dune::LoopSolver<Vector> solver(op, preconditioner, reduction, maxIt, verboseLevel);
-            solver.apply(pressTrace_, f_, result);
-        }
-        else
-            DUNE_THROW(Dune::NotImplemented, "MimeticPressure2P :: solve : combination "
-                    << preconditionerName_<< " and "<< solverName_ << ".");
-    }
-    else
-        DUNE_THROW(Dune::NotImplemented, "MimeticPressure2P :: solve : preconditioner "
-                << preconditionerName_ << ".");
+    double reduction = SolverParameters::reductionSolver;
+    int maxItSolver = SolverParameters::maxIterationNumberSolver;
+    int iterPreconditioner = SolverParameters::iterationNumberPreconditioner;
+    int verboseLevelSolver = SolverParameters::verboseLevelSolver;
+    double relaxation = SolverParameters::relaxationPreconditioner;
+
+    if (verboseLevelSolver)
+    std::cout << "MimeticPressure2P: solve for pressure" << std::endl;
+
+    Preconditioner preconditioner(*A_, iterPreconditioner, relaxation);
+    Solver solver(op, preconditioner, reduction, maxItSolver, verboseLevelSolver);
+    solver.apply(pressTrace_, f_, result);
 
     return;
 }
@@ -366,6 +315,7 @@ void MimeticPressure2P<TypeTag>::calculateVelocity()
         problem_.variables().velocity()[i][3][0] = 0;
         problem_.variables().velocity()[i][3][1] = normalVelocity_[i][3];
     }
+//    printvector(std::cout, problem_.variables().velocity(), "velocity", "row", 4, 1, 3);
     return;
 }
 
