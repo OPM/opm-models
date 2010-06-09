@@ -21,6 +21,8 @@ am
 .deps/
 .libs/
 *.log
+*.dat
+*.png
 autom4te.cache/
 dumux-handbook.dvi
 .cproject
