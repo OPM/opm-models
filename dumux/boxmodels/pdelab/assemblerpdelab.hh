@@ -66,7 +66,7 @@ public:
 
     	localOperator_ = new LocalOperator(model);
     	gridOperatorSpace_ = new GridOperatorSpace(*gridFunctionSpace_, *constraintsTrafo_,
-												   *gridFunctionSpace_, *constraintsTrafo_, *localOperator_);
+    	        *gridFunctionSpace_, *constraintsTrafo_, *localOperator_);
 
     	matrix_ = new Matrix(*gridOperatorSpace_);
     	*matrix_ = 0;
@@ -109,15 +109,6 @@ public:
     	set_constrained_dofs(*constraintsTrafo_, 0.0, *u);
 
 #if 1
-//    	Vector numProcessesVec(*f);
-//    	numProcessesVec = 1.0;
-//    	Dune::PDELab::AddDataHandle<GridFunctionSpace,Vector> adddh(*gridFunctionSpace_, numProcessesVec);
-//    	if (gridFunctionSpace_->gridview().comm().size()>1)
-//    	  gridFunctionSpace_->gridview().communicate(adddh,
-//    	      Dune::InteriorBorder_InteriorBorder_Interface,
-//    	      Dune::ForwardCommunication);
-
-
         // rescale jacobian and right hand side to the largest 
         // entry on the main diagonal block matrix
     	typedef typename Matrix::RowIterator RowIterator;
