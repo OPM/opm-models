@@ -271,7 +271,7 @@ public:
      * \brief Set the problem name.
      *
      * This function sets the simulation name, which should be called before
-     * the application porblem is declared! If not, the default name "sim"
+     * the application problem is declared! If not, the default name "sim"
      * will be used.
      */
     static void setName(const char *newName)

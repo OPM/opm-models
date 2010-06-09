@@ -86,10 +86,6 @@ public:
      */
     // \{
 
-    void init()
-    {
-    }
-
     void timeIntegration()
     {
         // set the initial condition of the model
