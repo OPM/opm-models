@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 		Grid grid(N,L,H);
 		const GridView gridView(grid.leafView());
 
-		Dune::Uniform fluid;
+		Dumux::Uniform fluid;
 		Dumux::HomogeneousNonlinearSoil<Grid, Scalar> soil;
 		Dumux::TwoPhaseRelations<Grid, Scalar> materialLaw(soil, fluid, fluid);
 

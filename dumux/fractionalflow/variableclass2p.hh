@@ -16,7 +16,7 @@
 #ifndef DUMUX_VARIABLECLASS2P_NEW_HH
 #define DUMUX_VARIABLECLASS2P_NEW_HH
 
-#define HACK_SINTEF_RESPROP
+//#define HACK_SINTEF_RESPROP
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/mcmgmapper.hh>
