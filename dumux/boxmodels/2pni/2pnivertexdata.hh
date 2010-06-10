@@ -86,12 +86,12 @@ public:
         // the internal energies and the enthalpies
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             enthalpy_[phaseIdx] = 
-                FluidSystem::enthalpy(phaseIdx, 
+                FluidSystem::phaseEnthalpy(phaseIdx,
                                       this->fluidState().temperature(),
                                       this->fluidState().phasePressure(phaseIdx),
                                       this->fluidState());
             internalEnergy_[phaseIdx] =
-                FluidSystem::internalEnergy(phaseIdx, 
+                FluidSystem::phaseInternalEnergy(phaseIdx,
                                             this->fluidState().temperature(),
                                             this->fluidState().phasePressure(phaseIdx),
                                             this->fluidState());
