@@ -90,7 +90,7 @@ int main(int argc, char** argv)
         typedef Dumux::FVVelocity2P<GridView, Scalar, VariableType, Problem> DiffusionType;
         DiffusionType diffusion(gridView, problem, modelDef);
 
-        Dune::CapillaryDiffusion<GridView, Scalar, VariableType, Problem> capillaryDiffusion(problem, soil);
+        Dumux::CapillaryDiffusion<GridView, Scalar, VariableType, Problem> capillaryDiffusion(problem, soil);
 
         typedef Dumux::FVSaturation2P<GridView, Scalar, VariableType, Problem> TransportType;
 //        TransportType transport(gridView, problem, modelDef);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         int iterFlag = 0;
         int nIter = 30;
         double maxDefect = 1e-5;
-        typedef Dune::IMPES<GridView, DiffusionType, TransportType, VariableType> IMPESType;
+        typedef Dumux::IMPES<GridView, DiffusionType, TransportType, VariableType> IMPESType;
         IMPESType impes(diffusion, transport, iterFlag, nIter, maxDefect);
 
         double tStart = 0;
