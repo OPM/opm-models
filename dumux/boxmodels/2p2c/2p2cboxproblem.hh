@@ -23,8 +23,6 @@
 #define DUMUX_2P2C_BOX_PROBLEM_HH
 
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
-#include <dumux/material/twophaserelations.hh>
-
 
 namespace Dumux
 {
