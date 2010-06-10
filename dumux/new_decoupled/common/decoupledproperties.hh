@@ -18,7 +18,7 @@
 
 #include <dumux/common/properties.hh>
 #include <dumux/operators/mimeticoperator.hh>
-#include <dumux/diffusion/mimetic/mimeticgroundwater.hh>
+#include <dumux/new_decoupled/2p/diffusion/mimetic/mimeticgroundwater.hh>
 
 /*!
  * \file
