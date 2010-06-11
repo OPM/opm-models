@@ -28,12 +28,12 @@
 #include <dumux/new_material/components/simpleh2o.hh>
 #include <dumux/new_material/components/oil.hh>
 
-#include <dumux/new_decoupled/2p/impes/impesproblem2p.hh>
-#include <dumux/new_decoupled/2p/diffusion/fv/fvvelocity2p.hh>
-#include <dumux/new_decoupled/2p/diffusion/fvmpfa/fvmpfaovelocity2p.hh>
-#include <dumux/new_decoupled/2p/transport/fv/fvsaturation2p.hh>
-#include <dumux/new_decoupled/2p/transport/fv/capillarydiffusion.hh>
-#include <dumux/new_decoupled/2p/transport/fv/gravitypart.hh>
+#include <dumux/decoupled/2p/impes/impesproblem2p.hh>
+#include <dumux/decoupled/2p/diffusion/fv/fvvelocity2p.hh>
+#include <dumux/decoupled/2p/diffusion/fvmpfa/fvmpfaovelocity2p.hh>
+#include <dumux/decoupled/2p/transport/fv/fvsaturation2p.hh>
+#include <dumux/decoupled/2p/transport/fv/capillarydiffusion.hh>
+#include <dumux/decoupled/2p/transport/fv/gravitypart.hh>
 
 #include "test_2p_spatialparams.hh"
 

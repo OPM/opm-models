@@ -27,6 +27,7 @@
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/operators/boundaryconditions.hh>
+#include <dumux/operators/boundaryconditions.hh>
 
 namespace Dumux
 {

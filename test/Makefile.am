@@ -2,6 +2,5 @@ SUBDIRS = . \
 	 transport\
 	  fractionalflow \
 	 
-EXTRA_DIST=CMakeLists.txt
-include $(top_srcdir)/am/global-rules
+inclu $(top_srcdir)/am/global-rules
 
