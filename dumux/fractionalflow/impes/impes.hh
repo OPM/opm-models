@@ -122,7 +122,7 @@ public:
                 this->diffusion.pressure(false, t);
                 nextPressureTime_ += pressureDt_;
             }
-            
+
             //calculate velocities
             this->diffusion.calculateVelocity(t);
 

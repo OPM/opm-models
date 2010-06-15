@@ -48,14 +48,14 @@ namespace Dumux
  * components, one gets one transport equation for each component
  * \f{eqnarray*}
     &&  \phi \frac{\partial (\sum_\alpha \varrho_\alpha X_\alpha^\kappa S_\alpha )}
-	{\partial t}
-	- \sum_\alpha \nabla \cdot \left\{ \varrho_\alpha X_\alpha^\kappa
-	\frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
+    {\partial t}
+    - \sum_\alpha \nabla \cdot \left\{ \varrho_\alpha X_\alpha^\kappa
+    \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
     ({\bf \nabla} p_\alpha - \varrho_{\alpha} \mbox{\bf g}) \right\}
-	\nonumber \\ \nonumber \\
+    \nonumber \\ \nonumber \\
     &-& \sum_\alpha \nabla \cdot \left\{{\bf D_{pm}^\kappa} \varrho_{\alpha} {\bf \nabla} X^\kappa_{\alpha} \right\}
     - \sum_\alpha q_\alpha^\kappa = \quad 0 \qquad \kappa \in \{w, a\} \, ,
-	\alpha \in \{w, g\}
+    \alpha \in \{w, g\}
     \f}
  *
  * This is discretized using a fully-coupled vertex
@@ -76,11 +76,11 @@ namespace Dumux
  * of the system. Following cases can be distinguished:
  * <ul>
  *  <li> Both phases are present: The saturation is used (either \f$S_n\f$ or \f$S_w\f$, dependent on the chosen <tt>Formulation</tt>),
- *  	as long as \f$ 0 < S_\alpha < 1\f$</li>.
+ *      as long as \f$ 0 < S_\alpha < 1\f$</li>.
  *  <li> Only wetting phase is present: The mass fraction of, e.g., air in the wetting phase \f$X^a_w\f$ is used,
- *  	as long as the maximum mass fraction is not exceeded (\f$X^a_w<X^a_{w,max}\f$)</li>
+ *      as long as the maximum mass fraction is not exceeded (\f$X^a_w<X^a_{w,max}\f$)</li>
  *  <li> Only non-wetting phase is present: The mass fraction of, e.g., water in the non-wetting phase, \f$X^w_n\f$, is used,
- *  	as long as the maximum mass fraction is not exceeded (\f$X^w_n<X^w_{n,max}\f$)</li>
+ *      as long as the maximum mass fraction is not exceeded (\f$X^w_n<X^w_{n,max}\f$)</li>
  * </ul>
  */
 
@@ -147,7 +147,7 @@ public:
     template <class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
-        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addOutputVtkFields(writer, this->curSol());
     }
 
     /*!
@@ -187,11 +187,11 @@ public:
      *        system.
      */
     void calculateMass(Dune::FieldVector<Scalar, 2> &massGas,
-		       Dune::FieldVector<Scalar, 2> &massLiquid)
+               Dune::FieldVector<Scalar, 2> &massLiquid)
     {
         this->localJacobian().calculateMass(this->curSolFunction(),
-					    massGas,
-					    massLiquid);
+                        massGas,
+                        massLiquid);
     };
 };
 

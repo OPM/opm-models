@@ -85,33 +85,33 @@ public:
     const GlobalPosition &gravity() const
     { return gravity_; }
 
-    /*! 
+    /*!
      * \brief Fluid properties of the wetting phase.
      */
     const Fluid &fluid() const
     { return fluid_; }
 
-    /*! 
+    /*!
      * \brief Returns the soil properties object.
      */
     Soil &soil()
     { return soil_; }
 
-    /*! 
+    /*!
      * \copydoc soil()
      */
     const Soil &soil() const
     { return soil_; }
-    
+
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation *asImp_()
     { return static_cast<Implementation *>(this); }
-    
+
     //! \copydoc asImp_()
-    const Implementation *asImp_() const 
+    const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
 
     // fluids and material properties

@@ -113,7 +113,7 @@ public:
      *        from the current solution.
      *
      * \param elemSol    The current solution on the element
-     * \param vertexIdx  The local index of the element's vertex for 
+     * \param vertexIdx  The local index of the element's vertex for
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
      */
@@ -125,7 +125,7 @@ public:
             return 1e-2; // pressure
         else if (pvIdx == 1)
             return 1e-7; // saturation
-        
+
         return ParentType::numericEpsilon_(elemSol, vertIdx, pvIdx);
     }
 
@@ -162,7 +162,7 @@ public:
      */
     void computeFlux(PrimaryVarVector &flux, int faceId) const
     {
-		FluxData vars(this->problem_,
+        FluxData vars(this->problem_,
                       this->curElement_(),
                       this->curElementGeom_,
                       faceId,
@@ -252,15 +252,15 @@ public:
          // Loop over elements
           for (; elementIt != endit; ++elementIt)
           {
-         	 if (elementIt->partitionType() != Dune::InteriorEntity)
-         		 continue;
+              if (elementIt->partitionType() != Dune::InteriorEntity)
+                  continue;
 
               setCurrentElement(*elementIt);
                this->restrictToElement(tmpSol, globalSol);
                this->setCurrentSolution(tmpSol);
 
 
-   			for (int faceId = 0; faceId < this->curElementGeom_.numEdges; faceId++)
+               for (int faceId = 0; faceId < this->curElementGeom_.numEdges; faceId++)
              {
                  int idxI = this->curElementGeom_.subContVolFace[faceId].i;
 
@@ -268,8 +268,8 @@ public:
 
                  int flagI, flagJ;
 
-             	globalI = this->curElementGeom_.subContVol[idxI].global;
-             	globalJ = this->curElementGeom_.subContVol[idxJ].global;
+                 globalI = this->curElementGeom_.subContVol[idxI].global;
+                 globalJ = this->curElementGeom_.subContVol[idxJ].global;
                  // 2D case: give y or x value of the line over which flux is to be
                  //            calculated.
                  // up to now only flux calculation to lines or planes (3D) parallel to
@@ -336,8 +336,8 @@ public:
          // Loop over elements
          for (; elementIt != endit; ++elementIt)
          {
-        	 if (elementIt->partitionType() != Dune::InteriorEntity)
-        		 continue;
+             if (elementIt->partitionType() != Dune::InteriorEntity)
+                 continue;
 
              setCurrentElement(*elementIt);
              this->restrictToElement(tmpSol, globalSol);
@@ -347,7 +347,7 @@ public:
 
              for (int i = 0; i < numVerts; ++i)
              {
-//             	int globalIdx = dofMapper.map(*elementIt, i, dim);
+//                 int globalIdx = dofMapper.map(*elementIt, i, dim);
                  vol = this->curElementGeom_.subContVol[i].volume;
                  poro = this->curElemDat_[i].porosity();
                  rhoN = this->curElemDat_[i].density(nPhaseIdx);
@@ -381,13 +381,13 @@ public:
 
          if(this->problem_.gridView().comm().rank() == 0) // IF PARALLEL: only print by processor with rank() == 0
          {
-        	 // print minimum and maximum values
-        	 std::cout << "nonwetting phase saturation: min = "<< minSat
-        	 << ", max = "<< maxSat << std::endl;
-        	 std::cout << "wetting phase pressure: min = "<< minP
-        	 << ", max = "<< maxP << std::endl;
-//        	 std::cout << "temperature: min = "<< minTe
-//        	 << ", max = "<< maxTe << std::endl;
+             // print minimum and maximum values
+             std::cout << "nonwetting phase saturation: min = "<< minSat
+             << ", max = "<< maxSat << std::endl;
+             std::cout << "wetting phase pressure: min = "<< minP
+             << ", max = "<< maxP << std::endl;
+//             std::cout << "temperature: min = "<< minTe
+//             << ", max = "<< maxTe << std::endl;
          }
      }
 
@@ -489,7 +489,7 @@ public:
         // create the required scalar fields
         unsigned numVertices = this->gridView_.size(dim);
         //unsigned numElements = this->gridView_.size(0);
-        
+
         // global defect of the two auxiliary equations
         ScalarField* gd[numEq];
         ScalarField* delta[numEq];
@@ -502,11 +502,11 @@ public:
 
         ElementIterator eIt = this->gridView_.template begin<0>();
         ElementIterator eEndIt = this->gridView_.template end<0>();
-        
+
         for (; eIt != eEndIt; ++ eIt)
         {
             this->curElementGeom_.update(*eIt);
-            for (int scvIdx = 0; 
+            for (int scvIdx = 0;
                  scvIdx < this->curElementGeom_.numVertices;
                  ++scvIdx)
             {
@@ -541,10 +541,10 @@ public:
 //                           int vertIdx,
 //                           int pvIdx) const
 //    {
-//    	if (pvIdx == pressureIdx)
-//    		return 1e1;
-//    	else
-//    		return 1e-6;
+//        if (pvIdx == pressureIdx)
+//            return 1e1;
+//        else
+//            return 1e-6;
 //    }
 
 protected:

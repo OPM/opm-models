@@ -74,7 +74,7 @@ SET_PROP(InjectionProblem, Problem)
 };
 
 // Set fluid configuration
-SET_PROP(InjectionProblem, 
+SET_PROP(InjectionProblem,
               FluidSystem)
 {
     //typedef Dumux::Brine_CO2_System<TypeTag, Dumux::IFP::CO2Tables> type;
@@ -82,7 +82,7 @@ SET_PROP(InjectionProblem,
 };
 
 // Set the soil properties
-SET_TYPE_PROP(InjectionProblem, 
+SET_TYPE_PROP(InjectionProblem,
               SpatialParameters,
               Dumux::InjectionSpatialParameters<TypeTag>);
 
@@ -307,7 +307,7 @@ private:
         Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
 
         values[Indices::plIdx] = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
-        values[Indices::SgOrXIdx] = 
+        values[Indices::SgOrXIdx] =
             values[Indices::plIdx]*0.95/
             BinaryCoeff::H2O_N2::henry(temperature_);
     }

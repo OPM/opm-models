@@ -237,11 +237,11 @@ public:
      */
     void endTimestep(bool onlyDiscard=false)
     {
-    	if (!onlyDiscard) {
-    		curWriter_->write(curOutFileName_.c_str(),
-							  Dune::VTKOptions::ascii);
+        if (!onlyDiscard) {
+            curWriter_->write(curOutFileName_.c_str(),
+                              Dune::VTKOptions::ascii);
 
-    		// determine name to write into the multi-file for the
+            // determine name to write into the multi-file for the
             // current time step
             std::string fileName;
             std::string suffix = fileSuffix_();
@@ -249,7 +249,7 @@ public:
                 fileName = curOutFileName_;
                 multiFile_.precision(16);
                 multiFile_ << "   <DataSet timestep=\""
-                           << curTime_ 
+                           << curTime_
                            << "\" file=\""
                            << fileName << "." << suffix << "\"/>\n";
             }
@@ -265,9 +265,9 @@ public:
                 }
             }
 
-    	}
-    	else
-    		-- writerNum_;
+        }
+        else
+            -- writerNum_;
 
         delete curWriter_;
         while (vectorFields_.begin() != vectorFields_.end()) {
@@ -334,10 +334,10 @@ public:
             std::getline(res.deserializeStream(), dummy);
             if (multiFile_.is_open())
                 multiFile_.close();
-            
+
             if (fileLen > 0) {
                 multiFile_.open(multiFileName_.c_str());
-                
+
                 char *tmp = new char[fileLen];
                 res.deserializeStream().read(tmp, fileLen);
                 multiFile_.write(tmp, fileLen);

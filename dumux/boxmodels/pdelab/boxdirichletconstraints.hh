@@ -42,7 +42,7 @@ class BoxDirichletConstraints // : public Dune::PDELab::ConformingDirichletConst
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
 
-	enum {numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
+    enum {numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq))};
     enum {dim = GridView::dimension};
 
     typedef Dumux::BoundaryTypes<numEq> BoundaryTypeVector;
@@ -56,7 +56,7 @@ public:
 
     BoxDirichletConstraints(Problem& problem)
         : problem_(problem)
-	{}
+    {}
 
     //! boundary constraints
     /**
@@ -65,10 +65,10 @@ public:
      * \tparam LFS local function space
      * \tparam T   TransformationType
      */
-    template<typename F, typename I, typename LFS, 
+    template<typename F, typename I, typename LFS,
              typename T>
     void boundary (const F& f,
-                   const Dune::PDELab::IntersectionGeometry<I>& ig, 
+                   const Dune::PDELab::IntersectionGeometry<I>& ig,
                    const LFS& lfs,
                    T& trafo) const
     {
@@ -95,11 +95,11 @@ public:
         for (int faceVertIdx = 0; faceVertIdx < refelem.size(face, 1, dim); faceVertIdx ++){
             int elemVertIdx = refelem.subEntity(face, 1, faceVertIdx, dim);
             int boundaryFaceIdx = fvElemGeom.boundaryFaceIndex(face, faceVertIdx);
-            
+
             bcTypes.reset();
             problem_.boundaryTypes(bcTypes, *elementPointer, fvElemGeom, ig.intersection(), elemVertIdx, boundaryFaceIdx);
             bcTypes.checkWellPosed();
-            
+
             for (std::size_t i = 0; i < lfs.localFiniteElement().localCoefficients().size(); i++) {
                 // The codim to which this dof is attached to
                 unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
@@ -108,7 +108,7 @@ public:
                     continue;
                 if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity() != elemVertIdx)
                     continue;
-                
+
                 if (bcTypes.isDirichlet(F::eqIdx)) {
                     trafo[i] = empty;
                 }
@@ -140,7 +140,7 @@ public:
     // empty map means Dirichlet constraint
     typename T::RowType empty;
 
-	typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
+    typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
     // loop over all degrees of freedom and check if it is not owned by this processor
     for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)

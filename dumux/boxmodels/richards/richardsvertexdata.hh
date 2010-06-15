@@ -66,7 +66,7 @@ public:
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
                 const Problem           &problem,
-                bool                     isOldSol) 
+                bool                     isOldSol)
     {
         typedef Indices I;
 

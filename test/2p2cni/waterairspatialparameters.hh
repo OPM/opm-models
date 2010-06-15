@@ -89,7 +89,7 @@ public:
         coarseMaterialParams_.setSwr(0.2);
         coarseMaterialParams_.setSnr(0.0);
 
-        // parameters for the Brooks-Corey law 
+        // parameters for the Brooks-Corey law
         fineMaterialParams_.setPe(1e4);
         coarseMaterialParams_.setPe(1e4);
         fineMaterialParams_.setAlpha(2.0);
@@ -99,7 +99,7 @@ public:
     ~WaterAirSpatialParameters()
     {}
 
-    
+
     /*!
      * \brief Update the spatial parameters with the flow solution
      *        after a timestep.
@@ -116,7 +116,7 @@ public:
      *
      * \param element       The current finite element
      * \param fvElemGeom    The current finite volume geometry of the element
-     * \param scvfIdx       The index sub-control volume face where the 
+     * \param scvfIdx       The index sub-control volume face where the
      *                      intrinsic velocity ought to be calculated.
      */
     const Scalar intrinsicPermeability(const Element           &element,
@@ -145,7 +145,7 @@ public:
         const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
         if (isFineMaterial_(pos))
             return finePorosity_;
-        else 
+        else
             return coarsePorosity_;
     }
 
@@ -209,18 +209,18 @@ public:
         // arithmetic mean of the liquid saturation and the porosity
         const int i = fvElemGeom.subContVolFace[scvfIdx].i;
         const int j = fvElemGeom.subContVolFace[scvfIdx].j;
-        Scalar Sl   = std::max(0.0, (vDat[i].saturation(lPhaseIdx) + 
+        Scalar Sl   = std::max(0.0, (vDat[i].saturation(lPhaseIdx) +
                                      vDat[j].saturation(lPhaseIdx)) / 2);
         Scalar poro = (porosity(element, fvElemGeom, i) +
                        porosity(element, fvElemGeom, j)) / 2;
 
         Scalar lsat = pow(lGranite, (1-poro)) * pow(lWater, poro);
         Scalar ldry = pow(lGranite, (1-poro));
-        
+
         // the heat conductivity of the matrix. in general this is a
         // tensorial value, but we assume isotropic heat conductivity.
         Scalar heatCond = ldry + sqrt(Sl) * (ldry - lsat);
-        
+
         // the matrix heat flux is the negative temperature gradient
         // times the heat conductivity.
         heatFlux  = tempGrad;
@@ -228,7 +228,7 @@ public:
     }
 
 private:
-    bool isFineMaterial_(const GlobalPosition &pos) const 
+    bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
     Scalar fineK_;

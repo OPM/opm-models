@@ -25,8 +25,8 @@ int main(int argc, char** argv)
         const double tStart = 0;
         const double tEnd = 4e9;
         double dt = 5e7;
-	double firstDt = dt;
-	double maxDt = dt;
+    double firstDt = dt;
+    double maxDt = dt;
         int modulo = 1;
 
         // create a grid object
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 
         //Dumux::SimpleProblem<GridView, Scalar, VariableClass> ProblemType;
         typedef Dumux::SimpleNonlinearProblem<GridView, Scalar, VariableClass> ProblemType;
-	ProblemType problem(variables, mat, mat , soil, materialLaw,L,H);
+    ProblemType problem(variables, mat, mat , soil, materialLaw,L,H);
 
         //Dune::DiffusivePart<GridView, Scalar> diffusivePart;
         Dumux::CapillaryDiffusion<GridView, Scalar, VariableClass, ProblemType> capillaryDiffusion(problem, soil, false);
@@ -69,8 +69,8 @@ int main(int argc, char** argv)
         //Transport transport(gridView, problem, dt, diffusivePart, computeNumFlux);
         Transport transport(gridView, problem, capillaryDiffusion, computeNumFlux);
 
-	Dumux::RungeKuttaStep<Grid, Transport> timeStep(1);
-	//Dune::ImplicitEulerStep<Grid, Transport> timeStep;
+    Dumux::RungeKuttaStep<Grid, Transport> timeStep(1);
+    //Dune::ImplicitEulerStep<Grid, Transport> timeStep;
         Dumux::TimeLoop<GridView, Transport > timeloop(gridView, tStart, tEnd, dt, "implicitfvtransport", modulo, firstDt, timeStep);
 
         timeloop.execute(transport);

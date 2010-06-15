@@ -71,7 +71,7 @@ public:
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
                 const Problem           &problem,
-                bool                     isOldSol) 
+                bool                     isOldSol)
     {
         typedef Indices I;
 
@@ -85,7 +85,7 @@ public:
 
         // the internal energies and the enthalpies
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            enthalpy_[phaseIdx] = 
+            enthalpy_[phaseIdx] =
                 FluidSystem::phaseEnthalpy(phaseIdx,
                                       this->fluidState().temperature(),
                                       this->fluidState().phasePressure(phaseIdx),
@@ -137,7 +137,7 @@ public:
      */
     Scalar heatCapacity() const
     { return heatCapacity_; };
-    
+
 protected:
     Scalar internalEnergy_[numPhases];
     Scalar enthalpy_[numPhases];

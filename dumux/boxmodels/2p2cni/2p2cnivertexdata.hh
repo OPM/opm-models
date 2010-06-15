@@ -1,6 +1,6 @@
 // $Id$
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Melanie Darcis 								 *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                                  *
  *   Copyright (C) 2008-2010 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
@@ -74,7 +74,7 @@ public:
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
                 Problem                 &problem,
-                bool                     isOldSol) 
+                bool                     isOldSol)
     {
         // vertex update data for the mass balance
         ParentType::update(sol,
@@ -87,7 +87,7 @@ public:
         // the internal energies and the enthalpies
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (this->fluidState().saturation(phaseIdx) != 0.0) {
-                enthalpy_[phaseIdx] = 
+                enthalpy_[phaseIdx] =
                     FluidSystem::phaseEnthalpy(phaseIdx,
                                           this->fluidState().temperature(),
                                           this->fluidState().phasePressure(phaseIdx),
@@ -144,7 +144,7 @@ public:
      */
     Scalar heatCapacity() const
     { return heatCapacity_; };
-    
+
 protected:
     Scalar internalEnergy_[numPhases];
     Scalar enthalpy_[numPhases];

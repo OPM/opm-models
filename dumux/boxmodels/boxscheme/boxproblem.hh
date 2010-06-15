@@ -57,9 +57,9 @@ private:
         dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GridView::Grid::ctype 						CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dimWorld> 			GlobalPosition;
-    typedef typename GridView::template Codim<dim>::Iterator 	VertexIterator;
+    typedef typename GridView::Grid::ctype                         CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld>             GlobalPosition;
+    typedef typename GridView::template Codim<dim>::Iterator     VertexIterator;
 
 public:
     BoxProblem(const GridView &gridView)
@@ -230,7 +230,7 @@ public:
      */
     const char *name() const
     {
-    	return simname_.c_str();
+        return simname_.c_str();
     }
 
     /*!
@@ -242,7 +242,7 @@ public:
      */
     static void setName(const char *newName)
     {
-    	simname_ = newName;
+        simname_ = newName;
     }
 
     /*!
@@ -383,8 +383,8 @@ protected:
 
 private:
     static std::string simname_; // a string for the name of the current simulation,
-								  // which could be set by means of an program argument,
-								  // for example.
+                                  // which could be set by means of an program argument,
+                                  // for example.
     const GridView  gridView_;
 
     GlobalPosition  bboxMin_;

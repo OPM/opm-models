@@ -48,10 +48,10 @@ class TwoPNewtonController : public NewtonController<TypeTag>
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     enum {
-        numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq)), 
+        numEq = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         pressureIdx = Indices::pressureIdx
     };
 
@@ -68,7 +68,7 @@ public:
                               const SolutionFunction &deltaU)
     {
         typedef typename SolutionFunction::BlockType FV;
-        
+
         // get the maximum value of each primary in either the old or
         // the new solution
         Dune::FieldVector<Scalar, numEq> weight(1.0);
@@ -94,12 +94,12 @@ public:
                 // machine precision!
                 typedef std::numeric_limits<Scalar> limits;
                 const Scalar machinePrec =
-                    limits::epsilon()*100 
+                    limits::epsilon()*100
                     * std::max<Scalar>(Scalar(1e10)/limits::max(),
                                        std::abs((*uOld)[i][j]));
                 if (this->tolerance_ < machinePrec*weight[j])
                 {
-                    std::cerr << "Allowed tolerance (" 
+                    std::cerr << "Allowed tolerance ("
                               << this->tolerance_
                               << ") is below machine precision ("
                               << machinePrec*weight[j]
@@ -122,7 +122,7 @@ public:
             }
         };
 
-        this->endIterMsg() << ", worst offender: vertex " << offenderVertIdx 
+        this->endIterMsg() << ", worst offender: vertex " << offenderVertIdx
                            << ", primary var " << offenderPVIdx
                            << ", delta: " << offenderDelta;
 

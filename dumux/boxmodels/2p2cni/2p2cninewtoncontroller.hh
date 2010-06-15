@@ -47,7 +47,7 @@ class TwoPTwoCNINewtonController : public NewtonController<TypeTag >
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::SolutionFunction SolutionFunction;
-    
+
 public:
     TwoPTwoCNINewtonController()
     {

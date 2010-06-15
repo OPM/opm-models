@@ -110,7 +110,7 @@ public:
      */
     void computeFlux(PrimaryVarVector &flux, int faceId) const
     {
-		FluxData vars(this->problem_,
+        FluxData vars(this->problem_,
                       this->curElement_(),
                       this->curElementGeom_,
                       faceId,

@@ -19,6 +19,8 @@
 
 #include <dumux/common/properties.hh>
 
+#include <dumux/boxmodels/pdelab/istlvectorbackend.hh>
+
 /*!
  * \file
  * \brief Specify the shape functions, operator assemblers, etc
@@ -209,7 +211,7 @@ SET_PROP(BoxScheme, SolutionTypes)
 public:
     //! A solution function. This is a function with the same domain as the grid.
 #ifdef HAVE_DUNE_PDELAB
-	typedef FunctionPDELab<TypeTag>               SolutionFunction;
+    typedef FunctionPDELab<TypeTag>               SolutionFunction;
 #else
     typedef Dune::P1Function<GridView, Scalar, GridView, numEq>       SolutionFunction;
 #endif
@@ -236,16 +238,16 @@ public:
      * This is the representation of the solution function and defines
      * a primary variable vector at each degree of freedom.
      */
-    typedef typename SolutionFunction::RepresentationType             Solution;
+    typedef typename SolutionFunction::RepresentationType SolutionVector;
     /*!
      * \brief A vector of primary variables.
      */
-    typedef typename SolutionFunction::BlockType                      PrimaryVarVector;
+    typedef typename SolutionFunction::BlockType PrimaryVarVector;
 
     /*!
      * \brief The solution for a single finite element.
      */
-    typedef Dune::BlockVector<PrimaryVarVector>                       SolutionOnElement;
+    typedef Dune::BlockVector<PrimaryVarVector> SolutionOnElement;
 
     /*!
      * \brief Vector of boundary types at a degree of freedom.
@@ -256,7 +258,7 @@ public:
      * \brief Assembler for the global jacobian matrix.
      */
 #ifdef HAVE_DUNE_PDELAB
-	typedef AssemblerPDELab<TypeTag>      JacobianAssembler;
+    typedef AssemblerPDELab<TypeTag>      JacobianAssembler;
 #else
     typedef Dune::P1OperatorAssembler<Grid, Scalar, GridView, GridView, numEq>  JacobianAssembler;
 #endif
@@ -285,11 +287,14 @@ SET_PROP(BoxScheme, PDELabTypes)
 public:
     //typedef typename Dune::PDELab::NonoverlappingConformingDirichletConstraints Constraints;
     typedef typename Dumux::NonoverlappingBoxDirichletConstraints<TypeTag> Constraints;
-    typedef Dune::PDELab::GridFunctionSpace<GridView, FEM, Constraints,
-							Dune::PDELab::ISTLVectorBackend<numEq> > ScalarGridFunctionSpace;
+    typedef Dune::PDELab::GridFunctionSpace<GridView,
+        FEM,
+        Constraints,
+        Dumux::PDELab::ISTLVectorBackend<TypeTag>
+        >    ScalarGridFunctionSpace;
     typedef Dune::PDELab::PowerGridFunctionSpace<ScalarGridFunctionSpace, numEq,
-							Dune::PDELab::GridFunctionSpaceBlockwiseMapper> GridFunctionSpace;
-	typedef typename GridFunctionSpace::template ConstraintsContainer<Scalar>::Type ConstraintsTrafo;
+                            Dune::PDELab::GridFunctionSpaceBlockwiseMapper> GridFunctionSpace;
+    typedef typename GridFunctionSpace::template ConstraintsContainer<Scalar>::Type ConstraintsTrafo;
     typedef BoxJacobianPDELab<TypeTag> LocalOperator;
     typedef Dune::PDELab::GridOperatorSpace<GridFunctionSpace,
                                             GridFunctionSpace,

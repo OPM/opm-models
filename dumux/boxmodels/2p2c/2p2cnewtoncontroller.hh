@@ -48,8 +48,8 @@ class TwoPTwoCNewtonController : public NewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
-    
+    typedef typename SolutionTypes::SolutionVector SolutionVector;
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPTwoCIndices)) Indices;
 
     enum {
@@ -67,14 +67,14 @@ public:
 
     //! Suggest a new time stepsize based either on the number of newton
     //! iterations required or on the variable switch
-    void newtonEndStep(SolutionFunction &u, SolutionFunction &uOld)
+    void newtonEndStep(SolutionVector &u, SolutionVector &uOld)
     {
         // call the method of the base class
         ParentType::model().localJacobian().updateStaticData(u, uOld);
         ParentType::newtonEndStep(u, uOld);
     }
 
-    void newtonUpdate(SolutionFunction &deltaU, const SolutionFunction &uOld)
+    void newtonUpdate(SolutionVector &deltaU, const SolutionVector &uOld)
     {
         this->writeConvergence_(uOld, deltaU);
         //Scalar oldRelError = this->error_;
@@ -83,8 +83,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, PTAG(NewtonUseLineSearch)))
             lineSearchUpdate_(deltaU, uOld);
         else {
-            (*deltaU) *= - 1.0;
-            (*deltaU) += *uOld;
+            deltaU *= - 1.0;
+            deltaU += uOld;
         }
     }
 
@@ -100,17 +100,17 @@ public:
     };
 
 private:
-    void lineSearchUpdate_(SolutionFunction &u, const SolutionFunction &uOld)
+    void lineSearchUpdate_(SolutionVector &u, const SolutionVector &uOld)
     {
        Scalar lambda = 1.0;
        Scalar globDef;
-       SolutionFunction tmp(this->model().jacobianAssembler().gridFunctionSpace(), 0.0);
+       SolutionVector tmp(this->model(), 0.0);
        Scalar oldGlobDef = this->model().globalResidual(uOld, tmp);
-       
+
        int n = 0;
        while (true) {
-           *u *= -lambda;
-           *u += *uOld;
+           u *= -lambda;
+           u += uOld;
            globDef = this->model().globalResidual(u, tmp);
 
            if (globDef < oldGlobDef || lambda <= 1.0/8) {
@@ -119,8 +119,8 @@ private:
            }
 
            // undo the last iteration
-           *u -= *uOld;
-           *u /= - lambda;
+           u -= uOld;
+           u /= - lambda;
 
            // try with a smaller update
            lambda /= 2;

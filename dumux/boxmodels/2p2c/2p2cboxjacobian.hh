@@ -60,8 +60,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
-    typedef typename SolutionTypes::Solution                Solution;
+    typedef typename SolutionTypes::SolutionVector SolutionVector;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
@@ -250,7 +249,7 @@ public:
 
         // add diffusive flux of liquid component in gas phase
         tmp =
-        	- vars.porousDiffCoeff(gPhaseIdx) * vars.molarDensityAtIP(gPhaseIdx) *
+            - vars.porousDiffCoeff(gPhaseIdx) * vars.molarDensityAtIP(gPhaseIdx) *
             (vars.molarConcGrad(gPhaseIdx)*vars.face().normal);
         flux[contiLEqIdx] += tmp * FluidSystem::molarMass(lCompIdx);
         flux[contiGEqIdx] -= tmp * FluidSystem::molarMass(gCompIdx);
@@ -296,7 +295,7 @@ public:
     /*!
      * \brief Update the static data of all vertices in the grid.
      */
-    void updateStaticData(SolutionFunction &curGlobalSol, SolutionFunction &oldGlobalSol)
+    void updateStaticData(SolutionVector &curGlobalSol, SolutionVector &oldGlobalSol)
     {
         bool wasSwitched = false;
 
@@ -316,7 +315,7 @@ public:
                     continue;
 
                 staticVertexDat_[globalIdx].visited = true;
-                vertexData.update((*curGlobalSol)[globalIdx],
+                vertexData.update(curGlobalSol[globalIdx],
                                   *it,
                                   this->curElementGeom_,
                                   i,
@@ -399,9 +398,9 @@ public:
      *         and get minimum and maximum values of primary variables
      *
      */
-    void calculateMass(const SolutionFunction &globalSol,
-		       Dune::FieldVector<Scalar, 2> &massGas,
-		       Dune::FieldVector<Scalar, 2> &massLiquid)
+    void calculateMass(const SolutionVector &globalSol,
+                       Dune::FieldVector<Scalar, 2> &massGas,
+                       Dune::FieldVector<Scalar, 2> &massLiquid)
     {
         massGas = 0;
         massLiquid = 0;
@@ -411,7 +410,7 @@ public:
 
         SolutionOnElement curSol;
         VertexDataArray elemDat;
-	/*
+    /*
         VertexData tmp;
         int state;
         Scalar vol, poro, rhoN, rhoW, satN, satW, xAW, xWW, xWN, xAN, pW, Te;
@@ -425,15 +424,15 @@ public:
         Scalar maxTe = -1e100;
         Scalar minX = 1e100;
         Scalar maxX = -1e100;
-        
-	// Loop over elements
+
+    // Loop over elements
         for (; elementIt != endit; ++elementIt)
         {
             setCurrentElement(*elementIt);
 
             int numLocalVerts = elementIt->template count<dim>();
-	    curSol.resize(numLocalVerts);
-	    elemDat.resize(numLocalVerts);
+        curSol.resize(numLocalVerts);
+        elemDat.resize(numLocalVerts);
             this->restrictToElement(curSol, globalSol);
             this->updateElementData_(elemDat, curSol, false);
             // get geometry type
@@ -442,17 +441,17 @@ public:
             // Loop over element vertices
             for (int i = 0; i < numLocalVerts; ++i)
             {
-  	        //int globalIdx = this->vertexMapper().map(*elementIt, i, dim);
+              //int globalIdx = this->vertexMapper().map(*elementIt, i, dim);
 
-		const VertexData &vdat = elemDat[i];
-		const FluidState &fs = vdat.fluidState();
+        const VertexData &vdat = elemDat[i];
+        const FluidState &fs = vdat.fluidState();
                 Scalar vol = this->curElementGeom_.subContVol[i].volume;
-		
-		Scalar satN = fs.saturation(gPhaseIdx);
-		Scalar xAW = fs.massFrac(lPhaseIdx, gCompIdx);
-		Scalar pW = fs.phasePressure(lPhaseIdx);
-		Scalar T = fs.temperature();
-		/*
+
+        Scalar satN = fs.saturation(gPhaseIdx);
+        Scalar xAW = fs.massFrac(lPhaseIdx, gCompIdx);
+        Scalar pW = fs.phasePressure(lPhaseIdx);
+        Scalar T = fs.temperature();
+        /*
                 poro = this->problem_.porosity(this->curElement_(), i);
                 rhoN = elemDat[i].density[gPhaseIdx];
                 rhoW = elemDat[i].density[lPhaseIdx];
@@ -478,23 +477,23 @@ public:
                 maxX = std::max(maxX, xAW);
                 minTe = std::min(minTe, T);
                 maxTe = std::max(maxTe, T);
-                
-		// calculate total mass
-		Scalar mGas =
-		  vdat.porosity()
-		  * fs.saturation(gPhaseIdx)
-		  * fs.density(gPhaseIdx)
-		  * vol;	
-		massGas[lCompIdx] += mGas * fs.massFrac(gPhaseIdx, lCompIdx);
-		massGas[gCompIdx] += mGas * fs.massFrac(gPhaseIdx, gCompIdx);
 
-		Scalar mLiquid =
-		  vdat.porosity()
-		  * fs.saturation(lPhaseIdx)
-		  * fs.density(lPhaseIdx)
-		  * vol;	
-		massLiquid[lCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, lCompIdx);
-		massLiquid[gCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, gCompIdx);
+        // calculate total mass
+        Scalar mGas =
+          vdat.porosity()
+          * fs.saturation(gPhaseIdx)
+          * fs.density(gPhaseIdx)
+          * vol;
+        massGas[lCompIdx] += mGas * fs.massFrac(gPhaseIdx, lCompIdx);
+        massGas[gCompIdx] += mGas * fs.massFrac(gPhaseIdx, gCompIdx);
+
+        Scalar mLiquid =
+          vdat.porosity()
+          * fs.saturation(lPhaseIdx)
+          * fs.density(lPhaseIdx)
+          * vol;
+        massLiquid[lCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, lCompIdx);
+        massLiquid[gCompIdx] += mLiquid * fs.massFrac(lPhaseIdx, gCompIdx);
             }
         }
 
@@ -521,7 +520,7 @@ public:
      *        the current timestep.
      */
     template <class MultiWriter>
-    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionVector &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
@@ -541,7 +540,7 @@ public:
         ScalarField *phasePresence =writer.template createField<Scalar, 1>(numVertices);
         ScalarField *massFrac[numPhases][numComponents];
         for (int i = 0; i < numPhases; ++i)
-            for (int j = 0; j < numComponents; ++j) 
+            for (int j = 0; j < numComponents; ++j)
                 massFrac[i][j] = writer.template createField<Scalar, 1>(numVertices);
 
 #ifdef VELOCITY_OUTPUT  // check if velocity output is demanded
@@ -549,7 +548,7 @@ public:
         ScalarField *velocityY    = writer.template createField<Scalar, 1>(numVertices);
         ScalarField *velocityZ    = writer.template createField<Scalar, 1>(numVertices);
         Scalar maxV=0.; // variable to store the maximum face velocity
-        
+
         // initialize velocity fields
         Scalar boxSurface[numVertices];
         for (int i = 0; i < numVertices; ++i) {
@@ -598,54 +597,54 @@ public:
                 (*mobG)[globalIdx] = elemDat[i].mobility(gPhaseIdx);
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                     for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                        (*massFrac[phaseIdx][compIdx]) [globalIdx] = 
+                        (*massFrac[phaseIdx][compIdx]) [globalIdx] =
                             elemDat[i].fluidState().massFrac(phaseIdx, compIdx);
-                        
+
                         Valgrind::CheckDefined((*massFrac[phaseIdx][compIdx])[globalIdx][0]);
                     }
                 (*temperature)[globalIdx] = elemDat[i].temperature();
                 (*phasePresence)[globalIdx] = staticVertexDat_[globalIdx].phasePresence;
             };
-            
-#ifdef VELOCITY_OUTPUT		// check if velocity output is demanded
+
+#ifdef VELOCITY_OUTPUT        // check if velocity output is demanded
             // In the box method, the velocity is evaluated on the FE-Grid. However, to get an
             // average apparent velocity at the vertex, all contributing velocities have to be interpolated.
             GlobalPosition velocity(0.);
             // loop over the phases
             for (int faceIdx = 0; faceIdx< this->curElementGeom_.numEdges; faceIdx++)
             {
-            	//prepare the flux calculations (set up and prepare geometry, FE gradients)
-            	FluxData fluxDat(this->problem_,
-            			this->curElement_(),
-            			this->curElementGeom_,
-            			faceIdx,
-            			elemDat);
+                //prepare the flux calculations (set up and prepare geometry, FE gradients)
+                FluxData fluxDat(this->problem_,
+                        this->curElement_(),
+                        this->curElementGeom_,
+                        faceIdx,
+                        elemDat);
 
                 // choose phase of interest. Alternatively, a loop over all phases would be possible.
-            	int phaseIdx = gPhaseIdx;
+                int phaseIdx = gPhaseIdx;
 
-            	// get darcy velocity
-            	velocity = fluxDat.vDarcy[phaseIdx];  // mind the sign: vDarcy = kf grad p
+                // get darcy velocity
+                velocity = fluxDat.vDarcy[phaseIdx];  // mind the sign: vDarcy = kf grad p
 
-            	// up+downstream mobility
-            	const VertexData &up = elemDat[fluxDat.upstreamIdx[phaseIdx]];
-            	const VertexData &down = elemDat[fluxDat.downstreamIdx[phaseIdx]];
-            	Scalar scvfArea = fluxDat.face->normal.two_norm(); //get surface area to weight velocity at the IP with the surface area
-            	velocity *= (mobilityUpwindAlpha*up.mobility[phaseIdx] + (1-mobilityUpwindAlpha)*down.mobility[phaseIdx])* scvfArea;
+                // up+downstream mobility
+                const VertexData &up = elemDat[fluxDat.upstreamIdx[phaseIdx]];
+                const VertexData &down = elemDat[fluxDat.downstreamIdx[phaseIdx]];
+                Scalar scvfArea = fluxDat.face->normal.two_norm(); //get surface area to weight velocity at the IP with the surface area
+                velocity *= (mobilityUpwindAlpha*up.mobility[phaseIdx] + (1-mobilityUpwindAlpha)*down.mobility[phaseIdx])* scvfArea;
 
-            	int vertIIdx = this->problem().model().vertexMapper().map(this->curElement_(),
-									  fluxDat.face->i,
-									  dim);
-            	int vertJIdx = this->problem().model().vertexMapper().map(this->curElement_(),
-									  fluxDat.face->j,
-									  dim);
-            	// add surface area for weighting purposes
-            	boxSurface[vertIIdx] += scvfArea;
-            	boxSurface[vertJIdx] += scvfArea;
+                int vertIIdx = this->problem().model().vertexMapper().map(this->curElement_(),
+                                      fluxDat.face->i,
+                                      dim);
+                int vertJIdx = this->problem().model().vertexMapper().map(this->curElement_(),
+                                      fluxDat.face->j,
+                                      dim);
+                // add surface area for weighting purposes
+                boxSurface[vertIIdx] += scvfArea;
+                boxSurface[vertJIdx] += scvfArea;
 
-            	// Add velocity to upstream and downstream vertex.
-            	// Beware: velocity has to be substracted because of the (wrong) sign of vDarcy
-            	(*velocityX)[vertIIdx] -= velocity[0];
+                // Add velocity to upstream and downstream vertex.
+                // Beware: velocity has to be substracted because of the (wrong) sign of vDarcy
+                (*velocityX)[vertIIdx] -= velocity[0];
                 (*velocityX)[vertJIdx] -= velocity[0];
                 if (dim >= 2) {
                     (*velocityY)[vertIIdx] -= velocity[1];
@@ -659,14 +658,14 @@ public:
 #endif
         }
 
-#ifdef VELOCITY_OUTPUT		// check if velocity output is demanded
+#ifdef VELOCITY_OUTPUT        // check if velocity output is demanded
         // normalize the velocities at the vertices
         for (int i = 0; i < numVertices; ++i) {
-        	(*velocityX)[i] /= boxSurface[i];
+            (*velocityX)[i] /= boxSurface[i];
         if (dim >= 2)
-        	(*velocityY)[i] /= boxSurface[i];
+            (*velocityY)[i] /= boxSurface[i];
         if (dim == 3)
-        	(*velocityZ)[i] /= boxSurface[i];
+            (*velocityZ)[i] /= boxSurface[i];
         }
 #endif
 
@@ -689,7 +688,7 @@ public:
         writer.addVertexData(temperature, "temperature");
         writer.addVertexData(phasePresence, "phase presence");
 
-#ifdef VELOCITY_OUTPUT		// check if velocity output is demanded
+#ifdef VELOCITY_OUTPUT        // check if velocity output is demanded
         writer.addVertexData(velocityX, "Vx");
         if (dim >= 2)
             writer.addVertexData(velocityY, "Vy");
@@ -709,22 +708,18 @@ public:
      */
     template <class MultiWriter>
     void addConvergenceVtkFields(MultiWriter &writer,
-                                 const SolutionFunction &oldSol,
-                                 const SolutionFunction &update)
+                                 const SolutionVector &oldSol,
+                                 const SolutionVector &update)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
-#if HAVE_DUNE_PDELAB
-        SolutionFunction globalDef(this->model().jacobianAssembler().gridFunctionSpace(), 0.0);
-#else
-        SolutionFunction globalDef(this->gridView(), this->gridView(), false);
-#endif
+        SolutionVector globalDef(oldSol, 0.0);
         this->model().globalResidual(oldSol, globalDef);
 
         // create the required scalar fields
         unsigned numVertices = this->gridView_.size(dim);
         //unsigned numElements = this->gridView_.size(0);
-        
+
         // global defect of the two auxiliary equations
         ScalarField* gd[numEq];
         ScalarField* delta[numEq];
@@ -737,11 +732,11 @@ public:
 
         ElementIterator eIt = this->gridView_.template begin<0>();
         ElementIterator eEndIt = this->gridView_.template end<0>();
-        
+
         for (; eIt != eEndIt; ++ eIt)
         {
             this->curElementGeom_.update(*eIt);
-            for (int scvIdx = 0; 
+            for (int scvIdx = 0;
                  scvIdx < this->curElementGeom_.numVertices;
                  ++scvIdx)
             {
@@ -815,7 +810,7 @@ protected:
 
     //  perform variable switch at a vertex; Returns true if a
     //  variable switch was performed.
-    bool primaryVarSwitch_(SolutionFunction &globalSol,
+    bool primaryVarSwitch_(SolutionVector &globalSol,
                            const VertexData &vertexData,
                            int globalIdx,
                            const GlobalPosition &globalPos)
@@ -824,14 +819,14 @@ protected:
         bool wouldSwitch  = false;
         int phasePresence    = staticVertexDat_[globalIdx].phasePresence;
         int newPhasePresence = phasePresence;
-        
+
         // check if a primary var switch is necessary
         if (phasePresence == gPhaseOnly)
         {
             // calculate mole fraction in the hypothetic liquid phase
             Scalar xll = vertexData.fluidState().moleFrac(lPhaseIdx, lCompIdx);
             Scalar xlg = vertexData.fluidState().moleFrac(lPhaseIdx, gCompIdx);
-            
+
             Scalar xlMax = 1.0;
             if (xll + xlg > xlMax)
                 wouldSwitch = true;
@@ -849,9 +844,9 @@ protected:
                           << std::endl;
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
-                    (*globalSol)[globalIdx][switchIdx] = 0.0;
+                    globalSol[globalIdx][switchIdx] = 0.0;
                 else if (formulation == plSg)
-                    (*globalSol)[globalIdx][switchIdx] = 1.0;
+                    globalSol[globalIdx][switchIdx] = 1.0;
             };
         }
         else if (phasePresence == lPhaseOnly)
@@ -878,9 +873,9 @@ protected:
                           << std::endl;
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
-                    (*globalSol)[globalIdx][switchIdx] = 0.999;
+                    globalSol[globalIdx][switchIdx] = 0.999;
                 else if (formulation == plSg)
-                    (*globalSol)[globalIdx][switchIdx] = 0.001;
+                    globalSol[globalIdx][switchIdx] = 0.001;
             }
         }
         else if (phasePresence == bothPhases) {
@@ -896,8 +891,8 @@ protected:
                           << ", Sg: " << vertexData.saturation(gPhaseIdx)
                           << std::endl;
                 newPhasePresence = lPhaseOnly;
-                
-                (*globalSol)[globalIdx][switchIdx]
+
+                globalSol[globalIdx][switchIdx]
                     = vertexData.fluidState().massFrac(lPhaseIdx, gCompIdx);
             }
             else if (vertexData.saturation(lPhaseIdx) <= Smin) {
@@ -909,7 +904,7 @@ protected:
                           << std::endl;
                 newPhasePresence = gPhaseOnly;
 
-                (*globalSol)[globalIdx][switchIdx]
+                globalSol[globalIdx][switchIdx]
                     = vertexData.fluidState().massFrac(gPhaseIdx, lCompIdx);
             }
         }

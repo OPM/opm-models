@@ -96,7 +96,7 @@ public:
     virtual void postProcessUpdate(Scalar t, Scalar dt)
     {
         updateTime(dt);
-        
+
         return;
     }
 
@@ -117,7 +117,7 @@ public:
         return diffusion.problem();
     }
 
-    
+
     typename Diffusion::ProblemType& problem() const
     {
         return diffusion.problem();

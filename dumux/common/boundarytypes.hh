@@ -34,32 +34,32 @@ namespace Dumux
 
 template <int numEq>
 class BoundaryTypes
-{      
+{
     class BoundaryWrapper
     { public:
         BoundaryWrapper(BoundaryTypes *bt, int idx)
             : bt_(bt), idx_(idx) {};
-        
+
         BoundaryWrapper &operator=(int bc) {
             switch (bc) {
             case Dumux::BoundaryConditions::neumann:
                 bt_->boundaryInfo_[idx_].visited       = 1;
                 bt_->boundaryInfo_[idx_].isDirichlet = 0;
-                
+
                 Valgrind::SetDefined(bt_->boundaryInfo_[idx_]);
 
                 break;
             case Dumux::BoundaryConditions::dirichlet:
                 bt_->boundaryInfo_[idx_].visited       = 1;
                 bt_->boundaryInfo_[idx_].isDirichlet = 1;
-                
+
                 Valgrind::SetDefined(bt_->boundaryInfo_[idx_]);
 
                 bt_->eq2pvIdx_[idx_] = idx_;
                 bt_->pv2eqIdx_[idx_] = idx_;
                 break;
             default:
-                DUNE_THROW(Dune::InvalidStateException, 
+                DUNE_THROW(Dune::InvalidStateException,
                            "Only neumann and dirichlet "
                            "conditions are supported!");
             }
@@ -72,7 +72,7 @@ class BoundaryTypes
     };
 
 public:
-    BoundaryTypes() 
+    BoundaryTypes()
     { reset(); }
 
     /*!
@@ -88,7 +88,7 @@ public:
             boundaryInfo_[i].visited = 0;
 
             boundaryInfo_[i].isDirichlet = 0;
-            
+
             eq2pvIdx_[i] = i;
             pv2eqIdx_[i] = i;
         };
@@ -105,23 +105,23 @@ public:
      *
      * If they are not, an exception is thrown!#
      */
-    void checkWellPosed() const 
+    void checkWellPosed() const
     {
         for (int i=0; i < numEq; ++i) {
             // if this fails, at least one condition is missing.
             assert(boundaryInfo_[i].visited);
         }
-    };        
-   
+    };
+
     /*!
      * \brief Set all boundary conditions to neuman.
      */
     void setAllNeumann()
-    { 
+    {
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             boundaryInfo_[eqIdx].visited = 1;
             boundaryInfo_[eqIdx].isDirichlet = 0;
-            
+
             Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
@@ -130,11 +130,11 @@ public:
      * \brief Set all boundary conditions to dirichlet.
      */
     void setAllDirichlet()
-    { 
+    {
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
             boundaryInfo_[eqIdx].visited = 1;
             boundaryInfo_[eqIdx].isDirichlet = 1;
-           
+
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
 
@@ -147,7 +147,7 @@ public:
      *        equation.
      */
     void setNeumann(int eqIdx)
-    { 
+    {
         boundaryInfo_[eqIdx].visited = 1;
 
         Valgrind::SetDefined(boundaryInfo_[eqIdx]);
@@ -162,9 +162,9 @@ public:
      * \param eqIdx The index of the equation which should be ignored
      *              as a consequence
      */
-    void setDirichlet(int pvIdx, 
+    void setDirichlet(int pvIdx,
                       int eqIdx)
-    { 
+    {
         boundaryInfo_[eqIdx].visited = 1;
         boundaryInfo_[eqIdx].isDirichlet = 1;
 
@@ -174,7 +174,7 @@ public:
 
         Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
-    
+
     /*!
      * \brief Set a dirichlet boundary condition for a single primary
      *        variable
@@ -256,16 +256,16 @@ public:
      *        primary varibles or equations.
      *
      * To get rid of the "deprecated warning" do the following:
-     * 	boundaryTypeVector is now a class, which has the methods
-     * 	setAllNeumann() and setAllDirichlet().
+     *     boundaryTypeVector is now a class, which has the methods
+     *     setAllNeumann() and setAllDirichlet().
      *
-     * 		deprecated System				->		current System
+     *         deprecated System                ->        current System
      *
-     * 	values=BoundaryConditions::neumann;	->	values.setAllNeumann();
+     *     values=BoundaryConditions::neumann;    ->    values.setAllNeumann();
      *
      */
     BoundaryTypes &operator=(int bc) DUNE_DEPRECATED
-    { 
+    {
         switch (bc) {
         case Dumux::BoundaryConditions::neumann:
             reset();
@@ -275,7 +275,7 @@ public:
             reset();
             setAllDirichlet();
             break;
-        
+
         default:
             DUNE_THROW(Dune::InvalidStateException,
                        "Only neumann and dirichlet "
@@ -289,7 +289,7 @@ private:
     struct __packed__ {
         unsigned char visited : 1;
         unsigned char isDirichlet : 1;
-    } boundaryInfo_[numEq];   
+    } boundaryInfo_[numEq];
 
     unsigned char eq2pvIdx_[numEq];
     unsigned char pv2eqIdx_[numEq];

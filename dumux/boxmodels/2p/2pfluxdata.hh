@@ -45,7 +45,7 @@ class TwoPFluxData
 {
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))    Problem;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
 
@@ -206,10 +206,10 @@ private:
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
             spatialParams.meanK(K,
-                   spatialParams.intrinsicPermeability(element, 
+                   spatialParams.intrinsicPermeability(element,
                                                        fvElemGeom_,
                                                        face().i),
-                    spatialParams.intrinsicPermeability(element, 
+                    spatialParams.intrinsicPermeability(element,
                                                         fvElemGeom_,
                                                         face().j));
             K.mv(potentialGrad_[phaseIdx], Kmvp);

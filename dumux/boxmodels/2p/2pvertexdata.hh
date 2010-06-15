@@ -43,7 +43,7 @@ class TwoPVertexData
     // this is a bit hacky: the Vertex data might not be identical to
     // the implementation.
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData))   Implementation;
-    
+
     enum {
         numEq         = GET_PROP_VALUE(TypeTag, PTAG(NumEq)),
         numPhases     = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)),
@@ -58,7 +58,7 @@ class TwoPVertexData
     enum {
         pwSn = Indices::pwSn,
         pnSw = Indices::pnSw,
-        
+
         pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
 
@@ -91,14 +91,14 @@ public:
                 const FVElementGeometry &elemGeom,
                 int                      vertIdx,
                 const Problem           &problem,
-                bool                     isOldSol) 
+                bool                     isOldSol)
     {
         asImp().updateTemperature_(sol,
-                                   element, 
+                                   element,
                                    elemGeom,
                                    vertIdx,
                                    problem);
-        
+
         // material law parameters
         const MaterialLawParams &materialParams =
             problem.spatialParameters().materialLawParams(element, elemGeom, vertIdx);
@@ -108,37 +108,37 @@ public:
         if (int(formulation) == pwSn) {
             Sn = sol[saturationIdx];
             p[wPhaseIdx] = sol[pressureIdx];
-            p[nPhaseIdx] = 
-                p[wPhaseIdx] + 
+            p[nPhaseIdx] =
+                p[wPhaseIdx] +
                 MaterialLaw::pC(materialParams, 1 - Sn);
         }
         else if (int(formulation) == pnSw) {
             Sn = 1 - sol[saturationIdx];
             p[nPhaseIdx] = sol[pressureIdx];
-            p[wPhaseIdx] = 
-                p[nPhaseIdx] - 
+            p[wPhaseIdx] =
+                p[nPhaseIdx] -
                 MaterialLaw::pC(materialParams, 1 - Sn);
         }
 
         fluidState_.update(Sn, p[wPhaseIdx], p[nPhaseIdx], temperature_);
 
-        mobility_[wPhaseIdx] = 
+        mobility_[wPhaseIdx] =
             MaterialLaw::krw(materialParams, 1 - Sn)
             /
-            FluidSystem::phaseViscosity(wPhaseIdx, 
+            FluidSystem::phaseViscosity(wPhaseIdx,
                                         temperature_,
                                         p[wPhaseIdx],
                                         fluidState_);
-        mobility_[nPhaseIdx] = 
+        mobility_[nPhaseIdx] =
             MaterialLaw::krn(materialParams, 1 - Sn)
             /
-            FluidSystem::phaseViscosity(nPhaseIdx, 
+            FluidSystem::phaseViscosity(nPhaseIdx,
                                         temperature_,
                                         p[nPhaseIdx],
                                         fluidState_);
 
         // porosity
-        porosity_ = problem.spatialParameters().porosity(element, 
+        porosity_ = problem.spatialParameters().porosity(element,
                                                          elemGeom,
                                                          vertIdx);
     }
@@ -147,11 +147,11 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      vertIdx,
-                            const Problem           &problem) 
+                            const Problem           &problem)
     {
         temperature_ = problem.temperature(element, elemGeom, vertIdx);
     }
-        
+
     /*!
      * \brief Returns the phase state for the control-volume.
      */
@@ -218,7 +218,7 @@ protected:
 private:
     Implementation &asImp()
     { return *static_cast<Implementation*>(this); }
-    
+
     const Implementation &asImp() const
     { return *static_cast<const Implementation*>(this); }
 };

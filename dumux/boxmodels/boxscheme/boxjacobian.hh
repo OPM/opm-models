@@ -89,7 +89,7 @@ private:
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::VertexMapper            VertexMapper;
     typedef typename SolutionTypes::ElementMapper           ElementMapper;
-    typedef typename SolutionTypes::Solution                Solution;
+    typedef typename SolutionTypes::SolutionVector          SolutionVector;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
@@ -116,9 +116,9 @@ public:
      * \brief Compute the global residual right hand side
      *        of an equation we would like to have zero.
      */
-    void evalGlobalResidual(SolutionFunction &residual)
+    void evalGlobalResidual(SolutionVector &residual)
     {
-        *residual = 0;
+        residual = 0;
         SolutionOnElement tmpSol, tmpSolOld;
         SolutionOnElement localResid;
         localResid.resize(12);
@@ -126,8 +126,8 @@ public:
         const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             this->setCurrentElement(*elemIt);
-            this->restrictToElement(tmpSol, this->problem().model().curSolFunction());
-            this->restrictToElement(tmpSolOld, this->problem().model().prevSolFunction());
+            this->restrictToElement(tmpSol, this->problem().model().curSol());
+            this->restrictToElement(tmpSolOld, this->problem().model().prevSol());
             this->asImp_().setCurrentSolution(tmpSol);
             this->asImp_().setPreviousSolution(tmpSolOld);
 
@@ -135,7 +135,7 @@ public:
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i) {
                 int globalI = this->problem().model().vertexMapper().map(*elemIt, i, dim);
-                (*residual)[globalI] += localResid[i];
+                residual[globalI] += localResid[i];
             }
         };
     }
@@ -148,10 +148,10 @@ public:
     {
         // set the current grid element
         asImp_().setCurrentElement(element);
-        
+
         int numVertices = curElementGeom_.numVertices;
         SolutionOnElement localU(numVertices);
-        restrictToElement(localU, problem_.model().curSolFunction());
+        restrictToElement(localU, problem_.model().curSol());
         asImp_().assemble_(element, localU);
     }
 
@@ -166,7 +166,7 @@ public:
             for (int j = 0; j < numEq; ++j)
                 residual[i][j] = Scalar(0);
         }
-        
+
         asImp_().evalFluxes_(residual);
         asImp_().evalVolumeTerms_(residual);
 
@@ -180,7 +180,7 @@ public:
                     residual[i][j] = 0;
             }
         }
-    
+
 #if HAVE_VALGRIND
         for (int i=0; i < curElementGeom_.numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
@@ -192,7 +192,7 @@ public:
      *        of the current element, save the result to 'dest'.
      */
     void restrictToElement(SolutionOnElement &dest,
-                           const SolutionFunction &globalFn) const
+                           const SolutionVector &globalSol) const
     {
         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
         // we assert that the i-th shape function is
@@ -200,7 +200,7 @@ public:
         int n = curElement_().template count<dim>();
         dest.resize(n);
         for (int i = 0; i < n; i++) {
-            dest[i] = (*globalFn)[dofMapper.map(curElement_(), i, dim)];
+            dest[i] = globalSol[dofMapper.map(curElement_(), i, dim)];
         }
     }
 
@@ -242,7 +242,7 @@ public:
      * This method should be overwritten by the child class if
      * necessary.
      */
-    void updateStaticData(SolutionFunction &curSol, SolutionFunction &oldSol)
+    void updateStaticData(SolutionVector &curSol, SolutionVector &oldSol)
     { };
 
     /*!
@@ -265,7 +265,7 @@ public:
                                  curElement_(),
                                  curFvElementGeometry(),
                                  vertIdx,
-                                 problem(), 
+                                 problem(),
                                  isOldSol);
         }
     }
@@ -305,7 +305,7 @@ public:
      * needs to be recalculated. (Updating the element cache is very
      * expensive since material laws need to be evaluated.)
      */
-    void deflectCurrentSolution(SolutionOnElement &curSol, 
+    void deflectCurrentSolution(SolutionOnElement &curSol,
                                 int vertIdx,
                                 int eqIdx,
                                 Scalar value)
@@ -317,12 +317,12 @@ public:
         // recalculate the vertex data for the box which should be
         // changed
         curSol[vertIdx][eqIdx] = value;
-        
+
         Valgrind::SetUndefined(curElemDat_[vertIdx]);
-        curElemDat_[vertIdx].update(curSol[vertIdx], 
+        curElemDat_[vertIdx].update(curSol[vertIdx],
                                     curElement_(),
                                     curFvElementGeometry(),
-                                    vertIdx, 
+                                    vertIdx,
                                     problem(),
                                     false);
         Valgrind::CheckDefined(curElemDat_[vertIdx]);
@@ -335,8 +335,8 @@ public:
      * This only works if deflectSolution was only called with
      * (vert, component) as arguments.
      */
-    void restoreCurrentSolution(SolutionOnElement &curSol, 
-                                int vertIdx, 
+    void restoreCurrentSolution(SolutionOnElement &curSol,
+                                int vertIdx,
                                 int eqIdx,
                                 Scalar origValue)
     {
@@ -400,7 +400,7 @@ protected:
     // current and previous element data. (this is model specific.)
     VertexDataArray  curElemDat_;
     VertexDataArray  prevElemDat_;
-    
+
     // temporary variable to store the variable vertex data
     VertexData   curVertexDataStash_;
 
@@ -476,7 +476,7 @@ protected:
                                                     1,
                                                     faceVertIdx,
                                                     dim);
-                
+
                 if (!this->bctype[elemVertIdx].hasNeumann())
                     // the current boundary segment does not have any
                     // equation where a neumann condition should be
@@ -505,7 +505,7 @@ protected:
     {
         // temporary vector to store the neumann boundary fluxes
         PrimaryVarVector values(0.0);
-        
+
         problem_.neumann(values,
                          curElement_(),
                          curElementGeom_,
@@ -514,7 +514,7 @@ protected:
                          boundaryFaceIdx);
         values *= curElementGeom_.boundaryFace[boundaryFaceIdx].area;
         Valgrind::CheckDefined(values);
-        
+
         result += values;
     }
 
@@ -524,7 +524,7 @@ protected:
 
         // restrict the previous global solution to the current element
         SolutionOnElement localOldU(numVertices);
-        restrictToElement(localOldU, problem_.model().prevSolFunction());
+        restrictToElement(localOldU, problem_.model().prevSol());
 
         this->asImp_().setCurrentSolution(localU);
         this->asImp_().setPreviousSolution(localOldU);
@@ -534,11 +534,11 @@ protected:
         SolutionOnElement partialStiffness(numVertices);
         for (int j = 0; j < numVertices; j++) {
             for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
-                asImp_().assemblePartialStiffness_(partialStiffness, 
+                asImp_().assemblePartialStiffness_(partialStiffness,
                                                    localU,
                                                    j,
                                                    pvIdx);
-                
+
                 // update the local stiffness matrix with the current partial
                 // derivatives
                 updateLocalStiffness_(j,
@@ -547,7 +547,7 @@ protected:
             }
         }
     };
-    
+
     void evalFluxes_(SolutionOnElement &residual)
     {
         // calculate the mass flux over the faces and subtract
@@ -588,11 +588,11 @@ protected:
             this->asImp_().computeStorage(tmp, i, true);
 
             massContrib -= tmp;
-            massContrib *= 
+            massContrib *=
                 curElementGeom_.subContVol[i].volume
                 /
                 problem_.timeManager().timeStepSize();
-            
+
             for (int j = 0; j < numEq; ++j)
                 residual[i][j] += massContrib[j];
 
@@ -603,14 +603,14 @@ protected:
 
             for (int j = 0; j < numEq; ++j) {
                 residual[i][j] -= source[j];
-                
+
                 // make sure that only defined quantities where used
                 // to calculate the residual.
                 Valgrind::CheckDefined(residual[i][j]);
             }
         }
     }
-    
+
     /*!
      * \brief Update the stiffness matrix for all equations on all
      *        vertices of the current element with the partial
@@ -627,7 +627,7 @@ protected:
     {
         Scalar eps = asImp_().numericEpsilon_(elemSol, vertexIdx, pvIdx);
         Scalar uJ = elemSol[vertexIdx][pvIdx];
-        
+
         // vary the pvIdx-th primary variable at the element's j-th
         // vertex and calculate the residual, don't include the
         // boundary conditions
@@ -639,7 +639,7 @@ protected:
         SolutionOnElement tmp(curElementGeom_.numVertices);
         asImp_().evalLocalResidual(tmp);
         asImp_().restoreCurrentSolution(elemSol, vertexIdx, pvIdx, uJ);
-        
+
         // central differences
         dest -= tmp;
         dest /= 2*eps;
@@ -655,14 +655,14 @@ protected:
      *        from the current solution.
      *
      * \param elemSol    The current solution on the element
-     * \param vertexIdx  The local index of the element's vertex for 
+     * \param vertexIdx  The local index of the element's vertex for
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
      */
     Scalar numericEpsilon_(const SolutionOnElement &elemSol,
                            int vertIdx,
                            int pvIdx) const
-    { return 1e-9*(std::abs(elemSol[vertIdx][pvIdx]) + 1); }
+    { return 1e-11*(std::abs(elemSol[vertIdx][pvIdx]) + 1); }
 
     /*!
      * \brief Updates the current local stiffness matrix with the

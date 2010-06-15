@@ -76,7 +76,7 @@ SET_PROP(WaterAirProblem, Problem)
 SET_TYPE_PROP(WaterAirProblem, FluidSystem, Dumux::H2O_N2_System<TypeTag>);
 
 // Set the soil properties
-SET_TYPE_PROP(WaterAirProblem, 
+SET_TYPE_PROP(WaterAirProblem,
               SpatialParameters,
               Dumux::WaterAirSpatialParameters<TypeTag>);
 
@@ -115,7 +115,7 @@ SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, true);
  * This problem should typically be simulated for 300000 s.
  * A good choice for the initial time step size is 1000 s.
  *
- * To run the simulation execute the following line in shell: 
+ * To run the simulation execute the following line in shell:
  * <tt>./test_2p2cni ./grids/test_2p2cni.dgf 300000 1000</tt>
  *  */
 template <class TypeTag = TTAG(WaterAirProblem) >
@@ -297,7 +297,7 @@ public:
                 const FVElementGeometry &fvElemGeom,
                 int                      scvIdx) const
     {
-	       values = Scalar(0.0);
+           values = Scalar(0.0);
     }
 
     /*!
@@ -311,13 +311,13 @@ public:
                  const FVElementGeometry &fvElemGeom,
                  int                      scvIdx) const
     {
-	       const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+           const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
 
         initial_(values, globalPos);
 
 #if !ISOTHERMAL
- 	       if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] < 30)
-	    	   values[temperatureIdx] = 380;
+            if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] < 30)
+               values[temperatureIdx] = 380;
 #endif
     }
 

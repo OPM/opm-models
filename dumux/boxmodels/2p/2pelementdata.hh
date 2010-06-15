@@ -15,7 +15,7 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Contains the quantities which are are constant within a
  *        finite element in the two-phase model.

@@ -164,11 +164,11 @@ public:
         ParentType::computeDiffusiveFlux(flux, fluxData);
 
         // diffusive heat flux
-        flux[temperatureIdx] += 
+        flux[temperatureIdx] +=
             fluxData.normalMatrixHeatFlux();
     }
 
-    
+
 };
 
 }

@@ -31,19 +31,19 @@ public:
             enum { eqIdx = i };
         };
     };
-    
+
     template <int i>
     const typename Child<i>::Type &getChild() const
     {
         static typename Child<i>::Type dummy;
         return dummy;
     };
-    
+
     enum { isLeaf = false };
     enum { CHILDREN = numEq };
 
     BoundaryIndexHelperPDELab()
-	{}
+    {}
 };
 
 #endif

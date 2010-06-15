@@ -13,7 +13,7 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Gives the phase state.
  */
@@ -49,7 +49,7 @@ class TwoPFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTAG(Sc
 
 public:
     enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
-    
+
 public:
     void update(Scalar Sw, Scalar pressW, Scalar pressN, Scalar temperature)
     {

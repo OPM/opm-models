@@ -86,7 +86,7 @@ SET_INT_PROP(BoxOnePTwoC, NumPhases,     1); //!< The number of phases in the 1p
 SET_INT_PROP(BoxOnePTwoC, NumComponents, 2); //!< The number of components in the 1p2c model is 2
 
 //! Use the 1p2c local jacobian operator for the 1p2c model
-SET_TYPE_PROP(BoxOnePTwoC, 
+SET_TYPE_PROP(BoxOnePTwoC,
               LocalJacobian,
               OnePTwoCBoxJacobian<TypeTag>);
 

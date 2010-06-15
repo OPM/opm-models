@@ -72,7 +72,7 @@ public:
     {
         set(x, y, m0, m1);
     }
-    
+
     /*!
      * \brief Set the sampling points and the boundary slopes of the
      *        spline function.
@@ -84,21 +84,21 @@ public:
     {
         x_ = x;
         y_ = y;
-        
+
         // See: J. Stoer: "Numerische Mathematik 1", 9th edition,
         // Springer, 2005, p. 111
         Dune::FieldMatrix<Scalar, numSamples, numSamples> M(0);
         FieldVector d(0);
 
         const int n = numSamples - 1;
-        
+
         // second to next to last rows
         for (int i = 1; i < n; ++i) {
             const Scalar lambda_i = h_(i + 1) / (h_(i) + h_(i+1));
             const Scalar mu_i = 1 - lambda_i;
-            const Scalar d_i = 
+            const Scalar d_i =
                 6 / (h_(i) + h_(i+1))
-                * 
+                *
                 ( (y_[i+1] - y[i])/h_(i+1) - (y_[i] - y[i-1])/h_(i));
 
             M[i][i-1] = mu_i;
@@ -115,13 +115,13 @@ public:
         // last row
         M[n][n] = 2;
         M[n][n - 1] = 1;
-        d[n] = 
-            6/h_(n) 
+        d[n] =
+            6/h_(n)
             *
             (m1 - (y_[n] - y_[n - 1])/h_(n));
 
         // solve for the moments
-        M.solve(moments_, d);   
+        M.solve(moments_, d);
     }
 
     /*!
@@ -160,16 +160,16 @@ public:
         Scalar x_i = x - x_[i];
         Scalar x_i1 = x_[i+1] - x;
 
-        Scalar A_i = 
-            (y_[i+1] - y_[i])/h_i1 
+        Scalar A_i =
+            (y_[i+1] - y_[i])/h_i1
             -
             h_i1/6*(moments_[i+1] - moments_[i]);
         Scalar B_i = y_[i] - moments_[i]* (h_i1*h_i1) / 6;
-        
+
         return
-            moments_[i]* x_i1*x_i1*x_i1 / (6 * h_i1) 
+            moments_[i]* x_i1*x_i1*x_i1 / (6 * h_i1)
             +
-            moments_[i + 1]* x_i*x_i*x_i / (6 * h_i1) 
+            moments_[i + 1]* x_i*x_i*x_i / (6 * h_i1)
             +
             A_i*x_i
             +
@@ -192,15 +192,15 @@ public:
         Scalar x_i = x - x_[i];
         Scalar x_i1 = x_[i+1] - x;
 
-        Scalar A_i = 
-            (y_[i+1] - y_[i])/h_i1 
+        Scalar A_i =
+            (y_[i+1] - y_[i])/h_i1
             -
             h_i1/6*(moments_[i+1] - moments_[i]);
-        
+
         return
-            -moments_[i] * x_i1*x_i1 / (2 * h_i1) 
+            -moments_[i] * x_i1*x_i1 / (2 * h_i1)
             +
-            moments_[i + 1] * x_i*x_i / (2 * h_i1) 
+            moments_[i + 1] * x_i*x_i / (2 * h_i1)
             +
             A_i;
     }
@@ -218,7 +218,7 @@ public:
         assert(applies(x0));
         assert(applies(x1));
         assert(x0 <= x1);
-        
+
         // corner case where the whole spline is a constant
         if (moments_[0] == 0 &&
             moments_[1] == 0 &&
@@ -229,7 +229,7 @@ public:
             return 2;
         }
 
-        
+
         int i = findIntervalIdx_(x0);
         if (x_[i] <= x0 && x1 <= x_[i+1]) {
             // the interval to check is completely included in a
@@ -244,11 +244,11 @@ public:
         for (; i < iEnd - 1; ++i)
             if (r != monotonic_(i, x_[i], x_[i + 1]))
                 return 0;
-        
+
         // check for the last segment
         if (x_[iEnd] < x1 && r != monotonic_(iEnd, x_[iEnd], x1))
         { return 0; }
-        
+
         return r;
     }
 
@@ -270,12 +270,12 @@ public:
      ----------- snip -----------
      ./yourProgramm > spline.csv
      gnuplot
-     
+
      gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
      "spline.csv" using 1:3 w l ti "Derivative",          \
      "spline.csv" using 1:4 w p ti "Monotonic"
      ----------- snap -----------
-     */   
+     */
     void printCSV(Scalar x0, Scalar x1, int k) const
     {
         const int n = numSamples - 1;
@@ -306,7 +306,7 @@ public:
                 dy_dx = evalDerivative(x);
                 mono = monotonic(std::max(x_[0], x), std::min(x_[n], x_p1));
             }
-            
+
             std::cout << x << " " << y << " " << dy_dx << " " << mono << "\n";
         }
     }
@@ -341,7 +341,7 @@ private:
                 // to determine whether we're monotonically increasing
                 // or decreasing
                 x0 = x1;
-            return (x0*(x0*3*a + 2*b) + c > 0) ? 1 : -1;           
+            return (x0*(x0*3*a + 2*b) + c > 0) ? 1 : -1;
         };
         if ((x0 < xE1 && xE1 < x1) ||
             (x0 < xE2 && xE2 < x1))
@@ -352,7 +352,7 @@ private:
         // no extremum in range (x0, x1)
         x0 = (x0 + x1)/2; // pick point in the middle of the interval
                           // to avoid extrema on the boundaries
-        return (x0*(x0*3*a + 2*b) + c > 0) ? 1 : -1;       
+        return (x0*(x0*3*a + 2*b) + c > 0) ? 1 : -1;
     };
 
     Scalar h_(int i) const
@@ -363,17 +363,17 @@ private:
         // bisection
         int iLow = 0;
         int iHigh = numSamples - 1;
-        
+
         while (iLow + 1 < iHigh) {
             int i = (iLow + iHigh) / 2;
-            if (x_[i] > x) 
+            if (x_[i] > x)
                 iHigh = i;
             else
-                iLow = i;            
+                iLow = i;
         };
         return iLow;
     };
-    
+
     // returns the coefficient in front of the x^3 term. In Stoer this
     // is delta.
     Scalar a_(int i) const
@@ -471,7 +471,7 @@ public:
              Scalar m1,
              Scalar m2)
     { set(x[0], x[1], y[0], y[1], m1, m2); };
-    
+
     /*!
      * \brief Set the parameters of the spline.
      *
@@ -485,7 +485,7 @@ public:
              Scalar m2)
     {
         assert(x1 != x2);
-              
+
         x1_ = x1;
         x2_ = x2;
 
@@ -508,10 +508,10 @@ public:
         tmpLeft  = 1;
         d_ = tmpRight/tmpLeft;
 
-        assert(fabs(eval(x1) - y1) < 1e-5);
-        assert(fabs(eval(x2) - y2) < 1e-5);
-        assert(fabs(evalDerivative(x1) - m1) < 1e-5);
-        assert(fabs(evalDerivative(x2) - m2) < 1e-5);
+        assert(fabs(eval(x1) - y1) < std::max(1e-11, fabs(1e-8*y1)));
+        assert(fabs(eval(x2) - y2) < std::max(1e-11, fabs(1e-8*y2)));
+        assert(fabs(evalDerivative(x1) - m1) < std::max(1e-11, fabs(1e-8*m1)));
+        assert(fabs(evalDerivative(x2) - m2) < std::max(1e-11, fabs(1e-8*m2)));
     }
 
     /*!
@@ -558,7 +558,7 @@ public:
             // not exhibit any extrema.
             return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;
         }
-        
+
         disc = std::sqrt(disc);
         Scalar xE1 = (-2*b_ + disc)/(6*a_);
         Scalar xE2 = (-2*b_ - disc)/(6*a_);
@@ -569,7 +569,7 @@ public:
                 // to determine whether we're monotonically increasing
                 // or decreasing
                 x0 = x1;
-            return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;           
+            return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;
         };
         if ((x0 < xE1 && xE1 < x1) ||
             (x0 < xE2 && xE2 < x1))
@@ -581,7 +581,7 @@ public:
         // no extremum in range (x0, x1)
         x0 = (x0 + x1)/2; // pick point in the middle of the interval
                           // to avoid extrema on the boundaries
-        return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;       
+        return (x0*(x0*3*a_ + 2*b_) + c_ > 0) ? 1 : -1;
     };
 
     /*!
@@ -607,12 +607,12 @@ public:
      ----------- snip -----------
      ./yourProgramm > spline.csv
      gnuplot
-     
+
      gnuplot> plot "spline.csv" using 1:2 w l ti "Curve", \
      "spline.csv" using 1:3 w l ti "Derivative",          \
      "spline.csv" using 1:4 w p ti "Monotonic"
      ----------- snap -----------
-     */   
+     */
     void printCSV(Scalar x0, Scalar x1, int k) const
     {
         for (int i = 0; i <= k; ++i) {
@@ -642,7 +642,7 @@ public:
                 dy_dx = evalDerivative(x);
                 mono = monotonic(std::max(x1_, x), std::min(x2_, x_p1));
             }
-            
+
             std::cout << x << " " << y << " " << dy_dx << " " << mono << "\n";
         }
     }

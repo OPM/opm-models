@@ -62,7 +62,7 @@ public:
      */
     Scalar temperature() const
     { DUNE_THROW(Dune::Exception, "temperature() method called for a 2p2cni problem"); };
-  
+
     // \}
 };
 

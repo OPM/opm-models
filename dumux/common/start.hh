@@ -48,7 +48,7 @@ void printUsage(const char *progname)
  */
 template <class ProblemTypeTag>
 int startFromDGF(int argc, char **argv)
-{    
+{
 #ifdef NDEBUG
     try {
 #endif
@@ -94,7 +94,7 @@ int startFromDGF(int argc, char **argv)
 
         if (restart)
             problem.deserialize(restartTime);
-        
+
         if (!problem.simulate(dt, tEnd))
             return 2;
 

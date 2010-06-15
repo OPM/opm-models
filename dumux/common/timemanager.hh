@@ -384,7 +384,7 @@ public:
      */
 
 private:
-    
+
     int              episodeIndex_;
     double           episodeStartTime_;
     double           episodeLength_;

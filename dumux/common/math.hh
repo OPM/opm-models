@@ -142,11 +142,11 @@ bool isBetween(const Dune::FieldVector<Scalar, dim> &pos,
               const Dune::FieldVector<Scalar, dim> &largerVec)
 {
    if (isLarger(pos, smallerVec) && isSmaller(pos, largerVec))
-	   {
-		   return true;
-	   }
+       {
+           return true;
+       }
    else
-	   return false;
+       return false;
 }
 
 

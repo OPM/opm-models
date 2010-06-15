@@ -57,7 +57,7 @@ namespace Dumux {
  \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
  (\text{grad} p_\alpha - \varrho_{\alpha} \mbox{\bf g}) \right\}
  - q_\alpha^\kappa = \quad 0 \qquad \alpha \in \{w, n\}
- * 	\f}
+ *     \f}
  * For the energy balance, local thermal equilibrium is assumed which results in one
  * energy conservation equation for the porous solid matrix and the fluids:
  * \f{eqnarray*}
@@ -66,7 +66,7 @@ namespace Dumux {
  - \sum_\alpha \text{div} \left\{ \varrho_\alpha h_\alpha
  \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left( \text{grad} \: p_\alpha
  - \varrho_\alpha \mathbf{g} \right) \right\} \\
-	&-& \text{div} \left( \lambda_{pm} \text{grad} \: T \right)
+    &-& \text{div} \left( \lambda_{pm} \text{grad} \: T \right)
  - q^h \qquad = \quad 0, \qquad \alpha \in \{w, n\}.
  \f}
  *
@@ -82,38 +82,38 @@ namespace Dumux {
 
 template<class TypeTag>
 class TwoPNIBoxModel: public BoxScheme<TypeTag, TwoPNIBoxModel<TypeTag> > {
-	typedef TwoPNIBoxModel<TypeTag> ThisType;
-	typedef BoxScheme<TypeTag, ThisType> ParentType;
+    typedef TwoPNIBoxModel<TypeTag> ThisType;
+    typedef BoxScheme<TypeTag, ThisType> ParentType;
 
-	typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
-	typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-	typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
 public:
-	TwoPNIBoxModel(Problem &prob)
-	: ParentType(prob)
-	{
-	}
+    TwoPNIBoxModel(Problem &prob)
+    : ParentType(prob)
+    {
+    }
 
     /*!
      * \brief Append all quantities of interest which can be derived
      *        from the solution of the current time step to the VTK
      *        writer.
      */
-	template <class MultiWriter>
-	void addOutputVtkFields(MultiWriter &writer)
-	{
-		this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
-	}
+    template <class MultiWriter>
+    void addOutputVtkFields(MultiWriter &writer)
+    {
+        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
+    }
 
-	/*!
-	 * \brief Calculate the phase masses in the system for
-	 *        the current timestep.
-	 */
-	void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
-	{
-		this->localJacobian().calculateMass(this->curSolFunction(), mass);
-	}
+    /*!
+     * \brief Calculate the phase masses in the system for
+     *        the current timestep.
+     */
+    void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
+    {
+        this->localJacobian().calculateMass(this->curSolFunction(), mass);
+    }
 };
 
 }

@@ -143,7 +143,7 @@ public:
     VariableClass(const GridView& gridView, const ReservoirProperties& resProps, Scalar& initialSat = *(new Scalar(1)), Dune::FieldVector<Scalar, dim>& initialVel = *(new Dune::FieldVector<Scalar, dim> (0)))
     : gridViewDiffusion_(gridView), gridViewTransport_(gridView),
     indexSetDiffusion_(gridView.indexSet()),indexSetTransport_(gridView.indexSet()),
-    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)), 
+    gridSizeDiffusion_(indexSetDiffusion_.size(0)),gridSizeTransport_(indexSetTransport_.size(0)),
     resProps_(resProps), codim_(0), time_(0)
     {
         initializeGlobalVariablesDiffPart(initialVel);
@@ -298,7 +298,7 @@ private:
         for (ElementIterator eIt = gridViewTransport_.template begin<0>(); eIt != eItEnd; ++eIt)
             elementVolumes_[indexSetTransport_.index(*eIt)] = (*eIt).geometry().volume();
     }
-    
+
     void analyzeMass() const
     {
 #ifdef HACK_SINTEF_RESPROP

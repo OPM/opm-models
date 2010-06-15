@@ -87,7 +87,7 @@ public:
         : fvElemGeom_(elemGeom)
     {
         scvfIdx_ = faceIdx;
-        
+
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             densityAtIP_[phaseIdx] = Scalar(0);
             molarDensityAtIP_[phaseIdx] = Scalar(0);
@@ -157,14 +157,14 @@ private:
                 fI = fJ = 0.5; // doesn't matter because no phase is
                                // present in both cells!
             densityAtIP_[phaseIdx] =
-                (fI*elemDat[i].density(phaseIdx) + 
+                (fI*elemDat[i].density(phaseIdx) +
                  fJ*elemDat[j].density(phaseIdx))
                 /
                 (fI + fJ);
             // phase density
             molarDensityAtIP_[phaseIdx]
                 =
-                (fI*elemDat[i].molarDensity(phaseIdx) + 
+                (fI*elemDat[i].molarDensity(phaseIdx) +
                  fJ*elemDat[j].molarDensity(phaseIdx))
                 /
                 (fI + fJ);
@@ -203,10 +203,10 @@ private:
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
             spatialParams.meanK(K,
-                                spatialParams.intrinsicPermeability(element, 
+                                spatialParams.intrinsicPermeability(element,
                                                                     fvElemGeom_,
                                                                     face().i),
-                                spatialParams.intrinsicPermeability(element, 
+                                spatialParams.intrinsicPermeability(element,
                                                                     fvElemGeom_,
                                                                     face().j));
             K.mv(potentialGrad_[phaseIdx], Kmvp);
@@ -257,7 +257,7 @@ private:
 
             // -> harmonic mean
             porousDiffCoeff_[phaseIdx] = harmonicMean(vDat_i.porosity() * vDat_i.saturation(phaseIdx) * tau_i * vDat_i.diffCoeff(phaseIdx),
-										 vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
+                                         vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
 
         }
     }

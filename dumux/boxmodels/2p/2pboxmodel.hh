@@ -107,7 +107,7 @@ public:
       */
      void calculateFluxAcrossLayer(Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
      {
-    	 this->localJacobian().calculateFluxAcrossLayer(this->curSolFunction(), flux, coord, coordVal);
+         this->localJacobian().calculateFluxAcrossLayer(this->curSolFunction(), flux, coord, coordVal);
      }
 
      /*!

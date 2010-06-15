@@ -68,7 +68,7 @@ class BoxScheme
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::VertexMapper            VertexMapper;
     typedef typename SolutionTypes::ElementMapper           ElementMapper;
-    typedef typename SolutionTypes::Solution                Solution;
+    typedef typename SolutionTypes::SolutionVector          SolutionVector;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
     typedef typename SolutionTypes::BoundaryTypeVector      BoundaryTypeVector;
@@ -138,7 +138,7 @@ public:
     }
 
     ~BoxScheme()
-    { 
+    {
         delete jacAsm_;
         delete uCur_;
         delete uPrev_;
@@ -151,31 +151,27 @@ public:
      */
     void initial()
     {
-    	if (!wasRestarted_) {
+        if (!wasRestarted_) {
             allocateStuff_();
             this->localJacobian().initStaticData();
-            applyInitialSolution_(*uCur_);
+            applyInitialSolution_(*(*uCur_));
         }
 
-        applyDirichletBoundaries_(*uCur_);
-        
+        applyDirichletBoundaries_(*(*uCur_));
+
         // also set the solution of the "previous" time step to the
         // initial solution.
         *(*uPrev_) = *(*uCur_);
     }
 
-    Scalar globalResidual(const SolutionFunction &u, SolutionFunction &tmp) 
+    Scalar globalResidual(const SolutionVector &u, SolutionVector &tmp)
     {
-#if HAVE_DUNE_PDELAB
-        SolutionFunction tmpU(jacobianAssembler().gridFunctionSpace(), 0.0);
-#else
-        SolutionFunction tmpU(gridView_, gridView_);
-#endif
-        *tmpU = *(*uCur_);
-        *(*uCur_) = *u;
+        SolutionVector tmpU(asImp_(), 0.0);
+        tmpU = *(*uCur_);
+        *(*uCur_) = u;
         localJacobian_.evalGlobalResidual(tmp);
 
-        Scalar result = (*tmp).two_norm();
+        Scalar result = tmp.two_norm();
         /*
         Scalar result = 0;
         for (int i = 0; i < (*tmp).size(); ++i) {
@@ -183,38 +179,57 @@ public:
                 result += std::abs((*tmp)[i][j]);
         }
         */
-        *(*uCur_) = *tmpU;
+        *(*uCur_) = tmpU;
         return result;
     };
+
     /*!
      * \brief Reference to the current solution function.
      */
-    const SolutionFunction &curSolFunction() const
+    const SolutionFunction &curSolFunction() const DUNE_DEPRECATED // use curSol() instead
     { return *uCur_; }
 
     /*!
      * \brief Reference to the current solution function.
      */
-    SolutionFunction &curSolFunction()
+    SolutionFunction &curSolFunction() DUNE_DEPRECATED // use curSol() instead
     { return *uCur_; }
 
     /*!
-     * \brief Reference to the solution function for the right hand side.
-     */
-    SolutionFunction &rightHandSideFunction()
-    { return *f_; }
-
-    /*!
      * \brief Reference to solution function of the previous time step.
      */
-    SolutionFunction &prevSolFunction()
+    SolutionFunction &prevSolFunction() DUNE_DEPRECATED // use prevSol() instead
     { return *uPrev_; }
 
     /*!
      * \brief Reference to solution function of the previous time step.
      */
-    const SolutionFunction &prevSolFunction() const
+    const SolutionFunction &prevSolFunction() const DUNE_DEPRECATED // use prevSol() instead
     { return *uPrev_; }
+
+    /*!
+     * \brief Reference to the current solution as a block vector.
+     */
+    const SolutionVector &curSol() const
+    { return *(*uCur_); }
+
+    /*!
+     * \brief Reference to the current solution as a block vector.
+     */
+    SolutionVector &curSol()
+    { return *(*uCur_); }
+
+    /*!
+     * \brief Reference to the previous solution as a block vector.
+     */
+    const SolutionVector &prevSol() const
+    { return *(*uPrev_); }
+
+    /*!
+     * \brief Reference to the previous solution as a block vector.
+     */
+    SolutionVector &prevSol()
+    { return *(*uPrev_); }
 
     /*!
      * \brief Returns the operator assembler for the global jacobian of
@@ -264,8 +279,8 @@ public:
                 NewtonController &controller)
     {
 #if HAVE_VALGRIND
-        for (size_t i = 0; i < (*curSolFunction()).size(); ++i)
-            Valgrind::CheckDefined((*curSolFunction())[i]);
+        for (size_t i = 0; i < curSol().size(); ++i)
+            Valgrind::CheckDefined(curSol()[i]);
 #endif // HAVE_VALGRIND
 
         asImp_().updateBegin();
@@ -273,17 +288,16 @@ public:
         int numRetries = 0;
         while (true)
         {
-            bool converged = solver.execute(this->asImp_(),
-                                            controller);
+            bool converged = solver.execute(controller);
             if (converged)
                 break;
-            
+
             ++numRetries;
             if (numRetries > 10) {
                 problem_.updateFailed();
                 asImp_().updateFailed();
                 DUNE_THROW(Dune::MathError,
-                           "Newton solver didn't converge after 10 timestep divisions. dt=" 
+                           "Newton solver didn't converge after 10 timestep divisions. dt="
                            << problem_.timeManager().timeStepSize());
             }
 
@@ -300,8 +314,8 @@ public:
         asImp_().updateSuccessful();
 
 #if HAVE_VALGRIND
-        for (size_t i = 0; i < (*curSolFunction()).size(); ++i) {
-            Valgrind::CheckDefined(&(*curSolFunction())[i]);
+        for (size_t i = 0; i < curSol().size(); ++i) {
+            Valgrind::CheckDefined(curSol()[i]);
         }
 #endif // HAVE_VALGRIND
     }
@@ -314,7 +328,7 @@ public:
      */
     void updateBegin()
     {
-        applyDirichletBoundaries_(*uCur_);
+        applyDirichletBoundaries_(curSol());
     }
 
 
@@ -349,7 +363,7 @@ public:
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
         *(*uCur_) = *(*uPrev_);
-        applyDirichletBoundaries_(*uCur_);
+        applyDirichletBoundaries_(curSol());
     };
 
     /*!
@@ -357,9 +371,9 @@ public:
      *
      * The global deflection of the mass balance from zero.
      */
-    void evalGlobalResidual(SolutionFunction &globResidual)
+    void evalGlobalResidual(SolutionVector &globResidual)
     {
-        (*globResidual) = Scalar(0.0);
+        globResidual = Scalar(0.0);
 
         // iterate through leaf grid
         ElementIterator        it     = gridView_.template begin<0>();
@@ -380,8 +394,8 @@ public:
             SolutionOnElement localOldU(numDofs);
 
             localJacobian_.setCurrentElement(element);
-            localJacobian_.restrictToElement(localU, curSolFunction());
-            localJacobian_.restrictToElement(localOldU, prevSolFunction());
+            localJacobian_.restrictToElement(localU, curSol());
+            localJacobian_.restrictToElement(localOldU, prevSol());
 
             localJacobian_.setCurrentSolution(localU);
             localJacobian_.setPreviousSolution(localOldU);
@@ -436,7 +450,7 @@ public:
         }
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            outstream << (*curSolFunction())[vertIdx][eqIdx] << " ";
+            outstream << curSol()[vertIdx][eqIdx] << " ";
         }
     };
 
@@ -453,7 +467,7 @@ public:
                 DUNE_THROW(Dune::IOError,
                            "Could not deserialize vertex "
                            << vertIdx);
-            instream >> (*curSolFunction())[vertIdx][eqIdx];
+            instream >> curSol()[vertIdx][eqIdx];
         }
     };
 
@@ -465,6 +479,12 @@ public:
      */
     const DofEntityMapper &dofEntityMapper() const
     { return dofEntityMapper_; };
+
+    /*!
+     * \brief Returns the number of global degrees of freedoms (DOFs)
+     */
+    size_t numDofs() const
+    { return gridView_.size(dim); }
 
     /*!
      * \brief Mapper for vertices to indices.
@@ -480,7 +500,7 @@ public:
 
     void resetJacobianAssembler ()
     {
-    	delete jacAsm_;
+        delete jacAsm_;
 
         jacAsm_ = new JacobianAssembler(asImp_(), problem_);
     }
@@ -492,26 +512,19 @@ protected:
 
     void allocateStuff_()
     {
-#ifdef HAVE_DUNE_PDELAB
         jacAsm_ = new JacobianAssembler(asImp_(), problem_);
         uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
         uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
         f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-#else
-        jacAsm_ = new JacobianAssembler(gridView_.grid(), gridView_, gridView_, !hasOverlap_());
-        uCur_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-        uPrev_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-        f_ = new SolutionFunction(gridView_, gridView_, !hasOverlap_());
-#endif
     }
 
-    void applyInitialSolution_(SolutionFunction &u)
+    void applyInitialSolution_(SolutionVector &u)
     {
         // first set the whole domain to zero. This is
         // necessary in order to also get a meaningful value
         // for ghost nodes (if we are running in parallel)
         if (gridView_.comm().size() > 1) {
-            (*u) = Scalar(0.0);
+            u = Scalar(0.0);
         }
 
         // iterate through leaf grid and evaluate initial
@@ -529,7 +542,7 @@ protected:
     };
 
     // apply the initial solition for a single element
-    void applyInitialSolutionElement_(SolutionFunction &u,
+    void applyInitialSolutionElement_(SolutionVector &u,
                                       const Element &element)
     {
         // HACK: set the current element for the local
@@ -552,16 +565,16 @@ protected:
             // use the problem for actually doing the
             // dirty work of nailing down the initial
             // solution.
-            this->problem_.initial((*u)[globalIdx],
+            this->problem_.initial(u[globalIdx],
                                    element,
                                    fvElemGeom,
                                    scvIdx);
-            Valgrind::CheckDefined((*u)[globalIdx]);
+            Valgrind::CheckDefined(u[globalIdx]);
         }
     }
 
     // apply dirichlet boundaries for the whole grid
-    void applyDirichletBoundaries_(SolutionFunction &u)
+    void applyDirichletBoundaries_(SolutionVector &u)
     {
         // set Dirichlet boundary conditions of the grid's
         // outer boundaries
@@ -583,7 +596,7 @@ protected:
     };
 
     // apply dirichlet boundaries for a single element
-    void applyDirichletElement_(SolutionFunction &u,
+    void applyDirichletElement_(SolutionVector &u,
                                 const Element &element)
     {
         Dune::GeometryType      geoType = element.geometry().type();
@@ -615,7 +628,7 @@ protected:
 
     // apply dirichlet boundaries for a single boundary
     // sub-control volume face of a finite volume cell.
-    void applyDirichletSCVF_(SolutionFunction &u,
+    void applyDirichletSCVF_(SolutionVector &u,
                              const Element &element,
                              const ReferenceElement &refElem,
                              const IntersectionIterator &isIt,
@@ -672,11 +685,11 @@ protected:
             // TODO: we should propably use the sum weighted by the
             //       sub-control volume instead of just overwriting
             //       the previous values...
-            (*u)[globalVertexIdx][eqIdx] = dirichletVal[boundaryTypes.eqToDirichletIndex(eqIdx)];
+            u[globalVertexIdx][eqIdx] = dirichletVal[boundaryTypes.eqToDirichletIndex(eqIdx)];
         }
     }
 
-    bool verbose_() const 
+    bool verbose_() const
     { return gridView_.comm().rank() == 0; };
 
     Implementation &asImp_()

@@ -113,12 +113,12 @@ public:
     // Component indices
     static const int lCompIdx = 0; //!< Index of the liquid's primary component
     static const int gCompIdx = 1; //!< Index of the gas' primary component
-  
+
     // present phases (-> 'pseudo' primary variable)
     static const int lPhaseOnly = 1; //!< Only the non-wetting phase is present
     static const int gPhaseOnly = 0; //!< Only the wetting phase is present
     static const int bothPhases = 2; //!< Both phases are present
-    
+
     // Primary variable indices
     static const int pressureIdx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
     static const int switchIdx   = PVOffset + 1; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
@@ -150,12 +150,12 @@ public:
     // Component indices
     static const int lCompIdx = 0; //!< Index of the liquid's primary component
     static const int gCompIdx = 1; //!< Index of the gas' primary component
-  
+
     // present phases (-> 'pseudo' primary variable)
     static const int lPhaseOnly = 1; //!< Only the non-wetting phase is present
     static const int gPhaseOnly = 2; //!< Only the wetting phase is present
     static const int bothPhases = 3; //!< Both phases are present
-    
+
     // Primary variable indices
     static const int pressureIdx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
     static const int switchIdx   = PVOffset + 1; //!< Index of the either the saturation or the mass fraction of the non-wetting/wetting phase
@@ -186,11 +186,11 @@ SET_PROP(BoxTwoPTwoC, NumComponents)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-    
+
 public:
     static const int value = FluidSystem::numComponents;
 
-    static_assert(value == 2, 
+    static_assert(value == 2,
                   "Only fluid systems with 2 components are supported by the 2p-2c model!");
 };
 
@@ -204,10 +204,10 @@ SET_PROP(BoxTwoPTwoC, NumPhases)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluidSystem)) FluidSystem;
-    
+
 public:
     static const int value = FluidSystem::numPhases;
-    static_assert(value == 2, 
+    static_assert(value == 2,
                   "Only fluid systems with 2 phases are supported by the 2p-2c model!");
 };
 

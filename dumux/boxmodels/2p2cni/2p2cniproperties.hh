@@ -112,7 +112,7 @@ SET_PROP(BoxTwoPTwoCNI, TwoPTwoCIndices)
 SET_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices)
 { private:
     enum { formulation = GET_PROP_VALUE(TypeTag, PTAG(Formulation)) };
-public:  
+public:
     typedef TwoPTwoCNIIndices<TypeTag, formulation, 0> type;
 };
 

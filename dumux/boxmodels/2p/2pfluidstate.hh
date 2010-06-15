@@ -14,7 +14,7 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Gives the phase state.
  */
@@ -50,7 +50,7 @@ class TwoPFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTAG(Sc
 
 public:
     enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
-    
+
 public:
     void update(Scalar Sn, Scalar pressW, Scalar pressN, Scalar temperature)
     {
@@ -72,7 +72,7 @@ public:
      * \brief Returns the saturation of a phase.
      */
     Scalar saturation(int phaseIdx) const
-    { 
+    {
         if (phaseIdx == wPhaseIdx)
             return Scalar(1.0) - Sn_;
         else
@@ -83,12 +83,12 @@ public:
      * \brief Returns the mass fraction of a component in a phase.
      */
     Scalar massFrac(int phaseIdx, int compIdx) const
-    { 
+    {
         if (compIdx == phaseIdx)
             return 1.0;
         return 0;
     }
-    
+
     /*!
      * \brief Returns the molar fraction of a component in a fluid phase.
      */
@@ -96,14 +96,14 @@ public:
     {
         return massFrac(phaseIdx, compIdx);
     }
-    
+
     /*!
      * \brief Returns the total concentration of a phase [mol / m^3].
      *
      * This is equivalent to the sum of all component concentrations.
      */
     Scalar totalConcentration(int phaseIdx) const
-    { 
+    {
         return density_[phaseIdx]/FluidSystem::molarMass(phaseIdx);
     };
 
@@ -111,18 +111,18 @@ public:
      * \brief Returns the concentration of a component in a phase [mol / m^3].
      */
     Scalar concentration(int phaseIdx, int compIdx) const
-    { 
-        if (phaseIdx == compIdx) 
+    {
+        if (phaseIdx == compIdx)
             return totalConcentration(phaseIdx);
         return 0;
     };
-        
+
     /*!
      * \brief Returns the density of a phase [kg / m^3].
      */
     Scalar density(int phaseIdx) const
     { return density_[phaseIdx]; }
-    
+
     /*!
      * \brief Returns mean molar mass of a phase [kg / mol].
      *
@@ -131,17 +131,17 @@ public:
      */
     Scalar averageMolarMass(int phaseIdx) const
     { return FluidSystem::molarMass(phaseIdx); };
-    
+
     /*!
      * \brief Returns the partial pressure of a component in the gas phase [Pa].
      */
     Scalar partialPressure(int compIdx) const
-    { 
+    {
         if (compIdx == wPhaseIdx)
             return 0;
         return phasePressure_[nPhaseIdx];
     }
-    
+
     /*!
      * \brief Returns the pressure of a fluid phase [Pa].
      */

@@ -16,7 +16,7 @@
  *   This program is distributed WITHOUT ANY WARRANTY.                       *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Calcultes the phase state from the primary variables in the
  *        2pNc model.
@@ -56,7 +56,7 @@ class TwoPTwoCFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTA
 
         lCompIdx = Indices::lCompIdx,
         gCompIdx = Indices::gCompIdx,
-        
+
         switchIdx = Indices::switchIdx,
         pressureIdx = Indices::pressureIdx,
     };
@@ -69,13 +69,13 @@ class TwoPTwoCFluidState : public FluidState<typename GET_PROP_TYPE(TypeTag, PTA
     };
 
     // formulations
-    enum { 
+    enum {
         formulation = GET_PROP_VALUE(TypeTag, PTAG(Formulation)),
         plSg = TwoPTwoCFormulation::plSg,
         pgSl = TwoPTwoCFormulation::pgSl
     };
 
-public:   
+public:
     enum { numPhases = GET_PROP_VALUE(TypeTag, PTAG(NumPhases)) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, PTAG(NumComponents)) };
     enum { numSolvents = 1 };
@@ -99,7 +99,7 @@ public:
 
         temperature_ = temperature;
         Valgrind::CheckDefined(temperature_);
-        
+
         // extract non-wetting phase pressure
         if (phasePresence == gPhaseOnly)
             Sg_ = 1.0;
@@ -155,12 +155,12 @@ public:
             // convert mass to mole fractions
             concentration_[gPhaseIdx][lCompIdx] *= avgMolarMass_[gPhaseIdx]/M1;
             concentration_[gPhaseIdx][gCompIdx] *= avgMolarMass_[gPhaseIdx]/M2;
-            
+
             // convert to real concentrations
             totalConcentration_[gPhaseIdx] = 1.0;
             Scalar rhog = FluidSystem::phaseDensity(gPhaseIdx,
                                                     temperature_,
-                                                    phasePressure_[gPhaseIdx], 
+                                                    phasePressure_[gPhaseIdx],
                                                     *this);
             totalConcentration_[gPhaseIdx] = rhog / avgMolarMass_[gPhaseIdx];
             concentration_[gPhaseIdx][lCompIdx] *= totalConcentration_[gPhaseIdx];
@@ -187,12 +187,12 @@ public:
             // convert mass to mole fractions
             concentration_[lPhaseIdx][lCompIdx] *= avgMolarMass_[lPhaseIdx]/M1;
             concentration_[lPhaseIdx][gCompIdx] *= avgMolarMass_[lPhaseIdx]/M2;
-            
+
             // convert to real concentrations
             totalConcentration_[lPhaseIdx] = 1.0;
             Scalar rhol = FluidSystem::phaseDensity(lPhaseIdx,
                                                     temperature_,
-                                                    phasePressure_[lPhaseIdx], 
+                                                    phasePressure_[lPhaseIdx],
                                                     *this);
             totalConcentration_[lPhaseIdx] = rhol / avgMolarMass_[lPhaseIdx];
             concentration_[lPhaseIdx][lCompIdx] *= totalConcentration_[lPhaseIdx];
@@ -234,13 +234,13 @@ public:
      * \brief Returns the saturation of a phase.
      */
     Scalar saturation(int phaseIdx) const
-    { 
+    {
         if (phaseIdx == lPhaseIdx)
             return Scalar(1.0) - Sg_;
         else
             return Sg_;
     };
-    
+
     /*!
      * \brief Returns the molar fraction of a component in a fluid phase.
      */
@@ -250,7 +250,7 @@ public:
             concentration_[phaseIdx][compIdx]/
             totalConcentration_[phaseIdx];
     }
-    
+
     /*!
      * \brief Returns the total concentration of a phase [mol / m^3].
      *
@@ -264,23 +264,23 @@ public:
      */
     Scalar concentration(int phaseIdx, int compIdx) const
     { return concentration_[phaseIdx][compIdx]; };
-    
+
     /*!
      * \brief Returns the mass fraction of a component in a phase.
      */
     Scalar massFrac(int phaseIdx, int compIdx) const
-    { 
+    {
         return
             moleFrac(phaseIdx, compIdx) *
             FluidSystem::molarMass(compIdx)/avgMolarMass_[phaseIdx];
     }
-    
+
     /*!
      * \brief Returns the density of a phase [kg / m^3].
      */
     Scalar density(int phaseIdx) const
     { return totalConcentration_[phaseIdx]*avgMolarMass_[phaseIdx]; }
-    
+
     /*!
      * \brief Returns mean molar mass of a phase [kg / mol].
      *
@@ -289,7 +289,7 @@ public:
      */
     Scalar averageMolarMass(int phaseIdx) const
     { return avgMolarMass_[phaseIdx]; };
-    
+
     /*!
      * \brief Returns the pressure of a fluid phase [Pa].
      */

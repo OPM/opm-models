@@ -192,7 +192,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity()
         {
             // local number of facet
             int isIndex = isIt->indexInInside();
-            
+
             // get geometry type of face
             Dune::GeometryType faceGT = isIt->geometryInInside().type();
 

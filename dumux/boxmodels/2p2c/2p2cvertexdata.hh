@@ -94,18 +94,18 @@ public:
                 const FVElementGeometry &elemGeom,
                 int                      scvIdx,
                 const Problem           &problem,
-                bool                     isOldSol) 
+                bool                     isOldSol)
     {
         asImp().updateTemperature_(sol,
-                                   element, 
+                                   element,
                                    elemGeom,
                                    scvIdx,
                                    problem);
 
         // capillary pressure parameters
-        const MaterialLawParams &materialParams = 
+        const MaterialLawParams &materialParams =
             problem.spatialParameters().materialLawParams(element, elemGeom, scvIdx);
-        
+
         int globalVertIdx = problem.model().dofEntityMapper().map(element, scvIdx, dim);
         int phasePresence = problem.model().localJacobian().phasePresence(globalVertIdx, isOldSol);
 
@@ -116,8 +116,8 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (this->fluidState().saturation(phaseIdx) != 0.0) {
                 // Mobilities
-                const Scalar mu = 
-                    FluidSystem::phaseViscosity(phaseIdx, 
+                const Scalar mu =
+                    FluidSystem::phaseViscosity(phaseIdx,
                                                 fluidState().temperature(),
                                                 fluidState().phasePressure(lPhaseIdx),
                                                 fluidState());
@@ -131,7 +131,7 @@ public:
                 Valgrind::CheckDefined(mobility_[phaseIdx]);
 
                 // binary diffusion coefficents
-                diffCoeff_[phaseIdx] = 
+                diffCoeff_[phaseIdx] =
                     FluidSystem::diffCoeff(phaseIdx,
                                            lCompIdx,
                                            gCompIdx,
@@ -145,7 +145,7 @@ public:
                 diffCoeff_[phaseIdx] = 0;
             }
         }
-        
+
         // porosity
         porosity_ = problem.spatialParameters().porosity(element,
                                                          elemGeom,
@@ -157,7 +157,7 @@ public:
                             const Element           &element,
                             const FVElementGeometry &elemGeom,
                             int                      scvIdx,
-                            const Problem           &problem) 
+                            const Problem           &problem)
     {
         temperature_ = problem.temperature(element, elemGeom, scvIdx);
     }
@@ -211,7 +211,7 @@ public:
      *        the control volume.
      */
     Scalar mobility(int phaseIdx) const
-    { 
+    {
         return mobility_[phaseIdx];
     }
 
@@ -244,7 +244,7 @@ protected:
 private:
     Implementation &asImp()
     { return *static_cast<Implementation*>(this); }
-    
+
     const Implementation &asImp() const
     { return *static_cast<const Implementation*>(this); }
 };
