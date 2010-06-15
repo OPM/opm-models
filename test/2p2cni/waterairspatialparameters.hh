@@ -54,7 +54,7 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
     typedef Dune::FieldVector<CoordScalar,dimWorld> Vector;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+    typedef typename SolutionTypes::SolutionVector        SolutionVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(VertexData)) VertexData;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FluxData))   FluxData;
@@ -106,7 +106,7 @@ public:
      *
      * \TODO call parameters
      */
-    void update(const SolutionFunction &globalSolutionFn)
+    void update(const SolutionVector &globalSolution)
     {
     };
 

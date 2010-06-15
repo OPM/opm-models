@@ -89,7 +89,7 @@ public:
         : ParentType(prob)
     {
     }
-
+    
     /*!
      * \brief Append all quantities of interest which can be derived
      *        from the solution of the current time step to the VTK
@@ -98,19 +98,19 @@ public:
     template <class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
-        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addOutputVtkFields(writer, this->curSol());
     }
 
     /*!
-      * \brief Calculate the flux of the nonwetting phase across a given
-      * layer for the current timestep
-      */
-     void calculateFluxAcrossLayer(Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
-     {
-         this->localJacobian().calculateFluxAcrossLayer(this->curSolFunction(), flux, coord, coordVal);
-     }
-
-     /*!
+     * \brief Calculate the flux of the nonwetting phase across a given
+     * layer for the current timestep
+     */
+    void calculateFluxAcrossLayer(Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
+    {
+        this->localJacobian().calculateFluxAcrossLayer(this->curSolFunction(), flux, coord, coordVal);
+    }
+    
+    /*!
      * \brief Calculate the phase masses in the system for the current
      *        timestep.
      */

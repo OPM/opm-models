@@ -64,7 +64,6 @@ class BoxScheme
     typedef typename GridView::Grid::ctype                   CoordScalar;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::VertexMapper            VertexMapper;
     typedef typename SolutionTypes::ElementMapper           ElementMapper;
@@ -106,7 +105,7 @@ public:
      */
     struct NewtonTraits {
         typedef typename ThisType::LocalJacobian     LocalJacobian;
-        typedef typename ThisType::SolutionFunction  Function;
+        typedef typename ThisType::SolutionVector  Vector;
         typedef typename ThisType::JacobianAssembler JacobianAssembler;
         typedef typename ThisType::Scalar            Scalar;
         typedef typename ThisType::GridView::Grid    Grid;
@@ -121,15 +120,15 @@ public:
           dofEntityMapper_(gridView_),
           vertexMapper_(gridView_),
           elementMapper_(gridView_),
-
           localJacobian_(prob)
     {
+        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
+
         wasRestarted_ = false;
 
-        jacAsm_ = 0;
-        uCur_ = 0;
-        uPrev_ = 0;
-        f_ = 0;
+        uCur_.resize(asImp_().numDofs());
+        uPrev_.resize(asImp_().numDofs());
+        f_.resize(asImp_().numDofs());
 
         // check grid partitioning if we are parallel
 //        assert((prob.gridView().comm().size() == 1) ||
@@ -137,38 +136,28 @@ public:
 //               (prob.gridView().ghostSize(0) > 0));
     }
 
-    ~BoxScheme()
-    {
-        delete jacAsm_;
-        delete uCur_;
-        delete uPrev_;
-        delete f_;
-    }
-
-
     /*!
      * \brief Apply the initial conditions to the model.
      */
     void initial()
     {
         if (!wasRestarted_) {
-            allocateStuff_();
             this->localJacobian().initStaticData();
-            applyInitialSolution_(*(*uCur_));
+            applyInitialSolution_(uCur_);
         }
 
-        applyDirichletBoundaries_(*(*uCur_));
+        applyDirichletBoundaries_(uCur_);
 
         // also set the solution of the "previous" time step to the
         // initial solution.
-        *(*uPrev_) = *(*uCur_);
+        uPrev_ = uCur_;
     }
 
     Scalar globalResidual(const SolutionVector &u, SolutionVector &tmp)
     {
         SolutionVector tmpU(asImp_(), 0.0);
-        tmpU = *(*uCur_);
-        *(*uCur_) = u;
+        tmpU = uCur_;
+        uCur_ = u;
         localJacobian_.evalGlobalResidual(tmp);
 
         Scalar result = tmp.two_norm();
@@ -179,57 +168,33 @@ public:
                 result += std::abs((*tmp)[i][j]);
         }
         */
-        *(*uCur_) = tmpU;
+        uCur_ = tmpU;
         return result;
     };
-
-    /*!
-     * \brief Reference to the current solution function.
-     */
-    const SolutionFunction &curSolFunction() const DUNE_DEPRECATED // use curSol() instead
-    { return *uCur_; }
-
-    /*!
-     * \brief Reference to the current solution function.
-     */
-    SolutionFunction &curSolFunction() DUNE_DEPRECATED // use curSol() instead
-    { return *uCur_; }
-
-    /*!
-     * \brief Reference to solution function of the previous time step.
-     */
-    SolutionFunction &prevSolFunction() DUNE_DEPRECATED // use prevSol() instead
-    { return *uPrev_; }
-
-    /*!
-     * \brief Reference to solution function of the previous time step.
-     */
-    const SolutionFunction &prevSolFunction() const DUNE_DEPRECATED // use prevSol() instead
-    { return *uPrev_; }
 
     /*!
      * \brief Reference to the current solution as a block vector.
      */
     const SolutionVector &curSol() const
-    { return *(*uCur_); }
+    { return uCur_; }
 
     /*!
      * \brief Reference to the current solution as a block vector.
      */
     SolutionVector &curSol()
-    { return *(*uCur_); }
+    { return uCur_; }
 
     /*!
      * \brief Reference to the previous solution as a block vector.
      */
     const SolutionVector &prevSol() const
-    { return *(*uPrev_); }
+    { return uPrev_; }
 
     /*!
      * \brief Reference to the previous solution as a block vector.
      */
     SolutionVector &prevSol()
-    { return *(*uPrev_); }
+    { return uPrev_; }
 
     /*!
      * \brief Returns the operator assembler for the global jacobian of
@@ -340,7 +305,7 @@ public:
     void updateSuccessful()
     {
         // make the current solution the previous one.
-        *(*uPrev_) = *(*uCur_);
+        uPrev_ = uCur_;
     };
 
     /*!
@@ -362,7 +327,7 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        *(*uCur_) = *(*uPrev_);
+        uCur_ = uPrev_;
         applyDirichletBoundaries_(curSol());
     };
 
@@ -428,7 +393,6 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-        allocateStuff_();
         res.template deserializeEntities<dim>(asImp_(), this->gridView_);
         wasRestarted_ = true;
     }
@@ -509,14 +473,6 @@ protected:
     //! returns true iff the grid has an overlap
     bool hasOverlap_()
     { return gridView_.overlapSize(0) > 0; };
-
-    void allocateStuff_()
-    {
-        jacAsm_ = new JacobianAssembler(asImp_(), problem_);
-        uCur_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-        uPrev_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-        f_ = new SolutionFunction(jacAsm_->gridFunctionSpace(), 0.0);
-    }
 
     void applyInitialSolution_(SolutionVector &u)
     {
@@ -723,10 +679,10 @@ protected:
 
     // cur is the current solution, prev the solution of the previous
     // time step
-    SolutionFunction *uCur_;
-    SolutionFunction *uPrev_;
+    SolutionVector uCur_;
+    SolutionVector uPrev_;
     // the right hand side
-    SolutionFunction  *f_;
+    SolutionVector f_;
 
     bool wasRestarted_;
 };

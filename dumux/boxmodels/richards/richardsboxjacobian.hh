@@ -49,7 +49,7 @@ class RichardsBoxJacobian : public BoxJacobian<TypeTag>
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+    typedef typename SolutionTypes::SolutionVector        SolutionVector;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
 
@@ -155,7 +155,7 @@ public:
      *        solution to an ouput writer.
      */
     template <class MultiWriter>
-    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionVector &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 

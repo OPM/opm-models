@@ -713,7 +713,7 @@ public:
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
-        SolutionVector globalDef(oldSol, 0.0);
+        SolutionVector globalDef(this->model(), 0.0);
         this->model().globalResidual(oldSol, globalDef);
 
         // create the required scalar fields
@@ -742,9 +742,9 @@ public:
             {
                 int globalIdx = this->problem().model().vertexMapper().map(*eIt, scvIdx, dim);
                 for (int i = 0; i < numEq; ++i) {
-                    (*x[i])[globalIdx] = (*oldSol)[globalIdx][i];
-                    (*delta[i])[globalIdx] = - (*update)[globalIdx][i];
-                    (*gd[i])[globalIdx] = (*globalDef)[globalIdx][i];
+                    (*x[i])[globalIdx] = oldSol[globalIdx][i];
+                    (*delta[i])[globalIdx] = - update[globalIdx][i];
+                    (*gd[i])[globalIdx] = globalDef[globalIdx][i];
                 }
             }
         }

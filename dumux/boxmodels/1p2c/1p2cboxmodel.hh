@@ -89,7 +89,7 @@ public:
     template <class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
-        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addOutputVtkFields(writer, this->curSol());
     }
 
     /*!
@@ -98,7 +98,7 @@ public:
      */
     void calculateMass(Dune::FieldVector<Scalar, 2> &mass)
     {
-        this->localJacobian().calculateMass(this->curSolFunction(), mass);
+        this->localJacobian().calculateMass(this->curSol(), mass);
     }
 };
 }

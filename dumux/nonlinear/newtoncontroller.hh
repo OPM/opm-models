@@ -115,7 +115,7 @@ struct NewtonConvergenceWriter
     };
 
     void writeFields(const SolutionVector &uOld,
-            const SolutionVector &deltaU)
+                     const SolutionVector &deltaU)
     {
         ctl_.model().localJacobian().addConvergenceVtkFields(*vtkMultiWriter_, uOld, deltaU);
     };
@@ -428,8 +428,8 @@ public:
 
         newtonUpdateRelError(uOld, deltaU);
 
-        *deltaU *= -1;
-        *deltaU += *uOld;
+        deltaU *= -1;
+        deltaU += uOld;
     }
 
     /*!
@@ -539,7 +539,7 @@ protected:
     { return *static_cast<const Implementation*>(this); }
 
     void writeConvergence_(const SolutionVector &uOld,
-            const SolutionVector &deltaU)
+                           const SolutionVector &deltaU)
     {
         convergenceWriter_.beginIteration(this->model().gridView());
         convergenceWriter_.writeFields(uOld, deltaU);

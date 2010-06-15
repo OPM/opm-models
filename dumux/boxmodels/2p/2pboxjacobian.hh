@@ -85,7 +85,7 @@ protected:
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
     typedef typename SolutionTypes::PrimaryVarVector        PrimaryVarVector;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
+    typedef typename SolutionTypes::SolutionVector        SolutionVector;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::SolutionOnElement       SolutionOnElement;
 
@@ -240,7 +240,7 @@ public:
      * the axis at the value "coordValue"
      *
      */
-     void calculateFluxAcrossLayer (const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
+     void calculateFluxAcrossLayer (const SolutionVector &globalSol, Dune::FieldVector<Scalar, 2> &flux, int coord, Scalar coordVal)
      {
         SolutionOnElement tmpSol;
         ElementIterator elementIt = this->problem_.gridView().template begin<0>();
@@ -313,7 +313,7 @@ public:
       *         and get minimum and maximum values of primary variables
       *
       */
-     void calculateMass(const SolutionFunction &globalSol, Dune::FieldVector<Scalar, 2> &mass)
+     void calculateMass(const SolutionVector &globalSol, Dune::FieldVector<Scalar, 2> &mass)
      {
 //         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
          SolutionOnElement tmpSol;
@@ -398,7 +398,7 @@ public:
      *        writer.
      */
     template <class MultiWriter>
-    void addOutputVtkFields(MultiWriter &writer, const SolutionFunction &globalSol)
+    void addOutputVtkFields(MultiWriter &writer, const SolutionVector &globalSol)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
@@ -474,16 +474,12 @@ public:
      */
     template <class MultiWriter>
     void addConvergenceVtkFields(MultiWriter &writer,
-                                 const SolutionFunction &oldSol,
-                                 const SolutionFunction &update)
+                                 const SolutionVector &oldSol,
+                                 const SolutionVector &update)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
 
-#if HAVE_DUNE_PDELAB
-        SolutionFunction globalDef(this->model().jacobianAssembler().gridFunctionSpace(), 0.0);
-#else
-        SolutionFunction globalDef(this->gridView(), this->gridView(), false);
-#endif
+        SolutionVector globalDef(this->model(), 0.0);
         this->model().globalResidual(oldSol, globalDef);
 
         // create the required scalar fields
@@ -512,9 +508,9 @@ public:
             {
                 int globalIdx = this->problem().model().vertexMapper().map(*eIt, scvIdx, dim);
                 for (int i = 0; i < numEq; ++i) {
-                    (*x[i])[globalIdx] = (*oldSol)[globalIdx][i];
-                    (*delta[i])[globalIdx] = - (*update)[globalIdx][i];
-                    (*gd[i])[globalIdx] = (*globalDef)[globalIdx][i];
+                    (*x[i])[globalIdx] = oldSol[globalIdx][i];
+                    (*delta[i])[globalIdx] = - update[globalIdx][i];
+                    (*gd[i])[globalIdx] = globalDef[globalIdx][i];
                 }
             }
         }

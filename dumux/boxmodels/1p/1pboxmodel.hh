@@ -71,7 +71,7 @@ public:
     template <class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
-        this->localJacobian().addOutputVtkFields(writer, this->curSolFunction());
+        this->localJacobian().addOutputVtkFields(writer, this->curSol());
     }
 };
 }

@@ -84,13 +84,8 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/nonlinear/newtoncontroller.hh>
 
-#if HAVE_DUNE_PDELAB
 #include <dumux/boxmodels/pdelab/assemblerpdelab.hh>
-#include <dumux/boxmodels/pdelab/functionpdelab.hh>
 #include <dumux/boxmodels/pdelab/boxdirichletconstraints.hh>
-#else
-#include <dune/disc/operators/p1operator.hh>
-#endif
 
 #include <dumux/common/boundarytypes.hh>
 
@@ -208,20 +203,10 @@ SET_PROP(BoxScheme, SolutionTypes)
         { return gt.dim() == dim; }
     };
 
+    typedef typename GET_PROP(TypeTag, PTAG(PDELabTypes)) PDELabTypes;
+    typedef typename PDELabTypes::GridFunctionSpace GridFunctionSpace;
+
 public:
-    //! A solution function. This is a function with the same domain as the grid.
-#ifdef HAVE_DUNE_PDELAB
-    typedef FunctionPDELab<TypeTag>               SolutionFunction;
-#else
-    typedef Dune::P1Function<GridView, Scalar, GridView, numEq>       SolutionFunction;
-#endif
-
-    /*!
-     * \brief The type which maps an entity with an attached degree of
-     *        freedom to an index in the solution.
-     */
-    typedef typename SolutionFunction::VM                              DofEntityMapper;
-
     /*!
      * \brief Mapper for the grid view's vertices.
      */
@@ -233,16 +218,22 @@ public:
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, ElementLayout> ElementMapper;
 
     /*!
+     * \brief The type which maps an entity with an attached degree of
+     *        freedom to an index in the solution.
+     */
+    typedef VertexMapper DofEntityMapper;
+
+    /*!
      * \brief The type of a solution at a fixed time.
      *
      * This is the representation of the solution function and defines
      * a primary variable vector at each degree of freedom.
      */
-    typedef typename SolutionFunction::RepresentationType SolutionVector;
+    typedef typename GridFunctionSpace::template VectorContainer<Scalar>::Type SolutionVector;
     /*!
      * \brief A vector of primary variables.
      */
-    typedef typename SolutionFunction::BlockType PrimaryVarVector;
+    typedef typename SolutionVector::block_type PrimaryVarVector;
 
     /*!
      * \brief The solution for a single finite element.

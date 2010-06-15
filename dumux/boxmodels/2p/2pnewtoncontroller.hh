@@ -47,7 +47,7 @@ class TwoPNewtonController : public NewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(NewtonMethod)) NewtonMethod;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction SolutionFunction;
+    typedef typename SolutionTypes::SolutionVector SolutionVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(TwoPIndices)) Indices;
     enum {
@@ -64,10 +64,10 @@ public:
      * \brief Update the error of the solution compared to the
      *        previous iteration.
      */
-    void newtonUpdateRelError(const SolutionFunction &uOld,
-                              const SolutionFunction &deltaU)
+    void newtonUpdateRelError(const SolutionVector &uOld,
+                              const SolutionVector &deltaU)
     {
-        typedef typename SolutionFunction::BlockType FV;
+        typedef typename SolutionVector::block_type FV;
 
         // get the maximum value of each primary in either the old or
         // the new solution
@@ -83,12 +83,12 @@ public:
         int offenderVertIdx = -1;
         int offenderPVIdx = -1;
         Scalar offenderDelta = 0;
-        for (int i = 0; i < int((*uOld).size()); ++i) {
+        for (int i = 0; i < int(uOld.size()); ++i) {
             for (int j = 0; j < FV::size; ++j) {
                 // calculate the relative error at the current vertex
                 // i and the current primary variable j
-//              Scalar curErr = std::abs((*deltaU)[i][j] * weight[j]);
-              Scalar curErr = std::abs((*deltaU)[i][j]/(1.0 + std::abs((*uOld)[i][j])));
+//              Scalar curErr = std::abs(deltaU[i][j] * weight[j]);
+              Scalar curErr = std::abs(deltaU[i][j]/(1.0 + std::abs(uOld[i][j])));
 #if 0
                 // make sure that the specified tolerance is not below
                 // machine precision!
@@ -96,7 +96,7 @@ public:
                 const Scalar machinePrec =
                     limits::epsilon()*100
                     * std::max<Scalar>(Scalar(1e10)/limits::max(),
-                                       std::abs((*uOld)[i][j]));
+                                       std::abs(uOld[i][j]));
                 if (this->tolerance_ < machinePrec*weight[j])
                 {
                     std::cerr << "Allowed tolerance ("
@@ -116,7 +116,7 @@ public:
                 if (this->error_ < curErr) {
                     offenderVertIdx = i;
                     offenderPVIdx = j;
-                    offenderDelta = (*deltaU)[i][j];
+                    offenderDelta = deltaU[i][j];
                     this->error_ = curErr;
                 };
             }

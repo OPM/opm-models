@@ -85,7 +85,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry))   FVElementGeometry;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::DofEntityMapper         DofEntityMapper;
     typedef typename SolutionTypes::VertexMapper            VertexMapper;
     typedef typename SolutionTypes::ElementMapper           ElementMapper;

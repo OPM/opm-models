@@ -48,22 +48,12 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes)) SolutionTypes;
-    typedef typename SolutionTypes::SolutionFunction        SolutionFunction;
     typedef typename SolutionTypes::SolutionVector          SolutionVector;
     typedef typename SolutionTypes::JacobianAssembler       JacobianAssembler;
 public:
     NewtonMethod(Model &model)
         : model_(model)
     { }
-
-    /*!
-     * \brief Initialize the data structures.
-     */
-    void init()
-    {
-        uOld_.setGFS(model.jacobianAssembler().gridFunctionSpace());
-        residual_.setGFS(model.jacobianAssembler().gridFunctionSpace());
-    }
 
     /*!
      * \brief Returns a reference to the current numeric model.
