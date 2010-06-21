@@ -469,6 +469,11 @@ public:
         jacAsm_ = new JacobianAssembler(asImp_(), problem_);
     }
 
+    ~BoxScheme()
+    {
+        delete jacAsm_;
+    }
+
 protected:
     //! returns true iff the grid has an overlap
     bool hasOverlap_()

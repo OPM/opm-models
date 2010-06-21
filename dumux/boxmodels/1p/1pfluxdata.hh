@@ -55,6 +55,7 @@ class OnePFluxData
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
 
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(FVElementGeometry)) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
     typedef typename FVElementGeometry::SubControlVolume             SCV;
     typedef typename FVElementGeometry::SubControlVolumeFace         SCVFace;
 
@@ -66,15 +67,9 @@ public:
                  const FVElementGeometry &elemGeom,
                  int faceIdx,
                  const VertexDataArray &elemDat)
-        : fvElemGeom(elemGeom)
+        : fvElemGeom_(elemGeom)
     {
-        face = &fvElemGeom.subContVolFace[faceIdx];
-
-        int i = face->i;
-        int j = face->j;
-
-        insideSCV = &fvElemGeom.subContVol[i];
-        outsideSCV = &fvElemGeom.subContVol[j];
+        scvfIdx_ = faceIdx;
 
         densityAtIP = 0;
         viscosityAtIP = 0;
@@ -84,6 +79,9 @@ public:
         calculateVelocities_(problem, element, elemDat);
     };
 
+    const SCVFace &face() const
+    { return fvElemGeom_.subContVolFace[scvfIdx_]; }
+
 private:
     void calculateGradients_(const Problem &problem,
                              const Element &element,
@@ -92,11 +90,11 @@ private:
         // calculate gradients
         GlobalPosition tmp(0.0);
         for (int idx = 0;
-             idx < fvElemGeom.numVertices;
+             idx < fvElemGeom_.numVertices;
              idx++) // loop over adjacent vertices
         {
             // FE gradient at vertex idx
-            const LocalPosition &feGrad = face->grad[idx];
+            const LocalPosition &feGrad = face().grad[idx];
 
             // the pressure gradient
             tmp = feGrad;
@@ -105,10 +103,10 @@ private:
 
             // fluid density
             densityAtIP +=
-                elemDat[idx].density*face->shapeValue[idx];
+                elemDat[idx].density*face().shapeValue[idx];
             // fluid viscosity
             viscosityAtIP +=
-                elemDat[idx].viscosity*face->shapeValue[idx];
+                elemDat[idx].viscosity*face().shapeValue[idx];
         }
 
         // correct the pressure gradients by the hydrostatic
@@ -123,35 +121,32 @@ private:
                               const Element &element,
                               const VertexDataArray &elemDat)
     {
-        // calculate the permeability tensor. TODO: this should be
-        // more flexible
+        const SpatialParameters &spatialParams = problem.spatialParameters();
         typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
         Tensor K;
-        const Tensor &Ki = problem.soil().K(insideSCV->global,
-                                            element,
-                                            insideSCV->local);
-        const Tensor &Kj = problem.soil().K(outsideSCV->global,
-                                            element,
-                                            outsideSCV->local);
-        Dumux::harmonicMeanMatrix(K, Ki, Kj);
+        spatialParams.meanK(K,
+               spatialParams.intrinsicPermeability(element,
+                                                   fvElemGeom_,
+                                                   face().i),
+                spatialParams.intrinsicPermeability(element,
+                                                    fvElemGeom_,
+                                                    face().j));
 
         // temporary vector for the Darcy velocity
         GlobalPosition vDarcy;
         K.mv(pressureGrad, vDarcy);  // vDarcy = K * grad p
-        vDarcyNormal = vDarcy*face->normal;
+        vDarcyNormal = vDarcy*face().normal;
 
         // set the upstream and downstream vertices
-        upstreamIdx = face->i;
-        downstreamIdx = face->j;
+        upstreamIdx = face().i;
+        downstreamIdx = face().j;
         if (vDarcyNormal > 0)
             std::swap(upstreamIdx, downstreamIdx);
     }
 
 public:
-    const FVElementGeometry &fvElemGeom;
-    const SCVFace *face;
-    const SCV     *insideSCV;
-    const SCV     *outsideSCV;
+    const FVElementGeometry &fvElemGeom_;
+    int                      scvfIdx_;
 
     // gradients
     GlobalPosition pressureGrad;

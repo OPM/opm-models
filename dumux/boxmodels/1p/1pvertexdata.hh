@@ -54,6 +54,7 @@ class OnePVertexData
     typedef typename GET_PROP(TypeTag, PTAG(SolutionTypes))     SolutionTypes;
     typedef typename SolutionTypes::PrimaryVarVector            PrimaryVarVector;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(OnePIndices))  Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Fluid))        Fluid;
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim>       LocalPosition;
@@ -70,20 +71,16 @@ public:
                 bool                     isOldSol)
     {
         typedef Indices I;
-        const GlobalPosition &global = element.geometry().corner(vertIdx);
-        const LocalPosition  &local =
-            ReferenceElements::general(element.type()).position(vertIdx,
-                                                                GridView::dimension);
 
         Scalar temperature = problem.temperature(element, elemGeom, vertIdx);
         pressure = sol[I::pressureIdx];
-        density = problem.fluid().density(temperature, pressure);
-        viscosity = problem.fluid().viscosity(temperature, pressure);
+        density = Fluid::density(temperature, pressure);
+        viscosity = Fluid::viscosity(temperature, pressure);
 
         // porosity
-        porosity = problem.soil().porosity(global,
-                                           element,
-                                           local);
+        porosity = problem.spatialParameters().porosity(element,
+                                                         elemGeom,
+                                                         vertIdx);
     };
 
     Scalar pressure;

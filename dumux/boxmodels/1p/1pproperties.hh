@@ -74,7 +74,7 @@ NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxScheme));
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 1p models
-NEW_PROP_TAG(Soil); //!< The type of the soil properties object
+NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
 NEW_PROP_TAG(Fluid); //!< The fluid for the single-phase problems
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 

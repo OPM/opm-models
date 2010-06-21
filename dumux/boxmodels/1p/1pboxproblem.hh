@@ -23,8 +23,6 @@
 #define DUMUX_1P_BOX_PROBLEM_HH
 
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
-#include <dumux/material/twophaserelations.hh>
-
 
 namespace Dumux
 {
@@ -44,8 +42,7 @@ class OnePBoxProblem : public BoxProblem<TypeTag, Implementation>
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))   Scalar;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Fluid))    Fluid;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Soil))     Soil;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(SpatialParameters)) SpatialParameters;
 
     enum {
         dim = Grid::dimension,
@@ -59,6 +56,8 @@ public:
         : ParentType(gridView),
           gravity_(0)
     {
+        spatialParameters_ = new SpatialParameters(gridView);
+
         if (GET_PROP_VALUE(TypeTag, PTAG(EnableGravity)))
             gravity_[dim-1]  = -9.81;
     }
@@ -86,24 +85,16 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Fluid properties of the wetting phase.
+     * \brief Returns the spatial parameters object.
      */
-    const Fluid &fluid() const
-    { return fluid_; }
+    SpatialParameters &spatialParameters()
+    { return *spatialParameters_; }
 
     /*!
-     * \brief Returns the soil properties object.
+     * \copydoc spatialParameters()
      */
-    Soil &soil()
-    { return soil_; }
-
-    /*!
-     * \copydoc soil()
-     */
-    const Soil &soil() const
-    { return soil_; }
-
-    // \}
+    const SpatialParameters &spatialParameters() const
+    { return *spatialParameters_; }
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
@@ -114,9 +105,7 @@ private:
     const Implementation *asImp_() const
     { return static_cast<const Implementation *>(this); }
 
-    // fluids and material properties
-    Fluid           fluid_;
-    Soil            soil_;
+    SpatialParameters* spatialParameters_;
 
     GlobalPosition  gravity_;
 };

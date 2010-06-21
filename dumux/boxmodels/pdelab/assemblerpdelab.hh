@@ -106,6 +106,7 @@ public:
         gridOperatorSpace_->jacobian(u, *matrix_);
 
         residual_.base().resize(u.size());
+        residual_ = 0;
         gridOperatorSpace_->residual(u, residual_);
 
         set_constrained_dofs(*constraintsTrafo_, 0.0, residual_);
