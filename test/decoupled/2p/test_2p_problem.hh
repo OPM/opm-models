@@ -232,7 +232,7 @@ Scalar dirichletPress(const GlobalPosition& globalPos, const Intersection& inter
 
             FluidState fluidState;
             fluidState.update(sat, pRef, pRef, temp);
-            return (2e5 + (upperRight_[1] - globalPos[1]) * FluidSystem::phaseDensity(wPhaseIdx, temp, pRef, fluidState) * this->gravity().two_norm());
+            return (2e5 + (upperRight_[dim-1] - globalPos[dim-1]) * FluidSystem::phaseDensity(wPhaseIdx, temp, pRef, fluidState) * this->gravity().two_norm());
         }
         else
         return 2e5;
