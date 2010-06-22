@@ -25,6 +25,7 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 
+#include <dumux/new_material/fluidsystems/liquidphase.hh>
 #include <dumux/new_material/components/simpleh2o.hh>
 #include <dumux/new_material/components/oil.hh>
 
@@ -74,8 +75,8 @@ SET_TYPE_PROP(TwoPTestProblem, ConvectivePart, Dumux::GravityPart<TypeTag>);
 
 SET_PROP(TwoPTestProblem, PressureModel)
 {
-//    typedef Dumux::FVVelocity2P<TTAG(TwoPTestProblem)> type;
-    typedef Dumux::FVMPFAOVelocity2P<TTAG(TwoPTestProblem)> type;
+    typedef Dumux::FVVelocity2P<TTAG(TwoPTestProblem)> type;
+//    typedef Dumux::FVMPFAOVelocity2P<TTAG(TwoPTestProblem)> type;
 };
 
 //SET_INT_PROP(TwoPTestProblem, VelocityFormulation,
