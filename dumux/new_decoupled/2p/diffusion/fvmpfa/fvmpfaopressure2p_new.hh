@@ -1250,62 +1250,98 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                 Scalar densityW = this->problem().variables().densityWetting(globalIdx1);
                 Scalar densityNW = this->problem().variables().densityNonwetting(globalIdx1);
 
-                //compute total mobility of cell 1
-                Scalar lambda1(problem_.variables().mobilityWetting(globalIdx1));
-                lambda1 += problem_.variables().mobilityNonwetting(globalIdx1);
+                //get the viscosities
+                Scalar viscosityW = this->problem().variables().viscosityWetting(globalIdx1);
+                Scalar viscosityNW = this->problem().variables().viscosityNonwetting(globalIdx1);
 
-                Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 1);
-                Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 0);
-                Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 1);
-                Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 0);
+                //compute total mobility of cell 1
+                Scalar sat = this->problem().variables().saturation()[globalIdx1];
+                Scalar satBound = 0;
+                //check boundary sat at face 1
+                if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[0]))
+                {
+                    satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[0]);
+                }
+                else
+                {
+                    satBound = sat;
+                }
+                Scalar lambda12 = MaterialLaw::krw(
+                        problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                  +MaterialLaw::krn(
+                        problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+                //check boundary sat at face 4
+                if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[1]))
+                {
+                    satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[1]);
+                }
+                else
+                {
+                    satBound = sat;
+                }
+                Scalar lambda14 = MaterialLaw::krw(
+                        problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                  +MaterialLaw::krn(
+                        problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+
+                Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 1);
+                Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 0);
+                Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 1);
+                Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 0);
 
                 //neumann - neumann
                 if (bcTypeFace[interactionVolFaces[0]] == BoundaryConditions::neumann && bcTypeFace[interactionVolFaces[1]]
                         == BoundaryConditions::neumann)
                 {
                     // compute transmissibility matrix T = CA^{-1}B+F
-                    Dune::FieldMatrix<Scalar, dim, dim> C(0), F(0), A(0), B(0);
+                    Dune::FieldMatrix<Scalar, dim, dim> C(0), A(0);
+                    Dune::FieldMatrix<Scalar, dim, dim-1> F(0), B(0);
                     Dune::FieldVector<Scalar, dim> fB(0);
 
                     // evaluate matrix C, F, A, B
                     C[0][0] = -gn12nu12;
                     C[0][1] = -gn12nu14;
+                    C[1][0] = -gn14nu12;
+                    C[1][1] = -gn14nu14;
 
-                    F[0][0] = gn12nu12 + gn12nu14;
+                    F[0] = gn12nu12 + gn12nu14;
+                    F[1] = gn14nu12 + gn14nu14;
 
                     A[0][0] = gn12nu12;
                     A[0][1] = gn12nu14;
-                    A[1][0] = -gn14nu12;
-                    A[1][1] = -gn14nu14;
+                    A[1][0] = gn14nu12;
+                    A[1][1] = gn14nu14;
 
-                    B[0][0] = gn12nu12 + gn12nu14;
-                    B[1][0] = -gn14nu12 - gn14nu14;
+                    B[0] = gn12nu12 + gn12nu14;
+                    B[1] = gn14nu12 + gn14nu14;
 
                     // get neumann boundary value
                     std::vector<Scalar> J(interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
                             interactionVolFaces[0]));
                     Scalar J1 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
-                    J.swap(interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
-                            interactionVolFaces[1]));
+                    J = interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
+                            interactionVolFaces[1]);
                     Scalar J4 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
                     fB[0] = J1;
-                    fB[1] = -J4;
+                    fB[1] = J4;
 
                     // compute T
                     A.invert();
                     C.rightmultiply(A);
 
-                    F += B.leftmultiply(C);
-                    Dune::FieldMatrix<Scalar, dim, dim> T(F);
+                    F += B.leftmultiplyany(C);
+                    Dune::FieldMatrix<Scalar, dim, dim-1> T(F);
                     Dune::FieldVector<Scalar, dim> r(0);
                     C.mv(fB, r);
 
                     // assemble the global matrix A_ and right hand side f
-                    A_[globalIdx1][globalIdx1] += T[0][0] + T[1][0];
+                    A_[globalIdx1][globalIdx1] += T[0] + T[1];
 
-                    f_[globalIdx1] -= r[0] + r[1];
+                    f_[globalIdx1] += r[0] + r[1];
                 }
                 //dirichlet - dirichlet
                 else if (bcTypeFace[interactionVolFaces[0]] == BoundaryConditions::dirichlet && bcTypeFace[interactionVolFaces[1]]
@@ -1396,6 +1432,10 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar densityW = this->problem().variables().densityWetting(globalIdx1);
                     Scalar densityNW = this->problem().variables().densityNonwetting(globalIdx1);
 
+                    //get the viscosities
+                    Scalar viscosityW = this->problem().variables().viscosityWetting(globalIdx1);
+                    Scalar viscosityNW = this->problem().variables().viscosityNonwetting(globalIdx1);
+
                     //compute total mobility of cell 1
                     Scalar lambda1(problem_.variables().mobilityWetting(globalIdx1));
                     lambda1 += problem_.variables().mobilityNonwetting(globalIdx1);
@@ -1403,12 +1443,44 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar lambda4(problem_.variables().mobilityWetting(globalIdx4));
                     lambda4 += problem_.variables().mobilityNonwetting(globalIdx4);
 
-                    Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 1);
-                    Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 0);
+                    //compute total mobility at the boundaries
+                    Scalar sat = this->problem().variables().saturation()[globalIdx1];
+                    Scalar satBound = 0;
+                    //check boundary sat at face 1
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[0]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[0]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda12 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+                    //check boundary sat at face 4
+                    sat = this->problem().variables().saturation()[globalIdx4];
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[1]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[1]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda43 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos4, *elementPointer4), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos4, *elementPointer4), satBound) / viscosityNW;
+
+                    Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 1);
+                    Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 0);
                     Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 1);
                     Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 0);
-                    Scalar gn43nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 1, 0);
-                    Scalar gn43nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 1, 1);
+                    Scalar gn43nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43, 3, 1, 0);
+                    Scalar gn43nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43, 3, 1, 1);
                     Scalar gn14nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 0, 0);
                     Scalar gn14nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 0, 1);
 
@@ -1448,24 +1520,23 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
 
                     Scalar J1 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
-                    J.swap(interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
-                            interactionVolFaces[1]));
+                    J = interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
+                            interactionVolFaces[1]);
                     Scalar J4 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
-                    fB[0] = -J1;
-                    fB[1] = -J4;
+                    fB[0] = J1;
+                    fB[1] = J4;
 
                     Dune::FieldVector<Scalar, 2 * dim - 1> r(0);
                     // compute T
                     A.invert();
-                    A.mv(fB, r);
-                    C.mv(r, r);
+
+                    //calculate RHS
+                    C.rightmultiplyany(A).mv(fB, r);
 
                     Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> AinvB(A.rightmultiplyany(B));
                     Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> T(AinvB.leftmultiplyany(C));
                     T += F;
-
-                    C.mv(fB, r);
 
                     // assemble the global matrix A_ and right hand side f
                     //flux 4
@@ -1476,9 +1547,8 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     A_[globalIdx4][globalIdx1] += T[1][0] - T[2][0];
                     A_[globalIdx4][globalIdx4] += T[1][1] - T[2][1];
 
-                    f_[globalIdx1] -= (r[0] + r[2]);
-                    f_[globalIdx4] -= (r[1] - r[2]);
-
+                    f_[globalIdx1] += r[0] + r[2];
+                    f_[globalIdx4] += r[1] - r[2];
                 }
                 //neumann - neumann
                 else if (bcTypeFace[interactionVolFaces[1]] == BoundaryConditions::neumann && bcTypeFace[interactionVolFaces[2]]
@@ -1509,6 +1579,10 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar densityW = this->problem().variables().densityWetting(globalIdx1);
                     Scalar densityNW = this->problem().variables().densityNonwetting(globalIdx1);
 
+                    //get the viscosities
+                    Scalar viscosityW = this->problem().variables().viscosityWetting(globalIdx1);
+                    Scalar viscosityNW = this->problem().variables().viscosityNonwetting(globalIdx1);
+
                     //compute total mobility of cell 1
                     Scalar lambda1(problem_.variables().mobilityWetting(globalIdx1));
                     lambda1 += problem_.variables().mobilityNonwetting(globalIdx1);
@@ -1516,14 +1590,46 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar lambda2(problem_.variables().mobilityWetting(globalIdx2));
                     lambda2 += problem_.variables().mobilityNonwetting(globalIdx2);
 
+                    //compute total mobility at the boundaries
+                    Scalar sat = this->problem().variables().saturation()[globalIdx1];
+                    Scalar satBound = 0;
+                    //check boundary sat at face 1
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[1]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[1]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda14 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+                    sat = this->problem().variables().saturation()[globalIdx2];
+                    //check boundary sat at face 4
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[2]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[2]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda23 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos2, *elementPointer2), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos2, *elementPointer2), satBound) / viscosityNW;
+
                     Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 1);
                     Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 0);
-                    Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 1);
-                    Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 0);
+                    Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 1);
+                    Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 0);
                     Scalar gn12nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 1, 0);
                     Scalar gn12nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 1, 1);
-                    Scalar gn23nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 0, 0);
-                    Scalar gn23nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 0, 1);
+                    Scalar gn23nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23, 1, 0, 0);
+                    Scalar gn23nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23, 1, 0, 1);
 
                     // compute transmissibility matrix T = CA^{-1}B+F
                     Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 1> C(0), A(0);
@@ -1560,25 +1666,25 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                             interactionVolFaces[1]));
                     Scalar J1 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
-                    J.swap(interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
-                            interactionVolFaces[2]));
+                    J = interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::neumann> (
+                            interactionVolFaces[2]);
                     Scalar J2 = (J[wPhaseIdx] / densityW + J[nPhaseIdx] / densityNW);
 
-                    fB[1] = -J2;
-                    fB[2] = -J1;
+                    fB[1] = J2;
+                    fB[2] = J1;
 
                     Dune::FieldVector<Scalar, 2 * dim - 1> r(0);
                     // compute T
                     A.invert();
-                    A.mv(fB, r);
-                    C.mv(r, r);
+
+                    //calc RHS r
+                    C.rightmultiplyany(A).mv(fB, r);
+
 
                     Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> AinvB(A.rightmultiplyany(B));
                     Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> T(AinvB.leftmultiplyany(C));
 
                     T += F;
-
-                    C.mv(fB, r);
 
                     //flux 1
                     // assemble the global matrix A_ and right hand side f
@@ -1589,8 +1695,8 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     A_[globalIdx2][globalIdx1] += -T[0][0] + T[1][0];
                     A_[globalIdx2][globalIdx2] += -T[0][1] + T[1][1];
 
-                    f_[globalIdx1] -= (r[0] + r[2]);
-                    f_[globalIdx2] -= (-r[0] + r[1]);
+                    f_[globalIdx1] += r[0] + r[2];
+                    f_[globalIdx2] += -r[0] + r[1];
 
                 }
                 //dirichlet- dirichlet
@@ -1612,6 +1718,10 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     int globalIdx1 = problem_.variables().index(*elementPointer1);
                     int globalIdx4 = problem_.variables().index(*elementPointer4);
 
+                    //get the viscosities
+                    Scalar viscosityW = this->problem().variables().viscosityWetting(globalIdx1);
+                    Scalar viscosityNW = this->problem().variables().viscosityNonwetting(globalIdx1);
+
                     // evaluate right hand side
                     std::vector<Scalar> source(problem_.source(globalPos1, *elementPointer1));
                     f_[globalIdx1] += volume1 / (4.0) * (source[wPhaseIdx] + source[nPhaseIdx]);
@@ -1625,12 +1735,44 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar lambda4(problem_.variables().mobilityWetting(globalIdx4));
                     lambda4 += problem_.variables().mobilityNonwetting(globalIdx4);
 
-                    Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 1);
-                    Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 0);
+                    //compute total mobility at the boundaries
+                    Scalar sat = this->problem().variables().saturation()[globalIdx1];
+                    Scalar satBound = 0;
+                    //check boundary sat at face 1
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[0]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[0]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda12 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+                    //check boundary sat at face 4
+                    sat = this->problem().variables().saturation()[globalIdx4];
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[1]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[1]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda43 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos4, *elementPointer4), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos4, *elementPointer4), satBound) / viscosityNW;
+
+                    Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 1);
+                    Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12, 0, 0, 0);
                     Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 1);
                     Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 0);
-                    Scalar gn43nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 1, 0);
-                    Scalar gn43nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 1, 1);
+                    Scalar gn43nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43, 3, 1, 0);
+                    Scalar gn43nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43, 3, 1, 1);
                     Scalar gn14nu41 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 0, 0);
                     Scalar gn14nu43 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda4, 3, 0, 1);
 
@@ -1687,6 +1829,10 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     int globalIdx1 = problem_.variables().index(*elementPointer1);
                     int globalIdx2 = problem_.variables().index(*elementPointer2);
 
+                    //get the viscosities
+                    Scalar viscosityW = this->problem().variables().viscosityWetting(globalIdx1);
+                    Scalar viscosityNW = this->problem().variables().viscosityNonwetting(globalIdx1);
+
                     // evaluate right hand side
                     std::vector<Scalar> source(problem_.source(globalPos1, *elementPointer1));
                     f_[globalIdx1] += volume1 / (4.0) * (source[wPhaseIdx] + source[nPhaseIdx]);
@@ -1700,14 +1846,46 @@ void FVMPFAOPressure2P<TypeTag>::assemble()
                     Scalar lambda2(problem_.variables().mobilityWetting(globalIdx2));
                     lambda2 += problem_.variables().mobilityNonwetting(globalIdx2);
 
+                    //compute total mobility at the boundaries
+                    Scalar sat = this->problem().variables().saturation()[globalIdx1];
+                    Scalar satBound = 0;
+                    //check boundary sat at face 1
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[1]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[1]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda14 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos1, *elementPointer1), satBound) / viscosityNW;
+
+                    //check boundary sat at face 4
+                    sat = this->problem().variables().saturation()[globalIdx2];
+                    if (interactionVolumes_[globalVertIdx].isDirichletSatBound(interactionVolFaces[2]))
+                    {
+                        satBound = interactionVolumes_[globalVertIdx].getDirichletSat(interactionVolFaces[2]);
+                    }
+                    else
+                    {
+                        satBound = sat;
+                    }
+                    Scalar lambda23 = MaterialLaw::krw(
+                            problem_.spatialParameters().materialLawParams(globalPos2, *elementPointer2), satBound) / viscosityW
+                                      +MaterialLaw::krn(
+                            problem_.spatialParameters().materialLawParams(globalPos2, *elementPointer2), satBound) / viscosityNW;
+
                     Scalar gn12nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 1);
                     Scalar gn12nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 0, 0);
-                    Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 1);
-                    Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda1, 0, 1, 0);
+                    Scalar gn14nu14 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 1);
+                    Scalar gn14nu12 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14, 0, 1, 0);
                     Scalar gn12nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 1, 0);
                     Scalar gn12nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 1, 1);
-                    Scalar gn23nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 0, 0);
-                    Scalar gn23nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda2, 1, 0, 1);
+                    Scalar gn23nu23 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23, 1, 0, 0);
+                    Scalar gn23nu21 = interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23, 1, 0, 1);
 
                     Scalar g1 = interactionVolumes_[globalVertIdx].template getBoundaryCondition<BoundaryConditions::dirichlet> (
                             interactionVolFaces[1]);
@@ -1888,6 +2066,9 @@ void FVMPFAOPressure2P<TypeTag>::solve()
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressurePreconditioner)) Preconditioner;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(PressureSolver)) Solver;
 
+//                            printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
+//                            printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
+
     Dune::MatrixAdapter<Matrix, Vector, Vector> op(A_); // make linear operator from A_
     Dune::InverseOperatorResult result;
 
@@ -1906,7 +2087,7 @@ void FVMPFAOPressure2P<TypeTag>::solve()
 
     //                        printmatrix(std::cout, A_, "global stiffness matrix", "row", 11, 3);
     //                        printvector(std::cout, f_, "right hand side", "row", 200, 1, 3);
-    //        printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
+//            printvector(std::cout, (problem_.variables().pressure()), "pressure", "row", 200, 1, 3);
 
     return;
 }

@@ -385,22 +385,22 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                     continue;
                 }
 
-                Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                 Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                 Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
-                Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 1, 0);
+                Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
+                Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 0);
                 Scalar gn12nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 1);
                 Scalar gn23nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 0);
-                Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 0, 1);
-                Scalar gn43nu32 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda32[i], 2, 0, 1);
+                Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 1);
+                Scalar gn43nu32 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda34[i], 2, 0, 1);
                 Scalar gn43nu34 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda34[i], 2, 0, 0);
                 Scalar gn23nu32 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda32[i], 2, 1, 1);
-                Scalar gn23nu34 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda34[i], 2, 1, 0);
-                Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 1, 0);
+                Scalar gn23nu34 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda32[i], 2, 1, 0);
+                Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 0);
                 Scalar gn43nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 1);
                 Scalar gn14nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 0);
-                Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 0, 1);
+                Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 1);
 
                 // evaluate parts of velocity
                 FieldVector vel12 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(0, 0);
@@ -769,11 +769,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         J4[wPhaseIdx] /= densityW;
                         J4[nPhaseIdx] /= densityNW;
 
-                        vel12[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 0);
-                        vel14[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 1);
-
-                        vel12[i] *= J1[i];
-                        vel14[i] *= J4[i];
+                        vel12[i] *= J1[i]/2;
+                        vel14[i] *= J4[i]/2;
                     }
                 }
                 //dirichlet - dirichlet
@@ -899,10 +896,10 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             continue;
                         }
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
 
                         vel12[i] *= ((gn12nu12 + gn12nu14) * press1 - gn12nu12 * g1 - gn12nu14 * g4) / 2;//divide by 2 because the flux is related to the half face!
                         vel14[i] *= ((gn14nu12 + gn14nu14) * press1 - gn14nu12 * g1 - gn14nu14 * g4) / 2;
@@ -1029,22 +1026,22 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda14[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos1, *elementPointer1), sat);
                         lambda14[1] /= viscosityNW;
                     }
-                    //                                                            std::cout<<"lambda121 = "<<lambda12
-                    //                                                                    <<"lambda141 = "<<lambda14<<"\n";
+                                                                                std::cout<<"lambda121 = "<<lambda12
+                                                                                        <<"lambda141 = "<<lambda14<<"\n";
 
                     for (int i = 0; i < numPhases; i++)
                     {
                         //                                                std::cout<<"lambda12 = "<<lambda12[i]<<
                         //                                                        "\nlambda14 = "<<lambda14[i]<<"\n";
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
 
-                        vel12[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 0);
+//                        vel12[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 0);
                         //std::cout<<this->interactionVolumes_[globalVertIdx].getFaceArea(0, 0)<<"\n";
-                        vel12[i] *= J1[i];
+                        vel12[i] *= J1[i]/2;
 
                         if (gn12nu12 != 0)
                         {
@@ -1181,17 +1178,17 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda14[1] /= viscosityNW;
                     }
 
-                    //                    std::cout << "lambda122 = " << lambda12 << "lambda142 = " << lambda14 << "\n";
+                                        std::cout << "lambda122 = " << lambda12 << "lambda142 = " << lambda14 << "\n";
 
                     for (int i = 0; i < numPhases; i++)
                     {
                         //                                                std::cout<<"lambda12 = "<<lambda12[i]<<
                         //                                                        "\nlambda14 = "<<lambda14[i]<<"\n";
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
 
                         if (gn14nu14 != 0)
                         {
@@ -1203,8 +1200,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             vel12[i] *= ((gn12nu12 + gn12nu14) * press1 - gn12nu12 * g1) / 2;//divide by 2 because the flux is related to the half face!
                         }
 
-                        vel14[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 1);
-                        vel14[i] *= J4[i];
+//                        vel14[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 1);
+                        vel14[i] *= J4[i]/2;
                     }
                 }
                 else
@@ -1472,7 +1469,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda14[1] /= viscosityNW;
                         lambda41[1] /= viscosityNW;
                     }
-                    //                    std::cout<<"lambda12 = "<<lambda12<<"\nlambda14"<<lambda14<<"\nlambda41 = "<<lambda41<<"\nlambda34 = "<<lambda43<<"\n";
+                                        std::cout<<"lambda12 = "<<lambda12<<"\nlambda14"<<lambda14<<"\nlambda41 = "<<lambda41<<"\nlambda34 = "<<lambda43<<"\n";
 
 
                     for (int i = 0; i < numPhases; i++)
@@ -1501,26 +1498,25 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         FieldVector vel41 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(3, 0);
                         FieldVector vel43 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(3, 1);
 
+                        vel12 *= J1[i]/2;
+                        vel43 *= J4[i]/2;
+
                         if (numFluxFaces == 0)
                         {
-                            vel12[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 0);
-                            vel43[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(3, 1);
-                            vel12[i] *= J1[i];
-                            vel43[i] *= J4[i];
-                            vel14[i] *= 0;
-                            vel41[i] *= 0;
+                            vel14 *= 0;
+                            vel41 *= 0;
 
                             continue;
                         }
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
-                        Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
+                        Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 0);
                         Scalar gn43nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 1);
                         Scalar gn14nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 0);
-                        Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 0, 1);
+                        Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 1);
 
                         // compute transmissibility matrix T = CA^{-1}B+F
                         Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 1> C(0), A(0);
@@ -1552,8 +1548,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         B[2][0] = -gn14nu12 - gn14nu14;
                         B[2][1] = gn14nu43 - gn14nu41;
 
-                        fB[0] = -J1[i];
-                        fB[1] = -J4[i];
+                        fB[0] = J1[i];
+                        fB[1] = J4[i];
 
                         // use the pressure values to compute the fluxes
                         Dune::FieldVector<Scalar, 2 * dim - 2> p(0);
@@ -1586,14 +1582,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 3> r(0);
                             // compute T
                             Amod.invert();
-                            Amod.mv(fBMod, r);
-                            Cmod.mv(r, r);
+
+                            //calc RHS r
+                            Cmod.rightmultiplyany(Amod).mv(fBMod, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 3, 2 * dim - 2> AinvB(Amod.rightmultiplyany(Bmod));
                             Dune::FieldMatrix<Scalar, 2 * dim - 3, 2 * dim - 2> T(AinvB.leftmultiplyany(Cmod));
                             T += Fmod;
-
-                            C.mv(fBMod, r);
 
                             Dune::FieldVector<Scalar, 2 * dim - 3> fluxMod(0);
                             T.mv(p, fluxMod);
@@ -1629,14 +1624,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 2> r(0);
                             // compute T
                             Amod.invert();
-                            Amod.mv(fBMod, r);
-                            Cmod.mv(r, r);
+
+                            //calc RHS r
+                            Cmod.rightmultiplyany(Amod).mv(fBMod, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 2, 2 * dim - 2> AinvB(Amod.rightmultiplyany(Bmod));
                             Dune::FieldMatrix<Scalar, 2 * dim - 2, 2 * dim - 2> T(AinvB.leftmultiplyany(Cmod));
                             T += Fmod;
-
-                            C.mv(fBMod, r);
 
                             Dune::FieldVector<Scalar, 2 * dim - 2> fluxMod(0);
                             T.mv(p, fluxMod);
@@ -1653,24 +1647,21 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 1> r(0);
                             // compute T
                             A.invert();
-                            A.mv(fB, r);
-                            C.mv(r, r);
+
+                            //calc RHS r
+                            C.rightmultiplyany(A).mv(fB, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> AinvB(A.rightmultiplyany(B));
                             Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> T(AinvB.leftmultiplyany(C));
                             T += F;
-
-                            C.mv(fB, r);
 
                             T.mv(p, flux);
 
                             flux += r;
                         }
 
-                        vel12 *= flux[0] / 2;//divide by 2 because the flux is related to the half face!
-                        vel14 *= flux[2] / 2;
+                        vel14 *= flux[2] / 2;//divide by 2 because the flux is related to the half face!
                         vel41 *= flux[2] / 2;
-                        vel43 *= flux[1] / 2;
 
                         switch (velocityType_)
                         {
@@ -1835,6 +1826,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda21[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda12[0] /= viscosityW;
                         lambda21[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1843,6 +1835,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda21[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda12[0] /= viscosityW;
                         lambda21[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     if (potentialNW12 >= 0)
                     {
@@ -1851,6 +1844,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda21[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda12[1] /= viscosityNW;
                         lambda21[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1859,6 +1853,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         lambda21[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda12[1] /= viscosityNW;
                         lambda21[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
 
                     //compute mobilities of face 2
@@ -1868,6 +1863,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         Scalar sat = this->problem().variables().saturation()[globalIdx2];
                         lambda23[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda23[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1882,12 +1878,14 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         }
                         lambda23[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda23[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     if (potentialNW23 >= 0)
                     {
                         Scalar sat = this->problem().variables().saturation()[globalIdx2];
                         lambda23[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda23[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1902,6 +1900,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         }
                         lambda23[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos2, *elementPointer2), sat);
                         lambda23[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
 
                     //compute mobilities of face 4
@@ -1911,6 +1910,7 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         Scalar sat = this->problem().variables().saturation()[globalIdx1];
                         lambda14[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos1, *elementPointer1), sat);
                         lambda14[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1925,12 +1925,14 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         }
                         lambda14[0] = MaterialLaw::krw(this->problem().spatialParameters().materialLawParams(globalPos1, *elementPointer1), sat);
                         lambda14[0] /= viscosityW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     if (potentialNW14 >= 0)
                     {
                         Scalar sat = this->problem().variables().saturation()[globalIdx1];
                         lambda14[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos1, *elementPointer1), sat);
                         lambda14[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
                     else
                     {
@@ -1945,9 +1947,10 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         }
                         lambda14[1] = MaterialLaw::krn(this->problem().spatialParameters().materialLawParams(globalPos1, *elementPointer1), sat);
                         lambda14[1] /= viscosityNW;
+                        std::cout<<"sat = "<<sat<<"\n";
                     }
 
-                    //                    std::cout<<"lambda12 = "<<lambda12<<"\nlambda21"<<lambda21<<"\nlambda14 = "<<lambda14<<"\nlambda23 = "<<lambda23<<"\n";
+                                        std::cout<<"lambda12 = "<<lambda12<<"\nlambda21"<<lambda21<<"\nlambda14 = "<<lambda14<<"\nlambda23 = "<<lambda23<<"\n";
 
                     for (int i = 0; i < numPhases; i++)
                     {
@@ -1975,26 +1978,25 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         FieldVector vel23 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(1, 0);
                         FieldVector vel21 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(1, 1);
 
+                        vel14 *= J1[i]/2;
+                        vel23 *= J2[i]/2;
+
                         if (numFluxFaces == 0)
                         {
-                            vel14[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(0, 1);
-                            vel23[i] *= this->interactionVolumes_[globalVertIdx].getFaceArea(1, 0);
-                            vel12[i] *= J1[i];
-                            vel23[i] *= J2[i];
-                            vel12[i] *= 0;
-                            vel21[i] *= 0;
+                            vel12 *= 0;
+                            vel21 *= 0;
 
                             continue;
                         }
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
-                        Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
+                        Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 0);
                         Scalar gn12nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 1);
                         Scalar gn23nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 0);
-                        Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 0, 1);
+                        Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 1);
 
                         // compute transmissibility matrix T = CA^{-1}B+F
                         Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 1> C(0), A(0);
@@ -2029,8 +2031,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         B[2][0] = gn14nu12 + gn14nu14;
 
                         // get neumann boundary value
-                        fB[1] = -J2[i];
-                        fB[2] = -J1[i];
+                        fB[1] = J2[i];
+                        fB[2] = J1[i];
 
                         // use the pressure values to compute the fluxes
                         Dune::FieldVector<Scalar, 2 * dim - 2> p(0);
@@ -2063,14 +2065,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 3> r(0);
                             // compute T
                             Amod.invert();
-                            Amod.mv(fBMod, r);
-                            Cmod.mv(r, r);
+
+                            //calc RHS r
+                            Cmod.rightmultiplyany(Amod).mv(fBMod, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 3, 2 * dim - 2> AinvB(Amod.rightmultiplyany(Bmod));
                             Dune::FieldMatrix<Scalar, 2 * dim - 3, 2 * dim - 2> T(AinvB.leftmultiplyany(Cmod));
                             T += Fmod;
-
-                            C.mv(fBMod, r);
 
                             Dune::FieldVector<Scalar, 2 * dim - 3> fluxMod(0);
                             T.mv(p, fluxMod);
@@ -2106,14 +2107,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 2> r(0);
                             // compute T
                             Amod.invert();
-                            Amod.mv(fBMod, r);
-                            Cmod.mv(r, r);
+
+                            //calc RHS r
+                            Cmod.rightmultiplyany(Amod).mv(fBMod, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 2, 2 * dim - 2> AinvB(Amod.rightmultiplyany(Bmod));
                             Dune::FieldMatrix<Scalar, 2 * dim - 2, 2 * dim - 2> T(AinvB.leftmultiplyany(Cmod));
                             T += Fmod;
-
-                            C.mv(fBMod, r);
 
                             Dune::FieldVector<Scalar, 2 * dim - 2> fluxMod(0);
                             T.mv(p, fluxMod);
@@ -2130,14 +2130,13 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             Dune::FieldVector<Scalar, 2 * dim - 1> r(0);
                             // compute T
                             A.invert();
-                            A.mv(fB, r);
-                            C.mv(r, r);
+
+                            //calc RHS r
+                            C.rightmultiplyany(A).mv(fB, r);
 
                             Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> AinvB(A.rightmultiplyany(B));
                             Dune::FieldMatrix<Scalar, 2 * dim - 1, 2 * dim - 2> T(AinvB.leftmultiplyany(C));
                             T += F;
-
-                            C.mv(fB, r);
 
                             T.mv(p, flux);
 
@@ -2147,8 +2146,6 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                         //                        std::cout<<"flux2 = "<<flux<<"\n";
 
                         vel12 *= flux[0] / 2;//divide by 2 because the flux is related to the half face!
-                        vel14 *= flux[2] / 2;
-                        vel23 *= flux[1] / 2;
                         vel21 *= flux[0] / 2;
 
                         switch (velocityType_)
@@ -2421,14 +2418,14 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             continue;
                         }
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
-                        Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
+                        Scalar gn43nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 0);
                         Scalar gn43nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 1, 1);
                         Scalar gn14nu41 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 0);
-                        Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda43[i], 3, 0, 1);
+                        Scalar gn14nu43 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda41[i], 3, 0, 1);
 
                         // evaluate parts of velocity
                         FieldVector vel12 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(0, 0);
@@ -2752,14 +2749,14 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
                             continue;
                         }
 
-                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 0, 1);
+                        Scalar gn12nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 1);
                         Scalar gn12nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 0, 0);
                         Scalar gn14nu14 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 1);
-                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda12[i], 0, 1, 0);
-                        Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 1, 0);
+                        Scalar gn14nu12 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda14[i], 0, 1, 0);
+                        Scalar gn12nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 0);
                         Scalar gn12nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 1, 1);
                         Scalar gn23nu23 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 0);
-                        Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda21[i], 1, 0, 1);
+                        Scalar gn23nu21 = this->interactionVolumes_[globalVertIdx].getNTKKrNu_by_dF(lambda23[i], 1, 0, 1);
 
                         // evaluate parts of velocity
                         FieldVector vel12 = this->interactionVolumes_[globalVertIdx].getUnitOuterNormalByFace(0, 0);
@@ -2907,8 +2904,8 @@ void FVMPFAOVelocities2P<TypeTag>::calculateVelocity()
         } // end boundaries
 
     } // end vertex iterator
-//        printvector(std::cout, this->problem().variables().velocity(), "velocity", "row", 4, 1, 3);
-    //    printvector(std::cout, this->problem().variables().velocitySecondPhase(), "velocity second phase", "row", 4, 1, 3);
+        printvector(std::cout, this->problem().variables().velocity(), "velocity", "row", 4, 1, 3);
+        printvector(std::cout, this->problem().variables().velocitySecondPhase(), "velocity second phase", "row", 4, 1, 3);
     return;
 } // end method calcTotalVelocity
 
