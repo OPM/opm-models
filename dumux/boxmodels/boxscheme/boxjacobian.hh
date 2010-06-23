@@ -383,6 +383,11 @@ public:
     const MatrixBlock &mat(int i, int j) const
     { return A[i][j]; }
 
+    const VertexDataArray& currentElementData() const
+    {
+        return curElemDat_;
+    }
+
 protected:
     const Element &curElement_() const
     { return *curElementPtr_; }
