@@ -20,7 +20,7 @@
 #ifndef DUMUX_START_HH
 #define DUMUX_START_HH
 
-#include <dumux/common/properties.hh>
+#include <dumux/common/propertysystem.hh>
 
 #include <dune/common/mpihelper.hh>
 

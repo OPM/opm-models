@@ -1,4 +1,4 @@
-SUBDIRS = fractionalflow io nonlinear .
+SUBDIRS = decoupled material boxmodels common io nonlinear .
 
 # the standard debug streams are put into the libdune
 noinst_LTLIBRARIES = libdumux.la

@@ -21,7 +21,7 @@
 #define DUMUX_2P_BOX_PROBLEM_HH
 
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
-#include <dumux/new_material/fluidsystems/2p_system.hh>
+#include <dumux/material/fluidsystems/2p_system.hh>
 
 namespace Dumux
 {

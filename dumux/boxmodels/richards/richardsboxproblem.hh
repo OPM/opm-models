@@ -21,7 +21,7 @@
 #define DUMUX_RICHARDS_BOX_PROBLEM_HH
 
 #include <dumux/boxmodels/boxscheme/boxproblem.hh>
-#include <dumux/material/twophaserelations.hh>
+#include <dumux/old_material/twophaserelations.hh>
 
 
 namespace Dumux

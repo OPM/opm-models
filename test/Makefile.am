@@ -1,6 +1,5 @@
-SUBDIRS = . \
-	 transport\
-	  fractionalflow \
-	 
-inclu $(top_srcdir)/am/global-rules
+SUBDIRS = boxmodels common decoupled .
+
+EXTRA_DIST=CMakeLists.txt
+include $(top_srcdir)/am/global-rules
 

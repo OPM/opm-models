@@ -1,15 +1,7 @@
 # directories which are commented out do not compile at the moment
 # (they also don't compile if using the old build system)!
 
-add_subdirectory("1p")
-add_subdirectory("1p2c")
-add_subdirectory("2p")
-add_subdirectory("2pni")
-add_subdirectory("2p2c")
-add_subdirectory("2p2cni")
-#add_subdirectory("diffusion")
-#add_subdirectory("fractionalflow")
-add_subdirectory("properties")
-add_subdirectory("richards")
-#add_subdirectory("transport")
+add_subdirectory("boxmodels")
+add_subdirectory("common")
+#add_subdirectory("decoupled")
 

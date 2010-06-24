@@ -26,7 +26,7 @@
 
 #include "2p2cproperties.hh"
 
-#include <dumux/new_material/fluidstate.hh>
+#include <dumux/material/fluidstate.hh>
 
 namespace Dumux
 {

@@ -23,7 +23,7 @@
 
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/grid/common/capabilities.hh>
-#include <dumux/common/properties.hh>
+#include <dumux/common/propertysystem.hh>
 
 namespace Dumux
 {

@@ -29,7 +29,7 @@
 #include <dune/common/exceptions.hh>
 
 #include <dumux/common/valgrind.hh>
-#include <dumux/fvgeometry/fvelementgeometry.hh>
+#include <dumux/boxmodels/boxscheme/fvelementgeometry.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
 
 #include <boost/format.hpp>

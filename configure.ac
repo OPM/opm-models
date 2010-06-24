@@ -3,7 +3,7 @@
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
 AM_INIT_AUTOMAKE([tar-pax])
-AC_CONFIG_SRCDIR([test/diffusion/test_diffusion.cc])
+AC_CONFIG_SRCDIR([test/decoupled/1p/test_diffusion.cc])
 AM_CONFIG_HEADER([config.h])
 #AC_SUBST([LOCAL_LIBS], '$(top_srcdir)/lib/libdunemux.la')
 AC_SUBST([LOCAL_LIBS], '$(top_srcdir)/dumux/libdumux.la')
@@ -89,24 +89,59 @@ AC_SUBST(AM_CPPFLAGS, "$ALL_PKG_CPPFLAGS" )
 AC_SUBST(AM_LDFLAGS, "$ALL_PKG_LDFLAGS" )
 LIBS="$DUNE_LIBS $ALL_PKG_LIBS $PARDISO_LIBS"
 
-AC_CONFIG_FILES([Makefile
+AC_CONFIG_FILES([dumux.pc
+    Makefile
     doc/Makefile 
-    dumux/Makefile 
-    test/Makefile
     doc/doxygen/Makefile 
     doc/handbook/Makefile
-    dumux/fractionalflow/Makefile 
+    dumux/Makefile 
+    dumux/boxmodels/Makefile 
+    dumux/boxmodels/1p/Makefile 
+    dumux/boxmodels/1p2c/Makefile 
+    dumux/boxmodels/2p/Makefile 
+    dumux/boxmodels/2p2c/Makefile 
+    dumux/boxmodels/2p2cni/Makefile 
+    dumux/boxmodels/2pni/Makefile 
+    dumux/boxmodels/boxscheme/Makefile 
+    dumux/boxmodels/pdelab/Makefile 
+    dumux/boxmodels/richards/Makefile 
+    dumux/common/Makefile 
+    dumux/decoupled/Makefile 
+    dumux/decoupled/2p/Makefile 
+    dumux/decoupled/2p/diffusion/Makefile 
+    dumux/decoupled/2p/diffusion/fv/Makefile 
+    dumux/decoupled/2p/diffusion/fvmpfa/Makefile 
+    dumux/decoupled/2p/diffusion/mimetic/Makefile 
+    dumux/decoupled/2p/impes/Makefile 
+    dumux/decoupled/2p/transport/Makefile 
+    dumux/decoupled/2p/transport/fv/Makefile 
+    dumux/decoupled/common/Makefile 
     dumux/io/Makefile 
+    dumux/material/Makefile 
+    dumux/material/binarycoefficients/Makefile 
+    dumux/material/components/Makefile 
+    dumux/material/fluidmatrixinteractions/Makefile 
+    dumux/material/fluidsystems/Makefile 
+    dumux/material/spatialparameters/Makefile 
     dumux/nonlinear/Makefile 
-    test/2p2c/Makefile
-    test/2p2cni/Makefile
-    test/fractionalflow/Makefile
-    test/new_localglobalupscaling/Makefile
-    test/transport/Makefile
-    tutorial/Makefile
-    dumux/fractionalflow/impes/Makefile 
     m4/Makefile
-    dumux.pc])
+    test/Makefile
+    test/boxmodels/Makefile 
+    test/boxmodels/1p/Makefile 
+    test/boxmodels/2p/Makefile 
+    test/boxmodels/2pni/Makefile
+    test/boxmodels/1p2c/Makefile 
+    test/boxmodels/2p2c/Makefile
+    test/boxmodels/2p2cni/Makefile
+    test/boxmodels/richards/Makefile  
+    test/common/Makefile
+    test/common/propertysystem/Makefile
+    test/common/spline/Makefile
+    test/decoupled/Makefile
+    test/decoupled/1p/Makefile
+    test/decoupled/2p/Makefile
+    tutorial/Makefile
+])
 
 AC_OUTPUT
 # finally print the summary information

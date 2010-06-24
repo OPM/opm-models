@@ -17,7 +17,7 @@
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH
 
-#include <dumux/common/properties.hh>
+#include <dumux/common/propertysystem.hh>
 
 #include <dumux/boxmodels/pdelab/istlvectorbackend.hh>
 
@@ -79,7 +79,7 @@ NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 }
 }
 
-#include <dumux/fvgeometry/fvelementgeometry.hh>
+#include <dumux/boxmodels/boxscheme/fvelementgeometry.hh>
 
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/nonlinear/newtoncontroller.hh>

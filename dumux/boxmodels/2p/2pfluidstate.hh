@@ -21,7 +21,7 @@
 #ifndef DUMUX_2P_PHASE_STATE_HH
 #define DUMUX_2P_PHASE_STATE_HH
 
-#include <dumux/new_material/fluidstate.hh>
+#include <dumux/material/fluidstate.hh>
 #include <dumux/boxmodels/2p/2pproperties.hh>
 
 namespace Dumux
