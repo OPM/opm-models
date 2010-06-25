@@ -219,7 +219,7 @@ public:
                               const FluxData &fluxData) const
     {
         // diffusive fluxes
-        //flux += 0.0;
+        flux += 0.0;
     }
 
     /*!
@@ -315,23 +315,22 @@ public:
       */
      void calculateMass(const SolutionVector &globalSol, Dune::FieldVector<Scalar, 2> &mass)
      {
-//         const DofEntityMapper &dofMapper = this->problem_.model().dofEntityMapper();
-         SolutionOnElement tmpSol;
-         ElementIterator elementIt = this->problem_.gridView().template begin<0>();
-         ElementIterator endit = this->problem_.gridView().template end<0>();
+          mass = 0;
 
+          ElementIterator elementIt = this->model().gridView().template begin<0>();
+         ElementIterator endit = this->model().gridView().template end<0>();
+
+         SolutionOnElement curSol;
          VertexDataArray elemDat;
-         VertexData tmp;
-         Scalar vol, poro, rhoN, rhoW, satN, satW, pW;//, Te;
-         Scalar massNPhase(0.), massWPhase(0.);
 
-         mass = 0;
          Scalar minSat = 1e100;
          Scalar maxSat = -1e100;
          Scalar minP = 1e100;
          Scalar maxP = -1e100;
-//         Scalar minTe = 1e100;
-//         Scalar maxTe = -1e100;
+#if !ISOTHERMAL
+         Scalar minTe = 1e100;
+         Scalar maxTe = -1e100;
+#endif
 
          // Loop over elements
          for (; elementIt != endit; ++elementIt)
@@ -340,54 +339,66 @@ public:
                  continue;
 
              setCurrentElement(*elementIt);
-             this->restrictToElement(tmpSol, globalSol);
-             this->setCurrentSolution(tmpSol);
 
-             int numVerts = elementIt->template count<dim>();
+             int numLocalVerts = elementIt->template count<dim>();
+             curSol.resize(numLocalVerts);
+                elemDat.resize(numLocalVerts);
+             this->restrictToElement(curSol, globalSol);
+             this->updateElementData_(elemDat, curSol, false);
 
-             for (int i = 0; i < numVerts; ++i)
+             for (int i = 0; i < numLocalVerts; ++i)
              {
-//                 int globalIdx = dofMapper.map(*elementIt, i, dim);
-                 vol = this->curElementGeom_.subContVol[i].volume;
-                 poro = this->curElemDat_[i].porosity();
-                 rhoN = this->curElemDat_[i].density(nPhaseIdx);
-                 rhoW = this->curElemDat_[i].density(wPhaseIdx);
-                 satW  = this->curElemDat_[i].saturation(wPhaseIdx);
-                 satN  = this->curElemDat_[i].saturation(nPhaseIdx);
-                 pW = this->curElemDat_[i].pressure(wPhaseIdx);
-//                 Te = asImp_()->temperature((*globalSol)[globalIdx]);
+                 const VertexData &vdat = elemDat[i];
+                Scalar vol = this->curElementGeom_.subContVol[i].volume;
 
-
-                 massNPhase = vol * poro * satN * rhoN;
-                 massWPhase = vol * poro * satW * rhoW;
+                 Scalar satN = vdat.saturation(nPhaseIdx);
+                Scalar pW = vdat.pressure(wPhaseIdx);
+                Scalar T = vdat.temperature();
 
                  // get minimum and maximum values of primary variables
                  minSat = std::min(minSat, satN);
                  maxSat = std::max(maxSat, satN);
                  minP = std::min(minP, pW);
                  maxP = std::max(maxP, pW);
-//                 minTe = std::min(minTe, Te);
-//                 maxTe = std::max(maxTe, Te);
+#if !ISOTHERMAL
+                 minTe = std::min(minTe, T);
+                 maxTe = std::max(maxTe, T);
+#endif
 
-                 // calculate total mass
-                 mass[0] += massNPhase; // mass nonwetting phase
-                 mass[1] += massWPhase; // mass in wetting phase
+                mass[nPhaseIdx] +=
+                      vdat.porosity()
+                      * vdat.saturation(nPhaseIdx)
+                      * vdat.density(nPhaseIdx)
+                      * vol;
+
+                  mass[wPhaseIdx] +=
+                      vdat.porosity()
+                      * vdat.saturation(wPhaseIdx)
+                      * vdat.density(wPhaseIdx)
+                      * vol;
              }
          }
 
-         // IF PARALLEL: calculate total mass including all processors
-         // also works for sequential calculation
-         mass = this->problem_.gridView().comm().sum(mass);
+        mass = this->gridView_.comm().sum(mass);
+
+        Scalar minS = this->gridView_.comm().min(minSat);
+        Scalar maxS = this->gridView_.comm().max(maxSat);
+        Scalar minPr = this->gridView_.comm().min(minP);
+        Scalar maxPr = this->gridView_.comm().max(maxP);
+        Scalar minT = this->gridView_.comm().min(minTe);
+        Scalar maxT = this->gridView_.comm().max(maxTe);
 
          if(this->problem_.gridView().comm().rank() == 0) // IF PARALLEL: only print by processor with rank() == 0
          {
              // print minimum and maximum values
-             std::cout << "nonwetting phase saturation: min = "<< minSat
-             << ", max = "<< maxSat << std::endl;
-             std::cout << "wetting phase pressure: min = "<< minP
-             << ", max = "<< maxP << std::endl;
-//             std::cout << "temperature: min = "<< minTe
-//             << ", max = "<< maxTe << std::endl;
+             std::cout << "nonwetting phase saturation: min = "<< minS
+             << ", max = "<< maxS << std::endl;
+             std::cout << "wetting phase pressure: min = "<< minPr
+             << ", max = "<< maxPr << std::endl;
+#if !ISOTHERMAL
+             std::cout << "temperature: min = "<< minT
+             << ", max = "<< maxT << std::endl;
+#endif
          }
      }
 
