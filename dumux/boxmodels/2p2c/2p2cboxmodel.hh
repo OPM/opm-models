@@ -40,23 +40,23 @@ namespace Dumux
  * \f$\kappa \in \{ w, a \}\f$. The standard multiphase Darcy
  * approach is used as the equation for the conservation of momentum:
  * \f[
-     v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} K
-     \left(\text{grad} p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
+ v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} K
+ \left(\text{grad} p_\alpha - \varrho_{\alpha} \boldsymbol{g} \right)
  * \f]
  *
  * By inserting this into the equations for the conservation of the
  * components, one gets one transport equation for each component
  * \f{eqnarray*}
-    &&  \phi \frac{\partial (\sum_\alpha \varrho_\alpha X_\alpha^\kappa S_\alpha )}
-    {\partial t}
-    - \sum_\alpha \nabla \cdot \left\{ \varrho_\alpha X_\alpha^\kappa
-    \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
-    ({\bf \nabla} p_\alpha - \varrho_{\alpha} \mbox{\bf g}) \right\}
-    \nonumber \\ \nonumber \\
+ &&  \phi \frac{\partial (\sum_\alpha \varrho_\alpha X_\alpha^\kappa S_\alpha )}
+ {\partial t}
+ - \sum_\alpha \nabla \cdot \left\{ \varrho_\alpha X_\alpha^\kappa
+ \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
+ ({\bf \nabla} p_\alpha - \varrho_{\alpha} \mbox{\bf g}) \right\}
+ \nonumber \\ \nonumber \\
     &-& \sum_\alpha \nabla \cdot \left\{{\bf D_{pm}^\kappa} \varrho_{\alpha} {\bf \nabla} X^\kappa_{\alpha} \right\}
-    - \sum_\alpha q_\alpha^\kappa = \quad 0 \qquad \kappa \in \{w, a\} \, ,
-    \alpha \in \{w, g\}
-    \f}
+ - \sum_\alpha q_\alpha^\kappa = \quad 0 \qquad \kappa \in \{w, a\} \, ,
+ \alpha \in \{w, g\}
+ \f}
  *
  * This is discretized using a fully-coupled vertex
  * centered finite volume (box) scheme as spatial and
@@ -84,32 +84,31 @@ namespace Dumux
  * </ul>
  */
 
-template<class TypeTag, class Implementation >
-class TwoPTwoCBoxModelBase
-    : public BoxScheme<TypeTag,
-                       // Implementation of the box scheme
-                       Implementation >
+template<class TypeTag, class Implementation>
+class TwoPTwoCBoxModelBase: public BoxScheme<TypeTag,
+// Implementation of the box scheme
+        Implementation>
 {
-    typedef TwoPTwoCBoxModelBase<TypeTag, Implementation>         ThisType;
-    typedef BoxScheme<TypeTag, Implementation>                    ParentType;
+    typedef TwoPTwoCBoxModelBase<TypeTag, Implementation> ThisType;
+    typedef BoxScheme<TypeTag, Implementation> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar))        Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))       Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
 public:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView))      GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(GridView)) GridView;
 private:
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(LocalJacobian)) LocalJacobian;
 
-
-    enum {
+    enum
+    {
         dim = GridView::dimension
     };
-    typedef typename GridView::template Codim<0>::Entity     Element;
-    typedef typename GridView::template Codim<dim>::Entity   Vertex;
+    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GridView::template Codim<dim>::Entity Vertex;
 
 public:
-    TwoPTwoCBoxModelBase(Problem &prob)
-        : ParentType(prob)
+    TwoPTwoCBoxModelBase(Problem &prob) :
+        ParentType(prob)
     {
     }
 
@@ -124,9 +123,10 @@ public:
         this->localJacobian().setSwitched(false);
         this->localJacobian().resetPhasePresence();
         /*this->localJacobian().updateStaticData(this->curSolFunction(),
-                                                this->prevSolFunction());
-        */
-    };
+         this->prevSolFunction());
+         */
+    }
+    ;
 
     /*!
      * \brief Called by the BoxScheme's update method.
@@ -144,7 +144,7 @@ public:
      *        from the solution of the current time step to the VTK
      *        writer.
      */
-    template <class MultiWriter>
+    template<class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
     {
         this->localJacobian().addOutputVtkFields(writer, this->curSol());
@@ -155,44 +155,45 @@ public:
      *        after the last time step.
      */
     bool switched() const
-    { return this->localJacobian().switched(); }
+    {
+        return this->localJacobian().switched();
+    }
 
     /*!
      * \brief Write the current solution to a restart file.
      */
-    void serializeEntity(std::ostream &outStream,
-                         const Vertex &vert)
+    void serializeEntity(std::ostream &outStream, const Vertex &vert)
     {
         // write primary variables
         ParentType::serializeEntity(outStream, vert);
 
         this->localJacobian().serializeEntity(outStream, vert);
-    };
+    }
+    ;
 
     /*!
      * \brief Reads the current solution for a vertex from a restart
      *        file.
      */
-    void deserializeEntity(std::istream &inStream,
-                           const Vertex &vert)
+    void deserializeEntity(std::istream &inStream, const Vertex &vert)
     {
         // read primary variables
         ParentType::deserializeEntity(inStream, vert);
 
         this->localJacobian().deserializeEntity(inStream, vert);
-    };
+    }
+    ;
 
     /*!
      * \brief Calculates the total mass of all components in the
      *        system.
      */
     void calculateMass(Dune::FieldVector<Scalar, 2> &massGas,
-               Dune::FieldVector<Scalar, 2> &massLiquid)
+            Dune::FieldVector<Scalar, 2> &massLiquid)
     {
-        this->localJacobian().calculateMass(this->curSolFunction(),
-                        massGas,
-                        massLiquid);
-    };
+        this->localJacobian().calculateMass(this->curSol(), massGas, massLiquid);
+    }
+    ;
 };
 
 /**
@@ -201,19 +202,19 @@ public:
  * This implements an isothermal two phase two component
  * model. This class is just a simple wrapper for \ref TwoPTwoCBoxModelBase .
  */
-template<class TypeTag >
-class TwoPTwoCBoxModel
-    : public TwoPTwoCBoxModelBase<TypeTag, TwoPTwoCBoxModel<TypeTag> >
+template<class TypeTag>
+class TwoPTwoCBoxModel: public TwoPTwoCBoxModelBase<TypeTag, TwoPTwoCBoxModel<
+        TypeTag> >
 {
 public:
-    typedef TwoPTwoCBoxModel<TypeTag>                           ThisType;
-    typedef TwoPTwoCBoxModelBase<TypeTag, ThisType>             ParentType;
+    typedef TwoPTwoCBoxModel<TypeTag> ThisType;
+    typedef TwoPTwoCBoxModelBase<TypeTag, ThisType> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem))      Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Problem)) Problem;
 
 public:
-    TwoPTwoCBoxModel(Problem &prob)
-        : ParentType(prob)
+    TwoPTwoCBoxModel(Problem &prob) :
+        ParentType(prob)
     {
     }
 };
