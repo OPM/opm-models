@@ -113,8 +113,10 @@ public:
                                 +
                                 vertDat.density(nPhaseIdx) *
                                 vertDat.internalEnergy(nPhaseIdx) *
-                                vertDat.saturation(nPhaseIdx));
-        //vertDat.temperature()*vertDat.heatCapacity();
+                                vertDat.saturation(nPhaseIdx))
+                                +
+                                vertDat.temperature() *
+                                vertDat.heatCapacity();
     }
 
     /*!
@@ -162,7 +164,8 @@ public:
         ParentType::computeDiffusiveFlux(flux, fluxData);
 
         // diffusive heat flux
-        //flux[energyEqIdx] += fluxData.normalMatrixHeatFlux();
+        flux[energyEqIdx] += fluxData.normalMatrixHeatFlux();
+
     }
 };
 

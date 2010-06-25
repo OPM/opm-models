@@ -103,8 +103,7 @@ public:
                                                    elemGeom,
                                                    scvfIdx);
         // project the heat flux vector on the face's normal vector
-        normalMatrixHeatFlux_ = -(tmp*elemGeom.subContVolFace[scvfIdx].normal);
-        normalMatrixHeatFlux_ = 0;
+        normalMatrixHeatFlux_ = tmp * elemGeom.subContVolFace[scvfIdx].normal;
     }
 
     /*!
