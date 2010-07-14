@@ -26,8 +26,8 @@
 #include <dune/common/mpihelper.hh>
 
 #include <dumux/common/valgrind.hh>
-#include <dumux/operators/boundaryconditions.hh>
-#include <dumux/operators/boundaryconditions.hh>
+#include <dumux/common/boundaryconditions.hh>
+#include <dumux/common/boundaryconditions.hh>
 
 namespace Dumux
 {

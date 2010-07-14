@@ -27,7 +27,7 @@
 #include<dune/pdelab/finiteelementmap/conformingconstraints.hh>
 
 #include<dumux/common/boundarytypes.hh>
-#include<dumux/operators/boundaryconditions.hh>
+#include<dumux/common/boundaryconditions.hh>
 
 namespace Dumux {
 //! Constraints construction

@@ -30,7 +30,7 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
-#include<dumux/operators/boundaryconditions.hh>
+#include<dumux/common/boundaryconditions.hh>
 
 /**
 * @file

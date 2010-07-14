@@ -36,7 +36,7 @@
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
 #include<dune/istl/bcrsmatrix.hh>
-#include<dumux/operators/boundaryconditions.hh>
+#include<dumux/common/boundaryconditions.hh>
 #include<dumux/operators/localstiffness.hh>
 
 /**
