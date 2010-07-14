@@ -24,7 +24,7 @@
 #include <dune/istl/preconditioners.hh>
 
 // dumux environment
-#include "dumux/pardiso/pardiso.hh"
+#include "dumux/common/pardiso.hh"
 #include <dumux/decoupled/2p/2pproperties.hh>
 #include <dumux/decoupled/2p/diffusion/fvmpfa/mpfaproperties.hh>
 

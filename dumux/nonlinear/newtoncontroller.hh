@@ -38,7 +38,7 @@
 #include <iostream>
 #include <boost/format.hpp>
 
-#include <dumux/pardiso/pardiso.hh>
+#include <dumux/common/pardiso.hh>
 
 #include <dumux/boxmodels/pdelab/preconditionerpdelab.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
