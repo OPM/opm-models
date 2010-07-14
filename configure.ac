@@ -135,6 +135,7 @@ AC_CONFIG_FILES([dumux.pc
     test/boxmodels/2p2cni/Makefile
     test/boxmodels/richards/Makefile  
     test/common/Makefile
+    test/common/pardiso/Makefile 
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
     test/decoupled/Makefile
