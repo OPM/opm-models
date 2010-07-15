@@ -25,6 +25,8 @@
 #ifndef DUMUX_1P2C_PROPERTIES_HH
 #define DUMUX_1P2C_PROPERTIES_HH
 
+#include<dumux/boxmodels/boxscheme/boxproperties.hh>
+
 namespace Dumux
 {
 ////////////////////////////////
@@ -72,8 +74,8 @@ NEW_TYPE_TAG(BoxOnePTwoC, INHERITS_FROM(BoxScheme));
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of fluid components in the system
 NEW_PROP_TAG(OnePTwoCIndices); //!< Enumerations for the 1p2c models
-NEW_PROP_TAG(Soil); //!< The type of the soil properties object
-NEW_PROP_TAG(Fluid); //!< The fluid for the single-phase problems
+NEW_PROP_TAG(SpatialParameters); //!< The type of the soil
+NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
 NEW_PROP_TAG(UpwindAlpha);   //!< The default value of the upwind parameter
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 
