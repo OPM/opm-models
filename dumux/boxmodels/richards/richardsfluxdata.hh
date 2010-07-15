@@ -122,13 +122,13 @@ private:
         // more flexible
         typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
         Tensor K;
-        const Tensor &Ki = problem.soil().K(insideSCV->global,
-                                            element,
-                                            insideSCV->local);
-        const Tensor &Kj = problem.soil().K(outsideSCV->global,
-                                            element,
-                                            outsideSCV->local);
-        Dumux::harmonicMeanMatrix(K, Ki, Kj);
+        problem.spatialParameters().meanK(K,
+                problem.spatialParameters().intrinsicPermeability(element,
+                                                   fvElemGeom,
+                                                   face->i),
+                problem.spatialParameters().intrinsicPermeability(element,
+                                                    fvElemGeom,
+                                                    face->j));
 
         // temporary vector for the Darcy velocity
         GlobalPosition vDarcy;

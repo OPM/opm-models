@@ -113,8 +113,8 @@ public:
                                 +
                                 vertDat.density(nPhaseIdx) *
                                 vertDat.internalEnergy(nPhaseIdx) *
-                                vertDat.saturation(nPhaseIdx));
-        vertDat.temperature()*vertDat.heatCapacity();
+                                vertDat.saturation(nPhaseIdx))
+          + vertDat.temperature()*vertDat.heatCapacity();
     }
 
     /*!

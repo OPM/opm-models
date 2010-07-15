@@ -20,12 +20,11 @@
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
-#include <dumux/old_material/fluids/water.hh>
-#include <dumux/old_material/fluids/air.hh>
-
 #include <dumux/boxmodels/richards/richardsboxmodel.hh>
+#include <dumux/material/components/simpleh2o.hh>
+#include <dumux/material/fluidsystems/liquidphase.hh>
 
-#include "richardslenssoil.hh"
+#include "richardslensspatialparameters.hh"
 
 namespace Dumux
 {
@@ -69,20 +68,18 @@ SET_PROP(RichardsLensProblem, Problem)
 };
 
 // Set the wetting phase
-SET_TYPE_PROP(RichardsLensProblem, WettingPhase, Dumux::Water);
-
-// Set the non-wetting phase
-SET_TYPE_PROP(RichardsLensProblem, NonwettingPhase, Dumux::Air);
-
-// Set the soil properties
-SET_PROP(RichardsLensProblem, Soil)
+SET_PROP(RichardsLensProblem, WettingPhase)
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, PTAG(Grid)) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, PTAG(Scalar)) Scalar;
-
 public:
-    typedef Dumux::RichardsLensSoil<Grid, Scalar> type;
+    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+};
+
+// Set the soil properties
+SET_PROP(RichardsLensProblem, SpatialParameters)
+{
+    typedef Dumux::RichardsLensSpatialParameters<TypeTag> type;
 };
 
 // Enable gravity
@@ -144,7 +141,7 @@ public:
     {
         lensLowerLeft_=lensLowerLeft;
         lensUpperRight_=lensUpperRight;
-        this->soil().setLensCoords(lensLowerLeft_, lensUpperRight_);
+        this->spatialParameters().setLensCoords(lensLowerLeft_, lensUpperRight_);
     }
 
     /*!
