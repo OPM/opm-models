@@ -42,20 +42,22 @@ namespace Dumux
 template <class TypeTag>
 class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
 {
+    typedef TwoPVolumeVariables<TypeTag> ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum { temperatureIdx = Indices::temperatureIdx };
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
+    typedef typename ParentType::FluidState FluidState;
+    
     /*!
      * \brief Returns the total internal energy of a phase in the
      *        sub-control volume.
@@ -86,36 +88,42 @@ protected:
     // this method gets called by the parent class. since this method
     // is protected, we are friends with our parent..
     friend class TwoPVolumeVariables<TypeTag>;
-
-    static Scalar temperature_(const PrimaryVariables &priVars,
-                            const Problem& problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int scvIdx)
+    
+    /*!
+     * \brief Update the temperature for a given control volume.
+     */
+    static void updateTemperature_(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int historyIdx)
     {
-        return priVars[Indices::temperatureIdx];
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
 
-    template<class ParameterCache>
-    static Scalar enthalpy_(const FluidState& fluidState,
-                            const ParameterCache& paramCache,
-                            int phaseIdx)
+    template <class ParameterCache>
+    static void updateEnthalpy_(FluidState &fluidState,
+                                const ParameterCache &paramCache,
+                                const ElementContext &elemCtx,
+                                int scvIdx,
+                                int historyIdx)
     {
-        return FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+        // compute and set the internal energies of the fluid phases
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar h = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+
+            fluidState.setEnthalpy(phaseIdx, h);
+        }
     }
 
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const PrimaryVariables &sol,
-                       const Problem &problem,
-                       const Element &element,
-                       const FVElementGeometry &elemGeom,
+    void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       bool isOldSol)
+                       int historyIdx)
     {
-        // copmute and set the heat capacity of the solid phase
-        heatCapacity_ = problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
+        // compute and set the heat capacity of the solid phase
+        heatCapacity_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx, scvIdx);
         Valgrind::CheckDefined(heatCapacity_);
     }
 

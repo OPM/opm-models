@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -80,6 +80,9 @@ SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
 // Enable molecular diffusion of the components?
 SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
 
+
+// Enable thermodynamic hints?
+SET_BOOL_PROP(ObstacleProblem, EnableHints, false);
 // Use the chopped Newton method?
 SET_BOOL_PROP(ObstacleProblem, NewtonEnableChop, true);
 

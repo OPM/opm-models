@@ -142,11 +142,10 @@ public:
      * \param scvIdx The index of the sub-control volume.
      * \return Intrinsic permeability
      */
-    Scalar intrinsicPermeability(const Element &element,
-                                 const FVElementGeometry &fvElemGeom,
-                                 int scvIdx) const
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
-        const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &globalPos = context.pos(localIdx);
         if (isInLens_(globalPos))
             return lensK_;
         return outerK_;
@@ -160,10 +159,9 @@ public:
      * \param scvIdx The index of the sub-control volume.
      * \return Porosity
      */
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
-    { return 0.4; }
+     template <class Context>
+     Scalar porosity(const Context &context, int localIdx) const
+     { return 0.4; }
 
     /*!
      * \brief Function for defining the parameters needed by constitutive relationships (kr-Sw, pc-Sw, etc.).
@@ -173,11 +171,10 @@ public:
      * \param scvIdx The index of the sub-control volume.
      * \return the material parameters object
      */
-    const MaterialLawParams& materialLawParams(const Element &element,
-                                                const FVElementGeometry &fvElemGeom,
-                                                int scvIdx) const
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
     {
-        const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         if (isInLens_(globalPos))
             return lensMaterialParams_;

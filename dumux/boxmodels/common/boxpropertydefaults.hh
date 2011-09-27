@@ -133,7 +133,7 @@ SET_TYPE_PROP(BoxModel, VolumeVariables, Dumux::BoxVolumeVariables<TypeTag>);
 /*!
  * \brief An array of secondary variable containers.
  */
-SET_TYPE_PROP(BoxModel, ElementVolumeVariables, Dumux::BoxElementVolumeVariables<TypeTag>);
+SET_TYPE_PROP(BoxModel, ElementContext, Dumux::BoxElementContext<TypeTag>);
 
 /*!
  * \brief Boundary types at a single degree of freedom.
@@ -195,6 +195,8 @@ SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);
 //! set number of equations of the mathematical model as default
 SET_INT_PROP(BoxModel, LinearSolverBlockSize, GET_PROP_VALUE(TypeTag, NumEq));
 
+//! Set the history size of the time discretiuation to 2 (for implicit euler)
+SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
 } // namespace Properties
 } // namespace Dumux
 

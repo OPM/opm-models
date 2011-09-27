@@ -44,7 +44,6 @@
 #include <dumux/material/components/nullcomponent.hh>
 
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 namespace Dumux
 {
@@ -115,15 +114,6 @@ public:
     typedef Dumux::FluidSystems::TwoPImmiscible<Scalar,
                                                 WettingPhase,
                                                 NonwettingPhase> type;
-};
-
-SET_PROP(BoxTwoP, FluidState)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-public:
-    typedef ImmiscibleFluidState<Scalar, FluidSystem> type;
 };
 
 // disable velocity output by default

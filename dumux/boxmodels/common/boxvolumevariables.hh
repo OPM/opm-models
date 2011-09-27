@@ -53,6 +53,7 @@ class BoxVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     // default constructor
@@ -99,13 +100,6 @@ public:
     { return (evalPoint_ == 0)?asImp_():*evalPoint_; }
 
     /*!
-     * \brief Set the volume variables which should be used as initial
-     *        conditions for complex calculations.
-     */
-    void setHint(const Implementation *hint)
-    {};
-
-    /*!
      * \brief Update all quantities for a given control volume.
      *
      * \param priVars The primary variables for the control volume
@@ -122,15 +116,13 @@ public:
      *       phase state in the 2p2c model)
      */
     void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
+                const ElementContext &elemCtx,
                 int scvIdx,
-                bool isOldSol)
+                int historyIdx)
     {
         Valgrind::CheckDefined(priVars);
         primaryVars_ = priVars;
-        extrusionFactor_ = problem.boxExtrusionFactor(element, elemGeom, scvIdx);
+        extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, scvIdx);
     }
 
     /*!

@@ -92,8 +92,8 @@ public:
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const ElementVolumeVariables &elemVars = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &volVars = elemVars[scvIdx];
+        const ElementVolumeVariables &elemCtx = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
+        const VolumeVariables &volVars = elemCtx[scvIdx];
 
         // partial time derivative of the wetting phase mass
         result[pressureIdx] =  volVars.density() * volVars.porosity();

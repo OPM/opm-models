@@ -547,6 +547,21 @@ private:
     static bool enablePartialReassemble_()
     { return GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
 
+    Problem &problem_()
+    { return *problemPtr_; }
+    const Problem &problem_() const
+    { return *problemPtr_; }
+    const Model &model_() const
+    { return problem_().model(); }
+    Model &model_()
+    { return problem_().model(); }
+    const GridView &gridView_() const
+    { return problem_().gridView(); }
+    const VertexMapper &vertexMapper_() const
+    { return problem_().vertexMapper(); }
+    const ElementMapper &elementMapper_() const
+    { return problem_().elementMapper(); }
+
     // Construct the BCRS matrix for the global jacobian
     void createMatrix_()
     {
@@ -741,24 +756,23 @@ private:
 
             // update the right hand side
             residual_[globI] += model_().localJacobian().residual(i);
-            for (int j = 0; j < residual_[globI].dimension; ++j)
-                assert(std::isfinite(residual_[globI][j]));
+
             if (enableJacobianRecycling_()) {
                 storageTerm_[globI] +=
-                    model_().localJacobian().storageTerm(i);
+                    model_().localJacobian().residualStorage(i);
             }
 
             // only update the jacobian matrix for non-green vertices
             if (vertexColor(globI) != Green) {
                 if (enableJacobianRecycling_())
                     storageJacobian_[globI] +=
-                        model_().localJacobian().storageJacobian(i);
+                        model_().localJacobian().jacobianStorage(i);
 
                 // update the jacobian matrix
                 for (int j=0; j < numVertices; ++ j) {
                     int globJ = vertexMapper_().map(elem, j, dim);
                     (*matrix_)[globI][globJ] +=
-                        model_().localJacobian().mat(i,j);
+                        model_().localJacobian().jacobian(i, j);
                 }
             }
         }
@@ -768,7 +782,7 @@ private:
     // residual updated, but the jacobian is left alone...
     void assembleGreenElement_(const Element &elem)
     {
-        model_().localResidual().eval(elem);
+        model_().localResidual().eval(problem_(), elem);
 
         int numVertices = elem.template count<dim>();
         for (int i=0; i < numVertices; ++ i) {
@@ -806,22 +820,6 @@ private:
             residual_[vIdx] = 0;
         }
     }
-
-
-    Problem &problem_()
-    { return *problemPtr_; }
-    const Problem &problem_() const
-    { return *problemPtr_; }
-    const Model &model_() const
-    { return problem_().model(); }
-    Model &model_()
-    { return problem_().model(); }
-    const GridView &gridView_() const
-    { return problem_().gridView(); }
-    const VertexMapper &vertexMapper_() const
-    { return problem_().vertexMapper(); }
-    const ElementMapper &elementMapper_() const
-    { return problem_().elementMapper(); }
 
     Problem *problemPtr_;
 

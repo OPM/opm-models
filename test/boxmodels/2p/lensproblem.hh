@@ -27,9 +27,10 @@
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  */
-
 #ifndef DUMUX_LENSPROBLEM_HH
 #define DUMUX_LENSPROBLEM_HH
+
+//#include <dumux/common/quad.hh>
 
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -269,6 +270,7 @@ public:
      *
      * This problem assumes a uniform temperature of 10 degrees Celsius.
      */
+    using ParentType::temperature;
     Scalar temperature() const
     { return temperature_; };
 
@@ -316,7 +318,7 @@ public:
     void dirichletAtPos(PrimaryVariables &values,
                         const GlobalPosition &globalPos) const
     {
-        typename GET_PROP_TYPE(TypeTag, FluidState) fluidState;
+        ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
         fluidState.setTemperature(temperature_);
         fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
         fluidState.setPressure(FluidSystem::nPhaseIdx, /*pressure=*/1e5);
@@ -385,7 +387,7 @@ public:
     {
         Scalar depth = this->bboxMax()[1] - globalPos[1];
 
-        typename GET_PROP_TYPE(TypeTag, FluidState) fluidState;
+        ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
         fluidState.setTemperature(temperature_);
         fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
         fluidState.setPressure(FluidSystem::nPhaseIdx, /*pressure=*/1e5);
