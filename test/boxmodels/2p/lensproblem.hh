@@ -86,8 +86,7 @@ SET_TYPE_PROP(LensProblem, GridCreator, LensGridCreator<TypeTag>);
 // Set the problem property
 SET_TYPE_PROP(LensProblem, Problem, Dumux::LensProblem<TypeTag>);
 
-// TODO: remove this macro switch
-#if 1
+#if 0
 // Set the wetting phase
 SET_PROP(LensProblem, WettingPhase)
 {
@@ -107,7 +106,7 @@ public:
 };
 #else
 // OR: set the fluid system
-SET_TYPE_PROP(LensProblem, FluidSystem, H2ON2FluidSystem<TypeTag>);
+SET_TYPE_PROP(LensProblem, FluidSystem, FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 #endif
 
 // Enable partial reassembly of the jacobian matrix?
@@ -270,16 +269,17 @@ public:
      *
      * This problem assumes a uniform temperature of 10 degrees Celsius.
      */
-    using ParentType::temperature;
-    Scalar temperature() const
+    template <class Context>
+    Scalar temperature(const Context &context,
+                       int localIdx) const
     { return temperature_; };
 
 
-    void sourceAtPos(PrimaryVariables &values,
-                const GlobalPosition &globalPos) const
-    {
-        values = 0;
-    }
+    template <class Context>
+    void source(PrimaryVariables &values,
+                const Context &context,
+                int localIdx) const
+    { values = 0; }
 
     // \}
 
@@ -295,9 +295,12 @@ public:
      * \param values The boundary types for the conservation equations
      * \param globalPos The position of the center of the finite volume
      */
-    void boundaryTypesAtPos(BoundaryTypes &values,
-            const GlobalPosition &globalPos) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values,
+                       const Context &context,
+                       int localIdx) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
         if (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)) {
             values.setAllDirichlet();
         }
@@ -315,9 +318,12 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    void dirichletAtPos(PrimaryVariables &values,
-                        const GlobalPosition &globalPos) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values,
+                   const Context &context,
+                   int localIdx) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
         ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
         fluidState.setTemperature(temperature_);
         fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
@@ -357,9 +363,14 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumannAtPos(PrimaryVariables &values,
-                      const GlobalPosition &globalPos) const
+    template <class Context>
+    void neumann(PrimaryVariables &values,
+                 const Context &context,
+                 const Intersection &is,
+                 int localIdx,
+                 int boundaryIndex) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
         values = 0.0;
         if (onInlet_(globalPos)) {
             values[contiNEqIdx] = -0.04; // kg / (m * s)
@@ -386,13 +397,8 @@ public:
                       const GlobalPosition &globalPos) const
     {
         Scalar depth = this->bboxMax()[1] - globalPos[1];
-
+        Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
         ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
-        fluidState.setTemperature(temperature_);
-        fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
-        fluidState.setPressure(FluidSystem::nPhaseIdx, /*pressure=*/1e5);
-
-        Scalar densityW = FluidSystem::density(fluidState, FluidSystem::wPhaseIdx);
 
         // hydrostatic pressure
         values[pwIdx] = 1e5 - densityW*this->gravity()[1]*depth;

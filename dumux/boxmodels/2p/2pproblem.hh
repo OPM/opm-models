@@ -182,9 +182,6 @@ public:
      *                 the element
      */
     template <class Context>
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
-    DUNE_DEPRECATED
     const Vector &gravity(const Context &context,
                           int localIdx) const
     {
@@ -202,7 +199,6 @@ public:
     const Vector &boxGravity(const Element &element,
                              const FVElementGeometry &fvGeom,
                              int scvIdx) const
-        DUNE_DEPRECATED // use context objects!
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!

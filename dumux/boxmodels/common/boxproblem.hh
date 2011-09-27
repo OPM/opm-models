@@ -63,7 +63,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
@@ -160,7 +160,8 @@ public:
     {
         const auto vPtr = context.element().template subEntity<dim>(localIdx);
 
-        // forward it to the method which only takes the global coordinate
+        // if you get a deprecation warning here, please use context
+        // objects to specify your problem!
         asImp_().boundaryTypes(values, *vPtr);
    }
     
@@ -171,6 +172,7 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
+    DUNE_DEPRECATED
     void boundaryTypes(BoundaryTypes &values,
                        const Vertex &vertex) const
     {
@@ -206,14 +208,14 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    DUNE_DEPRECATED
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
                    int localIdx) const
     {
         const auto vPtr = context.element().template subEntity<dim>(localIdx);
         
-        // forward it to the method which only takes the global coordinate
+        // if you get a deprecation warning here, please use context
+        // objects to specify your problem!
         asImp_().dirichlet(values, *vPtr);
     }
 
@@ -258,15 +260,14 @@ public:
     }
 
     template <class Context>
-    DUNE_DEPRECATED
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
     void neumann(PrimaryVariables &priVars,
                  const Context &context,
                  const Intersection &is,
                  int localIdx,
                  int boundaryIndex) const
     {
+        // if you get a deprecation warning here, please use context
+        // objects to specify your problem!
         return asImp_().boxSDNeumann(priVars,
                                      context.element(),
                                      context.fvElemGeom(),
@@ -295,14 +296,14 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
+    DUNE_DEPRECATED
     void boxSDNeumann(PrimaryVariables &values,
                       const Element &element,
                       const FVElementGeometry &fvElemGeom,
                       const Intersection &is,
                       int scvIdx,
                       int boundaryFaceIdx,
-                      const ElementContext &elemCtx) const
-        DUNE_DEPRECATED
+                      const ElementVariables &elemVars) const
     {
         // forward it to the interface without the volume variables
         asImp_().neumann(values,
@@ -362,13 +363,12 @@ public:
     }
 
     template <class Context>
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
-    DUNE_DEPRECATED
     void source(PrimaryVariables &priVars,
                 const Context &context,
                 int localIdx) const
     {
+        // if you get an deprecation warning here, please use context
+        // objects to specify your problem!
         return asImp_().boxSDSource(priVars,
                                     context.element(),
                                     context.fvElemGeom(),
@@ -398,11 +398,11 @@ public:
                      const Element &element,
                      const FVElementGeometry &fvElemGeom,
                      int scvIdx,
-                     const ElementContext &elemCtx) const
+                     const ElementVariables &elemVars) const
         DUNE_DEPRECATED
     {
         // forward to solution independent, box specific interface
-        asImp_().source(values, elemCtx, scvIdx);
+        asImp_().source(values, element, fvElemGeom, scvIdx);
     }
 
     /*!
@@ -500,9 +500,6 @@ public:
      * are assumed to extend 1 m to the back.
      */
     template <class Context>
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
-    DUNE_DEPRECATED
     Scalar extrusionFactor(const Context &context,
                            int localIdx) const
     {
@@ -520,7 +517,6 @@ public:
      * thought as pipes with a cross section of 1 m^2 and 2D problems
      * are assumed to extend 1 m to the back.
      */
-    DUNE_DEPRECATED
     Scalar boxExtrusionFactor(const Element &element,
                               const FVElementGeometry &fvElemGeom,
                               int scvIdx) const

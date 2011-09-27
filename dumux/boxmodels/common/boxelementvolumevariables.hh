@@ -106,10 +106,7 @@ public:
 
         // update the finite element geometry
         fvElemGeom_.update(gridView_, elem);
-    }
 
-    void updateBoundaryTypes()
-    {
         // resize the SCV and the SCVF arrays
         if (fvElemGeom_.numVertices > scvVars_.size()) {
             scvVars_.resize(fvElemGeom_.numVertices);
@@ -117,7 +114,10 @@ public:
         }
         if (fvElemGeom_.numEdges > scvfVars_.size())
             scvfVars_.resize(fvElemGeom_.numEdges);
+    }
 
+    void updateBoundaryTypes()
+    {
         // fill the boundary types stuff
         hasNeumann_ = false;
         hasDirichlet_ = false;

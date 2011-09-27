@@ -246,7 +246,7 @@ public:
     { return porosity_; }
 
 protected:
-    static Scalar updateTemperature_(FluidState &fluidState,
+    static void updateTemperature_(FluidState &fluidState,
                                      const ElementContext &elemCtx,
                                      int scvIdx,
                                      int historyIdx)

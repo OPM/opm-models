@@ -55,7 +55,7 @@ class TwoPFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -80,13 +80,13 @@ public:
     {}
 
 #warning Docme
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementVariables &elemVars, int scvfIdx)
     {
-        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+        insideScvIdx_ = elemVars.fvElemGeom().subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = elemVars.fvElemGeom().subContVolFace[scvfIdx].j;
 
-        calculateGradients_(elemCtx, scvfIdx);
-        calculateNormalFlux_(elemCtx, scvfIdx);
+        calculateGradients_(elemVars, scvfIdx);
+        calculateNormalFlux_(elemVars, scvfIdx);
     };
 
     /*!
@@ -134,7 +134,7 @@ public:
     { return (normalFlux_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
 protected:
-    void calculateGradients_(const ElementContext &elemCtx,
+    void calculateGradients_(const ElementVariables &elemVars,
                              int scvfIdx)
     {
         // reset all gradients to 0
@@ -143,11 +143,11 @@ protected:
         }
         
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
-        const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+        const Scvf &scvf = elemVars.fvElemGeom().subContVolFace[scvfIdx];
 
         // calculate gradients
         for (int scvIdx = 0;
-             scvIdx < elemCtx.numScv();
+             scvIdx < elemVars.numScv();
              scvIdx ++) // loop over adjacent vertices
         {
             // FE gradient at vertex idx
@@ -158,7 +158,7 @@ protected:
             {
                 // the pressure gradient
                 Vector tmp(feGrad);
-                tmp *= elemCtx.volVars(scvIdx, /*historyIdx=*/0).pressure(phase);
+                tmp *= elemVars.volVars(scvIdx, /*historyIdx=*/0).pressure(phase);
                 potentialGrad_[phase] += tmp;
             }
         }
@@ -170,22 +170,18 @@ protected:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemCtx.problem().boxGravity(elemCtx.element(), 
-                                                   elemCtx.fvElemGeom(), 
-                                                   insideScvIdx_));
-            g += elemCtx.problem().boxGravity(elemCtx.element(), 
-                                               elemCtx.fvElemGeom(), 
-                                               outsideScvIdx_);
+            Vector g(elemVars.problem().gravity(elemVars, insideScvIdx_));
+            g += elemVars.problem().gravity(elemVars, outsideScvIdx_);
             g /= 2;
             
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
                 // calculate the phase density at the integration point. we
                 // only do this if the wetting phase is present in both cells
-                Scalar SI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
-                Scalar SJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
-                Scalar rhoI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
-                Scalar rhoJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
+                Scalar SI = elemVars.volVars(insideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
+                Scalar SJ = elemVars.volVars(outsideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
+                Scalar rhoI = elemVars.volVars(insideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
+                Scalar rhoJ = elemVars.volVars(outsideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
                 Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
                 Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
                 if (fI + fJ == 0)
@@ -204,20 +200,20 @@ protected:
         }
     }
 
-    void calculateNormalFlux_(const ElementContext &elemCtx, 
+    void calculateNormalFlux_(const ElementVariables &elemVars, 
                               int scvfIdx)
     {
-        const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
+        const SpatialParameters &spatialParams = elemVars.problem().spatialParameters();
 
         // calculate the intrinsic permeability
         Tensor K;
         spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemCtx,
+                            spatialParams.intrinsicPermeability(elemVars,
                                                                 insideScvIdx_),
-                            spatialParams.intrinsicPermeability(elemCtx,
+                            spatialParams.intrinsicPermeability(elemVars,
                                                                 outsideScvIdx_));
 
-        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const Vector &normal = elemVars.fvElemGeom().subContVolFace[scvfIdx].normal;
 
         // calculate the flux in the normal direction of the
         // current sub control volume face:
