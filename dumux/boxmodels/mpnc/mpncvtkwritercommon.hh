@@ -47,7 +47,7 @@ class MPNCVtkWriterCommon : public MPNCVtkWriterModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -126,15 +126,14 @@ public:
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const Element &elem,
-                        const FVElementGeometry &fvElemGeom,
-                        const ElementVolumeVariables &elemVolVars,
-                        const ElementBoundaryTypes &elemBcTypes)
+    void processElement(const ElementContext &elemCtx)
     {
-        int n = elem.template count<dim>();
-        for (int i = 0; i < n; ++i) {
-            int I = this->problem_.vertexMapper().map(elem, i, dim);
-            const VolumeVariables &volVars = elemVolVars[i];
+        const auto &vertexMapper = elemCtx.problem().vertexMapper();
+        const auto &elem = elemCtx.element();
+
+        for (int i = 0; i < elemCtx.numScv(); ++i) {
+            int I = vertexMapper.map(elem, i, dim);
+            const VolumeVariables &volVars = elemCtx.volVars(i);
 
             if (porosityOutput_) porosity_[I] = volVars.porosity();
 
@@ -143,7 +142,7 @@ public:
             // is used for a dirichlet condition
             int tmp = 0;
             for (int j = 0; j < numEq; ++j) {
-                if (elemBcTypes[i].isDirichlet(j))
+                if (elemCtx.boundaryTypes(i).isDirichlet(j))
                     tmp += (1 << j);
             }
             if (boundaryTypesOutput_) boundaryTypes_[I] = tmp;
@@ -164,18 +163,15 @@ public:
 
         // calculate velocities if requested by the problem
         if (velocityOutput_) {
+            const auto &fvElemGeom = elemCtx.fvElemGeom();
             for (int faceIdx = 0; faceIdx < fvElemGeom.numEdges; ++ faceIdx) {
+                const auto &fluxVars = elemCtx.fluxVars(faceIdx);
+                
                 int i = fvElemGeom.subContVolFace[faceIdx].i;
-                int I = this->problem_.vertexMapper().map(elem, i, dim);
+                int I = vertexMapper.map(elem, i, dim);
 
                 int j = fvElemGeom.subContVolFace[faceIdx].j;
-                int J = this->problem_.vertexMapper().map(elem, j, dim);
-
-                FluxVariables fluxVars(this->problem_,
-                                       elem,
-                                       fvElemGeom,
-                                       faceIdx,
-                                       elemVolVars);
+                int J = vertexMapper.map(elem, j, dim);
 
                 Scalar scvfArea = fvElemGeom.subContVolFace[faceIdx].normal.two_norm();
                 scvfArea *= fluxVars.extrusionFactor();
@@ -184,13 +180,10 @@ public:
                 boxSurface_[J] += scvfArea;
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Dune::FieldVector<Scalar, dim> darcyVelocity;
-                    fluxVars.computeDarcy(darcyVelocity,
-                                          elemVolVars,
-                                          phaseIdx);
-                    darcyVelocity *= scvfArea;
-                    velocity_[phaseIdx][I] += darcyVelocity;
-                    velocity_[phaseIdx][J] += darcyVelocity;
+                    Dune::FieldVector<Scalar, dim> v(fluxVars.filterVelocity(phaseIdx));
+                    v *= scvfArea;
+                    velocity_[phaseIdx][I] += v;
+                    velocity_[phaseIdx][J] += v;
 
                 } // end for all phases
             } // end for all faces

@@ -65,14 +65,9 @@ SET_TYPE_PROP(ObstacleProblem,
 
 
 // Set fluid configuration
-SET_PROP(ObstacleProblem, FluidSystem)
-{ private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-public:
-    typedef Dumux::FluidSystems::H2ON2<Scalar, /*useComplexRelations=*/false> type;
-};
-//              Dumux::Simple_H2O_N2_TCE_System<TypeTag> );
-//Dumux::H2O_N2_System<TypeTag> );
+SET_TYPE_PROP(ObstacleProblem,
+              FluidSystem,
+              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable smooth upwinding?
 SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
@@ -80,11 +75,10 @@ SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
 // Enable molecular diffusion of the components?
 SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
 
-
-// Enable thermodynamic hints?
-SET_BOOL_PROP(ObstacleProblem, EnableHints, false);
 // Use the chopped Newton method?
 SET_BOOL_PROP(ObstacleProblem, NewtonEnableChop, true);
+
+SET_BOOL_PROP(ObstacleProblem, MPNCVtkAddTemperatures, true);
 
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
@@ -188,8 +182,8 @@ public:
         temperature_ = 273.15 + 25; // -> 25°C
 
         // initialize the tables of the fluid system
-        Scalar Tmin = temperature_ - 1.0;
-        Scalar Tmax = temperature_ + 1.0;
+        Scalar Tmin = temperature_ - 10.0;
+        Scalar Tmax = temperature_ + 40.0;
         int nT = 3;
 
         Scalar pmin = 1.0e5 * 0.75;
@@ -265,6 +259,7 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
+    using ParentType::boundaryTypes;
     void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -284,6 +279,7 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
+    using ParentType::dirichlet;
     void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -299,6 +295,7 @@ public:
      * in normal direction of each component. Negative values mean
      * influx.
      */
+    using ParentType::neumann;
     void neumann(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -323,6 +320,7 @@ public:
      * unit. Positive values mean that mass is created, negative ones
      * mean that it vanishes.
      */
+    using ParentType::source;
     void source(PrimaryVariables &values,
                 const Element &element,
                 const FVElementGeometry &fvElemGeom,
@@ -337,6 +335,7 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    using ParentType::initial;
     void initial(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,

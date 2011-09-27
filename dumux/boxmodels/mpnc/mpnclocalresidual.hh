@@ -56,8 +56,8 @@ protected:
 
 
     enum {
-
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy),
@@ -75,7 +75,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
 
@@ -83,6 +83,9 @@ protected:
 
     typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyResid;
     typedef MPNCLocalResidualMass<TypeTag, enableKinetic> MassResid;
+
+    typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
+    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
 
 public:
     /*!
@@ -92,15 +95,18 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(PrimaryVariables &storage, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVariables &storage, 
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int historyIdx) const
     {
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const ElementVolumeVariables &elemVolVars = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &volVars = elemVolVars[scvIdx];
+        const VolumeVariables &volVars = 
+            elemCtx.volVars(scvIdx, historyIdx);
 
         storage = 0;
 
@@ -117,39 +123,27 @@ public:
      *        element.
      */
     void addPhaseStorage(PrimaryVariables &storage,
-                         const Element &element,
+                         const ElementContext &elemCtx,
                          int phaseIdx) const
     {
-        // create a finite volume element geometry
-        FVElementGeometry fvElemGeom;
-        fvElemGeom.update(this->gridView_(), element);
-
-        // calculate volume variables
-        ElementVolumeVariables volVars;
-        this->model_().setHints(element, volVars);
-        volVars.update(this->problem_(),
-                       element,
-                       fvElemGeom,
-                       /*useOldSolution=*/false);
-
         // calculate the phase storage for all sub-control volumes
-        for (int scvIdx=0;
-             scvIdx < fvElemGeom.numVertices;
-             scvIdx++)
+        for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             PrimaryVariables tmp(0.0);
 
             // compute mass and energy storage terms in terms of
             // averaged quantities
             MassResid::addPhaseStorage(tmp,
-                                       volVars[scvIdx],
+                                       elemCtx.volVars(scvIdx),
                                        phaseIdx);
             EnergyResid::addPhaseStorage(tmp,
-                                         volVars[scvIdx],
+                                         elemCtx.volVars(scvIdx),
                                          phaseIdx);
 
             // multiply with volume of sub-control volume
-            tmp *= fvElemGeom.subContVol[scvIdx].volume;
+            tmp *= 
+                elemCtx.volVars(scvIdx).extrusionFactor() *
+                elemCtx.fvElemGeom().subContVol[scvIdx].volume;
 
             // Add the storage of the current SCV to the total storage
             storage += tmp;
@@ -160,87 +154,59 @@ public:
      * \brief Calculate the source term of the equation
      */
     void computeSource(PrimaryVariables &source,
-                       int scvIdx)
-     {
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int historyIdx = 0) const
+    {
         Valgrind::SetUndefined(source);
-        this->problem_().boxSDSource(source,
-                                     this->elem_(),
-                                     this->fvElemGeom_(),
-                                     scvIdx,
-                                     this->curVolVars_() );
-        const VolumeVariables &volVars = this->curVolVars_(scvIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx);
 
         PrimaryVariables tmp(0);
-        MassResid::computeSource(tmp, volVars);
+        MassResid::computeSource(tmp, elemCtx, scvIdx);
         source += tmp;
+        //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
         Valgrind::CheckDefined(source);
-
-        /*
-         *      EnergyResid also called in the MassResid
-         *      1) Makes some sense because energy is also carried by mass
-         *      2) The mass transfer between the phases is needed.
-         */
-//        tmp = 0.;
-//        EnergyResid::computeSource(tmp, volVars);
-//        source += tmp;
-//        Valgrind::CheckDefined(source);
-     };
-
-
+    };
+       
     /*!
      * \brief Evaluates the total flux of all conservation quantities
      *        over a face of a subcontrol volume.
      */
-    void computeFlux(PrimaryVariables &flux, int faceIdx) const
+    void computeFlux(PrimaryVariables &flux,
+                     const ElementContext &elemCtx,
+                     int scvfIdx) const
     {
-        FluxVariables fluxVars(this->problem_(),
-                               this->elem_(),
-                               this->fvElemGeom_(),
-                               faceIdx,
-                               this->curVolVars_());
-
         flux = 0.0;
-        MassResid::computeFlux(flux, fluxVars, this->curVolVars_() );
+        MassResid::computeFlux(flux, elemCtx, scvfIdx);
         Valgrind::CheckDefined(flux);
-/*
- *      EnergyResid also called in the MassResid
- *      1) Makes some sense because energy is also carried by mass
- *      2) The component-wise mass flux in each phase is needed.
- */
+        /*
+         * EnergyResid also called in the MassResid
+         * 1) Makes some sense because energy is also carried by mass
+         * 2) The component-wise mass flux in each phase is needed.
+         */
     }
-
-    /*!
-     * \brief Compute the local residual, i.e. the deviation of the
-     *        equations from zero.
-     */
-    void eval(const Element &element)
-    { ParentType::eval(element); }
 
     /*!
      * \brief Evaluate the local residual.
      */
-    void eval(const Element &element,
-              const FVElementGeometry &fvGeom,
-              const ElementVolumeVariables &prevVolVars,
-              const ElementVolumeVariables &curVolVars,
-              const ElementBoundaryTypes &bcType)
+    using ParentType::eval;
+    void eval(LocalBlockVector &residual,
+              LocalBlockVector &storageTerm,
+              const ElementContext &elemCtx) const
     {
-        ParentType::eval(element,
-                         fvGeom,
-                         prevVolVars,
-                         curVolVars,
-                         bcType);
+        ParentType::eval(residual,
+                         storageTerm,
+                         elemCtx);
 
-        for (int i = 0; i < this->fvElemGeom_().numVertices; ++i) {
-            // add the two auxiliary equations, make sure that the
-            // dirichlet boundary condition is conserved
+        // handle the M additional model equations, make sure that
+        // the dirichlet boundary condition is conserved
+        int numScv = elemCtx.numScv();
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             {
-                if (!bcType[i].isDirichlet(phase0NcpIdx + phaseIdx))
-                {
-                    this->residual_[i][phase0NcpIdx + phaseIdx] =
-                        this->curVolVars_(i).phaseNcp(phaseIdx);
-                }
+                if (!elemCtx.boundaryTypes(scvIdx).isDirichlet(phase0NcpIdx + phaseIdx))
+                    residual[scvIdx][phase0NcpIdx + phaseIdx] =
+                        elemCtx.volVars(scvIdx).phaseNcp(phaseIdx);
             }
         }
     }

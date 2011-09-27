@@ -56,7 +56,7 @@ class MPNCFluxVariablesEnergy
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
 public:
@@ -64,12 +64,7 @@ public:
     {
     }
 
-    void update(const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &fvElemGeom,
-                int scvfIdx,
-                const FluxVariables &fluxDat,
-                const ElementVolumeVariables &elemVolVars)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {};
 };
 
@@ -81,9 +76,10 @@ class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true,  /*kineticEnergyTr
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
 
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -104,86 +100,26 @@ public:
     MPNCFluxVariablesEnergy()
     {}
 
-    void update(const  Problem & problem,
-                const Element &element,
-                const FVElementGeometry &fvElemGeom,
-                int scvfIdx,
-                const FluxVariables &fluxDat,
-                const ElementVolumeVariables &elemVolVars)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {
+        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom();
+
         // calculate temperature gradient using finite element
         // gradients
         Vector tmp(0.0);
         Vector temperatureGradient(0.);
-        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; scvIdx++)
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             tmp = fvElemGeom.subContVolFace[scvfIdx].grad[scvIdx];
-            tmp *= elemVolVars[scvIdx].fluidState().temperature(/*phaseIdx=*/0);
+            tmp *= elemCtx.volVars(scvIdx).fluidState().temperature();
             temperatureGradient += tmp;
         }
 
         // project the heat flux vector on the face's normal vector
-        temperatureGradientNormal_ = temperatureGradient * fvElemGeom.subContVolFace[scvfIdx].normal;
+        temperatureGradientNormal_ = 
+            temperatureGradient * fvElemGeom.subContVolFace[scvfIdx].normal;
 
-
-        lambdaPm_ = lumpedLambdaPm(problem,
-                                   element,
-                                    fvElemGeom,
-                                    scvfIdx,
-                                    elemVolVars) ;
-
-    }
-
-    Scalar lumpedLambdaPm(const Problem &problem,
-                          const Element &element,
-                           const FVElementGeometry & fvElemGeom,
-                           int faceIdx,
-                           const ElementVolumeVariables & elemVolVars)
-    {
-         // arithmetic mean of the liquid saturation and the porosity
-         const int i = fvElemGeom.subContVolFace[faceIdx].i;
-         const int j = fvElemGeom.subContVolFace[faceIdx].j;
-
-         typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables)::FluidState FluidState;
-         const FluidState &fsI = elemVolVars[i].fluidState();
-         const FluidState &fsJ = elemVolVars[j].fluidState();
-         const Scalar Sli = fsI.saturation(lPhaseIdx);
-         const Scalar Slj = fsJ.saturation(lPhaseIdx);
-
-         typename FluidSystem::ParameterCache paramCacheI, paramCacheJ;
-         paramCacheI.updateAll(fsI);
-         paramCacheJ.updateAll(fsJ);
-
-         const Scalar Sl = std::max<Scalar>(0.0, 0.5*(Sli + Slj));
-
-         //        const Scalar lambdaDry = 0.583; // W / (K m) // works, orig
-         //        const Scalar lambdaWet = 1.13; // W / (K m) // works, orig
-
-         Scalar lambdaSoilI = problem.spatialParameters().soilThermalConductivity(element, fvElemGeom, i);
-         Scalar lambdaSoilJ = problem.spatialParameters().soilThermalConductivity(element, fvElemGeom, i);
-         const Scalar lambdaDry = 0.5 * (lambdaSoilI + FluidSystem::thermalConductivity(fsI, paramCacheI, gPhaseIdx)); // W / (K m)
-         const Scalar lambdaWet = 0.5 * (lambdaSoilJ + FluidSystem::thermalConductivity(fsJ, paramCacheJ, lPhaseIdx)) ; // W / (K m)
-
-         // the heat conductivity of the matrix. in general this is a
-         // tensorial value, but we assume isotropic heat conductivity.
-         // This is the Sommerton approach with lambdaDry =
-         // lambdaSn100%.  Taken from: H. Class: "Theorie und
-         // numerische Modellierung nichtisothermer Mehrphasenprozesse
-         // in NAPL-kontaminierten poroesen Medien", PhD Thesis, University of
-         // Stuttgart, Institute of Hydraulic Engineering, p. 57
-
-         Scalar result;
-         if (Sl < 0.1) {
-             // regularization
-             Dumux::Spline<Scalar> sp(0, 0.1, // x1, x2
-                                      0, std::sqrt(0.1), // y1, y2
-                                      5*0.5/std::sqrt(0.1), 0.5/std::sqrt(0.1)); // m1, m2
-             result = lambdaDry + sp.eval(Sl)*(lambdaWet - lambdaDry);
-         }
-         else
-             result = lambdaDry + std::sqrt(Sl)*(lambdaWet - lambdaDry);
-
-         return result;
+        lambdaPm_ = lumpedLambdaPm_(elemCtx, scvfIdx) ;
     }
 
     /*!
@@ -196,11 +132,59 @@ public:
      * \brief The normal of the gradient of temperature .
      */
     Scalar temperatureGradientNormal() const
-    {
-        return temperatureGradientNormal_;
-    }
+    { return temperatureGradientNormal_; }
 
 private:
+    Scalar lumpedLambdaPm_(const ElementContext &elemCtx, int scvfIdx)
+    {
+        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom();
+
+        // arithmetic mean of the liquid saturation and the porosity
+        const int i = fvElemGeom.subContVolFace[scvfIdx].i;
+        const int j = fvElemGeom.subContVolFace[scvfIdx].j;
+        
+        const Scalar Sli = elemCtx.volVars(i).fluidState().saturation(lPhaseIdx);
+        const Scalar Slj = elemCtx.volVars(j).fluidState().saturation(lPhaseIdx);
+        
+        const Scalar Sl = std::max<Scalar>(0.0, 0.5*(Sli + Slj));
+
+        const Scalar lambda_solid =
+            (elemCtx.volVars(i).thermalConductivitySolid() 
+             + elemCtx.volVars(j).thermalConductivitySolid())
+            / 2;
+        
+        //        const Scalar lambdaDry = 0.583; // W / (K m) // works, orig
+        //        const Scalar lambdaWet = 1.13; // W / (K m) // works, orig
+        
+#warning "TODO: this is certainly not correct: it does not include porosity, and the mutable parameters probably need to be upwinded! Change lambda_dry and lambda_wet to spatial parameters? what about the case with more than 2 fluid phases, then?"
+#warning "TODO/more: assumes thermal conductivity of the fluids to be independent of pressure, temperature and composition!"
+        typename FluidSystem::MutableParameters mutParams; //dummy
+        Scalar lambdaDry = 
+            0.5 * (lambda_solid + FluidSystem::computeThermalConductivity(mutParams, gPhaseIdx) );
+        Scalar lambdaWet =
+            0.5 * (lambda_solid + FluidSystem::computeThermalConductivity(mutParams, lPhaseIdx));
+        
+        // the heat conductivity of the matrix. in general this is a
+        // tensorial value, but we assume isotropic heat conductivity.
+        // This is the Sommerton approach with lambdaDry =
+        // lambdaSn100%.  Taken from: H. Class: "Theorie und
+        // numerische Modellierung nichtisothermer Mehrphasenprozesse
+        // in NAPL-kontaminierten poroesen Medien", PhD Thesis, University of
+        // Stuttgart, Institute of Hydraulic Engineering, p. 57
+        Scalar result;
+        if (Sl < 0.1) {
+            // regularization
+            Dumux::Spline<Scalar> sp(0, 0.1, // x1, x2
+                                    0, std::sqrt(0.1), // y1, y2
+                                    5*0.5/std::sqrt(0.1), 0.5/std::sqrt(0.1)); // m1, m2
+            result = lambdaDry + sp.eval(Sl)*(lambdaWet - lambdaDry);
+        }
+        else
+            result = lambdaDry + std::sqrt(Sl)*(lambdaWet - lambdaDry);
+
+        return result;
+    }
+
     Scalar lambdaPm_;
     Scalar temperatureGradientNormal_;
 };

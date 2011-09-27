@@ -88,6 +88,26 @@ public:
     // \{
 
     /*!
+     * \brief Evaluate the boundary conditions for a dirichlet
+     *        control volume.
+     *
+     * \param values The dirichlet values for the primary variables
+     * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
+     * \param localIdx The local index of the entity neighboring the Dirichlet boundary.
+     *
+     * For this method, the \a values parameter stores primary variables.
+     */
+    template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
+    Scalar temperature(const Context &context,
+                       int localIdx) const
+    {
+        // if you get a deprecation warning here, please use context
+        // objects to specify your problem!
+        return boxTemperature(context.element(), context.fvElemGeom(), localIdx);
+   }
+
+    /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
      * This is the discretization specific interface for the box
@@ -143,10 +163,27 @@ public:
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    const Vector &gravity(const Context &context,
+                          int localIdx) const
+    {
+        return asImp_().boxGravity(context.element(),
+                                   context.fvElemGeom(),
+                                   localIdx);
+    };
+
+    /*!
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     *
      * This is the box discretization specific interface. By default
      * it just calls gravityAtPos().
      */
-    const GlobalPosition &boxGravity(const Element &element,
+    const Vector &boxGravity(const Element &element,
                                      const FVElementGeometry &fvGeom,
                                      int scvIdx) const
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
@@ -157,7 +194,7 @@ public:
      * This is discretization independent interface. By default it
      * just calls gravity().
      */
-    const GlobalPosition &gravityAtPos(const GlobalPosition &pos) const
+    const Vector &gravityAtPos(const GlobalPosition &pos) const
     { return asImp_().gravity(); }
 
     /*!
@@ -169,7 +206,7 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const GlobalPosition &gravity() const
+    const Vector &gravity() const
     { return gravity_; }
 
     /*!

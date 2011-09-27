@@ -38,8 +38,7 @@
 #include "boxfvelementgeometry.hh"
 #include "boxelementboundarytypes.hh"
 #include "boxlocaljacobian.hh"
-#include "boxlocalresidual.hh"
-#include "boxelementvolumevariables.hh"
+#include "boxelementcontext.hh"
 #include "boxvolumevariables.hh"
 
 #include <dumux/common/boundarytypes.hh>

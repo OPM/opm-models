@@ -26,14 +26,14 @@
  * \brief Contains the energy part of volume variables of the M-phase,
  *        N-component model.
  */
-#ifndef DUMUX_MPNC_ENERGY_VOLUME_VARIABLES_HH
-#define DUMUX_MPNC_ENERGY_VOLUME_VARIABLES_HH
+#ifndef DUMUX_MPNC_VOLUME_VARIABLES_ENERGY_HH
+#define DUMUX_MPNC_VOLUME_VARIABLES_ENERGY_HH
 
 #include <dumux/boxmodels/mpnc/mpncproperties.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \brief Contains the energy related quantities which are constant within a
  *        finite volume in the two-phase, N-component model.
@@ -54,8 +54,10 @@ class MPNCVolumeVariablesEnergy
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -71,13 +73,11 @@ public:
      */
     void updateTemperatures(FluidState &fs,
                             ParameterCache &paramCache,
-                            const PrimaryVariables &sol,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
+                            const ElementContext &elemCtx,
                             int scvIdx,
-                            const Problem &problem) const
+                            int phaseIdx) const
     {
-        Scalar T = problem.boxTemperature(element, elemGeom, scvIdx);
+        Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx);
         fs.setTemperature(T);
     }
 
@@ -90,11 +90,12 @@ public:
      */
     void update(FluidState &fs,
                 ParameterCache &paramCache,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
+                const ElementContext &elemCtx,
                 int scvIdx,
-                const Problem &problem)
+                int historyIdx)
     {
+        // the phase temperatures where already set by the base volume
+        // variables!
     }
 
     /*!
@@ -102,8 +103,7 @@ public:
      *        if some of the object's attributes is undefined.
      */
     void checkDefined() const
-    {
-    }
+    { }
 };
 
 /*!
@@ -114,6 +114,7 @@ template <class TypeTag>
 class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyTransfer=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -139,14 +140,13 @@ public:
      */
     void updateTemperatures(FluidState &fs,
                             ParameterCache &paramCache,
-                            const PrimaryVariables &sol,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
+                            const ElementContext &elemCtx,
                             int scvIdx,
-                            const Problem &problem) const
+                            int historyIdx) const
     {
         // retrieve temperature from solution vector
-        Scalar T = sol[temperatureIdx];
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        Scalar T = priVars[temperatureIdx];
         fs.setTemperature(T);
     }
 
@@ -156,21 +156,21 @@ public:
      */
     void update(FluidState &fs,
                 ParameterCache &paramCache,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
+                const ElementContext &elemCtx,
                 int scvIdx,
-                const Problem &problem)
+                int historyIdx)
     {
+        const auto &priVars = elemCtx.volVars(scvIdx, historyIdx).primaryVars();
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
+
         Valgrind::SetUndefined(*this);
 
         // heat capacities of the fluids plus the porous medium
-        heatCapacity_ =
-            problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
-        Valgrind::CheckDefined(heatCapacity_);
+        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx);
+        Valgrind::CheckDefined(heatCapacitySolid_);
 
-        soilDensity_ =
-            problem.spatialParameters().soilDensity(element, elemGeom, scvIdx);
-        Valgrind::CheckDefined(soilDensity_);
+        thermalConductivitySolid_ = spatialParams.thermalConductivitySolid(elemCtx, scvIdx);
+        Valgrind::CheckDefined(thermalConductivitySolid_);
 
         // set the enthalpies
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -180,18 +180,14 @@ public:
     }
 
     /*!
-     * \brief Returns the total heat capacity [J/(K m^3)] of the rock matrix in
-     *        the sub-control volume.
+     * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
+     *        with no pores in the sub-control volume.
      */
-    Scalar heatCapacity() const
-    { return heatCapacity_; };
+    Scalar heatCapacitySolid() const
+    { return heatCapacitySolid_; };
 
-    /*!
-     * \brief Returns the total density of the given soil [kg / m^3] in
-     *        the sub-control volume.
-     */
-    Scalar soilDensity() const
-    { return soilDensity_; };
+    Scalar thermalConductivitySolid() const
+    { return thermalConductivitySolid_; };
 
     /*!
      * \brief If running under valgrind this produces an error message
@@ -199,13 +195,13 @@ public:
      */
     void checkDefined() const
     {
-        Valgrind::CheckDefined(heatCapacity_);
-        Valgrind::CheckDefined(soilDensity_);
+        Valgrind::CheckDefined(heatCapacitySolid_);
+        Valgrind::CheckDefined(thermalConductivitySolid_);
     };
 
 protected:
-    Scalar heatCapacity_;
-    Scalar soilDensity_;
+    Scalar heatCapacitySolid_;
+    Scalar thermalConductivitySolid_;
 };
 
 } // end namepace

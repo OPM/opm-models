@@ -54,7 +54,7 @@ class MPNCVtkWriterEnergy : public MPNCVtkWriterModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -88,15 +88,15 @@ public:
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const Element &elem,
-                        const FVElementGeometry &fvElemGeom,
-                        const ElementVolumeVariables &elemVolVars,
-                        const ElementBoundaryTypes &elemBcTypes)
+    void processElement(const ElementContext &elemCtx)
     {
+        const auto &vertexMapper = elemCtx.problem().vertexMapper();
+        const auto &elem = elemCtx.element();
+
         int n = elem.template count<dim>();
         for (int i = 0; i < n; ++i) {
-            int I = this->problem_.vertexMapper().map(elem, i, dim);
-            const VolumeVariables &volVars = elemVolVars[i];
+            int I = vertexMapper.map(elem, i, dim);
+            const VolumeVariables &volVars = elemCtx.volVars(i);
 
             if (temperatureOutput_)
                 temperature_[I] = volVars.fluidState().temperature(0);
@@ -137,7 +137,7 @@ class MPNCVtkWriterEnergy<TypeTag, /* enableEnergy = */ true, /* enableKineticEn
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -177,20 +177,20 @@ public:
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const Element &elem,
-                        const FVElementGeometry &fvElemGeom,
-                        const ElementVolumeVariables &elemVolVars,
-                        const ElementBoundaryTypes &elemBcTypes)
+    void processElement(const ElementContext &elemCtx)
     {
+        const auto &vertexMapper = elemCtx.problem().vertexMapper();
+        const auto &elem = elemCtx.element();
+        
         int n = elem.template count<dim>();
         for (int i = 0; i < n; ++i) {
-            int I = this->problem_.vertexMapper().map(elem, i, dim);
-            const VolumeVariables &volVars = elemVolVars[i];
+            int I = vertexMapper.map(elem, i, dim);
+            const VolumeVariables &volVars = elemCtx.volVars(i);
 
             if (temperatureOutput_) temperature_[I] = volVars.fluidState().temperature(0);
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 if (enthalpyOutput_)
-                    enthalpy_[phaseIdx][I] = volVars.fluidState().temperature(phaseIdx);
+                    enthalpy_[phaseIdx][I] = volVars.fluidState().enthalpy(phaseIdx);
                 if (internalEnergyOutput_)
                     internalEnergy_[phaseIdx][I] = volVars.fluidState().internalEnergy(phaseIdx);
             }

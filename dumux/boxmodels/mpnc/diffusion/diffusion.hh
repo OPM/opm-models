@@ -40,6 +40,7 @@ class MPNCDiffusion
 {
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents)};
@@ -54,18 +55,15 @@ class MPNCDiffusion
 
 public:
     static void flux(CompVector &fluxes,
+                     const ElementContext &elemCtx,
+                     int scvfIdx,
                      int phaseIdx,
-                     const FluxVariables &fluxDat,
                      Scalar molarDensity)
     {
         if (phaseIdx == gPhaseIdx)
-            gasFlux_(fluxes, fluxDat, molarDensity);
-        else if (phaseIdx == lPhaseIdx){
-            #if MACROSCALE_DIFFUSION_ONLY_GAS
-                    return ; // in the case that only the diffusion in the gas phase is considered, the liquidFlux should not be called
-            #endif
-            liquidFlux_(fluxes, fluxDat, molarDensity);
-        }
+            gasFlux_(fluxes, elemCtx, scvfIdx, molarDensity);
+        else if (phaseIdx == lPhaseIdx)
+            liquidFlux_(fluxes, elemCtx, scvfIdx, molarDensity);
         else
             DUNE_THROW(Dune::InvalidStateException,
                        "Invalid phase index: " << phaseIdx);
@@ -73,24 +71,32 @@ public:
 
 protected:
     static void liquidFlux_(CompVector &fluxes,
-                            const FluxVariables &fluxDat,
+                            const ElementContext &elemCtx,
+                            int scvfIdx,
                             Scalar molarDensity)
     {
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             // TODO: tensorial diffusion coefficients
-            Scalar xGrad = fluxDat.moleFracGrad(lPhaseIdx, compIdx)*fluxDat.face().normal;
+            Scalar xGrad = fluxVars.moleFracGrad(lPhaseIdx, compIdx)*normal;
             fluxes[compIdx] =
                 - xGrad *
                 molarDensity *
-                fluxDat.face().normal.two_norm() * // because we want a mole flux and not an area specific flux
-                fluxDat.porousDiffCoeffL(compIdx) ;
+                normal.two_norm() * // because we want a mole flux and not an area specific flux
+                fluxVars.porousDiffCoeffL(compIdx) ;
         }
     }
 
     static void gasFlux_(CompVector &fluxes,
-                         const FluxVariables &fluxDat,
+                         const ElementContext &elemCtx,
+                         int scvfIdx,
                          Scalar molarDensity)
     {
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        
         // Stefan-Maxwell equation
         //
         // See: R. Reid, et al.: "The Properties of Liquids and
@@ -101,10 +107,10 @@ protected:
 
         for (int i = 0; i < numComponents - 1; ++i) {
             for (int j = 0; j < numComponents; ++j) {
-                Scalar Dij = fluxDat.porousDiffCoeffG(i, j);
+                Scalar Dij = fluxVars.porousDiffCoeffG(i, j);
                 if (Dij) {
-                    M[i][j] += fluxDat.moleFrac(gPhaseIdx, i) / Dij;
-                    M[i][i] -= fluxDat.moleFrac(gPhaseIdx, j) / Dij;
+                    M[i][j] += fluxVars.moleFrac(gPhaseIdx, i) / Dij;
+                    M[i][i] -= fluxVars.moleFrac(gPhaseIdx, j) / Dij;
                 }
             }
         };
@@ -115,7 +121,7 @@ protected:
 
         DiffVector rightHandSide ; // see source cited above
         for (int i = 0; i < numComponents - 1; ++i) {
-            rightHandSide[i] = molarDensity*(fluxDat.moleFracGrad(gPhaseIdx, i)*fluxDat.face().normal);
+            rightHandSide[i] = molarDensity*(fluxVars.moleFracGrad(gPhaseIdx, i)*normal);
         }
         rightHandSide[numComponents - 1] = 0.0;
 
@@ -140,15 +146,16 @@ class MPNCDiffusion<TypeTag, false>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef Dune::FieldVector<Scalar, numComponents>        CompVector;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef Dune::FieldVector<Scalar, numComponents> CompVector;
 
 public:
     static void flux(CompVector &fluxes,
+                     const ElementContext &fluxVars,
+                     int scvfIdx,
                      int phaseIdx,
-                     const FluxVariables &fluxVars,
                      Scalar totalConcentration)
-    { fluxes = 0;  }
+    { fluxes = 0; }
 };
 
 }

@@ -123,7 +123,7 @@ public:
     { 
         if (!fvElemGeomUpToDate_) {
             fvElemGeomUpToDate_ = true;
-            fvElemGeom_.update(gridView_, elem);
+            fvElemGeom_.update(gridView_, element());
         }
         return fvElemGeom_;
     }
@@ -131,7 +131,7 @@ public:
     /*!
      * \brief Return the position of a local entities in global coordinates
      */
-    const GlobalPosition &pos(int scvIdx) const
+    const GlobalPosition pos(int scvIdx) const
     { return element().geometry().corner(scvIdx); }
 
 protected:

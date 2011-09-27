@@ -52,7 +52,7 @@ class MPNCVtkWriterModule
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -89,10 +89,7 @@ public:
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const Element &elem,
-                        const FVElementGeometry &fvElemGeom,
-                        const ElementVolumeVariables &elemCurVolVars,
-                        const ElementBoundaryTypes &elemBcTypes)
+    void processElement(const ElementContext &elemCtx)
     {
     }
 

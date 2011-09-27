@@ -52,7 +52,7 @@ class MPNCVtkWriterMass : public MPNCVtkWriterModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -88,15 +88,15 @@ public:
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const Element &elem,
-                        const FVElementGeometry &fvElemGeom,
-                        const ElementVolumeVariables &elemVolVars,
-                        const ElementBoundaryTypes &elemBcTypes)
+    void processElement(const ElementContext &elemCtx)
     {
+        const auto &vertexMapper = elemCtx.problem().vertexMapper();
+        const auto &elem = elemCtx.element();
+
         int n = elem.template count<dim>();
         for (int i = 0; i < n; ++i) {
-            int I = this->problem_.vertexMapper().map(elem, i, dim);
-            const VolumeVariables &volVars = elemVolVars[i];
+            int I = vertexMapper.map(elem, i, dim);
+            const VolumeVariables &volVars = elemCtx.volVars(i);
 
             if (fugacityOutput_) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {

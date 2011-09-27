@@ -51,6 +51,7 @@ class MPNCVolumeVariablesIA
                   "but no suitable specialization of the IA volume variables module "
                   "has been included.");
 
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -64,14 +65,11 @@ public:
      * \brief Updates the volume specific interfacial area [m^2 / m^3] between the phases.
      */
     template <class FluidState, class ParameterCache>
-    void update(const VolumeVariables & volVars,
-                const FluidState &fluidState,
-                const ParameterCache &paramCache,
-                const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element & element,
-                const FVElementGeometry & elemGeom,
-                const int scvIdx)
+    void update(FluidState &fluidState,
+                ParameterCache &paramCache,
+                const ElementContext &elemCtx,
+                int scvIdx,
+                int historyIdx)
     {
     }
 

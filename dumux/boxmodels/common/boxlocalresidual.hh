@@ -33,6 +33,7 @@
 #include <dumux/common/valgrind.hh>
 
 #include "boxproperties.hh"
+#include "boxboundarycontext.hh"
 
 namespace Dumux
 {

@@ -31,7 +31,7 @@
 #include "boxproperties.hh"
 #include "boxpropertydefaults.hh"
 
-#include "boxelementvolumevariables.hh"
+#include "boxelementcontext.hh"
 #include "boxlocaljacobian.hh"
 #include "boxlocalresidual.hh"
 
@@ -202,7 +202,8 @@ public:
             elemCtx.updateAll(*elemIt);
             localResidual().eval(elemCtx);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            int numScv = elemCtx.numScv();
+            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
                 int globalI = vertexMapper().map(*elemIt, scvIdx, dim);
                 dest[globalI] += localResidual().residual(scvIdx);
             }
@@ -759,7 +760,7 @@ protected:
                   -1);
 
         int numBoundaryVertices = 0;
-        ElementContext elemCtx(problem_());
+        BoxBoundaryContext<TypeTag> boundaryCtx(problem_());
 
         // loop over all elements of the grid
         ElementIterator elemIt = gridView_().template begin<0>();
@@ -774,7 +775,7 @@ protected:
             Dune::GeometryType geoType = elem.geometry().type();
             const ReferenceElement &refElem = ReferenceElements::general(geoType);
             
-            elemCtx.updateFVElemGeom(*elemIt);
+            boundaryCtx.update(*elemIt);
 
             // loop over all intersections of the element
             IntersectionIterator isIt = gridView_().ibegin(elem);
@@ -809,7 +810,7 @@ protected:
                     boundaryVertexIndex_[globalIdx] = numBoundaryVertices;
                     ++numBoundaryVertices;
 
-                    problem_().boundaryTypes(bTypes, elemCtx, scvIdx);
+                    problem_().boundaryTypes(bTypes, boundaryCtx, scvIdx);
                 } // loop over intersection's vertices
             } // loop over intersections
         } // loop over elements

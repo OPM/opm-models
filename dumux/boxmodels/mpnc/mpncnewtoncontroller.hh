@@ -172,6 +172,7 @@ class MPNCNewtonController : public NewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     enum {
+        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
         enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),

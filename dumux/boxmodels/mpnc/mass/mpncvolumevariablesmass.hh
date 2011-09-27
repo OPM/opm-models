@@ -50,6 +50,7 @@ class MPNCVolumeVariablesMass
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -81,13 +82,13 @@ public:
      */
     void update(FluidState &fs,
                 ParameterCache &paramCache,
-                const PrimaryVariables &priVars,
-                const VolumeVariables *hint,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvIdx)
+                const ElementContext &elemCtx,
+                int scvIdx,
+                int historyIdx)
     {
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto *hint = elemCtx.hint(scvIdx);
+        
         ComponentVector fug;
         // retrieve component fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)

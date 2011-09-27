@@ -41,7 +41,7 @@ class MPNCVtkWriter
     typedef typename GET_PROP_TYPE(TypeTag, MPNCVtkEnergyModule) MPNCVtkEnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, MPNCVtkCustomModule) MPNCVtkCustomModule;
 
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
@@ -73,41 +73,20 @@ public:
         customWriter_.allocBuffers(writer);
 
         // iterate over grid
-        FVElementGeometry fvElemGeom;
-        ElementVolumeVariables elemVolVars;
-        ElementBoundaryTypes elemBcTypes;
+        ElementContext elemCtx(problem_);
 
         ElementIterator elemIt = problem_.gridView().template begin<0>();
         ElementIterator elemEndIt = problem_.gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            fvElemGeom.update(problem_.gridView(), *elemIt);
-            elemBcTypes.update(problem_, *elemIt, fvElemGeom);
-            this->problem_.model().setHints(*elemIt, elemVolVars);
-            elemVolVars.update(problem_,
-                               *elemIt,
-                               fvElemGeom,
-                               false);
-            this->problem_.model().updateCurHints(*elemIt, elemVolVars);
+            elemCtx.updateAll(*elemIt);
 
             // tell the sub-writers to do what ever they need to with
             // their internal buffers when a given element is seen.
-            commonWriter_.processElement(*elemIt,
-                                         fvElemGeom,
-                                         elemVolVars,
-                                         elemBcTypes);
-            massWriter_.processElement(*elemIt,
-                                       fvElemGeom,
-                                       elemVolVars,
-                                       elemBcTypes);
-            energyWriter_.processElement(*elemIt,
-                                         fvElemGeom,
-                                         elemVolVars,
-                                         elemBcTypes);
-            customWriter_.processElement(*elemIt,
-                                         fvElemGeom,
-                                         elemVolVars,
-                                         elemBcTypes);
+            commonWriter_.processElement(elemCtx);
+            massWriter_.processElement(elemCtx);
+            energyWriter_.processElement(elemCtx);
+            customWriter_.processElement(elemCtx);
         }
 
         // write everything to the output file

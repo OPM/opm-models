@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -55,7 +55,7 @@ class TwoPFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -80,20 +80,24 @@ public:
     {}
 
 #warning Docme
-    void update(const ElementVariables &elemVars, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {
-        insideScvIdx_ = elemVars.fvElemGeom().subContVolFace[scvfIdx].i;
-        outsideScvIdx_ = elemVars.fvElemGeom().subContVolFace[scvfIdx].j;
+        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
-        calculateGradients_(elemVars, scvfIdx);
-        calculateNormalFlux_(elemVars, scvfIdx);
+        extrusionFactor_ =
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+             + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
+
+        calculateGradients_(elemCtx, scvfIdx);
+        calculateNormalFluxes_(elemCtx, scvfIdx);
     };
 
     /*!
      * \brief Return the extrusion factor of the SCVF.
      */
     Scalar extrusionFactor() const
-    { return 1.0; }
+    { return extrusionFactor_; }
 
     /*!
      * \brief Return a phase's pressure potential gradient.
@@ -114,27 +118,27 @@ public:
     { return normalFlux_[phaseIdx]; }
 
     /*!
-     * \brief Return the local index of the downstream control volume
-     *        for a given phase as a function of the normal flux.
-     *
-     * \param phaseIdx The index of the fluid phase for which the downstream
-     *                 direction is requested.
-     */
-    int downstreamIdx(int phaseIdx) const
-    { return (normalFlux_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
-
-    /*!
      * \brief Return the local index of the upstream control volume
      *        for a given phase as a function of the normal flux.
      *
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
      */
-    int upstreamIdx(int phaseIdx) const
+    short upstreamIdx(int phaseIdx) const
     { return (normalFlux_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
+    /*!
+     * \brief Return the local index of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase for which the downstream
+     *                 direction is requested.
+     */
+    short downstreamIdx(int phaseIdx) const
+    { return (normalFlux_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+
 protected:
-    void calculateGradients_(const ElementVariables &elemVars,
+    void calculateGradients_(const ElementContext &elemCtx,
                              int scvfIdx)
     {
         // reset all gradients to 0
@@ -143,11 +147,11 @@ protected:
         }
         
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
-        const Scvf &scvf = elemVars.fvElemGeom().subContVolFace[scvfIdx];
+        const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
         // calculate gradients
         for (int scvIdx = 0;
-             scvIdx < elemVars.numScv();
+             scvIdx < elemCtx.numScv();
              scvIdx ++) // loop over adjacent vertices
         {
             // FE gradient at vertex idx
@@ -158,7 +162,7 @@ protected:
             {
                 // the pressure gradient
                 Vector tmp(feGrad);
-                tmp *= elemVars.volVars(scvIdx, /*historyIdx=*/0).pressure(phase);
+                tmp *= elemCtx.volVars(scvIdx, /*historyIdx=*/0).pressure(phase);
                 potentialGrad_[phase] += tmp;
             }
         }
@@ -170,18 +174,18 @@ protected:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemVars.problem().gravity(elemVars, insideScvIdx_));
-            g += elemVars.problem().gravity(elemVars, outsideScvIdx_);
+            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
+            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
             
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
                 // calculate the phase density at the integration point. we
                 // only do this if the wetting phase is present in both cells
-                Scalar SI = elemVars.volVars(insideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
-                Scalar SJ = elemVars.volVars(outsideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
-                Scalar rhoI = elemVars.volVars(insideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
-                Scalar rhoJ = elemVars.volVars(outsideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
+                Scalar SI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
+                Scalar SJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).saturation(phaseIdx);
+                Scalar rhoI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
+                Scalar rhoJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).density(phaseIdx);
                 Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
                 Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
                 if (fI + fJ == 0)
@@ -200,20 +204,21 @@ protected:
         }
     }
 
-    void calculateNormalFlux_(const ElementVariables &elemVars, 
-                              int scvfIdx)
+    void calculateNormalFluxes_(const ElementContext &elemCtx, 
+                                int scvfIdx)
     {
-        const SpatialParameters &spatialParams = elemVars.problem().spatialParameters();
+        const SpatialParameters &spatialParams =
+            elemCtx.problem().spatialParameters();
 
         // calculate the intrinsic permeability
         Tensor K;
         spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemVars,
+                            spatialParams.intrinsicPermeability(elemCtx,
                                                                 insideScvIdx_),
-                            spatialParams.intrinsicPermeability(elemVars,
+                            spatialParams.intrinsicPermeability(elemCtx,
                                                                 outsideScvIdx_));
 
-        const Vector &normal = elemVars.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
 
         // calculate the flux in the normal direction of the
         // current sub control volume face:
@@ -238,8 +243,11 @@ protected:
     }
 
     // local indices of the inside and the outside sub-control volumes
-    int insideScvIdx_;
-    int outsideScvIdx_;
+    short insideScvIdx_;
+    short outsideScvIdx_;
+
+    // extrusion factor
+    Scalar extrusionFactor_;
 
     // gradients
     Vector potentialGrad_[numPhases];

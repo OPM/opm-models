@@ -38,10 +38,11 @@ class MPNCVolumeVariablesDiffusion
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { lPhaseIdx = FluidSystem::lPhaseIdx };
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
@@ -53,8 +54,9 @@ public:
     template <class FluidState, class ParameterCache>
     void update(FluidState &fluidState,
                 ParameterCache &paramCache,
-                const VolumeVariables &volVars,
-                const Problem &problem)
+                const ElementContext &elemCtx,
+                int scvIdx,
+                int historyIdx)
     {
         Valgrind::SetUndefined(*this);
 
@@ -76,9 +78,10 @@ public:
             for (int compJIdx = compIIdx + 1; compJIdx < numComponents; ++compJIdx) {
                 diffCoeffG_[compIIdx][compJIdx] =
                         FluidSystem::binaryDiffusionCoefficient(fluidState,
-                                                                paramCache,                                                        gPhaseIdx,
-                                                        compIIdx,
-                                                        compJIdx);
+                                                                paramCache,
+                                                                gPhaseIdx,
+                                                                compIIdx,
+                                                                compJIdx);
 
                 // fill the symmetric part of the diffusion coefficent
                 // matrix
@@ -128,6 +131,7 @@ template<class TypeTag>
 class MPNCVolumeVariablesDiffusion<TypeTag, false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
@@ -138,8 +142,9 @@ public:
     template <class FluidState, class ParameterCache>
     void update(FluidState &fluidState,
                 ParameterCache &paramCache,
-                const VolumeVariables &volVars,
-                const Problem &problem)
+                const ElementContext &elemCtx,
+                int scvIdx,
+                int historyIdx)
     { }
 
     Scalar diffCoeffL(int compIdx) const

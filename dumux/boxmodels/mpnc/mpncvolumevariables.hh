@@ -65,6 +65,7 @@ class MPNCVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     enum {
@@ -109,19 +110,15 @@ public:
      * \brief Update all quantities for a given control volume.
      */
     void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
+                const ElementContext &elemCtx,
                 int scvIdx,
-                bool isOldSol)
+                int historyIdx)
     {
         Valgrind::CheckDefined(priVars);
         ParentType::update(priVars,
-                           problem,
-                           element,
-                           elemGeom,
+                           elemCtx,
                            scvIdx,
-                           isOldSol);
+                           historyIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::ParameterCache paramCache;
@@ -130,50 +127,48 @@ public:
         // set the phase saturations
         /////////////
         Scalar sumSat = 0;
-        for (int i = 0; i < numPhases - 1; ++i) {
-            sumSat += priVars[S0Idx + i];
-            fluidState_.setSaturation(i, priVars[S0Idx + i]);
+        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+            sumSat += priVars[S0Idx + phaseIdx];
+            fluidState_.setSaturation(phaseIdx, priVars[S0Idx + phaseIdx]);
         }
-        Valgrind::CheckDefined(sumSat);
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
+        Valgrind::CheckDefined(sumSat);
+
 
         /////////////
         // set the fluid phase temperatures
         /////////////
         EnergyVolumeVariables::updateTemperatures(fluidState_,
                                                   paramCache,
-                                                  priVars,
-                                                  element,
-                                                  elemGeom,
+                                                  elemCtx,
                                                   scvIdx,
-                                                  problem);
+                                                  historyIdx);
+
 
         /////////////
         // set the phase pressures
         /////////////
 
-        // capillary pressure parameters
+        // retrieve capillary pressure parameters
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &materialParams =
-            problem.spatialParameters().materialLawParams(element, elemGeom, scvIdx);
-        // capillary pressures
+            spatialParams.materialLawParams(elemCtx, scvIdx);
+        // calculate capillary pressures
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
         // add to the pressure of the first fluid phase
         Scalar p0 = priVars[p0Idx];
-        for (int i = 0; i < numPhases; ++ i)
-            fluidState_.setPressure(i, p0 - capPress[0] + capPress[i]);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+            fluidState_.setPressure(phaseIdx, p0 + (capPress[phaseIdx] - capPress[0]));
 
         /////////////
         // set the fluid compositions
         /////////////
         MassVolumeVariables::update(fluidState_,
                                     paramCache,
-                                    priVars,
-                                    hint_,
-                                    problem,
-                                    element,
-                                    elemGeom,
-                                    scvIdx);
+                                    elemCtx,
+                                    scvIdx,
+                                    historyIdx);
         MassVolumeVariables::checkDefined();
 
         /////////////
@@ -181,9 +176,7 @@ public:
         /////////////
 
         // porosity
-        porosity_ = problem.spatialParameters().porosity(element,
-                                                         elemGeom,
-                                                         scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
         Valgrind::CheckDefined(porosity_);
 
         /////////////
@@ -207,7 +200,11 @@ public:
         /////////////
 
         // update the diffusion part of the volume data
-        DiffusionVolumeVariables::update(fluidState_, paramCache, *this, problem);
+        DiffusionVolumeVariables::update(fluidState_, 
+                                         paramCache,
+                                         elemCtx,
+                                         scvIdx,
+                                         historyIdx);
         DiffusionVolumeVariables::checkDefined();
 
         /////////////
@@ -217,27 +214,19 @@ public:
         // update the remaining parts of the energy module
         EnergyVolumeVariables::update(fluidState_,
                                       paramCache,
-                                      element,
-                                      elemGeom,
+                                      elemCtx,
                                       scvIdx,
-                                      problem);
+                                      historyIdx);
         EnergyVolumeVariables::checkDefined();
 
-        // make sure the quantities in the fluid state are well-defined
-        fluidState_.checkDefined();
-
-        // specific interfacial area,
-        // well also all the dimensionless numbers :-)
-        // well, also the mass transfer rate
-        IAVolumeVariables::update(*this,
-                                  fluidState_,
-                                  paramCache,
-                                  priVars,
-                                  problem,
-                                  element,
-                                  elemGeom,
-                                  scvIdx);
+        // specific interfacial area, well also all the dimensionless numbers :-)
+        IAVolumeVariables::update(fluidState_,
+				  paramCache,
+                                  elemCtx,
+                                  scvIdx,
+                                  historyIdx);
         IAVolumeVariables::checkDefined();
+        fluidState_.checkDefined();
         checkDefined();
     }
 

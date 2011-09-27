@@ -157,6 +157,7 @@ public:
             // obviously come from the current solution.)
             int upIdx = evalPointFluxVars.upstreamIdx(phaseIdx);
             int dnIdx = evalPointFluxVars.downstreamIdx(phaseIdx);
+
             const VolumeVariables &up = elemCtx.volVars(upIdx, /*historyIdx=*/0);
             const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*historyIdx=*/0);
 

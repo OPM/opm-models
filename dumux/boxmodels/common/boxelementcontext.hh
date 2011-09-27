@@ -22,10 +22,10 @@
 /*!
  * \file
  *
- * \brief Volume variables gathered on an element
+ * \brief Represents all quantities which are relevant for an element
  */
-#ifndef DUMUX_BOX_ELEMENT_VARIABLES_HH
-#define DUMUX_BOX_ELEMENT_VARIABLES_HH
+#ifndef DUMUX_BOX_ELEMENT_CONTEXT_HH
+#define DUMUX_BOX_ELEMENT_CONTEXT_HH
 
 #include "boxproperties.hh"
 
@@ -334,9 +334,9 @@ public:
     { return scvVars_[scvIdx].volVars[historyIdx]; }
 
     PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0)
-    { return volVars(scvIdx, historyIdx).primaryVars(); }
+    { return scvVars_[scvIdx].volVars[historyIdx].primaryVars(); }
     const PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0) const
-    { return volVars(scvIdx, historyIdx).primaryVars(); }
+    { return scvVars_[scvIdx].volVars[historyIdx].primaryVars(); }
 
     /*!
      * \brief Returns the volume variables at the evaluation point.

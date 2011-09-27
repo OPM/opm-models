@@ -107,8 +107,8 @@ public:
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      *
-     *        \param globalVertexIdx The global index of the vertex
-     *        \param pvIdx The index of the primary variable
+     * \param globalVertexIdx The global index of the vertex
+     * \param pvIdx The index of the primary variable
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
@@ -125,8 +125,8 @@ public:
      *        from the solution of the current time step to the VTK
      *        writer.
      *
-     *        \param sol The global solution vector
-     *        \param writer The writer for multi-file VTK datasets
+     * \param sol The global solution vector
+     * \param writer The writer for multi-file VTK datasets
      */
     template<class MultiWriter>
     void addOutputVtkFields(const SolutionVector &sol,
@@ -172,11 +172,6 @@ public:
         ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            if(velocityOutput && !elemIt->geometry().type().isCube()){
-                DUNE_THROW(Dune::InvalidStateException,
-                           "Currently, velocity output only works for cubes. "
-                           "Please set the EnableVelocityOutput property to false!");
-            }
             int idx = this->elementMapper().map(*elemIt);
             (*rank)[idx] = this->gridView_().comm().rank();
 
@@ -205,133 +200,8 @@ public:
                 }
             };
 
-#if 0
-            if(velocityOutput)
-            {
-                // calculate vertex velocities
-                GlobalPosition tmpVelocity[numPhases];
-
-                for(int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                {
-                 tmpVelocity[phaseIdx]  = Scalar(0.0);
-                }
-
-                typedef Dune::BlockVector<Dune::FieldVector<Scalar, dim> > SCVVelocities;
-                SCVVelocities scvVelocityW(8), scvVelocityN(8);
-
-                scvVelocityW = 0;
-                scvVelocityN = 0;
-
-                ElementVolumeVariables elemVolVars;
-
-                elemVolVars.update(this->problem_(),
-                                  *elemIt,
-                                  fvElemGeom,
-                                  false /* oldSol? */);
-
-                for (int faceIdx = 0; faceIdx< fvElemGeom.numEdges; faceIdx++)
-                {
-
-                    FluxVariables fluxDat(this->problem_(),
-                                  *elemIt,
-                                  fvElemGeom,
-                                  faceIdx,
-                                  elemVolVars);
-
-                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                    {
-
-                         // data attached to upstream and the downstream vertices
-                        // of the current phase
-                        const VolumeVariables up =
-                            elemVolVars[fluxDat.upstreamIdx(phaseIdx)];
-                        const VolumeVariables dn =
-                            elemVolVars[fluxDat.downstreamIdx(phaseIdx)];
-
-                      // calculate the flux in the normal direction of the
-                      // current sub control volume face
-                      GlobalPosition tmpVec(0);
-                      fluxDat.intrinsicPermeability().mv(fluxDat.potentialGrad(phaseIdx),
-                                                     tmpVec);
-                      const GlobalPosition globalNormal = fluxDat.face().normal;
-                      const Scalar normalFlux = - (tmpVec*globalNormal);
-
-                      // local position of integration point
-                      const Dune::FieldVector<Scalar, dim>& localPosIP = fvElemGeom.subContVolFace[faceIdx].ipLocal;
-
-                      // Transformation of the global normal vector to normal vector in the reference element
-                      const Dune::FieldMatrix<CoordScalar, dim, dim> jacobianT1 = elemIt->geometry().jacobianTransposed(localPosIP);
-                          elemIt->geometry().jacobianTransposed(localPosIP);
-
-                      GlobalPosition localNormal(0);
-                      jacobianT1.mv(globalNormal, localNormal);
-                        // note only works for cubes
-                      const Scalar localArea = std::pow(2,-(dim-1));
-
-                      localNormal /= localNormal.two_norm();
-
-                      // Get the Darcy velocities. The Darcy velocities are divided by the area of the subcontrolvolumeface
-                      // in the reference element.
-                      const Scalar massUpwindWeight = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
-                      PhasesVector q;
-                      q[phaseIdx] = normalFlux
-                                           * (massUpwindWeight
-                                           * up.mobility(phaseIdx)
-                                           + (1- massUpwindWeight)
-                                           * dn.mobility(phaseIdx)) / localArea;
-
-                      // transform the normal Darcy velocity into a vector
-                      tmpVelocity[phaseIdx] = localNormal;
-                      tmpVelocity[phaseIdx] *= q[phaseIdx];
-
-                      if(phaseIdx == wPhaseIdx){
-                      scvVelocityW[fluxDat.face().i] += tmpVelocity[phaseIdx];
-                      scvVelocityW[fluxDat.face().j] += tmpVelocity[phaseIdx];
-                      }
-                      else if(phaseIdx == nPhaseIdx){
-                      scvVelocityN[fluxDat.face().i] += tmpVelocity[phaseIdx];
-                      scvVelocityN[fluxDat.face().j] += tmpVelocity[phaseIdx];
-                      }
-                   }
-                }
-                typedef Dune::GenericReferenceElements<Scalar, dim> ReferenceElements;
-                const Dune::FieldVector<Scalar, dim> &localPos
-                    = ReferenceElements::general(elemIt->geometry().type()).position(0, 0);
-
-                 // get the transposed Jacobian of the element mapping
-                const Dune::FieldMatrix<CoordScalar, dim, dim> &jacobianT2
-                    = elemIt->geometry().jacobianTransposed(localPos);
-
-                // transform vertex velocities from local to global coordinates
-                for (int i = 0; i < numVerts; ++i)
-                {
-                    int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                    // calculate the subcontrolvolume velocity by the Piola transformation
-                    Dune::FieldVector<CoordScalar, dim> scvVelocity(0);
-
-                    jacobianT2.mtv(scvVelocityW[i], scvVelocity);
-                    scvVelocity /= elemIt->geometry().integrationElement(localPos);
-                    // add up the wetting phase subcontrolvolume velocities for each vertex
-                    (*velocityW)[globalIdx] += scvVelocity;
-
-                    jacobianT2.mtv(scvVelocityN[i], scvVelocity);
-                    scvVelocity /= elemIt->geometry().integrationElement(localPos);
-                    // add up the nonwetting phase subcontrolvolume velocities for each vertex
-                    (*velocityN)[globalIdx] += scvVelocity;
-                }
-            }
-#endif
         }
-#if 0
-            if(velocityOutput)
-            {
-                // divide the vertex velocities by the number of adjacent scvs i.e. cells
-                for(int globalIdx = 0; globalIdx<numVertices; ++globalIdx){
-                (*velocityW)[globalIdx] /= (*cellNum)[globalIdx];
-                (*velocityN)[globalIdx] /= (*cellNum)[globalIdx];
-                }
-            }
-#endif
+
         writer.attachVertexData(*Sn, "Sn");
         writer.attachVertexData(*Sw, "Sw");
         writer.attachVertexData(*pN, "pn");
@@ -343,13 +213,7 @@ public:
         writer.attachVertexData(*mobN, "mobN");
         writer.attachVertexData(*poro, "porosity");
         writer.attachVertexData(*Te, "temperature");
-#if 0
-        if(velocityOutput) // check if velocity output is demanded
-        {
-            writer.attachVertexData(*velocityW,  "velocityW", dim);
-            writer.attachVertexData(*velocityN,  "velocityN", dim);
-        }
-#endif
+
         writer.attachCellData(*rank, "process rank");
     }
 };

@@ -114,31 +114,17 @@ namespace Dumux
 template<class TypeTag>
 class MPNCModel : public BoxModel<TypeTag>
 {
+    typedef MPNCModel<TypeTag> ThisType;
     typedef BoxModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef Dumux::MPNCVtkWriter<TypeTag> MPNCVtkWriter;
-
-    enum {
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
-        enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),
-        enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy),
-        enableSmoothUpwinding = GET_PROP_VALUE(TypeTag, EnableSmoothUpwinding),
-        enablePartialReassemble = GET_PROP_VALUE(TypeTag, EnablePartialReassemble),
-        enableJacobianRecycling = GET_PROP_VALUE(TypeTag, EnableJacobianRecycling),
-        numDiffMethod = GET_PROP_VALUE(TypeTag, NumericDifferenceMethod),
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-        numEq = GET_PROP_VALUE(TypeTag, NumEq)
-    };
 
 public:
     ~MPNCModel()
@@ -148,21 +134,6 @@ public:
     {
         ParentType::init(problem);
         vtkWriter_ = new MPNCVtkWriter(problem);
-
-        if (this->gridView_().comm().rank() == 0)
-            std::cout
-                << "Initializing M-phase N-component model: \n"
-                << "    phases: " << numPhases << "\n"
-                << "    components: " << numComponents << "\n"
-                << "    equations: " << numEq << "\n"
-                << "    kinetic mass transfer: " << enableKinetic<< "\n"
-                << "    kinetic energy transfer: " << enableKineticEnergy<< "\n"
-                << "    diffusion: " << enableDiffusion << "\n"
-                << "    energy equation: " << enableEnergy << "\n"
-                << "    smooth upwinding: " << enableSmoothUpwinding << "\n"
-                << "    partial jacobian reassembly: " << enablePartialReassemble << "\n"
-                << "    numeric differentiation method: " << numDiffMethod << " (-1: backward, 0: central, +1 forward)\n"
-                << "    jacobian recycling: " << enableJacobianRecycling << "\n";
     }
 
     /*!
@@ -172,11 +143,15 @@ public:
     void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
     {
         dest = 0;
-
+        
+        ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            this->localResidual().addPhaseStorage(dest, *elemIt, phaseIdx);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
+
+            this->localResidual().addPhaseStorage(dest, elemCtx, phaseIdx);
         };
 
         if (this->gridView_().comm().size() > 1)

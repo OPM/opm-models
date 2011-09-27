@@ -48,6 +48,7 @@ class MPNCLocalResidualMassCommon
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
@@ -91,114 +92,39 @@ public:
      *        quantities over a face of a subcontrol volume via a
      *        fluid phase.
      */
-    static void computeAdvectivePhaseFlux(ComponentVector &phaseComponentValues,
-                                          const FluxVariables &fluxVars,
-                                          const int phaseIdx)
+    static void computeAdvectiveFlux(ComponentVector &compFlux,
+                                     const ElementContext &elemCtx,
+                                     int scvfIdx,
+                                     int phaseIdx)
     {
-        static bool enableSmoothUpwinding_ = GET_PARAM(TypeTag, bool, EnableSmoothUpwinding);
-
-        Vector tmpVec;
-        fluxVars.intrinsicPermeability().mv(fluxVars.potentialGrad(phaseIdx),
-                                            tmpVec);
-
-        // advective part is flux over face, therefore needs to be multiplied by normal vector
-        // (length: area of face)
-        Scalar normalFlux = - (tmpVec*fluxVars.face().normal);
-
-        // data attached to upstream and the downstream vertices
-        // of the current phase
-        int upIdx = fluxVars.face().i;
-        int dnIdx = fluxVars.face().j;
-#ifndef NDEBUG
-        if (!std::isfinite(normalFlux))
-            DUNE_THROW(NumericalProblem, "Calculated non-finite normal flux");
-#endif
-
-        if (normalFlux < 0) std::swap(upIdx, dnIdx);
-        const VolumeVariables &up = fluxVars.volVars(upIdx);
-        const VolumeVariables &dn = fluxVars.volVars(dnIdx);
-
-        ////////
-        // advective fluxes of all components in the phase
-        ////////
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            // add advective flux of current component in current
-            // phase. we use full upwinding.
-
-            if (enableSmoothUpwinding_) {
-                Scalar mobUp = up.mobility(phaseIdx);
-                Scalar cUp = up.fluidState().molarity(phaseIdx, compIdx);
-
-                Scalar mobDn = dn.mobility(phaseIdx);
-                Scalar cDn = dn.fluidState().molarity(phaseIdx, compIdx);
-
-                Scalar mUp = mobUp*cUp;
-                Scalar mDn = mobDn*cDn;
-                Scalar m0 = Dumux::harmonicMean(mUp, mDn);
-
-                Scalar x = std::abs(normalFlux);
-                Scalar sign = (normalFlux < 0)?-1:1;
-
-                // the direction from upstream to downstream
-                //GlobalPosition delta = this->curElement_().geometry().corner(upIdx);
-                //delta -= this->curElement_().geometry().corner(dnIdx);
-
-                // approximate the mean viscosity at the face
-                Scalar meanVisc = (up.fluidState().viscosity(phaseIdx) +
-                                   dn.fluidState().viscosity(phaseIdx))/2;
-
-                // put the mean viscosity and permeanbility in
-                // relation to the viscosity of water at
-                // approximatly 20 degrees Celsius.
-                const Scalar pGradRef = 10; // [Pa/m]
-                const Scalar muRef = 1e-3; // [Ns/m^2]
-                const Scalar Kref = 1e-12; // [m^2] = approx 1 Darcy
-
-                Scalar faceArea = fluxVars.face().normal.two_norm();
-                Scalar eps = pGradRef * Kref * faceArea * meanVisc/muRef; // * (1e3/18e-3)/meanC;
-
-                Scalar compFlux;
-                if (x >= eps) {
-                    // we only do tricks if x is below the epsilon
-                    // value
-                    compFlux = x*mUp;
-                }
-                else {
-                    Scalar xPos[] = { 0, eps };
-                    Scalar yPos[] = { 0, eps*mUp };
-                    Spline<Scalar> sp2(xPos, yPos, m0, mUp);
-                    compFlux = sp2.eval(x);
-                }
-
-                phaseComponentValues[compIdx] = sign*compFlux;
-            }
-            else {// !use smooth upwinding
-                phaseComponentValues[compIdx] =
-                    up.mobility(phaseIdx) *
-                    up.fluidState().molarity(phaseIdx, compIdx) *
-                    normalFlux;
-            }
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx));
+        
+        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+            compFlux[compIdx] =
+                up.fluidState().molarity(phaseIdx, compIdx)
+                * fluxVars.normalVelocity(phaseIdx);
         }
     }
-
-
+    
     /*!
      * \brief Evaluates the advective flux of all conservation
      *        quantities over a face of a subcontrol volume via a
      *        fluid phase.
      */
-    static void computeDiffusivePhaseFlux(ComponentVector &flux,
-                                          const FluxVariables &fluxVars,
-                                          int phaseIdx)
+    static void computeDiffusiveFlux(ComponentVector &flux,
+                                     const ElementContext &elemCtx,
+                                     int scvfIdx,
+                                     int phaseIdx)
     {
         if (!enableDiffusion) {
             flux = 0.0;
             return;
         }
 
-
-        const VolumeVariables &volVarsI = fluxVars.volVars(fluxVars.face().i);
-        const VolumeVariables &volVarsJ = fluxVars.volVars(fluxVars.face().j);
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const VolumeVariables &volVarsI = elemCtx.volVars(fluxVars.insideIdx());
+        const VolumeVariables &volVarsJ = elemCtx.volVars(fluxVars.outsideIdx());
         if (volVarsI.fluidState().saturation(phaseIdx) < 1e-4 ||
             volVarsJ.fluidState().saturation(phaseIdx) < 1e-4)
         {
@@ -213,7 +139,7 @@ public:
         molarDensityAtIP += volVarsJ.fluidState().molarDensity(phaseIdx);
         molarDensityAtIP /= 2;
 
-        Diffusion::flux(flux, phaseIdx, fluxVars, molarDensityAtIP);
+        Diffusion::flux(flux, elemCtx, scvfIdx, phaseIdx, molarDensityAtIP);
     }
 };
 
@@ -236,7 +162,7 @@ class MPNCLocalResidualMass
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
     enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -287,80 +213,69 @@ public:
      * \brief Calculate the storage for all mass balance equations
      */
     static void computeFlux(PrimaryVariables &flux,
-                            const FluxVariables &fluxVars,
-                            const ElementVolumeVariables & elemVolVars)
+                            const ElementContext &elemCtx,
+                            int scvfIdx)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             flux[conti0EqIdx + compIdx] = 0.0;
 
-        ComponentVector phaseComponentValuesAdvection(0.);
-        ComponentVector phaseComponentValuesDiffusion(0.);
-        ComponentVector phaseComponentValuesMassTransport[numPhases]; // what goes into the energy module
+        ComponentVector diffusiveFlux(0.);
+        ComponentVector advectiveFlux(0.);
+        ComponentVector totalFluxes[numPhases]; // goes into the energy module
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            MassCommon::computeAdvectivePhaseFlux(phaseComponentValuesAdvection, fluxVars, phaseIdx);
-            Valgrind::CheckDefined(phaseComponentValuesAdvection);
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                flux[conti0EqIdx + compIdx] +=
-                        phaseComponentValuesAdvection[compIdx];
+            MassCommon::computeAdvectiveFlux(advectiveFlux,
+                                             elemCtx, 
+                                             scvfIdx,
+                                             phaseIdx);
+            MassCommon::computeDiffusiveFlux(diffusiveFlux,
+                                             elemCtx,
+                                             scvfIdx,
+                                             phaseIdx);
 
-            MassCommon::computeDiffusivePhaseFlux(phaseComponentValuesDiffusion, fluxVars, phaseIdx);
-            Valgrind::CheckDefined(phaseComponentValuesDiffusion);
+            // add the fluxes to the primary variables vector
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                flux[conti0EqIdx + compIdx] +=
-                        phaseComponentValuesDiffusion[compIdx];
+                flux[conti0EqIdx + compIdx] += 
+                    advectiveFlux[compIdx] + diffusiveFlux[compIdx];
 
-            // Right now I think that adding the two contributions individually into the flux is best for debugging and understanding.
-            // The Energy module needs both contributions.
-            phaseComponentValuesMassTransport[phaseIdx] = phaseComponentValuesDiffusion + phaseComponentValuesAdvection ;
+            // Right now I think that adding the two contributions
+            // individually into the flux is best for debugging and
+            // understanding. The Energy module needs both
+            // contributions.
+            totalFluxes[phaseIdx] = advectiveFlux + diffusiveFlux;
+
+            Valgrind::CheckDefined(advectiveFlux);
+            Valgrind::CheckDefined(diffusiveFlux);
             Valgrind::CheckDefined(flux);
         }
 
         // \todo
         //
-        // The computeflux() of the Energy module needs a
-        // component-wise flux (for the diffusive enthalpy transport)
-        // It makes some sense calling energy from here, because energy
-        // is carried by mass However, it is not really a clean
-        // solution.
+        // The computeFlux() of the energy module needs a
+        // component-wise flux for the enthalpy transport. It makes
+        // some sense calling into the energy module from here,
+        // because energy is carried by mass. However, it is not
+        // really a clean solution.
 
         // energy transport in fluid phases
         EnergyResid::computeFlux(flux,
-                                 fluxVars,
-                                 elemVolVars,
-                                 phaseComponentValuesMassTransport);
+                                 elemCtx,
+                                 scvfIdx,
+                                 totalFluxes);
         Valgrind::CheckDefined(flux);
     }
-
-
 
     /*!
      * \brief Calculate the source terms for all mass balance
      *        equations
      */
     static void computeSource(PrimaryVariables &source,
-                              const VolumeVariables &volVars)
+                              const ElementContext &elemCtx,
+                              int scvIdx)
     {
-    static_assert(not enableKineticEnergy,
-                      "In the case of kinetic energy transfer the advective energy transport between the phases has to be considered. "
-                      "It is hard (technically) to say how much mass got transfered in the case of chemical equilibrium. "
-                      "Therefore, kineticEnergy and no kinetic mass does not fit (yet).");
-
-        // mass transfer is not considered in this mass module
+        // set source terms for mass to 0 for all components
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             source[conti0EqIdx + compIdx] = 0.0;
-
-
-        PrimaryVariables tmp(0);
-        // Similar to the compute Flux, the energy residual needs to be called from the
-        // mass residual.
-        ComponentVector dummy[numPhases];
-            for (int iDummy =0; iDummy <numPhases; ++iDummy)
-                dummy[iDummy] = 0.;
-        EnergyResid::computeSource(tmp,
-                                   volVars,
-                                   dummy);
-        source += tmp;
         Valgrind::CheckDefined(source);
     };
 };

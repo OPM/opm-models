@@ -63,7 +63,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
@@ -160,8 +160,6 @@ public:
     {
         const auto vPtr = context.element().template subEntity<dim>(localIdx);
 
-        // if you get a deprecation warning here, please use context
-        // objects to specify your problem!
         asImp_().boundaryTypes(values, *vPtr);
    }
     
@@ -191,7 +189,7 @@ public:
                             const GlobalPosition &pos) const
     {
         // Throw an exception (there is no reasonable default value
-        // for Dirichlet conditions)
+        // for the boundary type)
         DUNE_THROW(Dune::InvalidStateException,
                    "The problem does not provide "
                    "a boundaryTypes() method.");
@@ -208,14 +206,13 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
                    int localIdx) const
     {
         const auto vPtr = context.element().template subEntity<dim>(localIdx);
         
-        // if you get a deprecation warning here, please use context
-        // objects to specify your problem!
         asImp_().dirichlet(values, *vPtr);
     }
 
@@ -228,7 +225,6 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    DUNE_DEPRECATED
     void dirichlet(PrimaryVariables &values,
                    const Vertex &vertex) const
     {
@@ -247,7 +243,6 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    DUNE_DEPRECATED
     void dirichletAtPos(PrimaryVariables &values,
                         const GlobalPosition &pos) const
     {
@@ -260,14 +255,13 @@ public:
     }
 
     template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void neumann(PrimaryVariables &priVars,
                  const Context &context,
                  const Intersection &is,
                  int localIdx,
                  int boundaryIndex) const
     {
-        // if you get a deprecation warning here, please use context
-        // objects to specify your problem!
         return asImp_().boxSDNeumann(priVars,
                                      context.element(),
                                      context.fvElemGeom(),
@@ -296,14 +290,13 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    DUNE_DEPRECATED
     void boxSDNeumann(PrimaryVariables &values,
                       const Element &element,
                       const FVElementGeometry &fvElemGeom,
                       const Intersection &is,
                       int scvIdx,
                       int boundaryFaceIdx,
-                      const ElementVariables &elemVars) const
+                      const ElementContext &elemCtx) const
     {
         // forward it to the interface without the volume variables
         asImp_().neumann(values,
@@ -334,7 +327,6 @@ public:
                  const Intersection &is,
                  int scvIdx,
                  int boundaryFaceIdx) const
-        DUNE_DEPRECATED
     {
         // forward it to the interface with only the global position
         asImp_().neumannAtPos(values, fvElemGeom.boundaryFace[boundaryFaceIdx].ipGlobal);
@@ -352,7 +344,6 @@ public:
      */
     void neumannAtPos(PrimaryVariables &values,
                       const GlobalPosition &pos) const
-        DUNE_DEPRECATED
     {
         // Throw an exception (there is no reasonable default value
         // for Neumann conditions)
@@ -363,12 +354,11 @@ public:
     }
 
     template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void source(PrimaryVariables &priVars,
                 const Context &context,
                 int localIdx) const
     {
-        // if you get an deprecation warning here, please use context
-        // objects to specify your problem!
         return asImp_().boxSDSource(priVars,
                                     context.element(),
                                     context.fvElemGeom(),
@@ -398,8 +388,7 @@ public:
                      const Element &element,
                      const FVElementGeometry &fvElemGeom,
                      int scvIdx,
-                     const ElementVariables &elemVars) const
-        DUNE_DEPRECATED
+                     const ElementContext &elemCtx) const
     {
         // forward to solution independent, box specific interface
         asImp_().source(values, element, fvElemGeom, scvIdx);
@@ -422,7 +411,6 @@ public:
                 const Element &element,
                 const FVElementGeometry &fvElemGeom,
                 int scvIdx) const
-        DUNE_DEPRECATED
     {
         // forward to generic interface
         asImp_().sourceAtPos(values, fvElemGeom.subContVol[scvIdx].global);
@@ -443,11 +431,25 @@ public:
      */
     void sourceAtPos(PrimaryVariables &values,
                      const GlobalPosition &pos) const
-        DUNE_DEPRECATED
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "The problem does not provide "
                    "a sourceAtPos() method.");
+    }
+
+    /*!
+     * \brief Evaluate the initial value for a control volume.
+     *
+     * For this method, the \a values parameter stores primary
+     * variables.
+     */
+    template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
+    void initial(PrimaryVariables &values,
+                 const Context &context,
+                 int localIdx) const
+    {
+        asImp_().initial(values, context.element(), context.fvElemGeom(), localIdx);
     }
 
     /*!

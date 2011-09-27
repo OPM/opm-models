@@ -43,7 +43,7 @@ class MPNCFluxVariablesDiffusion
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
@@ -68,30 +68,36 @@ public:
     MPNCFluxVariablesDiffusion()
     {}
 
-    void update(const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvfIdx,
-                const ElementVolumeVariables &vDat)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {
-        int i = elemGeom.subContVolFace[scvfIdx].i;
-        int j = elemGeom.subContVolFace[scvfIdx].j;
+        int i = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
+        int j = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
-        for (int phase = 0; phase < numPhases; ++phase) {
-            for (int comp = 0; comp < numComponents; ++comp) {
-                moleFrac_[phase][comp]  = vDat[i].fluidState().moleFraction(phase, comp);
-                moleFrac_[phase][comp] += vDat[j].fluidState().moleFraction(phase, comp);
-                moleFrac_[phase][comp] /= 2;
+        const VolumeVariables &volVarsI = elemCtx.volVars(i);
+        const VolumeVariables &volVarsJ = elemCtx.volVars(j);
+
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                moleFrac_[phaseIdx][compIdx]  = volVarsI.fluidState().moleFrac(phaseIdx, compIdx);
+                moleFrac_[phaseIdx][compIdx] += volVarsJ.fluidState().moleFrac(phaseIdx, compIdx);
+                moleFrac_[phaseIdx][compIdx] /= 2;
             }
         }
 
+        // initialize the diffusion coefficients to zero
+        for (int compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
+            porousDiffCoeffL_[compIIdx] = 0.0;
+            for (int compJIdx = 0; compJIdx < numComponents; ++compJIdx)
+                porousDiffCoeffG_[compIIdx][compJIdx] = 0.0;
+        }
+        
         // update the concentration gradients using two-point
         // gradients
-        const GlobalPosition &normal = elemGeom.subContVolFace[scvfIdx].normal;
+        const GlobalPosition &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
 
-        GlobalPosition tmp = element.geometry().corner(j);
-        tmp -= element.geometry().corner(i);
-        Scalar dist = tmp.two_norm()*normal.two_norm();
+        GlobalPosition tmp = elemCtx.pos(j);
+        tmp -= elemCtx.pos(i);
+        Scalar dist = tmp.two_norm();
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
         {
             // concentration gradients
@@ -99,18 +105,12 @@ public:
                 moleFracGrad_[phaseIdx][compIdx] = normal;
                 moleFracGrad_[phaseIdx][compIdx]
                     *=
-                    (vDat[j].fluidState().moleFraction(phaseIdx, compIdx) -
-                     vDat[i].fluidState().moleFraction(phaseIdx, compIdx))
-                    / dist;
+                    (volVarsJ.fluidState().moleFraction(phaseIdx, compIdx) -
+                     volVarsI.fluidState().moleFraction(phaseIdx, compIdx))
+                    / (dist * normal.two_norm());
             }
         }
-
-        // initialize the diffusion coefficients to zero
-        for (int i = 0; i < numComponents; ++i) {
-            porousDiffCoeffL_[i] = 0.0;
-            for (int j = 0; j < numComponents; ++j)
-                porousDiffCoeffG_[i][j] = 0.0;
-        }
+    
 
         // calculate the diffusion coefficients at the integration
         // point in the porous medium
@@ -118,8 +118,8 @@ public:
         {
             // make sure to only calculate diffusion coefficents
             // for phases which exist in both finite volumes
-            if (vDat[i].fluidState().saturation(phaseIdx) <= 1e-4 ||
-                vDat[j].fluidState().saturation(phaseIdx) <= 1e-4)
+            if (volVarsI.fluidState().saturation(phaseIdx) <= 1e-4 ||
+                volVarsJ.fluidState().saturation(phaseIdx) <= 1e-4)
             {
                 continue;
             }
@@ -132,29 +132,29 @@ public:
             // TODO (?): move this calculation to the soil (possibly
             // that's a bad idea, though)
             Scalar red_i =
-                vDat[i].fluidState().saturation(phaseIdx)/vDat[i].porosity() *
-                std::pow(vDat[i].porosity() * vDat[i].fluidState().saturation(phaseIdx), 7.0/3);
+                volVarsI.fluidState().saturation(phaseIdx)/volVarsI.porosity() *
+                std::pow(volVarsI.porosity() * volVarsI.fluidState().saturation(phaseIdx), 7.0/3);
             Scalar red_j =
-                vDat[j].fluidState().saturation(phaseIdx)/vDat[j].porosity() *
-                std::pow(vDat[j].porosity() * vDat[j].fluidState().saturation(phaseIdx), 7.0/3);
+                volVarsJ.fluidState().saturation(phaseIdx)/volVarsJ.porosity() *
+                std::pow(volVarsJ.porosity() * volVarsJ.fluidState().saturation(phaseIdx), 7.0/3);
 
             if (phaseIdx == FluidSystem::lPhaseIdx) {
                 // Liquid phase diffusion coefficients in the porous medium
-                for (int i = 0; i < numComponents; ++i) {
+                for (int compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
                     // -> arithmetic mean
-                    porousDiffCoeffL_[i]
-                        = 1./2*(red_i * vDat[i].diffCoeff(lPhaseIdx, 0, i) +
-                                red_j * vDat[j].diffCoeff(lPhaseIdx, 0, i));
+                    porousDiffCoeffL_[compIIdx]
+                        = 1./2*(red_i * volVarsI.diffCoeff(lPhaseIdx, 0, compIIdx) +
+                                red_j * volVarsJ.diffCoeff(lPhaseIdx, 0, compIIdx));
                 }
             }
             else {
                 // Gas phase diffusion coefficients in the porous medium
-                for (int i = 0; i < numComponents; ++i) {
-                    for (int j = 0; j < numComponents; ++j) {
+                for (int compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
+                    for (int compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
                         // -> arithmetic mean
-                        porousDiffCoeffG_[i][j]
-                            = 1./2*(red_i * vDat[i].diffCoeff(gPhaseIdx, i, j) +
-                                    red_j * vDat[j].diffCoeff(gPhaseIdx, i, j));
+                        porousDiffCoeffG_[compIIdx][compJIdx]
+                            = 1./2*(red_i * volVarsI.diffCoeff(gPhaseIdx, compIIdx, compJIdx) +
+                                    red_j * volVarsJ.diffCoeff(gPhaseIdx, compIIdx, compJIdx));
                     }
                 }
             }
@@ -208,18 +208,14 @@ class MPNCFluxVariablesDiffusion<TypeTag, false>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
 public:
     MPNCFluxVariablesDiffusion()
     {}
 
-    void update(const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvfIdx,
-                const ElementVolumeVariables &vDat)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {
     };
 };
