@@ -79,7 +79,10 @@ public:
     TwoPFluxVariables()
     {}
 
-#warning Docme
+    /*!
+     * \brief Caclulates the quantities required on a sub-control
+     *        volume face for the 2p box model.
+     */
     void update(const ElementContext &elemCtx, int scvfIdx)
     {
         insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;

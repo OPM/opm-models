@@ -25,7 +25,6 @@
  *
  * \brief Base class for all models which use the one-phase,
  *        box model.
- *        Adaption of the BOX scheme to the one-phase flow model.
  */
 
 #ifndef DUMUX_1P_MODEL_HH
@@ -56,7 +55,7 @@ class OnePBoxModel : public BoxModel<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
@@ -80,46 +79,31 @@ public:
         // create the required scalar fields
         unsigned numVertices = this->problem_().gridView().size(dim);
         ScalarField *p = writer.allocateManagedBuffer(numVertices);
-        ScalarField *K = writer.allocateManagedBuffer(numVertices);
 
         unsigned numElements = this->gridView_().size(0);
         ScalarField *rank = writer.allocateManagedBuffer(numElements);
 
-        FVElementGeometry fvElemGeom;
-        VolumeVariables volVars;
-        ElementBoundaryTypes elemBcTypes;
+        ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            int idx = this->problem_().model().elementMapper().map(*elemIt);
+            int idx = this->elementMapper().map(*elemIt);
             (*rank)[idx] = this->gridView_().comm().rank();
 
-            fvElemGeom.update(this->gridView_(), *elemIt);
-            elemBcTypes.update(this->problem_(), *elemIt, fvElemGeom);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
 
-            int numVerts = elemIt->template count<dim> ();
-            for (int i = 0; i < numVerts; ++i)
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
             {
-                int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                volVars.update(sol[globalIdx],
-                               this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               i,
-                               false);
-                const SpatialParameters &spatialParams = this->problem_().spatialParameters();
-
+                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
                 (*p)[globalIdx] = volVars.pressure();
-                (*K)[globalIdx] = spatialParams.intrinsicPermeability(*elemIt,
-                                                                    fvElemGeom,
-                                                                    i);
             };
         }
 
         writer.attachVertexData(*p, "p");
-        writer.attachVertexData(*K, "K");
         writer.attachCellData(*rank, "process rank");
     }
 };

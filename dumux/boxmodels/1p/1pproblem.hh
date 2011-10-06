@@ -53,16 +53,18 @@ class OnePBoxProblem : public BoxProblem<TypeTag>
     typedef typename GridView::template Codim<0>::Entity Element;
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
-/*!
- * \brief The constructor.
- *
- * \param timeManager The time manager
- * \param gridView The grid view
- */
+    /*!
+     * \brief The constructor.
+     *
+     * \param timeManager The time manager
+     * \param gridView The grid view
+     */
     OnePBoxProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
           gravity_(0)
@@ -81,6 +83,26 @@ public:
     /*!
      * \brief Return the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    // if you get an deprecated warning here, please use context
+    // objects to specify your problem!
+    DUMUX_DEPRECATED_MSG("please use context objects to specify your problem!")
+    Scalar temperature(const Context &context,
+                       int localIdx) const
+    {
+        return asImp_().boxTemperature(context.element(),
+                                       context.fvElemGeom(),
+                                       localIdx);                             
+    };
+
+    /*!
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     *
      * This is the discretization specific interface for the box
      * method. By default it just calls temperature(pos).
      *
@@ -92,6 +114,7 @@ public:
     Scalar boxTemperature(const Element &element,
                           const FVElementGeometry fvGeom,
                           int scvIdx) const
+        DUNE_DEPRECATED // use context objects!
     { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -115,6 +138,24 @@ public:
     Scalar temperature() const
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
+
+    /*!
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    const Vector &gravity(const Context &context,
+                          int localIdx) const
+    {
+        return asImp_().boxGravity(context.element(),
+                                   context.fvElemGeom(),
+                                   localIdx);
+    };
+
     /*!
      * \brief Return the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
@@ -126,9 +167,9 @@ public:
      * \param fvGeom The finite volume geometry of the element
      * \param scvIdx The local index of the sub control volume inside the element
      */
-    const GlobalPosition &boxGravity(const Element &element,
-                                     const FVElementGeometry &fvGeom,
-                                     int scvIdx) const
+    const Vector &boxGravity(const Element &element,
+                             const FVElementGeometry &fvGeom,
+                             int scvIdx) const
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -139,7 +180,7 @@ public:
      *
      * \param pos The position in global coordinates
      */
-    const GlobalPosition &gravityAtPos(const GlobalPosition &pos) const
+    const Vector &gravityAtPos(const GlobalPosition &pos) const
     { return asImp_().gravity(); }
 
     /*!
@@ -151,7 +192,7 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const GlobalPosition &gravity() const
+    const Vector &gravity() const
     { return gravity_; }
 
     /*!

@@ -47,12 +47,13 @@ template<class TypeTag>
 class OnePLocalResidual : public BoxLocalResidual<TypeTag>
 {
     typedef OnePLocalResidual<TypeTag> ThisType;
-
+    typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
+ 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
@@ -62,7 +63,6 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
     enum { pressureIdx = Indices::pressureIdx };
 
 public:
-
     /*!
      * \brief Constructor. Sets the upwind weight.
      */
@@ -85,18 +85,20 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVariables &result, 
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int historyIdx) const
     {
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const ElementVolumeVariables &elemCtx = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &volVars = elemCtx[scvIdx];
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         // partial time derivative of the wetting phase mass
-        result[pressureIdx] =  volVars.density() * volVars.porosity();
+        result[pressureIdx] = volVars.density() * volVars.porosity();
     }
 
 
@@ -107,27 +109,21 @@ public:
      * \param flux The flux over the SCV (sub-control-volume) face
      * \param faceIdx The index of the SCV face
      */
-    void computeFlux(PrimaryVariables &flux, int faceIdx) const
+    void computeFlux(PrimaryVariables &flux,
+                     const ElementContext &elemCtx,
+                     int scvfIdx) const
     {
-        FluxVariables fluxVars(this->problem_(),
-                               this->elem_(),
-                               this->fvElemGeom_(),
-                               faceIdx,
-                               this->curVolVars_());
-        Vector tmpVec;
-        fluxVars.intrinsicPermeability().mv(fluxVars.potentialGrad(),
-                                            tmpVec);
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx());
+        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx());
 
-        Scalar normalFlux = -(tmpVec*fluxVars.face().normal);
 
-        const VolumeVariables &up = this->curVolVars_(fluxVars.upstreamIdx(normalFlux));
-        const VolumeVariables &dn = this->curVolVars_(fluxVars.downstreamIdx(normalFlux));
         flux[pressureIdx] =
             ((    upwindWeight_)*(up.density()/up.viscosity())
              +
              (1 - upwindWeight_)*(dn.density()/dn.viscosity()))
             *
-            normalFlux;
+            fluxVars.normalFlux();
     }
 
     /*!
@@ -137,29 +133,19 @@ public:
      * \param localVertexIdx The index of the SCV
      *
      */
-    void computeSource(PrimaryVariables &q, int localVertexIdx)
+    void computeSource(PrimaryVariables &values,
+                       const ElementContext &elemCtx,
+                       int scvIdx) const
     {
-        this->problem_().boxSDSource(q,
-                                     this->elem_(),
-                                     this->fvElemGeom_(),
-                                     localVertexIdx,
-                                     this->curVolVars_());
+        elemCtx.problem().source(values, elemCtx, scvIdx);
     }
 
-    /*!
-     * \brief Return the temperature given the solution vector of a
-     *        finite volume.
-     */
-    template <class PrimaryVariables>
-    Scalar temperature(const PrimaryVariables &sol)
-    { return this->problem_.temperature(); /* constant temperature */ }
-
 private:
-    ThisType &asImp_()
-    { return *static_cast<ThisType *>(this); }
+    Implementation &asImp_()
+    { return *static_cast<Implementation*>(this); }
 
-    const ThisType &asImp_() const
-    { return *static_cast<const ThisType *>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
 
     Scalar upwindWeight_;
 };

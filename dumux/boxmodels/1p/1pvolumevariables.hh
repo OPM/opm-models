@@ -47,16 +47,13 @@ class OnePVolumeVariables : public BoxVolumeVariables<TypeTag>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
 public:
     //! Type of the fluid state
@@ -73,53 +70,60 @@ public:
      * \param isOldSol Evaluate function with solution of current or previous time step
      */
     void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
+                const ElementContext &elemCtx,
                 int scvIdx,
-                bool isOldSol)
+                int historyIdx)
     {
-        ParentType::update(priVars, problem, element, elemGeom, scvIdx, isOldSol);
+        ParentType::update(priVars, elemCtx, scvIdx, historyIdx);
 
-        completeFluidState(priVars, problem, element, elemGeom, scvIdx, fluidState_);
+        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+
         // porosity
-        porosity_ = problem.spatialParameters().porosity(element,
-                                                         elemGeom,
-                                                         scvIdx);
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
 
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(priVars, problem, element, elemGeom, scvIdx, isOldSol);
+        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
     };
 
     /*!
      * \copydoc BoxModel::completeFluidState
      */
-    static void completeFluidState(const PrimaryVariables& primaryVariables,
-                                   const Problem& problem,
-                                   const Element& element,
-                                   const FVElementGeometry& elementGeometry,
+    static void completeFluidState(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
                                    int scvIdx,
-                                   FluidState& fluidState)
+                                   int historyIdx)
     {
-        Scalar t = Implementation::temperature_(primaryVariables, problem, element,
-                                                elementGeometry, scvIdx);
-        fluidState.setTemperature(t);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
 
-        fluidState.setPressure(/*phaseIdx=*/0, primaryVariables[Indices::pressureIdx]);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+
+        fluidState.setPressure(/*phaseIdx=*/0, priVars[Indices::pressureIdx]);
 
         // saturation in a single phase is always 1 and thus redundant
         // to set. But since we use the fluid state shared by the
         // immiscible multi-phase models, so we have to set it here...
         fluidState.setSaturation(/*phaseIdx=*/0, 1.0);
 
+        typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updatePhase(fluidState, /*phaseIdx=*/0);
+        paramCache.updateAll(fluidState);
 
-        Scalar value = FluidSystem::density(fluidState, paramCache,  /*phaseIdx=*/0);
-        fluidState.setDensity(/*phaseIdx=*/0, value);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            // compute and set the viscosity
+            Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+            fluidState.setViscosity(phaseIdx, mu);
 
-        value = FluidSystem::viscosity(fluidState, paramCache,  /*phaseIdx=*/0);
-        fluidState.setViscosity(/*phaseIdx=*/0, value);
+            // compute and set the density
+            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
+            fluidState.setDensity(phaseIdx, rho);
+        }
+        
+        Implementation::updateEnthalpy_(fluidState, 
+                                        paramCache, 
+                                        elemCtx,
+                                        scvIdx,
+                                        historyIdx);
     }
 
     /*!
@@ -137,21 +141,21 @@ public:
      *        the control volume.
      *
      */
-    Scalar pressure() const
+    Scalar pressure(int phaseIdx = 0) const
     { return fluidState_.pressure(/*phaseIdx=*/0); }
 
     /*!
      * \brief Return the mass density \f$\mathrm{[kg/m^3]}\f$ of a given phase within the
      *        control volume.
      */
-    Scalar density() const
+    Scalar density(int phaseIdx = 0) const
     { return fluidState_.density(/*phaseIdx=*/0); }
 
     /*!
      * \brief Return the dynamic viscosity \f$\mathrm{[Pa s]}\f$ of the fluid within the
      *        control volume.
      */
-    Scalar viscosity() const
+    Scalar viscosity(int phaseIdx = 0) const
     { return fluidState_.viscosity(/*phaseIdx=*/0); }
 
     /*!
@@ -167,24 +171,28 @@ public:
     { return fluidState_; }
 
 protected:
-    static Scalar temperature_(const PrimaryVariables &priVars,
-                            const Problem& problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int scvIdx)
+    static Scalar updateTemperature_(FluidState &fluidState,
+                                     const ElementContext &elemCtx,
+                                     int scvIdx,
+                                     int historyIdx)
     {
-        return problem.boxTemperature(element, elemGeom, scvIdx);
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
+
+    template<class ParameterCache>
+    static Scalar updateEnthalpy_(FluidState &fluidState,
+                                  const ParameterCache &paramCache,
+                                  const ElementContext &elemCtx,
+                                  int scvIdx,
+                                  int historyIdx)
+    { }
 
     /*!
      * \brief Called by update() to compute the energy related quantities.
      */
-    void updateEnergy_(const PrimaryVariables &sol,
-                       const Problem &problem,
-                       const Element &element,
-                       const FVElementGeometry &elemGeom,
-                       int vertIdx,
-                       bool isOldSol)
+    void updateEnergy_(const ElementContext &elemCtx,
+                       int scvIdx,
+                       int historyIdx)
     { }
 
     FluidState fluidState_;
