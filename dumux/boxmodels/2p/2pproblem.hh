@@ -123,7 +123,7 @@ public:
     template <class Context>
     // if you get an deprecated warning here, please use context
     // objects to specify your problem!
-    DUNE_DEPRECATED
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     Scalar temperature(const Context &context,
                        int localIdx) const
     {
@@ -146,7 +146,6 @@ public:
     Scalar boxTemperature(const Element &element,
                           const FVElementGeometry fvGeom,
                           int scvIdx) const
-        DUNE_DEPRECATED // use context objects!
     { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -158,7 +157,6 @@ public:
      * \param pos The position in global coordinates where the temperature should be specified.
      */
     Scalar temperatureAtPos(const GlobalPosition &pos) const
-        DUNE_DEPRECATED // use context objects!
     { return asImp_().temperature(); }
 
     /*!
@@ -169,7 +167,6 @@ public:
      * no energy equation is used.
      */
     Scalar temperature() const
-        DUNE_DEPRECATED // use context objects!
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
 

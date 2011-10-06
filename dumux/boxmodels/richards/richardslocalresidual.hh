@@ -47,6 +47,7 @@ class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
@@ -85,17 +86,12 @@ public:
      * \param usePrevSol Calculate the storage term of the previous solution
      *                   instead of the model's current solution.
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVariables &result, 
+                        const ElementVariables &elemVars,
+                        int scvIdx, 
+                        int historyIdx) const
     {
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const VolumeVariables &volVars =
-            usePrevSol ?
-            this->prevVolVars_(scvIdx) :
-            this->curVolVars_(scvIdx);
+        const VolumeVariables &volVars = elemVars.volVars(scvIdx, historyIdx);
 
         // partial time derivative of the wetting phase mass
         result[contiEqIdx] =
@@ -115,32 +111,24 @@ public:
      * \param scvfIdx The sub control volume face index inside the current
      *                element
      */
-    void computeFlux(PrimaryVariables &flux, int scvfIdx) const
+    void computeFlux(PrimaryVariables &flux,
+                     const ElementVariables &elemVars,
+                     int scvfIdx) const
     {
-        FluxVariables fluxVars(this->problem_(),
-                               this->elem_(),
-                               this->fvElemGeom_(),
-                               scvfIdx,
-                               this->curVolVars_());
-
-        // calculate the flux in the normal direction of the
-        // current sub control volume face
-        Vector tmpVec;
-        fluxVars.intrinsicPermeability().mv(fluxVars.potentialGradW(),
-                                            tmpVec);
-        Scalar normalFlux = -(tmpVec*fluxVars.face().normal);
+        const auto &fluxVarsEval = elemVars.evalPointFluxVars(scvfIdx);
+        const auto &fluxVars = elemVars.fluxVars(scvfIdx);
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = this->curVolVars_(fluxVars.upstreamIdx(normalFlux));
-        const VolumeVariables &dn = this->curVolVars_(fluxVars.downstreamIdx(normalFlux));
+        const VolumeVariables &up = elemVars.volVars(fluxVarsEval.upstreamIdx());
+        const VolumeVariables &dn = elemVars.volVars(fluxVarsEval.upstreamIdx());
 
         flux[contiEqIdx] =
-            normalFlux
+            fluxVars.normalFlux()
             *
-            ((    massUpwindWeight_)*up.density(wPhaseIdx)*up.mobility(wPhaseIdx)
+            ((    massUpwindWeight_)*up.density(wPhaseIdx)*up.mobility()
              +
-             (1 - massUpwindWeight_)*dn.density(wPhaseIdx)*dn.mobility(wPhaseIdx));
+             (1 - massUpwindWeight_)*dn.density(wPhaseIdx)*dn.mobility());
     }
 
     /*!
@@ -151,13 +139,13 @@ public:
      * \param scvIdx The sub control volume index inside the current
      *               element
      */
-    void computeSource(PrimaryVariables &q, int scvIdx)
+    void computeSource(PrimaryVariables &q,
+                       const ElementVariables &elemVars,
+                       int scvIdx) const
     {
-        this->problem_().boxSDSource(q,
-                                     this->elem_(),
-                                     this->fvElemGeom_(),
-                                     scvIdx,
-                                     this->curVolVars_());
+        elemVars.problem().source(q,
+                                  elemVars,
+                                  scvIdx);
     }
 
 private:

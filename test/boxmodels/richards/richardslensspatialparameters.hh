@@ -136,6 +136,7 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
+    using ParentType::intrinsicPermeability;
     Scalar intrinsicPermeability(const Element &element,
                                  const FVElementGeometry &fvElemGeom,
                                  int scvIdx) const
@@ -153,6 +154,7 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
+    using ParentType::porosity;
     Scalar porosity(const Element &element,
                     const FVElementGeometry &fvElemGeom,
                     int scvIdx) const
@@ -165,22 +167,8 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
-    const MaterialLawParams& materialLawParams(const Element &element,
-                                                const FVElementGeometry &fvElemGeom,
-                                                int scvIdx) const
-    {
-        return materialLawParams(fvElemGeom.subContVol[scvIdx].global);
-    }
-
-    /*!
-     * \brief Returns the parameters for the material law at a given location
-     *
-     * This method is not actually required by the Richards model, but provided
-     * for the convenience of the RichardsLensProblem
-     *
-     * \param globalPos A global coordinate vector
-     */
-    const MaterialLawParams& materialLawParams(const GlobalPosition &globalPos) const
+    using ParentType::materialLawParams;
+    const MaterialLawParams& materialLawParamsAtPos(const GlobalPosition &globalPos) const
     {
 
         if (isInLens_(globalPos))

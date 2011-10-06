@@ -57,7 +57,9 @@ class RichardsBoxProblem : public BoxProblem<TypeTag>
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
@@ -110,6 +112,26 @@ public:
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    // if you get an deprecated warning here, please use context
+    // objects to specify your problem!
+    DUNE_DEPRECATED
+    Scalar temperature(const Context &context,
+                       int localIdx) const
+    {
+        return asImp_().boxTemperature(context.element(),
+                                       context.fvElemGeom(),
+                                       localIdx);                             
+    };
+
+    /*!
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     *
      * This is the discretization specific interface for the box
      * method. By default it just calls temperature(pos).
      *
@@ -121,6 +143,7 @@ public:
     Scalar boxTemperature(const Element &element,
                           const FVElementGeometry fvGeom,
                           int scvIdx) const
+        DUNE_DEPRECATED // use context objects!
     { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -132,6 +155,7 @@ public:
      * \param pos The position in global coordinates where the temperature should be specified.
      */
     Scalar temperatureAtPos(const GlobalPosition &pos) const
+        DUNE_DEPRECATED // use context objects!
     { return asImp_().temperature(); }
 
     /*!
@@ -142,23 +166,26 @@ public:
      * no energy equation is used.
      */
     Scalar temperature() const
+        DUNE_DEPRECATED // use context objects!
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
+
     /*!
-     * \brief Returns the reference pressure \f$\mathrm{[Pa]}\f$ of the non-wetting
-     *        phase within a control volume.
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
-     * This method MUST be overwritten by the actual problem.
-     *
-          * \param element The DUNE Codim<0> enitiy which intersects with
-     *                the finite volume.
-     * \param fvGeom The finite volume geometry of the element.
-     * \param scvIdx The local index of the sub control volume inside the element
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
      */
-    Scalar referencePressure(const Element &element,
-                             const FVElementGeometry fvGeom,
-                             int scvIdx) const
-    { DUNE_THROW(Dune::NotImplemented, "referencePressure() method not implemented by the actual problem"); };
+    template <class Context>
+    const Vector &gravity(const Context &context,
+                          int localIdx) const
+    {
+        return asImp_().boxGravity(context.element(),
+                                   context.fvElemGeom(),
+                                   localIdx);
+    };
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
@@ -184,8 +211,8 @@ public:
      * it just calls gravityAtPos().
      */
     const Vector &boxGravity(const Element &element,
-                                     const FVElementGeometry &fvGeom,
-                                     int scvIdx) const
+                             const FVElementGeometry &fvGeom,
+                             int scvIdx) const
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -208,6 +235,42 @@ public:
      */
     const Vector &gravity() const
     { return gravity_; }
+
+
+    /*!
+     * \brief Returns the reference pressure \f$\mathrm{[Pa]}\f$ of the non-wetting
+     *        phase within a control volume.
+     *
+     * This method MUST be overwritten by the actual problem.
+     *
+          * \param element The DUNE Codim<0> enitiy which intersects with
+     *                the finite volume.
+     * \param fvGeom The finite volume geometry of the element.
+     * \param scvIdx The local index of the sub control volume inside the element
+     */
+    template <class Context>
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
+    Scalar referencePressure(const Context &context,
+                             int localIdx) const
+    { return asImp_().referencePressure(context.element(), context.fvElemGeom(), localIdx); }
+
+
+    /*!
+     * \brief Returns the reference pressure \f$\mathrm{[Pa]}\f$ of the non-wetting
+     *        phase within a control volume.
+     *
+     * This method MUST be overwritten by the actual problem.
+     *
+          * \param element The DUNE Codim<0> enitiy which intersects with
+     *                the finite volume.
+     * \param fvGeom The finite volume geometry of the element.
+     * \param scvIdx The local index of the sub control volume inside the element
+     */
+    Scalar referencePressure(const Element &element,
+                             const FVElementGeometry &fvGeom,
+                             int scvIdx) const
+    { DUNE_THROW(Dune::NotImplemented, "referencePressure() method not implemented by the actual problem"); };
+
 
     /*!
      * \brief Returns the spatial parameters object.

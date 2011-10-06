@@ -94,20 +94,29 @@ namespace Dumux
 template<class TypeTag >
 class RichardsModel : public BoxModel<TypeTag>
 {
+    typedef RichardsModel<TypeTag> ThisType;
+    typedef BoxModel<TypeTag> ParentType;
+
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
+        dim = GridView::dimension,
         nPhaseIdx = Indices::nPhaseIdx,
         wPhaseIdx = Indices::wPhaseIdx
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    enum { dim = GridView::dimension };
 
 public:
     /*!
@@ -146,36 +155,29 @@ public:
         ScalarField *rhoW = writer.allocateManagedBuffer(numVertices);
         ScalarField *rhoN = writer.allocateManagedBuffer(numVertices);
         ScalarField *mobW = writer.allocateManagedBuffer(numVertices);
-        ScalarField *mobN = writer.allocateManagedBuffer(numVertices);
         ScalarField *poro = writer.allocateManagedBuffer(numVertices);
         ScalarField *Te = writer.allocateManagedBuffer(numVertices);
 
         unsigned numElements = this->gridView_().size(0);
-        ScalarField *rank =
-                writer.allocateManagedBuffer (numElements);
+        ScalarField *rank = writer.allocateManagedBuffer (numElements);
 
-        FVElementGeometry fvElemGeom;
-        VolumeVariables volVars;
+        ElementVariables elemVars(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            int idx = this->problem_().model().elementMapper().map(*elemIt);
-            (*rank)[idx] = this->gridView_().comm().rank();
+            int elemIdx = this->elementMapper().map(*elemIt);
+            (*rank)[elemIdx] = this->gridView_().comm().rank();
 
-            fvElemGeom.update(this->gridView_(), *elemIt);
+            elemVars.updateFVElemGeom(*elemIt);
+            elemVars.updateScvVars(/*historyIdx=*/0);
 
-            int numVerts = elemIt->template count<dim> ();
-            for (int i = 0; i < numVerts; ++i)
+            for (int scvIdx = 0; scvIdx < elemVars.numScv(); ++scvIdx)
             {
-                int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                volVars.update(sol[globalIdx],
-                               this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               i,
-                               false);
+                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
+
+                const VolumeVariables &volVars = elemVars.volVars(scvIdx, /*historyIdx=*/0);
 
                 (*pW)[globalIdx] = volVars.pressure(wPhaseIdx);
                 (*pN)[globalIdx] = volVars.pressure(nPhaseIdx);
@@ -185,7 +187,6 @@ public:
                 (*rhoW)[globalIdx] = volVars.density(wPhaseIdx);
                 (*rhoN)[globalIdx] = volVars.density(nPhaseIdx);
                 (*mobW)[globalIdx] = volVars.mobility(wPhaseIdx);
-                (*mobN)[globalIdx] = volVars.mobility(nPhaseIdx);
                 (*poro)[globalIdx] = volVars.porosity();
                 (*Te)[globalIdx] = volVars.temperature();
             };
@@ -199,7 +200,6 @@ public:
         writer.attachVertexData(*rhoW, "rhoW");
         writer.attachVertexData(*rhoN, "rhoN");
         writer.attachVertexData(*mobW, "mobW");
-        writer.attachVertexData(*mobN, "mobN");
         writer.attachVertexData(*poro, "porosity");
         writer.attachVertexData(*Te, "temperature");
         writer.attachCellData(*rank, "process rank");

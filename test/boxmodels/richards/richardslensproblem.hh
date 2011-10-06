@@ -82,7 +82,8 @@ SET_BOOL_PROP(RichardsLensProblem, EnableGravity, true);
 // Enable partial reassembly of the Jacobian matrix?
 SET_BOOL_PROP(RichardsLensProblem, EnablePartialReassemble, true);
 
-// Enable re-use of the Jacobian matrix for the first iteration of a time step?
+// Enable re-use of the Jacobian matrix of the last iteration of the
+// previous for the first iteration of the current time step?
 SET_BOOL_PROP(RichardsLensProblem, EnableJacobianRecycling, true);
 
 // Use forward diffferences to approximate the Jacobian matrix
@@ -189,6 +190,7 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
+    using ParentType::temperature;
     Scalar temperature() const
     { return 273.15 + 10; }; // -> 10°C
 
@@ -204,6 +206,7 @@ public:
      * \param scvIdx The sub control volume index inside the finite
      *               volume geometry
      */
+    using ParentType::referencePressure;
     Scalar referencePressure(const Element &element,
                              const FVElementGeometry &fvElemGeom,
                              int scvIdx) const
@@ -254,7 +257,7 @@ public:
                    const GlobalPosition &globalPos) const
     {
         // use initial values as boundary conditions
-        initial_(values, globalPos);
+        initialAtPos(values, globalPos);
     }
 
     /*!
@@ -292,21 +295,18 @@ public:
      * \param pos The position for which the boundary type is set
      */
     void initialAtPos(PrimaryVariables &values,
-                 const GlobalPosition &pos) const
-    { initial_(values, pos); };
-
-    // \}
-
-private:
-    void initial_(PrimaryVariables &values, const GlobalPosition &pos) const
-    {
+                      const GlobalPosition &pos) const
+    { 
         Scalar Sw = 0.0;
         Scalar pc =
-            MaterialLaw::pC(this->spatialParameters().materialLawParams(pos),
+            MaterialLaw::pC(this->spatialParameters().materialLawParamsAtPos(pos),
                             Sw);
         values[pwIdx] = pnRef_ - pc;
     }
 
+    // \}
+
+private:
     bool onLeftBoundary_(const GlobalPosition &globalPos) const
     {
         return globalPos[0] < this->bboxMin()[0] + eps_;

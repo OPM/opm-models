@@ -45,19 +45,22 @@ class RichardsNewtonController : public NewtonController<TypeTag>
     typedef NewtonController<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
-    enum { pwIdx = Indices::pwIdx };
+    enum {
+        dim = GridView::dimension,
+        pwIdx = Indices::pwIdx,
+    };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    enum { dim = GridView::dimension };
 public:
     /*!
      * \brief Constructor
@@ -83,6 +86,7 @@ public:
     {
         ParentType::newtonUpdate(uCurrentIter, uLastIter, deltaU);
 
+        const auto &assembler = this->model_().jacobianAssembler();
         if (!GET_PARAM(TypeTag, bool, NewtonUseLineSearch))
         {
             // do not clamp anything after 5 iterations
@@ -90,35 +94,46 @@ public:
                 return;
 
             // clamp saturation change to at most 20% per iteration
-            FVElementGeometry fvElemGeom;
-            const GridView &gv = this->problem_().gridView();
-            ElementIterator eIt = gv.template begin<0>();
-            const ElementIterator eEndIt = gv.template end<0>();
-            for (; eIt != eEndIt; ++eIt) {
-                fvElemGeom.update(gv, *eIt);
-                for (int i = 0; i < fvElemGeom.numVertices; ++i) {
-                    int globI = this->problem_().vertexMapper().map(*eIt, i, dim);
+            ElementVariables elemVars(this->problem_());
+            
+            ElementIterator elemIt = this->gridView_().template begin<0>();
+            const ElementIterator &elemEndIt = this->gridView_().template end<0>();
+            for (; elemIt != elemEndIt; ++elemIt)
+            {
+                if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
+                    // don't look at green elements, since they
+                    // probably have not changed much anyways
+                    continue;
+
+                elemVars.updateFVElemGeom(*elemIt);
+                
+                for (int scvIdx = 0; scvIdx < elemVars.numScv(); ++scvIdx) {
+                    int globI = this->problem_().vertexMapper().map(*elemIt, scvIdx, dim);
+                    if (assembler.vertexColor(globI) == JacobianAssembler::Green)
+                        // don't limit at green vertices, since they
+                        // probably have not changed much anyways
+                        continue;
 
                     // calculate the old wetting phase saturation
-                    const SpatialParameters &sp = this->problem_().spatialParameters();
-                    const MaterialLawParams &mp = sp.materialLawParams(*eIt, fvElemGeom, i);
-                    Scalar pcMin = MaterialLaw::pC(mp, 1.0);
+                    const SpatialParameters &spatialParams = this->problem_().spatialParameters();
+                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemVars, scvIdx);
+
+                    Scalar pcMin = MaterialLaw::pC(matParams, /*Sw=*/1.0);
                     Scalar pW = uLastIter[globI][pwIdx];
-                    Scalar pN = std::max(this->problem_().referencePressure(*eIt, fvElemGeom, i),
+                    Scalar pN = std::max(this->problem_().referencePressure(elemVars, scvIdx),
                                          pW + pcMin);
                     Scalar pcOld = pN - pW;
-                    Scalar SwOld = std::max<Scalar>(0.0, MaterialLaw::Sw(mp, pcOld));
+                    Scalar SwOld = std::max<Scalar>(0.0, MaterialLaw::Sw(matParams, pcOld));
 
                     // convert into minimum and maximum wetting phase
                     // pressures
-                    Scalar pwMin = pN - MaterialLaw::pC(mp, SwOld - 0.2);
-                    Scalar pwMax = pN - MaterialLaw::pC(mp, SwOld + 0.2);
+                    Scalar pwMin = pN - MaterialLaw::pC(matParams, SwOld - 0.2);
+                    Scalar pwMax = pN - MaterialLaw::pC(matParams, SwOld + 0.2);
 
                     // clamp the result
                     pW = uCurrentIter[globI][pwIdx];
                     pW = std::max(pwMin, std::min(pW, pwMax));
                     uCurrentIter[globI][pwIdx] = pW;
-
                 }
             }
         }
