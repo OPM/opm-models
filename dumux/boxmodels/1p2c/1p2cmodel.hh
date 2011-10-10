@@ -42,6 +42,11 @@ namespace Dumux
 {
 
 /*!
+ * \ingroup BoxModels
+ * \defgroup OnePTwoCBoxModel One-phase Two-component box model
+ */
+
+/*!
  * \ingroup OnePTwoCBoxModel
  * \brief Adaption of the BOX scheme to the one-phase two-component flow model.
  *
@@ -80,8 +85,7 @@ class OnePTwoCBoxModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
@@ -111,6 +115,8 @@ public:
     /*!
      * \brief \copybrief Dumux::BoxModel::addOutputVtkFields
      *
+     * \copydetails Dumux::BoxModel::addOutputVtkFields
+     *
      * Specialization for the OnePTwoCBoxModel, adding pressure,
      * mass and mole fractions, and the process rank to the VTK writer.
      */
@@ -130,6 +136,7 @@ public:
         ScalarField &massFrac1 = *writer.allocateManagedBuffer(numVertices);
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
+        ScalarField &delFrac= *writer.allocateManagedBuffer(numVertices);
 #ifdef VELOCITY_OUTPUT // check if velocity output is demanded
         ScalarField &velocityX = *writer.allocateManagedBuffer(numVertices);
         ScalarField &velocityY = *writer.allocateManagedBuffer(numVertices);
@@ -156,31 +163,23 @@ public:
         ScalarField &rank =
                 *writer.allocateManagedBuffer(numElements);
 
-        FVElementGeometry fvElemGeom;
-        VolumeVariables volVars;
-        ElementBoundaryTypes elemBcTypes;
+        ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            int idx = this->problem_().model().elementMapper().map(*elemIt);
+            int idx = this->elementMapper().map(*elemIt);
             rank[idx] = this->gridView_().comm().rank();
 
-            fvElemGeom.update(this->gridView_(), *elemIt);
-            elemBcTypes.update(this->problem_(), *elemIt, fvElemGeom);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
 
-            int numVerts = elemIt->template count<dim> ();
-            for (int i = 0; i < numVerts; ++i)
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
             {
-                int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                volVars.update(sol[globalIdx],
-                               this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               i,
-                               false);
+                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
 
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
                 pressure[globalIdx] = volVars.pressure();
                 delp[globalIdx] = volVars.pressure() - 1e5;
                 moleFrac0[globalIdx] = volVars.moleFraction(0);
@@ -189,6 +188,7 @@ public:
                 massFrac1[globalIdx] = volVars.massFraction(1);
                 rho[globalIdx] = volVars.density();
                 mu[globalIdx] = volVars.viscosity();
+                delFrac[globalIdx] = volVars.massFraction(1)-volVars.moleFraction(1);
             };
 
 #ifdef VELOCITY_OUTPUT // check if velocity output is demanded
@@ -306,17 +306,10 @@ public:
         if (dim > 2)
             writer.attachVertexData(velocityZ, "Vz");
 #endif
-        char nameMoleFrac0[42], nameMoleFrac1[42];
-        snprintf(nameMoleFrac0, 42, "x_%s", FluidSystem::componentName(0));
-        snprintf(nameMoleFrac1, 42, "x_%s", FluidSystem::componentName(1));
-        writer.attachVertexData(moleFrac0, nameMoleFrac0);
-        writer.attachVertexData(moleFrac1, nameMoleFrac1);
-
-        char nameMassFrac0[42], nameMassFrac1[42];
-        snprintf(nameMassFrac0, 42, "X_%s", FluidSystem::componentName(0));
-        snprintf(nameMassFrac1, 42, "X_%s", FluidSystem::componentName(1));
-        writer.attachVertexData(massFrac0, nameMassFrac0);
-        writer.attachVertexData(massFrac1, nameMassFrac1);
+        writer.attachVertexData(moleFrac0, "x_H2O");
+        writer.attachVertexData(moleFrac1, "x_N2");
+        writer.attachVertexData(massFrac0, "X_H2O");
+        writer.attachVertexData(massFrac1, "X_N2");
 //        writer.attachVertexData(delFrac, "delFrac_TRAIL");
         writer.attachVertexData(rho, "rho");
         writer.attachVertexData(mu, "mu");

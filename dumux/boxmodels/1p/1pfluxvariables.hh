@@ -95,8 +95,11 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    const Vector &potentialGrad(int phaseIdx) const
-    { return potentialGrad_[phaseIdx]; }
+    const Vector &potentialGrad(int phaseIdx = 0) const
+    {
+        assert(phaseIdx == 0);
+        return potentialGrad_[phaseIdx];
+    }
 
     /*!
      * \brief Return a phase's pressure potential gradient times

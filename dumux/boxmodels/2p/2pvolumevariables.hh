@@ -247,9 +247,9 @@ public:
 
 protected:
     static void updateTemperature_(FluidState &fluidState,
-                                     const ElementContext &elemCtx,
-                                     int scvIdx,
-                                     int historyIdx)
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int historyIdx)
     {
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }

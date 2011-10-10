@@ -93,7 +93,7 @@ class InjectionSpatialParameters : public BoxSpatialParameters<TypeTag>
     typedef Dune::FieldVector<Scalar,dimWorld> Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -227,7 +227,7 @@ public:
      */
     void matrixHeatFlux(Vector &heatFlux,
                         const FluxVariables &fluxDat,
-                        const ElementVolumeVariables &vDat,
+                        const ElementContext &vDat,
                         const Vector &tempGrad,
                         const Element &element,
                         const FVElementGeometry &fvElemGeom,

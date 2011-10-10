@@ -57,7 +57,7 @@ class RichardsVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
@@ -87,52 +87,52 @@ public:
      *                 the previous time step or from the current one
      */
     void update(const PrimaryVariables &priVars,
-                const ElementVariables &elemVars,
+                const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
         assert(!FluidSystem::isLiquid(nPhaseIdx));
 
-        ParentType::update(priVars, elemVars, scvIdx, historyIdx);
+        ParentType::update(priVars, elemCtx, scvIdx, historyIdx);
 
-        completeFluidState(fluidState_, elemVars, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
 
         //////////
         // specify the other parameters
         //////////
-        const auto &spatialParams = elemVars.problem().spatialParameters();
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &matParams =
-            spatialParams.materialLawParams(elemVars, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx);
         relativePermeabilityWetting_ =
             MaterialLaw::krw(matParams, 
                              fluidState_.saturation(wPhaseIdx));
 
-        porosity_ = spatialParams.porosity(elemVars, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
 
         // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(elemVars, scvIdx, historyIdx);
+        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
     }
 
     /*!
      * \copydoc BoxModel::completeFluidState
      */
     static void completeFluidState(FluidState &fluidState,
-                                   const ElementVariables &elemVars,
+                                   const ElementContext &elemCtx,
                                    int scvIdx,
                                    int historyIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemVars, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        const auto &spatialParams = elemVars.problem().spatialParameters();
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
         const typename MaterialLaw::Params &materialParams =
-            spatialParams.materialLawParams(elemVars, scvIdx);
-        const auto &priVars = elemVars.primaryVars(scvIdx, historyIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
         
         // pressures
         Scalar minPc = MaterialLaw::pC(materialParams, 1.0);
-        Scalar pnRef = elemVars.problem().referencePressure(elemVars, scvIdx);
+        Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx);
         fluidState.setPressure(wPhaseIdx, priVars[pwIdx]);
         fluidState.setPressure(nPhaseIdx, std::max(pnRef, priVars[pwIdx] + minPc));
         
@@ -157,7 +157,7 @@ public:
         
         Implementation::updateEnthalpy_(fluidState, 
                                         paramCache, 
-                                        elemVars,
+                                        elemCtx,
                                         scvIdx,
                                         historyIdx);
     }
@@ -263,26 +263,26 @@ public:
     { return fluidState_.pressure(nPhaseIdx) - fluidState_.pressure(wPhaseIdx); }
 
 protected:
-    static Scalar updateTemperature_(FluidState &fluidState,
-                                     const ElementVariables &elemVars,
-                                     int scvIdx,
-                                     int historyIdx)
+    static void updateTemperature_(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int historyIdx)
     {
-        fluidState.setTemperature(elemVars.problem().temperature(elemVars, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
-
+    
     template<class ParameterCache>
-    static Scalar updateEnthalpy_(FluidState &fluidState,
-                                  const ParameterCache &paramCache,
-                                  const ElementVariables &elemVars,
-                                  int scvIdx,
-                                  int historyIdx)
+    static void updateEnthalpy_(FluidState &fluidState,
+                                const ParameterCache &paramCache,
+                                const ElementContext &elemCtx,
+                                int scvIdx,
+                                int historyIdx)
     { }
 
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const ElementVariables &elemVars,
+    void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
                        int historyIdx)
     { }

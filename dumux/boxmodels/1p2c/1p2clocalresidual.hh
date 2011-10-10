@@ -28,16 +28,17 @@
  * \brief Element-wise calculation the local Jacobian for the single-phase,
  *        two-component model in the BOX scheme.
  */
-
 #ifndef DUMUX_ONEP_TWOC_LOCAL_RESIDUAL_HH
 #define DUMUX_ONEP_TWOC_LOCAL_RESIDUAL_HH
-#define VELOCITY_OUTPUT 1 //1 turns velocity output on, 0 turns it off
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dumux/boxmodels/1p2c/1p2cproperties.hh>
 #include <dumux/boxmodels/1p2c/1p2cvolumevariables.hh>
 #include <dumux/boxmodels/1p2c/1p2cfluxvariables.hh>
+
+#warning "TODO: implement outflow condition properly"
+//#include <dumux/boxmodels/1p2c/1p2cboundaryvariables.hh>
 
 #include <dune/common/collectivecommunication.hh>
 #include <vector>
@@ -52,7 +53,7 @@ namespace Dumux
  * \brief Calculate the local Jacobian for the single-phase,
  *        two-component model in the BOX scheme.
  *
- *  This class is used to fill the gaps in BoxLocalResidual for the 1p2c flow and transport.
+ *  This class is used to fill the gaps in BoxLocalResidual for the 1P-2C flow.
  */
 template<class TypeTag>
 class OnePTwoCLocalResidual : public BoxLocalResidual<TypeTag>
@@ -66,200 +67,152 @@ protected:
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
 
-    enum
-        {
-            numEq = GET_PROP_VALUE(TypeTag, NumEq),
-
-            //phase index
-            phaseIdx = Indices::phaseIdx,
-
-            // indices of the primary variables
-            pressuerIdx = Indices::pressureIdx,
-            comp1Idx = Indices::comp1Idx,
-
-            // indices of the equations
-            contiEqIdx = Indices::contiEqIdx,
-            transEqIdx = Indices::transEqIdx
-        };
-
-    //! property that defines whether mole or mass fractions are used
-    static const bool useMoles = GET_PROP_VALUE(TypeTag, UseMoles);
-
-
-
-public:
-    /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    OnePTwoCLocalResidual()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        upwindWeight_ = GET_PARAM(TypeTag, Scalar, UpwindWeight);
+    enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
+        numEq = GET_PROP_VALUE(TypeTag, NumEq),
+        pressureIdx = Indices::pressureIdx,
+        x1Idx = Indices::x1Idx,
+        // indices of the equations
+        contiEqIdx = Indices::contiEqIdx,
+        transEqIdx = Indices::transEqIdx
     };
 
+public:
     /*!
      * \brief Evaluate the amount of all conservation quantities
      *        (e.g. phase mass) within a finite volume.
      *
      *        \param result The mass of the component within the sub-control volume
-     *        \param scvIdx The index of the considered face of the sub-control volume
+     *        \param scvIdx The index of the considered face of the sub control volume
      *        \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVariables &result, 
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int historyIdx) const
     {
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const ElementVolumeVariables &elemVolVars = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &volVars = elemVolVars[scvIdx];
+        // retrieve the volume variables for the SCV at the specified
+        // point in time
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         result = 0;
-        if(!useMoles)
-        {
-            // storage term of continuity equation - massfractions
-            result[contiEqIdx] +=
-                volVars.fluidState().density(phaseIdx)*volVars.porosity();
-            //storage term of the transport equation - massfractions
-            result[transEqIdx] +=
-                volVars.fluidState().density(phaseIdx) * volVars.fluidState().massFraction(phaseIdx, comp1Idx) * volVars.porosity();
-        }
-        else
-        {
-            // storage term of continuity equation- molefractions
-            //careful: molarDensity changes with moleFrac!
-            result[contiEqIdx] += volVars.molarDensity()*volVars.porosity();
-            // storage term of the transport equation - molefractions
-            result[transEqIdx] +=
-                volVars.fluidState().molarDensity(phaseIdx)*volVars.fluidState().moleFraction(phaseIdx, comp1Idx) *
-                volVars.porosity();
-        }
 
+        // storage term of continuity equation- molefractions
+        //careful: molarDensity changes with moleFrac!
+        result[contiEqIdx] +=
+            fs.molarDensity(/*phaseIdx=*/0)
+            * volVars.porosity();
+        // storage term of the transport equation - molefractions
+        result[transEqIdx] +=
+            fs.molarDensity(/*phaseIdx=*/0)
+            * fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1)
+            * volVars.porosity();
     }
 
     /*!
-     * \brief Evaluate the mass flux over a face of a sub-control
+     * \brief Evaluates the mass flux over a face of a subcontrol
      *        volume.
      *
      *        \param flux The flux over the SCV (sub-control-volume) face for each component
      *        \param faceId The index of the considered face of the sub control volume
-     *        \param onBoundary A boolean variable to specify whether the flux variables
-     *               are calculated for interior SCV faces or boundary faces, default=false
+     *        \param onBoundary If the considered face exists at the boundary
      */
-    void computeFlux(PrimaryVariables &flux, int faceId, bool onBoundary=false) const
+    void computeFlux(PrimaryVariables &flux,
+                     const ElementContext &elemCtx,
+                     int scvfIdx) const
     {
         flux = 0;
-        FluxVariables fluxVars(this->problem_(),
-                               this->elem_(),
-                               this->fvElemGeom_(),
-                               faceId,
-                               this->curVolVars_(),
-                               onBoundary);
-
-        asImp_()->computeAdvectiveFlux(flux, fluxVars);
-        asImp_()->computeDiffusiveFlux(flux, fluxVars);
+        asImp_().computeAdvectiveFlux(flux, elemCtx, scvfIdx);
+        asImp_().computeDiffusiveFlux(flux, elemCtx, scvfIdx);
     }
 
     /*!
-     * \brief Evaluate the advective mass flux of all components over
-     *        a face of a sub-control volume.
+     * \brief Evaluates the advective mass flux of all components over
+     *        a face of a subcontrol volume or a boundary segment.
      *
      * \param flux The advective flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux, const FluxVariables &fluxVars) const
+    void computeAdvectiveFlux(PrimaryVariables &flux, 
+                              const ElementContext &elemCtx,
+                              int scvfIdx) const
     {
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
+        
         ////////
         // advective fluxes of all components in all phases
         ////////
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up =
-            this->curVolVars_(fluxVars.upstreamIdx());
+        const VolumeVariables &up = 
+            elemCtx.volVars(evalPointFluxVars.upstreamIdx(), 
+                             /*historyIdx=*/0);
         const VolumeVariables &dn =
-            this->curVolVars_(fluxVars.downstreamIdx());
+            elemCtx.volVars(evalPointFluxVars.downstreamIdx(), 
+                             /*historyIdx=*/0);
+        Scalar upstreamWeight = GET_PARAM(TypeTag, Scalar, UpwindWeight);
 
-        if(!useMoles)
-        {
-            // total mass flux - massfraction
-            //KmvpNormal is the Darcy velocity multiplied with the normal vector, calculated in 1p2cfluxvariables.hh
-            flux[contiEqIdx] +=
-                fluxVars.KmvpNormal() *
-                ((     upwindWeight_)*up.density()/up.viscosity()
-                 +
-                 ((1 - upwindWeight_)*dn.density()/dn.viscosity()));
-
-            // advective flux of the second component - massfraction
-            flux[transEqIdx] +=
-                fluxVars.KmvpNormal() *
-                ((    upwindWeight_)*up.fluidState().density(phaseIdx) * up.fluidState().massFraction(phaseIdx, comp1Idx)/up.viscosity()
-                 +
-                 (1 - upwindWeight_)*dn.fluidState().density(phaseIdx)*dn.fluidState().massFraction(phaseIdx, comp1Idx)/dn.viscosity());
-        }
-        else
-        {
-            // total mass flux - molefraction
-            //KmvpNormal is the Darcy velocity multiplied with the normal vector, calculated in 1p2cfluxvariables.hh
-            flux[contiEqIdx] +=
-                fluxVars.KmvpNormal() *
-                ((     upwindWeight_)*up.molarDensity()/up.viscosity()
-                 +
-                 ((1 - upwindWeight_)*dn.molarDensity()/dn.viscosity()));
-
-            // advective flux of the second component -molefraction
-            flux[transEqIdx] +=
-                fluxVars.KmvpNormal() *
-                ((    upwindWeight_)*up.molarDensity() * up.fluidState().moleFraction(phaseIdx, comp1Idx)/up.viscosity()
-                 +
-                 (1 - upwindWeight_)*dn.molarDensity() * dn.fluidState().moleFraction(phaseIdx, comp1Idx)/dn.viscosity());
-        }
-
+        Scalar rhoUp = up.molarDensity();
+        Scalar rhoDn = dn.molarDensity();
+        Scalar xUp = up.moleFraction(/*compIdx=*/1);
+        Scalar xDn = dn.moleFraction(/*compIdx=*/1);
+            
+        // total mass/molar flux
+        flux[contiEqIdx] +=
+            fluxVars.normalFlux() *
+            ((     upstreamWeight)*rhoUp/up.viscosity()
+             +
+             ((1 - upstreamWeight)*rhoDn/dn.viscosity()));
+        
+        // advective flux of the second component
+        flux[transEqIdx] +=
+            fluxVars.normalFlux() *
+            ((    upstreamWeight) * rhoUp * xUp/up.viscosity()
+             +
+             (1 - upstreamWeight) * rhoDn * xDn/dn.viscosity());
     }
 
     /*!
      * \brief Adds the diffusive mass flux of all components over
-     *        a face of a sub-control volume.
+     *        a face of a subcontrol volume.
      *
      * \param flux The diffusive flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux, const FluxVariables &fluxVars) const
+    void computeDiffusiveFlux(PrimaryVariables &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx) const
     {
-        Scalar tmp(0);
+        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
 
-        // diffusive flux of second component
-        if(!useMoles)
-        {
-            // diffusive flux of the second component - massfraction
-            tmp = -(fluxVars.moleFracGrad(comp1Idx)*fluxVars.face().normal);
-            tmp *= fluxVars.porousDiffCoeff() * fluxVars.molarDensityAtIP();
-            // convert it to a mass flux and add it
-            flux[transEqIdx] += tmp * FluidSystem::molarMass(comp1Idx);
-        }
-        else
-        {
-            // diffusive flux of the second component - molefraction
-            tmp = -(fluxVars.moleFracGrad(comp1Idx)*fluxVars.face().normal);
-            tmp *= fluxVars.porousDiffCoeff() * fluxVars.molarDensityAtIP();
-
-            // dispersive flux of second component - molefraction
-            //            Vector normalDisp;
-            //            fluxVars.dispersionTensor().mv(fluxVars.face().normal, normalDisp);
-            //            tmp -= fluxVars.molarDensityAtIP()*
-            //                (normalDisp * fluxVars.moleFracGrad(comp1Idx));
-
-            flux[transEqIdx] += tmp;
-        }
+        // molar formulation
+        
+        // diffusive flux of the second component
+        Scalar tmp = 0;
+        for (int i = 0; i < normal.dimension; ++ i)
+            tmp += fluxVars.moleFracGrad(/*phaseIdx=*/0, /*compIdx=*/1)[i]*normal[i];
+        tmp *= -1;
+        tmp *= fluxVars.porousDiffCoeff() * fluxVars.molarDensity();
+        
+#if 0
+        // dispersive flux of second component - molefraction
+        Vector normalDisp;
+        fluxVars.dispersionTensor().mv(normal, normalDisp);
+        tmp -= fluxVars.molarDensityAtIP()*
+            (normalDisp * fluxVars.moleFracGrad());
+#endif
+        
+        flux[transEqIdx] += tmp;
     }
 
     /*!
@@ -268,53 +221,166 @@ public:
      *        \param localVertexIdx The index of the vertex of the sub control volume
      *
      */
-    void computeSource(PrimaryVariables &q, int localVertexIdx)
+    void computeSource(PrimaryVariables &q,
+                       const ElementContext &elemCtx,
+                       int scvIdx) const
     {
-        this->problem_().boxSDSource(q,
-                                     this->elem_(),
-                                     this->fvElemGeom_(),
-                                     localVertexIdx,
-                                     this->curVolVars_());
+        elemCtx.problem().source(q,
+                                  elemCtx,
+                                  scvIdx);
+    }
+
+#if 0
+    void evalBoundary_()
+    {
+        ParentType::evalBoundary_();
+
+        if (this->bcTypes_().hasOutflow())
+        {
+            evalOutflow_();
+        }
+
+        if (this->bcTypes_().hasDirichlet())
+            this->evalDirichlet_();
+    }
+
+    void evalOutflux(PrimaryVariables &outFlux, 
+                     const BoundaryFluxVariables &fluxVars,
+                     const ElementContext &elemCtx,
+                     int scvIdx,
+                     int boundaryIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented, "evalOutflux()");
+    };
+#endif // 0
+
+protected:
+#if 0
+    /*!
+     * \brief Add all Outflow boundary conditions to the local
+     *        residual.
+     */
+    void evalOutflow_()
+    {
+        Dune::GeometryType geoType = this->elem_().geometry().type();
+
+        typedef typename Dune::GenericReferenceElements<Scalar, dim> ReferenceElements;
+        typedef typename Dune::GenericReferenceElement<Scalar, dim> ReferenceElement;
+        const ReferenceElement &refElem = ReferenceElements::general(geoType);
+
+        IntersectionIterator isIt = this->gridView_().ibegin(this->elem_());
+        const IntersectionIterator &endIt = this->gridView_().iend(this->elem_());
+        for (; isIt != endIt; ++isIt)
+        {
+            // handle only faces on the boundary
+            if (!isIt->boundary())
+                continue;
+
+            // Assemble the boundary for all vertices of the current
+            // face
+            int faceIdx = isIt->indexInInside();
+            int numFaceVerts = refElem.size(faceIdx, 1, dim);
+            for (int faceVertIdx = 0;
+                 faceVertIdx < numFaceVerts;
+                 ++faceVertIdx)
+            {
+                int elemVertIdx = refElem.subEntity(faceIdx,
+                                                    1,
+                                                    faceVertIdx,
+                                                    dim);
+
+                int boundaryFaceIdx =
+                    this->fvElemGeom_().boundaryFaceIndex(faceIdx, faceVertIdx);
+                
+                // add the residual of all vertices of the boundary
+                // segment
+                evalOutflowSegment_(isIt,
+                                    elemVertIdx,
+                                    boundaryFaceIdx);
+            }
+        }
     }
 
     /*!
      * \brief Add Outflow boundary conditions for a single sub-control
      *        volume face to the local residual.
-     *
-     * \param isIt   The intersection iterator of current element
-     * \param scvIdx The index of the considered face of the sub-control volume
-     * \param boundaryFaceIdx The index of the considered boundary face of the sub control volume
      */
-    void evalOutflowSegment(const IntersectionIterator &isIt,
-                            int scvIdx,
-                            int boundaryFaceIdx)
+    void evalOutflowSegment_(const IntersectionIterator &isIt,
+                             int scvIdx,
+                             int boundaryFaceIdx)
     {
+        // temporary vector to store the neumann boundary fluxes
+        PrimaryVariables flux(0.0);
         const BoundaryTypes &bcTypes = this->bcTypes_(scvIdx);
-        // deal with outflow boundaries
+
+        // deal with neumann boundaries
         if (bcTypes.hasOutflow())
         {
-            //calculate outflow fluxes
-            PrimaryVariables values(0.0);
-            asImp_()->computeFlux(values, boundaryFaceIdx, true);
-            Valgrind::CheckDefined(values);
+            const BoundaryVariables boundaryVars(this->problem_(),
+                                                 this->elem_(),
+                                                 this->fvElemGeom_(),
+                                                 boundaryFaceIdx,
+                                                 this->curVolVars_(),
+                                                 scvIdx);
 
-            for (int equationIdx = 0; equationIdx < numEq; ++equationIdx)
+            const VolumeVariables& vertVars = this->curVolVars_()[scvIdx];
+
+            // mass balance
+            if (bcTypes.isOutflow(contiEqIdx))
             {
-                if (!bcTypes.isOutflow(equationIdx) )
-                    continue;
-                // deduce outflow
-                this->residual_[scvIdx][equationIdx] += values[equationIdx];
+                if(!useMolarFormulation) //use massfractions
+                {
+                    flux[contiEqIdx] += boundaryVars.KmvpNormal()*vertVars.density()/vertVars.viscosity();
+                }
+                else //use molefractions
+                {
+                    flux[contiEqIdx] += boundaryVars.KmvpNormal()*vertVars.molarDensity()/vertVars.viscosity();
+                }
             }
+
+            // component transport
+            if (bcTypes.isOutflow(transEqIdx))
+            {
+                if(!useMolarFormulation)//use massfractions
+                {
+                    // advective flux
+                    flux[transEqIdx]+= boundaryVars.KmvpNormal()*vertVars.density()/vertVars.viscosity()
+                        *vertVars.fluidState().massFrac(phaseIdx, /*compIdx=*/1);
+
+                    // diffusive flux of comp1 component in phase0
+                    Scalar tmp = 0;
+                    for (int i = 0; i < Vector::size; ++ i)
+                        tmp += boundaryVars.massFracGrad(/*compIdx=*/1)[i]*boundaryVars.boundaryFace().normal[i];
+                    tmp *= -1;
+
+                    tmp *= boundaryVars.porousDiffCoeff()*boundaryVars.densityAtIP();
+                    flux[transEqIdx] += tmp;//* FluidSystem::molarMass(/*compIdx=*/1);
+                }
+                else //use molefractions
+                {
+                    // advective flux
+                    flux[transEqIdx]+= boundaryVars.KmvpNormal()*vertVars.molarDensity()/vertVars.viscosity()
+                        *vertVars.fluidState().moleFrac(phaseIdx, /*compIdx=*/1);
+
+                    // diffusive flux of comp1 component in phase0
+                    Scalar tmp = 0;
+                    for (int i = 0; i < Vector::size; ++ i)
+                        tmp += boundaryVars.moleFracGrad(/*compIdx=*/1)[i]*boundaryVars.boundaryFace().normal[i];
+                    tmp *= -1;
+
+                    tmp *= boundaryVars.porousDiffCoeff()*boundaryVars.molarDensityAtIP();
+                    flux[transEqIdx] += tmp;
+                }
+            }
+            this->residual_[scvIdx] += flux;
         }
     }
+#endif
 
-    Implementation *asImp_()
-    { return static_cast<Implementation *> (this); }
-    const Implementation *asImp_() const
-    { return static_cast<const Implementation *> (this); }
-
-private:
-    Scalar upwindWeight_;
+    Implementation &asImp_()
+    { return *static_cast<Implementation *> (this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation *> (this); }
 };
 
 }

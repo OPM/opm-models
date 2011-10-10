@@ -47,7 +47,7 @@ class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
@@ -87,11 +87,11 @@ public:
      *                   instead of the model's current solution.
      */
     void computeStorage(PrimaryVariables &result, 
-                        const ElementVariables &elemVars,
+                        const ElementContext &elemCtx,
                         int scvIdx, 
                         int historyIdx) const
     {
-        const VolumeVariables &volVars = elemVars.volVars(scvIdx, historyIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         // partial time derivative of the wetting phase mass
         result[contiEqIdx] =
@@ -112,16 +112,16 @@ public:
      *                element
      */
     void computeFlux(PrimaryVariables &flux,
-                     const ElementVariables &elemVars,
+                     const ElementContext &elemCtx,
                      int scvfIdx) const
     {
-        const auto &fluxVarsEval = elemVars.evalPointFluxVars(scvfIdx);
-        const auto &fluxVars = elemVars.fluxVars(scvfIdx);
+        const auto &fluxVarsEval = elemCtx.evalPointFluxVars(scvfIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = elemVars.volVars(fluxVarsEval.upstreamIdx());
-        const VolumeVariables &dn = elemVars.volVars(fluxVarsEval.upstreamIdx());
+        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx());
+        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.upstreamIdx());
 
         flux[contiEqIdx] =
             fluxVars.normalFlux()
@@ -140,11 +140,11 @@ public:
      *               element
      */
     void computeSource(PrimaryVariables &q,
-                       const ElementVariables &elemVars,
+                       const ElementContext &elemCtx,
                        int scvIdx) const
     {
-        elemVars.problem().source(q,
-                                  elemVars,
+        elemCtx.problem().source(q,
+                                  elemCtx,
                                   scvIdx);
     }
 

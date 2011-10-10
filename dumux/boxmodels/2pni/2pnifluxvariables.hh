@@ -1,9 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -26,16 +26,16 @@
  * \file
  *
  * \brief This file contains the data which is required to calculate
- *        all fluxes (mass and energy) of all phases over a face of a finite volume.
+ *        all fluxes (mass of components and energy) over a face of a finite volume.
  *
- * This means pressure and temperature gradients, phase densities at
- * the integration point, etc.
+ * This means pressure, concentration and temperature gradients, phase
+ * densities at the integration point, etc.
  */
 #ifndef DUMUX_2PNI_FLUX_VARIABLES_HH
 #define DUMUX_2PNI_FLUX_VARIABLES_HH
 
 #include <dumux/common/math.hh>
-#include <dumux/boxmodels/2p/2pfluxvariables.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {
@@ -44,8 +44,8 @@ namespace Dumux
  * \ingroup TwoPNIModel
  * \ingroup BoxFluxVariables
  * \brief This template class contains the data which is required to
- *        calculate all fluxes (mass and energy) of all phases over a
- *        face of a finite volume for the non-isothermal two-phase model.
+ *        calculate all fluxes (mass of components and energy) over a face of a finite
+ *        volume for the non-isothermal two-phase model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.
@@ -57,7 +57,8 @@ class TwoPNIFluxVariables : public TwoPFluxVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -65,57 +66,57 @@ class TwoPNIFluxVariables : public TwoPFluxVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
-
-    /*
-        * \brief The constructor
-        *
-        * \param problem The problem
-        * \param element The finite element
-        * \param elemGeom The finite-volume geometry in the box scheme
-        * \param faceIdx The local index of the SCV (sub-control-volume) face
-        * \param elemDat The volume variables of the current element
-        */
-
-    TwoPNIFluxVariables(const Problem &problem,
-                   const Element &element,
-                   const FVElementGeometry &elemGeom,
-                   int scvfIdx,
-                   const ElementVolumeVariables &elemDat)
-        : ParentType(problem, element, elemGeom, scvfIdx, elemDat)
+    void update(const ElementContext &elemCtx, int scvfIdx)
     {
+        ParentType::update(elemCtx, scvfIdx);
+
+        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        Vector temperatureGrad(0);
-        Vector tmp(0.0);
-        for (int vertIdx = 0; vertIdx < elemGeom.numVertices; vertIdx++)
+        Vector temperatureGrad;
+        Vector tmp;
+        temperatureGrad = Scalar(0.0);
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
-            tmp = elemGeom.subContVolFace[scvfIdx].grad[vertIdx];
-            tmp *= elemDat[vertIdx].temperature();
+            const auto &feGrad = scvf.grad[scvIdx];
+            const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+
+            tmp = feGrad;
+            tmp *= volVars.fluidState().temperature(/*phaseIdx=*/0);
             temperatureGrad += tmp;
         }
 
-        // The spatial parameters calculates the actual heat flux vector
-        problem.spatialParameters().matrixHeatFlux(tmp,
-                                                   *this,
-                                                   elemDat,
-                                                   temperatureGrad,
-                                                   element,
-                                                   elemGeom,
-                                                   scvfIdx);
-        // project the heat flux vector on the face's normal vector
-        normalMatrixHeatFlux_ = tmp * elemGeom.subContVolFace[scvfIdx].normal;
+        // scalar product of temperature gradient and scvf normal
+        temperatureGradNormal_ = 0.0;
+        for (int i = 0; i < dimWorld; ++ i)
+            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
+
+        const auto &volVarsInside = elemCtx.volVars(this->insideIdx());
+        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx());
+
+        // arithmetic mean
+        heatConductivity_ =
+            0.5 * (volVarsInside.heatConductivity()
+                   +
+                   volVarsOutside.heatConductivity());
+        Valgrind::CheckDefined(heatConductivity_);
     }
 
     /*!
-     * \brief The total heat flux \f$\mathrm{[J/s]}\f$ due to heat conduction
-     *        of the rock matrix over the sub-control volume's face in
-     *        direction of the face normal.
+     * \brief The temperature gradient times the face normal [K m^2 / m]
      */
-    Scalar normalMatrixHeatFlux() const
-    { return normalMatrixHeatFlux_; }
+    Scalar temperatureGradNormal() const
+    { return temperatureGradNormal_; }
+
+    /*!
+     * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 / (K/m)]}\f$
+     */
+    Scalar heatConductivity() const
+    { return heatConductivity_; }
 
 private:
-    Scalar normalMatrixHeatFlux_;
+    Scalar temperatureGradNormal_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace

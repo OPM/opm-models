@@ -43,15 +43,6 @@ namespace Dumux
 template <int PVOffset = 0>
 struct OnePTwoCIndices
 {
-
-    //! Set the default phase used by the fluid system to the first one
-    static const int phaseIdx = 0;
-
-    //! Set the default for the first component the fluid system's first component
-    static const int comp0Idx = 0;
-    //! Set the default for the second component the fluid system's second component
-   static const int comp1Idx = 1;
-
     // Equation indices
     static const int contiEqIdx = PVOffset + 0; //!< continuity equation index
     static const int transEqIdx = PVOffset + 1; //!< transport equation index

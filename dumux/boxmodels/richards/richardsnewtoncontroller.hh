@@ -49,7 +49,7 @@ class RichardsNewtonController : public NewtonController<TypeTag>
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -94,7 +94,7 @@ public:
                 return;
 
             // clamp saturation change to at most 20% per iteration
-            ElementVariables elemVars(this->problem_());
+            ElementContext elemCtx(this->problem_());
             
             ElementIterator elemIt = this->gridView_().template begin<0>();
             const ElementIterator &elemEndIt = this->gridView_().template end<0>();
@@ -105,9 +105,9 @@ public:
                     // probably have not changed much anyways
                     continue;
 
-                elemVars.updateFVElemGeom(*elemIt);
+                elemCtx.updateFVElemGeom(*elemIt);
                 
-                for (int scvIdx = 0; scvIdx < elemVars.numScv(); ++scvIdx) {
+                for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                     int globI = this->problem_().vertexMapper().map(*elemIt, scvIdx, dim);
                     if (assembler.vertexColor(globI) == JacobianAssembler::Green)
                         // don't limit at green vertices, since they
@@ -116,11 +116,11 @@ public:
 
                     // calculate the old wetting phase saturation
                     const SpatialParameters &spatialParams = this->problem_().spatialParameters();
-                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemVars, scvIdx);
+                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemCtx, scvIdx);
 
                     Scalar pcMin = MaterialLaw::pC(matParams, /*Sw=*/1.0);
                     Scalar pW = uLastIter[globI][pwIdx];
-                    Scalar pN = std::max(this->problem_().referencePressure(elemVars, scvIdx),
+                    Scalar pN = std::max(this->problem_().referencePressure(elemCtx, scvIdx),
                                          pW + pcMin);
                     Scalar pcOld = pN - pW;
                     Scalar SwOld = std::max<Scalar>(0.0, MaterialLaw::Sw(matParams, pcOld));

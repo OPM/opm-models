@@ -1,8 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -28,25 +29,23 @@
  *        using the non-isothermal two-phase box model.
  *
  */
-#ifndef DUMUX_NEW_2PNI_LOCAL_RESIDUAL_HH
-#define DUMUX_NEW_2PNI_LOCAL_RESIDUAL_HH
-
-#include "2pniproperties.hh"
+#ifndef DUMUX_2PNI_LOCAL_RESIDUAL_HH
+#define DUMUX_2PNI_LOCAL_RESIDUAL_HH
 
 #include <dumux/boxmodels/2p/2plocalresidual.hh>
 
 #include <dumux/boxmodels/2pni/2pnivolumevariables.hh>
 #include <dumux/boxmodels/2pni/2pnifluxvariables.hh>
 
+#include <dumux/boxmodels/2pni/2pniproperties.hh>
 namespace Dumux
 {
 /*!
  * \ingroup TwoPNIModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the non-isothermal two-phase box model.
+ *        using the two-phase box model.
  */
-
 template<class TypeTag>
 class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
 {
@@ -55,69 +54,60 @@ class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx
+        temperatureIdx = Indices::temperatureIdx,
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    TwoPNILocalResidual()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        massUpwindWeight_ = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
-    };
-
-    /*!
-     * \brief Evaluate the amount all conservation quantites
-     *        (e.g. phase mass and energy storage) within a sub-control volume.
+     * \brief Evaluate the amount all conservation quantities
+     *        (e.g. phase mass) within a sub-control volume.
      *
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      *
-     *  \param result The phase mass within the sub-control volume
+     *  \param result The storage of the conservation quantitiy (mass or energy) within the sub-control volume
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(PrimaryVariables &storage,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int historyIdx) const
     {
         // compute the storage term for phase mass
-        ParentType::computeStorage(result, scvIdx, usePrevSol);
+        ParentType::computeStorage(storage, elemCtx, scvIdx, historyIdx);
 
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const ElementVolumeVariables &vertDatArray = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &vertDat = vertDatArray[scvIdx];
+        const VolumeVariables &volVars =
+            elemCtx.volVars(scvIdx, historyIdx);
 
-        // compute the energy storage
-        result[temperatureIdx] =
-            vertDat.porosity()*(vertDat.density(wPhaseIdx) *
-                                vertDat.internalEnergy(wPhaseIdx) *
-                                vertDat.saturation(wPhaseIdx)
-                                +
-                                vertDat.density(nPhaseIdx) *
-                                vertDat.internalEnergy(nPhaseIdx) *
-                                vertDat.saturation(nPhaseIdx))
-          + vertDat.temperature()*vertDat.heatCapacity();
+        storage[energyEqIdx] = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        {
+            // add the internal energy of the phase
+            storage[energyEqIdx] +=
+                volVars.porosity() * (
+                    volVars.fluidState().density(phaseIdx)
+                    * volVars.fluidState().internalEnergy(phaseIdx)
+                    * volVars.fluidState().saturation(phaseIdx));
+        };
+
+        // handle the heat capacity of the solid
+        storage[energyEqIdx] +=
+            volVars.fluidState().temperature(/*phaseIdx=*/0)
+            * volVars.heatCapacitySolid()
+            * (1 - volVars.porosity());
     }
 
     /*!
@@ -125,46 +115,38 @@ public:
      * over a face of a subcontrol volume and writes the result in
      * the flux vector.
      *
-     * \param flux The advective flux over the sub-control-volume face for each phase
-     * \param fluxVars The flux variables at the current SCV
-     *
+     * \param flux The advective flux over the SCV (sub-control-volume) face for each component
+     * \param fluxData The flux variables at the current SCV face
      *
      * This method is called by compute flux (base class)
      */
     void computeAdvectiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxVars) const
+                              const ElementContext &elemCtx,
+                              int scvfIdx) const
     {
         // advective mass flux
-        ParentType::computeAdvectiveFlux(flux, fluxVars);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, scvfIdx);
+
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
 
         // advective heat flux in all phases
-        flux[energyEqIdx] = 0;
-        Vector tmpVec;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // calculate the flux in the normal direction of the
-            // current sub control volume face
-            fluxVars.intrinsicPermeability().mv(fluxVars.potentialGrad(phaseIdx),
-                                                tmpVec);
-            Scalar normalFlux = -(tmpVec*fluxVars.face().normal);
+            // vertex data of the upstream and the downstream vertices
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx));
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx));
 
-            // data attached to upstream and the downstream vertices
-            // of the current phase
-            const VolumeVariables &up = this->curVolVars_(fluxVars.upstreamIdx(normalFlux));
-            const VolumeVariables &dn = this->curVolVars_(fluxVars.downstreamIdx(normalFlux));
-
-            // add advective energy flux in current phase
             flux[energyEqIdx] +=
-                normalFlux
-                *
-                ((    massUpwindWeight_)*
-                 up.density(phaseIdx)*
-                 up.mobility(phaseIdx)*
-                 up.enthalpy(phaseIdx)
-                 +
-                 (1 - massUpwindWeight_)*
-                 dn.density(phaseIdx)*
-                 dn.mobility(phaseIdx)*
-                 dn.enthalpy(phaseIdx));
+                fluxVars.filterVelocityNormal(phaseIdx)
+                * (fluxVars.upstreamWeight(phaseIdx)
+                   * up.fluidState().enthalpy(phaseIdx)
+                   * up.fluidState().density(phaseIdx)
+                   * up.mobility(phaseIdx)
+                   +
+                   fluxVars.downstreamWeight(phaseIdx)
+                   * dn.fluidState().enthalpy(phaseIdx)
+                   * dn.fluidState().density(phaseIdx)
+                   * dn.mobility(phaseIdx));
         }
     }
 
@@ -172,23 +154,25 @@ public:
      * \brief Adds the diffusive heat flux to the flux vector over
      *        the face of a sub-control volume.
      *
-     * \param flux The diffusive flux over the sub-control-volume face for each phase
-     * \param fluxData The flux variables at the current SCV
+     * \param flux The diffusive flux over the SCV (sub-control-volume) face for each conservation quantity (mass, energy)
+     * \param fluxData The flux variables at the current SCV face
      *
+     * This method is called by compute flux (base class)
      */
     void computeDiffusiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxData) const
+                              const ElementContext &elemCtx,
+                              int scvfIdx) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, fluxData);
+        ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx);
+
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
 
         // diffusive heat flux
-        flux[energyEqIdx] += fluxData.normalMatrixHeatFlux();
+        flux[energyEqIdx] +=
+            -fluxVars.temperatureGradNormal()
+            * fluxVars.heatConductivity();
     }
-
-private:
-    Scalar massUpwindWeight_;
-
 };
 
 }

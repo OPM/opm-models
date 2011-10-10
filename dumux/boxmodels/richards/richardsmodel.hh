@@ -102,7 +102,7 @@ class RichardsModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVariables) ElementVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
@@ -161,7 +161,7 @@ public:
         unsigned numElements = this->gridView_().size(0);
         ScalarField *rank = writer.allocateManagedBuffer (numElements);
 
-        ElementVariables elemVars(this->problem_());
+        ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
@@ -170,14 +170,14 @@ public:
             int elemIdx = this->elementMapper().map(*elemIt);
             (*rank)[elemIdx] = this->gridView_().comm().rank();
 
-            elemVars.updateFVElemGeom(*elemIt);
-            elemVars.updateScvVars(/*historyIdx=*/0);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemVars.numScv(); ++scvIdx)
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
             {
                 int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
 
-                const VolumeVariables &volVars = elemVars.volVars(scvIdx, /*historyIdx=*/0);
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
 
                 (*pW)[globalIdx] = volVars.pressure(wPhaseIdx);
                 (*pN)[globalIdx] = volVars.pressure(nPhaseIdx);

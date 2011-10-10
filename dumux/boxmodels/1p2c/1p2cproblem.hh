@@ -73,7 +73,7 @@ public:
     OnePTwoCBoxProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
           gravity_(0),
-          spatialParams_(gridView)
+          spatialParameters_(gridView)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
@@ -83,6 +83,27 @@ public:
      * \name Problem parameters
      */
     // \{
+
+
+    /*!
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    // if you get an deprecated warning here, please use context
+    // objects to specify your problem!
+    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
+    Scalar temperature(const Context &context,
+                       int localIdx) const
+    {
+        return asImp_().boxTemperature(context.element(),
+                                       context.fvElemGeom(),
+                                       localIdx);                             
+    };
 
     /*!
      * \brief Return the temperature \f$\mathrm{[K]}\f$ within a control volume.
@@ -121,6 +142,24 @@ public:
     Scalar temperature() const
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
+
+    /*!
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc 
+     * \param localIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    const Vector &gravity(const Context &context,
+                          int localIdx) const
+    {
+        return asImp_().boxGravity(context.element(),
+                                   context.fvElemGeom(),
+                                   localIdx);
+    };
+
     /*!
      * \brief Return the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
@@ -133,8 +172,8 @@ public:
      * \param scvIdx The local index of the sub-control volume inside the element
      */
     const Vector &boxGravity(const Element &element,
-                                     const FVElementGeometry &fvGeom,
-                                     int scvIdx) const
+                             const FVElementGeometry &fvGeom,
+                             int scvIdx) const
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
@@ -164,13 +203,13 @@ public:
      * \brief Return the spatial parameters object.
      */
     SpatialParameters &spatialParameters()
-    { return spatialParams_; }
+    { return spatialParameters_; }
 
     /*!
-     * \copydoc spatialParameters()
+     * \brief Returns the spatial parameters object.
      */
     const SpatialParameters &spatialParameters() const
-    { return spatialParams_; }
+    { return spatialParameters_; }
 
     // \}
 
@@ -185,7 +224,7 @@ private:
     Vector gravity_;
 
     // spatial parameters
-    SpatialParameters spatialParams_;
+    SpatialParameters spatialParameters_;
 };
 
 }

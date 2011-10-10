@@ -24,10 +24,10 @@
  * \file
  *
  * \brief Definition of the spatial parameters for the 1p2c
- *        outlfow problem.
+ *        tissue-tumor problem
  */
-#ifndef DUMUX_1P2C_OUTFLOW_SPATIAL_PARAMETERS_HH
-#define DUMUX_1P2C_OUTFLOW_SPATIAL_PARAMETERS_HH
+#ifndef DUMUX_TISSUE_TUMOR_SPATIAL_PARAMETERS_HH
+#define DUMUX_TISSUE_TUMOR_SPATIAL_PARAMETERS_HH
 
 #include <dumux/material/spatialparameters/boxspatialparameters1p.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
@@ -42,10 +42,10 @@ namespace Dumux
  * \ingroup BoxTestProblems
  *
  * \brief Definition of the spatial parameters for the 1p2c
- *        outflow problem.
+ *        tissue-tumor problem
  */
 template<class TypeTag>
-class OnePTwoCOutflowSpatialParameters : public BoxSpatialParametersOneP<TypeTag>
+class TissueTumorSpatialParameters : public BoxSpatialParametersOneP<TypeTag>
 {
     typedef BoxSpatialParametersOneP<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -57,38 +57,37 @@ class OnePTwoCOutflowSpatialParameters : public BoxSpatialParametersOneP<TypeTag
         dimWorld=GridView::dimensionworld
     };
 
+    typedef Dune::FieldVector<CoordScalar,dim> LocalPosition;
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar,dimWorld> Vector;
 
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity Element;
 
+    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
     //typedef LinearMaterial<Scalar> EffMaterialLaw;
 public:
-    OnePTwoCOutflowSpatialParameters(const GridView &gv)
+    TissueTumorSpatialParameters(const GridView &gv)
         : ParentType(gv)
     {
-        permeability_ = 1e-10;
-        porosity_ = 0.4;
-        tortuosity_ = 0.28;
+        permTumor_ = 2.142e-11;
+        permTissue_ = 4.424e-12;
+        porosityTumor_ = 0.31;
+        porosityTissue_ = 0.13;
+        tortuosityTumor_ = 0.706;
+        tortuosityTissue_ = 0.280;
     }
 
-    ~OnePTwoCOutflowSpatialParameters()
+    ~TissueTumorSpatialParameters()
     {}
 
-
-    /*!
-     * \brief Update the spatial parameters with the flow solution
-     *        after a timestep.
-     *
-     * \param globalSolution the global solution vector
-     */
-    void update(const SolutionVector &globalSolution)
-    {
-    };
 
     /*!
      * \brief Define the intrinsic permeability \f$\mathrm{[m^2]}\f$.
@@ -97,11 +96,14 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
-    const Scalar intrinsicPermeability(const Element &element,
-                                       const FVElementGeometry &fvElemGeom,
-                                       int scvIdx) const
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
-            return permeability_;
+        const GlobalPosition &pos = context.pos(localIdx);
+        if (isTumor_(pos))
+            return permTumor_;
+        else
+            return permTissue_;
     }
 
     /*!
@@ -111,11 +113,14 @@ public:
      * \param fvElemGeom The finite volume geometry
      * \param scvIdx The local index of the sub-control volume where
      */
-    double porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar porosity(const Context &context, int localIdx) const
     {
-            return porosity_;
+        const GlobalPosition &pos = context.pos(localIdx);
+        if (isTumor_(pos))
+            return porosityTumor_;
+        else
+            return porosityTissue_;
     }
 
     /*!
@@ -125,11 +130,14 @@ public:
      * \param fvElemGeom The finite volume geometry
      * \param scvIdx The local index of the sub-control volume where
      */
-    double tortuosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar tortuosity(const Context &context, int localIdx) const
     {
-            return tortuosity_;
+        const GlobalPosition &pos = context.pos(localIdx);
+        if (isTumor_(pos))
+            return tortuosityTumor_;
+        else
+            return tortuosityTissue_;
     }
 
     /*!
@@ -139,24 +147,39 @@ public:
      * \param fvElemGeom The finite volume geometry
      * \param scvIdx The local index of the sub-control volume where
      */
-    double dispersivity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar dispersivity(const Context &context,
+                        int localIdx) const
     {
         return 0;
     }
 
-    bool useTwoPointGradient(const Element &elem,
-                             int vertexI,
-                             int vertexJ) const
+    template <class Context>  
+    bool useTwoPointGradient(const Context &context,
+                             int scvfIdx) const
     {
-        return false;
+        const auto &scvf = context.fvElemGeom().subContVolFace[scvfIdx];
+        bool inTumorI = isTumor_(context.pos(scvf.i));
+        bool inTumorJ = isTumor_(context.pos(scvf.j));
+        
+        return (inTumorI && !inTumorJ) || (inTumorJ && !inTumorI);
     }
 
 private:
-    Scalar permeability_;
-    Scalar porosity_;
-    Scalar tortuosity_;
+    bool isTumor_(const GlobalPosition &globalPos) const
+    {
+        if(10e-3 < globalPos[0] && globalPos[0] < 15e-3 &&
+           10e-3 < globalPos[1] && globalPos[1] < 15e-3)
+            return true;
+        return false;
+    }
+
+    Scalar permTumor_;
+    Scalar permTissue_;
+    Scalar porosityTumor_;
+    Scalar porosityTissue_;
+    Scalar tortuosityTumor_;
+    Scalar tortuosityTissue_;
 };
 
 }

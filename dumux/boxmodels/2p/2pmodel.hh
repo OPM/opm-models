@@ -132,7 +132,6 @@ public:
     void addOutputVtkFields(const SolutionVector &sol,
                             MultiWriter &writer)
     {
-        bool velocityOutput = GET_PROP_VALUE(TypeTag, EnableVelocityOutput);
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
         typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VectorField;
 
@@ -149,20 +148,7 @@ public:
         ScalarField *mobN = writer.allocateManagedBuffer(numVertices);
         ScalarField *poro = writer.allocateManagedBuffer(numVertices);
         ScalarField *Te = writer.allocateManagedBuffer(numVertices);
-        ScalarField *cellNum =writer.allocateManagedBuffer (numVertices);
-        VectorField *velocityN = writer.template allocateManagedBuffer<double, dim>(numVertices);
-        VectorField *velocityW = writer.template allocateManagedBuffer<double, dim>(numVertices);
 
-        if(velocityOutput) // check if velocity output is demanded
-        {
-            // initialize velocity fields
-            for (int i = 0; i < numVertices; ++i)
-            {
-                (*velocityN)[i] = Scalar(0);
-                (*velocityW)[i] = Scalar(0);
-                (*cellNum)[i] = Scalar(0.0);
-            }
-        }
         unsigned numElements = this->gridView_().size(0);
         ScalarField *rank = writer.allocateManagedBuffer(numElements);
 
@@ -194,10 +180,6 @@ public:
                 (*mobN)[globalIdx] = volVars.mobility(nPhaseIdx);
                 (*poro)[globalIdx] = volVars.porosity();
                 (*Te)[globalIdx] = volVars.temperature();
-                if(velocityOutput)
-                {
-                    (*cellNum)[globalIdx] += 1;
-                }
             };
 
         }

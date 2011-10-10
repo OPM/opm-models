@@ -153,9 +153,7 @@ protected:
         const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
         // calculate gradients
-        for (int scvIdx = 0;
-             scvIdx < elemCtx.numScv();
-             scvIdx ++) // loop over adjacent vertices
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx)
         {
             // FE gradient at vertex idx
             const Vector &feGrad = scvf.grad[scvIdx];
@@ -163,7 +161,7 @@ protected:
             // compute sum of pressure gradients for each phase
             for (int phase = 0; phase < numPhases; phase++)
             {
-                // the pressure gradient
+                // the pressure gradient [Pa/m]
                 Vector tmp(feGrad);
                 tmp *= elemCtx.volVars(scvIdx, /*historyIdx=*/0).pressure(phase);
                 potentialGrad_[phase] += tmp;
