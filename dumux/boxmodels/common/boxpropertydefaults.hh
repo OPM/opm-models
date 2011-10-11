@@ -37,6 +37,7 @@
 #include "boxassembler.hh"
 #include "boxfvelementgeometry.hh"
 #include "boxelementboundarytypes.hh"
+#include "boxlocalresidual.hh"
 #include "boxlocaljacobian.hh"
 #include "boxlocalresidual.hh"
 #include "boxelementcontext.hh"

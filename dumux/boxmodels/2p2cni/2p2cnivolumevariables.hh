@@ -48,19 +48,27 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
 {
     //! \cond 0
     typedef TwoPTwoCVolumeVariables<TypeTag> ParentType;
-    typedef typename ParentType::FluidState FluidState;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
+    enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld
+    };
+
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { temperatureIdx = Indices::temperatureIdx };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
     //! \endcond
 
 public:
@@ -94,40 +102,31 @@ protected:
     // is protected, we are friends with our parent..
     friend class TwoPTwoCVolumeVariables<TypeTag>;
 
-    static Scalar temperature_(const PrimaryVariables &priVars,
-                            const Problem& problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int scvIdx)
+    // set the fluid state's temperature
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int historyIdx)
     {
-        return priVars[temperatureIdx];
-    }
-
-    template<class ParameterCache>
-    static Scalar enthalpy_(const FluidState& fluidState,
-                            const ParameterCache& paramCache,
-                            int phaseIdx)
-    {
-        return FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+        // retrieve temperature from solution vector
+        this->fluidState_.setTemperature(elemCtx.priVars(scvIdx)[temperatureIdx]);
     }
 
     /*!
-     * \brief Update all quantities for a given control volume.
-     *
-     * \param sol The solution primary variables
-     * \param problem The problem
-     * \param element The element
-     * \param elemGeom Evaluate function with solution of current or previous time step
-     * \param scvIdx The local index of the SCV (sub-control volume)
-     * \param isOldSol Evaluate function with solution of current or previous time step
+     * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const PrimaryVariables &sol,
-                      const Problem &problem,
-                      const Element &element,
-                      const FVElementGeometry &elemGeom,
-                      int scvIdx,
-                      bool isOldSol)
+    template <class ParameterCache>
+    void updateEnergy_(ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int historyIdx)
     {
+        // copmute and set the internal energies of the fluid phases
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
+
+            this->fluidState_.setEnthalpy(phaseIdx, h);
+        }
+
         // copmute and set the heat capacity of the solid phase
         heatCapacity_ = problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
         Valgrind::CheckDefined(heatCapacity_);

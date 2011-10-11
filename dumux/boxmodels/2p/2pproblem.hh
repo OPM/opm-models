@@ -129,7 +129,7 @@ public:
     {
         return asImp_().boxTemperature(context.element(),
                                        context.fvElemGeom(),
-                                       localIdx);                             
+                                       localIdx);
     }
 
     /*!

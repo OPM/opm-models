@@ -83,7 +83,6 @@ public:
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
 
 SET_BOOL_PROP(InjectionProblem, EnableJacobianRecycling, true);
-SET_BOOL_PROP(InjectionProblem, EnableVelocityOutput, false);
 
 // set the defaults for some injection problem specific properties
 SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureLow, 1e6);
@@ -133,11 +132,7 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
-    enum {
-        lPhaseIdx = Indices::lPhaseIdx,
-        gPhaseIdx = Indices::gPhaseIdx,
-
-
+    enum { 
         H2OIdx = FluidSystem::H2OIdx,
         N2Idx = FluidSystem::N2Idx,
 
@@ -154,7 +149,6 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
     typedef typename GridView::Intersection Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
@@ -198,8 +192,8 @@ public:
     {
         // Calculate storage terms
         PrimaryVariables storageL, storageG;
-        this->model().globalPhaseStorage(storageL, lPhaseIdx);
-        this->model().globalPhaseStorage(storageG, gPhaseIdx);
+        this->model().globalPhaseStorage(storageL, /*phaseIdx=*/0);
+        this->model().globalPhaseStorage(storageG, /*phaseIdx=*/1);
 
         // Write mass balance information for rank 0
         if (this->gridView().comm().rank() == 0) {
@@ -227,6 +221,7 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
+    using ParentType::temperature;
     Scalar temperature() const
     { return temperature_; };
 
@@ -248,6 +243,7 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
+    using ParentType::boundaryTypes;
     void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -267,6 +263,7 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
+    using ParentType::dirichlet;
     void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -281,6 +278,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
+    using ParentType::neumann;
     void neumann(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -314,6 +312,7 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    using ParentType::initial;
     void initial(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -332,6 +331,7 @@ public:
      * \param globalIdx The index of the global vertex
      * \param globalPos The global position
      */
+    using ParentType::initialPhasePresence;
     int initialPhasePresence(const Vertex &vert,
                              int &globalIdx,
                              const GlobalPosition &globalPos) const

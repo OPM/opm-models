@@ -54,16 +54,15 @@ class TwoPTwoCFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GridView::ctype CoordScalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
-        lPhaseIdx = Indices::lPhaseIdx,
-        gPhaseIdx = Indices::gPhaseIdx,
-        lCompIdx = Indices::lCompIdx,
-        gCompIdx = Indices::gCompIdx
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -78,121 +77,234 @@ class TwoPTwoCFluxVariables
     typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
 
 public:
-    /*
-     * \brief The constructor
-     *
-     * \param problem The problem
-     * \param element The finite element
-     * \param elemGeom The finite-volume geometry in the box scheme
-     * \param faceIdx The local index of the SCV (sub-control-volume) face
-     * \param elemVolVars The volume variables of the current element
-     * \param onBoundary Distinguishes if we are on a SCV face or on a boundary face
-     */
-    TwoPTwoCFluxVariables(const Problem &problem,
-                          const Element &element,
-                          const FVElementGeometry &elemGeom,
-                          int faceIdx,
-                          const ElementVolumeVariables &elemVolVars,
-                          bool onBoundary = false)
-        : fvGeom_(elemGeom), faceIdx_(faceIdx), onBoundary_(onBoundary)
-    {
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            densityAtIP_[phaseIdx] = Scalar(0);
-            molarDensityAtIP_[phaseIdx] = Scalar(0);
-            potentialGrad_[phaseIdx] = Scalar(0);
-            concentrationGrad_[phaseIdx] = Scalar(0);
-            molarConcGrad_[phaseIdx] = Scalar(0);
-        }
 
-        calculateValues_(problem, element, elemVolVars);
+    void update(const ElementContext &elemCtx, int scvfIdx)
+    {
+        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+
+        extrusionFactor_ =
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+             + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
+        
+        // update the base module (i.e. advection)
+        calculateGradients_(elemCtx, scvfIdx);
+        calculateVelocities_(elemCtx, scvfIdx);
     }
 
-protected:
-    void calculateValues_(const Problem &problem,
-                          const Element &element,
-                          const ElementVolumeVariables &elemVolVars)
+    /*!
+     * \brief Returns th extrusion factor for the sub-control volume face
+     */
+    Scalar extrusionFactor() const
+    { return extrusionFactor_; }
+
+    /*!
+     * \brief Return the filter velocity of a fluid phase at the
+     *        face's integration point [m/s]
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    const Vector &filterVelocity(int phaseIdx) const
+    { return velocity_[phaseIdx]; }
+
+    /*!
+     * \brief Return the filter velocity of a fluid phase at the
+     *        face's integration point times the phase normal times
+     *        the face area [1/s]
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar normalVelocity(int phaseIdx) const
+    { return normalVelocity_[phaseIdx]; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "inside" of the sub-control volume face.
+     */
+    short insideIdx() const
+    { return insideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "outside" of the sub-control volume face.
+     */
+    short outsideIdx() const
+    { return outsideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the upstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase for which the upstream
+     *                 direction is requested.
+     */
+    short upstreamIdx(int phaseIdx) const
+    { return (normalVelocity_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase for which the downstream
+     *                 direction is requested.
+     */
+    short downstreamIdx(int phaseIdx) const
+    { return (normalVelocity_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+
+    /*!
+     * \brief Return the weight of the upstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar upstreamWeight(int phaseIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Return the weight of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar downstreamWeight(int phaseIdx) const
+    { return 0.0; }
+
+    Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
+    { 
+        assert(0 <= compIdx && compIdx < numComponents); 
+        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+
+        return porousDiffCoeff_[phaseIdx];
+    };
+
+    Scalar molarDensity(int phaseIdx) const
+    { 
+        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+
+        return molarDensity_[phaseIdx];
+    };
+
+    Scalar moleFrac(int phaseIdx, int compIdx) const
+    { 
+        assert(0 <= compIdx && compIdx < numComponents); 
+        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+
+        return moleFrac_[phaseIdx][compIdx];
+    };
+
+    const Vector &moleFracGrad(int phaseIdx, int compIdx) const
+    { 
+        return moleFracGrad_[phaseIdx][compIdx];
+    };
+
+    const Vector &temperatureGrad() const
+    { return temperatureGrad_; };
+
+private:
+    void calculateGradients_(const ElementContext &elemCtx,
+                             int scvfIdx)
     {
-        // calculate densities at the integration points of the face
-        Vector tmp(0.0);
-        for (int idx = 0;
-             idx < fvGeom_.numVertices;
-             idx++) // loop over adjacent vertices
-        {
-            for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
-            {
-               densityAtIP_[phaseIdx] += elemVolVars[idx].density(phaseIdx)*
-                       face().shapeValue[idx];
-               molarDensityAtIP_[phaseIdx] += elemVolVars[idx].molarDensity(phaseIdx)*
-                       face().shapeValue[idx];
+        // reset all quantities to 0
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            molarDensity_[phaseIdx] = Scalar(0);
+            porousDiffCoeff_[phaseIdx] = Scalar(0);
+            potentialGrad_[phaseIdx] = Scalar(0);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                moleFracGrad_[phaseIdx][compIdx] = Scalar(0);
+                moleFrac_[phaseIdx][compIdx] = Scalar(0);
             }
         }
+        temperatureGrad_ = Scalar(0);
+        
+        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
-        calculateGradients_(problem, element, elemVolVars);
-        calculateVelocities_(problem, element, elemVolVars);
-        calculateDiffCoeffPM_(problem, element, elemVolVars);
-    }
-
-    void calculateGradients_(const Problem &problem,
-                             const Element &element,
-                             const ElementVolumeVariables &elemVolVars)
-    {
         // calculate gradients
-        Vector tmp(0.0);
-        for (int idx = 0;
-             idx < fvGeom_.numVertices;
-             idx++) // loop over adjacent vertices
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
         {
-            // FE gradient at vertex idx
-            const Vector &feGrad = face().grad[idx];
+            // FE gradient at vertex
+            const Vector &feGrad = scvf.grad[scvIdx];
+            Scalar shapeValue = scvf.shapeValue[scvIdx];
+            const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+            const auto &fluidState = volVars.fluidState();
+            Vector tmp;
 
             // compute sum of pressure gradients for each phase
             for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
             {
                 // the pressure gradient
                 tmp = feGrad;
-                tmp *= elemVolVars[idx].pressure(phaseIdx);
+                tmp *= fluidState.pressure(phaseIdx);
                 potentialGrad_[phaseIdx] += tmp;
+                
+                molarDensity_[phaseIdx] += shapeValue * volVars.molarDensity(phaseIdx);
+
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    tmp = feGrad;
+                    tmp *= fluidState.moleFraction(phaseIdx, compIdx);
+                    moleFracGrad_[phaseIdx][compIdx] += tmp;
+
+                    moleFrac_[phaseIdx][compIdx] += 
+                        shapeValue * fluidState.moleFraction(phaseIdx, compIdx);
+                }
             }
 
-            // the concentration gradient of the non-wetting
-            // component in the wetting phase
             tmp = feGrad;
-            tmp *= elemVolVars[idx].fluidState().massFraction(lPhaseIdx, gCompIdx);
-            concentrationGrad_[lPhaseIdx] += tmp;
+            tmp *= fluidState.temperature();
+            temperatureGrad_ += tmp;
+        }
 
-            tmp = feGrad;
-            tmp *= elemVolVars[idx].fluidState().moleFraction(lPhaseIdx, gCompIdx);
-            molarConcGrad_[lPhaseIdx] += tmp;
 
-            //            // the concentration gradient of the wetting component
-            //            // in the non-wetting phase
-            tmp = feGrad;
-            tmp *= elemVolVars[idx].fluidState().massFraction(gPhaseIdx, lCompIdx);
-            concentrationGrad_[gPhaseIdx] += tmp;
+        const auto &volVarsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0);
+        const auto &volVarsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            // calculate tortuosity at the nodes i and j needed
+            // for porous media diffusion coefficient
+            Scalar tauI =
+                1.0/(volVarsI.porosity() * volVarsI.porosity()) 
+                *
+                pow(volVarsI.porosity() * volVarsI.saturation(phaseIdx),
+                    7.0/3);
+            Scalar tauJ =
+                1.0/(volVarsJ.porosity() * volVarsJ.porosity())
+                * 
+                pow(volVarsJ.porosity() * volVarsJ.saturation(phaseIdx),
+                    7.0/3);
 
-            tmp = feGrad;
-            tmp *= elemVolVars[idx].fluidState().moleFraction(gPhaseIdx, lCompIdx);
-            molarConcGrad_[gPhaseIdx] += tmp;
+            // Diffusion coefficient in the porous medium
+            // -> harmonic mean
+            porousDiffCoeff_[phaseIdx] = 
+                harmonicMean(volVarsI.porosity()
+                             * volVarsI.saturation(phaseIdx)
+                             * tauI
+                             * volVarsI.diffCoeff(phaseIdx)
+                             ,
+                             volVarsJ.porosity()
+                             * volVarsJ.saturation(phaseIdx)
+                             * tauJ
+                             * volVarsJ.diffCoeff(phaseIdx));
         }
 
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
         ///////////////
-        if (GET_PARAM(TypeTag, bool, EnableGravity)) {
+        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(problem.boxGravity(element, fvGeom_, face().i));
-            g += problem.boxGravity(element, fvGeom_, face().j);
+            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
+            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-
+            
+            const auto &fsIn = volVarsI.fluidState();
+            const auto &fsOut = volVarsJ.fluidState();
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
                 // calculate the phase density at the integration point. we
                 // only do this if the wetting phase is present in both cells
-                Scalar SI = elemVolVars[face().i].saturation(phaseIdx);
-                Scalar SJ = elemVolVars[face().j].saturation(phaseIdx);
-                Scalar rhoI = elemVolVars[face().i].density(phaseIdx);
-                Scalar rhoJ = elemVolVars[face().j].density(phaseIdx);
+                Scalar SI = fsIn.saturation(phaseIdx);
+                Scalar SJ = fsOut.saturation(phaseIdx);
+                Scalar rhoI = fsIn.density(phaseIdx);
+                Scalar rhoJ = fsOut.density(phaseIdx);
                 Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
                 Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
                 if (fI + fJ == 0)
@@ -211,194 +323,64 @@ protected:
         }
     }
 
-    Scalar rhoFactor_(int phaseIdx, int scvIdx, const ElementVolumeVariables &vDat)
+    void calculateVelocities_(const ElementContext &elemCtx, 
+                              int scvfIdx)
     {
-        static const Scalar eps = 1e-2;
-        const Scalar sat = vDat[scvIdx].density(phaseIdx);
-        if (sat > eps)
-            return 0.5;
-        if (sat <= 0)
-            return 0;
+        const SpatialParameters &spatialParams = 
+            elemCtx.problem().spatialParameters();
 
-        static const Dumux::Spline<Scalar> sp(0, eps, // x0, x1
-                                              0, 0.5, // y0, y1
-                                              0, 0); // m0, m1
-        return sp.eval(sat);
-    }
-
-    void calculateVelocities_(const Problem &problem,
-                              const Element &element,
-                              const ElementVolumeVariables &elemVolVars)
-    {
-        const SpatialParameters &spatialParams = problem.spatialParameters();
-        // multiply the pressure potential by the intrinsic permeability
+        // calculate the intrinsic permeability
         Tensor K;
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
+        spatialParams.meanK(K,
+                            spatialParams.intrinsicPermeability(elemCtx,
+                                                                insideScvIdx_),
+                            spatialParams.intrinsicPermeability(elemCtx,
+                                                                outsideScvIdx_));
+        
+        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+
+        ///////////////
+        // calculate the weights of the upstream and the downstream
+        // control volumes
+        ///////////////
+        for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
         {
-            spatialParams.meanK(K,
-                                spatialParams.intrinsicPermeability(element,
-                                                                    fvGeom_,
-                                                                    face().i),
-                                spatialParams.intrinsicPermeability(element,
-                                                                    fvGeom_,
-                                                                    face().j));
-            K.mv(potentialGrad_[phaseIdx], Kmvp_[phaseIdx]);
-            KmvpNormal_[phaseIdx] = -(Kmvp_[phaseIdx]*face().normal);
-        }
-
-        // set the upstream and downstream vertices
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
-            upstreamIdx_[phaseIdx] = face().i;
-            downstreamIdx_[phaseIdx] = face().j;
-
-            if (KmvpNormal_[phaseIdx] < 0) {
-                std::swap(upstreamIdx_[phaseIdx],
-                          downstreamIdx_[phaseIdx]);
-            }
-        }
-    }
-
-    void calculateDiffCoeffPM_(const Problem &problem,
-                               const Element &element,
-                               const ElementVolumeVariables &elemVolVars)
-    {
-        const VolumeVariables &vDat_i = elemVolVars[face().i];
-        const VolumeVariables &vDat_j = elemVolVars[face().j];
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
-            // make sure to only calculate diffusion coefficients
-            // for phases which exist in both finite volumes
-            if (vDat_i.saturation(phaseIdx) <= 0 ||
-                vDat_j.saturation(phaseIdx) <= 0)
-            {
-                porousDiffCoeff_[phaseIdx] = 0.0;
-                continue;
-            }
-
-            // calculate tortuosity at the nodes i and j needed
-            // for porous media diffusion coefficient
-            Scalar tau_i =
-                1.0/(vDat_i.porosity() * vDat_i.porosity()) *
-                std::pow(vDat_i.porosity() * vDat_i.saturation(phaseIdx), 7.0/3);
-            Scalar tau_j =
-                1.0/(vDat_j.porosity() * vDat_j.porosity()) *
-                std::pow(vDat_j.porosity() * vDat_j.saturation(phaseIdx), 7.0/3);
-            // Diffusion coefficient in the porous medium
-
-            // -> harmonic mean
-            porousDiffCoeff_[phaseIdx] = harmonicMean(vDat_i.porosity() * vDat_i.saturation(phaseIdx) * tau_i * vDat_i.diffCoeff(phaseIdx),
-                                                      vDat_j.porosity() * vDat_j.saturation(phaseIdx) * tau_j * vDat_j.diffCoeff(phaseIdx));
+            // calculate the "prelimanary" filter velocity not
+            // taking the mobility into account
+            K.mv(potentialGrad_[phaseIdx], velocity_[phaseIdx]);
+            velocity_[phaseIdx] *= -1;
+            
+            // normal velocity is the scalar product of the filter
+            // velocity with the face normal
+            normalVelocity_[phaseIdx] = 0.0;
+            for (int i = 0; i < Vector::size; ++i) 
+                normalVelocity_[phaseIdx] += velocity_[phaseIdx][i]*normal[i];
         }
     }
 
-public:
-    /*!
-     * \brief Return the pressure potential multiplied with the
-     *        intrinsic permeability which goes from vertex i to
-     *        vertex j.
-     *
-     * Note that the length of the face's normal is the area of the
-     * phase, so this is not the actual velocity by the integral of
-     * the velocity over the face's area. Also note that the phase
-     * mobility is not yet included here since this would require a
-     * decision on the upwinding approach (which is done in the
-     * actual model).
-     */
-    Scalar KmvpNormal(int phaseIdx) const
-    { return KmvpNormal_[phaseIdx]; }
 
-    /*!
-     * \brief Return the pressure potential multiplied with the
-     *        intrinsic permeability as vector (for velocity output)
-     */
-    Vector Kmvp(int phaseIdx) const
-    { return Kmvp_[phaseIdx]; }
+    // local indices of the inside and the outside sub-control volumes
+    short insideScvIdx_;
+    short outsideScvIdx_;
 
-    /*!
-     * \brief Return the local index of the upstream control volume
-     *        for a given phase.
-     */
-    int upstreamIdx(int phaseIdx) const
-    { return upstreamIdx_[phaseIdx]; }
+    // extrusion factor for the sub-control volume face
+    Scalar extrusionFactor_;
 
-    /*!
-     * \brief Return the local index of the downstream control volume
-     *        for a given phase.
-     */
-    int downstreamIdx(int phaseIdx) const
-    { return downstreamIdx_[phaseIdx]; }
-
-    /*!
-     * \brief The binary diffusion coefficient for each fluid phase.
-     */
-    Scalar porousDiffCoeff(int phaseIdx) const
-    { return porousDiffCoeff_[phaseIdx]; };
-
-    /*!
-     * \brief Return density \f$\mathrm{[kg/m^3]}\f$ of a phase at the integration
-     *        point.
-     */
-    Scalar densityAtIP(int phaseIdx) const
-    { return densityAtIP_[phaseIdx]; }
-
-    /*!
-     * \brief Return molar density \f$\mathrm{[mol/m^3]}\f$ of a phase at the integration
-     *        point.
-     */
-    Scalar molarDensityAtIP(int phaseIdx) const
-    { return molarDensityAtIP_[phaseIdx]; }
-
-    /*!
-     * \brief The concentration gradient of a component in a phase.
-     */
-    const Vector &concentrationGrad(int phaseIdx) const
-    { return concentrationGrad_[phaseIdx]; };
-
-    /*!
-     * \brief The molar concentration gradient of a component in a phase.
-     */
-    const Vector &molarConcGrad(int phaseIdx) const
-    { return molarConcGrad_[phaseIdx]; };
-
-    /*!
-     * \brief The face of the current sub-control volume. This may be either
-     *        an inner sub-control-volume face or a face on the boundary.
-     */
-    const SCVFace &face() const
-    {
-        if (onBoundary_)
-            return fvGeom_.boundaryFace[faceIdx_];
-        else
-            return fvGeom_.subContVolFace[faceIdx_];
-    }
-
-protected:
-    const FVElementGeometry &fvGeom_;
-    const int faceIdx_;
-    const bool onBoundary_;
-
-    // gradients
+    // pressure potential gradients of all phases
     Vector potentialGrad_[numPhases];
-    Vector concentrationGrad_[numPhases];
-    Vector molarConcGrad_[numPhases];
 
-    // density of each face at the integration point
-    Scalar densityAtIP_[numPhases], molarDensityAtIP_[numPhases];
+    // filter velocities of all phases
+    Vector velocity_[numPhases];
 
-    // intrinsic permeability times pressure potential gradient
-    Vector Kmvp_[numPhases];
-    // projected on the face normal
-    Scalar KmvpNormal_[numPhases];
+    // normal velocities, i.e. filter velocity times face normal times
+    // face area
+    Scalar normalVelocity_[numPhases];
 
-    // local index of the upwind vertex for each phase
-    int upstreamIdx_[numPhases];
-    // local index of the downwind vertex for each phase
-    int downstreamIdx_[numPhases];
-
-    // the diffusion coefficient for the porous medium
     Scalar porousDiffCoeff_[numPhases];
+    Scalar molarDensity_[numPhases];
+    Scalar moleFrac_[numPhases][numComponents];
+    Vector moleFracGrad_[numPhases][numComponents];
+    Vector temperatureGrad_;
 };
 
 } // end namepace

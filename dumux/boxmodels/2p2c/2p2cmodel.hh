@@ -89,30 +89,33 @@ namespace Dumux
 template<class TypeTag>
 class TwoPTwoCModel: public BoxModel<TypeTag>
 {
+    typedef TwoPTwoCModel<TypeTag> ThisType;
     typedef BoxModel<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
-    };
-
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
+
     enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
+
+        numEq = GET_PROP_VALUE(TypeTag, NumEq),
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
+        historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
+
         pressureIdx = Indices::pressureIdx,
         switchIdx = Indices::switchIdx,
-
-        lPhaseIdx = Indices::lPhaseIdx,
-        gPhaseIdx = Indices::gPhaseIdx,
-        lCompIdx = Indices::lCompIdx,
-        gCompIdx = Indices::gCompIdx,
 
         lPhaseOnly = Indices::lPhaseOnly,
         gPhaseOnly = Indices::gPhaseOnly,
@@ -123,19 +126,13 @@ class TwoPTwoCModel: public BoxModel<TypeTag>
         formulation = GET_PROP_VALUE(TypeTag, Formulation)
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::ctype CoordScalar;
+    typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
-    };
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
+    typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
@@ -152,19 +149,6 @@ public:
 
         setSwitched_(false);
 
-        // check, if velocity output can be used (works only for cubes so far)
-        velocityOutput_ = GET_PARAM(TypeTag, bool, EnableVelocityOutput);
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            if(elemIt->geometry().type().isCube() == false){
-                velocityOutput_ = false;
-            };
-        };
-        if (velocityOutput_ != GET_PARAM(TypeTag, bool, EnableVelocityOutput))
-            std::cout << "ATTENTION: Velocity output only works for cubes and is set to false for simplices\n";
-
         VertexIterator it = this->gridView_().template begin<dim> ();
         const VertexIterator &endit = this->gridView_().template end<dim> ();
         for (; it != endit; ++it)
@@ -173,16 +157,15 @@ public:
             const GlobalPosition &globalPos = it->geometry().corner(0);
 
             // initialize phase presence
-            staticVertexDat_[globalIdx].phasePresence
-                = this->problem_().initialPhasePresence(*it, globalIdx,
+            staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0]
+                = this->problem_().initialPhasePresence(*it, 
+                                                        globalIdx,
                                                         globalPos);
             staticVertexDat_[globalIdx].wasSwitched = false;
 
-            staticVertexDat_[globalIdx].oldPhasePresence
-                = staticVertexDat_[globalIdx].phasePresence;
+            staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/1]
+                = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
         }
-
-        massUpwindWeight_ = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
     }
 
     /*!
@@ -195,18 +178,18 @@ public:
     void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
     {
         dest = 0;
-
+        
+        ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            this->localResidual().evalPhaseStorage(*elemIt, phaseIdx);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
 
-            for (int i = 0; i < elemIt->template count<dim>(); ++i)
-                dest += this->localResidual().storageTerm()[i];
+            this->localResidual().addPhaseStorage(dest, elemCtx, /*historyIdx=*/0, phaseIdx);
         };
 
-        if (this->gridView_().comm().size() > 1)
-            dest = this->gridView_().comm().sum(dest);
+        this->gridView_().comm().sum(dest);
     }
 
     /*!
@@ -231,7 +214,7 @@ public:
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
         if (Indices::pressureIdx == pvIdx)
-            return std::min(1.0/this->prevSol()[globalVertexIdx][pvIdx], 1.0);
+            return std::min(1.0/this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx], 1.0);
         return 1;
     }
 
@@ -266,11 +249,8 @@ public:
      * \param globalVertexIdx The global vertex index
      * \param oldSol Evaluate function with solution of current or previous time step
      */
-    int phasePresence(int globalVertexIdx, bool oldSol) const
-    {
-        return oldSol ? staticVertexDat_[globalVertexIdx].oldPhasePresence
-            : staticVertexDat_[globalVertexIdx].phasePresence;
-    }
+    int phasePresence(int globalVertexIdx, int historyIdx) const
+    { return staticVertexDat_[globalVertexIdx].phasePresence[historyIdx]; }
 
     /*!
      * \brief Append all quantities of interest which can be derived
@@ -306,27 +286,12 @@ public:
                 massFrac[i][j] = writer.allocateManagedBuffer(numVertices);
         ScalarField *temperature = writer.allocateManagedBuffer(numVertices);
         ScalarField *poro = writer.allocateManagedBuffer(numVertices);
-        ScalarField *cellNum =writer.allocateManagedBuffer (numVertices);
-        VectorField *velocityG = writer.template allocateManagedBuffer<double, dim>(numVertices);
-        VectorField *velocityL = writer.template allocateManagedBuffer<double, dim>(numVertices);
-
-        if(velocityOutput_) // check if velocity output is demanded
-        {
-            // initialize velocity fields
-            for (int i = 0; i < numVertices; ++i)
-            {
-                (*velocityG)[i] = Scalar(0);
-                (*velocityL)[i] = Scalar(0);
-                (*cellNum)[i] = Scalar(0.0);
-            }
-        }
 
         unsigned numElements = this->gridView_().size(0);
         ScalarField *rank =
             writer.allocateManagedBuffer (numElements);
 
-        FVElementGeometry fvElemGeom;
-        VolumeVariables volVars;
+        ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
@@ -334,162 +299,38 @@ public:
         {
             int idx = this->elementMapper().map(*elemIt);
             (*rank)[idx] = this->gridView_().comm().rank();
-            fvElemGeom.update(this->gridView_(), *elemIt);
 
-            int numVerts = elemIt->template count<dim> ();
-            for (int i = 0; i < numVerts; ++i)
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*historyIdx=*/0);
+
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
             {
-                int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                volVars.update(sol[globalIdx],
-                               this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               i,
-                               false);
-                (*Sg)[globalIdx]    = volVars.saturation(gPhaseIdx);
-                (*Sl)[globalIdx]    = volVars.saturation(lPhaseIdx);
-                (*pg)[globalIdx]    = volVars.pressure(gPhaseIdx);
-                (*pl)[globalIdx]    = volVars.pressure(lPhaseIdx);
+                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
+
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+                (*Sg)[globalIdx]    = volVars.saturation(/*phaseIdx=*/1);
+                (*Sl)[globalIdx]    = volVars.saturation(/*phaseIdx=*/0);
+                (*pg)[globalIdx]    = volVars.pressure(/*phaseIdx=*/1);
+                (*pl)[globalIdx]    = volVars.pressure(/*phaseIdx=*/0);
                 (*pc)[globalIdx]    = volVars.capillaryPressure();
-                (*rhoL)[globalIdx]  = volVars.fluidState().density(lPhaseIdx);
-                (*rhoG)[globalIdx]  = volVars.fluidState().density(gPhaseIdx);
-                (*mobL)[globalIdx]  = volVars.mobility(lPhaseIdx);
-                (*mobG)[globalIdx]  = volVars.mobility(gPhaseIdx);
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                    for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                    {
+                (*rhoL)[globalIdx]  = volVars.fluidState().density(/*phaseIdx=*/0);
+                (*rhoG)[globalIdx]  = volVars.fluidState().density(/*phaseIdx=*/1);
+                (*mobL)[globalIdx]  = volVars.mobility(/*phaseIdx=*/0);
+                (*mobG)[globalIdx]  = volVars.mobility(/*phaseIdx=*/1);
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                         (*massFrac[phaseIdx][compIdx])[globalIdx]
                             = volVars.fluidState().massFraction(phaseIdx, compIdx);
-
-                        Valgrind::CheckDefined(
-                                               (*massFrac[phaseIdx][compIdx])[globalIdx][0]);
+                        Valgrind::CheckDefined((*massFrac[phaseIdx][compIdx])[globalIdx][0]);
                     }
+                }
+
                 (*poro)[globalIdx]  = volVars.porosity();
                 (*temperature)[globalIdx] = volVars.temperature();
-                (*phasePresence)[globalIdx]
-                    = staticVertexDat_[globalIdx].phasePresence;
-                if(velocityOutput_)
-                {
-                    (*cellNum)[globalIdx] += 1;
-                }
+                (*phasePresence)[globalIdx] = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
             };
-
-            if(velocityOutput_)
-            {
-                // calculate vertex velocities
-                GlobalPosition tmpVelocity[numPhases];
-
-                for(int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                {
-                 tmpVelocity[phaseIdx]  = Scalar(0.0);
-                }
-
-                typedef Dune::BlockVector<Dune::FieldVector<Scalar, dim> > SCVVelocities;
-                SCVVelocities scvVelocityL(8), scvVelocityG(8);
-
-                scvVelocityL = 0;
-                scvVelocityG = 0;
-
-                ElementVolumeVariables elemVolVars;
-
-                elemVolVars.update(this->problem_(),
-                                  *elemIt,
-                                  fvElemGeom,
-                                  false /* oldSol? */);
-
-                for (int faceIdx = 0; faceIdx< fvElemGeom.numEdges; faceIdx++)
-                {
-
-                    FluxVariables fluxDat(this->problem_(),
-                                  *elemIt,
-                                  fvElemGeom,
-                                  faceIdx,
-                                  elemVolVars);
-
-                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                    {
-
-                         // data attached to upstream and the downstream vertices
-                        // of the current phase
-                        const VolumeVariables up =
-                            elemVolVars[fluxDat.upstreamIdx(phaseIdx)];
-                        const VolumeVariables dn =
-                            elemVolVars[fluxDat.downstreamIdx(phaseIdx)];
-
-                      // local position of integration point
-                      const Dune::FieldVector<Scalar, dim>& localPosIP = fvElemGeom.subContVolFace[faceIdx].ipLocal;
-
-                      // Transformation of the global normal vector to normal vector in the reference element
-                      const Dune::FieldMatrix<CoordScalar, dim, dim> jacobianT1 = elemIt->geometry().jacobianTransposed(localPosIP);
-                      const GlobalPosition globalNormal = fluxDat.face().normal;
-
-                      GlobalPosition localNormal(0);
-                      jacobianT1.mv(globalNormal, localNormal);
-                        // note only works for cubes
-                      const Scalar localArea = std::pow(2,-(dim-1));
-
-                      localNormal /= localNormal.two_norm();
-
-                      // Get the Darcy velocities. The Darcy velocities are divided by the area of the subcontrolvolume
-                      // face in the reference element.
-                      massUpwindWeight_ = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
-                      PhasesVector q;
-                      q[phaseIdx] = fluxDat.KmvpNormal(phaseIdx)
-                                           * (massUpwindWeight_
-                                           * up.mobility(phaseIdx)
-                                           + (1- massUpwindWeight_)
-                                           * dn.mobility(phaseIdx)) / localArea;
-
-                      // transform the normal Darcy velocity into a vector
-                      tmpVelocity[phaseIdx] = localNormal;
-                      tmpVelocity[phaseIdx] *= q[phaseIdx];
-
-                      if(phaseIdx == lPhaseIdx){
-                      scvVelocityL[fluxDat.face().i] += tmpVelocity[phaseIdx];
-                      scvVelocityL[fluxDat.face().j] += tmpVelocity[phaseIdx];
-                      }
-                      else if(phaseIdx == gPhaseIdx){
-                      scvVelocityG[fluxDat.face().i] += tmpVelocity[phaseIdx];
-                      scvVelocityG[fluxDat.face().j] += tmpVelocity[phaseIdx];
-                      }
-                   }
-                }
-
-                typedef Dune::GenericReferenceElements<Scalar, dim> ReferenceElements;
-                const Dune::FieldVector<Scalar, dim>& localPos =
-                    ReferenceElements::general(elemIt->geometry().type()).position(0, 0);
-
-                 // get the transposed Jacobian of the element mapping
-                const Dune::FieldMatrix<CoordScalar, dim, dim> jacobianT2 = elemIt->geometry().jacobianTransposed(localPos);
-
-                // transform vertex velocities from local to global coordinates
-                for (int i = 0; i < numVerts; ++i)
-                {
-                    int globalIdx = this->vertexMapper().map(*elemIt, i, dim);
-                    // calculate the subcontrolvolume velocity by the Piola transformation
-                    Dune::FieldVector<CoordScalar, dim> scvVelocity(0);
-
-                    jacobianT2.mtv(scvVelocityL[i], scvVelocity);
-                    scvVelocity /= elemIt->geometry().integrationElement(localPos);
-                    // add up the wetting phase subcontrolvolume velocities for each vertex
-                    (*velocityL)[globalIdx] += scvVelocity;
-
-                    jacobianT2.mtv(scvVelocityG[i], scvVelocity);
-                    scvVelocity /= elemIt->geometry().integrationElement(localPos);
-                    // add up the nonwetting phase subcontrolvolume velocities for each vertex
-                    (*velocityG)[globalIdx] += scvVelocity;
-                }
-            }
         }
-            if(velocityOutput_)
-            {
-                // divide the vertex velocities by the number of adjacent scvs i.e. cells
-                for(int globalIdx = 0; globalIdx<numVertices; ++globalIdx){
-                (*velocityL)[globalIdx] /= (*cellNum)[globalIdx];
-                (*velocityG)[globalIdx] /= (*cellNum)[globalIdx];
-                }
-            }
-
+            
 
         writer.attachVertexData(*Sg,     "Sg");
         writer.attachVertexData(*Sl,     "Sl");
@@ -513,11 +354,6 @@ public:
         writer.attachVertexData(*temperature,    "temperature");
         writer.attachVertexData(*phasePresence,  "phase presence");
 
-        if(velocityOutput_) // check if velocity output is demanded
-        {
-            writer.attachVertexData(*velocityL,  "velocityL", dim);
-            writer.attachVertexData(*velocityG,  "velocityG", dim);
-        }
         writer.attachCellData(*rank, "process rank");
     }
 
@@ -536,7 +372,7 @@ public:
         if (!outStream.good())
             DUNE_THROW(Dune::IOError, "Could not serialize vertex " << vertIdx);
 
-        outStream << staticVertexDat_[vertIdx].phasePresence << " ";
+        outStream << staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0] << " ";
     }
 
     /*!
@@ -557,10 +393,9 @@ public:
             DUNE_THROW(Dune::IOError,
                        "Could not deserialize vertex " << vertIdx);
 
-        inStream >> staticVertexDat_[vertIdx].phasePresence;
-        staticVertexDat_[vertIdx].oldPhasePresence
-            = staticVertexDat_[vertIdx].phasePresence;
-
+        inStream >> staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0];
+        staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/1]
+            = staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0];
     }
 
     /*!
@@ -577,32 +412,39 @@ public:
         for (unsigned i = 0; i < staticVertexDat_.size(); ++i)
             staticVertexDat_[i].visited = false;
 
-        FVElementGeometry fvElemGeom;
-        static VolumeVariables volVars;
-        ElementIterator it = this->gridView_().template begin<0> ();
-        const ElementIterator &endit = this->gridView_().template end<0> ();
-        for (; it != endit; ++it)
+        ElementContext elemCtx(this->problem_());
+
+        ElementIterator elemIt = this->gridView_().template begin<0>();
+        ElementIterator elemEndIt = this->gridView_().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt)
         {
-            fvElemGeom.update(this->gridView_(), *it);
-            for (int i = 0; i < fvElemGeom.numVertices; ++i)
+            bool fvElemGeomUpdated = false;
+            int numScv = elemIt->template count<dim>();
+            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
             {
-                int globalIdx = this->vertexMapper().map(*it, i, dim);
+                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
 
                 if (staticVertexDat_[globalIdx].visited)
                     continue;
-
                 staticVertexDat_[globalIdx].visited = true;
-                volVars.update(curGlobalSol[globalIdx],
-                               this->problem_(),
-                               *it,
-                               fvElemGeom,
-                               i,
-                               false);
-                const GlobalPosition &global = it->geometry().corner(i);
+
+                if (!fvElemGeomUpdated) {
+                    fvElemGeomUpdated = true;
+                    elemCtx.updateFVElemGeom(*elemIt);
+                }
+                
+                // compute the volume variables of the current
+                // sub-control volume
+                elemCtx.updateScvVars(curGlobalSol[globalIdx],
+                                       scvIdx,
+                                       /*historyIdx=*/0);
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+
+                const GlobalPosition &globalPos = elemCtx.pos(scvIdx);
                 if (primaryVarSwitch_(curGlobalSol,
                                       volVars,
                                       globalIdx,
-                                      global))
+                                      globalPos))
                 {
                     this->jacobianAssembler().markVertexRed(globalIdx);
                     wasSwitched = true;
@@ -626,10 +468,8 @@ protected:
      */
     struct StaticVars
     {
-        int phasePresence;
+        int phasePresence[historySize];
         bool wasSwitched;
-
-        int oldPhasePresence;
         bool visited;
     };
 
@@ -643,8 +483,8 @@ protected:
         int numVertices = this->gridView_().size(dim);
         for (int i = 0; i < numVertices; ++i)
         {
-            staticVertexDat_[i].phasePresence
-                = staticVertexDat_[i].oldPhasePresence;
+            staticVertexDat_[i].phasePresence[/*historyIdx=*/0]
+                = staticVertexDat_[i].phasePresence[/*historyIdx=*/1];
             staticVertexDat_[i].wasSwitched = false;
         }
     }
@@ -657,8 +497,8 @@ protected:
         int numVertices = this->gridView_().size(dim);
         for (int i = 0; i < numVertices; ++i)
         {
-            staticVertexDat_[i].oldPhasePresence
-                = staticVertexDat_[i].phasePresence;
+            staticVertexDat_[i].phasePresence[/*historyIdx=*/1]
+                = staticVertexDat_[i].phasePresence[/*historyIdx=*/0];
             staticVertexDat_[i].wasSwitched = false;
         }
     }
@@ -668,27 +508,26 @@ protected:
      *        the last timestep.
      */
     void setSwitched_(bool yesno)
-    {
-        switchFlag_ = yesno;
-    }
+    { switchFlag_ = yesno; }
 
     //  perform variable switch at a vertex; Returns true if a
     //  variable switch was performed.
     bool primaryVarSwitch_(SolutionVector &globalSol,
-                           const VolumeVariables &volVars, int globalIdx,
+                           const VolumeVariables &volVars,
+                           int globalIdx,
                            const GlobalPosition &globalPos)
     {
         // evaluate primary variable switch
         bool wouldSwitch = false;
-        int phasePresence = staticVertexDat_[globalIdx].phasePresence;
+        int phasePresence = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
         int newPhasePresence = phasePresence;
 
         // check if a primary var switch is necessary
         if (phasePresence == gPhaseOnly)
         {
             // calculate mole fraction in the hypothetic liquid phase
-            Scalar xll = volVars.fluidState().moleFraction(lPhaseIdx, lCompIdx);
-            Scalar xlg = volVars.fluidState().moleFraction(lPhaseIdx, gCompIdx);
+            Scalar xll = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/0);
+            Scalar xlg = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
 
             Scalar xlMax = 1.0;
             if (xll + xlg > xlMax)
@@ -715,8 +554,8 @@ protected:
         {
             // calculate fractions of the partial pressures in the
             // hypothetic gas phase
-            Scalar xgl = volVars.fluidState().moleFraction(gPhaseIdx, lCompIdx);
-            Scalar xgg = volVars.fluidState().moleFraction(gPhaseIdx, gCompIdx);
+            Scalar xgl = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/0);
+            Scalar xgg = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/1);
 
             Scalar xgMax = 1.0;
             if (xgl + xgg > xgMax)
@@ -732,6 +571,7 @@ protected:
                 std::cout << "gas phase appears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", x_gl + x_gg: "
                           << xgl + xgg << std::endl;
+                std::cout.flush();
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
                     globalSol[globalIdx][switchIdx] = 0.999;
@@ -745,33 +585,33 @@ protected:
             if (staticVertexDat_[globalIdx].wasSwitched)
                 Smin = -0.01;
 
-            if (volVars.saturation(gPhaseIdx) <= Smin)
+            if (volVars.saturation(/*phaseIdx=*/1) <= Smin)
             {
                 wouldSwitch = true;
                 // gas phase disappears
                 std::cout << "Gas phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sg: "
-                          << volVars.saturation(gPhaseIdx) << std::endl;
+                          << volVars.saturation(/*phaseIdx=*/1) << std::endl;
                 newPhasePresence = lPhaseOnly;
 
-                globalSol[globalIdx][switchIdx]
-                    = volVars.fluidState().massFraction(lPhaseIdx, gCompIdx);
+                globalSol[globalIdx][switchIdx] =
+                    volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
             }
-            else if (volVars.saturation(lPhaseIdx) <= Smin)
+            else if (volVars.saturation(/*phaseIdx=*/0) <= Smin)
             {
                 wouldSwitch = true;
                 // liquid phase disappears
                 std::cout << "Liquid phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sl: "
-                          << volVars.saturation(lPhaseIdx) << std::endl;
+                          << volVars.saturation(/*phaseIdx=*/0) << std::endl;
                 newPhasePresence = gPhaseOnly;
 
-                globalSol[globalIdx][switchIdx]
-                    = volVars.fluidState().massFraction(gPhaseIdx, lCompIdx);
+                globalSol[globalIdx][switchIdx] =
+                    volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0);
             }
         }
 
-        staticVertexDat_[globalIdx].phasePresence = newPhasePresence;
+        staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0] = newPhasePresence;
         staticVertexDat_[globalIdx].wasSwitched = wouldSwitch;
         return phasePresence != newPhasePresence;
     }
@@ -780,8 +620,6 @@ protected:
     // parameters given in constructor
     std::vector<StaticVars> staticVertexDat_;
     bool switchFlag_;
-    bool velocityOutput_;
-    Scalar massUpwindWeight_;
 };
 
 }
