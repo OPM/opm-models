@@ -103,21 +103,26 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx)
     {
         const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom();
+        const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
 
         // calculate temperature gradient using finite element
         // gradients
         Vector tmp(0.0);
-        Vector temperatureGradient(0.);
+        Vector temperatureGrad(0.);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             tmp = fvElemGeom.subContVolFace[scvfIdx].grad[scvIdx];
             tmp *= elemCtx.volVars(scvIdx).fluidState().temperature();
-            temperatureGradient += tmp;
+            temperatureGrad += tmp;
         }
 
-        // project the heat flux vector on the face's normal vector
-        temperatureGradientNormal_ = 
-            temperatureGradient * fvElemGeom.subContVolFace[scvfIdx].normal;
+        // scalar product of temperature gradient and scvf normal
+        temperatureGradNormal_ = 0.0;
+        for (int i = 0; i < dim; ++ i)
+            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
+
+        const auto &volVarsInside = elemCtx.volVars(scvf.i);
+        const auto &volVarsOutside = elemCtx.volVars(scvf.j);
 
         // arithmetic mean
         heatConductivity_ =
@@ -130,68 +135,18 @@ public:
     /*!
      * \brief The lumped / average conductivity of solid plus phases \f$[W/mK]\f$.
      */
-    Scalar lambdaPm() const
-    { return lambdaPm_; }
+    Scalar heatConductivity() const
+    { return heatConductivity_; }
 
     /*!
      * \brief The normal of the gradient of temperature .
      */
-    Scalar temperatureGradientNormal() const
-    { return temperatureGradientNormal_; }
+    Scalar temperatureGradNormal() const
+    { return temperatureGradNormal_; }
 
 private:
-    Scalar lumpedLambdaPm_(const ElementContext &elemCtx, int scvfIdx)
-    {
-        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom();
-
-        // arithmetic mean of the liquid saturation and the porosity
-        const int i = fvElemGeom.subContVolFace[scvfIdx].i;
-        const int j = fvElemGeom.subContVolFace[scvfIdx].j;
-        
-        const Scalar Sli = elemCtx.volVars(i).fluidState().saturation(lPhaseIdx);
-        const Scalar Slj = elemCtx.volVars(j).fluidState().saturation(lPhaseIdx);
-        
-        const Scalar Sl = std::max<Scalar>(0.0, 0.5*(Sli + Slj));
-
-        const Scalar lambda_solid =
-            (elemCtx.volVars(i).thermalConductivitySolid() 
-             + elemCtx.volVars(j).thermalConductivitySolid())
-            / 2;
-        
-        //        const Scalar lambdaDry = 0.583; // W / (K m) // works, orig
-        //        const Scalar lambdaWet = 1.13; // W / (K m) // works, orig
-        
-#warning "TODO: this is certainly not correct: it does not include porosity, and the mutable parameters probably need to be upwinded! Change lambda_dry and lambda_wet to spatial parameters? what about the case with more than 2 fluid phases, then?"
-#warning "TODO/more: assumes thermal conductivity of the fluids to be independent of pressure, temperature and composition!"
-        typename FluidSystem::MutableParameters mutParams; //dummy
-        Scalar lambdaDry = 
-            0.5 * (lambda_solid + FluidSystem::computeThermalConductivity(mutParams, gPhaseIdx) );
-        Scalar lambdaWet =
-            0.5 * (lambda_solid + FluidSystem::computeThermalConductivity(mutParams, lPhaseIdx));
-        
-        // the heat conductivity of the matrix. in general this is a
-        // tensorial value, but we assume isotropic heat conductivity.
-        // This is the Sommerton approach with lambdaDry =
-        // lambdaSn100%.  Taken from: H. Class: "Theorie und
-        // numerische Modellierung nichtisothermer Mehrphasenprozesse
-        // in NAPL-kontaminierten poroesen Medien", PhD Thesis, University of
-        // Stuttgart, Institute of Hydraulic Engineering, p. 57
-        Scalar result;
-        if (Sl < 0.1) {
-            // regularization
-            Dumux::Spline<Scalar> sp(0, 0.1, // x1, x2
-                                    0, std::sqrt(0.1), // y1, y2
-                                    5*0.5/std::sqrt(0.1), 0.5/std::sqrt(0.1)); // m1, m2
-            result = lambdaDry + sp.eval(Sl)*(lambdaWet - lambdaDry);
-        }
-        else
-            result = lambdaDry + std::sqrt(Sl)*(lambdaWet - lambdaDry);
-
-        return result;
-    }
-
-    Scalar lambdaPm_;
-    Scalar temperatureGradientNormal_;
+    Scalar heatConductivity_;
+    Scalar temperatureGradNormal_;
 };
 
 } // end namepace

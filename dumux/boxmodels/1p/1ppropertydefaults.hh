@@ -44,6 +44,8 @@
 #include <dumux/material/components/nullcomponent.hh>
 
 #include <dumux/material/fluidsystems/1pfluidsystem.hh>
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
+
 
 namespace Dumux
 {
@@ -60,6 +62,17 @@ SET_INT_PROP(BoxOneP, NumPhases, 1); //!< The number of phases in the 1p model i
 SET_TYPE_PROP(BoxOneP,
               LocalResidual,
               OnePLocalResidual<TypeTag>);
+
+//! set the heat conduction law to the dummy law
+SET_TYPE_PROP(BoxOneP,
+              HeatConductionLaw, 
+              Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxOneP, 
+              HeatConductionLawParams, 
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! the Model property
 SET_TYPE_PROP(BoxOneP, Model, OnePBoxModel<TypeTag>);

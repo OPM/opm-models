@@ -109,13 +109,11 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    void update(const PrimaryVariables &priVars,
-                const ElementContext &elemCtx,
+    void update(const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
-        ParentType::update(priVars,
-                           elemCtx,
+        ParentType::update(elemCtx,
                            scvIdx,
                            historyIdx);
 

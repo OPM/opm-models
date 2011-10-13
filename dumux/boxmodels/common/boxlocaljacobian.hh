@@ -366,7 +366,7 @@ protected:
         // variable at the given sub control volume
         elemCtx.saveScvVars(scvIdx);
 
-        PrimaryVariables priVars(elemCtx.volVars(scvIdx, /*historyIdx=*/0).primaryVars());
+        PrimaryVariables priVars(elemCtx.primaryVars(scvIdx, /*historyIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, scvIdx, pvIdx);
         Scalar delta = 0;
 

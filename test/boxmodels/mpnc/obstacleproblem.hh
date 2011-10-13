@@ -78,8 +78,6 @@ SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
 // Use the chopped Newton method?
 SET_BOOL_PROP(ObstacleProblem, NewtonEnableChop, true);
 
-SET_BOOL_PROP(ObstacleProblem, MPNCVtkAddTemperatures, true);
-
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
 

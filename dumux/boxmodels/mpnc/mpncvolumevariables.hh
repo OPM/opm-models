@@ -109,19 +109,17 @@ public:
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    void update(const PrimaryVariables &priVars,
-                const ElementContext &elemCtx,
+    void update(const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
-        Valgrind::CheckDefined(priVars);
-        ParentType::update(priVars,
-                           elemCtx,
+        ParentType::update(elemCtx,
                            scvIdx,
                            historyIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::ParameterCache paramCache;
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
 
         /////////////
         // set the phase saturations

@@ -89,6 +89,9 @@ NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
 NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)
 
+NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
+
 //! The compositional twophase system of fluids which is considered
 NEW_PROP_TAG(FluidSystem);
 

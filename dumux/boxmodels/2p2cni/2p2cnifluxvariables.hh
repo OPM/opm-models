@@ -35,7 +35,7 @@
 #define DUMUX_2P2CNI_FLUX_VARIABLES_HH
 
 #include <dumux/common/math.hh>
-#include <dumux/boxmodels/2p2c/2p2cfluxvariables.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {
@@ -75,8 +75,9 @@ public:
         const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        temperatureGrad_ = Scalar(0.0);
-        Vector tmp(0.0);
+        Vector temperatureGrad;
+        Vector tmp;
+        temperatureGrad = Scalar(0.0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             const auto &feGrad = scvf.grad[scvIdx];
@@ -84,16 +85,17 @@ public:
 
             tmp = feGrad;
             tmp *= volVars.temperature();
-            temperatureGrad_ += tmp;
+            temperatureGrad += tmp;
         }
+        
+        // scalar product of temperature gradient and scvf normal
+        temperatureGradNormal_ = 0.0;
+        for (int i = 0; i < dimWorld; ++ i)
+            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
-        // The spatial parameters calculates the actual heat flux vector
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
-        spatialParams.matrixHeatFlux(tmp,
-                                     elemCtx,
-                                     scvfIdx);
-        // project the heat flux vector on the face's normal vector
-        normalMatrixHeatFlux_ = tmp*scvf.normal;
+        const auto &volVarsInside = elemCtx.volVars(this->insideIdx());
+        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx());
+
         // arithmetic mean
         heatConductivity_ =
             0.5 * (volVarsInside.heatConductivity() 
@@ -103,22 +105,20 @@ public:
     }
 
     /*!
-     * \brief The temperature gradient [K/m]
+     * \brief The temperature gradient times the face normal [K m^2 / m] 
      */
-    const Vector& temperatureGrad() const
-    { return temperatureGrad_; }
+    Scalar temperatureGradNormal() const
+    { return temperatureGradNormal_; }
 
     /*!
-     * \brief The total heat flux \f$\mathrm{[J/s]}\f$ due to heat conduction
-     *        of the rock matrix over the sub-control volume's face in
-     *        direction of the face normal.
+     * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 / (K/m)]}\f$
      */
-    Scalar normalMatrixHeatFlux() const
-    { return normalMatrixHeatFlux_; }
+    Scalar heatConductivity() const
+    { return heatConductivity_; }
 
 private:
-    Vector temperatureGrad_;
-    Scalar normalMatrixHeatFlux_;
+    Scalar temperatureGradNormal_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace

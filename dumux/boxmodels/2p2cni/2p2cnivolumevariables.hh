@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Melanie Darcis                                  *
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -40,7 +40,7 @@ namespace Dumux
  * \ingroup TwoPTwoCNIModel
  * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the non-isothermal two-phase, two-component
+ *        finite volume in the non-isothermal two-phase
  *        model.
  */
 template <class TypeTag>
@@ -52,10 +52,10 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { temperatureIdx = Indices::temperatureIdx };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -64,7 +64,6 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
 
 public:
     typedef typename ParentType::FluidState FluidState;
-
     /*!
      * \brief Returns the total internal energy of a phase in the
      *        sub-control volume.
@@ -87,8 +86,16 @@ public:
      * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */
-    Scalar heatCapacity() const
+    Scalar heatCapacitySolid() const
     { return heatCapacitySolid_; };
+
+    /*!
+     * \brief Returns the total conductivity capacity
+     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
+     *        sub-control volume.
+     */
+    Scalar heatConductivity() const
+    { return heatConductivity_; };
 
 protected:
     // this method gets called by the parent class. since this method
@@ -113,7 +120,7 @@ protected:
         // compute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
-
+            
             this->fluidState_.setEnthalpy(phaseIdx, h);
         }
 

@@ -28,6 +28,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/heatconduction/somerton.hh>
 
 #include <dumux/boxmodels/mpnc/mpncmodel.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
@@ -63,6 +64,18 @@ private:
         typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
 public:
     typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+};
+
+// Set the heat conduction law
+SET_PROP(ObstacleSpatialParameters, HeatConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    // define the material law parameterized by absolute saturations
+    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
 };
 }
 
@@ -100,6 +113,9 @@ public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
 
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename HeatConductionLaw::Params HeatConductionLawParams;
+
     ObstacleSpatialParameters(const GridView &gv)
         : ParentType(gv)
     {
@@ -108,7 +124,8 @@ public:
         fineK_ = 1e-15;
 
         // the porosity
-        porosity_ = 0.3;
+        finePorosity_ = 0.3;
+        coarsePorosity_ = 0.3;
 
         // residual saturations
         fineMaterialParams_.setSwr(0.0);
@@ -132,6 +149,11 @@ public:
         fineMaterialParams_.setLambda(2);
         coarseMaterialParams_.setLambda(2);
         */
+
+        // parameters for the somerton law of heat conduction
+        computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
+        computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
+
     }
 
     ~ObstacleSpatialParameters()
@@ -178,7 +200,11 @@ public:
                     const FVElementGeometry &fvElemGeom,
                     int scvIdx) const
     {
-        return porosity_;
+        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        if (isFineMaterial_(pos))
+            return finePorosity_;
+        else
+            return coarsePorosity_;
     }
 
     /*!
@@ -195,34 +221,54 @@ public:
             return coarseMaterialParams_;
     }
 
-
     /*!
-     * \brief Returns the volumetric heat capacity [J/(K m^3)] of the
-     *        solid phase with no pores in a sub-control volume.
+     * \brief Returns the volumetric heat capacity \f$[J/m^3 K]\f$ of
+     *        the rock matrix.
+     *
+     * Porosity is _not_ taken into account by this method. This is
+     * only required for non-isothermal models.
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the heat capacity needs to be defined
      */
-    using ParentType::heatCapacitySolid;
-    Scalar heatCapacitySolid(const Element &element,
-                             const FVElementGeometry &fvElemGeom,
-                             int scvIdx) const
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context,
+                             int localIdx) const
     {
         return
-            2700.0 // density of granite [kg/m^3] 
-            * 790.0 ;  // specific heat capacity of granite [J / (kg K)]
+            790 // specific heat capacity of granite [J / (kg K)]
+            * 2700; // density of granite [kg/m^3]
     }
 
     /*!
-     * \brief Returns the thermal conductivity [W / (K m)] of the solid
-     *        phase disregarding the pores in a sub-control volume.
+     * \brief Return the parameter object for the heat conductivty law
+     *        for a given position
      */
-    using ParentType::thermalConductivitySolid;
-    Scalar thermalConductivitySolid(const Element &element,
-                                    const FVElementGeometry &fvElemGeom,
-                                    int scvIdx) const
-    {
-        return 2.8; // conductivity of granite [W / (m K ) ]
+    template <class Context>
+    const HeatConductionLawParams&
+    heatConducionParams(const Context &context, int localIdx) const
+    { 
+        const GlobalPosition &pos = context.pos(localIdx);
+        if (isFineMaterial_(pos))
+            return fineHeatCondParams_;
+        return coarseHeatCondParams_;
     }
 
 private:
+    void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
+    {
+        Scalar lambdaWater = 0.6;
+        Scalar lambdaGranite = 2.8;
+
+        Scalar lambdaWet = pow(lambdaGranite, (1-poro)) * pow(lambdaWater, poro);
+        Scalar lambdaDry = pow(lambdaGranite, (1-poro));
+
+        params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
+        params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+    }
+
     /*!
      * \brief Returns whether a given global position is in the
      *        fine-permeability region or not.
@@ -236,9 +282,16 @@ private:
 
     Scalar coarseK_;
     Scalar fineK_;
-    Scalar porosity_;
+
+    Scalar coarsePorosity_;
+    Scalar finePorosity_;
+
     MaterialLawParams fineMaterialParams_;
     MaterialLawParams coarseMaterialParams_;
+
+    HeatConductionLawParams fineHeatCondParams_;
+    HeatConductionLawParams coarseHeatCondParams_;
+
 };
 
 }

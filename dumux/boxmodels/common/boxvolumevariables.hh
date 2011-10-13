@@ -64,7 +64,6 @@ public:
     BoxVolumeVariables(const BoxVolumeVariables &v)
     {
         evalPoint_ = 0;
-        primaryVars_ = v.primaryVars_;
         extrusionFactor_ = v.extrusionFactor_;
     };
 
@@ -74,7 +73,6 @@ public:
     BoxVolumeVariables &operator=(const BoxVolumeVariables &v)
     {
         evalPoint_ = 0;
-        primaryVars_ = v.primaryVars_;
         extrusionFactor_ = v.extrusionFactor_;
 
         return *this;
@@ -101,44 +99,12 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
-     *
-     * \param priVars The primary variables for the control volume
-     * \param problem The object specifying the problem which ought to
-     *                be simulated
-     * \param element An element which contains part of the control volume
-     * \param elemGeom The finite volume geometry for the element
-     * \param scvIdx Local index of the sub control volume which is inside the element
-     * \param isOldSol Specifies whether this is the previous solution or the current one
-     *
-     * \todo Eliminate the 'isOldSol' parameter. This implies that the
-     *       'pseudo-primary variables' must be somehow be stored
-     *       inside the PrimaryVariables. (e.g. we need to know the
-     *       phase state in the 2p2c model)
      */
-    void update(const PrimaryVariables &priVars,
-                const ElementContext &elemCtx,
+    void update(const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
-        Valgrind::CheckDefined(priVars);
-        primaryVars_ = priVars;
         extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, scvIdx);
-    }
-
-    /*!
-     * \brief Return the vector of primary variables
-     */
-    const PrimaryVariables &primaryVars() const
-    { return primaryVars_; }
-
-    /*!
-     * \brief Return a component of primary variable vector
-     *
-     * \param pvIdx The index of the primary variable of interest
-     */
-    Scalar primaryVar(int pvIdx) const
-    {
-        return primaryVars_[pvIdx];
     }
 
     /*!
@@ -160,7 +126,6 @@ public:
     void checkDefined() const
     {
 #if !defined NDEBUG && HAVE_VALGRIND
-        Valgrind::CheckDefined(primaryVars_);
         Valgrind::CheckDefined(evalPoint_);
         if (evalPoint_ && evalPoint_ != this)
             evalPoint_->checkDefined();
@@ -176,7 +141,6 @@ protected:
     // the evaluation point of the local jacobian
     const Implementation *evalPoint_;
 
-    PrimaryVariables primaryVars_;
     Scalar extrusionFactor_;
 };
 

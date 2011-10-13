@@ -28,7 +28,7 @@
  * \file
  *
  * \brief Defines the default values for most of the properties
- *        required by the non-isotherm two-phase box model.
+ *        required by the non-isothermal two-phase box model.
  */
 
 #ifndef DUMUX_2PNI_PROPERTY_DEFAULTS_HH
@@ -41,6 +41,8 @@
 #include "2pnivolumevariables.hh"
 #include "2pnifluxvariables.hh"
 #include "2pniindices.hh"
+
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Dumux
 {

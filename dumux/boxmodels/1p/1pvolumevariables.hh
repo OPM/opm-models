@@ -61,20 +61,12 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
-     *
-     * \param priVars The local primary variable vector
-     * \param problem The problem object
-     * \param element The current element
-     * \param elemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local index of the SCV (sub-control volume)
-     * \param isOldSol Evaluate function with solution of current or previous time step
      */
-    void update(const PrimaryVariables &priVars,
-                const ElementContext &elemCtx,
+    void update(const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
-        ParentType::update(priVars, elemCtx, scvIdx, historyIdx);
+        ParentType::update(elemCtx, scvIdx, historyIdx);
 
         completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
 

@@ -42,6 +42,7 @@ namespace Dumux
 template<class TypeTag>
 class BoxElementContext
 {
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
@@ -50,6 +51,7 @@ class BoxElementContext
 
     struct ScvStore_ {
         VolumeVariables volVars[timeDiscHistorySize];
+        PrimaryVariables priVars[timeDiscHistorySize];
         const VolumeVariables *hint[timeDiscHistorySize];
     };
     typedef std::vector<ScvStore_> ScvVarsVector;
@@ -62,7 +64,6 @@ class BoxElementContext
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -157,8 +158,8 @@ public:
 
     void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int historyIdx)
     {
-        scvVars_[scvIdx].volVars[historyIdx].update(priVars,
-                                                    /*context=*/*this,
+        scvVars_[scvIdx].priVars[historyIdx] = priVars;
+        scvVars_[scvIdx].volVars[historyIdx].update(/*context=*/*this,
                                                     scvIdx,
                                                     historyIdx);
     }
@@ -334,9 +335,9 @@ public:
     { return scvVars_[scvIdx].volVars[historyIdx]; }
 
     PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0)
-    { return scvVars_[scvIdx].volVars[historyIdx].primaryVars(); }
+    { return scvVars_[scvIdx].priVars[historyIdx]; }
     const PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0) const
-    { return scvVars_[scvIdx].volVars[historyIdx].primaryVars(); }
+    { return scvVars_[scvIdx].priVars[historyIdx]; }
 
     /*!
      * \brief Returns the volume variables at the evaluation point.
@@ -345,6 +346,7 @@ public:
     { 
         scvIdxSaved_ = scvIdx;
         scvVarsSaved_ = scvVars_[scvIdx].volVars[/*historyIdx=*/0];
+        priVarsSaved_ = scvVars_[scvIdx].priVars[/*historyIdx=*/0];
     }
 
     /*!
@@ -353,6 +355,7 @@ public:
     void restoreScvVars(int scvIdx)
     { 
         scvIdxSaved_ = -1;
+        scvVars_[scvIdx].priVars[/*historyIdx=*/0] = priVarsSaved_;
         scvVars_[scvIdx].volVars[/*historyIdx=*/0] = scvVarsSaved_;
     }
 
@@ -394,6 +397,7 @@ protected:
 
     int scvIdxSaved_;
     VolumeVariables scvVarsSaved_;
+    PrimaryVariables priVarsSaved_;
 
     ScvfVarsVector scvfVars_;
     ScvfVarsVector scvfVarsSaved_;

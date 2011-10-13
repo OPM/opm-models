@@ -42,6 +42,8 @@
 #include "1p2cfluxvariables.hh"
 #include "1p2cindices.hh"
 
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
+
 namespace Dumux
 {
 // \{
@@ -58,6 +60,17 @@ SET_SCALAR_PROP(BoxOnePTwoC, Scaling, 1); //!< Scaling of the model is set to 1 
 
 //! Use the 1p2c local residual function for the 1p2c model
 SET_TYPE_PROP(BoxOnePTwoC, LocalResidual, OnePTwoCLocalResidual<TypeTag>);
+
+//! set the heat conduction law to the dummy law
+SET_TYPE_PROP(BoxOnePTwoC,
+              HeatConductionLaw, 
+              Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxOnePTwoC, 
+              HeatConductionLawParams, 
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! define the model
 SET_TYPE_PROP(BoxOnePTwoC, Model, OnePTwoCBoxModel<TypeTag>);

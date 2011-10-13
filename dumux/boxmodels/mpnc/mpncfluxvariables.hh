@@ -99,11 +99,11 @@ public:
 
         // update the flux data of the energy module (i.e. isothermal
         // or non-isothermal)
-        energyDat_.update(elemCtx, scvfIdx);
+        energyVars_.update(elemCtx, scvfIdx);
 
         // update the flux data of the diffusion module (i.e. with or
         // without diffusion)
-        diffusionDat_.update(elemCtx, scvfIdx);
+        diffusionVars_.update(elemCtx, scvfIdx);
     }
 
     /*!
@@ -186,29 +186,25 @@ public:
     ////////////////////////////////////////////////
     // forward calls to the diffusion module
     Scalar porousDiffCoeffL(int compIdx) const
-    { return diffusionDat_.porousDiffCoeffL(compIdx); };
+    { return diffusionVars_.porousDiffCoeffL(compIdx); };
 
     Scalar porousDiffCoeffG(int compIIdx, int compJIdx) const
-    { return diffusionDat_.porousDiffCoeffG(compIIdx, compJIdx); };
+    { return diffusionVars_.porousDiffCoeffG(compIIdx, compJIdx); };
 
     const Scalar moleFrac(int phaseIdx, int compIdx) const
-    { return diffusionDat_.moleFrac(phaseIdx, compIdx); };
+    { return diffusionVars_.moleFrac(phaseIdx, compIdx); };
 
     const Vector &moleFracGrad(int phaseIdx,
                                int compIdx) const
-    { return diffusionDat_.moleFracGrad(phaseIdx, compIdx); };
+    { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); };
     // end of forward calls to the diffusion module
     ////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////
-    // forward calls to the temperature module
-    const Vector &temperatureGrad() const
-    { return energyDat_.temperatureGrad(); };
-
-    const FluxVariablesEnergy &energyData() const
-    { return energyDat_; }
-    // end of forward calls to the temperature module
-    ////////////////////////////////////////////////
+    /*!
+     * \brief Returns the variables relevant for the energy module
+     */
+    const FluxVariablesEnergy &energyVars() const
+    { return energyVars_; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,
@@ -402,8 +398,8 @@ private:
     Scalar upstreamWeight_[numPhases];
 
     // data for the diffusion and the energy modules
-    FluxVariablesDiffusion diffusionDat_;
-    FluxVariablesEnergy energyDat_;
+    FluxVariablesDiffusion diffusionVars_;
+    FluxVariablesEnergy energyVars_;
 };
 
 } // end namepace

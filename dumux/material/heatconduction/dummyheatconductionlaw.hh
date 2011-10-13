@@ -1,7 +1,5 @@
-// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-// vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
+ *   Copyright (C) 2011 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -20,39 +18,49 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup Properties
- * \ingroup BoxProperties
- * \ingroup TwoPTwoCNIModel
- * \file
+ * \file dummyheatconductionlaw.hh
  *
- * \brief Defines the properties required for the non-isothermal two-phase,
- * two-component BOX model.
+ * \brief Implements a dumm law for heat conduction to which isothermal models 
+ *        can fall back to
+ *
+ * If any method of this law is called, it throws an excetion
  */
-#ifndef DUMUX_2P2CNI_PROPERTIES_HH
-#define DUMUX_2P2CNI_PROPERTIES_HH
+#ifndef DUMUX_DUMMY_HEATCONDUCTION_LAW_HH
+#define DUMUX_DUMMY_HEATCONDUCTION_LAW_HH
 
-#include <dumux/boxmodels/2p2c/2p2cproperties.hh>
+#include <dune/common/exceptions.hh>
 
 namespace Dumux
 {
-
-namespace Properties
+/*!
+ * \ingroup material
+ *
+ * \brief Implements a dumm law for heat conduction to which isothermal models 
+ *        can fall back to
+ *
+ * If any method of this law is called, it throws an excetion
+ */
+template <class ScalarT>
+class DummyHeatConductionLaw
 {
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
+public:
+    typedef int Params;
+    typedef ScalarT Scalar;
 
-//! The type tag for the non-isothermal two-phase, two-component problems
-NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC));
-
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
-NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
-
-NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
-}
+    /*!
+     * \brief Given a fluid state, return the effective heat conductivity [W/m^2 / (K/m)] of the porous
+     *        medium.
+     *
+     * If this method is called an exception is thrown at run time.
+     */
+    template <class FluidState>
+    static Scalar heatConductivity(const Params &params, 
+                                   const FluidState &fluidState)
+    {
+        DUNE_THROW(Dune::InvalidStateException,
+                   "No heat conduction law specified!");
+    }
+};
 }
 
 #endif

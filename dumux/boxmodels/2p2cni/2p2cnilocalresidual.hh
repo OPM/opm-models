@@ -26,11 +26,11 @@
  * \file
  *
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the non-isothermal two-phase two-component box model.
+ *        using the non-isothermal two-phase, two-component box model.
  *
  */
-#ifndef DUMUX_NEW_2P2CNI_LOCAL_RESIDUAL_HH
-#define DUMUX_NEW_2P2CNI_LOCAL_RESIDUAL_HH
+#ifndef DUMUX_2P2CNI_LOCAL_RESIDUAL_HH
+#define DUMUX_2P2CNI_LOCAL_RESIDUAL_HH
 
 #include <dumux/boxmodels/2p2c/2p2clocalresidual.hh>
 
@@ -44,7 +44,7 @@ namespace Dumux
  * \ingroup TwoPTwoCNIModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase two-component box model.
+ *        using the two-phasem, two-component box model.
  */
 template<class TypeTag>
 class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
@@ -114,7 +114,10 @@ public:
         };
         
         // handle the heat capacity of the solid
-        storage[energyEqIdx] += volVars.temperature() * volVars.heatCapacity();
+        storage[energyEqIdx] += 
+            volVars.temperature()
+            * volVars.heatCapacitySolid()
+            * (1 - volVars.porosity());
     }
 
     /*!
@@ -138,7 +141,6 @@ public:
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
         
         // advective heat flux in all phases
-        flux[energyEqIdx] = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
             const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx));
@@ -146,15 +148,15 @@ public:
 
             flux[energyEqIdx] +=
                 fluxVars.normalVelocity(phaseIdx)
-                    *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.enthalpy(phaseIdx)
-                      * up.density(phaseIdx)
-                      * up.mobility(phaseIdx)
-                      +
-                      fluxVars.downstreamWeight(phaseIdx)
-                      * dn.enthalpy(phaseIdx)
-                      * dn.density(phaseIdx)
-                      * dn.mobility(phaseIdx));
+                * (fluxVars.upstreamWeight(phaseIdx)
+                   * up.enthalpy(phaseIdx)
+                   * up.density(phaseIdx)
+                   * up.mobility(phaseIdx)
+                   +
+                   fluxVars.downstreamWeight(phaseIdx)
+                   * dn.enthalpy(phaseIdx)
+                   * dn.density(phaseIdx)
+                   * dn.mobility(phaseIdx));
         }
     }
 
@@ -177,13 +179,10 @@ public:
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
 
         // diffusive heat flux
-        flux[temperatureIdx] +=
-            fluxVars.normalMatrixHeatFlux();
+        flux[energyEqIdx] +=
+            -fluxVars.temperatureGradNormal()
+            * fluxVars.heatConductivity();
     }
-
-private:
-    Scalar massUpwindWeight_;
-
 };
 
 }

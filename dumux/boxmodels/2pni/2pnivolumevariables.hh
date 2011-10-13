@@ -24,7 +24,7 @@
  * \file
  *
  * \brief Contains the quantities which are constant within a
- *        finite volume in the non-isothermal two-phase, two-component
+ *        finite volume in the non-isothermal two-phase
  *        model.
  */
 #ifndef DUMUX_2PNI_VOLUME_VARIABLES_HH

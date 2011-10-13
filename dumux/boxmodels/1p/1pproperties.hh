@@ -57,6 +57,8 @@ NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 1p models
 NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters object
 NEW_PROP_TAG(FluidSystem); //!< The type of the fluid system to use
 NEW_PROP_TAG(Fluid); //!< The fluid used for the default fluid system
+NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(UpwindWeight); //!< Returns weight of the upwind cell when calculating fluxes
 

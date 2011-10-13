@@ -38,7 +38,6 @@ namespace Dumux
  * \ingroup BoxBaseProblems
  * \brief Base class for all problems which use the non-isothermal
  *         two-phase box model.
- *
  */
 template<class TypeTag>
 class TwoPNIProblem : public TwoPProblem<TypeTag>

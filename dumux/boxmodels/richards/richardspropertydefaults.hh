@@ -41,6 +41,7 @@
 
 #include <dumux/material/components/nullcomponent.hh>
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Dumux
 {
@@ -93,6 +94,17 @@ private:
 public:
     typedef typename MaterialLaw::Params type;
 };
+
+//! set the heat conduction law to a dummy one by default
+SET_TYPE_PROP(BoxRichards, 
+              HeatConductionLaw, 
+              Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxRichards, 
+              HeatConductionLawParams, 
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 /*!
  * \brief The wetting phase used.

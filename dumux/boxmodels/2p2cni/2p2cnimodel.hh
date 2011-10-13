@@ -25,10 +25,10 @@
 /*!
  * \file
  *
- * \brief Adaption of the BOX scheme to the non-isothermal two-phase two-component flow model.
+ * \brief Adaption of the BOX scheme to the non-isothermal two-phase, two-component flow model.
  */
-#ifndef DUMUX_NEW_2P2CNI_MODEL_HH
-#define DUMUX_NEW_2P2CNI_MODEL_HH
+#ifndef DUMUX_2P2CNI_MODEL_HH
+#define DUMUX_2P2CNI_MODEL_HH
 
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 

@@ -60,8 +60,11 @@ NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters
 NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
 
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
-NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law (extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
+NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
+
+NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
 
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(MassUpwindWeight); //!< The value of the upwind weight for the mass conservation equations

@@ -309,7 +309,7 @@ protected:
             Valgrind::SetUndefined(tmp);
             asImp_().computeDirichlet_(tmp, elemCtx, scvIdx);
             const PrimaryVariables &priVars = 
-                elemCtx.volVars(scvIdx).primaryVars();
+                elemCtx.primaryVars(scvIdx);
 
             // set the dirichlet conditions
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {

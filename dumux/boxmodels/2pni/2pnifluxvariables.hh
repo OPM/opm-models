@@ -45,7 +45,7 @@ namespace Dumux
  * \ingroup BoxFluxVariables
  * \brief This template class contains the data which is required to
  *        calculate all fluxes (mass of components and energy) over a face of a finite
- *        face of a finite volume for the non-isothermal two-phase model.
+ *        volume for the non-isothermal two-phase model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.

@@ -86,14 +86,13 @@ public:
      * \param isOldSol Specifies whether the solution is from
      *                 the previous time step or from the current one
      */
-    void update(const PrimaryVariables &priVars,
-                const ElementContext &elemCtx,
+    void update(const ElementContext &elemCtx,
                 int scvIdx,
                 int historyIdx)
     {
         assert(!FluidSystem::isLiquid(nPhaseIdx));
 
-        ParentType::update(priVars, elemCtx, scvIdx, historyIdx);
+        ParentType::update(elemCtx, scvIdx, historyIdx);
 
         completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
 

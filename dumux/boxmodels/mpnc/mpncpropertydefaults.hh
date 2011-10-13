@@ -40,6 +40,7 @@
 #include "energy/mpncvtkwriterenergy.hh"
 
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 
 /*!
@@ -110,6 +111,18 @@ private:
 public:
     typedef typename MaterialLaw::Params type;
 };
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxMPNC, 
+              HeatConductionLaw, 
+              Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxMPNC, 
+              HeatConductionLawParams, 
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 /*!
  * \brief Set the themodynamic constraint solver which calculates the

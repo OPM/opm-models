@@ -132,18 +132,18 @@ class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true, /*kineticenergyTra
 
 
 public:
-    static void computeStorage(PrimaryVariables &result,
+    static void computeStorage(PrimaryVariables &storage,
                                const VolumeVariables &volVars)
     {
-        result[energyEqIdx] = 0;
-
+        storage[energyEqIdx] = 0;
+        
         // energy of the fluids
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            addPhaseStorage(result, volVars, phaseIdx);
+            addPhaseStorage(storage, volVars, phaseIdx);
         }
 
-        // heat stored in the rock matrix
-        result[energyEqIdx] +=
+        // handle the heat capacity of the solid
+        storage[energyEqIdx] += 
             volVars.fluidState().temperature()
             * volVars.heatCapacitySolid()
             * (1.0 - volVars.porosity());
@@ -156,12 +156,12 @@ public:
         const typename VolumeVariables::FluidState &fs =
             volVars.fluidState();
 
-        // energy of the fluid
+        // add the internal energy of the phase
         storage[energyEqIdx] +=
-            fs.density(phaseIdx)
-            * fs.internalEnergy(phaseIdx)
-            * fs.saturation(phaseIdx)
-            * volVars.porosity();
+            volVars.porosity() * (
+                volVars.fluidState().density(phaseIdx)
+                * volVars.fluidState().internalEnergy(phaseIdx)
+                * volVars.fluidState().saturation(phaseIdx));
     }
 
     static void computeFlux(PrimaryVariables &flux,
@@ -185,7 +185,7 @@ public:
                               scvfIdx);
     }
     
-    static void computePhaseEnthalpyFlux(PrimaryVariables & result,
+    static void computePhaseEnthalpyFlux(PrimaryVariables &result,
                                          const ElementContext &elemCtx,
                                          int scvfIdx,
                                          const int phaseIdx,
@@ -201,9 +201,21 @@ public:
 
         // use the phase enthalpy of the upstream vertex to calculate
         // the enthalpy transport
-        int upIdx = elemCtx.fluxVars(scvfIdx).upstreamIdx(phaseIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+
+        int upIdx = fluxVars.upstreamIdx(phaseIdx);
+        int dnIdx = fluxVars.downstreamIdx(phaseIdx);
+
         const VolumeVariables &up = elemCtx.volVars(upIdx);
-        result[energyEqIdx] += up.fluidState().enthalpy(phaseIdx) * massFlux;
+        const VolumeVariables &dn = elemCtx.volVars(dnIdx);
+
+        result[energyEqIdx] += 
+            massFlux
+            * (fluxVars.upstreamWeight(phaseIdx)*
+               up.fluidState().enthalpy(phaseIdx)
+               +
+               fluxVars.downstreamWeight(phaseIdx)*
+               dn.fluidState().enthalpy(phaseIdx));
     }
 
     static void computeHeatConduction(PrimaryVariables &result,
@@ -212,11 +224,10 @@ public:
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
         
-        //lumped heat conduction of the rock matrix and the fluid phases
-        Scalar lumpedConductivity  = fluxVars.energyData().lambdaPm() ;
-        Scalar temperatureGradientNormal  = fluxVars.energyData().temperatureGradientNormal() ;
-        Scalar lumpedHeatConduction = - lumpedConductivity * temperatureGradientNormal ;
-        result[energyEqIdx] += lumpedHeatConduction ;
+        // diffusive heat flux
+        result[energyEqIdx] +=
+            -fluxVars.energyVars().temperatureGradNormal()
+            * fluxVars.energyVars().heatConductivity();
     }
 
 

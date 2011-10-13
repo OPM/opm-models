@@ -75,7 +75,7 @@ public:
                             ParameterCache &paramCache,
                             const ElementContext &elemCtx,
                             int scvIdx,
-                            int phaseIdx) const
+                            int historyIdx) const
     {
         Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx);
         fs.setTemperature(T);
@@ -122,6 +122,8 @@ class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyT
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
 
     enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -160,7 +162,7 @@ public:
                 int scvIdx,
                 int historyIdx)
     {
-        const auto &priVars = elemCtx.volVars(scvIdx, historyIdx).primaryVars();
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
         const auto &spatialParams = elemCtx.problem().spatialParameters();
 
         Valgrind::SetUndefined(*this);
@@ -169,8 +171,10 @@ public:
         heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx);
         Valgrind::CheckDefined(heatCapacitySolid_);
 
-        thermalConductivitySolid_ = spatialParams.thermalConductivitySolid(elemCtx, scvIdx);
-        Valgrind::CheckDefined(thermalConductivitySolid_);
+        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx);
+        heatConductivity_ =
+            HeatConductionLaw::heatConductivity(heatCondParams, fs);
+        Valgrind::CheckDefined(heatConductivity_);
 
         // set the enthalpies
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -186,8 +190,12 @@ public:
     Scalar heatCapacitySolid() const
     { return heatCapacitySolid_; };
 
-    Scalar thermalConductivitySolid() const
-    { return thermalConductivitySolid_; };
+    /*!
+     * \brief Returns the lumped thermal conductivity [W/(K m)] of the
+     *        medium.
+     */
+    Scalar heatConductivity() const
+    { return heatConductivity_; };
 
     /*!
      * \brief If running under valgrind this produces an error message
@@ -196,12 +204,12 @@ public:
     void checkDefined() const
     {
         Valgrind::CheckDefined(heatCapacitySolid_);
-        Valgrind::CheckDefined(thermalConductivitySolid_);
+        Valgrind::CheckDefined(heatConductivity_);
     };
 
 protected:
     Scalar heatCapacitySolid_;
-    Scalar thermalConductivitySolid_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace
