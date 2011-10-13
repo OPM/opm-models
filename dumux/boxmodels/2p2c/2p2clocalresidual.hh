@@ -159,11 +159,6 @@ public:
                         int scvIdx,
                         int historyIdx) const
     {
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
         const VolumeVariables &volVars = 
             elemCtx.volVars(scvIdx, historyIdx);
 

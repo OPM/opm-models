@@ -78,6 +78,8 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename Grid::ctype CoordScalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
     enum {
         dim=GridView::dimension,
         dimWorld=GridView::dimensionworld
@@ -85,22 +87,23 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
-        lPhaseIdx = Indices::lPhaseIdx
+        lPhaseIdx = FluidSystem::lPhaseIdx,
+        gPhaseIdx = FluidSystem::gPhaseIdx
     };
 
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar,dimWorld> Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-    typedef typename MaterialLaw::Params MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
+public:
     /*!
      * \brief The constructor
      *
@@ -132,9 +135,6 @@ public:
         coarseMaterialParams_.setLambda(2.0);
     }
 
-    ~WaterAirSpatialParameters()
-    {}
-
     /*!
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
@@ -143,6 +143,7 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
+    using ParentType::intrinsicPermeability;
     const Scalar intrinsicPermeability(const Element &element,
                                        const FVElementGeometry &fvElemGeom,
                                        int scvIdx) const
@@ -161,7 +162,8 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      *                    the porosity needs to be defined
      */
-    double porosity(const Element &element,
+    using ParentType::porosity;
+    Scalar porosity(const Element &element,
                     const FVElementGeometry &fvElemGeom,
                     int scvIdx) const
     {
@@ -180,6 +182,7 @@ public:
     * \param fvElemGeom The current finite volume geometry of the element
     * \param scvIdx The index of the sub-control volume
     */
+    using ParentType::materialLawParams;
     const MaterialLawParams& materialLawParams(const Element &element,
                                                 const FVElementGeometry &fvElemGeom,
                                                 int scvIdx) const
@@ -201,7 +204,8 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      *                    the heat capacity needs to be defined
      */
-    double heatCapacity(const Element &element,
+    using ParentType::heatCapacity;
+    Scalar heatCapacity(const Element &element,
                         const FVElementGeometry &fvElemGeom,
                         int scvIdx) const
     {
@@ -226,24 +230,26 @@ public:
      * \param scvfIdx The local index of the sub-control volume face where
      *                    the matrix heat flux should be calculated
      */
+    template <class Context>
     void matrixHeatFlux(Vector &heatFlux,
-                        const FluxVariables &fluxDat,
-                        const ElementVolumeVariables &vDat,
-                        const Vector &tempGrad,
-                        const Element &element,
-                        const FVElementGeometry &fvElemGeom,
-                        int scvfIdx) const
+                        const Context &context,
+                        int localIdx) const
     {
         static const Scalar lWater = 0.6;
         static const Scalar lGranite = 2.8;
 
+        const auto &fluxVars = context.fluxVars(localIdx);
+
         // arithmetic mean of the liquid saturation and the porosity
-        const int i = fvElemGeom.subContVolFace[scvfIdx].i;
-        const int j = fvElemGeom.subContVolFace[scvfIdx].j;
-        Scalar Sl = std::max<Scalar>(0.0, (vDat[i].saturation(lPhaseIdx) +
-                                           vDat[j].saturation(lPhaseIdx)) / 2);
-        Scalar poro = (porosity(element, fvElemGeom, i) +
-                       porosity(element, fvElemGeom, j)) / 2;
+        const int i = fluxVars.insideIdx();
+        const int j = fluxVars.outsideIdx();
+        const auto &volVarsI = context.volVars(i);
+        const auto &volVarsJ = context.volVars(j);
+
+        Scalar Sl = std::max<Scalar>(0.0, (volVarsI.saturation(lPhaseIdx) +
+                                           volVarsJ.saturation(lPhaseIdx)) / 2);
+        Scalar poro = (this->porosity(context, i) +
+                       this->porosity(context, j)) / 2;
 
         Scalar lsat = std::pow(lGranite, (1-poro)) * std::pow(lWater, poro);
         Scalar ldry = std::pow(lGranite, (1-poro));
@@ -254,8 +260,8 @@ public:
 
         // the matrix heat flux is the negative temperature gradient
         // times the heat conductivity.
-        heatFlux = tempGrad;
-        heatFlux *= -heatCond;
+        heatFlux = fluxVars.temperatureGrad();
+        heatFlux *= - heatCond;
     }
 
 private:

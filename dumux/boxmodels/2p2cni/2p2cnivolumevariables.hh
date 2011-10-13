@@ -50,16 +50,7 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
     typedef TwoPTwoCVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-
-    enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
-    };
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
@@ -73,6 +64,7 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
 
 public:
     /*!
+
      * \brief Returns the total internal energy of a phase in the
      *        sub-control volume.
      *
@@ -95,7 +87,7 @@ public:
      *        the sub-control volume.
      */
     Scalar heatCapacity() const
-    { return heatCapacity_; };
+    { return heatCapacitySolid_; };
 
 protected:
     // this method gets called by the parent class. since this method
@@ -103,22 +95,24 @@ protected:
     friend class TwoPTwoCVolumeVariables<TypeTag>;
 
     // set the fluid state's temperature
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx,
-                            int historyIdx)
-    {
-        // retrieve temperature from solution vector
-        this->fluidState_.setTemperature(elemCtx.priVars(scvIdx)[temperatureIdx]);
+    template <class FluidState> 
+    static void updateTemperature_(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int historyIdx)
+    { 
+        // retrieve temperature from the primary variables
+        fluidState.setTemperature(elemCtx.primaryVars(scvIdx)[temperatureIdx]);
     }
 
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
     template <class ParameterCache>
-    void updateEnergy_(ParameterCache &paramCache,
+    void updateEnergy_(const ParameterCache &paramCache,
                        const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     {
         // copmute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -127,12 +121,19 @@ protected:
             this->fluidState_.setEnthalpy(phaseIdx, h);
         }
 
-        // copmute and set the heat capacity of the solid phase
-        heatCapacity_ = problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
-        Valgrind::CheckDefined(heatCapacity_);
-    };
+        // compute and set the heat capacity of the solid phase
+        const auto &problem = elemCtx.problem();
+        //const auto &heatCondParams = problem.heatConducionParams(elemCtx, scvIdx, timeIdx);
 
-    Scalar heatCapacity_;
+        heatCapacitySolid_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx.element(), elemCtx.fvElemGeom(), scvIdx);
+        heatConductivity_ = 1e-5; // HACK: HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
+
+        Valgrind::CheckDefined(heatCapacitySolid_);
+        Valgrind::CheckDefined(heatConductivity_);
+    }
+
+    Scalar heatCapacitySolid_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace

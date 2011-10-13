@@ -48,7 +48,11 @@ class WaterAirProblem;
 
 namespace Properties
 {
+#if !ISOTHERMAL
 NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoCNI, WaterAirSpatialParameters));
+#else
+NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoC, WaterAirSpatialParameters));
+#endif
 
 // Set the grid type
 SET_PROP(WaterAirProblem, Grid)
@@ -84,9 +88,9 @@ SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
  *        buoyancy driven upward migration the gas passes a high
  *        temperature area.
  *
- * The domain is sized 40 m times 40 m in a depth of 1000 m. The rectangular area
- * with the increased temperature (380 K) starts at (20 m, 5 m) and ends at
- * (30 m, 35 m).
+ * The domain is sized 40 m times 40 m. The rectangular area with the
+ * increased temperature (380 K) starts at (20 m, 5 m) and ends at (30
+ * m, 35 m).
  *
  * For the mass conservation equation neumann boundary conditions are used on
  * the top and on the bottom of the domain, while dirichlet conditions
@@ -119,6 +123,7 @@ class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
     typedef TwoPTwoCNIProblem<TypeTag> ParentType;
 
     // copy some indices for convenience
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
 
@@ -128,6 +133,14 @@ class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
 #endif
+        
+        // component indices
+        N2Idx = FluidSystem::N2Idx,
+        H2OIdx = FluidSystem::H2OIdx,
+
+        // equation indices
+        contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
+        contiH2OEqIdx = Indices::conti0EqIdx + H2OIdx,
 
         // Phase State
         lPhaseOnly = Indices::lPhaseOnly,
@@ -147,7 +160,6 @@ class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
     typedef typename GridView::Intersection Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
@@ -190,7 +202,10 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    Scalar temperature() const
+    using ParentType::temperature;
+    Scalar temperature(const Element &element,
+                       const FVElementGeometry &fvElemGeom,
+                       int scvIdx) const
     {
         return 273.15 + 10; // -> 10°C
     };
@@ -216,6 +231,7 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
+    using ParentType::boundaryTypes;
     void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -239,6 +255,7 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
+    using ParentType::dirichlet;
     void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -260,6 +277,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
+    using ParentType::neumann;
     void neumann(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -274,7 +292,7 @@ public:
         if (globalPos[0] > 15 && globalPos[0] < 25 &&
             globalPos[1] < eps_)
         {
-            values[Indices::contiGEqIdx] = -1e-3;
+            values[contiN2EqIdx] = -1e-3; // [kg/(s m^2)]
         }
     }
 
@@ -296,6 +314,7 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    using ParentType::initial;
     void initial(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -318,6 +337,7 @@ public:
      * \param globalIdx The index of the global vertex
      * \param globalPos The global position
      */
+    using ParentType::initialPhasePresence;
     int initialPhasePresence(const Vertex &vert,
                              int &globalIdx,
                              const GlobalPosition &globalPos) const

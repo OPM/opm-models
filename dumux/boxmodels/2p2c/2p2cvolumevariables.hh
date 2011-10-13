@@ -133,6 +133,10 @@ public:
         // became part of the fluid state.
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
+
+        // energy related quantities
+        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, historyIdx);
+
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // relative permeabilities
             Scalar kr;
@@ -157,9 +161,6 @@ public:
         // porosity
         porosity_ = spatialParams.porosity(elemCtx, scvIdx);
         Valgrind::CheckDefined(porosity_);
-
-        // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
     }
 
     /*!
@@ -301,12 +302,6 @@ public:
             Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
             fluidState.setDensity(phaseIdx, rho);
         }
-
-        Implementation::updateEnthalpy_(fluidState, 
-                                        paramCache, 
-                                        elemCtx,
-                                        scvIdx,
-                                        historyIdx);
     }
 
     /*!
@@ -410,18 +405,11 @@ protected:
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
 
-    template<class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int historyIdx)
-    { }
-
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const ElementContext &elemCtx,
+    void updateEnergy_(typename FluidSystem::ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
                        int scvIdx,
                        int historyIdx)
     { }
@@ -437,8 +425,6 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
-
-
 };
 
 } // end namepace
