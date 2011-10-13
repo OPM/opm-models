@@ -44,9 +44,7 @@
 // use the same spatial parameters as the injection problem of the
 // 2p2c test program
 #include "../2p2c/injectionspatialparameters.hh"
-
-// include the grid creator for this problem
-#include "injection2pnigridcreator.hh"
+#include <dumux/common/cubegridcreator.hh>
 
 #define ISOTHERMAL 0
 
@@ -65,12 +63,6 @@ NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoP, InjectionSpatialParame
 
 // declare the properties specific for the non-isothermal immiscible
 // injection problem
-NEW_PROP_TAG(GridSizeX);
-NEW_PROP_TAG(GridSizeY);
-
-NEW_PROP_TAG(CellsX);
-NEW_PROP_TAG(CellsY);
-
 // Set the grid type
 SET_PROP(InjectionProblem2PNI, Grid)
 {
@@ -113,15 +105,17 @@ public:
 SET_BOOL_PROP(InjectionProblem2PNI, EnableGravity, true);
 
 // write convergence behaviour to disk?
-SET_BOOL_PROP(InjectionProblem2PNI, NewtonWriteConvergence, true);
+SET_BOOL_PROP(InjectionProblem2PNI, NewtonWriteConvergence, false);
 
 // define the properties specific for the non-isothermal immiscible
 // injection problem
 SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeX, 60.0);
 SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeY, 40.0);
+SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeZ, 0.0);
 
-SET_INT_PROP(InjectionProblem2PNI, CellsX, 24);
-SET_INT_PROP(InjectionProblem2PNI, CellsY, 26);
+SET_INT_PROP(InjectionProblem2PNI, GridCellsX, 24);
+SET_INT_PROP(InjectionProblem2PNI, GridCellsY, 26);
+SET_INT_PROP(InjectionProblem2PNI, GridCellsZ, 0);
 }
 
 /*!

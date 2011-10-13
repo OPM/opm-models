@@ -73,7 +73,7 @@ public:
         const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        temperatureGrad_ = Scalar(0.0);
+        Vector temperatureGrad(0.0);
         Vector tmp;
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
@@ -82,16 +82,18 @@ public:
 
             tmp = feGrad;
             tmp *= volVars.temperature();
-            temperatureGrad_ += tmp;
+            temperatureGrad += tmp;
         }
-
+        
         // scalar product of temperature gradient and scvf normal
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
-        spatialParams.matrixHeatFlux(tmp,
-                                     elemCtx,
-                                     scvfIdx);
+        temperatureGradNormal_ = 0.0;
+        for (int i = 0; i < dim; ++ i)
+            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
+
         // arithmetic mean
-        normalMatrixHeatFlux_ = tmp*scvf.normal;
+        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx());
+        const auto &volVarsInside = elemCtx.volVars(this->insideIdx());
+        heatConductivity_ =
             0.5 * (volVarsInside.heatConductivity()
                    +
                    volVarsOutside.heatConductivity());
@@ -99,12 +101,7 @@ public:
     }
 
     /*!
-     * \brief The temperature gradient [K/m]
-     */
-    const Vector& temperatureGrad() const
-    { return temperatureGrad_; }
-
-    /*!
+     * \brief The temperature gradient times the face normal [K m^2 / m] 
      */
     Scalar temperatureGradNormal() const
     { return temperatureGradNormal_; }
@@ -116,7 +113,7 @@ public:
     { return heatConductivity_; }
 
 private:
-    Vector temperatureGrad_;
+    Scalar temperatureGradNormal_;
     Scalar heatConductivity_;
 };
 

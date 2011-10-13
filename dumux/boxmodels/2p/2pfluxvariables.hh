@@ -117,7 +117,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalVelocity(int phaseIdx) const
+    Scalar filterVelocityNormal(int phaseIdx) const
     { return normalVelocity_[phaseIdx]; }
 
     /*!

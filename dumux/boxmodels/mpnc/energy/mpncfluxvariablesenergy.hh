@@ -119,7 +119,12 @@ public:
         temperatureGradientNormal_ = 
             temperatureGradient * fvElemGeom.subContVolFace[scvfIdx].normal;
 
-        lambdaPm_ = lumpedLambdaPm_(elemCtx, scvfIdx) ;
+        // arithmetic mean
+        heatConductivity_ =
+            0.5 * (volVarsInside.heatConductivity() 
+                   + 
+                   volVarsOutside.heatConductivity());
+        Valgrind::CheckDefined(heatConductivity_);
     }
 
     /*!

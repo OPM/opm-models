@@ -94,6 +94,12 @@ public:
                                      scvfIdx);
         // project the heat flux vector on the face's normal vector
         normalMatrixHeatFlux_ = tmp*scvf.normal;
+        // arithmetic mean
+        heatConductivity_ =
+            0.5 * (volVarsInside.heatConductivity() 
+                   + 
+                   volVarsOutside.heatConductivity());
+        Valgrind::CheckDefined(heatConductivity_);
     }
 
     /*!

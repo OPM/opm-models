@@ -165,7 +165,7 @@ public:
             // phase
             int eqIdx = (phaseIdx == wPhaseIdx) ? contiWEqIdx : contiNEqIdx;
             flux[eqIdx] +=
-                fluxVars.normalVelocity(phaseIdx)
+                fluxVars.filterVelocityNormal(phaseIdx)
                 * (fluxVars.upstreamWeight(phaseIdx)
                    * up.density(phaseIdx)
                    * up.mobility(phaseIdx)

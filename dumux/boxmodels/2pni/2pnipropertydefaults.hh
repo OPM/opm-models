@@ -44,8 +44,6 @@
 
 namespace Dumux
 {
-
-
 namespace Properties
 {
 //////////////////////////////////////////////////////////////////
@@ -68,12 +66,17 @@ SET_TYPE_PROP(BoxTwoPNI, VolumeVariables, TwoPNIVolumeVariables<TypeTag>);
 //! the FluxVariables property
 SET_TYPE_PROP(BoxTwoPNI, FluxVariables, TwoPNIFluxVariables<TypeTag>);
 
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxTwoPNI, 
+              HeatConductionLawParams, 
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
+
 //! The indices required by the non-isothermal two-phase model
 SET_TYPE_PROP(BoxTwoPNI, TwoPIndices, TwoPNIIndices<0>);
 SET_TYPE_PROP(BoxTwoPNI, TwoPNIIndices, TwoPNIIndices<0>);
 
 }
-
 }
 
 #endif

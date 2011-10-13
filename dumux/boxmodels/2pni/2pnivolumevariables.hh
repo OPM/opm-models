@@ -49,6 +49,7 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -80,8 +81,16 @@ public:
      * \brief Returns the total heat capacity \f$\mathrm{[J/K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */
-    Scalar heatCapacity() const
-    { return heatCapacity_; };
+    Scalar heatCapacitySolid() const
+    { return heatCapacitySolid_; };
+
+    /*!
+     * \brief Returns the total conductivity capacity
+     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
+     *        sub-control volume.
+     */
+    Scalar heatConductivity() const
+    { return heatConductivity_; };
 
 protected:
     // this method gets called by the parent class. since this method
@@ -120,11 +129,19 @@ protected:
                        int historyIdx)
     {
         // compute and set the heat capacity of the solid phase
-        heatCapacity_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx, scvIdx);
-        Valgrind::CheckDefined(heatCapacity_);
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx);
+
+        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx);
+        heatConductivity_ =
+            HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
+
+        Valgrind::CheckDefined(heatCapacitySolid_);
+        Valgrind::CheckDefined(heatConductivity_);
     }
 
-    Scalar heatCapacity_;
+    Scalar heatCapacitySolid_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace
