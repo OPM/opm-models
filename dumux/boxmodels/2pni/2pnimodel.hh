@@ -1,7 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Andreas Lauser, Bernd Flemisch                    *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -22,7 +25,7 @@
 /*!
  * \file
  *
- * \brief Adaption of the BOX scheme to the non-isothermal twophase flow model.
+ * \brief Adaption of the BOX scheme to the non-isothermal two-phase two-component flow model.
  */
 #ifndef DUMUX_2PNI_MODEL_HH
 #define DUMUX_2PNI_MODEL_HH
@@ -30,9 +33,13 @@
 #include <dumux/boxmodels/2p/2pmodel.hh>
 
 namespace Dumux {
+/*!
+ * \ingroup BoxModels
+ * \defgroup TwoPNIModel Non-isothermal two-phase two-component box model
+ */
 
 /*!
- * \ingroup TwoPNIBoxModel
+ * \ingroup TwoPNIModel
  * \brief A two-phase, non-isothermal flow model using the box scheme.
  *
  * This model implements a non-isothermal two-phase flow for two
@@ -68,7 +75,7 @@ namespace Dumux {
  \right\} \\
     & - \text{div} \left(\lambda_{pm} \textbf{grad} \, T \right)
     - q^h = 0, \qquad \alpha \in \{w, n\} \;,
- \f}
+\f}
  * where \f$h_\alpha\f$ is the specific enthalpy of a fluid phase
  * \f$\alpha\f$ and \f$u_\alpha = h_\alpha -
  * p_\alpha/\varrho_\alpha\f$ is the specific internal energy of the
@@ -86,7 +93,7 @@ namespace Dumux {
  * default, the model uses \f$p_w\f$, \f$S_n\f$ and \f$T\f$.
  */
 template<class TypeTag>
-class TwoPNIModel: public TwoPModel<TypeTag>
+class TwoPNIModel : public TwoPModel<TypeTag>
 {};
 
 }

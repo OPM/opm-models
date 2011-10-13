@@ -63,8 +63,9 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
     //! \endcond
 
 public:
-    /*!
+    typedef typename ParentType::FluidState FluidState;
 
+    /*!
      * \brief Returns the total internal energy of a phase in the
      *        sub-control volume.
      *
@@ -94,27 +95,22 @@ protected:
     // is protected, we are friends with our parent..
     friend class TwoPTwoCVolumeVariables<TypeTag>;
 
-    // set the fluid state's temperature
-    template <class FluidState> 
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
                                    int historyIdx)
-    { 
-        // retrieve temperature from the primary variables
-        fluidState.setTemperature(elemCtx.primaryVars(scvIdx)[temperatureIdx]);
+    {
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        fluidState.setTemperature(priVars[temperatureIdx]);
     }
 
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
     template <class ParameterCache>
     void updateEnergy_(const ParameterCache &paramCache,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx)
     {
-        // copmute and set the internal energies of the fluid phases
+        // compute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
 
@@ -123,10 +119,10 @@ protected:
 
         // compute and set the heat capacity of the solid phase
         const auto &problem = elemCtx.problem();
-        //const auto &heatCondParams = problem.heatConducionParams(elemCtx, scvIdx, timeIdx);
+        const auto &heatCondParams = problem.heatConducionParams(elemCtx, scvIdx, timeIdx);
 
-        heatCapacitySolid_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx.element(), elemCtx.fvElemGeom(), scvIdx);
-        heatConductivity_ = 1e-5; // HACK: HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
+        heatCapacitySolid_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx, scvIdx, timeIdx);
+        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
 
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);

@@ -248,6 +248,7 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
+    using ParentType::temperature;
     Scalar temperature(const Element &element,
                        const FVElementGeometry &fvElemGeom,
                        int scvIdx) const
@@ -276,6 +277,7 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
+    using ParentType::boundaryTypes;
     void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -301,6 +303,7 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
+    using ParentType::dirichlet;
     void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
     {
         const GlobalPosition globalPos = vertex.geometry().center();
@@ -327,6 +330,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
+    using ParentType::neumann;
     void neumann(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
@@ -362,6 +366,7 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    using ParentType::initial;
     void initial(PrimaryVariables &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,

@@ -117,8 +117,22 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalFlux(int phaseIdx) const
-    { return normalFlux_[phaseIdx]; }
+    Scalar normalVelocity(int phaseIdx) const
+    { return normalVelocity_[phaseIdx]; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "inside" of the sub-control volume face.
+     */
+    short insideIdx() const
+    { return insideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "outside" of the sub-control volume face.
+     */
+    short outsideIdx() const
+    { return outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the upstream control volume
@@ -128,7 +142,7 @@ public:
      *                 direction is requested.
      */
     short upstreamIdx(int phaseIdx) const
-    { return (normalFlux_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
+    { return (normalVelocity_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -138,7 +152,25 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { return (normalFlux_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+    { return (normalVelocity_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+
+    /*!
+     * \brief Return the weight of the upstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar upstreamWeight(int phaseIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Return the weight of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar downstreamWeight(int phaseIdx) const
+    { return 0.0; }
 
 protected:
     void calculateGradients_(const ElementContext &elemCtx,
@@ -234,12 +266,12 @@ protected:
             K.mv(potentialGrad(phaseIdx), tmpVec);
 
             // scalar product with the face normal
-            normalFlux_[phaseIdx] = 0.0;
+            normalVelocity_[phaseIdx] = 0.0;
             for (int i = 0; i < Vector::size; ++i) 
-                normalFlux_[phaseIdx] += tmpVec[i]*normal[i];
+                normalVelocity_[phaseIdx] += tmpVec[i]*normal[i];
 
-            // flux is along negative pressure gradients
-            normalFlux_[phaseIdx] *= -1;
+            // flux is along negative potential gradients
+            normalVelocity_[phaseIdx] *= -1;
         }
     }
 
@@ -254,7 +286,7 @@ protected:
     Vector potentialGrad_[numPhases];
 
     // normal fluxes
-    Scalar normalFlux_[numPhases];
+    Scalar normalVelocity_[numPhases];
 };
 
 } // end namepace

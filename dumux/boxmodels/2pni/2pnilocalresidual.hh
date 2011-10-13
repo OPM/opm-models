@@ -44,7 +44,7 @@ namespace Dumux
  * \ingroup TwoPNIModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase box model.
+ *        using the non-isothermal two-phase box model.
  */
 template<class TypeTag>
 class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
@@ -129,8 +129,9 @@ public:
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
-
+        
         // advective heat flux in all phases
+        flux[energyEqIdx] = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
             const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx));
@@ -141,12 +142,10 @@ public:
                 * (fluxVars.upstreamWeight(phaseIdx)
                    * up.fluidState().enthalpy(phaseIdx)
                    * up.fluidState().density(phaseIdx)
-                   * up.mobility(phaseIdx)
                    +
                    fluxVars.downstreamWeight(phaseIdx)
                    * dn.fluidState().enthalpy(phaseIdx)
-                   * dn.fluidState().density(phaseIdx)
-                   * dn.mobility(phaseIdx));
+                   * dn.fluidState().density(phaseIdx));
         }
     }
 

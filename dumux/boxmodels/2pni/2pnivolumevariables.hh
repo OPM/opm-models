@@ -2,7 +2,8 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *                                                                           *
@@ -22,8 +23,9 @@
 /*!
  * \file
  *
- * \brief Contains the quantities which are are constant within a
- *        finite volume in the non-isothermal two-phase model.
+ * \brief Contains the quantities which are constant within a
+ *        finite volume in the non-isothermal two-phase, two-component
+ *        model.
  */
 #ifndef DUMUX_2PNI_VOLUME_VARIABLES_HH
 #define DUMUX_2PNI_VOLUME_VARIABLES_HH
@@ -36,8 +38,9 @@ namespace Dumux
 /*!
  * \ingroup TwoPNIModel
  * \ingroup BoxVolumeVariables
- * \brief Contains the quantities which are constant within a
- *        finite volume in the non-isothermal two-phase model.
+ * \brief Contains the quantities which are are constant within a
+ *        finite volume in the non-isothermal two-phase, two-component
+ *        model.
  */
 template <class TypeTag>
 class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
@@ -45,14 +48,12 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
     typedef TwoPVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { temperatureIdx = Indices::temperatureIdx };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
@@ -63,11 +64,9 @@ public:
      *        sub-control volume.
      *
      * \param phaseIdx The phase index
-     *
      */
     Scalar internalEnergy(int phaseIdx) const
     { return this->fluidState_.internalEnergy(phaseIdx); };
-
     /*!
      * \brief Returns the total enthalpy of a phase in the sub-control
      *        volume.
@@ -89,15 +88,13 @@ protected:
     // is protected, we are friends with our parent..
     friend class TwoPVolumeVariables<TypeTag>;
     
-    /*!
-     * \brief Update the temperature for a given control volume.
-     */
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
                                    int historyIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        fluidState.setTemperature(priVars[temperatureIdx]);
     }
 
     template <class ParameterCache>

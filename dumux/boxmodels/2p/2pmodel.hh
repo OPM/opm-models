@@ -181,7 +181,6 @@ public:
                 (*poro)[globalIdx] = volVars.porosity();
                 (*Te)[globalIdx] = volVars.temperature();
             };
-
         }
 
         writer.attachVertexData(*Sn, "Sn");

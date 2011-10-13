@@ -26,10 +26,10 @@
  * \file
  *
  * \brief This file contains the data which is required to calculate
- *        all fluxes (mass of components and energy) over a face of a finite volume.
+ *        all fluxes (mass and energy) of all phases over a face of a finite volume.
  *
- * This means pressure, concentration and temperature gradients, phase
- * densities at the integration point, etc.
+ * This means pressure and temperature gradients, phase densities at
+ * the integration point, etc.
  */
 #ifndef DUMUX_2PNI_FLUX_VARIABLES_HH
 #define DUMUX_2PNI_FLUX_VARIABLES_HH
@@ -45,7 +45,7 @@ namespace Dumux
  * \ingroup BoxFluxVariables
  * \brief This template class contains the data which is required to
  *        calculate all fluxes (mass of components and energy) over a face of a finite
- *        volume for the non-isothermal two-phase model.
+ *        face of a finite volume for the non-isothermal two-phase model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.
@@ -73,29 +73,25 @@ public:
         const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        Vector temperatureGrad;
+        temperatureGrad_ = Scalar(0.0);
         Vector tmp;
-        temperatureGrad = Scalar(0.0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             const auto &feGrad = scvf.grad[scvIdx];
             const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
 
             tmp = feGrad;
-            tmp *= volVars.fluidState().temperature(/*phaseIdx=*/0);
-            temperatureGrad += tmp;
+            tmp *= volVars.temperature();
+            temperatureGrad_ += tmp;
         }
 
         // scalar product of temperature gradient and scvf normal
-        temperatureGradNormal_ = 0.0;
-        for (int i = 0; i < dimWorld; ++ i)
-            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
-
-        const auto &volVarsInside = elemCtx.volVars(this->insideIdx());
-        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx());
-
+        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        spatialParams.matrixHeatFlux(tmp,
+                                     elemCtx,
+                                     scvfIdx);
         // arithmetic mean
-        heatConductivity_ =
+        normalMatrixHeatFlux_ = tmp*scvf.normal;
             0.5 * (volVarsInside.heatConductivity()
                    +
                    volVarsOutside.heatConductivity());
@@ -103,7 +99,12 @@ public:
     }
 
     /*!
-     * \brief The temperature gradient times the face normal [K m^2 / m]
+     * \brief The temperature gradient [K/m]
+     */
+    const Vector& temperatureGrad() const
+    { return temperatureGrad_; }
+
+    /*!
      */
     Scalar temperatureGradNormal() const
     { return temperatureGradNormal_; }
@@ -115,7 +116,7 @@ public:
     { return heatConductivity_; }
 
 private:
-    Scalar temperatureGradNormal_;
+    Vector temperatureGrad_;
     Scalar heatConductivity_;
 };
 

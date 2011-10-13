@@ -161,27 +161,18 @@ public:
             const VolumeVariables &up = elemCtx.volVars(upIdx, /*historyIdx=*/0);
             const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*historyIdx=*/0);
 
-            // retrieve the 'velocity' in the normal direction of the
-            // current sub control volume face:
-            //
-            // v_\alpha := - (K grad p) * n
-            //
-            // note that v_\alpha is *not* equivalent to the Darcy
-            // velocity because the relative permebility is not
-            // included. Its purpose is to make the upwind decision,
-            // i.e. to decide whether the flow goes from sub control
-            // volume i to j or vice versa.
-            Scalar normalFlux = fluxVars.normalFlux(phaseIdx);
-
             // add advective flux of current component in current
             // phase
             int eqIdx = (phaseIdx == wPhaseIdx) ? contiWEqIdx : contiNEqIdx;
             flux[eqIdx] +=
-                normalFlux
-                *
-                ((    massUpwindWeight_)*up.density(phaseIdx)*up.mobility(phaseIdx)
-                 +
-                 (1 - massUpwindWeight_)*dn.density(phaseIdx)*dn.mobility(phaseIdx));
+                fluxVars.normalVelocity(phaseIdx)
+                * (fluxVars.upstreamWeight(phaseIdx)
+                   * up.density(phaseIdx)
+                   * up.mobility(phaseIdx)
+                   +
+                   fluxVars.downstreamWeight(phaseIdx)
+                   * dn.density(phaseIdx)
+                   * dn.mobility(phaseIdx));
         }
     }
 
