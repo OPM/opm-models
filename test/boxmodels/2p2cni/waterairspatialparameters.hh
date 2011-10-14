@@ -32,6 +32,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/heatconduction/somerton.hh>
 
 #include <dumux/boxmodels/2p2cni/2p2cnimodel.hh>
 
@@ -61,6 +62,18 @@ private:
 public:
     // define the material law parameterized by absolute saturations
     typedef EffToAbsLaw<EffMaterialLaw> type;
+};
+
+// Set the heat conduction law
+SET_PROP(WaterAirSpatialParameters, HeatConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    // define the material law parameterized by absolute saturations
+    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
 };
 }
 
@@ -103,6 +116,9 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
+
 public:
     /*!
      * \brief The constructor
@@ -133,6 +149,10 @@ public:
         coarseMaterialParams_.setPe(1e4);
         fineMaterialParams_.setLambda(2.0);
         coarseMaterialParams_.setLambda(2.0);
+
+        // parameters for the somerton law of heat conduction
+        computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
+        computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
     }
 
     /*!
@@ -143,12 +163,10 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
-    using ParentType::intrinsicPermeability;
-    const Scalar intrinsicPermeability(const Element &element,
-                                       const FVElementGeometry &fvElemGeom,
-                                       int scvIdx) const
+    template <class Context>
+    const Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineK_;
         return coarseK_;
@@ -162,12 +180,10 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      *                    the porosity needs to be defined
      */
-    using ParentType::porosity;
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar porosity(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return finePorosity_;
         else
@@ -182,12 +198,10 @@ public:
     * \param fvElemGeom The current finite volume geometry of the element
     * \param scvIdx The index of the sub-control volume
     */
-    using ParentType::materialLawParams;
-    const MaterialLawParams& materialLawParams(const Element &element,
-                                                const FVElementGeometry &fvElemGeom,
-                                                int scvIdx) const
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineMaterialParams_;
         else
@@ -204,67 +218,41 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      *                    the heat capacity needs to be defined
      */
-    using ParentType::heatCapacity;
-    Scalar heatCapacity(const Element &element,
-                        const FVElementGeometry &fvElemGeom,
-                        int scvIdx) const
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context, int localIdx) const
     {
         return
             790 // specific heat capacity of granite [J / (kg K)]
-            * 2700 // density of granite [kg/m^3]
-            * (1 - porosity(element, fvElemGeom, scvIdx));
+            * 2700; // density of granite [kg/m^3]
     }
 
     /*!
-     * \brief Calculate the heat flux \f$[W/m^2]\f$ through the
-     *        rock matrix based on the temperature gradient \f$[K / m]\f$
-     *
-     * This is only required for non-isothermal models.
-     *
-     * \param heatFlux The resulting heat flux vector
-     * \param fluxDat The flux variables
-     * \param vDat The volume variables
-     * \param tempGrad The temperature gradient
-     * \param element The current finite element
-     * \param fvElemGeom The finite volume geometry of the current element
-     * \param scvfIdx The local index of the sub-control volume face where
-     *                    the matrix heat flux should be calculated
+     * \brief Return the parameter object for the heat conductivty law
+     *        for a given position
      */
     template <class Context>
-    void matrixHeatFlux(Vector &heatFlux,
-                        const Context &context,
-                        int localIdx) const
-    {
-        static const Scalar lWater = 0.6;
-        static const Scalar lGranite = 2.8;
-
-        const auto &fluxVars = context.fluxVars(localIdx);
-
-        // arithmetic mean of the liquid saturation and the porosity
-        const int i = fluxVars.insideIdx();
-        const int j = fluxVars.outsideIdx();
-        const auto &volVarsI = context.volVars(i);
-        const auto &volVarsJ = context.volVars(j);
-
-        Scalar Sl = std::max<Scalar>(0.0, (volVarsI.saturation(lPhaseIdx) +
-                                           volVarsJ.saturation(lPhaseIdx)) / 2);
-        Scalar poro = (this->porosity(context, i) +
-                       this->porosity(context, j)) / 2;
-
-        Scalar lsat = std::pow(lGranite, (1-poro)) * std::pow(lWater, poro);
-        Scalar ldry = std::pow(lGranite, (1-poro));
-
-        // the heat conductivity of the matrix. in general this is a
-        // tensorial value, but we assume isotropic heat conductivity.
-        Scalar heatCond = ldry + std::sqrt(Sl) * (ldry - lsat);
-
-        // the matrix heat flux is the negative temperature gradient
-        // times the heat conductivity.
-        heatFlux = fluxVars.temperatureGrad();
-        heatFlux *= - heatCond;
+    const HeatConductionLawParams&
+    heatConducionParams(const Context &context, int localIdx) const
+    { 
+        const GlobalPosition &pos = context.pos(localIdx);
+        if (isFineMaterial_(pos))
+            return fineHeatCondParams_;
+        return coarseHeatCondParams_;
     }
 
 private:
+    void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
+    {
+        Scalar lambdaWater = 0.6;
+        Scalar lambdaGranite = 2.8;
+
+        Scalar lambdaWet = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaWater, poro);
+        Scalar lambdaDry = std::pow(lambdaGranite, (1-poro));
+
+        params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
+        params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+    }
+
     bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
@@ -277,6 +265,9 @@ private:
 
     MaterialLawParams fineMaterialParams_;
     MaterialLawParams coarseMaterialParams_;
+
+    HeatConductionLawParams fineHeatCondParams_;
+    HeatConductionLawParams coarseHeatCondParams_;
 };
 
 }

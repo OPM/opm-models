@@ -190,8 +190,8 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    using ParentType::temperature;
-    Scalar temperature() const
+    template <class Context>
+    Scalar temperature(const Context &context, int localIdx) const
     { return 273.15 + 10; }; // -> 10°C
 
     /*!
@@ -206,17 +206,13 @@ public:
      * \param scvIdx The sub control volume index inside the finite
      *               volume geometry
      */
-    using ParentType::referencePressure;
-    Scalar referencePressure(const Element &element,
-                             const FVElementGeometry &fvElemGeom,
-                             int scvIdx) const
+    template <class Context>
+    Scalar referencePressure(const Context &context, int localIdx) const
     { return pnRef_; };
 
-    void sourceAtPos(PrimaryVariables &values,
-                const GlobalPosition &globalPos) const
-    {
-        values = 0;
-    }
+    template <class Context>
+    void source(PrimaryVariables &values, const Context &context, int localIdx) const
+    { values = 0; }
 
     // \}
 
@@ -232,9 +228,13 @@ public:
      * \param values The boundary types for the conservation equations
      * \param globalPos The position for which the boundary type is set
      */
-    void boundaryTypesAtPos(BoundaryTypes &values,
-                       const GlobalPosition &globalPos) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, 
+                       const Context &context,
+                       int localIdx) const
     {
+        const auto &globalPos = context.pos(localIdx);
+
         if (onLeftBoundary_(globalPos) ||
             onRightBoundary_(globalPos))
         {
@@ -253,11 +253,13 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    void dirichletAtPos(PrimaryVariables &values,
-                   const GlobalPosition &globalPos) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values,
+                   const Context &context,
+                   int localIdx) const
     {
         // use initial values as boundary conditions
-        initialAtPos(values, globalPos);
+        initial(values, context, localIdx);
     }
 
     /*!
@@ -270,9 +272,15 @@ public:
      * \param values The neumann values for the conservation equations
      * \param globalPos The position for which the Neumann value is set
      */
-    void neumannAtPos(PrimaryVariables &values,
-                 const GlobalPosition &globalPos) const
+    template <class Context>
+    void neumann(PrimaryVariables &values,
+                 const Context &context,
+                 const Intersection &is,
+                 int localIdx,
+                 int boundaryIdx) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
+
         values = 0.0;
         if (onInlet_(globalPos)) {
             // inflow of water
@@ -294,13 +302,14 @@ public:
      * \param values Storage for all primary variables of the initial condition
      * \param pos The position for which the boundary type is set
      */
-    void initialAtPos(PrimaryVariables &values,
-                      const GlobalPosition &pos) const
+    template <class Context>
+    void initial(PrimaryVariables &values,
+                 const Context &context,
+                 int localIdx) const
     { 
+        const auto &materialParams = this->spatialParameters().materialLawParams(context, localIdx);
         Scalar Sw = 0.0;
-        Scalar pc =
-            MaterialLaw::pC(this->spatialParameters().materialLawParamsAtPos(pos),
-                            Sw);
+        Scalar pc = MaterialLaw::pC(materialParams, Sw);
         values[pwIdx] = pnRef_ - pc;
     }
 

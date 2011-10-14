@@ -149,22 +149,36 @@ public:
 
         setSwitched_(false);
 
-        VertexIterator it = this->gridView_().template begin<dim> ();
-        const VertexIterator &endit = this->gridView_().template end<dim> ();
-        for (; it != endit; ++it)
-        {
-            int globalIdx = this->dofMapper().map(*it);
-            const GlobalPosition &globalPos = it->geometry().corner(0);
+        ElementContext elemCtx(this->problem_());
 
-            // initialize phase presence
-            staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0]
-                = this->problem_().initialPhasePresence(*it, 
-                                                        globalIdx,
-                                                        globalPos);
-            staticVertexDat_[globalIdx].wasSwitched = false;
+        // iterate through leaf grid and evaluate initial
+        // condition at the center of each sub control volume
+        //
+        // TODO: the initial condition needs to be unique for
+        // each vertex. we should think about the API...
+        ElementIterator it = this->gridView_().template begin<0>();
+        const ElementIterator &eendit = this->gridView_().template end<0>();
+        for (; it != eendit; ++it) {
+            // deal with the current element
+            elemCtx.updateFVElemGeom(*it);
 
-            staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/1]
-                = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
+            // loop over all element vertices, i.e. sub control volumes
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
+            {
+                // map the local vertex index to the global one
+                int globalIdx = this->vertexMapper().map(*it,
+                                                         scvIdx,
+                                                         dim);
+
+
+                // initialize phase presence
+                staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0]
+                    = this->problem_().initialPhasePresence(elemCtx, scvIdx);
+                staticVertexDat_[globalIdx].wasSwitched = false;
+                
+                staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/1]
+                    = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
+            }
         }
     }
 

@@ -162,12 +162,10 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
-    using ParentType::intrinsicPermeability;
-    const Scalar intrinsicPermeability(const Element &element,
-                                       const FVElementGeometry &fvElemGeom,
-                                       int scvIdx) const
+    template <class Context>
+    const Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineK_;
         return coarseK_;
@@ -181,12 +179,10 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      *                    the porosity needs to be defined
      */
-    using ParentType::porosity;
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar porosity(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return finePorosity_;
         return coarsePorosity_;
@@ -199,12 +195,10 @@ public:
      * \param fvElemGeom The current finite volume geometry of the element
      * \param scvIdx The index of the sub-control volume
      */
-    using ParentType::materialLawParams;
-    const MaterialLawParams& materialLawParams(const Element &element,
-                                               const FVElementGeometry &fvElemGeom,
-                                               int scvIdx) const
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineMaterialParams_;
         return coarseMaterialParams_;
@@ -223,8 +217,7 @@ public:
      *                    the heat capacity needs to be defined
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context,
-                             int localIdx) const
+    Scalar heatCapacitySolid(const Context &context, int localIdx) const
     {
         return
             790 // specific heat capacity of granite [J / (kg K)]

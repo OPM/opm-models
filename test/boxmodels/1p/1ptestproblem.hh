@@ -150,13 +150,15 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    using ParentType::temperature;
-    Scalar temperature() const
+    template <class Context>
+    Scalar temperature(const Context &context, int localIdx) const
     { return 273.15 + 10; } // 10C
 
 
-    void sourceAtPos(PrimaryVariables &values,
-                const GlobalPosition &globalPos) const
+    template <class Context>
+    void source(PrimaryVariables &values,
+                const Context &context, 
+                int localIdx) const
     {
         values = 0;
     }
@@ -170,10 +172,10 @@ public:
      * \brief Specify which kind of boundary condition should be
      *        used for which equation on a given boundary segment.
      */
-    using ParentType::boundaryTypes;
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         double eps = 1.0e-3;
         if (globalPos[dim-1] < eps || globalPos[dim-1] > this->bboxMax()[dim-1] - eps)
@@ -188,11 +190,11 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    using ParentType::dirichlet;
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
     {
         double eps = 1.0e-3;
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         if (globalPos[dim-1] < eps) {
             values[pressureIdx] = 2.0e+5;
@@ -210,15 +212,14 @@ public:
      * in normal direction of each component. Negative values mean
      * influx.
      */
-    using ParentType::neumann;
+    template <class Context>
     void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
+                 const Context &context,
                  const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+                 int localIdx,
+                 int boundaryIndex) const
     {
-        //  const GlobalPosition &globalPos = fvElemGeom.boundaryFace[boundaryFaceIdx].ipGlobal;
+        //  const GlobalPosition &globalPos = context.pos(boundaryIdx);
 
         values[pressureIdx] = 0;
     }
@@ -236,13 +237,10 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    using ParentType::initial;
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+    template <class Context>
+    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
     {
-        //const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+        //const GlobalPosition &globalPos = context.pos(localIdx);
         values[pressureIdx] = 1.0e+5;// + 9.81*1.23*(20-globalPos[dim-1]);
     }
 

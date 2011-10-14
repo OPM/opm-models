@@ -240,7 +240,8 @@ public:
     /*!
      * \brief Returns the temperature [K] within the domain.
      */
-    Scalar temperatureAtPos(const GlobalPosition &globalPos) const
+    template <class Context>
+    Scalar temperature(const Context &context, int localIdx) const
     { return temperature_; };
 
     // \}
@@ -257,10 +258,10 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
-    using ParentType::boundaryTypes;
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         if (onInlet_(globalPos) || onOutlet_(globalPos))
             values.setAllDirichlet();
@@ -277,13 +278,9 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    using ParentType::dirichlet;
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
-    {
-        const GlobalPosition globalPos = vertex.geometry().center();
-
-        initial_(values, globalPos);
-    }
+    template <class Context>
+    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
+    { initial(values, context, localIdx); }
 
     /*!
      * \brief Evaluate the boundary conditions for a neumann
@@ -293,13 +290,12 @@ public:
      * in normal direction of each component. Negative values mean
      * influx.
      */
-    using ParentType::neumann;
+    template <class Context>
     void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
+                 const Context &context,
                  const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+                 int localIdx,
+                 int boundaryIndex) const
     { values = 0; }
 
     // \}
@@ -318,14 +314,11 @@ public:
      * unit. Positive values mean that mass is created, negative ones
      * mean that it vanishes.
      */
-    using ParentType::source;
+    template <class Context>
     void source(PrimaryVariables &values,
-                const Element &element,
-                const FVElementGeometry &fvElemGeom,
-                int scvIdx) const
-    {
-        values = Scalar(0.0);
-    }
+                const Context &context, 
+                int localIdx) const
+    { values = Scalar(0.0); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -333,33 +326,11 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    using ParentType::initial;
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+    template <class Context>
+    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
-        initial_(values, globalPos);
-        Valgrind::CheckDefined(values);
-    }
-
-    // \}
-
-    /*!
-     * \brief Write a restart file?
-     */
-    bool shouldWriteRestartFile() const
-    {
-        return ParentType::shouldWriteRestartFile();
-    }
-
-private:
-    // the internal method for the initial condition
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos) const
-    {
         typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> CompositionalFluidState;
         CompositionalFluidState fs;
 
@@ -367,7 +338,7 @@ private:
         int otherPhaseIdx;
 
         // set the fluid temperatures
-        fs.setTemperature(this->temperatureAtPos(globalPos));
+        fs.setTemperature(this->temperature(context, localIdx));
 
         if (onInlet_(globalPos)) {
             // only liquid on inlet

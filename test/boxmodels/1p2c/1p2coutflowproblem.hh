@@ -184,8 +184,8 @@ public:
      *
      * This problem assumes a temperature of 36 degrees Celsius.
      */
-    using ParentType::temperature;
-    Scalar temperature() const
+    template <class Context>
+    Scalar temperature(const Context &context, int localIdx) const
     { return 273.15 + 36; }; // in [K]
 
     // \}
@@ -199,8 +199,8 @@ public:
      * \brief Specifies which kind of boundary condition should be
      *        used for which equation on a given boundary segment.
      */
-    using ParentType::boundaryTypes;
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
     {
         values.setAllDirichlet();
     }
@@ -211,10 +211,10 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    using ParentType::dirichlet;
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         initial_(values, globalPos);
     }
@@ -227,13 +227,12 @@ public:
      * in normal direction of each component. Negative values mean
      * influx.
      */
-    using ParentType::neumann;
+    template <class Context>
     void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
+                  const Context &context,
                  const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+                 int localIdx,
+                 int boundaryIndex) const
     {
         values = 0;
     }
@@ -254,9 +253,13 @@ public:
      * unit. Positive values mean that mass is created, negative ones
      * mean that it vanishes.
      */
-    void sourceAtPos(PrimaryVariables &values,
-                     const GlobalPosition &globalPos) const
+    template <class Context>
+    void source(PrimaryVariables &values,
+                const Context &context, 
+                int localIdx) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
+
         values = Scalar(0.0);
 
         if (inInjectionVolume_(globalPos)) {
@@ -286,14 +289,11 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    using ParentType::initial;
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+    template <class Context>
+    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
     {
         const GlobalPosition &globalPos
-            = element.geometry().corner(scvIdx);
+            = context.pos(localIdx);
 
         initial_(values, globalPos);
     }
@@ -310,8 +310,7 @@ private:
 
 
     // the internal method for the initial condition
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos) const
+    void initial_(PrimaryVariables &values, const GlobalPosition &globalPos) const
     {
         values[pressureIdx] = 0.0; //initial condition for the pressure
         values[x1Idx] = 0.0; //initial condition for the trail molefraction

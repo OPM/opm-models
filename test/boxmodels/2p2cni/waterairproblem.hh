@@ -202,7 +202,7 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    using ParentType::temperature;
+    template <class Context>
     Scalar temperature(const Element &element,
                        const FVElementGeometry &fvElemGeom,
                        int scvIdx) const
@@ -211,8 +211,9 @@ public:
     };
 #endif
 
-    void sourceAtPos(PrimaryVariables &values,
-                const GlobalPosition &globalPos) const
+    template <class Context>
+    void source(PrimaryVariables &values,
+                const Context &context, int localIdx) const
     {
         values = 0;
     }
@@ -231,10 +232,10 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
-    using ParentType::boundaryTypes;
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         if(globalPos[0] > 40 - eps_ || globalPos[0] < eps_)
             values.setAllDirichlet();
@@ -255,10 +256,10 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    using ParentType::dirichlet;
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(localIdx);
 
         initial_(values, globalPos);
     }
@@ -277,15 +278,14 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    using ParentType::neumann;
+    template <class Context>
     void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
+                  const Context &context,
                  const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+                 int localIdx,
+                 int boundaryIndex) const
     {
-        const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+        const GlobalPosition &globalPos = context.pos(localIdx);
         values = 0;
 
         // negative values for injection
@@ -314,13 +314,10 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    using ParentType::initial;
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+    template <class Context>
+    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
     {
-           const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+           const GlobalPosition &globalPos = context.pos(localIdx);
 
         initial_(values, globalPos);
 
@@ -337,13 +334,9 @@ public:
      * \param globalIdx The index of the global vertex
      * \param globalPos The global position
      */
-    using ParentType::initialPhasePresence;
-    int initialPhasePresence(const Vertex &vert,
-                             int &globalIdx,
-                             const GlobalPosition &globalPos) const
-    {
-        return lPhaseOnly;
-    }
+    template <class Context>
+    int initialPhasePresence(const Context &context, int localIdx) const
+    { return lPhaseOnly; }
 
 private:
     // internal method for the initial condition (reused for the

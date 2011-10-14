@@ -89,10 +89,8 @@ public:
      * \param scvIdx The index sub-control volume face where the
      *                      intrinsic velocity ought to be calculated.
      */
-    using ParentType::intrinsicPermeability;
-    Scalar intrinsicPermeability(const Element &element,
-                                 const FVElementGeometry &fvElemGeom,
-                                 int scvIdx) const
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
         const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
 
@@ -108,10 +106,8 @@ public:
      * \param fvElemGeom The finite volume geometry
      * \param scvIdx The local index of the sub-control volume where
      */
-    using ParentType::porosity;
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar porosity(const Context &context, int localIdx) const
     { return 0.4; }
 
 private:

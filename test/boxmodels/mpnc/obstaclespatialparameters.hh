@@ -177,12 +177,10 @@ public:
      * \param scvIdx        The index sub-control volume where the
      *                      intrinsic permeability is given.
      */
-    using ParentType::intrinsicPermeability;
-    Scalar intrinsicPermeability(const Element &element,
-                                 const FVElementGeometry &fvElemGeom,
-                                 int scvIdx) const
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int localIdx) const
     {
-        if (isFineMaterial_(fvElemGeom.subContVol[scvIdx].global))
+        if (isFineMaterial_(context.pos(localIdx)))
             return fineK_;
         return coarseK_;
     }
@@ -195,12 +193,10 @@ public:
      * \param scvIdx      The local index of the sub-control volume where
      *                    the porosity needs to be defined
      */
-    using ParentType::porosity;
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    template <class Context>
+    Scalar porosity(const Context &context, int localIdx) const
     {
-        const GlobalPosition &pos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return finePorosity_;
         else
@@ -213,8 +209,10 @@ public:
      * \param pos The global position of the sub-control volume.
      * \return the material parameters object
      */
-    const MaterialLawParams &materialLawParamsAtPos(const GlobalPosition &pos) const
+    template <class Context>
+    const MaterialLawParams &materialLawParams(const Context &context, int localIdx) const
     {
+        const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineMaterialParams_;
         else
@@ -234,8 +232,7 @@ public:
      *                    the heat capacity needs to be defined
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context,
-                             int localIdx) const
+    Scalar heatCapacitySolid(const Context &context, int localIdx) const
     {
         return
             790 // specific heat capacity of granite [J / (kg K)]

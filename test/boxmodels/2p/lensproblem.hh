@@ -393,9 +393,13 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    void initialAtPos(PrimaryVariables &values,
-                      const GlobalPosition &globalPos) const
+    template <class Context>
+    void initial(PrimaryVariables &values,
+                 const Context &context,
+                 int localIdx) const
     {
+        const GlobalPosition &globalPos = context.pos(localIdx);
+        
         Scalar depth = this->bboxMax()[1] - globalPos[1];
         Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
         ImmiscibleFluidState<Scalar, FluidSystem> fluidState;

@@ -826,7 +826,7 @@ protected:
         uCur = Scalar(0.0);
         boxVolume_ = Scalar(0.0);
 
-        FVElementGeometry fvElemGeom;
+        ElementContext elemCtx(this->problem_());
 
         // iterate through leaf grid and evaluate initial
         // condition at the center of each sub control volume
@@ -837,10 +837,10 @@ protected:
         const ElementIterator &eendit = gridView_().template end<0>();
         for (; it != eendit; ++it) {
             // deal with the current element
-            fvElemGeom.update(gridView_(), *it);
+            elemCtx.updateFVElemGeom(*it);
 
             // loop over all element vertices, i.e. sub control volumes
-            for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; scvIdx++)
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
             {
                 // map the local vertex index to the global one
                 int globalIdx = vertexMapper().map(*it,
@@ -852,8 +852,7 @@ protected:
                 PrimaryVariables initVal;
                 Valgrind::SetUndefined(initVal);
                 problem_().initial(initVal,
-                                   *it,
-                                   fvElemGeom,
+                                   elemCtx,
                                    scvIdx);
                 Valgrind::CheckDefined(initVal);
 
@@ -861,8 +860,9 @@ protected:
                 // volumes. If the initial values disagree for
                 // different sub control volumes, the initial value
                 // will be the arithmetic mean.
-                initVal *= fvElemGeom.subContVol[scvIdx].volume;
-                boxVolume_[globalIdx] += fvElemGeom.subContVol[scvIdx].volume;
+                Scalar scvVolume = elemCtx.fvElemGeom().subContVol[scvIdx].volume;
+                initVal *= scvVolume;
+                boxVolume_[globalIdx] += scvVolume;
                 uCur[globalIdx] += initVal;
                 Valgrind::CheckDefined(uCur[globalIdx]);
             }
