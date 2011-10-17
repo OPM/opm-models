@@ -92,7 +92,7 @@ public:
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
 
         calculateGradients_(elemCtx, scvfIdx);
-        calculateNormalFluxes_(elemCtx, scvfIdx);
+        calculateVelocities_(elemCtx, scvfIdx);
         calculateDiffCoeffPM_(elemCtx, scvfIdx);
     };
 
@@ -136,14 +136,14 @@ public:
      *
      * \param compIdx The index of the considered component
      */
-    const Vector &concentrationGrad(int phaseIdx = 0, int compIdx = 1) const
+    const Vector &molarityGrad(int phaseIdx = 0, int compIdx = 1) const
     {
         // The 1p2c model is supposed to query only the
         // concentration gradient of the second component of the
         // first phase!
         assert(phaseIdx == 0 && compIdx == 1);
 
-        return concentrationGrad_;
+        return molarityGrad_;
     };
     
     /*!
@@ -186,17 +186,47 @@ public:
     }
     
     /*!
-     * \brief Return a phase's pressure potential gradient times
-     *        intrinsic permeability times the normal of the sub
-     *        control volume face times the area of the SCVF.
+     * \brief Return the fluid's filter velocity.
+     *
+     * For low Reynolds numbers that's the Darcy velocity, for higher
+     * ones advanced velocity models like the one suggested by
+     * Forchheimer kick in.
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalFlux(int phaseIdx = 0) const
+    const Vector &filterVelocity(int phaseIdx) const
+    {
+        assert(phaseIdx == 0);
+        return filterVelocity_;
+    }
+
+    /*!
+     * \brief Return a phase's pressure potential gradient times
+     *        intrinsic permeability times times the mobility timesthe
+     *        normal of the sub control volume face times the area of
+     *        the SCVF.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar filterVelocityNormal(int phaseIdx) const
     { 
         assert(phaseIdx == 0); // this is a single phase model!
-        return normalFlux_;
+        return filterVelocityNormal_;
     }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "inside" of the sub-control volume face.
+     */
+    short insideIdx() const
+    { return insideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "outside" of the sub-control volume face.
+     */
+    short outsideIdx() const
+    { return outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -205,10 +235,10 @@ public:
      * \param phaseIdx The index of the fluid phase for which the downstream
      *                 direction is requested.
      */
-    int downstreamIdx(int phaseIdx = 0) const
+    short downstreamIdx(int phaseIdx) const
     { 
         assert(phaseIdx == 0); // this is a single phase model!
-        return (normalFlux_ > 0)?outsideScvIdx_:insideScvIdx_;
+        return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
     }
 
     /*!
@@ -218,11 +248,29 @@ public:
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
      */
-    int upstreamIdx(int phaseIdx = 0) const
+    short upstreamIdx(int phaseIdx) const
     {
         assert(phaseIdx == 0); // this is a single phase model!
-        return (normalFlux_ > 0)?insideScvIdx_:outsideScvIdx_;
+        return (filterVelocityNormal_ > 0)?insideScvIdx_:outsideScvIdx_;
     }
+
+    /*!
+     * \brief Return the weight of the upstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar upstreamWeight(int phaseIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Return the weight of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar downstreamWeight(int phaseIdx) const
+    { return 0.0; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,
@@ -230,7 +278,7 @@ private:
     {
         // reset all gradients to 0
         potentialGrad_ = Scalar(0);
-        concentrationGrad_ = Scalar(0);
+        molarityGrad_ = Scalar(0);
         moleFracGrad_ = Scalar(0);
         massFracGrad_ = Scalar(0);
         
@@ -258,10 +306,10 @@ private:
                 tmp *= fs.pressure(/*phaseIdx=*/0);
                 potentialGrad_ += tmp;
                 
-                // the concentration gradient of the 2nd component [mol/m^3/m]
+                // the molarity gradient of the 2nd component [mol/m^3/m]
                 tmp = feGrad;
                 tmp *= fs.molarity(/*phaseIdx=*/0, /*compIdx=*/1);
-                concentrationGrad_ += tmp;
+                molarityGrad_ += tmp;
                 
                 // the mole fraction gradient of the 2nd component [1/m]
                 tmp = feGrad;
@@ -300,8 +348,8 @@ private:
             potentialGrad_ = tmp;
             potentialGrad_ *= fsJ.pressure(/*phaseIdx=*/0) - fsI.pressure(/*phaseIdx=*/0);
 
-            concentrationGrad_ = tmp;
-            concentrationGrad_ *= fsJ.molarity(/*phaseIdx=*/0, /*compIdx=*/1) - fsI.molarity(/*phaseIdx=*/0, /*compIdx=*/1);
+            molarityGrad_ = tmp;
+            molarityGrad_ *= fsJ.molarity(/*phaseIdx=*/0, /*compIdx=*/1) - fsI.molarity(/*phaseIdx=*/0, /*compIdx=*/1);
 
             moleFracGrad_ = tmp;
             moleFracGrad_ *= fsJ.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1) - fsI.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
@@ -333,8 +381,8 @@ private:
         }
     }
 
-    void calculateNormalFluxes_(const ElementContext &elemCtx, 
-                                int scvfIdx)
+    void calculateVelocities_(const ElementContext &elemCtx, 
+                              int scvfIdx)
     {
         const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
 
@@ -347,24 +395,27 @@ private:
                                                                 outsideScvIdx_));
 
         const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
-
-        // calculate the velocity in the normal direction of the
+        
+        // calculate the flux in the normal direction of the
         // current sub control volume face:
         //
         // v = - (K grad p) * n
         //
         // (the minus comes from the Darcy law which states that
-        // the flux is from high to low pressure potentials.)
-        Vector tmpVec;
-        K.mv(potentialGrad(/*phaseIdx=*/0), tmpVec);
+        // the flux is from high to low pressure potentials.)                           
+        K.mv(potentialGrad_, filterVelocity_);
+        // velocities go along negative pressure gradients
+        filterVelocity_ *= -1;
 
         // scalar product with the face normal
-        normalFlux_ = 0.0;
+        filterVelocityNormal_ = 0.0;
         for (int i = 0; i < Vector::size; ++i) 
-            normalFlux_ += tmpVec[i]*normal[i];
+            filterVelocityNormal_ += filterVelocity_[i]*normal[i];
         
-        // flux is along negative pressure gradients
-        normalFlux_ *= -1;
+        // multiply both with the upstream mobility
+        const auto &up = elemCtx.volVars(upstreamIdx(/*phaseIdx=*/0), /*historyIdx=*/0);
+        filterVelocityNormal_ *= up.mobility(/*phaseIdx=*/0);
+        filterVelocity_ *= up.mobility(/*phaseIdx=*/0);
     }
 
     /*!
@@ -401,7 +452,7 @@ private:
     Vector potentialGrad_;
 
     //! concentratrion gradient
-    Vector concentrationGrad_;
+    Vector molarityGrad_;
 
     //! mole fraction gradient
     Vector moleFracGrad_;
@@ -418,8 +469,11 @@ private:
     //! molar density of the fluid at the integration point
     Scalar molarDensity_;
 
+    // velocities
+    Vector filterVelocity_;
+
     // normal velocity
-    Scalar normalFlux_;
+    Scalar filterVelocityNormal_;
 };
 
 } // end namepace

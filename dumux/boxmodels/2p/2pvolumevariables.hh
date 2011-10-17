@@ -62,10 +62,6 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum {
-        pwSn = Indices::pwSn,
-        pnSw = Indices::pnSw,
-        pressureIdx = Indices::pressureIdx,
-        saturationIdx = Indices::saturationIdx,
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
@@ -91,8 +87,6 @@ public:
 
         completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
-
         const SpatialParameters &spatialParams = 
             elemCtx.problem().spatialParameters();
 
@@ -100,13 +94,11 @@ public:
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx);
 
-        mobility_[wPhaseIdx] =
-            MaterialLaw::krw(materialParams, fluidState_.saturation(wPhaseIdx))
-            / fluidState_.viscosity(wPhaseIdx);
+        relativePermeability_[wPhaseIdx] =
+            MaterialLaw::krw(materialParams, fluidState_.saturation(wPhaseIdx));
+        relativePermeability_[nPhaseIdx] =
+            MaterialLaw::krn(materialParams, fluidState_.saturation(wPhaseIdx));
 
-        mobility_[nPhaseIdx] =
-            MaterialLaw::krn(materialParams, fluidState_.saturation(wPhaseIdx))
-            / fluidState_.viscosity(nPhaseIdx);
 
         // porosity
         porosity_ = spatialParams.porosity(elemCtx, scvIdx);
@@ -132,22 +124,23 @@ public:
             spatialParams.materialLawParams(elemCtx, scvIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
 
-        if (int(formulation) == pwSn) {
-            Scalar Sn = priVars[saturationIdx];
+        int formulation = GET_PROP_VALUE(TypeTag, Formulation);
+        if (formulation == Indices::pwSn) {
+            Scalar Sn = priVars[Indices::saturationIdx];
             fluidState.setSaturation(nPhaseIdx, Sn);
             fluidState.setSaturation(wPhaseIdx, 1 - Sn);
 
-            Scalar pW = priVars[pressureIdx];
+            Scalar pW = priVars[Indices::pressureIdx];
             fluidState.setPressure(wPhaseIdx, pW);
             fluidState.setPressure(nPhaseIdx,
                                    pW + MaterialLaw::pC(materialParams, 1 - Sn));
         }
-        else if (int(formulation) == pnSw) {
-            Scalar Sw = priVars[saturationIdx];
+        else if (formulation == Indices::pnSw) {
+            Scalar Sw = priVars[Indices::saturationIdx];
             fluidState.setSaturation(wPhaseIdx, Sw);
             fluidState.setSaturation(nPhaseIdx, 1 - Sw);
 
-            Scalar pN = priVars[pressureIdx];
+            Scalar pN = priVars[Indices::pressureIdx];
             fluidState.setPressure(nPhaseIdx, pN);
             fluidState.setPressure(wPhaseIdx,
                                    pN - MaterialLaw::pC(materialParams, Sw));
@@ -181,47 +174,13 @@ public:
     { return fluidState_; }
 
     /*!
-     * \brief Returns the effective saturation of a given phase within
-     *        the control volume.
+     * \brief Returns the relative permeability of a given phase
+     *        within the control volume.
      *
      * \param phaseIdx The phase index
      */
-    Scalar saturation(int phaseIdx) const
-    { return fluidState_.saturation(phaseIdx); }
-
-    /*!
-     * \brief Returns the mass density of a given phase within the
-     *        control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar density(int phaseIdx) const
-    { return fluidState_.density(phaseIdx); }
-
-    /*!
-     * \brief Returns the effective pressure of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar pressure(int phaseIdx) const
-    { return fluidState_.pressure(phaseIdx); }
-
-    /*!
-     * \brief Returns the capillary pressure within the control volume [Pa].
-     */
-    Scalar capillaryPressure() const
-    { return fluidState_.pressure(nPhaseIdx) - fluidState_.pressure(wPhaseIdx); }
-
-    /*!
-     * \brief Returns temperature inside the sub-control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperature of the rock matrix and of all fluid phases are
-     * identical.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(/*phaseIdx=*/0); }
+    Scalar relativePermeability(int phaseIdx) const
+    { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective mobility of a given phase within
@@ -230,7 +189,7 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar mobility(int phaseIdx) const
-    { return mobility_[phaseIdx]; }
+    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the average porosity within the control volume.
@@ -265,7 +224,7 @@ protected:
 
     FluidState fluidState_;
     Scalar porosity_;
-    Scalar mobility_[numPhases];
+    Scalar relativePermeability_[numPhases];
 
 private:
     Implementation &asImp_()

@@ -34,9 +34,10 @@
 #include "boxelementcontext.hh"
 #include "boxlocaljacobian.hh"
 #include "boxlocalresidual.hh"
+#include <dumux/boxmodels/vtk/boxvtkoutputmodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
 
 #include <dumux/parallel/vertexhandles.hh>
-
 
 namespace Dumux
 {
@@ -95,10 +96,19 @@ public:
      * \brief The constructor.
      */
     BoxModel()
-    { }
+    {
+    }
 
     ~BoxModel()
-    { delete jacAsm_;  }
+    { 
+        // delete all VTK output modules
+        auto modIt = vtkOutputModules_.begin();
+        const auto &modEndIt = vtkOutputModules_.end();
+        for (; modIt != modEndIt; ++modIt)
+            delete *modIt;
+
+        delete jacAsm_;
+    }
 
     /*!
      * \brief Apply the initial conditions to the model.
@@ -138,6 +148,8 @@ public:
         // also set the solution of the "previous" time step to the
         // initial solution.
         solution_[/*historyIdx=*/1] = solution_[/*historyIdx=*/0];
+
+        asImp_().registerVtkModules_();
     }
 
     const VolumeVariables *hint(int globalIdx, int historyIdx) const
@@ -661,34 +673,30 @@ public:
     void addOutputVtkFields(const SolutionVector &sol,
                             MultiWriter &writer)
     {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        auto modIt = vtkOutputModules_.begin();
+        const auto &modEndIt = vtkOutputModules_.end();
+        for (; modIt != modEndIt; ++modIt)
+            (*modIt)->allocBuffers(writer);
 
-        // create the required scalar fields
-        unsigned numVertices = this->gridView_().size(dim);
+        // iterate over grid
+        ElementContext elemCtx(this->problem_());
 
-        // global defect of the two auxiliary equations
-        ScalarField* x[numEq];
-        for (int i = 0; i < numEq; ++i) {
-            x[i] = writer.allocateManagedBuffer(numVertices);
-        }
-
-        VertexIterator vIt = this->gridView_().template begin<dim>();
-        VertexIterator vEndIt = this->gridView_().template end<dim>();
-        for (; vIt != vEndIt; ++ vIt)
+        ElementIterator elemIt = this->gridView().template begin<0>();
+        ElementIterator elemEndIt = this->gridView().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt)
         {
-            int globalIdx = vertexMapper().map(*vIt);
-            for (int i = 0; i < numEq; ++i) {
-                (*x[i])[globalIdx] = sol[globalIdx][i];
-            }
+            elemCtx.updateAll(*elemIt);
+            
+            modIt = vtkOutputModules_.begin();
+            for (; modIt != modEndIt; ++modIt)
+                (*modIt)->processElement(elemCtx);
         }
-
-        for (int i = 0; i < numEq; ++i) {
-            std::ostringstream oss;
-            oss << "primaryVar_" << i;
-            writer.attachVertexData(*x[i], oss.str());
-        }
+            
+        modIt = vtkOutputModules_.begin();
+        for (; modIt != modEndIt; ++modIt)
+            (*modIt)->commitBuffers(writer);
     }
-
+    
     /*!
      * \brief Reference to the grid view of the spatial domain.
      */
@@ -724,6 +732,13 @@ protected:
     static bool enableHints_()
     { return GET_PARAM(TypeTag, bool, EnableHints); }
 
+    void registerVtkModules_()
+    {
+        // add the VTK output modules available on all model
+        auto *vtkMod = new Dumux::BoxVtkPrimaryVarsModule<TypeTag>(this->problem_());
+        this->vtkOutputModules_.push_back(vtkMod);
+    };
+
     /*!
      * \brief A reference to the problem on which the model is applied.
      */
@@ -746,7 +761,7 @@ protected:
      */
     LocalResidual &localResidual_()
     { return localJacobian_.localResidual(); }
-
+    
     /*!
      * \brief Updates the stuff which determines a vertex' or
      *        element's boundary type
@@ -896,7 +911,7 @@ protected:
     // variables
     mutable std::vector<bool> hintsUsable_[historySize];
     mutable std::vector<VolumeVariables> hints_[historySize];
-
+    
     /*!
      * \brief Returns whether messages should be printed
      */
@@ -925,6 +940,8 @@ protected:
     // all the index of the BoundaryTypes object for a vertex
     std::vector<int> boundaryVertexIndex_;
     std::vector<BoundaryTypes> boundaryTypes_;
+    
+    std::list<BoxVtkOutputModule<TypeTag>*> vtkOutputModules_;
 
     Dune::BlockVector<Dune::FieldVector<Scalar, 1> > boxVolume_;
 };

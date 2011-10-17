@@ -35,11 +35,11 @@
 #define DUMUX_2P_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 
 namespace Dumux
 {
-
-
 
 ////////////////////////////////
 // properties
@@ -52,13 +52,14 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the two-phase problems
-NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxTwoP, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(MassUpwindWeight); //!< The value of the weight of the upwind direction in the mass conservation equations
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model

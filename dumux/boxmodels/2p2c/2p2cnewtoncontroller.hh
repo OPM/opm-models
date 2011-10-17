@@ -72,7 +72,7 @@ public:
         int succeeded;
         try {
             // call the method of the base class
-            this->method().model().updateStaticData(uCurrentIter, uLastIter);
+            this->method().model().updateStaticData_(uCurrentIter, uLastIter);
             ParentType::newtonEndStep(uCurrentIter, uLastIter);
 
             succeeded = 1;

@@ -51,6 +51,7 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
  
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+        contiEqIdx = Indices::contiEqIdx,
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -63,17 +64,6 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
     enum { pressureIdx = Indices::pressureIdx };
 
 public:
-    /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    OnePLocalResidual()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        upwindWeight_ = GET_PARAM(TypeTag, Scalar, UpwindWeight);
-    };
-
     /*!
      * \brief Evaluate the rate of change of all conservation
      *        quantites (e.g. phase mass) within a sub-control
@@ -98,7 +88,9 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         // partial time derivative of the wetting phase mass
-        result[pressureIdx] = volVars.density() * volVars.porosity();
+        result[contiEqIdx] = 
+            volVars.fluidState().density(/*phaseIdx=*/0)
+            * volVars.porosity();
     }
 
 
@@ -114,16 +106,17 @@ public:
                      int scvfIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx());
-        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx());
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(/*phaseIdx=*/0));
+        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx(/*phaseIdx=*/0));
 
 
-        flux[pressureIdx] =
-            ((    upwindWeight_)*(up.density()/up.viscosity())
-             +
-             (1 - upwindWeight_)*(dn.density()/dn.viscosity()))
-            *
-            fluxVars.normalFlux();
+        flux[contiEqIdx] =
+            fluxVars.filterVelocityNormal(/*phaseIdx=*/0)
+            * ( fluxVars.upstreamWeight(/*phaseIdx=*/0)
+                * up.fluidState().density(/*phaseIdx=*/0)
+                +
+                fluxVars.downstreamWeight(/*phaseIdx=*/0)
+                * dn.fluidState().density(/*phaseIdx=*/0));
     }
 
     /*!
@@ -146,8 +139,6 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
-
-    Scalar upwindWeight_;
 };
 
 }

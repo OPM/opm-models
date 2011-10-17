@@ -34,11 +34,6 @@
 #include "mpncproperties.hh"
 #include "mpncnewtoncontroller.hh"
 
-#include "mpncvtkwritermodule.hh"
-#include "mpncvtkwritercommon.hh"
-#include "mass/mpncvtkwritermass.hh"
-#include "energy/mpncvtkwriterenergy.hh"
-
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -63,14 +58,7 @@ namespace Properties
  *
  * We just forward the number from the fluid system.
  */
-SET_PROP(BoxMPNC, NumComponents)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-public:
-    static const int value = FluidSystem::numComponents;
-};
+SET_INT_PROP(BoxMPNC, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
@@ -78,39 +66,18 @@ public:
  * We just forward the number from the fluid system and use an static
  * assert to make sure it is 2.
  */
-SET_PROP(BoxMPNC, NumPhases)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-public:
-    static const int value = FluidSystem::numPhases;
-};
+SET_INT_PROP(BoxMPNC, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 
 /*!
  * \brief Set the property for the number of equations and primary variables.
  */
-SET_PROP(BoxMPNC, NumEq)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
-
-public:
-    static const int value = Indices::NumPrimaryVars;
-};
+SET_INT_PROP(BoxMPNC, NumEq, GET_PROP_TYPE(TypeTag, MPNCIndices)::NumPrimaryVars);
 
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_PROP(BoxMPNC, MaterialLawParams)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-
-public:
-    typedef typename MaterialLaw::Params type;
-};
+SET_TYPE_PROP(BoxMPNC, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -144,10 +111,7 @@ SET_TYPE_PROP(BoxMPNC,
               MPNCLocalResidual<TypeTag>);
 
 //! Use the MpNc specific newton controller for the MpNc model
-SET_PROP(BoxMPNC, NewtonController)
-{public:
-    typedef MPNCNewtonController<TypeTag> type;
-};
+SET_TYPE_PROP(BoxMPNC, NewtonController, MPNCNewtonController<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxMPNC, Model, MPNCModel<TypeTag>);
@@ -173,72 +137,12 @@ SET_TYPE_PROP(BoxMPNC, VolumeVariables, MPNCVolumeVariables<TypeTag>);
 //! the FluxVariables property
 SET_TYPE_PROP(BoxMPNC, FluxVariables, MPNCFluxVariables<TypeTag>);
 
-//! truncate the newton update for the first few Newton iterations of a time step
+//! truncate the newton update in the beginning
 SET_BOOL_PROP(BoxMPNC, NewtonEnableChop, true);
 
 //! The indices required by the compositional twophase model
-SET_PROP(BoxMPNC, MPNCIndices)
-{
-    typedef MPNCIndices<TypeTag, 0> type;
-};
-
-//! The VTK writer module for common quantities
-SET_PROP(BoxMPNC, MPNCVtkCommonModule)
-{
-    typedef MPNCVtkWriterCommon<TypeTag> type;
-};
-
-//! The VTK writer module for quantities which are specific for each
-//! mass module
-SET_PROP(BoxMPNC, MPNCVtkMassModule)
-{
-private: enum { enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic) };
-public: typedef MPNCVtkWriterMass<TypeTag, enableKinetic> type;
-};
-
-//! The VTK writer module for quantities which are specific for each
-//! energy module
-SET_PROP(BoxMPNC, MPNCVtkEnergyModule)
-{
-private:
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
-public:
-    typedef MPNCVtkWriterEnergy<TypeTag, enableEnergy, enableKineticEnergy> type;
-};
-
-//! The VTK writer for user specified data (does nothing by default)
-SET_PROP(BoxMPNC, MPNCVtkCustomModule)
-{ typedef MPNCVtkWriterModule<TypeTag> type; };
-
-
-//!< Should the averaging of velocities be done in the Model? (By default in the output)
-SET_BOOL_PROP(BoxMPNC, VelocityAveragingInModel, false);
-
-//! Specify what to add to the VTK output by default
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddPorosity, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddBoundaryTypes, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddSaturations, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddPressures, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddVarPressures, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddVelocities, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddDensities, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddMobilities, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddAverageMolarMass, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddMassFractions, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddMoleFractions, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddMolarities, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddFugacities, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddFugacityCoefficients, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddTemperatures, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddEnthalpies, true);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddInternalEnergies, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddReynolds, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddPrandtl, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddNusselt, false);
-SET_BOOL_PROP(BoxMPNC, MPNCVtkAddInterfacialArea, false);
+SET_TYPE_PROP(BoxMPNC, MPNCIndices, MPNCIndices<TypeTag, 0>);
 }
-
 }
 
 #endif

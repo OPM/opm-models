@@ -101,6 +101,7 @@ public:
 
         const VolumeVariables &volVars = 
             elemCtx.volVars(scvIdx, historyIdx);
+        const auto &fs = volVars.fluidState();
 
         storage[energyEqIdx] = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -108,14 +109,14 @@ public:
             // add the internal energy of the phase
             storage[energyEqIdx] +=
                 volVars.porosity() * (
-                    volVars.density(phaseIdx)
-                    * volVars.internalEnergy(phaseIdx)
-                    * volVars.saturation(phaseIdx));
+                    fs.density(phaseIdx)
+                    * fs.internalEnergy(phaseIdx)
+                    * fs.saturation(phaseIdx));
         };
         
         // handle the heat capacity of the solid
         storage[energyEqIdx] += 
-            volVars.temperature()
+            fs.temperature(/*phaseIdx=*/0)
             * volVars.heatCapacitySolid()
             * (1 - volVars.porosity());
     }
@@ -147,16 +148,14 @@ public:
             const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx));
 
             flux[energyEqIdx] +=
-                fluxVars.normalVelocity(phaseIdx)
+                fluxVars.filterVelocityNormal(phaseIdx)
                 * (fluxVars.upstreamWeight(phaseIdx)
-                   * up.enthalpy(phaseIdx)
-                   * up.density(phaseIdx)
-                   * up.mobility(phaseIdx)
+                   * up.fluidState().enthalpy(phaseIdx)
+                   * up.fluidState().density(phaseIdx)
                    +
                    fluxVars.downstreamWeight(phaseIdx)
-                   * dn.enthalpy(phaseIdx)
-                   * dn.density(phaseIdx)
-                   * dn.mobility(phaseIdx));
+                   * dn.fluidState().enthalpy(phaseIdx)
+                   * dn.fluidState().density(phaseIdx));
         }
     }
 

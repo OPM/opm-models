@@ -206,7 +206,7 @@ public:
             {
                 if (!elemCtx.boundaryTypes(scvIdx).isDirichlet(phase0NcpIdx + phaseIdx))
                     residual[scvIdx][phase0NcpIdx + phaseIdx] =
-                        elemCtx.volVars(scvIdx).phaseNcp(phaseIdx);
+                        phaseNcp_(elemCtx, scvIdx, phaseIdx);
             }
         }
     }
@@ -216,6 +216,45 @@ protected:
     { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
+
+    /*!
+     * \brief Returns the value of the NCP-function for a phase.
+     */
+    Scalar phaseNcp_(const ElementContext &elemCtx, 
+                     int scvIdx,
+                     int phaseIdx) const
+    {
+        const auto &fsEval = elemCtx.evalPointVolVars(scvIdx).fluidState();
+        const auto &fs = elemCtx.volVars(scvIdx).fluidState();
+
+        Scalar aEval = phaseNotPresentIneq_(fsEval, phaseIdx);
+        Scalar bEval = phasePresentIneq_(fsEval, phaseIdx);
+        if (aEval > bEval)
+            return phasePresentIneq_(fs, phaseIdx);
+        return phaseNotPresentIneq_(fs, phaseIdx);
+    };
+
+    /*!
+     * \brief Returns the value of the inequality where a phase is
+     *        present.
+     */
+    template <class FluidState>
+    Scalar phasePresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    { return fluidState.saturation(phaseIdx); }
+
+    /*!
+     * \brief Returns the value of the inequality where a phase is not
+     *        present.
+     */
+    template <class FluidState>
+    Scalar phaseNotPresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    {
+        // difference of sum of mole fractions in the phase from 100%
+        Scalar a = 1;
+        for (int i = 0; i < numComponents; ++i)
+            a -= fluidState.moleFraction(phaseIdx, i);
+        return a;
+    }
 };
 
 } // end namepace

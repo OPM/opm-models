@@ -65,24 +65,6 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
 public:
     typedef typename ParentType::FluidState FluidState;
     /*!
-     * \brief Returns the total internal energy of a phase in the
-     *        sub-control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar internalEnergy(int phaseIdx) const
-    { return this->fluidState_.internalEnergy(phaseIdx); };
-
-    /*!
-     * \brief Returns the total enthalpy of a phase in the sub-control
-     *        volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar enthalpy(int phaseIdx) const
-    { return this->fluidState_.enthalpy(phaseIdx); };
-
-    /*!
      * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */

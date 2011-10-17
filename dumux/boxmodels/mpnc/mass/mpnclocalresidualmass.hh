@@ -103,7 +103,7 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             compFlux[compIdx] =
                 up.fluidState().molarity(phaseIdx, compIdx)
-                * fluxVars.normalVelocity(phaseIdx);
+                * fluxVars.filterVelocityNormal(phaseIdx);
         }
     }
     

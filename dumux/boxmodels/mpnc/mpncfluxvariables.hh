@@ -113,13 +113,22 @@ public:
     { return extrusionFactor_; }
 
     /*!
+     * \brief Return the pressure potential gradient of a fluid phase
+     *        at the face's integration point [Pa/m]
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    const Vector &potentialGrad(int phaseIdx) const
+    { return potentialGrad_[phaseIdx]; }
+
+    /*!
      * \brief Return the filter velocity of a fluid phase at the
      *        face's integration point [m/s]
      *
      * \param phaseIdx The index of the fluid phase
      */
     const Vector &filterVelocity(int phaseIdx) const
-    { return velocity_[phaseIdx]; }
+    { return filterVelocity_[phaseIdx]; }
 
     /*!
      * \brief Return the filter velocity of a fluid phase at the
@@ -128,8 +137,8 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalVelocity(int phaseIdx) const
-    { return normalVelocity_[phaseIdx]; }
+    Scalar filterVelocityNormal(int phaseIdx) const
+    { return filterVelocityNormal_[phaseIdx]; }
 
     /*!
      * \brief Return the local index of the control volume which is on
@@ -153,7 +162,7 @@ public:
      *                 direction is requested.
      */
     short upstreamIdx(int phaseIdx) const
-    { return (normalVelocity_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
+    { return (filterVelocityNormal_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -163,7 +172,7 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { return (normalVelocity_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+    { return (filterVelocityNormal_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
 
     /*!
      * \brief Return the weight of the upstream control volume
@@ -300,27 +309,27 @@ private:
         {
             // calculate the "prelimanary" filter velocity not
             // taking the mobility into account
-            K.mv(potentialGrad_[phaseIdx], velocity_[phaseIdx]);
-            velocity_[phaseIdx] *= -1;
+            K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
+            filterVelocity_[phaseIdx] *= -1;
             
             // determine upstream and downstream indices
             int upstreamIdx = outsideScvIdx_;
             int downstreamIdx = insideScvIdx_;
-            if (velocity_[phaseIdx] * normal > 0)
+            if (filterVelocity_[phaseIdx] * normal > 0)
                 std::swap(upstreamIdx, downstreamIdx);
             
             // calculate the actual darcy velocities and the upstream
             // and downstream weights.
             if (!GET_PARAM(TypeTag, bool, EnableSmoothUpwinding)) {
                 const VolumeVariables &up = elemCtx.volVars(upstreamIdx);
-                velocity_[phaseIdx] *= up.mobility(phaseIdx);
+                filterVelocity_[phaseIdx] *= up.mobility(phaseIdx);
                 upstreamWeight_[phaseIdx] = 1.0;
             }
             else {
                 const VolumeVariables &up = elemCtx.volVars(upstreamIdx);
                 const VolumeVariables &dn = elemCtx.volVars(downstreamIdx);
                 
-                Scalar x = velocity_[phaseIdx].two_norm();
+                Scalar x = filterVelocity_[phaseIdx].two_norm();
                 
                 Scalar mUp = up.mobility(phaseIdx);
                 Scalar mDn = dn.mobility(phaseIdx);
@@ -344,7 +353,7 @@ private:
                     // we only do tricks if x is below the epsilon
                     // value. Here, this is not the case, so we use
                     // the full upwinding scheme
-                    velocity_[phaseIdx] *= mUp;
+                    filterVelocity_[phaseIdx] *= mUp;
                     
                     upstreamWeight_[phaseIdx] = 1.0;
                 }
@@ -362,7 +371,7 @@ private:
                     // we use fact, that 'x' is the magnitude of the
                     // 'non-smooth' velocity (also, x != 0, because we
                     // already checked that in the if statement.)
-                    velocity_[phaseIdx] *= absV/x;
+                    filterVelocity_[phaseIdx] *= absV/x;
 
                     upstreamWeight_[phaseIdx] = (absV - vDn)/(vUp - vDn);;
                 }
@@ -370,9 +379,9 @@ private:
 
             // normal velocity is the scalar product of the filter
             // velocity with the face normal
-            normalVelocity_[phaseIdx] = 0.0;
+            filterVelocityNormal_[phaseIdx] = 0.0;
             for (int i = 0; i < Vector::size; ++i) 
-                normalVelocity_[phaseIdx] += velocity_[phaseIdx][i]*normal[i];
+                filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
         }
     }
 
@@ -387,11 +396,11 @@ private:
     Vector potentialGrad_[numPhases];
 
     // filter velocities of all phases
-    Vector velocity_[numPhases];
+    Vector filterVelocity_[numPhases];
 
     // normal velocities, i.e. filter velocity times face normal times
     // face area
-    Scalar normalVelocity_[numPhases];
+    Scalar filterVelocityNormal_[numPhases];
 
     // the relative weight of the values of the upstream sub-control
     // volume compared to the ones downstream

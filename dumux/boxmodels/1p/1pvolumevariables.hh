@@ -29,6 +29,7 @@
 #define DUMUX_1P_VOLUME_VARIABLES_HH
 
 #include "1pproperties.hh"
+
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
@@ -39,7 +40,7 @@ namespace Dumux
 /*!
  * \ingroup OnePBoxModel
  * \ingroup BoxVolumeVariables
- * \brief Contains the quantities which are constant within a
+ * \brief Contains the quantities which are are constant within a
  *        finite volume in the one-phase model.
  */
 template <class TypeTag>
@@ -89,7 +90,6 @@ public:
         Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
-
         fluidState.setPressure(/*phaseIdx=*/0, priVars[Indices::pressureIdx]);
 
         // saturation in a single phase is always 1 and thus redundant
@@ -119,68 +119,56 @@ public:
     }
 
     /*!
-     * \brief Return temperature \f$\mathrm{[K]}\f$ inside the sub-control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperatures of the rock matrix and of all fluid phases are
-     * identical.
+     * \brief Returns the thermodynamic state of the fluid.
      */
-    Scalar temperature() const
-    { return fluidState_.temperature(); }
+    const FluidState &fluidState() const
+    { return fluidState_; }
 
     /*!
-     * \brief Return the effective pressure \f$\mathrm{[Pa]}\f$ of a given phase within
-     *        the control volume.
-     *
-     */
-    Scalar pressure(int phaseIdx = 0) const
-    { return fluidState_.pressure(/*phaseIdx=*/0); }
-
-    /*!
-     * \brief Return the mass density \f$\mathrm{[kg/m^3]}\f$ of a given phase within the
-     *        control volume.
-     */
-    Scalar density(int phaseIdx = 0) const
-    { return fluidState_.density(/*phaseIdx=*/0); }
-
-    /*!
-     * \brief Return the dynamic viscosity \f$\mathrm{[Pa s]}\f$ of the fluid within the
-     *        control volume.
-     */
-    Scalar viscosity(int phaseIdx = 0) const
-    { return fluidState_.viscosity(/*phaseIdx=*/0); }
-
-    /*!
-     * \brief Return the average porosity \f$\mathrm{[-]}\f$ within the control volume.
+     * \brief Returns the average porosity within the control volume.
      */
     Scalar porosity() const
     { return porosity_; }
 
     /*!
-     * \brief Return the fluid state of the control volume.
+     * \brief Returns the relative permeability of the fluid []
+     *
+     * This is always 1 for single phase flow.
      */
-    const FluidState &fluidState() const
-    { return fluidState_; }
+    Scalar relativePermeability(int phaseIdx) const
+    { 
+        assert(phaseIdx == 0);
+        return 1.0;
+    };
+
+    /*!
+     * \brief Returns the mobility of the fluid [1 / (Pa s)]
+     */
+    Scalar mobility(int phaseIdx) const
+    { 
+        assert(phaseIdx == 0);
+        return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
+    };
 
 protected:
-    static Scalar updateTemperature_(FluidState &fluidState,
-                                     const ElementContext &elemCtx,
-                                     int scvIdx,
-                                     int historyIdx)
+    static void updateTemperature_(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int historyIdx)
     {
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
 
     template<class ParameterCache>
-    static Scalar updateEnthalpy_(FluidState &fluidState,
-                                  const ParameterCache &paramCache,
-                                  const ElementContext &elemCtx,
-                                  int scvIdx,
-                                  int historyIdx)
+    static void updateEnthalpy_(FluidState &fluidState,
+                                const ParameterCache &paramCache,
+                                const ElementContext &elemCtx,
+                                int scvIdx,
+                                int historyIdx)
     { }
 
     /*!
-     * \brief Called by update() to compute the energy related quantities.
+     * \brief Called by update() to compute the energy related quantities
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,

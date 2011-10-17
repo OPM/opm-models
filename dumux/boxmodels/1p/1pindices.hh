@@ -39,7 +39,11 @@ namespace Dumux
  */
 struct OnePIndices
 {
+    //! index of the pressure primary variable
     static const int pressureIdx = 0;
+
+    //! index of the mass conservation equation
+    static const int contiEqIdx = 0;
 };
 
 // \}

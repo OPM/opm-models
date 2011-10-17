@@ -68,8 +68,7 @@ struct TwoPIndices : public TwoPCommonIndices
     static const int SnIdx = PVOffset + 1; //!< Saturation index of the wetting phase
 
     // indices of the equations
-    static const int contiWEqIdx = PVOffset + 0; //!< Index of the continuity equation of the wetting phase
-    static const int contiNEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase
+    static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
 
 /*!
@@ -91,8 +90,7 @@ struct TwoPIndices<TwoPCommonIndices::pnSw, PVOffset>
     static const int SwIdx = PVOffset + 1; //!< Saturation index of the wetting phase
 
     // indices of the equations
-    static const int contiNEqIdx = PVOffset + 0; //!< Index of the continuity equation of the non-wetting phase
-    static const int contiWEqIdx = PVOffset + 1; //!< Index of the continuity equation of the wetting phase
+    static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
 
 // \}

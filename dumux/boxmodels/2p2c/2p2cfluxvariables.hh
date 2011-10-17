@@ -99,13 +99,22 @@ public:
     { return extrusionFactor_; }
 
     /*!
+     * \brief Return the pressure potential gradient of a fluid phase at the
+     *        face's integration point [Pa/m]
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    const Vector &potentialGrad(int phaseIdx) const
+    { return potentialGrad_[phaseIdx]; }
+
+    /*!
      * \brief Return the filter velocity of a fluid phase at the
      *        face's integration point [m/s]
      *
      * \param phaseIdx The index of the fluid phase
      */
     const Vector &filterVelocity(int phaseIdx) const
-    { return velocity_[phaseIdx]; }
+    { return filterVelocity_[phaseIdx]; }
 
     /*!
      * \brief Return the filter velocity of a fluid phase at the
@@ -114,8 +123,8 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalVelocity(int phaseIdx) const
-    { return normalVelocity_[phaseIdx]; }
+    Scalar filterVelocityNormal(int phaseIdx) const
+    { return filterVelocityNormal_[phaseIdx]; }
 
     /*!
      * \brief Return the local index of the control volume which is on
@@ -139,7 +148,7 @@ public:
      *                 direction is requested.
      */
     short upstreamIdx(int phaseIdx) const
-    { return (normalVelocity_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
+    { return (filterVelocityNormal_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -149,7 +158,7 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { return (normalVelocity_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+    { return (filterVelocityNormal_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
 
     /*!
      * \brief Return the weight of the upstream control volume
@@ -236,7 +245,7 @@ private:
                 tmp *= fluidState.pressure(phaseIdx);
                 potentialGrad_[phaseIdx] += tmp;
                 
-                molarDensity_[phaseIdx] += shapeValue * volVars.molarDensity(phaseIdx);
+                molarDensity_[phaseIdx] += shapeValue * fluidState.molarDensity(phaseIdx);
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     tmp = feGrad;
@@ -249,37 +258,40 @@ private:
             }
 
             tmp = feGrad;
-            tmp *= fluidState.temperature();
+            tmp *= fluidState.temperature(/*phaseIdx=*/0);
             temperatureGrad_ += tmp;
         }
 
 
         const auto &volVarsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0);
         const auto &volVarsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0);
+        const auto &fsI = volVarsI.fluidState();
+        const auto &fsJ = volVarsJ.fluidState();
+
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // calculate tortuosity at the nodes i and j needed
             // for porous media diffusion coefficient
             Scalar tauI =
                 1.0/(volVarsI.porosity() * volVarsI.porosity()) 
                 *
-                pow(volVarsI.porosity() * volVarsI.saturation(phaseIdx),
+                pow(volVarsI.porosity() * fsI.saturation(phaseIdx),
                     7.0/3);
             Scalar tauJ =
                 1.0/(volVarsJ.porosity() * volVarsJ.porosity())
                 * 
-                pow(volVarsJ.porosity() * volVarsJ.saturation(phaseIdx),
+                pow(volVarsJ.porosity() * fsJ.saturation(phaseIdx),
                     7.0/3);
 
             // Diffusion coefficient in the porous medium
             // -> harmonic mean
             porousDiffCoeff_[phaseIdx] = 
                 harmonicMean(volVarsI.porosity()
-                             * volVarsI.saturation(phaseIdx)
+                             * fsI.saturation(phaseIdx)
                              * tauI
                              * volVarsI.diffCoeff(phaseIdx)
                              ,
                              volVarsJ.porosity()
-                             * volVarsJ.saturation(phaseIdx)
+                             * fsJ.saturation(phaseIdx)
                              * tauJ
                              * volVarsJ.diffCoeff(phaseIdx));
         }
@@ -347,14 +359,19 @@ private:
         {
             // calculate the "prelimanary" filter velocity not
             // taking the mobility into account
-            K.mv(potentialGrad_[phaseIdx], velocity_[phaseIdx]);
-            velocity_[phaseIdx] *= -1;
+            K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
+            filterVelocity_[phaseIdx] *= -1;
             
             // normal velocity is the scalar product of the filter
             // velocity with the face normal
-            normalVelocity_[phaseIdx] = 0.0;
+            filterVelocityNormal_[phaseIdx] = 0.0;
             for (int i = 0; i < Vector::size; ++i) 
-                normalVelocity_[phaseIdx] += velocity_[phaseIdx][i]*normal[i];
+                filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
+
+            // multiply both with the upstream mobility
+            const auto &up = elemCtx.volVars(upstreamIdx(phaseIdx), /*historyIdx=*/0);
+            filterVelocityNormal_[phaseIdx] *= up.mobility(phaseIdx);
+            filterVelocity_[phaseIdx] *= up.mobility(phaseIdx);
         }
     }
 
@@ -370,11 +387,11 @@ private:
     Vector potentialGrad_[numPhases];
 
     // filter velocities of all phases
-    Vector velocity_[numPhases];
+    Vector filterVelocity_[numPhases];
 
     // normal velocities, i.e. filter velocity times face normal times
     // face area
-    Scalar normalVelocity_[numPhases];
+    Scalar filterVelocityNormal_[numPhases];
 
     Scalar porousDiffCoeff_[numPhases];
     Scalar molarDensity_[numPhases];

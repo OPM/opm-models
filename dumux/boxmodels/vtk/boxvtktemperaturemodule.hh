@@ -22,66 +22,67 @@
 /*!
  * \file
  *
- * \brief VTK writer module for the mass related quantities of the
- *        MpNc model.
+ * \brief VTK output module for quantities which make sense for models which
+ *        assume thermal equilibrium.
  */
-#ifndef DUMUX_MPNC_VTK_WRITER_MASS_HH
-#define DUMUX_MPNC_VTK_WRITER_MASS_HH
+#ifndef DUMUX_BOX_VTK_TEMPERATURE_MODULE_HH
+#define DUMUX_BOX_VTK_TEMPERATURE_MODULE_HH
 
-#include "../mpncvtkwritermodule.hh"
+#include "boxvtkoutputmodule.hh"
+
+#include <dumux/common/propertysystem.hh>
 
 namespace Dumux
 {
-/*!
- * \ingroup MPNCModel
- *
- * \brief VTK writer module for the mass related quantities of the
- *        MpNc model.
- *
- * This is the specialization for the case _without_ kinetic mass
- * transfer between phases.
- */
-template<class TypeTag, bool enableKinetic /* = false */>
-class MPNCVtkWriterMass : public MPNCVtkWriterModule<TypeTag>
+namespace Properties
 {
-    static_assert(!enableKinetic,
-                  "No kinetic mass transfer module included, "
-                  "but kinetic mass transfer enabled.");
+// create new type tag for the VTK temperature output
+NEW_TYPE_TAG(VtkTemperature);
 
-    typedef MPNCVtkWriterModule<TypeTag> ParentType;
+// create the property tags needed for the temperature module
+NEW_PROP_TAG(VtkWriteTemperature);
+NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
+NEW_PROP_TAG(VtkWriteInternalEnergies);
+NEW_PROP_TAG(VtkWriteEnthalpies);
+
+// set default values for what quantities to output
+SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
+}
+
+/*!
+ * \ingroup BoxModels
+ *
+ * \brief VTK output module for the temperature in which assume
+ *        thermal equilibrium
+ */
+template<class TypeTag>
+class BoxVtkTemperatureModule : public BoxVtkOutputModule<TypeTag>
+{
+    typedef BoxVtkOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
-
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
 
     enum { dim = GridView::dimension };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    bool fugacityOutput_;
 
-    typedef typename ParentType::ComponentBuffer ComponentBuffer;
-
+    typedef typename ParentType::ScalarBuffer ScalarBuffer;
+    typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
 public:
-    MPNCVtkWriterMass(const Problem &problem)
+    BoxVtkTemperatureModule(const Problem &problem)
         : ParentType(problem)
     {
-        fugacityOutput_ = GET_PARAM_FROM_GROUP(TypeTag, bool, MPNC, VtkAddFugacities);
     }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    template <class MultiWriter>
-    void allocBuffers(MultiWriter &writer)
+    void allocBuffers(VtkMultiWriter &writer)
     {
-        if (fugacityOutput_) this->resizeComponentBuffer_(fugacity_);
+        if (temperatureOutput_()) this->resizeScalarBuffer_(temperature_);
     }
 
     /*!
@@ -93,31 +94,28 @@ public:
         const auto &vertexMapper = elemCtx.problem().vertexMapper();
         const auto &elem = elemCtx.element();
 
-        int n = elem.template count<dim>();
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < elemCtx.numScv(); ++i) {
             int I = vertexMapper.map(elem, i, dim);
-            const VolumeVariables &volVars = elemCtx.volVars(i);
+            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
+            const auto &fs = volVars.fluidState();
 
-            if (fugacityOutput_) {
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    fugacity_[compIdx][I] = volVars.fluidState().fugacity(compIdx);
-                }
-            }
+            if (temperatureOutput_()) temperature_[I] = fs.temperature(/*phaseIdx=*/0);
         }
     }
 
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    template <class MultiWriter>
-    void commitBuffers(MultiWriter &writer)
+    void commitBuffers(VtkMultiWriter &writer)
     {
-        if (fugacityOutput_)
-            this->commitComponentBuffer_(writer, "f_%s", fugacity_);
+        if (temperatureOutput_()) this->commitScalarBuffer_(writer, "temperature", temperature_);
     }
 
 private:
-    ComponentBuffer fugacity_;
+    static bool temperatureOutput_()
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTemperature); };
+
+    ScalarBuffer temperature_;
 };
 
 }

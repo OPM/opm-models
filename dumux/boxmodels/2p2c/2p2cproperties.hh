@@ -36,6 +36,9 @@
 #define DUMUX_2P2C_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 
 namespace Dumux
 {
@@ -47,7 +50,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -58,7 +61,7 @@ NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters
-NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
+NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
 NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law

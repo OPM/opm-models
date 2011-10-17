@@ -95,16 +95,7 @@ public:
     typedef typename MassVolumeVariables::FluidState FluidState;
 
     MPNCVolumeVariables()
-    { hint_ = NULL; };
-
-    /*!
-     * \brief Set the volume variables which should be used as initial
-     *        conditions for complex calculations.
-     */
-    void setHint(const Implementation *hint)
-    {
-        hint_ = hint;
-    }
+    { };
 
     /*!
      * \brief Update all quantities for a given control volume.
@@ -240,20 +231,13 @@ public:
      *        the control volume.
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
-
-    /*!
-     * \brief Returns the viscosity of a given phase within
-     *        the control volume.
-     */
-    Scalar viscosity(int phaseIdx) const
-    { return fluidState_.viscosity(phaseIdx); }
+    { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the relative permeability of a given phase within
      *        the control volume.
      */
-    Scalar relativePermability(int phaseIdx) const
+    Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
@@ -261,50 +245,6 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
-
-    /*!
-     * \brief Returns true iff the fluid state is in the active set
-     *        for a phase,
-     */
-    bool isPhaseActive(int phaseIdx) const
-    {
-        return
-            phasePresentIneq(fluidState(), phaseIdx) -
-            phaseNotPresentIneq(fluidState(), phaseIdx)
-            >= 0;
-    }
-
-    /*!
-     * \brief Returns the value of the NCP-function for a phase.
-     */
-    Scalar phaseNcp(int phaseIdx) const
-    {
-        Scalar aEval = phaseNotPresentIneq(this->evalPoint().fluidState(), phaseIdx);
-        Scalar bEval = phasePresentIneq(this->evalPoint().fluidState(), phaseIdx);
-        if (aEval > bEval)
-            return phasePresentIneq(fluidState(), phaseIdx);
-        return phaseNotPresentIneq(fluidState(), phaseIdx);
-    };
-
-    /*!
-     * \brief Returns the value of the inequality where a phase is
-     *        present.
-     */
-    Scalar phasePresentIneq(const FluidState &fluidState, int phaseIdx) const
-    { return fluidState.saturation(phaseIdx); }
-
-    /*!
-     * \brief Returns the value of the inequality where a phase is not
-     *        present.
-     */
-    Scalar phaseNotPresentIneq(const FluidState &fluidState, int phaseIdx) const
-    {
-        // difference of sum of mole fractions in the phase from 100%
-        Scalar a = 1;
-        for (int i = 0; i < numComponents; ++i)
-            a -= fluidState.moleFraction(phaseIdx, i);
-        return a;
-    }
 
     /*!
      * \brief If running in valgrind this makes sure that all
@@ -316,7 +256,6 @@ public:
         ParentType::checkDefined();
 
         Valgrind::CheckDefined(porosity_);
-        Valgrind::CheckDefined(hint_);
         Valgrind::CheckDefined(relativePermeability_);
 
         fluidState_.checkDefined();
@@ -326,8 +265,6 @@ public:
 protected:
     Scalar porosity_; //!< Effective porosity within the control volume
     Scalar relativePermeability_[numPhases]; //!< Effective mobility within the control volume
-
-    const Implementation *hint_;
 
     //! Mass fractions of each component within each phase
     FluidState fluidState_;

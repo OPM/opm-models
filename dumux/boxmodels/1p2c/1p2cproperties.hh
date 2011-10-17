@@ -34,8 +34,10 @@
 #ifndef DUMUX_1P2C_PROPERTIES_HH
 #define DUMUX_1P2C_PROPERTIES_HH
 
-
 #include<dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 
 namespace Dumux
 {
@@ -48,7 +50,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single-phase, two-component problems
-NEW_TYPE_TAG(BoxOnePTwoC, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxOnePTwoC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -63,7 +65,6 @@ NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law f
 NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
 NEW_PROP_TAG(UpwindWeight);   //!< The default value of the upwind weight
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(Scaling); //!Defines Scaling of the model
 }
 // \}
 }

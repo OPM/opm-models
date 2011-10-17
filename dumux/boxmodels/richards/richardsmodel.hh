@@ -133,77 +133,17 @@ public:
         return 1;
     }
 
-    /*!
-     * \brief All relevant primary and secondary of a given
-     *        solution to an ouput writer.
-     *
-     * \param sol The current solution which ought to be written to disk
-     * \param writer The Dumux::VtkMultiWriter which is be used to write the data
-     */
-    template <class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol, MultiWriter &writer)
+protected:
+    friend class BoxModel<TypeTag>;
+    
+    void registerVtkModules_()
     {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        ParentType::registerVtkModules_();
 
-        // create the required scalar fields
-        unsigned numVertices = this->problem_().gridView().size(dim);
-        ScalarField *pW = writer.allocateManagedBuffer(numVertices);
-        ScalarField *pN = writer.allocateManagedBuffer(numVertices);
-        ScalarField *pC = writer.allocateManagedBuffer(numVertices);
-        ScalarField *Sw = writer.allocateManagedBuffer(numVertices);
-        ScalarField *Sn = writer.allocateManagedBuffer(numVertices);
-        ScalarField *rhoW = writer.allocateManagedBuffer(numVertices);
-        ScalarField *rhoN = writer.allocateManagedBuffer(numVertices);
-        ScalarField *mobW = writer.allocateManagedBuffer(numVertices);
-        ScalarField *poro = writer.allocateManagedBuffer(numVertices);
-        ScalarField *Te = writer.allocateManagedBuffer(numVertices);
-
-        unsigned numElements = this->gridView_().size(0);
-        ScalarField *rank = writer.allocateManagedBuffer (numElements);
-
-        ElementContext elemCtx(this->problem_());
-
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            int elemIdx = this->elementMapper().map(*elemIt);
-            (*rank)[elemIdx] = this->gridView_().comm().rank();
-
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
-
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-            {
-                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
-
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
-
-                (*pW)[globalIdx] = volVars.pressure(wPhaseIdx);
-                (*pN)[globalIdx] = volVars.pressure(nPhaseIdx);
-                (*pC)[globalIdx] = volVars.capillaryPressure();
-                (*Sw)[globalIdx] = volVars.saturation(wPhaseIdx);
-                (*Sn)[globalIdx] = volVars.saturation(nPhaseIdx);
-                (*rhoW)[globalIdx] = volVars.density(wPhaseIdx);
-                (*rhoN)[globalIdx] = volVars.density(nPhaseIdx);
-                (*mobW)[globalIdx] = volVars.mobility(wPhaseIdx);
-                (*poro)[globalIdx] = volVars.porosity();
-                (*Te)[globalIdx] = volVars.temperature();
-            };
-        }
-
-        writer.attachVertexData(*Sn, "Sn");
-        writer.attachVertexData(*Sw, "Sw");
-        writer.attachVertexData(*pN, "pn");
-        writer.attachVertexData(*pW, "pw");
-        writer.attachVertexData(*pC, "pc");
-        writer.attachVertexData(*rhoW, "rhoW");
-        writer.attachVertexData(*rhoN, "rhoN");
-        writer.attachVertexData(*mobW, "mobW");
-        writer.attachVertexData(*poro, "porosity");
-        writer.attachVertexData(*Te, "temperature");
-        writer.attachCellData(*rank, "process rank");
-    }
+        // add the VTK output modules available on all model
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+    };
 };
 }
 

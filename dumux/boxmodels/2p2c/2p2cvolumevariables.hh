@@ -138,11 +138,12 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // relative permeabilities
             Scalar kr;
+            Scalar Sw = fluidState_.saturation(/*phaseIdx=*/0);
             if (phaseIdx == 0)
-                kr = MaterialLaw::krw(materialParams, saturation(/*phaseIdx=*/0));
+                kr = MaterialLaw::krw(materialParams, Sw);
             else // ATTENTION: krn requires the liquid saturation
                 // as parameter!
-                kr = MaterialLaw::krn(materialParams, saturation(/*phaseIdx=*/0));
+                kr = MaterialLaw::krn(materialParams, Sw);
             relativePermeability_[phaseIdx] = kr;
             Valgrind::CheckDefined(relativePermeability_[phaseIdx]);
 
@@ -181,22 +182,22 @@ public:
         /////////////
         // set the saturations
         /////////////
-        Scalar Sg;
+        Scalar Sw;
         if (phasePresence == gPhaseOnly)
-            Sg = 1.0;
+            Sw = 0.0;
         else if (phasePresence == lPhaseOnly) {
-            Sg = 0.0;
+            Sw = 1.0;
         }
         else if (phasePresence == bothPhases) {
             if (formulation == plSg)
-                Sg = priVars[switchIdx];
+                Sw = 1.0 - priVars[switchIdx];
             else if (formulation == pgSl)
-                Sg = 1.0 - priVars[switchIdx];
+                Sw = priVars[switchIdx];
             else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
         }
         else DUNE_THROW(Dune::InvalidStateException, "phasePresence: " << phasePresence << " is invalid.");
-        fluidState.setSaturation(/*phaseIdx=*/0, 1 - Sg);
-        fluidState.setSaturation(/*phaseIdx=*/1, Sg);
+        fluidState.setSaturation(/*phaseIdx=*/0, Sw);
+        fluidState.setSaturation(/*phaseIdx=*/1, 1 - Sw);
 
         /////////////
         // set the pressures of the fluid phases
@@ -205,7 +206,7 @@ public:
         // calculate capillary pressure
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx);
-        Scalar pC = MaterialLaw::pC(materialParams, 1 - Sg);
+        Scalar pC = MaterialLaw::pC(materialParams, Sw);
 
         if (formulation == plSg) {
             fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
@@ -216,7 +217,6 @@ public:
             fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] - pC);
         }
         else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
-
         /////////////
         // calculate the phase compositions
         /////////////
@@ -308,62 +308,15 @@ public:
     const FluidState &fluidState() const
     { return fluidState_; }
 
-    /*!
-     * \brief Returns the effective saturation of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar saturation(int phaseIdx) const
-    { return fluidState_.saturation(phaseIdx); }
 
     /*!
-     * \brief Returns the mass density of a given phase within the
-     *        control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar density(int phaseIdx) const
-    { return fluidState_.density(phaseIdx); }
-
-    /*!
-     * \brief Returns the mass density of a given phase within the
-     *        control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar molarDensity(int phaseIdx) const
-    { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
-
-    /*!
-     * \brief Returns the effective pressure of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar pressure(int phaseIdx) const
-    { return fluidState_.pressure(phaseIdx); }
-
-    /*!
-     * \brief Returns temperature inside the sub-control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperature of the rock matrix and of all fluid phases are
-     * identical.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(/*phaseIdx=*/0); }
-
-    /*!
-     * \brief Returns the relative permeability of a given phase within
-     *        the control volume.
+     * \brief Returns the relative permeability of a given phase
+     *        within the control volume.
      *
      * \param phaseIdx The phase index
      */
     Scalar relativePermeability(int phaseIdx) const
-    {
-        return relativePermeability_[phaseIdx];
-    }
+    { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective mobility of a given phase within
@@ -372,9 +325,7 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar mobility(int phaseIdx) const
-    {
-        return relativePermeability_[phaseIdx]/fluidState_.viscosity(phaseIdx);
-    }
+    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the effective capillary pressure within the control volume.
@@ -413,7 +364,7 @@ protected:
     { }
 
     Scalar porosity_;        //!< Effective porosity within the control volume
-    Scalar relativePermeability_[numPhases];  //!< Relative permeability within the control volume
+    Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume
     Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
     FluidState fluidState_;
 

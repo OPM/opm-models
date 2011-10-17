@@ -128,14 +128,16 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
+            const auto &fs = volVars.fluidState();
+
             // compute storage term of all components within all phases
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] += 
-                    volVars.density(phaseIdx)
-                    * volVars.fluidState().massFraction(phaseIdx, compIdx)
-                    * volVars.saturation(phaseIdx)
+                    fs.density(phaseIdx)
+                    * fs.massFraction(phaseIdx, compIdx)
+                    * fs.saturation(phaseIdx)
                     * volVars.porosity()
                     * volVars.extrusionFactor()
                     * elemCtx.fvElemGeom().subContVol[scvIdx].volume;
@@ -161,6 +163,7 @@ public:
     {
         const VolumeVariables &volVars = 
             elemCtx.volVars(scvIdx, historyIdx);
+        const auto &fs = volVars.fluidState();
 
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -169,9 +172,9 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] += 
-                    volVars.density(phaseIdx)
-                    * volVars.saturation(phaseIdx)
-                    * volVars.fluidState().massFraction(phaseIdx, compIdx);
+                    fs.density(phaseIdx)
+                    * fs.saturation(phaseIdx)
+                    * fs.massFraction(phaseIdx, compIdx);
             }
 
 #warning "HACKY: we should probably standardize on one formulation"
@@ -179,8 +182,8 @@ public:
             // is replaced by a total mass balance equation
             if (replaceCompEqIdx < numComponents)
                 storage[replaceCompEqIdx] +=
-                    volVars.density(phaseIdx)
-                    * volVars.saturation(phaseIdx);
+                    fs.density(phaseIdx)
+                    * fs.saturation(phaseIdx);
         }
         storage *= volVars.porosity();
     }
@@ -230,16 +233,14 @@ public:
                 int eqIdx = conti0EqIdx + compIdx;
 
                 flux[eqIdx] += 
-                    fluxVars.normalVelocity(phaseIdx)
+                    fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.density(phaseIdx)
+                      * up.fluidState().density(phaseIdx)
                       * up.fluidState().massFraction(phaseIdx, compIdx)
-                      * up.mobility(phaseIdx)
                       +
                       fluxVars.downstreamWeight(phaseIdx)
-                      * dn.density(phaseIdx)
-                      * dn.fluidState().massFraction(phaseIdx, compIdx)
-                      * dn.mobility(phaseIdx));
+                      * dn.fluidState().density(phaseIdx)
+                      * dn.fluidState().massFraction(phaseIdx, compIdx));
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
@@ -252,14 +253,12 @@ public:
             {
                 // upstream vertex
                 flux[replaceCompEqIdx] += 
-                    fluxVars.normalVelocity(phaseIdx)
+                    fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.density(phaseIdx)
-                      * up.mobility(phaseIdx)
+                      * up.fluidState().density(phaseIdx)
                       +
                       fluxVars.downstreamWeight(phaseIdx)
-                      * dn.density(phaseIdx)
-                      * dn.mobility(phaseIdx));
+                      * dn.fluidState().density(phaseIdx));
                 Valgrind::CheckDefined(flux);
             }
         }
@@ -293,7 +292,7 @@ public:
                 fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
                 fluxVars.molarDensity(phaseIdx);
 
-#warning "HACKY: we should probably standardize on one formulation"
+#warning "HACKY: we should probably standardize diffusion on one formulation"
             // add the diffusive fluxes to the mass balance equations
             int eq0Idx = conti0EqIdx + 0;
             int eq1Idx = conti0EqIdx + 1;

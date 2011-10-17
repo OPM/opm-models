@@ -56,6 +56,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 SET_INT_PROP(BoxTwoP, NumEq, 2); //!< set the number of equations to 2
 SET_INT_PROP(BoxTwoP, NumPhases, 2); //!< The number of phases in the 2p model is 2
+SET_INT_PROP(BoxTwoP, NumComponents, 2);   //!< Number of chemical species in the system
 
 //! Set the default formulation to pWsN
 SET_INT_PROP(BoxTwoP,

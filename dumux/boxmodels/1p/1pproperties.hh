@@ -28,10 +28,12 @@
  *
  * \brief Defines the properties required for the one-phase BOX model.
  */
-#ifndef DUMUX_1P_PROPERTIES_DATA_HH
-#define DUMUX_1P_PROPERTIES_DATA_HH
+#ifndef DUMUX_BOX_1P_PROPERTIES_HH
+#define DUMUX_BOX_1P_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 
 namespace Dumux
 {
@@ -46,7 +48,7 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

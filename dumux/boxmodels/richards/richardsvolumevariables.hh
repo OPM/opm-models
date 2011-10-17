@@ -111,7 +111,7 @@ public:
         // energy related quantities not belonging to the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
     }
-
+    
     /*!
      * \copydoc BoxModel::completeFluidState
      */
@@ -134,7 +134,7 @@ public:
         Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx);
         fluidState.setPressure(wPhaseIdx, priVars[pwIdx]);
         fluidState.setPressure(nPhaseIdx, std::max(pnRef, priVars[pwIdx] + minPc));
-        
+
         // saturations
         Scalar Sw = MaterialLaw::Sw(materialParams,
                                     fluidState.pressure(nPhaseIdx)
@@ -162,11 +162,11 @@ public:
     }
 
     /*!
-     * \brief Return the fluid configuration at the given primary
-     *        variables
+     * \brief Returns a reference to the fluid state for the volume
      */
     const FluidState &fluidState() const
     { return fluidState_; }
+
 
     /*!
      * \brief Returns the average porosity [] within the control volume.
@@ -178,77 +178,27 @@ public:
     { return porosity_; }
 
     /*!
-     * \brief Returns the average absolute saturation [] of a given
-     *        fluid phase within the finite volume.
-     *
-     * The saturation of a fluid phase is defined as the fraction of
-     * the pore volume filled by it, i.e.
-     * \f[ S_\alpha := \frac{V_\alpha}{V_{pore}} = \phi \frac{V_\alpha}{V} \f]
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    Scalar saturation(int phaseIdx) const
-    { return fluidState_.saturation(phaseIdx); }
-
-    /*!
-     * \brief Returns the average mass density \f$\mathrm{[kg/m^3]}\f$ of a given
-     *        fluid phase within the control volume.
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    Scalar density(int phaseIdx) const
-    { return fluidState_.density(phaseIdx); }
-
-    /*!
-     * \brief Returns the effective pressure \f$\mathrm{[Pa]}\f$ of a given phase within
-     *        the control volume.
-     *
-     * For the non-wetting phase (i.e. the gas phase), we assume
-     * infinite mobility, which implies that the non-wetting phase
-     * pressure is equal to the finite volume's reference pressure
-     * defined by the problem.
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    Scalar pressure(int phaseIdx) const
-    { return fluidState_.pressure(phaseIdx); }
-
-    /*!
-     * \brief Returns average temperature \f$\mathrm{[K]}\f$ inside the control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperature of the rock matrix and of all fluid phases are
-     * identical.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(); }
-
-    /*!
-     * \brief Returns the effective mobility \f$\mathrm{[1/(Pa*s)]}\f$ of a given phase within
-     *        the control volume.
-     *
-     * The mobility of a fluid phase is defined as the relative
-     * permeability of the phase (given by the chosen material law)
-     * divided by the dynamic viscosity of the fluid, i.e.
-     * \f[ \lambda_\alpha := \frac{k_{r\alpha}}{\mu_\alpha} \f]
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    Scalar mobility(int phaseIdx = wPhaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
-
-    /*!
      * \brief Returns relative permeability [-] of a given phase within
      *        the control volume.
      *
-     * \param phaseIdx The index of the fluid phase
+     * \param phaseIdx The phase index
      */
     Scalar relativePermeability(int phaseIdx) const
-    {
-        if (phaseIdx == wPhaseIdx)
+    { 
+        if (phaseIdx == wPhaseIdx) 
             return relativePermeabilityWetting_;
-        return 1;
+        else
+            return 1.0;
     }
+
+    /*!
+     * \brief Returns the effective mobility of a given phase within
+     *        the control volume.
+     *
+     * \param phaseIdx The phase index
+     */
+    Scalar mobility(int phaseIdx) const
+    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the effective capillary pressure \f$\mathrm{[Pa]}\f$ within the
@@ -268,7 +218,7 @@ protected:
                                    int historyIdx)
     {
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
-    }
+    };
     
     template<class ParameterCache>
     static void updateEnthalpy_(FluidState &fluidState,

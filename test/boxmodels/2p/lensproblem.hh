@@ -198,13 +198,13 @@ class LensProblem : public TwoPProblem<TypeTag>
         pwIdx = Indices::pwIdx,
         SnIdx = Indices::SnIdx,
 
-        // equation indices
-        contiNEqIdx = Indices::contiNEqIdx,
-
         // phase indices
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
 
+        // equation indices
+        contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
+        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld

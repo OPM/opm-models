@@ -63,49 +63,17 @@ class OnePBoxModel : public BoxModel<TypeTag>
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     enum { dim = GridView::dimension };
 
-public:
-    /*!
-     * \brief \copybrief Dumux::BoxModel::addOutputVtkFields
-     *
-     * Specialization for the OnePBoxModel, adding the pressure and
-     * the process rank to the VTK writer.
-     */
-    template<class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
+protected:
+    friend class BoxModel<TypeTag>;
+    
+    void registerVtkModules_()
     {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        ParentType::registerVtkModules_();
 
-        // create the required scalar fields
-        unsigned numVertices = this->problem_().gridView().size(dim);
-        ScalarField *p = writer.allocateManagedBuffer(numVertices);
-
-        unsigned numElements = this->gridView_().size(0);
-        ScalarField *rank = writer.allocateManagedBuffer(numElements);
-
-        ElementContext elemCtx(this->problem_());
-
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            int idx = this->elementMapper().map(*elemIt);
-            (*rank)[idx] = this->gridView_().comm().rank();
-
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
-
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-            {
-                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
-                (*p)[globalIdx] = volVars.pressure();
-            };
-        }
-
-        writer.attachVertexData(*p, "p");
-        writer.attachCellData(*rank, "process rank");
-    }
+        // add the VTK output modules available on all model
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+    };
 };
 }
 

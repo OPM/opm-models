@@ -31,6 +31,7 @@
 #define DUMUX_2P2CNI_MODEL_HH
 
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
+#include "2p2cniproperties.hh"
 
 namespace Dumux {
 /*!
@@ -95,6 +96,16 @@ namespace Dumux {
 template<class TypeTag>
 class TwoPTwoCNIModel : public TwoPTwoCModel<TypeTag>
 {
+    typedef TwoPTwoCModel<TypeTag> ParentType;
+
+protected:
+    friend class BoxModel<TypeTag>;
+    
+    void registerVtkModules_()
+    {
+        ParentType::registerVtkModules_();
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
+    }
 };
 
 }

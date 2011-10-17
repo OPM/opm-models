@@ -406,7 +406,6 @@ protected:
             values *= 
                 elemCtx.fvElemGeom().boundaryFace[boundaryFaceIdx].area
                 * elemCtx.volVars(scvIdx, /*historyIdx*/0).extrusionFactor();
-            Valgrind::CheckDefined(values);
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (bcTypes.isNeumann(eqIdx))

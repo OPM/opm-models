@@ -105,11 +105,44 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar normalFlux(int phaseIdx = wPhaseIdx) const
-    { 
-        assert(phaseIdx == wPhaseIdx);
-        return normalFlux_;
+    const Vector &filterVelocity(int phaseIdx) const
+    {
+        static Vector nullVec(0);
+
+        if (phaseIdx == wPhaseIdx)
+            return filterVelocity_;
+        else
+            return nullVec;
     }
+
+    /*!
+     * \brief Return a phase's pressure potential gradient times
+     *        intrinsic permeability times the normal of the sub
+     *        control volume face times the area of the SCVF.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar filterVelocityNormal(int phaseIdx) const
+    { 
+        if (phaseIdx == wPhaseIdx)
+            return filterVelocityNormal_;
+        else
+            return 0;
+    }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "inside" of the sub-control volume face.
+     */
+    short insideIdx() const
+    { return insideScvIdx_; }
+
+    /*!
+     * \brief Return the local index of the control volume which is on
+     *        the "outside" of the sub-control volume face.
+     */
+    short outsideIdx() const
+    { return outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -121,7 +154,7 @@ public:
     int downstreamIdx(int phaseIdx = wPhaseIdx) const
     { 
         assert(phaseIdx == wPhaseIdx);
-        return (normalFlux_ > 0)?outsideScvIdx_:insideScvIdx_;
+        return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
     }
 
     /*!
@@ -134,8 +167,26 @@ public:
     int upstreamIdx(int phaseIdx = wPhaseIdx) const
     { 
         assert(phaseIdx == wPhaseIdx);
-        return (normalFlux_ > 0)?insideScvIdx_:outsideScvIdx_;
+        return (filterVelocityNormal_ > 0)?insideScvIdx_:outsideScvIdx_;
     }
+
+    /*!
+     * \brief Return the weight of the upstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar upstreamWeight(int phaseIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Return the weight of the downstream control volume
+     *        for a given phase as a function of the normal flux.
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    Scalar downstreamWeight(int phaseIdx) const
+    { return 0.0; }
 
 protected:
     void calculateGradients_(const ElementContext &elemCtx,
@@ -154,9 +205,11 @@ protected:
             // FE gradient at vertex idx
             const Vector &feGrad = scvf.grad[scvIdx];
 
+            const auto &fs = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
+
             // compute pressure gradient for the wetting phase
             Vector tmp(feGrad);
-            tmp *= elemCtx.volVars(scvIdx, /*historyIdx=*/0).pressure(wPhaseIdx);
+            tmp *= fs.pressure(wPhaseIdx);
             potentialGrad_ += tmp;
         }
 
@@ -171,13 +224,15 @@ protected:
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
             
-            
+            const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
+            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
+
             // calculate the phase density at the integration point. we
             // only do this if the wetting phase is present in both cells
-            Scalar SI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).saturation(wPhaseIdx);
-            Scalar SJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).saturation(wPhaseIdx);
-            Scalar rhoI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).density(wPhaseIdx);
-            Scalar rhoJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).density(wPhaseIdx);
+            Scalar SI = fsI.saturation(wPhaseIdx);
+            Scalar SJ = fsJ.saturation(wPhaseIdx);
+            Scalar rhoI = fsI.density(wPhaseIdx);
+            Scalar rhoJ = fsJ.density(wPhaseIdx);
             Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
             Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
             if (fI + fJ == 0)
@@ -217,16 +272,19 @@ protected:
         //
         // (the minus comes from the Darcy law which states that
         // the flux is from high to low pressure potentials.)
-        Vector tmpVec;
-        K.mv(potentialGrad(wPhaseIdx), tmpVec);
+        K.mv(potentialGrad(wPhaseIdx), filterVelocity_);
+        // velocity is along negative pressure gradients
+        filterVelocity_ *= -1;
         
         // scalar product with the face normal
-        normalFlux_ = 0.0;
+        filterVelocityNormal_ = 0.0;
         for (int i = 0; i < Vector::size; ++i) 
-            normalFlux_ += tmpVec[i]*normal[i];
+            filterVelocityNormal_ += filterVelocity_[i]*normal[i];
 
-        // flux is along negative pressure gradients
-        normalFlux_ *= -1;
+        // multiply both with the upstream mobility
+        const auto &up = elemCtx.volVars(upstreamIdx(wPhaseIdx), /*historyIdx=*/0);
+        filterVelocityNormal_ *= up.mobility(wPhaseIdx);
+        filterVelocity_ *= up.mobility(wPhaseIdx);
     }
 
     // local indices of the inside and the outside sub-control volumes
@@ -239,8 +297,11 @@ protected:
     // gradients
     Vector potentialGrad_;
 
+    // filter velocity
+    Vector filterVelocity_;
+
     // normal fluxes
-    Scalar normalFlux_;
+    Scalar filterVelocityNormal_;
 };
 
 } // end namepace

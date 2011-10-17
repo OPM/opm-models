@@ -29,6 +29,8 @@
 #include <dumux/linear/linearsolverproperties.hh>
 #include <dumux/nonlinear/newtonmethod.hh>
 
+#include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
+
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
@@ -52,7 +54,10 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for models based on the box-scheme
-NEW_TYPE_TAG(BoxModel, INHERITS_FROM(NewtonMethod, LinearSolverTypeTag, ImplicitModel));
+NEW_TYPE_TAG(BoxModel, INHERITS_FROM(NewtonMethod, 
+                                     LinearSolverTypeTag,
+                                     ImplicitModel,
+                                     VtkPrimaryVars));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

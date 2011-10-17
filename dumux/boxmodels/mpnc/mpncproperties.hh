@@ -23,6 +23,10 @@
 #define DUMUX_MPNC_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 /*!
  * \ingroup Properties
@@ -35,7 +39,6 @@ namespace Dumux
 {
 namespace Properties
 {
-
 //////////////////////////////////////////////////////////////////
 // Type tags
 //////////////////////////////////////////////////////////////////
@@ -43,7 +46,7 @@ namespace Properties
 /*!
  * \brief Define the type tag for the compositional twophase box model.
  */
-NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -52,37 +55,6 @@ NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(MPNCIndices); //!< Enumerations for the 2pNc model
 NEW_PROP_TAG(MPNCEnergyIndices); //!< Enumerations for the 2pNc model
-
-NEW_PROP_TAG(MPNCVtkCommonModule); //!< Vtk writer module for writing the common quantities into the VTK output file
-NEW_PROP_TAG(MPNCVtkMassModule); //!< Vtk writer module for writing the mass related quantities into the VTK output file
-NEW_PROP_TAG(MPNCVtkEnergyModule); //!< Vtk writer module for writing the energy related quantities into the VTK output file
-NEW_PROP_TAG(MPNCVtkCustomModule); //!< Vtk writer module for writing the user-specified quantities into the VTK output file
-
-NEW_PROP_TAG(VelocityAveragingInModel);//!< Should the averaging of velocities be done in the model?
-
-//! specify which quantities are written to the vtk output files
-NEW_PROP_TAG(MPNCVtkAddPorosity);
-NEW_PROP_TAG(MPNCVtkAddBoundaryTypes);
-NEW_PROP_TAG(MPNCVtkAddSaturations);
-NEW_PROP_TAG(MPNCVtkAddPressures);
-NEW_PROP_TAG(MPNCVtkAddVarPressures);
-NEW_PROP_TAG(MPNCVtkAddVelocities);
-NEW_PROP_TAG(MPNCVtkAddDensities);
-NEW_PROP_TAG(MPNCVtkAddMobilities);
-NEW_PROP_TAG(MPNCVtkAddAverageMolarMass);
-NEW_PROP_TAG(MPNCVtkAddMassFractions);
-NEW_PROP_TAG(MPNCVtkAddMoleFractions);
-NEW_PROP_TAG(MPNCVtkAddMolarities);
-NEW_PROP_TAG(MPNCVtkAddFugacities);
-NEW_PROP_TAG(MPNCVtkAddFugacityCoefficients);
-NEW_PROP_TAG(MPNCVtkAddTemperatures);
-NEW_PROP_TAG(MPNCVtkAddEnthalpies);
-NEW_PROP_TAG(MPNCVtkAddInternalEnergies);
-
-NEW_PROP_TAG(MPNCVtkAddReynolds);
-NEW_PROP_TAG(MPNCVtkAddPrandtl);
-NEW_PROP_TAG(MPNCVtkAddNusselt);
-NEW_PROP_TAG(MPNCVtkAddInterfacialArea);
 
 NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
 

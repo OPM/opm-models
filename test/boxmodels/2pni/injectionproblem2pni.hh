@@ -167,10 +167,16 @@ class InjectionProblem2PNI
     typedef typename GET_PROP_TYPE(TypeTag, TwoPNIIndices) Indices;
 #endif
     enum {
+        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
+        conti0EqIdx = Indices::conti0EqIdx,
 
-        contiNEqIdx = Indices::contiNEqIdx,
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
+
+        contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
+        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
 #if !ISOTHERMAL
         temperatureIdx = Indices::temperatureIdx,

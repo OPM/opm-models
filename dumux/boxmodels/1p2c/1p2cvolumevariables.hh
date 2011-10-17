@@ -155,44 +155,6 @@ public:
     { return fluidState_; }
 
     /*!
-     * \brief Returns density the of the fluid phase.
-     */
-    Scalar density() const
-    { return fluidState_.density(/*phaseIdx=*/0); }
-
-    Scalar molarDensity() const
-    { return fluidState_.molarDensity(/*phaseIdx=*/0);}
-
-    /*!
-     * \brief Returns mole fraction of a component in the phase
-     *
-     * \param compIdx The index of the component
-     */
-    Scalar moleFraction(int compIdx) const
-    { return fluidState_.moleFraction(/*phaseIdx=*/0, compIdx); }
-
-    /*!
-     * \brief Returns mass fraction of a component in the phase
-     * \param compIdx The index of the component
-     */
-    Scalar massFraction(int compIdx) const
-    { return fluidState_.massFraction(/*phaseIdx=*/0, compIdx); }
-    
-    /*!
-     * \brief Returns concentration of a component in the phase
-     * \param compIdx The index of the component
-     */
-    Scalar molarity(int compIdx) const
-    { return fluidState_.molarity(/*phaseIdx=*/0, compIdx); }
-
-    /*!
-     * \brief Returns the effective pressure of a given phase within
-     *        the control volume.
-     */
-    Scalar pressure() const
-    {  return fluidState_.pressure(/*phaseIdx=*/0);  }
-
-    /*!
      * \brief Returns the binary diffusion coefficient in the fluid
      */
     Scalar diffCoeff() const
@@ -205,27 +167,30 @@ public:
     { return tortuosity_; }
 
     /*!
-     * \brief Returns temperature inside the sub-control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperature of the rock matrix and of all fluid phases are
-     * identical.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(/*phaseIdx=*/0); }
-
-    /*!
-     * \brief Returns the dynamic viscosity \f$\mathrm{[Pa*s]}\f$ of a given phase
-     *        within the control volume.
-     */
-    Scalar viscosity() const
-    { return fluidState_.viscosity(/*phaseIdx=*/0); }
-
-    /*!
      * \brief Returns the average porosity within the control volume.
      */
     Scalar porosity() const
     { return porosity_; }
+
+    /*!
+     * \brief Returns the relative permeability of the fluid []
+     *
+     * This is always 1 for single phase flow.
+     */
+    Scalar relativePermeability(int phaseIdx) const
+    { 
+        assert(phaseIdx == 0);
+        return 1.0;
+    };
+
+    /*!
+     * \brief Returns the mobility of the fluid [1 / (Pa s)]
+     */
+    Scalar mobility(int phaseIdx) const
+    { 
+        assert(phaseIdx == 0);
+        return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
+    };
 
 protected:
     static void updateTemperature_(FluidState &fluidState,

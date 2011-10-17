@@ -65,7 +65,6 @@ SET_TYPE_PROP(BoxTwoPTwoCNI, Model, TwoPTwoCNIModel<TypeTag>);
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPTwoCNI, VolumeVariables, TwoPTwoCNIVolumeVariables<TypeTag>);
 
-
 //! the FluxVariables property
 SET_TYPE_PROP(BoxTwoPTwoCNI, FluxVariables, TwoPTwoCNIFluxVariables<TypeTag>);
 

@@ -55,6 +55,8 @@ namespace Properties {
 SET_INT_PROP(BoxRichards, NumEq, 1);
 //! Number of fluid phases considered
 SET_INT_PROP(BoxRichards, NumPhases, 2);
+//! Number of components considered
+SET_INT_PROP(BoxRichards, NumComponents, 2);
 
 //! The local residual operator
 SET_TYPE_PROP(BoxRichards,

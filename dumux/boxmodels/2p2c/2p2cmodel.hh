@@ -85,7 +85,6 @@ namespace Dumux
  *      as long as the maximum mass fraction is not exceeded \f$(X^w_n<X^w_{n,max})\f$</li>
  * </ul>
  */
-
 template<class TypeTag>
 class TwoPTwoCModel: public BoxModel<TypeTag>
 {
@@ -266,110 +265,6 @@ public:
     int phasePresence(int globalVertexIdx, int historyIdx) const
     { return staticVertexDat_[globalVertexIdx].phasePresence[historyIdx]; }
 
-    /*!
-     * \brief Append all quantities of interest which can be derived
-     *        from the solution of the current time step to the VTK
-     *        writer.
-     *
-     * \param sol The solution vector
-     * \param writer The writer for multi-file VTK datasets
-     */
-    template<class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
-    {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VectorField;
-
-        // create the required scalar fields
-        unsigned numVertices = this->problem_().gridView().size(dim);
-
-        ScalarField *Sg    = writer.allocateManagedBuffer(numVertices);
-        ScalarField *Sl    = writer.allocateManagedBuffer(numVertices);
-        ScalarField *pg    = writer.allocateManagedBuffer(numVertices);
-        ScalarField *pl    = writer.allocateManagedBuffer(numVertices);
-        ScalarField *pc    = writer.allocateManagedBuffer(numVertices);
-        ScalarField *rhoL  = writer.allocateManagedBuffer(numVertices);
-        ScalarField *rhoG  = writer.allocateManagedBuffer(numVertices);
-        ScalarField *mobL  = writer.allocateManagedBuffer(numVertices);
-        ScalarField *mobG = writer.allocateManagedBuffer(numVertices);
-        ScalarField *phasePresence = writer.allocateManagedBuffer(numVertices);
-        ScalarField *massFrac[numPhases][numComponents];
-        for (int i = 0; i < numPhases; ++i)
-            for (int j = 0; j < numComponents; ++j)
-                massFrac[i][j] = writer.allocateManagedBuffer(numVertices);
-        ScalarField *temperature = writer.allocateManagedBuffer(numVertices);
-        ScalarField *poro = writer.allocateManagedBuffer(numVertices);
-
-        unsigned numElements = this->gridView_().size(0);
-        ScalarField *rank =
-            writer.allocateManagedBuffer (numElements);
-
-        ElementContext elemCtx(this->problem_());
-
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            int idx = this->elementMapper().map(*elemIt);
-            (*rank)[idx] = this->gridView_().comm().rank();
-
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
-
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-            {
-                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
-
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
-                (*Sg)[globalIdx]    = volVars.saturation(/*phaseIdx=*/1);
-                (*Sl)[globalIdx]    = volVars.saturation(/*phaseIdx=*/0);
-                (*pg)[globalIdx]    = volVars.pressure(/*phaseIdx=*/1);
-                (*pl)[globalIdx]    = volVars.pressure(/*phaseIdx=*/0);
-                (*pc)[globalIdx]    = volVars.capillaryPressure();
-                (*rhoL)[globalIdx]  = volVars.fluidState().density(/*phaseIdx=*/0);
-                (*rhoG)[globalIdx]  = volVars.fluidState().density(/*phaseIdx=*/1);
-                (*mobL)[globalIdx]  = volVars.mobility(/*phaseIdx=*/0);
-                (*mobG)[globalIdx]  = volVars.mobility(/*phaseIdx=*/1);
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                        (*massFrac[phaseIdx][compIdx])[globalIdx]
-                            = volVars.fluidState().massFraction(phaseIdx, compIdx);
-                        Valgrind::CheckDefined((*massFrac[phaseIdx][compIdx])[globalIdx][0]);
-                    }
-                }
-
-                (*poro)[globalIdx]  = volVars.porosity();
-                (*temperature)[globalIdx] = volVars.temperature();
-                (*phasePresence)[globalIdx] = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
-            };
-        }
-            
-
-        writer.attachVertexData(*Sg,     "Sg");
-        writer.attachVertexData(*Sl,     "Sl");
-        writer.attachVertexData(*pg,     "pg");
-        writer.attachVertexData(*pl,     "pl");
-        writer.attachVertexData(*pc,     "pc");
-        writer.attachVertexData(*rhoL,   "rhoL");
-        writer.attachVertexData(*rhoG,   "rhoG");
-        writer.attachVertexData(*mobL,   "mobL");
-        writer.attachVertexData(*mobG,   "mobG");
-        for (int i = 0; i < numPhases; ++i)
-        {
-            for (int j = 0; j < numComponents; ++j)
-            {
-                std::ostringstream oss;
-                oss << "X_" << FluidSystem::phaseName(i) << "^" << FluidSystem::componentName(j);
-                writer.attachVertexData(*massFrac[i][j], oss.str());
-            }
-        }
-        writer.attachVertexData(*poro, "porosity");
-        writer.attachVertexData(*temperature,    "temperature");
-        writer.attachVertexData(*phasePresence,  "phase presence");
-
-        writer.attachCellData(*rank, "process rank");
-    }
 
     /*!
      * \brief Write the current solution to a restart file.
@@ -418,8 +313,8 @@ public:
      * \param curGlobalSol The current global solution
      * \param oldGlobalSol The previous global solution
      */
-    void updateStaticData(SolutionVector &curGlobalSol,
-                          const SolutionVector &oldGlobalSol)
+    void updateStaticData_(SolutionVector &curGlobalSol,
+                           const SolutionVector &oldGlobalSol)
     {
         bool wasSwitched = false;
 
@@ -476,6 +371,18 @@ public:
     }
 
 protected:
+    friend class BoxModel<TypeTag>;
+    
+    void registerVtkModules_()
+    {
+        ParentType::registerVtkModules_();
+
+        // add the VTK output modules meaninful for the model
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+    };
+
     /*!
      * \brief Data which is attached to each vertex and is not only
      *        stored locally.
@@ -599,25 +506,25 @@ protected:
             if (staticVertexDat_[globalIdx].wasSwitched)
                 Smin = -0.01;
 
-            if (volVars.saturation(/*phaseIdx=*/1) <= Smin)
+            if (volVars.fluidState().saturation(/*phaseIdx=*/1) <= Smin)
             {
                 wouldSwitch = true;
                 // gas phase disappears
                 std::cout << "Gas phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sg: "
-                          << volVars.saturation(/*phaseIdx=*/1) << std::endl;
+                          << volVars.fluidState().saturation(/*phaseIdx=*/1) << std::endl;
                 newPhasePresence = lPhaseOnly;
 
                 globalSol[globalIdx][switchIdx] =
                     volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
             }
-            else if (volVars.saturation(/*phaseIdx=*/0) <= Smin)
+            else if (volVars.fluidState().saturation(/*phaseIdx=*/0) <= Smin)
             {
                 wouldSwitch = true;
                 // liquid phase disappears
                 std::cout << "Liquid phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sl: "
-                          << volVars.saturation(/*phaseIdx=*/0) << std::endl;
+                          << volVars.fluidState().saturation(/*phaseIdx=*/0) << std::endl;
                 newPhasePresence = gPhaseOnly;
 
                 globalSol[globalIdx][switchIdx] =

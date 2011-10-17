@@ -101,9 +101,13 @@ public:
         // retrieve the volume variables for the SCV at the specified
         // point in time
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
+        const auto &fs = volVars.fluidState();
 
         result = 0;
 
+                * volVars.porosity();
+                * fs.massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
+                * volVars.porosity();
         // storage term of continuity equation- molefractions
         //careful: molarDensity changes with moleFrac!
         result[contiEqIdx] +=
@@ -154,31 +158,32 @@ public:
         // data attached to upstream and the downstream vertices
         // of the current phase
         const VolumeVariables &up = 
-            elemCtx.volVars(evalPointFluxVars.upstreamIdx(), 
+            elemCtx.volVars(evalPointFluxVars.upstreamIdx(/*phaseIdx=*/0), 
                              /*historyIdx=*/0);
         const VolumeVariables &dn =
-            elemCtx.volVars(evalPointFluxVars.downstreamIdx(), 
+            elemCtx.volVars(evalPointFluxVars.downstreamIdx(/*phaseIdx=*/0), 
                              /*historyIdx=*/0);
-        Scalar upstreamWeight = GET_PARAM(TypeTag, Scalar, UpwindWeight);
+        const auto &fsUp = up.fluidState();
+        const auto &fsDn = dn.fluidState();
 
-        Scalar rhoUp = up.molarDensity();
-        Scalar rhoDn = dn.molarDensity();
-        Scalar xUp = up.moleFraction(/*compIdx=*/1);
-        Scalar xDn = dn.moleFraction(/*compIdx=*/1);
+        Scalar rhoUp = fsUp.molarDensity(/*phaseIdx=*/0);
+        Scalar rhoDn = fsDn.molarDensity(/*phaseIdx=*/0);
+        Scalar xUp = fsUp.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
+        Scalar xDn = fsDn.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
             
         // total mass/molar flux
         flux[contiEqIdx] +=
-            fluxVars.normalFlux() *
-            ((     upstreamWeight)*rhoUp/up.viscosity()
-             +
-             ((1 - upstreamWeight)*rhoDn/dn.viscosity()));
+            fluxVars.filterVelocityNormal(/*phaseIdx=*/0) *
+            (fluxVars.upstreamWeight(/*phaseIdx=*/0)*rhoUp
+             + 
+             fluxVars.downstreamWeight(/*phaseIdx=*/0)*rhoDn);
         
         // advective flux of the second component
         flux[transEqIdx] +=
-            fluxVars.normalFlux() *
-            ((    upstreamWeight) * rhoUp * xUp/up.viscosity()
-             +
-             (1 - upstreamWeight) * rhoDn * xDn/dn.viscosity());
+            fluxVars.filterVelocityNormal(/*phaseIdx=*/0) *
+            (fluxVars.upstreamWeight(/*phaseIdx=*/0)*rhoUp*xUp
+             + 
+             fluxVars.downstreamWeight(/*phaseIdx=*/0)*rhoDn*xDn);
     }
 
     /*!
@@ -230,7 +235,11 @@ public:
                                   scvIdx);
     }
 
+protected:
+#warning "TODO: implement outflow boundary conditions"
 #if 0
+    friend class BoxModel<TypeTag>;
+
     void evalBoundary_()
     {
         ParentType::evalBoundary_();
@@ -252,10 +261,7 @@ public:
     {
         DUNE_THROW(Dune::NotImplemented, "evalOutflux()");
     };
-#endif // 0
 
-protected:
-#if 0
     /*!
      * \brief Add all Outflow boundary conditions to the local
      *        residual.

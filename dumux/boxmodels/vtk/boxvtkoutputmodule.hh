@@ -19,10 +19,8 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_VTK_BASE_WRITER_HH
-#define DUMUX_MPNC_VTK_BASE_WRITER_HH
-
-#include "mpncproperties.hh"
+#ifndef DUMUX_BOX_VTK_OUTPUT_MODULE_HH
+#define DUMUX_BOX_VTK_OUTPUT_MODULE_HH
 
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dune/istl/bvector.hh>
@@ -33,73 +31,76 @@
 
 namespace Dumux
 {
+namespace Properties
+{
+// forward definition of property tags
+NEW_PROP_TAG(NumPhases);
+NEW_PROP_TAG(NumComponents);
+NEW_PROP_TAG(NumEq);
+
+NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(ElementContext);
+NEW_PROP_TAG(VtkMultiWriter);
+NEW_PROP_TAG(FluidSystem);
+}
+
 /*!
- * \ingroup MPNCModel
- *
  * \brief A VTK writer module which adheres to the required API but
  *        does nothing.
  *
  * This class also provides some convenience methods for buffer
- * management.
+ * management and is the base class for all other VTK writer modules.
  */
 template<class TypeTag>
-class MPNCVtkWriterModule
+class BoxVtkOutputModule
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
+    typedef typename Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-
-    enum { dim             = GridView::dimension };
+    enum { dim = GridView::dimension };
 
 public:
     typedef std::vector<Dune::FieldVector<Scalar, 1> > ScalarBuffer;
+    typedef std::tr1::array<ScalarBuffer, numEq> EqBuffer;
     typedef std::tr1::array<ScalarBuffer, numPhases> PhaseBuffer;
     typedef std::tr1::array<ScalarBuffer, numComponents> ComponentBuffer;
-    typedef std::tr1::array<ComponentBuffer,  numPhases> PhaseComponentBuffer;
+    typedef std::tr1::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
 
-//    typedef Dune::FieldVector<Scalar, dim> VelocityVector;
-//    typedef Dune::BlockVector<VelocityVector> VelocityField;
-//    typedef std::tr1::array<VelocityField, numPhases> PhaseVelocityField;
-
-    MPNCVtkWriterModule(const Problem &problem)
+    BoxVtkOutputModule(const Problem &problem)
         : problem_(problem)
     {
     }
+
+    virtual ~BoxVtkOutputModule()
+    {};
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    template <class MultiWriter>
-    void allocBuffers(MultiWriter &writer)
-    {
-    }
+    virtual void allocBuffers(VtkMultiWriter &writer) = 0;
 
     /*!
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
      */
-    void processElement(const ElementContext &elemCtx)
-    {
-    }
+    virtual void processElement(const ElementContext &elemCtx) = 0;
 
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    template <class MultiWriter>
-    void commitBuffers(MultiWriter &writer)
-    {
-    }
+    virtual void commitBuffers(VtkMultiWriter &writer) = 0;
 
 protected:
     /*!
@@ -116,6 +117,25 @@ protected:
 
         buffer.resize(n);
         std::fill(buffer.begin(), buffer.end(), 0.0);
+    }
+
+    /*!
+     * \brief Allocate the space for a buffer storing a equation specific
+     *        quantity
+     */
+    void resizeEqBuffer_(EqBuffer &buffer,
+                         bool vertexCentered = true)
+    {
+        Scalar n;
+        if (vertexCentered)
+            n = problem_.gridView().size(dim);
+        else
+            n = problem_.gridView().size(0);
+
+        for (int i = 0; i < numEq; ++i) {
+            buffer[i].resize(n);
+            std::fill(buffer[i].begin(), buffer[i].end(), 0.0);
+        }
     }
 
     /*!
@@ -190,6 +210,49 @@ protected:
             writer.attachVertexData(buffer, name, 1);
         else
             writer.attachCellData(buffer, name, 1);
+    }
+
+    /*!
+     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     */
+    template <class MultiWriter>
+    void commitPriVarsBuffer_(MultiWriter &writer,
+                              const char *pattern,
+                              EqBuffer &buffer,
+                              bool vertexCentered = true)
+    {
+        char name[512];       
+        for (int i = 0; i < numEq; ++i) {
+            std::string eqName = problem_.model().primaryVarName(numEq);
+            snprintf(name, 512, pattern, eqName.c_str());
+
+            if (vertexCentered)
+                writer.attachVertexData(buffer[i], name, 1);
+            else
+                writer.attachCellData(buffer[i], name, 1);
+        }
+    }
+
+    /*!
+     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     */
+    template <class MultiWriter>
+    void commitEqBuffer_(MultiWriter &writer,
+                         const char *pattern,
+                         EqBuffer &buffer,
+                         bool vertexCentered = true)
+    {
+        char name[512];       
+        for (int i = 0; i < numEq; ++i) {
+            std::ostringstream oss;
+            oss << i;
+            snprintf(name, 512, pattern, oss.str().c_str());
+
+            if (vertexCentered)
+                writer.attachVertexData(buffer[i], name, 1);
+            else
+                writer.attachCellData(buffer[i], name, 1);
+        }
     }
 
     /*!

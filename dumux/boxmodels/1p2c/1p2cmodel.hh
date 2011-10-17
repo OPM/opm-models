@@ -25,7 +25,7 @@
  * \file
  *
  * \brief Base class for all models which use the single-phase,
- *        two-component box model.
+ *        two-component box model
  *        Adaption of the BOX scheme to the one-phase two-component flow model.
  */
 
@@ -50,7 +50,7 @@ namespace Dumux
  * \ingroup OnePTwoCBoxModel
  * \brief Adaption of the BOX scheme to the one-phase two-component flow model.
  *
- * This model implements a one-phase flow of a compressible fluid, that consists of two components,
+ * This model implements an one-phase flow of an incompressible fluid, that consists of two components,
  * using a standard Darcy
  * approach as the equation for the conservation of momentum:
  \f[
@@ -58,7 +58,7 @@ namespace Dumux
  \left(\text{grad} p - \varrho {\textbf g} \right)
  \f]
  *
- * Gravity can be enabled or disabled via the property system.
+ * Gravity can be enabled or disabled via the Property system.
  * By inserting this into the continuity equation, one gets
  \f[
  \Phi \frac{\partial \varrho}{\partial t} - \text{div} \left\{
@@ -76,248 +76,26 @@ namespace Dumux
  * finite volume (box) scheme as spatial and
  * the implicit Euler method as time discretization.
  *
- * The primary variables are the pressure \f$p\f$ and the mole or mass fraction of dissolved component \f$x\f$.
+ * The primary variables are the pressure \f$p\f$ and the mole fraction of dissolved component \f$x\f$.
  */
 
 template<class TypeTag >
 class OnePTwoCBoxModel : public BoxModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef BoxModel<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
+protected:
+    friend class BoxModel<TypeTag>;
+    
+    void registerVtkModules_()
+    {
+        ParentType::registerVtkModules_();
+
+        // add the VTK output modules meaninful for the model
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
     };
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-
-public:
-    /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    OnePTwoCBoxModel()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        upwindWeight_ = GET_PARAM(TypeTag, Scalar, UpwindWeight);
-    }
-
-    /*!
-     * \brief \copybrief Dumux::BoxModel::addOutputVtkFields
-     *
-     * \copydetails Dumux::BoxModel::addOutputVtkFields
-     *
-     * Specialization for the OnePTwoCBoxModel, adding pressure,
-     * mass and mole fractions, and the process rank to the VTK writer.
-     */
-    template<class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
-    {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
-
-        // create the required scalar fields
-        unsigned numVertices = this->problem_().gridView().size(dim);
-        ScalarField &pressure = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &delp = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &moleFrac0 = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &moleFrac1 = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &massFrac0 = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &massFrac1 = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &delFrac= *writer.allocateManagedBuffer(numVertices);
-#ifdef VELOCITY_OUTPUT // check if velocity output is demanded
-        ScalarField &velocityX = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &velocityY = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &velocityZ = *writer.allocateManagedBuffer(numVertices);
-        //use vertiacl faces for vx and horizontal faces for vy calculation
-        std::vector<GlobalPosition> boxSurface(numVertices);
-        // initialize velocity fields
-          for (int i = 0; i < numVertices; ++i)
-          {
-
-              velocityX[i] = 0;
-              if (dim > 1)
-              {
-                  velocityY[i] = 0;
-              }
-              if (dim > 2)
-              {
-                  velocityZ[i] = 0;
-              }
-              boxSurface[i] = Scalar(0.0); // initialize the boundary surface of the fv-boxes
-          }
-#endif
-        unsigned numElements = this->gridView_().size(0);
-        ScalarField &rank =
-                *writer.allocateManagedBuffer(numElements);
-
-        ElementContext elemCtx(this->problem_());
-
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            int idx = this->elementMapper().map(*elemIt);
-            rank[idx] = this->gridView_().comm().rank();
-
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
-
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-            {
-                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
-
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
-                pressure[globalIdx] = volVars.pressure();
-                delp[globalIdx] = volVars.pressure() - 1e5;
-                moleFrac0[globalIdx] = volVars.moleFraction(0);
-                moleFrac1[globalIdx] = volVars.moleFraction(1);
-                massFrac0[globalIdx] = volVars.massFraction(0);
-                massFrac1[globalIdx] = volVars.massFraction(1);
-                rho[globalIdx] = volVars.density();
-                mu[globalIdx] = volVars.viscosity();
-                delFrac[globalIdx] = volVars.massFraction(1)-volVars.moleFraction(1);
-            };
-
-#ifdef VELOCITY_OUTPUT // check if velocity output is demanded
-            // In the box method, the velocity is evaluated on the FE-Grid. However, to get an
-            // average apparent velocity at the vertex, all contributing velocities have to be interpolated.
-            GlobalPosition velocity;
-
-            ElementVolumeVariables elemVolVars;
-            elemVolVars.update(this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               false /* isOldSol? */);
-            // loop over the phases
-            for (int faceIdx = 0; faceIdx < fvElemGeom.numEdges; faceIdx++)
-            {
-                velocity = 0.0;
-                //prepare the flux calculations (set up and prepare geometry, FE gradients)
-                FluxVariables fluxVars(this->problem_(),
-                                       *elemIt,
-                                       fvElemGeom,
-                                       faceIdx,
-                                       elemVolVars);
-
-                //use vertiacl faces for vx and horizontal faces for vy calculation
-                GlobalPosition xVector(0), yVector(0);
-                xVector[0] = 1; yVector[1] = 1;
-
-                Dune::SeqScalarProduct<GlobalPosition> sp;
-
-                Scalar xDir = std::abs(sp.dot(fluxVars.face().normal, xVector));
-                Scalar yDir = std::abs(sp.dot(fluxVars.face().normal, yVector));
-
-                // up+downstream node
-                const VolumeVariables &up =
-                    elemVolVars[fluxVars.upstreamIdx()];
-                const VolumeVariables &dn =
-                    elemVolVars[fluxVars.downstreamIdx()];
-
-                //get surface area to weight velocity at the IP with the surface area
-                Scalar scvfArea = fluxVars.face().normal.two_norm();
-
-                int vertIIdx = this->problem_().vertexMapper().map(
-                    *elemIt, fluxVars.face().i, dim);
-                int vertJIdx = this->problem_().vertexMapper().map(
-                    *elemIt, fluxVars.face().j, dim);
-
-                //use vertical faces (horizontal noraml vector) to calculate vx
-                //in case of heterogeneities it seams to be better to define intrinisc permeability elementwise
-                if(xDir > yDir)//(fluxVars.face().normal[0] > 1e-10 || fluxVars.face().normal[0] < -1e-10)// (xDir > yDir)
-                {
-                    // get darcy velocity
-                    //calculate (v n) n/A
-                    Scalar tmp = fluxVars.KmvpNormal();
-                    velocity = fluxVars.face().normal;
-                    velocity *= tmp;
-                    velocity /= scvfArea;
-                    velocity *= (upwindWeight_ / up.viscosity() +
-                                 (1 - upwindWeight_)/ dn.viscosity());
-
-                    // add surface area for weighting purposes
-                    boxSurface[vertIIdx][0] += scvfArea;
-                    boxSurface[vertJIdx][0] += scvfArea;
-
-                    velocityX[vertJIdx] += velocity[0];
-                    velocityX[vertIIdx] += velocity[0];
-
-                }
-                if (yDir > xDir)//(fluxVars.face().normal[1] > 1e-10 || fluxVars.face().normal[1] < -1e-10)// (yDir > xDir)
-                {
-                    // get darcy velocity
-                    //calculate (v n) n/A
-                    Scalar tmp = fluxVars.KmvpNormal();
-                    velocity = fluxVars.face().normal;
-                    velocity *= tmp;
-                    velocity /= scvfArea;
-                    velocity *= (upwindWeight_ / up.viscosity() +
-                                 (1 - upwindWeight_)/ dn.viscosity());
-
-                    // add surface area for weighting purposes
-                    boxSurface[vertIIdx][1] += scvfArea;
-                    boxSurface[vertJIdx][1] += scvfArea;
-
-                    velocityY[vertJIdx] += velocity[1];
-                    velocityY[vertIIdx] += velocity[1];
-                }
-            }
-#endif
-        }
-#ifdef VELOCITY_OUTPUT
-        // normalize the velocities at the vertices
-        // calculate the bounding box of the grid view
-        VertexIterator vIt = this->gridView_().template begin<dim>();
-        const VertexIterator vEndIt = this->gridView_().template end<dim>();
-        for (; vIt!=vEndIt; ++vIt)
-        {
-            int i = this->problem_().vertexMapper().map(*vIt);
-
-            //use vertiacl faces for vx and horizontal faces for vy calculation
-            velocityX[i] /= boxSurface[i][0];
-            if (dim >= 2)
-            {
-                velocityY[i] /= boxSurface[i][1];
-            }
-            if (dim == 3)
-            {
-                velocityZ[i] /= boxSurface[i][2];
-            }
-        }
-#endif
-        writer.attachVertexData(pressure, "P");
-        writer.attachVertexData(delp, "delp");
-#ifdef VELOCITY_OUTPUT // check if velocity output is demanded
-        writer.attachVertexData(velocityX, "Vx");
-        writer.attachVertexData(velocityY, "Vy");
-        if (dim > 2)
-            writer.attachVertexData(velocityZ, "Vz");
-#endif
-        writer.attachVertexData(moleFrac0, "x_H2O");
-        writer.attachVertexData(moleFrac1, "x_N2");
-        writer.attachVertexData(massFrac0, "X_H2O");
-        writer.attachVertexData(massFrac1, "X_N2");
-//        writer.attachVertexData(delFrac, "delFrac_TRAIL");
-        writer.attachVertexData(rho, "rho");
-        writer.attachVertexData(mu, "mu");
-        writer.attachCellData(rank, "process rank");
-    }
-
-private:
-    Scalar upwindWeight_;
 };
 }
 

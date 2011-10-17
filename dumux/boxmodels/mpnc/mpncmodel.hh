@@ -23,7 +23,6 @@
 #define DUMUX_MPNC_MODEL_HH
 
 #include "mpncproperties.hh"
-#include "mpncvtkwriter.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <tr1/array>
@@ -124,18 +123,8 @@ class MPNCModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef Dumux::MPNCVtkWriter<TypeTag> MPNCVtkWriter;
 
 public:
-    ~MPNCModel()
-    { delete vtkWriter_; };
-
-    void init(Problem &problem)
-    {
-        ParentType::init(problem);
-        vtkWriter_ = new MPNCVtkWriter(problem);
-    }
-
     /*!
      * \brief Compute the total storage inside one phase of all
      *        conservation quantities.
@@ -158,17 +147,18 @@ public:
             dest = this->gridView_().comm().sum(dest);
     }
 
-    /*!
-     * \brief Add the result of the current timestep to the VTK output.
-     */
-    template <class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
-    {
-        vtkWriter_->addCurrentSolution(writer);
-    }
+protected:
+    friend class BoxModel<TypeTag>;
 
-    MPNCVtkWriter *vtkWriter_;
+    void registerVtkModules_()
+    {
+        ParentType::registerVtkModules_();
+
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
+    };
 };
 
 }

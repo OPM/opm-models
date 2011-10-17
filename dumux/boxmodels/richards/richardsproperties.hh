@@ -32,6 +32,8 @@
 #define DUMUX_RICHARDS_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 
 namespace Dumux
 {
@@ -46,13 +48,14 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for problems discretized using the Richards model
-NEW_TYPE_TAG(BoxRichards, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxRichards, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents);   //!< Number of components in the system
 NEW_PROP_TAG(RichardsIndices); //!< Enumerations used by the Richards models
 NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters object
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used

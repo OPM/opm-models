@@ -57,6 +57,7 @@ namespace Dumux
 namespace Properties {
 SET_INT_PROP(BoxOneP, NumEq, 1); //!< set the number of equations to 1
 SET_INT_PROP(BoxOneP, NumPhases, 1); //!< The number of phases in the 1p model is 1
+SET_INT_PROP(BoxOneP, NumComponents, 1); //!< The number of (pseudo) components in the 1p model is 1
 
 //! The local residual function
 SET_TYPE_PROP(BoxOneP,
@@ -100,6 +101,20 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
+// use the conjugated gradient solver preconditioned by ILU-0.
+// WARNING: CG is only expected to work for symmetric Jacobian
+// matrices, which means that the either fluid used is incompressible
+// and/or you are _not_ use upwinding!
+SET_TYPE_PROP(BoxOneP, LinearSolver, Dumux::BoxCGILU0Solver<TypeTag> );
+
+// disable output of a few quantities which make sense in a
+// multip-hase but not in a single-phase context
+SET_BOOL_PROP(BoxOneP, VtkWriteSaturations, false);
+SET_BOOL_PROP(BoxOneP, VtkWriteMobilities, false);
+SET_BOOL_PROP(BoxOneP, VtkWriteRelativePermeabilities, false);
+
+// enable filter velocity output by default
+SET_BOOL_PROP(BoxOneP, VtkWriteFilterVelocities, true);
 // \}
 } // end namepace Properties
 

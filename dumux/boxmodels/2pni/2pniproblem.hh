@@ -71,7 +71,8 @@ public:
      * exception. This method MUST NOT be overwritten by the actual
      * problem.
      */
-    Scalar temperature() const
+    template <class Context>
+    Scalar temperature(const Context &context, int localIdx) const
     { DUNE_THROW(Dune::Exception, "temperature() method called for a 2p2cni problem"); };
 
     // \}

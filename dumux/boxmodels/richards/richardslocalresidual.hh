@@ -63,17 +63,6 @@ class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
 
 public:
     /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    RichardsLocalResidual()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        massUpwindWeight_ = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
-    };
-
-    /*!
      * \brief Evaluate the rate of change of all conservation
      *        quantites (e.g. phase mass) within a sub control
      *        volume of a finite volume element for the Richards
@@ -95,8 +84,8 @@ public:
 
         // partial time derivative of the wetting phase mass
         result[contiEqIdx] =
-            volVars.density(wPhaseIdx)
-            * volVars.saturation(wPhaseIdx)
+            volVars.fluidState().density(wPhaseIdx)
+            * volVars.fluidState().saturation(wPhaseIdx)
             * volVars.porosity();
     }
 
@@ -124,11 +113,11 @@ public:
         const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.upstreamIdx());
 
         flux[contiEqIdx] =
-            fluxVars.normalFlux()
+            fluxVars.filterVelocityNormal(wPhaseIdx)
             *
-            ((    massUpwindWeight_)*up.density(wPhaseIdx)*up.mobility()
+            (fluxVars.upstreamWeight(wPhaseIdx)*up.fluidState().density(wPhaseIdx)
              +
-             (1 - massUpwindWeight_)*dn.density(wPhaseIdx)*dn.mobility());
+             fluxVars.downstreamWeight(wPhaseIdx)*dn.fluidState().density(wPhaseIdx));
     }
 
     /*!
@@ -147,9 +136,6 @@ public:
                                   elemCtx,
                                   scvIdx);
     }
-
-private:
-    Scalar massUpwindWeight_;
 };
 
 }

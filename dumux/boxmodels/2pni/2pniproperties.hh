@@ -33,6 +33,7 @@
 #define DUMUX_2PNI_PROPERTIES_HH
 
 #include <dumux/boxmodels/2p/2pproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux
 {
@@ -44,7 +45,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the non-isothermal two-phase problems
-NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP));
+NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP, VtkEnergy));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

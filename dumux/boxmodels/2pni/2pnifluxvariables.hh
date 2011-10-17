@@ -81,7 +81,7 @@ public:
             const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
 
             tmp = feGrad;
-            tmp *= volVars.temperature();
+            tmp *= volVars.fluidState().temperature(/*phaseIdx=*/0);
             temperatureGrad += tmp;
         }
         

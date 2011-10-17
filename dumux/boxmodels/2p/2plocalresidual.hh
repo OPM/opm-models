@@ -56,8 +56,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum
     {
-        contiWEqIdx = Indices::contiWEqIdx,
-        contiNEqIdx = Indices::contiNEqIdx,
+        conti0EqIdx = Indices::conti0EqIdx,
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
@@ -98,17 +97,12 @@ public:
         // point in time
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
-        // wetting phase mass
-        result[contiWEqIdx] = 
-            volVars.density(wPhaseIdx)
-            * volVars.porosity()
-            * volVars.saturation(wPhaseIdx);
-
-        // non-wetting phase mass
-        result[contiNEqIdx] = 
-            volVars.density(nPhaseIdx)
-            * volVars.porosity()
-            * volVars.saturation(nPhaseIdx);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            result[conti0EqIdx + phaseIdx] = 
+                volVars.porosity()
+                * volVars.fluidState().saturation(phaseIdx)
+                * volVars.fluidState().density(phaseIdx);
+        }
     }
 
     /*!
@@ -163,16 +157,13 @@ public:
 
             // add advective flux of current component in current
             // phase
-            int eqIdx = (phaseIdx == wPhaseIdx) ? contiWEqIdx : contiNEqIdx;
-            flux[eqIdx] +=
+            flux[conti0EqIdx + phaseIdx] +=
                 fluxVars.filterVelocityNormal(phaseIdx)
                 * (fluxVars.upstreamWeight(phaseIdx)
-                   * up.density(phaseIdx)
-                   * up.mobility(phaseIdx)
+                   * up.fluidState().density(phaseIdx)
                    +
                    fluxVars.downstreamWeight(phaseIdx)
-                   * dn.density(phaseIdx)
-                   * dn.mobility(phaseIdx));
+                   * dn.fluidState().density(phaseIdx));
         }
     }
 
