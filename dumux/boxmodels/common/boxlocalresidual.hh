@@ -34,6 +34,7 @@
 
 #include "boxproperties.hh"
 #include "boxboundarycontext.hh"
+#include "boxneumanncontext.hh"
 
 namespace Dumux
 {
@@ -72,6 +73,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
+    typedef Dumux::BoxNeumannContext<TypeTag> NeumannContext;
 
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
@@ -337,8 +340,9 @@ protected:
         Dune::GeometryType geoType = elem.geometry().type();
         const ReferenceElement &refElem = ReferenceElements::general(geoType);
 
+        NeumannContext neumannVars(elemCtx);
         const GridView &gridView = elemCtx.gridView();
-        IntersectionIterator isIt = gridView.ibegin(elem);
+        IntersectionIterator &isIt = neumannVars.intersectionIt();
         const IntersectionIterator &endIt = gridView.iend(elem);
         for (; isIt != endIt; ++isIt)
         {
@@ -365,8 +369,7 @@ protected:
                 // add the residual of all vertices of the boundary
                 // segment
                 evalNeumannSegment_(residual,
-                                    elemCtx,
-                                    *isIt,
+                                    neumannVars,
                                     scvIdx,
                                     boundaryFaceIdx);
             }
@@ -384,28 +387,25 @@ protected:
      *        volume face to the local residual.
      */
     void evalNeumannSegment_(LocalBlockVector &residual,
-                             const ElementContext &elemCtx,
-                             const Intersection &is,
+                             const NeumannContext &neumannVars,
                              int scvIdx,
                              int boundaryFaceIdx) const
     {
         // temporary vector to store the neumann boundary fluxes
-        const BoundaryTypes &bcTypes = elemCtx.boundaryTypes(scvIdx);
+        const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx);
         PrimaryVariables values;
         
         // deal with neumann boundaries
         if (bcTypes.hasNeumann()) {
             Valgrind::SetUndefined(values);
-            elemCtx.problem().neumann(values,
-                                       elemCtx,
-                                       is,
-                                       scvIdx,
-                                       boundaryFaceIdx);
+            neumannVars.problem().neumann(values,
+                                          neumannVars,
+                                          boundaryFaceIdx);
             Valgrind::CheckDefined(values);
 
             values *= 
-                elemCtx.fvElemGeom().boundaryFace[boundaryFaceIdx].area
-                * elemCtx.volVars(scvIdx, /*historyIdx*/0).extrusionFactor();
+                neumannVars.fvElemGeom().boundaryFace[boundaryFaceIdx].area
+                * neumannVars.elemCtx().volVars(scvIdx, /*historyIdx*/0).extrusionFactor();
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (bcTypes.isNeumann(eqIdx))

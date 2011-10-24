@@ -550,6 +550,21 @@ public:
         return (face*maxCOS + vertInFace);
     }
 
+    int subContVolIndex(int boundaryFaceIdx) const
+    {
+        // convert boundary index into element-local face index and
+        // face-local vertex index
+        int faceIdx = boundaryFaceIdx / maxCOS;
+        int vertInFaceIdx = boundaryFaceIdx % maxCOS;
+
+        // convert the element-local face index plus face-local vertex
+        // index to the element-local vertex index using the reference
+        // element.
+        const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
+            referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(geometryType_);
+        return referenceElement.subEntity(faceIdx, 1, vertInFaceIdx, dim);
+    }
+
     struct SubControlVolume //! FV intersected with element
     {
         LocalPosition local; //!< local vert position
@@ -586,6 +601,7 @@ public:
     int numVertices; //!< number of verts
     int numEdges; //!< number of edges
     int numFaces; //!< number of faces (0 in < 3D)
+    Dune::GeometryType geometryType_;
 
     const LocalFiniteElementCache feCache_;
     bool computeGradientAtScvCenters;
@@ -603,13 +619,13 @@ public:
     void update(const GridView& gridView, const Element& e)
     {
         const Geometry& geometry = e.geometry();
-        Dune::GeometryType gt = geometry.type();
+        geometryType_ = geometry.type();
 
         const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
-            referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(gt);
+            referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(geometryType_);
 
         const LocalFiniteElement
-            &localFiniteElement = feCache_.get(gt);
+            &localFiniteElement = feCache_.get(geometryType_);
 
         elementVolume = geometry.volume();
         elementLocal = referenceElement.position(0,0);

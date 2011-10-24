@@ -258,16 +258,14 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void neumann(PrimaryVariables &priVars,
                  const Context &context,
-                 const Intersection &is,
-                 int localIdx,
-                 int boundaryIndex) const
+                 int localIdx) const
     {
         return asImp_().boxSDNeumann(priVars,
                                      context.element(),
                                      context.fvElemGeom(),
-                                     is,
+                                     context.intersection(localIdx),
+                                     context.scvIdx(localIdx),
                                      localIdx,
-                                     boundaryIndex,
                                      context);
     }
 

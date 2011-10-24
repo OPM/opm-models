@@ -215,9 +215,7 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 const Intersection &is,
-                 int localIdx,
-                 int boundaryIndex) const
+                 int localIdx) const
     {
         //  const GlobalPosition &globalPos = context.pos(boundaryIdx);
 
