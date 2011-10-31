@@ -78,8 +78,8 @@ public:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                moleFrac_[phaseIdx][compIdx]  = volVarsI.fluidState().moleFrac(phaseIdx, compIdx);
-                moleFrac_[phaseIdx][compIdx] += volVarsJ.fluidState().moleFrac(phaseIdx, compIdx);
+                moleFrac_[phaseIdx][compIdx]  = volVarsI.fluidState().moleFraction(phaseIdx, compIdx);
+                moleFrac_[phaseIdx][compIdx] += volVarsJ.fluidState().moleFraction(phaseIdx, compIdx);
                 moleFrac_[phaseIdx][compIdx] /= 2;
             }
         }
@@ -173,7 +173,7 @@ public:
         return porousDiffCoeffG_[compIIdx][compJIdx];
     };
 
-    Scalar moleFrac(int phaseIdx,
+    Scalar moleFraction(int phaseIdx,
                     int compIdx) const
     {
         return moleFrac_[phaseIdx][compIdx];

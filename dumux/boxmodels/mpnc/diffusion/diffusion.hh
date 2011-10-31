@@ -109,8 +109,8 @@ protected:
             for (int j = 0; j < numComponents; ++j) {
                 Scalar Dij = fluxVars.porousDiffCoeffG(i, j);
                 if (Dij) {
-                    M[i][j] += fluxVars.moleFrac(gPhaseIdx, i) / Dij;
-                    M[i][i] -= fluxVars.moleFrac(gPhaseIdx, j) / Dij;
+                    M[i][j] += fluxVars.moleFraction(gPhaseIdx, i) / Dij;
+                    M[i][i] -= fluxVars.moleFraction(gPhaseIdx, j) / Dij;
                 }
             }
         };

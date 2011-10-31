@@ -200,8 +200,8 @@ public:
     Scalar porousDiffCoeffG(int compIIdx, int compJIdx) const
     { return diffusionVars_.porousDiffCoeffG(compIIdx, compJIdx); };
 
-    const Scalar moleFrac(int phaseIdx, int compIdx) const
-    { return diffusionVars_.moleFrac(phaseIdx, compIdx); };
+    const Scalar moleFraction(int phaseIdx, int compIdx) const
+    { return diffusionVars_.moleFraction(phaseIdx, compIdx); };
 
     const Vector &moleFracGrad(int phaseIdx,
                                int compIdx) const

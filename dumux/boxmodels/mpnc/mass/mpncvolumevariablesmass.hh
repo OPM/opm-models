@@ -120,13 +120,13 @@ public:
 
             /*
               std::cout << "final composition: " << FluidSystem::phaseName(phaseIdx) << "="
-              << fs.moleFrac(phaseIdx, 0) << " "
-              << fs.moleFrac(phaseIdx, 1) << " "
-              << fs.moleFrac(phaseIdx, 2) << " "
-              << fs.moleFrac(phaseIdx, 3) << " "
-              << fs.moleFrac(phaseIdx, 4) << " "
-              << fs.moleFrac(phaseIdx, 5) << " "
-              << fs.moleFrac(phaseIdx, 6) << "\n";
+              << fs.moleFraction(phaseIdx, 0) << " "
+              << fs.moleFraction(phaseIdx, 1) << " "
+              << fs.moleFraction(phaseIdx, 2) << " "
+              << fs.moleFraction(phaseIdx, 3) << " "
+              << fs.moleFraction(phaseIdx, 4) << " "
+              << fs.moleFraction(phaseIdx, 5) << " "
+              << fs.moleFraction(phaseIdx, 6) << "\n";
             */
 
         }

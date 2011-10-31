@@ -351,7 +351,7 @@ protected:
                 {
                     // advective flux
                     flux[transEqIdx]+= boundaryVars.KmvpNormal()*vertVars.density()/vertVars.viscosity()
-                        *vertVars.fluidState().massFrac(phaseIdx, /*compIdx=*/1);
+                        *vertVars.fluidState().massFraction(phaseIdx, /*compIdx=*/1);
 
                     // diffusive flux of comp1 component in phase0
                     Scalar tmp = 0;
@@ -366,7 +366,7 @@ protected:
                 {
                     // advective flux
                     flux[transEqIdx]+= boundaryVars.KmvpNormal()*vertVars.molarDensity()/vertVars.viscosity()
-                        *vertVars.fluidState().moleFrac(phaseIdx, /*compIdx=*/1);
+                        *vertVars.fluidState().moleFraction(phaseIdx, /*compIdx=*/1);
 
                     // diffusive flux of comp1 component in phase0
                     Scalar tmp = 0;

@@ -193,7 +193,7 @@ public:
         return molarDensity_[phaseIdx];
     };
 
-    Scalar moleFrac(int phaseIdx, int compIdx) const
+    Scalar moleFraction(int phaseIdx, int compIdx) const
     { 
         assert(0 <= compIdx && compIdx < numComponents); 
         assert(0 <= phaseIdx && phaseIdx < numPhases); 
