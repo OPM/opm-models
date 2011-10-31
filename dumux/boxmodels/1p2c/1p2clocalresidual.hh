@@ -93,7 +93,7 @@ public:
      *        \param scvIdx The index of the considered face of the sub control volume
      *        \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, 
+    void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -144,24 +144,24 @@ public:
      * \param flux The advective flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux, 
+    void computeAdvectiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
         const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
-        
+
         ////////
         // advective fluxes of all components in all phases
         ////////
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = 
-            elemCtx.volVars(evalPointFluxVars.upstreamIdx(/*phaseIdx=*/0), 
+        const VolumeVariables &up =
+            elemCtx.volVars(evalPointFluxVars.upstreamIdx(/*phaseIdx=*/0),
                              /*historyIdx=*/0);
         const VolumeVariables &dn =
-            elemCtx.volVars(evalPointFluxVars.downstreamIdx(/*phaseIdx=*/0), 
+            elemCtx.volVars(evalPointFluxVars.downstreamIdx(/*phaseIdx=*/0),
                              /*historyIdx=*/0);
         const auto &fsUp = up.fluidState();
         const auto &fsDn = dn.fluidState();
@@ -170,19 +170,19 @@ public:
         Scalar rhoDn = fsDn.molarDensity(/*phaseIdx=*/0);
         Scalar xUp = fsUp.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
         Scalar xDn = fsDn.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
-            
+
         // total mass/molar flux
         flux[contiEqIdx] +=
             fluxVars.filterVelocityNormal(/*phaseIdx=*/0) *
             (fluxVars.upstreamWeight(/*phaseIdx=*/0)*rhoUp
-             + 
+             +
              fluxVars.downstreamWeight(/*phaseIdx=*/0)*rhoDn);
-        
+
         // advective flux of the second component
         flux[transEqIdx] +=
             fluxVars.filterVelocityNormal(/*phaseIdx=*/0) *
             (fluxVars.upstreamWeight(/*phaseIdx=*/0)*rhoUp*xUp
-             + 
+             +
              fluxVars.downstreamWeight(/*phaseIdx=*/0)*rhoDn*xDn);
     }
 
@@ -253,7 +253,7 @@ protected:
             this->evalDirichlet_();
     }
 
-    void evalOutflux(PrimaryVariables &outFlux, 
+    void evalOutflux(PrimaryVariables &outFlux,
                      const BoundaryFluxVariables &fluxVars,
                      const ElementContext &elemCtx,
                      int scvIdx,
@@ -297,7 +297,7 @@ protected:
 
                 int boundaryFaceIdx =
                     this->fvElemGeom_().boundaryFaceIndex(faceIdx, faceVertIdx);
-                
+
                 // add the residual of all vertices of the boundary
                 // segment
                 evalOutflowSegment_(isIt,

@@ -132,7 +132,7 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
-    enum { 
+    enum {
         H2OIdx = FluidSystem::H2OIdx,
         N2Idx = FluidSystem::N2Idx,
 
@@ -227,7 +227,7 @@ public:
 
     template <class Context>
     void source(PrimaryVariables &values,
-                const Context &context, 
+                const Context &context,
                 int localIdx) const
     { values = 0; }
 

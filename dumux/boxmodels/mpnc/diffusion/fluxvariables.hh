@@ -90,7 +90,7 @@ public:
             for (int compJIdx = 0; compJIdx < numComponents; ++compJIdx)
                 porousDiffCoeffG_[compIIdx][compJIdx] = 0.0;
         }
-        
+
         // update the concentration gradients using two-point
         // gradients
         const GlobalPosition &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
@@ -110,7 +110,7 @@ public:
                     / (dist * normal.two_norm());
             }
         }
-    
+
 
         // calculate the diffusion coefficients at the integration
         // point in the porous medium

@@ -100,7 +100,7 @@ class TwoPTwoCNIModel : public TwoPTwoCModel<TypeTag>
 
 protected:
     friend class BoxModel<TypeTag>;
-    
+
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();

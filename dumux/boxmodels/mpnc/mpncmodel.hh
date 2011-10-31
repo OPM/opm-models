@@ -132,7 +132,7 @@ public:
     void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
     {
         dest = 0;
-        
+
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
         const ElementIterator elemEndIt = this->gridView_().template end<0>();

@@ -54,7 +54,7 @@ class BoxNeumannContext
 
     enum { dim = GridView::dimension };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    
+
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
 public:
@@ -131,7 +131,7 @@ public:
      *        interiour of the current Neumann segment
      */
     const VolumeVariables &volVars(int boundaryFaceIdx, int historyIdx) const
-    { 
+    {
         short insideScvIdx = scvIdx(boundaryFaceIdx);
         return elemCtx.volVars(insideScvIdx, historyIdx);
     }

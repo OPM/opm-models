@@ -99,14 +99,14 @@ public:
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx));
-        
+
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             compFlux[compIdx] =
                 up.fluidState().molarity(phaseIdx, compIdx)
                 * fluxVars.filterVelocityNormal(phaseIdx);
         }
     }
-    
+
     /*!
      * \brief Evaluates the advective flux of all conservation
      *        quantities over a face of a subcontrol volume via a
@@ -225,7 +225,7 @@ public:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             MassCommon::computeAdvectiveFlux(advectiveFlux,
-                                             elemCtx, 
+                                             elemCtx,
                                              scvfIdx,
                                              phaseIdx);
             MassCommon::computeDiffusiveFlux(diffusiveFlux,
@@ -235,7 +235,7 @@ public:
 
             // add the fluxes to the primary variables vector
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                flux[conti0EqIdx + compIdx] += 
+                flux[conti0EqIdx + compIdx] +=
                     advectiveFlux[compIdx] + diffusiveFlux[compIdx];
 
             // Right now I think that adding the two contributions

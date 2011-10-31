@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \brief VTK output module for the fluid composition for models assuming 
+ * \brief VTK output module for the fluid composition for models assuming
  *        chemical equilibrium.
  */
 #ifndef DUMUX_BOX_VTK_COMPOSITION_MODULE_HH
@@ -127,7 +127,7 @@ public:
                     if (moleFracOutput_()) moleFrac_[phaseIdx][compIdx][I] = fs.moleFraction(phaseIdx, compIdx);
                     if (massFracOutput_()) massFrac_[phaseIdx][compIdx][I] = fs.massFraction(phaseIdx, compIdx);
                     if (molarityOutput_()) molarity_[phaseIdx][compIdx][I] = fs.molarity(phaseIdx, compIdx);
-                    
+
                     if (fugacityCoeffOutput_()) fugacityCoeff_[phaseIdx][compIdx][I] = fs.fugacityCoefficient(phaseIdx, compIdx);
                 }
             }

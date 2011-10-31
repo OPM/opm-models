@@ -2,7 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2010 by Markus Wolff                                      *
- *   Copyright (C) 2007-2008 by Klaus Mosthaf                                *
+ *   Copyright (C) 2010 by Klaus Mosthaf                                     *
  *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
  *   Copyright (C) 2008-2010 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -67,8 +67,7 @@ public:
 }
 
 /*!
- * \ingroup RichardsModel
- * \ingroup BoxTestProblems
+ * \ingroup RichardsProblems
  * \brief The spatial parameters for the RichardsLensProblem
  */
 template<class TypeTag>
@@ -105,18 +104,33 @@ public:
     RichardsLensSpatialParameters(const GridView& gridView)
         : ParentType(gridView)
     {
+        lensPorosity_ = Params::tree().template get<double>("Soil.FinePorosity");
+        outerPorosity_ = Params::tree().template get<double>("Soil.CoarsePorosity");
+
+        for(int i = 0; i < dim; i++)
+        {
+            lensK_[i][i] = Params::tree().template get<double>("Soil.FinePermeability");
+            outerK_[i][i] = Params::tree().template get<double>("Soil.CoarsePermeability");
+        }
+
         // residual saturations
-        lensMaterialParams_.setSwr(0.18);
-        lensMaterialParams_.setSnr(0.0);
-        outerMaterialParams_.setSwr(0.05);
-        outerMaterialParams_.setSnr(0.0);
+        lensMaterialParams_.setSwr(Params::tree().template get<double>("Soil.FineResidualSaturationWetting"));
+        lensMaterialParams_.setSnr(Params::tree().template get<double>("Soil.FineResidualSaturationNonWetting"));
+        outerMaterialParams_.setSwr(Params::tree().template get<double>("Soil.CoarseResidualSaturationWetting"));
+        outerMaterialParams_.setSnr(Params::tree().template get<double>("Soil.CoarseResidualSaturationNonWetting"));
 
         // parameters for the Van Genuchten law
         // alpha and n
-        lensMaterialParams_.setVgAlpha(0.00045);
-        lensMaterialParams_.setVgN(7.3);
-        outerMaterialParams_.setVgAlpha(0.0037);
-        outerMaterialParams_.setVgN(4.7);
+//        lensMaterialParams_.setVgAlpha(0.00045);
+//        lensMaterialParams_.setVgN(7.3);
+//        outerMaterialParams_.setVgAlpha(0.0037);
+//        outerMaterialParams_.setVgN(4.7);
+
+        // parameters for the Brooks-Corey law
+        lensMaterialParams_.setPe(Params::tree().template get<double>("Soil.FineBrooksCoreyEntryPressure"));
+        lensMaterialParams_.setLambda(Params::tree().template get<double>("Soil.FineBrooksCoreyLambda"));
+        outerMaterialParams_.setPe(Params::tree().template get<double>("Soil.CoarseBrooksCoreyEntryPressure"));
+        outerMaterialParams_.setLambda(Params::tree().template get<double>("Soil.CoarseBrooksCoreyLambda"));
 
         // parameters for the linear law
         // minimum and maximum pressures
@@ -124,9 +138,6 @@ public:
 //        outerMaterialParams_.setEntryPC(0);
 //        lensMaterialParams_.setMaxPC(0);
 //        outerMaterialParams_.setMaxPC(0);
-
-        lensK_ = 1e-12;
-        outerK_ = 5e-12;
     }
 
     /*!
@@ -153,8 +164,15 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar porosity(const Context &context, int localIdx) const
-    { return 0.4; }
+    Scalar porosity(const Element &element,
+                    const FVElementGeometry &fvElemGeom,
+                    int scvIdx) const
+    {
+        const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
+        if (isInLens_(globalPos))
+            return lensPorosity_;
+        return outerPorosity_;
+    }
 
     /*!
      * \brief Returns the parameters for the material law at a given location
@@ -201,8 +219,10 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
 
-    Scalar lensK_;
-    Scalar outerK_;
+    Tensor lensK_;
+    Tensor outerK_;
+    Scalar lensPorosity_;
+    Scalar outerPorosity_;
     MaterialLawParams lensMaterialParams_;
     MaterialLawParams outerMaterialParams_;
 };

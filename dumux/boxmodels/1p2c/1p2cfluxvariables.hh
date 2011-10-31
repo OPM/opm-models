@@ -88,7 +88,7 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
 
         calculateGradients_(elemCtx, scvfIdx);
@@ -145,7 +145,7 @@ public:
 
         return molarityGrad_;
     };
-    
+
     /*!
      * \brief The molar concentration gradient of a component in a phase.
      *
@@ -156,10 +156,10 @@ public:
         // The 1p2c model is supposed to query only the mole fraction
         // gradient of the second component of the first phase!
         assert(phaseIdx == 0 && compIdx == 1);
-        
+
         return moleFracGrad_;
     };
-    
+
     /*!
      * \brief The mass fraction gradient of a component in a phase.
      *
@@ -170,7 +170,7 @@ public:
         // The 1p2c model is supposed to query only the mass fraction
         // gradient of the second component of the first phase!
         assert(phaseIdx == 0 && compIdx == 1);
-        
+
         return massFracGrad_;
     };
 
@@ -180,11 +180,11 @@ public:
      * \param phaseIdx The index of the fluid phase
      */
     const Vector &potentialGrad(int phaseIdx = 0) const
-    { 
+    {
         assert(phaseIdx == 0);
         return potentialGrad_;
     }
-    
+
     /*!
      * \brief Return the fluid's filter velocity.
      *
@@ -209,7 +209,7 @@ public:
      * \param phaseIdx The index of the fluid phase
      */
     Scalar filterVelocityNormal(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0); // this is a single phase model!
         return filterVelocityNormal_;
     }
@@ -236,7 +236,7 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0); // this is a single phase model!
         return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
     }
@@ -281,11 +281,11 @@ private:
         molarityGrad_ = Scalar(0);
         moleFracGrad_ = Scalar(0);
         massFracGrad_ = Scalar(0);
-        
+
         // reset all scalar values to 0
         density_ = 0;
         molarDensity_ = 0;
-        
+
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
         const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         const auto &spatialParams = elemCtx.problem().spatialParameters();
@@ -298,29 +298,29 @@ private:
                 // FE gradient at vertex idx
                 const Vector &feGrad = scvf.grad[scvIdx];
                 const auto &fs = elemCtx.volVars(scvIdx, /*historyIdx=*/0).fluidState();
-                
+
                 Vector tmp;
 
                 // the pressure gradient [Pa/m]
                 tmp = feGrad;
                 tmp *= fs.pressure(/*phaseIdx=*/0);
                 potentialGrad_ += tmp;
-                
+
                 // the molarity gradient of the 2nd component [mol/m^3/m]
                 tmp = feGrad;
                 tmp *= fs.molarity(/*phaseIdx=*/0, /*compIdx=*/1);
                 molarityGrad_ += tmp;
-                
+
                 // the mole fraction gradient of the 2nd component [1/m]
                 tmp = feGrad;
                 tmp *= fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
                 moleFracGrad_ += tmp;
-                
+
                 // the mass fraction gradient of the 2nd component [1/m]
                 tmp = feGrad;
                 tmp *= fs.massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
                 massFracGrad_ += tmp;
-                
+
                 // the molar and the mass density of the fluid
                 Scalar feValue = scvf.shapeValue[scvIdx];
                 density_ += feValue * fs.density(/*phaseIdx=*/0);
@@ -356,11 +356,11 @@ private:
 
             massFracGrad_ = tmp;
             massFracGrad_ *= fsJ.massFraction(/*phaseIdx=*/0, /*compIdx*/1) - fsI.massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
-            
+
             density_ = (fsJ.density(/*phaseIdx=*/0) + fsI.density(/*phaseIdx=*/0))/2;
             molarDensity_ = (fsJ.molarDensity(/*phaseIdx=*/0) + fsI.molarDensity(/*phaseIdx=*/0))/2;
         }
-        
+
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
         ///////////////
@@ -371,7 +371,7 @@ private:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             // make gravity acceleration a force
             Vector f(g);
             f *= density_;
@@ -381,7 +381,7 @@ private:
         }
     }
 
-    void calculateVelocities_(const ElementContext &elemCtx, 
+    void calculateVelocities_(const ElementContext &elemCtx,
                               int scvfIdx)
     {
         const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
@@ -395,23 +395,23 @@ private:
                                                                 outsideScvIdx_));
 
         const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
-        
+
         // calculate the flux in the normal direction of the
         // current sub control volume face:
         //
         // v = - (K grad p) * n
         //
         // (the minus comes from the Darcy law which states that
-        // the flux is from high to low pressure potentials.)                           
+        // the flux is from high to low pressure potentials.)
         K.mv(potentialGrad_, filterVelocity_);
         // velocities go along negative pressure gradients
         filterVelocity_ *= -1;
 
         // scalar product with the face normal
         filterVelocityNormal_ = 0.0;
-        for (int i = 0; i < Vector::size; ++i) 
+        for (int i = 0; i < Vector::size; ++i)
             filterVelocityNormal_ += filterVelocity_[i]*normal[i];
-        
+
         // multiply both with the upstream mobility
         const auto &up = elemCtx.volVars(upstreamIdx(/*phaseIdx=*/0), /*historyIdx=*/0);
         filterVelocityNormal_ *= up.mobility(/*phaseIdx=*/0);
@@ -425,7 +425,7 @@ private:
      * \param element The considered element of the grid
      * \param elemDat The parameters stored in the considered element
      */
-    void calculateDiffCoeffPM_(const ElementContext &elemCtx, 
+    void calculateDiffCoeffPM_(const ElementContext &elemCtx,
                                int scvfIdx)
     {
         const auto &volVarsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0);

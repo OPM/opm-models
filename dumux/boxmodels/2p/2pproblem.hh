@@ -116,7 +116,7 @@ public:
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */
@@ -174,7 +174,7 @@ public:
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */

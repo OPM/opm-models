@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \brief VTK output module for quantities which make sense for models which 
+ * \brief VTK output module for quantities which make sense for models which
  *        assume thermal equilibrium.
  */
 #ifndef DUMUX_BOX_VTK_ENERGY_MODULE_HH
@@ -51,7 +51,7 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 /*!
  * \ingroup BoxModels
  *
- * \brief VTK output module for quantities which make sense for models which 
+ * \brief VTK output module for quantities which make sense for models which
  *        assume thermal equilibrium.
  *
  * This module deals with the following quantities:

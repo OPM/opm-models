@@ -125,7 +125,7 @@ public:
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx);
-        
+
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
         // became part of the fluid state.
@@ -160,6 +160,7 @@ public:
         // porosity
         porosity_ = spatialParams.porosity(elemCtx, scvIdx);
         Valgrind::CheckDefined(porosity_);
+
     }
 
     /*!
@@ -171,7 +172,7 @@ public:
                                    int historyIdx)
     {
         Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
-        
+
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
         const auto &problem = elemCtx.problem();
         const auto &model = elemCtx.model();

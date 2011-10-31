@@ -126,8 +126,8 @@ public:
 
         // arithmetic mean
         heatConductivity_ =
-            0.5 * (volVarsInside.heatConductivity() 
-                   + 
+            0.5 * (volVarsInside.heatConductivity()
+                   +
                    volVarsOutside.heatConductivity());
         Valgrind::CheckDefined(heatConductivity_);
     }

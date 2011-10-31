@@ -144,8 +144,7 @@ SET_INT_PROP(LensProblem, CellsY, 32);
 }
 
 /*!
- * \ingroup TwoPBoxModel
- * \ingroup BoxTestProblems
+ * \ingroup TwoPBoxProblems
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  *
@@ -397,7 +396,7 @@ public:
                  int localIdx) const
     {
         const GlobalPosition &globalPos = context.pos(localIdx);
-        
+
         Scalar depth = this->bboxMax()[1] - globalPos[1];
         Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
         ImmiscibleFluidState<Scalar, FluidSystem> fluidState;

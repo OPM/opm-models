@@ -87,7 +87,7 @@ public:
             tmp *= volVars.fluidState().temperature(/*phaseIdx=*/0);
             temperatureGrad += tmp;
         }
-        
+
         // scalar product of temperature gradient and scvf normal
         temperatureGradNormal_ = 0.0;
         for (int i = 0; i < dimWorld; ++ i)
@@ -98,14 +98,14 @@ public:
 
         // arithmetic mean
         heatConductivity_ =
-            0.5 * (volVarsInside.heatConductivity() 
-                   + 
+            0.5 * (volVarsInside.heatConductivity()
+                   +
                    volVarsOutside.heatConductivity());
         Valgrind::CheckDefined(heatConductivity_);
     }
 
     /*!
-     * \brief The temperature gradient times the face normal [K m^2 / m] 
+     * \brief The temperature gradient times the face normal [K m^2 / m]
      */
     Scalar temperatureGradNormal() const
     { return temperatureGradNormal_; }

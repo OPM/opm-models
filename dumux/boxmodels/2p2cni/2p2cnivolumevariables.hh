@@ -102,7 +102,7 @@ protected:
         // compute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
-            
+
             this->fluidState_.setEnthalpy(phaseIdx, h);
         }
 

@@ -184,7 +184,7 @@ public:
                 if (averageMolarMassOutput_()) averageMolarMass_[phaseIdx][I] = fs.averageMolarMass(phaseIdx);
             }
         }
-        
+
         if (potentialGradientOutput_()) {
             // calculate velocities if requested by the problem
             for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++ scvfIdx) {
@@ -217,13 +217,13 @@ public:
             // calculate velocities if requested by the problem
             for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++ scvfIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
-            
+
                 int i = fluxVars.insideIdx();
                 int I = vertexMapper.map(elem, i, dim);
-            
+
                 int j = fluxVars.outsideIdx();
                 int J = vertexMapper.map(elem, j, dim);
-                          
+
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max(1e-16, std::abs(fluxVars.filterVelocityNormal(phaseIdx)));
                     weight *= fluxVars.extrusionFactor();

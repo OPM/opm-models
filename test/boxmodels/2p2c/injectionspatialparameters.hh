@@ -231,7 +231,7 @@ public:
     template <class Context>
     const HeatConductionLawParams&
     heatConducionParams(const Context &context, int localIdx) const
-    { 
+    {
         const GlobalPosition &pos = context.pos(localIdx);
         if (isFineMaterial_(pos))
             return fineHeatCondParams_;
@@ -263,7 +263,7 @@ private:
 
     MaterialLawParams fineMaterialParams_;
     MaterialLawParams coarseMaterialParams_;
-    
+
     HeatConductionLawParams fineHeatCondParams_;
     HeatConductionLawParams coarseHeatCondParams_;
 };

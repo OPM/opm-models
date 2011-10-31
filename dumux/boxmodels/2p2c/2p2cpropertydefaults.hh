@@ -110,14 +110,14 @@ public:
 };
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(BoxTwoPTwoC, 
-              HeatConductionLaw, 
+SET_TYPE_PROP(BoxTwoPTwoC,
+              HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxTwoPTwoC, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxTwoPTwoC,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the 2p2c local jacobian operator for the 2p2c model

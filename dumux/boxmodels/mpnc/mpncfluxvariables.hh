@@ -90,9 +90,9 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
-        
+
         // update the base module (i.e. advection)
         calculateGradients_(elemCtx, scvfIdx);
         calculateVelocities_(elemCtx, scvfIdx);
@@ -223,7 +223,7 @@ private:
         for (int phase = 0; phase < numPhases; ++phase) {
             potentialGrad_[phase] = Scalar(0);
         }
-        
+
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
         const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
@@ -256,7 +256,7 @@ private:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             const auto &fsIn = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
             const auto &fsOut = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
@@ -285,10 +285,10 @@ private:
         }
     }
 
-    void calculateVelocities_(const ElementContext &elemCtx, 
+    void calculateVelocities_(const ElementContext &elemCtx,
                               int scvfIdx)
     {
-        const SpatialParameters &spatialParams = 
+        const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
 
         // calculate the intrinsic permeability
@@ -298,7 +298,7 @@ private:
                                                                 insideScvIdx_),
                             spatialParams.intrinsicPermeability(elemCtx,
                                                                 outsideScvIdx_));
-        
+
         const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
 
         ///////////////
@@ -311,13 +311,13 @@ private:
             // taking the mobility into account
             K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
             filterVelocity_[phaseIdx] *= -1;
-            
+
             // determine upstream and downstream indices
             int upstreamIdx = outsideScvIdx_;
             int downstreamIdx = insideScvIdx_;
             if (filterVelocity_[phaseIdx] * normal > 0)
                 std::swap(upstreamIdx, downstreamIdx);
-            
+
             // calculate the actual darcy velocities and the upstream
             // and downstream weights.
             if (!GET_PARAM(TypeTag, bool, EnableSmoothUpwinding)) {
@@ -328,33 +328,33 @@ private:
             else {
                 const VolumeVariables &up = elemCtx.volVars(upstreamIdx);
                 const VolumeVariables &dn = elemCtx.volVars(downstreamIdx);
-                
+
                 Scalar x = filterVelocity_[phaseIdx].two_norm();
-                
+
                 Scalar mUp = up.mobility(phaseIdx);
                 Scalar mDn = dn.mobility(phaseIdx);
                 Scalar m0 = Dumux::harmonicMean(mUp, mDn);
-                
+
                 // approximate the mean viscosity at the face
                 Scalar meanVisc =
-                    (up.fluidState().viscosity(phaseIdx) 
+                    (up.fluidState().viscosity(phaseIdx)
                      + dn.fluidState().viscosity(phaseIdx))
                     / 2;
-                
+
                 // put the mean viscosity and permeanbility in
                 // relation to the viscosity of water at
                 // approximatly 20 degrees Celsius.
                 const Scalar pGradRef = 10; // [Pa/m]
                 const Scalar muRef = 1e-3; // [Ns/m^2]
                 const Scalar Kref = 1e-12; // [m^2] = approx 1 Darcy
-                
+
                 Scalar eps = pGradRef * Kref * meanVisc/muRef;
                 if (0 <= x || eps < x) {
                     // we only do tricks if x is below the epsilon
                     // value. Here, this is not the case, so we use
                     // the full upwinding scheme
                     filterVelocity_[phaseIdx] *= mUp;
-                    
+
                     upstreamWeight_[phaseIdx] = 1.0;
                 }
                 else {
@@ -365,7 +365,7 @@ private:
                     Scalar absV = sp2.eval(x);
                     Scalar vUp = x * mUp;
                     Scalar vDn = x * mDn;
-                    
+
                     // the velocity keeps the direction and has the
                     // magnitude of 'absV'. To normalize the velocity,
                     // we use fact, that 'x' is the magnitude of the
@@ -380,7 +380,7 @@ private:
             // normal velocity is the scalar product of the filter
             // velocity with the face normal
             filterVelocityNormal_[phaseIdx] = 0.0;
-            for (int i = 0; i < Vector::size; ++i) 
+            for (int i = 0; i < Vector::size; ++i)
                 filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
         }
     }

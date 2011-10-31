@@ -61,13 +61,13 @@ SET_TYPE_PROP(BoxOnePTwoC, LocalResidual, OnePTwoCLocalResidual<TypeTag>);
 
 //! set the heat conduction law to the dummy law
 SET_TYPE_PROP(BoxOnePTwoC,
-              HeatConductionLaw, 
+              HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxOnePTwoC, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxOnePTwoC,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! define the model

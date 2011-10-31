@@ -91,7 +91,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &storage, 
+    void computeStorage(PrimaryVariables &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -99,7 +99,7 @@ public:
         // compute the storage term for phase mass
         ParentType::computeStorage(storage, elemCtx, scvIdx, historyIdx);
 
-        const VolumeVariables &volVars = 
+        const VolumeVariables &volVars =
             elemCtx.volVars(scvIdx, historyIdx);
         const auto &fs = volVars.fluidState();
 
@@ -113,9 +113,9 @@ public:
                     * fs.internalEnergy(phaseIdx)
                     * fs.saturation(phaseIdx));
         };
-        
+
         // handle the heat capacity of the solid
-        storage[energyEqIdx] += 
+        storage[energyEqIdx] +=
             fs.temperature(/*phaseIdx=*/0)
             * volVars.heatCapacitySolid()
             * (1 - volVars.porosity());
@@ -137,10 +137,10 @@ public:
     {
         // advective mass flux
         ParentType::computeAdvectiveFlux(flux, elemCtx, scvfIdx);
-        
+
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
-        
+
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices

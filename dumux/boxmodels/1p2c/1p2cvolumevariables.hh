@@ -82,7 +82,7 @@ public:
         ParentType::update(elemCtx, scvIdx, historyIdx);
 
         completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
-    
+
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         porosity_ = spatialParams.porosity(elemCtx, scvIdx);
         tortuosity_ = spatialParams.tortuosity(elemCtx, scvIdx);
@@ -119,7 +119,7 @@ public:
                                    int historyIdx)
     {
         Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
-        
+
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
         fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
 
@@ -178,7 +178,7 @@ public:
      * This is always 1 for single phase flow.
      */
     Scalar relativePermeability(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0);
         return 1.0;
     };
@@ -187,7 +187,7 @@ public:
      * \brief Returns the mobility of the fluid [1 / (Pa s)]
      */
     Scalar mobility(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0);
         return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
     };
@@ -200,7 +200,7 @@ protected:
     {
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     }
-    
+
     template<class ParameterCache>
     static void updateEnthalpy_(FluidState &fluidState,
                                 const ParameterCache &paramCache,

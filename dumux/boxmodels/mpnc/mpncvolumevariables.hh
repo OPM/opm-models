@@ -189,7 +189,7 @@ public:
         /////////////
 
         // update the diffusion part of the volume data
-        DiffusionVolumeVariables::update(fluidState_, 
+        DiffusionVolumeVariables::update(fluidState_,
                                          paramCache,
                                          elemCtx,
                                          scvIdx,

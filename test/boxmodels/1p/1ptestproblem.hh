@@ -157,7 +157,7 @@ public:
 
     template <class Context>
     void source(PrimaryVariables &values,
-                const Context &context, 
+                const Context &context,
                 int localIdx) const
     {
         values = 0;

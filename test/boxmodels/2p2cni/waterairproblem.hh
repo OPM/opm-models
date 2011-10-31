@@ -133,7 +133,7 @@ class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
 #endif
-        
+
         // component indices
         N2Idx = FluidSystem::N2Idx,
         H2OIdx = FluidSystem::H2OIdx,

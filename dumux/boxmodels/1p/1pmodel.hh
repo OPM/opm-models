@@ -53,6 +53,8 @@ namespace Dumux
 template<class TypeTag >
 class OnePBoxModel : public BoxModel<TypeTag>
 {
+    typedef BoxModel<TypeTag> ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -65,7 +67,7 @@ class OnePBoxModel : public BoxModel<TypeTag>
 
 protected:
     friend class BoxModel<TypeTag>;
-    
+
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();

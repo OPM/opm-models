@@ -51,7 +51,7 @@ class BoxBoundaryContext
 
     enum { dim = GridView::dimension };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    
+
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
 public:
@@ -120,7 +120,7 @@ public:
      * \brief Return the current finite element geometry.
      */
     const FVElementGeometry &fvElemGeom() const
-    { 
+    {
         if (!fvElemGeomUpToDate_) {
             fvElemGeomUpToDate_ = true;
             fvElemGeom_.update(gridView_, element());

@@ -96,7 +96,7 @@ protected:
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
         const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
-        
+
         // Stefan-Maxwell equation
         //
         // See: R. Reid, et al.: "The Properties of Liquids and

@@ -314,12 +314,12 @@ public:
      *        sub-control volume at a given time.
      *
      * If the time step index is not given, return the volume
-     * variables for the current time. 
+     * variables for the current time.
      *
      * \param scvIdx The local index of the sub-control volume for
      *               which the volume variables are requested
-     * \param historyIdx The index of the time step for which the 
-     *                    volume variables are requested. 0 means 
+     * \param historyIdx The index of the time step for which the
+     *                    volume variables are requested. 0 means
      *                    current time step, 1 previous time step,
      *                    2 next-to-previous, etc.
      */
@@ -343,7 +343,7 @@ public:
      * \brief Returns the volume variables at the evaluation point.
      */
     void saveScvVars(int scvIdx)
-    { 
+    {
         scvIdxSaved_ = scvIdx;
         scvVarsSaved_ = scvVars_[scvIdx].volVars[/*historyIdx=*/0];
         priVarsSaved_ = scvVars_[scvIdx].priVars[/*historyIdx=*/0];
@@ -353,7 +353,7 @@ public:
      * \brief Restores the volume variables at the evaluation point.
      */
     void restoreScvVars(int scvIdx)
-    { 
+    {
         scvIdxSaved_ = -1;
         scvVars_[scvIdx].priVars[/*historyIdx=*/0] = priVarsSaved_;
         scvVars_[scvIdx].volVars[/*historyIdx=*/0] = scvVarsSaved_;
@@ -377,7 +377,7 @@ public:
      *               which the flux variables are requested
      */
     const FluxVariables &evalPointFluxVars(int scvfIdx) const
-    { 
+    {
         return (*scvfVarsEval_)[scvfIdx];
     }
 
@@ -386,14 +386,14 @@ public:
      *        evaluation point.
      */
     const VolumeVariables &evalPointVolVars(int scvIdx) const
-    { 
+    {
         if (scvIdxSaved_ == scvIdx)
             return scvVarsSaved_;
         return volVars(scvIdx, /*historyIdx=*/0);
     }
 
 protected:
-    ScvVarsVector scvVars_;  
+    ScvVarsVector scvVars_;
 
     int scvIdxSaved_;
     VolumeVariables scvVarsSaved_;

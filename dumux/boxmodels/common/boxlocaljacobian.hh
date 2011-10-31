@@ -107,7 +107,7 @@ private:
 
 public:
     BoxLocalJacobian()
-    { 
+    {
         internalElemVars_ = 0;
     }
 
@@ -125,7 +125,7 @@ public:
      * \param prob The problem which we want to simulate.
      */
     void init(Problem &prob)
-    { 
+    {
         problemPtr_ = &prob;
         modelPtr_ = &prob.model();
         internalElemVars_ = new ElementContext(prob);
@@ -157,18 +157,18 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalIndex(scvIdx);
             for (int historyIdx = 0; historyIdx < historySize; ++historyIdx)
-                model_().setHint(elemCtx.volVars(scvIdx, historyIdx), 
+                model_().setHint(elemCtx.volVars(scvIdx, historyIdx),
                                  globalIdx,
                                  historyIdx);
         }
-      
+
         // update the weights of the primary variables using the
         // current element variables
         model_().updatePVWeights(elemCtx);
-        
+
         resize_(elemCtx);
         reset_(elemCtx);
-       
+
         // calculate the local residual
         localResidual_.eval(residual_, residualStorage_, elemCtx);
 
@@ -191,7 +191,7 @@ public:
             }
         }
 
-        // restore flux variables. 
+        // restore flux variables.
         //elemCtx.restoreScvfVars(); // not necessary
     }
 
@@ -203,7 +203,7 @@ public:
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
      */
-    Scalar numericEpsilon(const ElementContext &elemCtx, 
+    Scalar numericEpsilon(const ElementContext &elemCtx,
                           int scvIdx,
                           int pvIdx) const
     {
@@ -275,7 +275,7 @@ protected:
     /*!
      * \brief Returns the numeric difference method which is applied.
      */
-    static int numericDifferenceMethod_() 
+    static int numericDifferenceMethod_()
     { return GET_PARAM(TypeTag, int, NumericDifferenceMethod); }
 
     /*!
@@ -288,10 +288,10 @@ protected:
 
         jacobian_.setSize(n, n);
         jacobianStorage_.resize(n);
-        
+
         residual_.resize(n);
         residualStorage_.resize(n);
-        
+
         derivResidual_.resize(n);
         derivStorage_.resize(n);
     };
@@ -404,7 +404,7 @@ protected:
             elemCtx.updateScvVars(priVars, scvIdx, /*historyIdx=*/0);
             elemCtx.updateAllScvfVars();
             localResidual_.eval(elemCtx);
-            
+
             derivResidual_ -= localResidual_.residual();
             derivStorage_[scvIdx] -= localResidual_.storageTerm()[scvIdx];
         }

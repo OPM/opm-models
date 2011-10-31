@@ -103,7 +103,7 @@ public:
      *        with no pores in the sub-control volume.
      */
     Scalar heatCapacitySolid() const
-    { 
+    {
         DUNE_THROW(Dune::InvalidStateException,
                    "heatCapacitySolid() called with the energy equation being disabled");
     };

@@ -95,7 +95,7 @@ public:
 
             // clamp saturation change to at most 20% per iteration
             ElementContext elemCtx(this->problem_());
-            
+
             ElementIterator elemIt = this->gridView_().template begin<0>();
             const ElementIterator &elemEndIt = this->gridView_().template end<0>();
             for (; elemIt != elemEndIt; ++elemIt)
@@ -106,7 +106,7 @@ public:
                     continue;
 
                 elemCtx.updateFVElemGeom(*elemIt);
-                
+
                 for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                     int globI = this->problem_().vertexMapper().map(*elemIt, scvIdx, dim);
                     if (assembler.vertexColor(globI) == JacobianAssembler::Green)

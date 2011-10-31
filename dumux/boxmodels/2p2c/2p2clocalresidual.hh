@@ -120,7 +120,7 @@ public:
      * \param element The element
      * \param phaseIdx The index of the fluid phase
      */
-    void addPhaseStorage(PrimaryVariables &storage, 
+    void addPhaseStorage(PrimaryVariables &storage,
                          const ElementContext &elemCtx,
                          int historyIdx,
                          int phaseIdx)
@@ -134,7 +134,7 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {
                 int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] += 
+                storage[eqIdx] +=
                     fs.density(phaseIdx)
                     * fs.massFraction(phaseIdx, compIdx)
                     * fs.saturation(phaseIdx)
@@ -156,12 +156,12 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &storage, 
+    void computeStorage(PrimaryVariables &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
     {
-        const VolumeVariables &volVars = 
+        const VolumeVariables &volVars =
             elemCtx.volVars(scvIdx, historyIdx);
         const auto &fs = volVars.fluidState();
 
@@ -171,7 +171,7 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {
                 int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] += 
+                storage[eqIdx] +=
                     fs.density(phaseIdx)
                     * fs.saturation(phaseIdx)
                     * fs.massFraction(phaseIdx, compIdx);
@@ -232,7 +232,7 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
 
-                flux[eqIdx] += 
+                flux[eqIdx] +=
                     fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
                       * up.fluidState().density(phaseIdx)
@@ -244,7 +244,7 @@ public:
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
-            
+
 #warning "HACKY: we should probably standardize on one formulation"
             // flux of the total mass balance;
             // this is only processed, if one component mass balance equation
@@ -252,7 +252,7 @@ public:
             if (replaceCompEqIdx < numComponents)
             {
                 // upstream vertex
-                flux[replaceCompEqIdx] += 
+                flux[replaceCompEqIdx] +=
                     fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
                       * up.fluidState().density(phaseIdx)
@@ -262,7 +262,7 @@ public:
                 Valgrind::CheckDefined(flux);
             }
         }
-        
+
     }
 
     /*!
@@ -288,7 +288,7 @@ public:
                 tmp += xGrad[i] * normal[i];
             tmp *= -1;
 
-            tmp *= 
+            tmp *=
                 fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
                 fluxVars.molarDensity(phaseIdx);
 

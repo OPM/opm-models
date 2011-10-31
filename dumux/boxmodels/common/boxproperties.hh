@@ -54,7 +54,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for models based on the box-scheme
-NEW_TYPE_TAG(BoxModel, INHERITS_FROM(NewtonMethod, 
+NEW_TYPE_TAG(BoxModel, INHERITS_FROM(NewtonMethod,
                                      LinearSolverTypeTag,
                                      ImplicitModel,
                                      VtkPrimaryVars));

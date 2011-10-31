@@ -210,14 +210,13 @@ class GeneralLensProblem : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
         pwIdx = Indices::pwIdx,
         SnIdx = Indices::SnIdx,
 
-        // equation indices
-        contiWEqIdx = Indices::contiWEqIdx,
-        contiNEqIdx = Indices::contiNEqIdx,
-
         // phase indices
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        wPhaseIdx = FluidSystem::wPhaseIdx,
+        nPhaseIdx = FluidSystem::nPhaseIdx,
 
+        // equation indices
+        contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
+        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,

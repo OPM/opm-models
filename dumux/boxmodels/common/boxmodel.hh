@@ -100,7 +100,7 @@ public:
     }
 
     ~BoxModel()
-    { 
+    {
         // delete all VTK output modules
         auto modIt = vtkOutputModules_.begin();
         const auto &modEndIt = vtkOutputModules_.end();
@@ -154,12 +154,12 @@ public:
 
     const VolumeVariables *hint(int globalIdx, int historyIdx) const
     {
-        if (!enableHints_() || 
+        if (!enableHints_() ||
             !hintsUsable_[historyIdx][globalIdx])
         {
             return 0;
         }
-        
+
         return &hints_[historyIdx][globalIdx];
     }
 
@@ -247,7 +247,7 @@ public:
     void globalStorage(PrimaryVariables &dest)
     {
         dest = 0;
-        
+
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = gridView_().template begin<0>();
         const ElementIterator elemEndIt = gridView_().template end<0>();
@@ -630,14 +630,14 @@ public:
             int globalIdx = vertexMapper().map(*vIt);
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
                 (*x[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
-                (*delta[pvIdx])[globalIdx] = 
+                (*delta[pvIdx])[globalIdx] =
                     - deltaU[globalIdx][pvIdx];
                 (*def[pvIdx])[globalIdx] = globalResid[globalIdx][pvIdx];
             }
 
             PrimaryVariables uOld(u[globalIdx]);
             PrimaryVariables uNew(uOld - deltaU[globalIdx]);
-            (*relError)[globalIdx] = asImp_().relativeErrorVertex(globalIdx, 
+            (*relError)[globalIdx] = asImp_().relativeErrorVertex(globalIdx,
                                                                   uOld,
                                                                   uNew);
         }
@@ -686,17 +686,17 @@ public:
         for (; elemIt != elemEndIt; ++elemIt)
         {
             elemCtx.updateAll(*elemIt);
-            
+
             modIt = vtkOutputModules_.begin();
             for (; modIt != modEndIt; ++modIt)
                 (*modIt)->processElement(elemCtx);
         }
-            
+
         modIt = vtkOutputModules_.begin();
         for (; modIt != modEndIt; ++modIt)
             (*modIt)->commitBuffers(writer);
     }
-    
+
     /*!
      * \brief Reference to the grid view of the spatial domain.
      */
@@ -725,8 +725,8 @@ public:
                                    int scvIdx,
                                    FluidState& fluidState)
     {
-      VolumeVariables::completeFluidState(primaryVariables, problem, element, 
-					  elementGeometry, scvIdx, fluidState);
+      VolumeVariables::completeFluidState(primaryVariables, problem, element,
+                      elementGeometry, scvIdx, fluidState);
     }
 protected:
     static bool enableHints_()
@@ -761,7 +761,7 @@ protected:
      */
     LocalResidual &localResidual_()
     { return localJacobian_.localResidual(); }
-    
+
     /*!
      * \brief Updates the stuff which determines a vertex' or
      *        element's boundary type
@@ -789,7 +789,7 @@ protected:
             const Element &elem = *elemIt;
             Dune::GeometryType geoType = elem.geometry().type();
             const ReferenceElement &refElem = ReferenceElements::general(geoType);
-            
+
             boundaryCtx.update(*elemIt);
 
             // loop over all intersections of the element
@@ -800,7 +800,7 @@ protected:
                 // do nothing if the face is _not_ on the boundary
                 if (!isIt->boundary())
                     continue;
-                
+
                 // loop over all vertices of the intersection
                 int faceIdx = isIt->indexInInside();
                 int numFaceVerts = refElem.size(faceIdx, 1, dim);
@@ -817,7 +817,7 @@ protected:
                     int globalIdx = vertexMapper().map(*elemIt, scvIdx, /*codim=*/dim);
                     if (boundaryVertexIndex_[globalIdx] >= 0)
                         continue; // vertex has already been visited
-                    
+
                     // add a BoundaryTypes object
                     if (boundaryTypes_.size() <= numBoundaryVertices)
                         boundaryTypes_.resize(numBoundaryVertices + 1);
@@ -911,7 +911,7 @@ protected:
     // variables
     mutable std::vector<bool> hintsUsable_[historySize];
     mutable std::vector<VolumeVariables> hints_[historySize];
-    
+
     /*!
      * \brief Returns whether messages should be printed
      */
@@ -940,7 +940,7 @@ protected:
     // all the index of the BoundaryTypes object for a vertex
     std::vector<int> boundaryVertexIndex_;
     std::vector<BoundaryTypes> boundaryTypes_;
-    
+
     std::list<BoxVtkOutputModule<TypeTag>*> vtkOutputModules_;
 
     Dune::BlockVector<Dune::FieldVector<Scalar, 1> > boxVolume_;

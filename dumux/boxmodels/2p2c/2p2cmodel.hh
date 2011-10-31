@@ -174,7 +174,7 @@ public:
                 staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0]
                     = this->problem_().initialPhasePresence(elemCtx, scvIdx);
                 staticVertexDat_[globalIdx].wasSwitched = false;
-                
+
                 staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/1]
                     = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
             }
@@ -191,7 +191,7 @@ public:
     void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
     {
         dest = 0;
-        
+
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
@@ -341,7 +341,7 @@ public:
                     fvElemGeomUpdated = true;
                     elemCtx.updateFVElemGeom(*elemIt);
                 }
-                
+
                 // compute the volume variables of the current
                 // sub-control volume
                 elemCtx.updateScvVars(curGlobalSol[globalIdx],
@@ -372,7 +372,7 @@ public:
 
 protected:
     friend class BoxModel<TypeTag>;
-    
+
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();

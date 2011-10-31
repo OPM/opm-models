@@ -48,10 +48,9 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
 {
     typedef OnePLocalResidual<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
- 
+
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-        contiEqIdx = Indices::contiEqIdx,
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -61,6 +60,7 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
+    enum { contiEqIdx = Indices::contiEqIdx };
     enum { pressureIdx = Indices::pressureIdx };
 
 public:
@@ -75,7 +75,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, 
+    void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -85,10 +85,10 @@ public:
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
+        const auto &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         // partial time derivative of the wetting phase mass
-        result[contiEqIdx] = 
+        result[contiEqIdx] =
             volVars.fluidState().density(/*phaseIdx=*/0)
             * volVars.porosity();
     }
@@ -106,8 +106,8 @@ public:
                      int scvfIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(/*phaseIdx=*/0));
-        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx(/*phaseIdx=*/0));
+        const auto &up = elemCtx.volVars(fluxVars.upstreamIdx(/*phaseIdx=*/0));
+        const auto &dn = elemCtx.volVars(fluxVars.downstreamIdx(/*phaseIdx=*/0));
 
 
         flux[contiEqIdx] =

@@ -95,7 +95,7 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(PrimaryVariables &storage, 
+    void computeStorage(PrimaryVariables &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -105,7 +105,7 @@ public:
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const VolumeVariables &volVars = 
+        const VolumeVariables &volVars =
             elemCtx.volVars(scvIdx, historyIdx);
 
         storage = 0;
@@ -141,7 +141,7 @@ public:
                                          phaseIdx);
 
             // multiply with volume of sub-control volume
-            tmp *= 
+            tmp *=
                 elemCtx.volVars(scvIdx).extrusionFactor() *
                 elemCtx.fvElemGeom().subContVol[scvIdx].volume;
 
@@ -167,7 +167,7 @@ public:
         //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
         Valgrind::CheckDefined(source);
     };
-       
+
     /*!
      * \brief Evaluates the total flux of all conservation quantities
      *        over a face of a subcontrol volume.
@@ -220,7 +220,7 @@ protected:
     /*!
      * \brief Returns the value of the NCP-function for a phase.
      */
-    Scalar phaseNcp_(const ElementContext &elemCtx, 
+    Scalar phaseNcp_(const ElementContext &elemCtx,
                      int scvIdx,
                      int phaseIdx) const
     {

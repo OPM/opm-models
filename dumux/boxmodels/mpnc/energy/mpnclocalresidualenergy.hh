@@ -136,14 +136,14 @@ public:
                                const VolumeVariables &volVars)
     {
         storage[energyEqIdx] = 0;
-        
+
         // energy of the fluids
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             addPhaseStorage(storage, volVars, phaseIdx);
         }
 
         // handle the heat capacity of the solid
-        storage[energyEqIdx] += 
+        storage[energyEqIdx] +=
             volVars.fluidState().temperature()
             * volVars.heatCapacitySolid()
             * (1.0 - volVars.porosity());
@@ -184,7 +184,7 @@ public:
                               elemCtx,
                               scvfIdx);
     }
-    
+
     static void computePhaseEnthalpyFlux(PrimaryVariables &result,
                                          const ElementContext &elemCtx,
                                          int scvfIdx,
@@ -209,7 +209,7 @@ public:
         const VolumeVariables &up = elemCtx.volVars(upIdx);
         const VolumeVariables &dn = elemCtx.volVars(dnIdx);
 
-        result[energyEqIdx] += 
+        result[energyEqIdx] +=
             massFlux
             * (fluxVars.upstreamWeight(phaseIdx)*
                up.fluidState().enthalpy(phaseIdx)
@@ -223,7 +223,7 @@ public:
                                       int scvfIdx)
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        
+
         // diffusive heat flux
         result[energyEqIdx] +=
             -fluxVars.energyVars().temperatureGradNormal()

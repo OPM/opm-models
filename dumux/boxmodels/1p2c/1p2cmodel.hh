@@ -86,7 +86,7 @@ class OnePTwoCBoxModel : public BoxModel<TypeTag>
 
 protected:
     friend class BoxModel<TypeTag>;
-    
+
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();

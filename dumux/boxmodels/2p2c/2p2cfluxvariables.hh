@@ -84,9 +84,9 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
-        
+
         // update the base module (i.e. advection)
         calculateGradients_(elemCtx, scvfIdx);
         calculateVelocities_(elemCtx, scvfIdx);
@@ -179,30 +179,30 @@ public:
     { return 0.0; }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
-    { 
-        assert(0 <= compIdx && compIdx < numComponents); 
-        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+    {
+        assert(0 <= compIdx && compIdx < numComponents);
+        assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return porousDiffCoeff_[phaseIdx];
     };
 
     Scalar molarDensity(int phaseIdx) const
-    { 
-        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+    {
+        assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return molarDensity_[phaseIdx];
     };
 
     Scalar moleFraction(int phaseIdx, int compIdx) const
-    { 
-        assert(0 <= compIdx && compIdx < numComponents); 
-        assert(0 <= phaseIdx && phaseIdx < numPhases); 
+    {
+        assert(0 <= compIdx && compIdx < numComponents);
+        assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return moleFrac_[phaseIdx][compIdx];
     };
 
     const Vector &moleFracGrad(int phaseIdx, int compIdx) const
-    { 
+    {
         return moleFracGrad_[phaseIdx][compIdx];
     };
 
@@ -224,7 +224,7 @@ private:
             }
         }
         temperatureGrad_ = Scalar(0);
-        
+
         const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
         // calculate gradients
@@ -244,7 +244,7 @@ private:
                 tmp = feGrad;
                 tmp *= fluidState.pressure(phaseIdx);
                 potentialGrad_[phaseIdx] += tmp;
-                
+
                 molarDensity_[phaseIdx] += shapeValue * fluidState.molarDensity(phaseIdx);
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -252,7 +252,7 @@ private:
                     tmp *= fluidState.moleFraction(phaseIdx, compIdx);
                     moleFracGrad_[phaseIdx][compIdx] += tmp;
 
-                    moleFrac_[phaseIdx][compIdx] += 
+                    moleFrac_[phaseIdx][compIdx] +=
                         shapeValue * fluidState.moleFraction(phaseIdx, compIdx);
                 }
             }
@@ -272,19 +272,19 @@ private:
             // calculate tortuosity at the nodes i and j needed
             // for porous media diffusion coefficient
             Scalar tauI =
-                1.0/(volVarsI.porosity() * volVarsI.porosity()) 
+                1.0/(volVarsI.porosity() * volVarsI.porosity())
                 *
                 pow(volVarsI.porosity() * fsI.saturation(phaseIdx),
                     7.0/3);
             Scalar tauJ =
                 1.0/(volVarsJ.porosity() * volVarsJ.porosity())
-                * 
+                *
                 pow(volVarsJ.porosity() * fsJ.saturation(phaseIdx),
                     7.0/3);
 
             // Diffusion coefficient in the porous medium
             // -> harmonic mean
-            porousDiffCoeff_[phaseIdx] = 
+            porousDiffCoeff_[phaseIdx] =
                 harmonicMean(volVarsI.porosity()
                              * fsI.saturation(phaseIdx)
                              * tauI
@@ -306,7 +306,7 @@ private:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             const auto &fsIn = volVarsI.fluidState();
             const auto &fsOut = volVarsJ.fluidState();
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
@@ -335,10 +335,10 @@ private:
         }
     }
 
-    void calculateVelocities_(const ElementContext &elemCtx, 
+    void calculateVelocities_(const ElementContext &elemCtx,
                               int scvfIdx)
     {
-        const SpatialParameters &spatialParams = 
+        const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
 
         // calculate the intrinsic permeability
@@ -348,7 +348,7 @@ private:
                                                                 insideScvIdx_),
                             spatialParams.intrinsicPermeability(elemCtx,
                                                                 outsideScvIdx_));
-        
+
         const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
 
         ///////////////
@@ -361,11 +361,11 @@ private:
             // taking the mobility into account
             K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
             filterVelocity_[phaseIdx] *= -1;
-            
+
             // normal velocity is the scalar product of the filter
             // velocity with the face normal
             filterVelocityNormal_[phaseIdx] = 0.0;
-            for (int i = 0; i < Vector::size; ++i) 
+            for (int i = 0; i < Vector::size; ++i)
                 filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
 
             // multiply both with the upstream mobility

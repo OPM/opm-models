@@ -162,7 +162,7 @@ public:
 
         asImp_().boundaryTypes(values, *vPtr);
    }
-    
+
     /*!
      * \brief Specifies which kind of boundary condition should be
      *        used for which equation on a given boundary segment.
@@ -212,7 +212,7 @@ public:
                    int localIdx) const
     {
         const auto vPtr = context.element().template subEntity<dim>(localIdx);
-        
+
         asImp_().dirichlet(values, *vPtr);
     }
 
@@ -260,13 +260,13 @@ public:
                  const Context &context,
                  int localIdx) const
     {
-        return asImp_().boxSDNeumann(priVars,
-                                     context.element(),
-                                     context.fvElemGeom(),
-                                     context.intersection(localIdx),
-                                     context.scvIdx(localIdx),
-                                     localIdx,
-                                     context);
+        asImp_().boxSDNeumann(priVars,
+                              context.element(),
+                              context.fvElemGeom(),
+                              context.intersection(localIdx),
+                              context.scvIdx(localIdx),
+                              localIdx,
+                              context);
     }
 
     /*!
@@ -288,13 +288,14 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
+    template <class Context>
     void boxSDNeumann(PrimaryVariables &values,
                       const Element &element,
                       const FVElementGeometry &fvElemGeom,
                       const Intersection &is,
                       int scvIdx,
                       int boundaryFaceIdx,
-                      const ElementContext &elemCtx) const
+                      const Context &elemCtx) const
     {
         // forward it to the interface without the volume variables
         asImp_().neumann(values,

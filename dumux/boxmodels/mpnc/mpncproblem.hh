@@ -62,7 +62,7 @@ class MPNCProblem : public BoxProblem<TypeTag>
         dimWorld = Grid::dimensionworld
     };
 
-    typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld>      GlobalPosition;
+    typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:

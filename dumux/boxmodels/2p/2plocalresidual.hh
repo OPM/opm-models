@@ -88,7 +88,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, 
+    void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -98,7 +98,7 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            result[conti0EqIdx + phaseIdx] = 
+            result[conti0EqIdx + phaseIdx] =
                 volVars.porosity()
                 * volVars.fluidState().saturation(phaseIdx)
                 * volVars.fluidState().density(phaseIdx);
@@ -131,7 +131,7 @@ public:
      * This method is called by compute flux and is mainly there for
      * derived models to ease adding equations selectively.
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux, 
+    void computeAdvectiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx) const
     {
@@ -178,7 +178,7 @@ public:
      * non-isothermal two-phase models to calculate diffusive heat
      * fluxes
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux, 
+    void computeDiffusiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx) const
     {

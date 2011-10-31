@@ -53,6 +53,7 @@ class OnePBoxProblem : public BoxProblem<TypeTag>
     typedef typename GridView::template Codim<0>::Entity Element;
     enum { dimWorld = GridView::dimensionworld };
 
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GridView::ctype CoordScalar;
 
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
@@ -84,7 +85,7 @@ public:
      * \brief Return the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */
@@ -97,7 +98,7 @@ public:
     {
         return asImp_().boxTemperature(context.element(),
                                        context.fvElemGeom(),
-                                       localIdx);                             
+                                       localIdx);
     };
 
     /*!
@@ -143,7 +144,7 @@ public:
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */
@@ -217,8 +218,7 @@ private:
     { return *static_cast<const Implementation *>(this); }
 
     SpatialParameters* spatialParameters_;
-
-    GlobalPosition gravity_;
+    Vector gravity_;
 };
 
 }

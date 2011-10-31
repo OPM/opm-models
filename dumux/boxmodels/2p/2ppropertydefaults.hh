@@ -94,14 +94,14 @@ SET_TYPE_PROP(BoxTwoP,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(BoxTwoP, 
-              HeatConductionLaw, 
+SET_TYPE_PROP(BoxTwoP,
+              HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxTwoP, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxTwoP,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 SET_PROP(BoxTwoP, WettingPhase)

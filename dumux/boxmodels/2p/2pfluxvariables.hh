@@ -89,7 +89,7 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
 
         calculateGradients_(elemCtx, scvfIdx);
@@ -189,7 +189,7 @@ protected:
         for (int phase = 0; phase < numPhases; ++phase) {
             potentialGrad_[phase] = Scalar(0);
         }
-        
+
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
         const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
@@ -220,7 +220,7 @@ protected:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
 
@@ -250,7 +250,7 @@ protected:
         }
     }
 
-    void calculateNormalFluxes_(const ElementContext &elemCtx, 
+    void calculateNormalFluxes_(const ElementContext &elemCtx,
                                 int scvfIdx)
     {
         const SpatialParameters &spatialParams =
@@ -281,7 +281,7 @@ protected:
 
             // scalar product with the face normal
             filterVelocityNormal_[phaseIdx] = 0.0;
-            for (int i = 0; i < Vector::size; ++i) 
+            for (int i = 0; i < Vector::size; ++i)
                 filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
 
             // multiply both with the upstream mobility

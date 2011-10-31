@@ -75,9 +75,9 @@ public:
      * \param usePrevSol Calculate the storage term of the previous solution
      *                   instead of the model's current solution.
      */
-    void computeStorage(PrimaryVariables &result, 
+    void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
-                        int scvIdx, 
+                        int scvIdx,
                         int historyIdx) const
     {
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);

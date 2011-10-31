@@ -70,8 +70,8 @@ SET_TYPE_PROP(BoxTwoPNI, FluxVariables, TwoPNIFluxVariables<TypeTag>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxTwoPNI, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxTwoPNI,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! The indices required by the non-isothermal two-phase model

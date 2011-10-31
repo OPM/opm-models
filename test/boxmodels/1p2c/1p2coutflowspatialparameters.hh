@@ -154,14 +154,14 @@ public:
         return 0;
     }
 
-    template <class Context>  
+    template <class Context>
     bool useTwoPointGradient(const Context &context,
                              int scvfIdx) const
     {
         const auto &scvf = context.fvElemGeom().subContVolFace[scvfIdx];
         bool inTumorI = isTumor_(context.pos(scvf.i));
         bool inTumorJ = isTumor_(context.pos(scvf.j));
-        
+
         return (inTumorI && !inTumorJ) || (inTumorJ && !inTumorI);
     }
 

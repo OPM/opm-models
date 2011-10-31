@@ -98,14 +98,14 @@ public:
 };
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(BoxRichards, 
-              HeatConductionLaw, 
+SET_TYPE_PROP(BoxRichards,
+              HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxRichards, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxRichards,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 /*!

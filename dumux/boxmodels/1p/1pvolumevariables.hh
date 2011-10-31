@@ -47,6 +47,7 @@ template <class TypeTag>
 class OnePVolumeVariables : public BoxVolumeVariables<TypeTag>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -110,9 +111,9 @@ public:
             Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
             fluidState.setDensity(phaseIdx, rho);
         }
-        
-        Implementation::updateEnthalpy_(fluidState, 
-                                        paramCache, 
+
+        Implementation::updateEnthalpy_(fluidState,
+                                        paramCache,
                                         elemCtx,
                                         scvIdx,
                                         historyIdx);
@@ -136,7 +137,7 @@ public:
      * This is always 1 for single phase flow.
      */
     Scalar relativePermeability(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0);
         return 1.0;
     };
@@ -145,7 +146,7 @@ public:
      * \brief Returns the mobility of the fluid [1 / (Pa s)]
      */
     Scalar mobility(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0);
         return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
     };

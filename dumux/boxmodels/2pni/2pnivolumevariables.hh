@@ -48,7 +48,7 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
     typedef TwoPVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
@@ -59,7 +59,7 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
 
 public:
     typedef typename ParentType::FluidState FluidState;
-    
+
     /*!
      * \brief Returns the total heat capacity \f$\mathrm{[J/K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
@@ -79,7 +79,7 @@ protected:
     // this method gets called by the parent class. since this method
     // is protected, we are friends with our parent..
     friend class TwoPVolumeVariables<TypeTag>;
-    
+
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,

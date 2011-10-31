@@ -87,7 +87,7 @@ public:
 
         completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
 
-        const SpatialParameters &spatialParams = 
+        const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
 
         // material law parameters
@@ -159,9 +159,9 @@ public:
             Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
             fluidState.setDensity(phaseIdx, rho);
         }
-        
-        Implementation::updateEnthalpy_(fluidState, 
-                                        paramCache, 
+
+        Implementation::updateEnthalpy_(fluidState,
+                                        paramCache,
                                         elemCtx,
                                         scvIdx,
                                         historyIdx);

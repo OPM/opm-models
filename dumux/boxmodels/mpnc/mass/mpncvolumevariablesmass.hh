@@ -88,7 +88,7 @@ public:
     {
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
         const auto *hint = elemCtx.hint(scvIdx);
-        
+
         ComponentVector fug;
         // retrieve component fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)

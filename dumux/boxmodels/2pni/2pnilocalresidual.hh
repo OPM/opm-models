@@ -129,7 +129,7 @@ public:
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
-        
+
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices

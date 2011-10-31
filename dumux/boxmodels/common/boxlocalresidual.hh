@@ -78,7 +78,7 @@ private:
 
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
-    
+
     // copying the local residual class is not a good idea
     BoxLocalResidual(const BoxLocalResidual &)
     {};
@@ -148,7 +148,7 @@ public:
         internalStorageTerm_.resize(numScv);
         asImp_().eval(internalResidual_, internalStorageTerm_, elemCtx);
     };
-    
+
     /*!
      * \brief Compute the local residual, i.e. the deviation of the
      *        conservation equations from zero.
@@ -176,7 +176,7 @@ public:
         asImp_().evalVolumeTerms_(residual, storageTerm, elemCtx);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom().numVertices; i++) 
+        for (int i=0; i < elemCtx.fvElemGeom().numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // !defined NDEBUG && HAVE_VALGRIND
 
@@ -198,7 +198,7 @@ public:
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
      */
-    void evalStorage(const ElementContext &elemCtx, 
+    void evalStorage(const ElementContext &elemCtx,
                      int historyIdx)
     {
         int numScv = elemCtx.numScv();
@@ -217,7 +217,7 @@ public:
      * quantity is inside the element.
      */
     void evalStorage(LocalBlockVector &storage,
-                     const ElementContext &elemCtx, 
+                     const ElementContext &elemCtx,
                      int historyIdx) const
     {
         // calculate the amount of conservation each quantity inside
@@ -225,11 +225,11 @@ public:
         for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             storage[scvIdx] = 0.0;
-            asImp_().computeStorage(storage[scvIdx], 
+            asImp_().computeStorage(storage[scvIdx],
                                     elemCtx,
                                     scvIdx,
                                     historyIdx);
-            storage[scvIdx] *= 
+            storage[scvIdx] *=
                 elemCtx.fvElemGeom().subContVol[scvIdx].volume
                 * elemCtx.volVars(scvIdx).extrusionFactor();
         }
@@ -242,9 +242,9 @@ public:
                     const ElementContext &elemCtx) const
     {
         PrimaryVariables flux;
-        
+
         // calculate the mass flux over the sub-control volume faces
-        for (int scvfIdx = 0; 
+        for (int scvfIdx = 0;
              scvfIdx < elemCtx.fvElemGeom().numEdges;
              scvfIdx++)
         {
@@ -286,10 +286,10 @@ protected:
         if (!elemCtx.onBoundary()) {
             return;
         }
-        
+
         if (elemCtx.hasNeumann())
             asImp_().evalNeumann_(residual, elemCtx);
-        
+
         if (elemCtx.hasDirichlet())
             asImp_().evalDirichlet_(residual, storageTerm, elemCtx);
     }
@@ -307,11 +307,11 @@ protected:
             const BoundaryTypes &bcTypes = elemCtx.boundaryTypes(scvIdx);
             if (!bcTypes.hasDirichlet())
                 continue;
-            
+
             // ask the problem for the dirichlet values
             Valgrind::SetUndefined(tmp);
             asImp_().computeDirichlet_(tmp, elemCtx, scvIdx);
-            const PrimaryVariables &priVars = 
+            const PrimaryVariables &priVars =
                 elemCtx.primaryVars(scvIdx);
 
             // set the dirichlet conditions
@@ -319,7 +319,7 @@ protected:
                 if (!bcTypes.isDirichlet(eqIdx))
                     continue;
                 int pvIdx = bcTypes.eqToDirichletIndex(eqIdx);
-                
+
                 assert(0 <= pvIdx && pvIdx < numEq);
                 Valgrind::CheckDefined(tmp[pvIdx]);
 
@@ -362,7 +362,7 @@ protected:
                                                /*entityCodim=*/1,
                                                /*subEntityIdx=*/faceVertIdx,
                                                /*subEntityCodim=*/dim);
-                
+
                 int boundaryFaceIdx =
                     elemCtx.fvElemGeom().boundaryFaceIndex(faceIdx, faceVertIdx);
 
@@ -376,7 +376,7 @@ protected:
         }
     }
 
-    void computeDirichlet_(PrimaryVariables &values, 
+    void computeDirichlet_(PrimaryVariables &values,
                            const ElementContext &elemCtx,
                            int scvIdx) const
     { elemCtx.problem().dirichlet(values, elemCtx, scvIdx); }
@@ -394,7 +394,7 @@ protected:
         // temporary vector to store the neumann boundary fluxes
         const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx);
         PrimaryVariables values;
-        
+
         // deal with neumann boundaries
         if (bcTypes.hasNeumann()) {
             Valgrind::SetUndefined(values);
@@ -403,7 +403,7 @@ protected:
                                           boundaryFaceIdx);
             Valgrind::CheckDefined(values);
 
-            values *= 
+            values *=
                 neumannVars.fvElemGeom().boundaryFace[boundaryFaceIdx].area
                 * neumannVars.elemCtx().volVars(scvIdx, /*historyIdx*/0).extrusionFactor();
 
@@ -419,7 +419,7 @@ protected:
      *        to the local residual of all sub-control volumes of the
      *        current element.
      */
-    void evalVolumeTerms_(LocalBlockVector &residual, 
+    void evalVolumeTerms_(LocalBlockVector &residual,
                           LocalBlockVector &storageTerm,
                           const ElementContext &elemCtx) const
     {
@@ -429,7 +429,7 @@ protected:
         for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             Scalar extrusionFactor =
-                elemCtx.volVars(scvIdx, /*historyIdx=*/0).extrusionFactor();          
+                elemCtx.volVars(scvIdx, /*historyIdx=*/0).extrusionFactor();
 
             // mass balance within the element. this is the
             // \f$\frac{m}{\partial t}\f$ term if using implicit
@@ -437,11 +437,11 @@ protected:
             //
             // TODO (?): we might need a more explicit way for
             // doing the time discretization...
-            asImp_().computeStorage(tmp2, 
+            asImp_().computeStorage(tmp2,
                                     elemCtx,
-                                    scvIdx, 
+                                    scvIdx,
                                     /*historyIdx=*/1);
-            asImp_().computeStorage(tmp, 
+            asImp_().computeStorage(tmp,
                                     elemCtx,
                                     scvIdx,
                                     /*historyIdx=*/0);
@@ -454,7 +454,7 @@ protected:
 
             storageTerm[scvIdx] += tmp;
             residual[scvIdx] += tmp;
-            
+
             // subtract the source term from the residual
             asImp_().computeSource(tmp2, elemCtx, scvIdx);
             tmp2 *= elemCtx.fvElemGeom().subContVol[scvIdx].volume * extrusionFactor;

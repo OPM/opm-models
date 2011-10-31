@@ -50,7 +50,7 @@ class RichardsFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    
+
     enum { wPhaseIdx = Indices::wPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
 
@@ -74,7 +74,7 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
 
         calculateGradients_(elemCtx, scvfIdx);
@@ -93,7 +93,7 @@ public:
      * \param phaseIdx The index of the fluid phase
      */
     const Vector &potentialGrad(int phaseIdx = wPhaseIdx) const
-    { 
+    {
         assert(phaseIdx == wPhaseIdx);
         return potentialGrad_;
     }
@@ -123,7 +123,7 @@ public:
      * \param phaseIdx The index of the fluid phase
      */
     Scalar filterVelocityNormal(int phaseIdx) const
-    { 
+    {
         if (phaseIdx == wPhaseIdx)
             return filterVelocityNormal_;
         else
@@ -152,7 +152,7 @@ public:
      *                 direction is requested.
      */
     int downstreamIdx(int phaseIdx = wPhaseIdx) const
-    { 
+    {
         assert(phaseIdx == wPhaseIdx);
         return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
     }
@@ -165,7 +165,7 @@ public:
      *                 direction is requested.
      */
     int upstreamIdx(int phaseIdx = wPhaseIdx) const
-    { 
+    {
         assert(phaseIdx == wPhaseIdx);
         return (filterVelocityNormal_ > 0)?insideScvIdx_:outsideScvIdx_;
     }
@@ -194,7 +194,7 @@ protected:
     {
         // reset all wetting phase potential gradient
         potentialGrad_ = Scalar(0);
-        
+
         const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
 
         // calculate gradients
@@ -223,7 +223,7 @@ protected:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
 
@@ -240,7 +240,7 @@ protected:
                 // both cells!
                 fI = fJ = 0.5;
             Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
-            
+
             // make gravity acceleration a force
             Vector f(g);
             f *= density;
@@ -250,7 +250,7 @@ protected:
         }
     }
 
-    void calculateNormalFluxes_(const ElementContext &elemCtx, 
+    void calculateNormalFluxes_(const ElementContext &elemCtx,
                                 int scvfIdx)
     {
         const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
@@ -275,10 +275,10 @@ protected:
         K.mv(potentialGrad(wPhaseIdx), filterVelocity_);
         // velocity is along negative pressure gradients
         filterVelocity_ *= -1;
-        
+
         // scalar product with the face normal
         filterVelocityNormal_ = 0.0;
-        for (int i = 0; i < Vector::size; ++i) 
+        for (int i = 0; i < Vector::size; ++i)
             filterVelocityNormal_ += filterVelocity_[i]*normal[i];
 
         // multiply both with the upstream mobility

@@ -87,7 +87,7 @@ public:
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */
@@ -100,7 +100,7 @@ public:
     {
         return asImp_().boxTemperature(context.element(),
                                        context.fvElemGeom(),
-                                       localIdx);                             
+                                       localIdx);
     };
 
     /*!
@@ -145,7 +145,7 @@ public:
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
+     *                fvElementGeometry, etc
      * \param localIdx The local index of the sub control volume inside
      *                 the element
      */
@@ -196,12 +196,12 @@ public:
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     int initialPhasePresence(const Context &context, int localIdx) const
-    { 
+    {
         return asImp_().initialPhasePresence(context.element(),
                                              context.fvElemGeom(),
                                              localIdx);
     }
-    
+
     int initialPhasePresence(const Element &element,
                              const FVElementGeometry fvGeom,
                              int scvIdx) const

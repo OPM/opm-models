@@ -103,7 +103,7 @@ public:
         const MaterialLawParams &matParams =
             spatialParams.materialLawParams(elemCtx, scvIdx);
         relativePermeabilityWetting_ =
-            MaterialLaw::krw(matParams, 
+            MaterialLaw::krw(matParams,
                              fluidState_.saturation(wPhaseIdx));
 
         porosity_ = spatialParams.porosity(elemCtx, scvIdx);
@@ -111,7 +111,7 @@ public:
         // energy related quantities not belonging to the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
     }
-    
+
     /*!
      * \copydoc BoxModel::completeFluidState
      */
@@ -128,7 +128,7 @@ public:
         const typename MaterialLaw::Params &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
-        
+
         // pressures
         Scalar minPc = MaterialLaw::pC(materialParams, 1.0);
         Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx);
@@ -141,7 +141,7 @@ public:
                                     - fluidState.pressure(wPhaseIdx));
         fluidState.setSaturation(wPhaseIdx, Sw);
         fluidState.setSaturation(nPhaseIdx, 1 - Sw);
-        
+
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
@@ -149,13 +149,13 @@ public:
         // compute and set the viscosity
         Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
         fluidState.setViscosity(phaseIdx, mu);
-        
+
         // compute and set the density
         Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
         fluidState.setDensity(phaseIdx, rho);
-        
-        Implementation::updateEnthalpy_(fluidState, 
-                                        paramCache, 
+
+        Implementation::updateEnthalpy_(fluidState,
+                                        paramCache,
                                         elemCtx,
                                         scvIdx,
                                         historyIdx);
@@ -184,8 +184,8 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar relativePermeability(int phaseIdx) const
-    { 
-        if (phaseIdx == wPhaseIdx) 
+    {
+        if (phaseIdx == wPhaseIdx)
             return relativePermeabilityWetting_;
         else
             return 1.0;
@@ -219,7 +219,7 @@ protected:
     {
         fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
     };
-    
+
     template<class ParameterCache>
     static void updateEnthalpy_(FluidState &fluidState,
                                 const ParameterCache &paramCache,

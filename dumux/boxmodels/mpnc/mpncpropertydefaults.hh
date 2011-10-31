@@ -81,14 +81,14 @@ SET_TYPE_PROP(BoxMPNC, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, Materi
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxMPNC, 
-              HeatConductionLaw, 
+SET_TYPE_PROP(BoxMPNC,
+              HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxMPNC, 
-              HeatConductionLawParams, 
+SET_TYPE_PROP(BoxMPNC,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 /*!

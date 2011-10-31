@@ -55,16 +55,13 @@ class OnePFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-            
+
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
     enum { dim = GridView::dimension };
     typedef Dune::FieldVector<Scalar, dim> Vector;
     typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
-    
-
-    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
 
 public:
     /*!
@@ -77,16 +74,15 @@ public:
         outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor() 
+            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
-        
+
         ///////////////
         // calculate the pressure gradient
         ///////////////
         potentialGrad_  = 0.0;
-        
-        typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
-        const Scvf &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+
+        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
         {
             // FE gradient at vertex idx
@@ -108,7 +104,7 @@ public:
             Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
             g /= 2;
-            
+
             const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
 
@@ -123,7 +119,7 @@ public:
                 // make gravity acceleration a force
                 Vector f(g);
                 f *= density;
-        
+
                 // calculate the final potential gradient
                 potentialGrad_ -= f;
             }
@@ -150,16 +146,16 @@ public:
         // v = - (K grad p) * n
         //
         // (the minus comes from the Darcy law which states that
-        // the flux is from high to low pressure potentials.)                           
+        // the flux is from high to low pressure potentials.)
         K.mv(potentialGrad_, filterVelocity_);
         // velocities go along negative pressure gradients
         filterVelocity_ *= -1;
 
         // scalar product with the face normal
         filterVelocityNormal_ = 0.0;
-        for (int i = 0; i < Vector::size; ++i) 
+        for (int i = 0; i < Vector::size; ++i)
             filterVelocityNormal_ += filterVelocity_[i]*normal[i];
-        
+
         // multiply both with the upstream mobility
         const auto &up = elemCtx.volVars(upstreamIdx(/*phaseIdx=*/0), /*historyIdx=*/0);
         filterVelocityNormal_ *= up.mobility(/*phaseIdx=*/0);
@@ -208,7 +204,7 @@ public:
      * \param phaseIdx The index of the fluid phase
      */
     Scalar filterVelocityNormal(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0); // this is a single phase model!
         return filterVelocityNormal_;
     }
@@ -235,7 +231,7 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { 
+    {
         assert(phaseIdx == 0); // this is a single phase model!
         return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
     }

@@ -229,7 +229,7 @@ public:
      * \param globalPos The position for which the boundary type is set
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, 
+    void boundaryTypes(BoundaryTypes &values,
                        const Context &context,
                        int localIdx) const
     {
@@ -304,7 +304,7 @@ public:
     void initial(PrimaryVariables &values,
                  const Context &context,
                  int localIdx) const
-    { 
+    {
         const auto &materialParams = this->spatialParameters().materialLawParams(context, localIdx);
         Scalar Sw = 0.0;
         Scalar pc = MaterialLaw::pC(materialParams, Sw);
