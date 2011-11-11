@@ -90,7 +90,7 @@ public:
      *
      * \param context Container for the volume variables, element,
      *                fvElementGeometry, etc
-     * \param localIdx The local index of the sub control volume inside
+     * \param spaceIdx The local index of the sub control volume inside
      *                 the element
      */
     template <class Context>
@@ -98,11 +98,11 @@ public:
     // objects to specify your problem!
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     Scalar temperature(const Context &context,
-                       int localIdx) const
+                       int spaceIdx, int timeIdx) const
     {
         return asImp_().boxTemperature(context.element(),
-                                       context.fvElemGeom(),
-                                       localIdx);
+                                       context.fvElemGeom(timeIdx),
+                                       spaceIdx);
     };
 
     /*!
@@ -148,16 +148,16 @@ public:
      *
      * \param context Container for the volume variables, element,
      *                fvElementGeometry, etc
-     * \param localIdx The local index of the sub control volume inside
+     * \param spaceIdx The local index of the sub control volume inside
      *                 the element
      */
     template <class Context>
     const Vector &gravity(const Context &context,
-                          int localIdx) const
+                          int spaceIdx, int timeIdx) const
     {
         return asImp_().boxGravity(context.element(),
-                                   context.fvElemGeom(),
-                                   localIdx);
+                                   context.fvElemGeom(timeIdx),
+                                   spaceIdx);
     };
 
     /*!

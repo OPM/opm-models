@@ -155,11 +155,11 @@ public:
     {
         // update the hints for the element's volume variables
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalIndex(scvIdx);
-            for (int historyIdx = 0; historyIdx < historySize; ++historyIdx)
-                model_().setHint(elemCtx.volVars(scvIdx, historyIdx),
+            int globalIdx = elemCtx.globalIndex(scvIdx, /*timeIdx=*/0);
+            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
+                model_().setHint(elemCtx.volVars(scvIdx, timeIdx),
                                  globalIdx,
-                                 historyIdx);
+                                 timeIdx);
         }
 
         // update the weights of the primary variables using the
@@ -366,7 +366,7 @@ protected:
         // variable at the given sub control volume
         elemCtx.saveScvVars(scvIdx);
 
-        PrimaryVariables priVars(elemCtx.primaryVars(scvIdx, /*historyIdx=*/0));
+        PrimaryVariables priVars(elemCtx.primaryVars(scvIdx, /*timeIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, scvIdx, pvIdx);
         Scalar delta = 0;
 
@@ -379,7 +379,7 @@ protected:
             delta += eps;
 
             // calculate the residual
-            elemCtx.updateScvVars(priVars, scvIdx, /*historyIdx=*/0);
+            elemCtx.updateScvVars(priVars, scvIdx, /*timeIdx=*/0);
             elemCtx.updateAllScvfVars();
             localResidual_.eval(derivResidual_, derivStorage_, elemCtx);
         }
@@ -401,7 +401,7 @@ protected:
 
             // calculate residual again, this time we use the local
             // residual's internal storage.
-            elemCtx.updateScvVars(priVars, scvIdx, /*historyIdx=*/0);
+            elemCtx.updateScvVars(priVars, scvIdx, /*timeIdx=*/0);
             elemCtx.updateAllScvfVars();
             localResidual_.eval(elemCtx);
 

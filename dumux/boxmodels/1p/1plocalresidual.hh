@@ -78,14 +78,14 @@ public:
     void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const auto &volVars = elemCtx.volVars(scvIdx, historyIdx);
+        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
         result[contiEqIdx] =
@@ -103,11 +103,12 @@ public:
      */
     void computeFlux(PrimaryVariables &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx) const
+                     int scvfIdx, 
+                     int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &up = elemCtx.volVars(fluxVars.upstreamIdx(/*phaseIdx=*/0));
-        const auto &dn = elemCtx.volVars(fluxVars.downstreamIdx(/*phaseIdx=*/0));
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &up = elemCtx.volVars(fluxVars.upstreamIdx(/*phaseIdx=*/0), timeIdx);
+        const auto &dn = elemCtx.volVars(fluxVars.downstreamIdx(/*phaseIdx=*/0), timeIdx);
 
 
         flux[contiEqIdx] =
@@ -128,9 +129,10 @@ public:
      */
     void computeSource(PrimaryVariables &values,
                        const ElementContext &elemCtx,
-                       int scvIdx) const
+                       int scvIdx,
+                       int timeIdx) const
     {
-        elemCtx.problem().source(values, elemCtx, scvIdx);
+        elemCtx.problem().source(values, elemCtx, scvIdx, timeIdx);
     }
 
 private:

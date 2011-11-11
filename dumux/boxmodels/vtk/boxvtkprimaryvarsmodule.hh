@@ -104,7 +104,7 @@ public:
 
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             int I = vertexMapper.map(elem, i, dim);
-            const auto &priVars = elemCtx.primaryVars(i);
+            const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (primaryVarsOutput_()) primaryVars_[eqIdx][I] = priVars[eqIdx];
@@ -115,7 +115,7 @@ public:
                     // is used for a dirichlet condition
                     int tmp = 0;
                     for (int j = 0; j < numEq; ++j) {
-                        if (elemCtx.boundaryTypes(i).isDirichlet(j))
+                        if (elemCtx.boundaryTypes(i, /*timeIdx=*/0).isDirichlet(j))
                             tmp += (1 << j);
                     }
                     boundaryTypes_[I] = tmp;

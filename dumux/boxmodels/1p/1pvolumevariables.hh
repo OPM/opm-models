@@ -66,18 +66,18 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, historyIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         // porosity
         const auto &spatialParams = elemCtx.problem().spatialParameters();
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
+        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
     };
 
     /*!
@@ -86,11 +86,11 @@ public:
     static void completeFluidState(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState.setPressure(/*phaseIdx=*/0, priVars[Indices::pressureIdx]);
 
         // saturation in a single phase is always 1 and thus redundant
@@ -116,7 +116,7 @@ public:
                                         paramCache,
                                         elemCtx,
                                         scvIdx,
-                                        historyIdx);
+                                        timeIdx);
     }
 
     /*!
@@ -155,9 +155,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     }
 
     template<class ParameterCache>
@@ -165,7 +165,7 @@ protected:
                                 const ParameterCache &paramCache,
                                 const ElementContext &elemCtx,
                                 int scvIdx,
-                                int historyIdx)
+                                int timeIdx)
     { }
 
     /*!
@@ -173,7 +173,7 @@ protected:
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     { }
 
     FluidState fluidState_;

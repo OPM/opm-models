@@ -270,14 +270,14 @@ public:
      */
     template <class Context>
     Scalar temperature(const Context &context,
-                       int localIdx) const
+                       int spaceIdx, int timeIdx) const
     { return temperature_; };
 
 
     template <class Context>
     void source(PrimaryVariables &values,
                 const Context &context,
-                int localIdx) const
+                int spaceIdx, int timeIdx) const
     { values = 0; }
 
     // \}
@@ -297,9 +297,9 @@ public:
     template <class Context>
     void boundaryTypes(BoundaryTypes &values,
                        const Context &context,
-                       int localIdx) const
+                       int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)) {
             values.setAllDirichlet();
         }
@@ -320,9 +320,9 @@ public:
     template <class Context>
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
-                   int localIdx) const
+                   int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
         fluidState.setTemperature(temperature_);
         fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
@@ -365,9 +365,9 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         values = 0.0;
         if (onInlet_(globalPos)) {
             values[contiNEqIdx] = -0.04; // kg / (m * s)
@@ -393,9 +393,9 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         Scalar depth = this->bboxMax()[1] - globalPos[1];
         Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);

@@ -119,7 +119,7 @@ public:
 
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             int I = vertexMapper.map(elem, i, dim);
-            const auto &volVars = elemCtx.volVars(i);
+            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fluidState();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

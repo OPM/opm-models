@@ -102,15 +102,15 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         ParentType::update(elemCtx,
                            scvIdx,
-                           historyIdx);
+                           timeIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::ParameterCache paramCache;
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         /////////////
         // set the phase saturations
@@ -131,7 +131,7 @@ public:
                                                   paramCache,
                                                   elemCtx,
                                                   scvIdx,
-                                                  historyIdx);
+                                                  timeIdx);
 
 
         /////////////
@@ -141,7 +141,7 @@ public:
         // retrieve capillary pressure parameters
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
         // calculate capillary pressures
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
@@ -157,7 +157,7 @@ public:
                                     paramCache,
                                     elemCtx,
                                     scvIdx,
-                                    historyIdx);
+                                    timeIdx);
         MassVolumeVariables::checkDefined();
 
         /////////////
@@ -165,7 +165,7 @@ public:
         /////////////
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
         /////////////
@@ -193,7 +193,7 @@ public:
                                          paramCache,
                                          elemCtx,
                                          scvIdx,
-                                         historyIdx);
+                                         timeIdx);
         DiffusionVolumeVariables::checkDefined();
 
         /////////////
@@ -205,7 +205,7 @@ public:
                                       paramCache,
                                       elemCtx,
                                       scvIdx,
-                                      historyIdx);
+                                      timeIdx);
         EnergyVolumeVariables::checkDefined();
 
         // specific interfacial area, well also all the dimensionless numbers :-)
@@ -213,7 +213,7 @@ public:
 				  paramCache,
                                   elemCtx,
                                   scvIdx,
-                                  historyIdx);
+                                  timeIdx);
         IAVolumeVariables::checkDefined();
         fluidState_.checkDefined();
         checkDefined();

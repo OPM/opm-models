@@ -68,26 +68,27 @@ public:
      * \brief Caclulates the quantities required on a sub-control
      *        volume face for the 2p box model.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        insideScvIdx_ = fvElemGeom.subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = fvElemGeom.subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
-             + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
+            (elemCtx.volVars(insideScvIdx_, timeIdx).extrusionFactor()
+             + elemCtx.volVars(outsideScvIdx_, timeIdx).extrusionFactor()) / 2;
 
         ///////////////
         // calculate the pressure gradient
         ///////////////
         potentialGrad_  = 0.0;
 
-        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
         {
             // FE gradient at vertex idx
             const Vector &feGrad = scvf.grad[scvIdx];
-            const auto &fs = elemCtx.volVars(scvIdx, /*historyIdx=*/0).fluidState();
+            const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
             Vector tmp(feGrad);
             tmp *= fs.pressure(/*phaseIdx=*/0);
@@ -101,12 +102,12 @@ public:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
-            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
+            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
+            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_, timeIdx);
             g /= 2;
 
-            const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
-            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
+            const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
 
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
@@ -134,11 +135,13 @@ public:
         Tensor K;
         spatialParams.meanK(K,
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_),
+                                                                insideScvIdx_,
+                                                                timeIdx),
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_));
+                                                                outsideScvIdx_,
+                                                                timeIdx));
 
-        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         // calculate the flux in the normal direction of the
         // current sub control volume face:
@@ -157,7 +160,7 @@ public:
             filterVelocityNormal_ += filterVelocity_[i]*normal[i];
 
         // multiply both with the upstream mobility
-        const auto &up = elemCtx.volVars(upstreamIdx(/*phaseIdx=*/0), /*historyIdx=*/0);
+        const auto &up = elemCtx.volVars(upstreamIdx(/*phaseIdx=*/0), timeIdx);
         filterVelocityNormal_ *= up.mobility(/*phaseIdx=*/0);
         filterVelocity_ *= up.mobility(/*phaseIdx=*/0);
     }

@@ -90,7 +90,7 @@ public:
      *                      intrinsic velocity ought to be calculated.
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int localIdx) const
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
 
@@ -107,7 +107,7 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
-    Scalar porosity(const Context &context, int localIdx) const
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
     { return 0.4; }
 
 private:

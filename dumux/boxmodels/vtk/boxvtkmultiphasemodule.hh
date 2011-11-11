@@ -163,7 +163,7 @@ public:
 
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             int I = vertexMapper.map(elem, i, dim);
-            const auto &volVars = elemCtx.volVars(i);
+            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fluidState();
 
             if (porosityOutput_()) porosity_[I] = volVars.porosity();
@@ -216,7 +216,7 @@ public:
         if (velocityOutput_()) {
             // calculate velocities if requested by the problem
             for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++ scvfIdx) {
-                const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+                const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
 
                 int i = fluxVars.insideIdx();
                 int I = vertexMapper.map(elem, i, dim);

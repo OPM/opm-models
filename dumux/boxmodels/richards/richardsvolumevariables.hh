@@ -88,28 +88,28 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         assert(!FluidSystem::isLiquid(nPhaseIdx));
 
-        ParentType::update(elemCtx, scvIdx, historyIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         //////////
         // specify the other parameters
         //////////
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &matParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
         relativePermeabilityWetting_ =
             MaterialLaw::krw(matParams,
                              fluidState_.saturation(wPhaseIdx));
 
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
+        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -118,20 +118,20 @@ public:
     static void completeFluidState(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const typename MaterialLaw::Params &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         // pressures
         Scalar minPc = MaterialLaw::pC(materialParams, 1.0);
-        Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx);
+        Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx, timeIdx);
         fluidState.setPressure(wPhaseIdx, priVars[pwIdx]);
         fluidState.setPressure(nPhaseIdx, std::max(pnRef, priVars[pwIdx] + minPc));
 
@@ -158,7 +158,7 @@ public:
                                         paramCache,
                                         elemCtx,
                                         scvIdx,
-                                        historyIdx);
+                                        timeIdx);
     }
 
     /*!
@@ -215,9 +215,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     };
 
     template<class ParameterCache>
@@ -225,7 +225,7 @@ protected:
                                 const ParameterCache &paramCache,
                                 const ElementContext &elemCtx,
                                 int scvIdx,
-                                int historyIdx)
+                                int timeIdx)
     { }
 
     /*!
@@ -233,7 +233,7 @@ protected:
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     { }
 
     FluidState fluidState_;

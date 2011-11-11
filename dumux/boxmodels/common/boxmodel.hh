@@ -125,8 +125,8 @@ public:
         updateBoundaryTypes_();
 
         int nDofs = asImp_().numDofs();
-        for (int historyIdx = 0; historyIdx < historySize; ++historyIdx)
-            solution_[historyIdx].resize(nDofs);
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
+            solution_[timeIdx].resize(nDofs);
         boxVolume_.resize(nDofs);
 
         localJacobian_.init(problem_());
@@ -138,48 +138,48 @@ public:
         // resize the hint vectors
         if (enableHints_()) {
             int nVerts = gridView_().size(dim);
-            for (int historyIdx = 0; historyIdx < historySize; ++historyIdx) {
-                hints_[historyIdx].resize(nVerts);
-                hintsUsable_[historyIdx].resize(nVerts);
-                std::fill(hintsUsable_[historyIdx].begin(),
-                          hintsUsable_[historyIdx].end(),
+            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+                hints_[timeIdx].resize(nVerts);
+                hintsUsable_[timeIdx].resize(nVerts);
+                std::fill(hintsUsable_[timeIdx].begin(),
+                          hintsUsable_[timeIdx].end(),
                           false);
             }
         }
 
         // also set the solution of the "previous" time step to the
         // initial solution.
-        solution_[/*historyIdx=*/1] = solution_[/*historyIdx=*/0];
+        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
 
         asImp_().registerVtkModules_();
     }
 
-    const VolumeVariables *hint(int globalIdx, int historyIdx) const
+    const VolumeVariables *hint(int globalIdx, int timeIdx) const
     {
         if (!enableHints_() ||
-            !hintsUsable_[historyIdx][globalIdx])
+            !hintsUsable_[timeIdx][globalIdx])
         {
             return 0;
         }
 
-        return &hints_[historyIdx][globalIdx];
+        return &hints_[timeIdx][globalIdx];
     }
 
     void setHint(const VolumeVariables &hint,
                  int globalIdx,
-                 int historyIdx) const
+                 int timeIdx) const
     {
         if (!enableHints_())
             return;
 
-        hints_[historyIdx][globalIdx] = hint;
-        hintsUsable_[historyIdx][globalIdx] = true;
+        hints_[timeIdx][globalIdx] = hint;
+        hintsUsable_[timeIdx][globalIdx] = true;
     };
 
     void shiftHints(int numSlots = 1)
     {
-        for (int historyIdx = 0; historyIdx < historySize - numSlots; ++ historyIdx)
-            hints_[historyIdx + numSlots] = hints_[historyIdx];
+        for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx)
+            hints_[timeIdx + numSlots] = hints_[timeIdx];
     };
 
     /*!
@@ -192,10 +192,10 @@ public:
     Scalar globalResidual(GlobalEqVector &dest,
                           const SolutionVector &u)
     {
-        SolutionVector tmp(solution(/*historyIdx=*/0));
-        solution(/*historyIdx=*/0) = u;
+        SolutionVector tmp(solution(/*timeIdx=*/0));
+        solution(/*timeIdx=*/0) = u;
         Scalar res = globalResidual(dest);
-        solution(/*historyIdx=*/0) = tmp;
+        solution(/*timeIdx=*/0) = tmp;
         return res;
     }
 
@@ -255,8 +255,8 @@ public:
         const ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
-            localResidual().evalStorage(elemCtx, /*historyIdx=*/0);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
+            localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i)
                 dest += localResidual().storageTerm()[i];
@@ -278,14 +278,14 @@ public:
     /*!
      * \brief Reference to the solution at a given history index as a block vector.
      */
-    const SolutionVector &solution(int historyIdx) const
-    { return solution_[historyIdx]; }
+    const SolutionVector &solution(int timeIdx) const
+    { return solution_[timeIdx]; }
 
     /*!
      * \brief Reference to the solution at a given history index as a block vector.
      */
-    SolutionVector &solution(int historyIdx)
-    { return solution_[historyIdx]; }
+    SolutionVector &solution(int timeIdx)
+    { return solution_[timeIdx]; }
 
     /*!
      * \brief Returns the operator assembler for the global jacobian of
@@ -336,7 +336,7 @@ public:
      */
     Scalar primaryVarWeight(int vertIdx, int pvIdx) const
     {
-        Scalar absPv = std::abs(this->solution(/*historyIdx=*/1)[vertIdx][pvIdx]);
+        Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[vertIdx][pvIdx]);
         return 1.0/std::max(absPv, 1.0);
     }
 
@@ -382,8 +382,8 @@ public:
                 NewtonController &controller)
     {
 #if HAVE_VALGRIND
-        for (size_t i = 0; i < solution(/*historyIdx=*/0).size(); ++i)
-            Valgrind::CheckDefined(solution(/*historyIdx=*/0)[i]);
+        for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i)
+            Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
 #endif // HAVE_VALGRIND
 
         asImp_().updateBegin();
@@ -396,8 +396,8 @@ public:
             asImp_().updateFailed();
 
 #if HAVE_VALGRIND
-        for (size_t i = 0; i < solution(/*historyIdx=*/0).size(); ++i) {
-            Valgrind::CheckDefined(solution(/*historyIdx=*/0)[i]);
+        for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
+            Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
         }
 #endif // HAVE_VALGRIND
 
@@ -434,9 +434,9 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        hints_[/*historyIdx=*/0] = hints_[/*historyIdx=*/1];
+        hints_[/*timeIdx=*/0] = hints_[/*timeIdx=*/1];
 
-        solution_[/*historyIdx=*/0] = solution_[/*historyIdx=*/1];
+        solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
         jacAsm_->reassembleAll();
     };
 
@@ -450,7 +450,7 @@ public:
     void advanceTimeLevel()
     {
         // make the current solution the previous one.
-        solution_[/*historyIdx=*/1] = solution_[/*historyIdx=*/0];
+        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
 
         // shift the hints by one position in the history
         shiftHints();
@@ -478,7 +478,7 @@ public:
     void deserialize(Restarter &res)
     {
         res.template deserializeEntities<dim>(asImp_(), this->gridView_());
-        solution_[/*historyIdx=*/1] = solution_[/*historyIdx=*/0];
+        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
     }
 
     /*!
@@ -503,7 +503,7 @@ public:
         }
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            outstream << solution_[/*historyIdx=*/0][vertIdx][eqIdx] << " ";
+            outstream << solution_[/*timeIdx=*/0][vertIdx][eqIdx] << " ";
         }
     };
 
@@ -525,7 +525,7 @@ public:
                 DUNE_THROW(Dune::IOError,
                            "Could not deserialize vertex "
                            << vertIdx);
-            instream >> solution_[/*historyIdx=*/0][vertIdx][eqIdx];
+            instream >> solution_[/*timeIdx=*/0][vertIdx][eqIdx];
         }
     };
 
@@ -725,8 +725,8 @@ public:
                                    const PrimaryVariables &primaryVars,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx = 0)
-    { VolumeVariables::completeFluidState(fluidState, primaryVars, elemCtx, scvIdx, historyIdx); }
+                                   int timeIdx = 0)
+    { VolumeVariables::completeFluidState(fluidState, primaryVars, elemCtx, scvIdx, timeIdx); }
     
 protected:
     static bool enableHints_()
@@ -825,7 +825,7 @@ protected:
                     boundaryVertexIndex_[globalIdx] = numBoundaryVertices;
                     ++numBoundaryVertices;
 
-                    problem_().boundaryTypes(bTypes, boundaryCtx, scvIdx);
+                    problem_().boundaryTypes(bTypes, boundaryCtx, scvIdx, /*timeIdx=*/0);
                 } // loop over intersection's vertices
             } // loop over intersections
         } // loop over elements
@@ -837,7 +837,7 @@ protected:
     void applyInitialSolution_()
     {
         // first set the whole domain to zero
-        SolutionVector &uCur = solution(/*historyIdx=*/0);
+        SolutionVector &uCur = solution(/*timeIdx=*/0);
         uCur = Scalar(0.0);
         boxVolume_ = Scalar(0.0);
 
@@ -868,14 +868,15 @@ protected:
                 Valgrind::SetUndefined(initVal);
                 problem_().initial(initVal,
                                    elemCtx,
-                                   scvIdx);
+                                   scvIdx,
+                                   /*timeIdx=*/0);
                 Valgrind::CheckDefined(initVal);
 
                 // add up the initial values of all sub-control
                 // volumes. If the initial values disagree for
                 // different sub control volumes, the initial value
                 // will be the arithmetic mean.
-                Scalar scvVolume = elemCtx.fvElemGeom().subContVol[scvIdx].volume;
+                Scalar scvVolume = elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
                 initVal *= scvVolume;
                 boxVolume_[globalIdx] += scvVolume;
                 uCur[globalIdx] += initVal;

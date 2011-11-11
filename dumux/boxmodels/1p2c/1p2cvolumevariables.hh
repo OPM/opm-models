@@ -77,17 +77,17 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, historyIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &spatialParams = elemCtx.problem().spatialParameters();
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
-        tortuosity_ = spatialParams.tortuosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        tortuosity_ = spatialParams.tortuosity(elemCtx, scvIdx, timeIdx);
 #warning "TODO: dispersivity"
-        dispersivity_ = 0; // spatialParams.dispersivity(elemCtx, scvIdx);
+        dispersivity_ = 0; // spatialParams.dispersivity(elemCtx, scvIdx, timeIdx);
 
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
@@ -107,7 +107,7 @@ public:
         Valgrind::CheckDefined(diffCoeff_);
 
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
+        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -116,11 +116,11 @@ public:
     static void completeFluidState(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
 
         Scalar x1 = priVars[x1Idx]; //mole or mass fraction of component 1
@@ -196,9 +196,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     }
 
     template<class ParameterCache>
@@ -206,7 +206,7 @@ protected:
                                 const ParameterCache &paramCache,
                                 const ElementContext &elemCtx,
                                 int scvIdx,
-                                int historyIdx)
+                                int timeIdx)
     { }
 
     /*!
@@ -214,7 +214,7 @@ protected:
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     { }
 
     Scalar porosity_;    //!< Effective porosity within the control volume

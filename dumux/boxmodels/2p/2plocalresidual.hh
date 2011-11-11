@@ -91,11 +91,11 @@ public:
     void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
         // retrieve the volume variables for the SCV at the specified
         // point in time
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             result[conti0EqIdx + phaseIdx] =
@@ -114,11 +114,12 @@ public:
      */
     void computeFlux(PrimaryVariables &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx) const
+                     int scvfIdx,
+                     int timeIdx) const
     {
         flux = 0;
-        asImp_()->computeAdvectiveFlux(flux, elemCtx, scvfIdx);
-        asImp_()->computeDiffusiveFlux(flux, elemCtx, scvfIdx);
+        asImp_()->computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        asImp_()->computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -133,10 +134,11 @@ public:
      */
     void computeAdvectiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -152,8 +154,8 @@ public:
             int upIdx = evalPointFluxVars.upstreamIdx(phaseIdx);
             int dnIdx = evalPointFluxVars.downstreamIdx(phaseIdx);
 
-            const VolumeVariables &up = elemCtx.volVars(upIdx, /*historyIdx=*/0);
-            const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*historyIdx=*/0);
+            const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
+            const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*timeIdx=*/0);
 
             // add advective flux of current component in current
             // phase
@@ -180,7 +182,8 @@ public:
      */
     void computeDiffusiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
         // no diffusive fluxes for immiscible models
     }
@@ -194,10 +197,11 @@ public:
      */
     void computeSource(PrimaryVariables &values,
                        const ElementContext &elemCtx,
-                       int scvIdx) const
+                       int scvIdx,
+                       int timeIdx) const
     {
         // retrieve the source term intrinsic to the problem
-        elemCtx.problem().source(values, elemCtx, scvIdx);
+        elemCtx.problem().source(values, elemCtx, scvIdx, timeIdx);
     }
 
 

@@ -164,9 +164,9 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Scalar intrinsicPermeability(const Context &context, int localIdx) const
+    const Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
             return fineK_;
         return coarseK_;
@@ -181,9 +181,9 @@ public:
      *                    the porosity needs to be defined
      */
     template <class Context>
-    Scalar porosity(const Context &context, int localIdx) const
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
             return finePorosity_;
         else
@@ -199,9 +199,9 @@ public:
     * \param scvIdx The index of the sub-control volume
     */
     template <class Context>
-    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
             return fineMaterialParams_;
         else
@@ -219,7 +219,7 @@ public:
      *                    the heat capacity needs to be defined
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context, int localIdx) const
+    Scalar heatCapacitySolid(const Context &context, int spaceIdx, int timeIdx) const
     {
         return
             790 // specific heat capacity of granite [J / (kg K)]
@@ -232,9 +232,9 @@ public:
      */
     template <class Context>
     const HeatConductionLawParams&
-    heatConducionParams(const Context &context, int localIdx) const
+    heatConducionParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
             return fineHeatCondParams_;
         return coarseHeatCondParams_;

@@ -83,9 +83,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState.setTemperature(priVars[temperatureIdx]);
     }
 
@@ -94,7 +94,7 @@ protected:
                                 const ParameterCache &paramCache,
                                 const ElementContext &elemCtx,
                                 int scvIdx,
-                                int historyIdx)
+                                int timeIdx)
     {
         // compute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -109,15 +109,14 @@ protected:
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     {
         // compute and set the heat capacity of the solid phase
         const auto &spatialParams = elemCtx.problem().spatialParameters();
-        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx);
+        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx, timeIdx);
 
-        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx);
-        heatConductivity_ =
-            HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
+        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
+        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
 
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);

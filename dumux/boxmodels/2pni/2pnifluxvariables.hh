@@ -66,11 +66,11 @@ class TwoPNIFluxVariables : public TwoPFluxVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        ParentType::update(elemCtx, scvfIdx);
+        ParentType::update(elemCtx, scvfIdx, timeIdx);
 
-        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
         Vector temperatureGrad(0.0);
@@ -78,7 +78,7 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             const auto &feGrad = scvf.grad[scvIdx];
-            const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+            const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
             tmp = feGrad;
             tmp *= volVars.fluidState().temperature(/*phaseIdx=*/0);
@@ -91,8 +91,8 @@ public:
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
         // arithmetic mean
-        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx());
-        const auto &volVarsInside = elemCtx.volVars(this->insideIdx());
+        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx(), timeIdx);
+        const auto &volVarsInside = elemCtx.volVars(this->insideIdx(), timeIdx);
         heatConductivity_ =
             0.5 * (volVarsInside.heatConductivity()
                    +

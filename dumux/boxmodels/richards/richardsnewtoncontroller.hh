@@ -116,11 +116,11 @@ public:
 
                     // calculate the old wetting phase saturation
                     const SpatialParameters &spatialParams = this->problem_().spatialParameters();
-                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemCtx, scvIdx);
+                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
 
                     Scalar pcMin = MaterialLaw::pC(matParams, /*Sw=*/1.0);
                     Scalar pW = uLastIter[globI][pwIdx];
-                    Scalar pN = std::max(this->problem_().referencePressure(elemCtx, scvIdx),
+                    Scalar pN = std::max(this->problem_().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                                          pW + pcMin);
                     Scalar pcOld = pN - pW;
                     Scalar SwOld = std::max<Scalar>(0.0, MaterialLaw::Sw(matParams, pcOld));

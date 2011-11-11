@@ -68,13 +68,13 @@ public:
     MPNCFluxVariablesDiffusion()
     {}
 
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        int i = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-        int j = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+        int i = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
+        int j = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
-        const VolumeVariables &volVarsI = elemCtx.volVars(i);
-        const VolumeVariables &volVarsJ = elemCtx.volVars(j);
+        const VolumeVariables &volVarsI = elemCtx.volVars(i, timeIdx);
+        const VolumeVariables &volVarsJ = elemCtx.volVars(j, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -93,7 +93,7 @@ public:
 
         // update the concentration gradients using two-point
         // gradients
-        const GlobalPosition &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const GlobalPosition &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         GlobalPosition tmp = elemCtx.pos(j);
         tmp -= elemCtx.pos(i);
@@ -215,7 +215,7 @@ public:
     MPNCFluxVariablesDiffusion()
     {}
 
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
     };
 };

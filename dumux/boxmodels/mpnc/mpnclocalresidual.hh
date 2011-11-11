@@ -94,7 +94,7 @@ public:
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
@@ -102,7 +102,7 @@ public:
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
         const VolumeVariables &volVars =
-            elemCtx.volVars(scvIdx, historyIdx);
+            elemCtx.volVars(scvIdx, timeIdx);
 
         storage = 0;
 
@@ -130,16 +130,16 @@ public:
             // compute mass and energy storage terms in terms of
             // averaged quantities
             MassResid::addPhaseStorage(tmp,
-                                       elemCtx.volVars(scvIdx),
+                                       elemCtx.volVars(scvIdx, /*timeIdx=*/0),
                                        phaseIdx);
             EnergyResid::addPhaseStorage(tmp,
-                                         elemCtx.volVars(scvIdx),
+                                         elemCtx.volVars(scvIdx, /*timeIdx=*/0),
                                          phaseIdx);
 
             // multiply with volume of sub-control volume
             tmp *=
-                elemCtx.volVars(scvIdx).extrusionFactor() *
-                elemCtx.fvElemGeom().subContVol[scvIdx].volume;
+                elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor() *
+                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
 
             // Add the storage of the current SCV to the total storage
             storage += tmp;
@@ -152,13 +152,13 @@ public:
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx = 0) const
+                       int timeIdx) const
     {
         Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
 
         RateVector tmp(0);
-        MassResid::computeSource(tmp, elemCtx, scvIdx);
+        MassResid::computeSource(tmp, elemCtx, scvIdx, timeIdx);
         source += tmp;
         //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
         Valgrind::CheckDefined(source);
@@ -170,10 +170,11 @@ public:
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx) const
+                     int scvfIdx,
+                     int timeIdx) const
     {
         flux = 0.0;
-        MassResid::computeFlux(flux, elemCtx, scvfIdx);
+        MassResid::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
         /*
          * EnergyResid also called in the MassResid
@@ -200,9 +201,9 @@ public:
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             {
-                if (!elemCtx.boundaryTypes(scvIdx).isDirichlet(phase0NcpIdx + phaseIdx))
+                if (!elemCtx.boundaryTypes(scvIdx, /*timeIdx=*/0).isDirichlet(phase0NcpIdx + phaseIdx))
                     residual[scvIdx][phase0NcpIdx + phaseIdx] =
-                        phaseNcp_(elemCtx, scvIdx, phaseIdx);
+                        phaseNcp_(elemCtx, scvIdx, /*timeIdx=*/0, phaseIdx);
             }
         }
     }
@@ -218,10 +219,11 @@ protected:
      */
     Scalar phaseNcp_(const ElementContext &elemCtx,
                      int scvIdx,
+                     int timeIdx,
                      int phaseIdx) const
     {
-        const auto &fsEval = elemCtx.evalPointVolVars(scvIdx).fluidState();
-        const auto &fs = elemCtx.volVars(scvIdx).fluidState();
+        const auto &fsEval = elemCtx.evalPointVolVars(scvIdx, timeIdx).fluidState();
+        const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
         Scalar aEval = phaseNotPresentIneq_(fsEval, phaseIdx);
         Scalar bEval = phasePresentIneq_(fsEval, phaseIdx);

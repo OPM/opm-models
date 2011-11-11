@@ -64,7 +64,7 @@ public:
     {
     }
 
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {};
 };
 
@@ -100,9 +100,9 @@ public:
     MPNCFluxVariablesEnergy()
     {}
 
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom();
+        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
 
         // calculate temperature gradient using finite element
@@ -112,7 +112,7 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             tmp = fvElemGeom.subContVolFace[scvfIdx].grad[scvIdx];
-            tmp *= elemCtx.volVars(scvIdx).fluidState().temperature();
+            tmp *= elemCtx.volVars(scvIdx, timeIdx).fluidState().temperature();
             temperatureGrad += tmp;
         }
 
@@ -121,8 +121,8 @@ public:
         for (int i = 0; i < dim; ++ i)
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
-        const auto &volVarsInside = elemCtx.volVars(scvf.i);
-        const auto &volVarsOutside = elemCtx.volVars(scvf.j);
+        const auto &volVarsInside = elemCtx.volVars(scvf.i, timeIdx);
+        const auto &volVarsOutside = elemCtx.volVars(scvf.j, timeIdx);
 
         // arithmetic mean
         heatConductivity_ =

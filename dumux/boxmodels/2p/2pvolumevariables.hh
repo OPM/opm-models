@@ -79,20 +79,20 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         ParentType::update(elemCtx,
                            scvIdx,
-                           historyIdx);
+                           timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
 
         // material law parameters
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
 
         relativePermeability_[wPhaseIdx] =
             MaterialLaw::krw(materialParams, fluidState_.saturation(wPhaseIdx));
@@ -101,10 +101,10 @@ public:
 
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, historyIdx);
+        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -113,16 +113,16 @@ public:
     static void completeFluidState(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const typename MaterialLaw::Params &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         int formulation = GET_PROP_VALUE(TypeTag, Formulation);
         if (formulation == Indices::pwSn) {
@@ -164,7 +164,7 @@ public:
                                         paramCache,
                                         elemCtx,
                                         scvIdx,
-                                        historyIdx);
+                                        timeIdx);
     }
 
     /*!
@@ -201,9 +201,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     }
 
     template<class ParameterCache>
@@ -211,7 +211,7 @@ protected:
                                 const ParameterCache &paramCache,
                                 const ElementContext &elemCtx,
                                 int scvIdx,
-                                int historyIdx)
+                                int timeIdx)
     { }
 
     /*!
@@ -219,7 +219,7 @@ protected:
      */
     void updateEnergy_(const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     { }
 
     FluidState fluidState_;

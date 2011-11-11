@@ -56,7 +56,7 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         Valgrind::SetUndefined(*this);
 
@@ -144,7 +144,7 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     { }
 
     Scalar diffCoeffL(int compIdx) const

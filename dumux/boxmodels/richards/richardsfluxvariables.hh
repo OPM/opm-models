@@ -68,17 +68,17 @@ public:
      * \brief Caclulates the quantities required on a sub-control
      *        volume face for the 2p box model.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+        insideScvIdx_ = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
-             + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
+            (elemCtx.volVars(insideScvIdx_, timeIdx).extrusionFactor()
+             + elemCtx.volVars(outsideScvIdx_, timeIdx).extrusionFactor()) / 2;
 
-        calculateGradients_(elemCtx, scvfIdx);
-        calculateNormalFluxes_(elemCtx, scvfIdx);
+        calculateGradients_(elemCtx, scvfIdx, timeIdx);
+        calculateNormalFluxes_(elemCtx, scvfIdx, timeIdx);
     };
 
     /*!
@@ -190,12 +190,13 @@ public:
 
 protected:
     void calculateGradients_(const ElementContext &elemCtx,
-                             int scvfIdx)
+                             int scvfIdx, 
+                             int timeIdx)
     {
         // reset all wetting phase potential gradient
         potentialGrad_ = Scalar(0);
 
-        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
 
         // calculate gradients
         for (int scvIdx = 0;
@@ -205,7 +206,7 @@ protected:
             // FE gradient at vertex idx
             const Vector &feGrad = scvf.grad[scvIdx];
 
-            const auto &fs = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
+            const auto &fs = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
 
             // compute pressure gradient for the wetting phase
             Vector tmp(feGrad);
@@ -220,12 +221,12 @@ protected:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
-            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
+            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
+            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_, timeIdx);
             g /= 2;
 
-            const auto &fsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0).fluidState();
-            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0).fluidState();
+            const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
 
             // calculate the phase density at the integration point. we
             // only do this if the wetting phase is present in both cells
@@ -251,7 +252,8 @@ protected:
     }
 
     void calculateNormalFluxes_(const ElementContext &elemCtx,
-                                int scvfIdx)
+                                int scvfIdx, 
+                                int timeIdx)
     {
         const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
 
@@ -259,11 +261,13 @@ protected:
         Tensor K;
         spatialParams.meanK(K,
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_),
+                                                                insideScvIdx_,
+                                                                timeIdx),
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_));
+                                                                outsideScvIdx_,
+                                                                timeIdx));
 
-        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         // calculate the flux in the normal direction of the
         // current sub control volume face:
@@ -282,7 +286,7 @@ protected:
             filterVelocityNormal_ += filterVelocity_[i]*normal[i];
 
         // multiply both with the upstream mobility
-        const auto &up = elemCtx.volVars(upstreamIdx(wPhaseIdx), /*historyIdx=*/0);
+        const auto &up = elemCtx.volVars(upstreamIdx(wPhaseIdx), timeIdx);
         filterVelocityNormal_ *= up.mobility(wPhaseIdx);
         filterVelocity_ *= up.mobility(wPhaseIdx);
     }

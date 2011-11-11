@@ -143,9 +143,9 @@ public:
      * \return Intrinsic permeability
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int localIdx) const
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
             return lensK_;
         return outerK_;
@@ -160,7 +160,7 @@ public:
      * \return Porosity
      */
      template <class Context>
-     Scalar porosity(const Context &context, int localIdx) const
+     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
      { return 0.4; }
 
     /*!
@@ -172,9 +172,9 @@ public:
      * \return the material parameters object
      */
     template <class Context>
-    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (isInLens_(globalPos))
             return lensMaterialParams_;

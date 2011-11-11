@@ -84,10 +84,10 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
-        const auto *hint = elemCtx.hint(scvIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
 
         ComponentVector fug;
         // retrieve component fugacities

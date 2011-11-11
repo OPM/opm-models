@@ -123,7 +123,7 @@ public:
         hasNeumann_ = false;
         hasDirichlet_ = false;
         for (int scvIdx = 0; scvIdx < numScv(); ++scvIdx) {
-            int globalIdx = globalIndex(scvIdx);
+            int globalIdx = globalIndex(scvIdx, /*timeIdx=*/0);
             boundaryTypes_[scvIdx] = model().boundaryTypes(globalIdx);
             hasDirichlet_ = hasDirichlet_ || boundaryTypes_[scvIdx]->hasDirichlet();
             hasNeumann_ = hasNeumann_ || boundaryTypes_[scvIdx]->hasNeumann();
@@ -136,39 +136,40 @@ public:
 
     void updateAllScvVars()
     {
-        for (int historyIdx = 0; historyIdx < timeDiscHistorySize; ++ historyIdx)
-            updateScvVars(historyIdx);
+        for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
+            updateScvVars(timeIdx);
     };
 
-    void updateScvVars(int historyIdx)
+    void updateScvVars(int timeIdx)
     {
         // update the volume variables for the whole history
         const VertexMapper &vertexMapper = problem().vertexMapper();
-        const SolutionVector &globalSol = model().solution(historyIdx);
+        const SolutionVector &globalSol = model().solution(timeIdx);
 
         int nScv = numScv();
         for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
             int globalIdx = vertexMapper.map(element(), scvIdx, dim);
             const PrimaryVariables &scvSol = globalSol[globalIdx];
 
-            scvVars_[scvIdx].hint[historyIdx] = model().hint(globalIdx, historyIdx);
-            updateScvVars(scvSol, scvIdx, historyIdx);
+            scvVars_[scvIdx].hint[timeIdx] = model().hint(globalIdx, timeIdx);
+            updateScvVars(scvSol, scvIdx, timeIdx);
         }
     }
 
-    void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int historyIdx)
+    void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
     {
-        scvVars_[scvIdx].priVars[historyIdx] = priVars;
-        scvVars_[scvIdx].volVars[historyIdx].update(/*context=*/*this,
+        scvVars_[scvIdx].priVars[timeIdx] = priVars;
+        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this,
                                                     scvIdx,
-                                                    historyIdx);
+                                                    timeIdx);
     }
 
     void updateAllScvfVars()
     {
         for (int scvfIdx = 0; scvfIdx < numScvf(); scvfIdx++) {
             scvfVars_[scvfIdx].update(/*context=*/ *this,
-                                      /*localIndex=*/scvfIdx);
+                                      /*localIndex=*/scvfIdx,
+                                      /*timeIdx=*/0);
         }
     }
 
@@ -201,7 +202,7 @@ public:
                 scvSol[eqnIdx] = elementSolVector[scvIdx + eqnIdx*numScv()];
 
             // update the volume variables for the newest history index
-            updateScvVars_(scvSol, /*historyIdx=*/0, scvIdx);
+            updateScvVars_(scvSol, /*timeIdx=*/0, scvIdx);
         }
     }
 
@@ -244,19 +245,19 @@ public:
     /*!
      * \brief Return the current finite element geometry.
      */
-    const FVElementGeometry &fvElemGeom() const
+    const FVElementGeometry &fvElemGeom(int timeIdx) const
     { return fvElemGeom_; }
 
     /*!
      * \brief Return the position of a local entities in global coordinates
      */
-    const GlobalPosition &pos(int scvIdx) const
+    const GlobalPosition &pos(int scvIdx, int timeIdx) const
     { return fvElemGeom_.subContVol[scvIdx].global; }
 
     /*!
      * \brief Return the global index for a sub-control volume
      */
-    int globalIndex(int scvIdx) const
+    int globalIndex(int scvIdx, int timeIdx) const
     { return model().vertexMapper().map(element(), scvIdx, dim); }
 
     /*!
@@ -281,7 +282,7 @@ public:
     /*!
      * \brief Returns the boundary types for a given vertex
      */
-    const BoundaryTypes &boundaryTypes(int scvIdx) const
+    const BoundaryTypes &boundaryTypes(int scvIdx, int timeIdx) const
     {
         return *boundaryTypes_[scvIdx];
     }
@@ -318,26 +319,26 @@ public:
      *
      * \param scvIdx The local index of the sub-control volume for
      *               which the volume variables are requested
-     * \param historyIdx The index of the time step for which the
+     * \param timeIdx The index of the time step for which the
      *                    volume variables are requested. 0 means
      *                    current time step, 1 previous time step,
      *                    2 next-to-previous, etc.
      */
-    const VolumeVariables &volVars(int scvIdx, int historyIdx = 0) const
-    { return scvVars_[scvIdx].volVars[historyIdx]; }
+    const VolumeVariables &volVars(int scvIdx, int timeIdx) const
+    { return scvVars_[scvIdx].volVars[timeIdx]; }
 
-    const VolumeVariables *hint(int scvIdx, int historyIdx = 0) const
-    { return scvVars_[scvIdx].hint[historyIdx]; }
+    const VolumeVariables *hint(int scvIdx, int timeIdx) const
+    { return scvVars_[scvIdx].hint[timeIdx]; }
     /*!
      * \copydoc volVars()
      */
-    VolumeVariables &volVars(int scvIdx, int historyIdx = 0)
-    { return scvVars_[scvIdx].volVars[historyIdx]; }
+    VolumeVariables &volVars(int scvIdx, int timeIdx)
+    { return scvVars_[scvIdx].volVars[timeIdx]; }
 
-    PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0)
-    { return scvVars_[scvIdx].priVars[historyIdx]; }
-    const PrimaryVariables &primaryVars(int scvIdx, int historyIdx = 0) const
-    { return scvVars_[scvIdx].priVars[historyIdx]; }
+    PrimaryVariables &primaryVars(int scvIdx, int timeIdx)
+    { return scvVars_[scvIdx].priVars[timeIdx]; }
+    const PrimaryVariables &primaryVars(int scvIdx, int timeIdx) const
+    { return scvVars_[scvIdx].priVars[timeIdx]; }
 
     /*!
      * \brief Returns the volume variables at the evaluation point.
@@ -345,8 +346,8 @@ public:
     void saveScvVars(int scvIdx)
     {
         scvIdxSaved_ = scvIdx;
-        scvVarsSaved_ = scvVars_[scvIdx].volVars[/*historyIdx=*/0];
-        priVarsSaved_ = scvVars_[scvIdx].priVars[/*historyIdx=*/0];
+        scvVarsSaved_ = scvVars_[scvIdx].volVars[/*timeIdx=*/0];
+        priVarsSaved_ = scvVars_[scvIdx].priVars[/*timeIdx=*/0];
     }
 
     /*!
@@ -355,8 +356,8 @@ public:
     void restoreScvVars(int scvIdx)
     {
         scvIdxSaved_ = -1;
-        scvVars_[scvIdx].priVars[/*historyIdx=*/0] = priVarsSaved_;
-        scvVars_[scvIdx].volVars[/*historyIdx=*/0] = scvVarsSaved_;
+        scvVars_[scvIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
+        scvVars_[scvIdx].volVars[/*timeIdx=*/0] = scvVarsSaved_;
     }
 
     /*!
@@ -366,7 +367,7 @@ public:
      * \param scvfIdx The local index of the sub-control volume face for
      *               which the flux variables are requested
      */
-    const FluxVariables &fluxVars(int scvIdx) const
+    const FluxVariables &fluxVars(int scvIdx, int timeIdx) const
     { return scvfVars_[scvIdx]; }
 
     /*!
@@ -376,8 +377,10 @@ public:
      * \param scvfIdx The local index of the sub-control volume face for
      *               which the flux variables are requested
      */
-    const FluxVariables &evalPointFluxVars(int scvfIdx) const
+    const FluxVariables &evalPointFluxVars(int scvfIdx, int timeIdx) const
     {
+        if (timeIdx != 0)
+            return fluxVars(scvfIdx, timeIdx);
         return (*scvfVarsEval_)[scvfIdx];
     }
 
@@ -385,11 +388,13 @@ public:
      * \brief Returns the volume variables for history index 0 at the
      *        evaluation point.
      */
-    const VolumeVariables &evalPointVolVars(int scvIdx) const
+    const VolumeVariables &evalPointVolVars(int scvIdx, int timeIdx) const
     {
+        if (timeIdx != 0)
+            return volVars(scvIdx, timeIdx);
         if (scvIdxSaved_ == scvIdx)
             return scvVarsSaved_;
-        return volVars(scvIdx, /*historyIdx=*/0);
+        return volVars(scvIdx, /*timeIdx=*/0);
     }
 
 protected:

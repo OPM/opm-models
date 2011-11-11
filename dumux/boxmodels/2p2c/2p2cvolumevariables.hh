@@ -111,20 +111,20 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         ParentType::update(elemCtx,
                            scvIdx,
-                           historyIdx);
+                           timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, historyIdx);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         /////////////
         // calculate the remaining quantities
         /////////////
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
 
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
@@ -133,7 +133,7 @@ public:
         paramCache.updateAll(fluidState_);
 
         // energy related quantities
-        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, historyIdx);
+        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // relative permeabilities
@@ -158,7 +158,7 @@ public:
         }
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx);
+        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
     }
@@ -169,16 +169,16 @@ public:
     static void completeFluidState(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, historyIdx);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
         const auto &model = elemCtx.model();
         const auto &spatialParams = problem.spatialParameters();
         int globalVertIdx = model.dofMapper().map(elemCtx.element(), scvIdx, dim);
-        int phasePresence = model.phasePresence(globalVertIdx, historyIdx);
+        int phasePresence = model.phasePresence(globalVertIdx, timeIdx);
 
         /////////////
         // set the saturations
@@ -206,7 +206,7 @@ public:
 
         // calculate capillary pressure
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx);
+            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
         Scalar pC = MaterialLaw::pC(materialParams, Sw);
 
         if (formulation == plSg) {
@@ -350,9 +350,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx));
+        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     }
 
     /*!
@@ -361,7 +361,7 @@ protected:
     void updateEnergy_(typename FluidSystem::ParameterCache &paramCache,
                        const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx)
+                       int timeIdx)
     { }
 
     Scalar porosity_;        //!< Effective porosity within the control volume

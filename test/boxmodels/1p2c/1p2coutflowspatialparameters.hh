@@ -97,9 +97,9 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int localIdx) const
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isTumor_(pos))
             return permTumor_;
         else
@@ -114,9 +114,9 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
-    Scalar porosity(const Context &context, int localIdx) const
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isTumor_(pos))
             return porosityTumor_;
         else
@@ -131,9 +131,9 @@ public:
      * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
-    Scalar tortuosity(const Context &context, int localIdx) const
+    Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(localIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isTumor_(pos))
             return tortuosityTumor_;
         else
@@ -149,18 +149,18 @@ public:
      */
     template <class Context>
     Scalar dispersivity(const Context &context,
-                        int localIdx) const
+                        int spaceIdx, int timeIdx) const
     {
         return 0;
     }
 
     template <class Context>
     bool useTwoPointGradient(const Context &context,
-                             int scvfIdx) const
+                             int scvfIdx, int timeIdx) const
     {
-        const auto &scvf = context.fvElemGeom().subContVolFace[scvfIdx];
-        bool inTumorI = isTumor_(context.pos(scvf.i));
-        bool inTumorJ = isTumor_(context.pos(scvf.j));
+        const auto &scvf = context.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
+        bool inTumorI = isTumor_(context.pos(scvf.i, timeIdx));
+        bool inTumorJ = isTumor_(context.pos(scvf.j, timeIdx));
 
         return (inTumorI && !inTumorJ) || (inTumorJ && !inTumorI);
     }

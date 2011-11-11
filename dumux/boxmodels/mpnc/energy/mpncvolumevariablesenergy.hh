@@ -75,9 +75,9 @@ public:
                             ParameterCache &paramCache,
                             const ElementContext &elemCtx,
                             int scvIdx,
-                            int historyIdx) const
+                            int timeIdx) const
     {
-        Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx);
+        Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx);
         fs.setTemperature(T);
     }
 
@@ -91,7 +91,7 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
         // the phase temperatures where already set by the base volume
         // variables!
@@ -174,10 +174,10 @@ public:
                             ParameterCache &paramCache,
                             const ElementContext &elemCtx,
                             int scvIdx,
-                            int historyIdx) const
+                            int timeIdx) const
     {
         // retrieve temperature from solution vector
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fs.setTemperature(priVars[temperatureIdx]);
     }
 
@@ -189,9 +189,9 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &spatialParams = elemCtx.problem().spatialParameters();
 
         Valgrind::SetUndefined(*this);

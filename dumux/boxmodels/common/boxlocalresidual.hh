@@ -167,10 +167,10 @@ public:
         storageTerm = 0.0;
 
         // evaluate the flux terms
-        asImp_().evalFluxes(residual, elemCtx);
+        asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom().numVertices; i++)
+        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // HAVE_VALGRIND
 
@@ -178,15 +178,15 @@ public:
         asImp_().evalVolumeTerms_(residual, storageTerm, elemCtx);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom().numVertices; i++)
+        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // !defined NDEBUG && HAVE_VALGRIND
 
         // evaluate the boundary conditions
-        asImp_().evalBoundary_(residual, storageTerm, elemCtx);
+        asImp_().evalBoundary_(residual, storageTerm, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom().numVertices; i++) {
+        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++) {
             Valgrind::CheckDefined(residual[i]);
         }
 #endif // HAVE_VALGRIND
@@ -201,13 +201,13 @@ public:
      * quantity is inside the element.
      */
     void evalStorage(const ElementContext &elemCtx,
-                     int historyIdx)
+                     int timeIdx)
     {
         int numScv = elemCtx.numScv();
         internalStorageTerm_.resize(numScv);
         evalStorage(internalStorageTerm_,
                     elemCtx,
-                    historyIdx);
+                    timeIdx);
     }
 
     /*!
@@ -220,7 +220,7 @@ public:
      */
     void evalStorage(LocalBlockVector &storage,
                      const ElementContext &elemCtx,
-                     int historyIdx) const
+                     int timeIdx) const
     {
         // calculate the amount of conservation each quantity inside
         // all sub control volumes
@@ -230,10 +230,10 @@ public:
             asImp_().computeStorage(storage[scvIdx],
                                     elemCtx,
                                     scvIdx,
-                                    historyIdx);
+                                    timeIdx);
             storage[scvIdx] *=
-                elemCtx.fvElemGeom().subContVol[scvIdx].volume
-                * elemCtx.volVars(scvIdx).extrusionFactor();
+                elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume
+                * elemCtx.volVars(scvIdx, timeIdx).extrusionFactor();
         }
     }
 
@@ -241,21 +241,22 @@ public:
      * \brief Add the flux term to a local residual.
      */
     void evalFluxes(LocalBlockVector &residual,
-                    const ElementContext &elemCtx) const
+                    const ElementContext &elemCtx,
+                    int timeIdx) const
     {
         RateVector flux;
 
         // calculate the mass flux over the sub-control volume faces
         for (int scvfIdx = 0;
-             scvfIdx < elemCtx.fvElemGeom().numEdges;
+             scvfIdx < elemCtx.fvElemGeom(timeIdx).numEdges;
              scvfIdx++)
         {
-            int i = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-            int j = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+            int i = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
+            int j = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
             Valgrind::SetUndefined(flux);
-            asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx);
-            flux *= elemCtx.fluxVars(scvfIdx).extrusionFactor();
+            asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
+            flux *= elemCtx.fluxVars(scvfIdx, timeIdx).extrusionFactor();
             Valgrind::CheckDefined(flux);
 
             // The balance equation for a finite volume is given by
@@ -283,17 +284,18 @@ protected:
      */
     void evalBoundary_(LocalBlockVector &residual,
                        LocalBlockVector &storageTerm,
-                       const ElementContext &elemCtx) const
+                       const ElementContext &elemCtx,
+                       int timeIdx) const
     {
         if (!elemCtx.onBoundary()) {
             return;
         }
 
         if (elemCtx.hasNeumann())
-            asImp_().evalNeumann_(residual, elemCtx);
+            asImp_().evalNeumann_(residual, elemCtx, timeIdx);
 
         if (elemCtx.hasDirichlet())
-            asImp_().evalDirichlet_(residual, storageTerm, elemCtx);
+            asImp_().evalDirichlet_(residual, storageTerm, elemCtx, timeIdx);
     }
 
     /*!
@@ -302,19 +304,20 @@ protected:
      */
     void evalDirichlet_(LocalBlockVector &residual,
                         LocalBlockVector &storageTerm,
-                        const ElementContext &elemCtx) const
+                        const ElementContext &elemCtx,
+                        int timeIdx) const
     {
         PrimaryVariables tmp(0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const BoundaryTypes &bcTypes = elemCtx.boundaryTypes(scvIdx);
+            const BoundaryTypes &bcTypes = elemCtx.boundaryTypes(scvIdx, timeIdx);
             if (!bcTypes.hasDirichlet())
                 continue;
 
             // ask the problem for the dirichlet values
             Valgrind::SetUndefined(tmp);
-            asImp_().computeDirichlet_(tmp, elemCtx, scvIdx);
+            asImp_().computeDirichlet_(tmp, elemCtx, scvIdx, timeIdx);
             const PrimaryVariables &priVars =
-                elemCtx.primaryVars(scvIdx);
+                elemCtx.primaryVars(scvIdx, timeIdx);
 
             // set the dirichlet conditions
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -336,7 +339,8 @@ protected:
      *        residual.
      */
     void evalNeumann_(LocalBlockVector &residual,
-                      const ElementContext &elemCtx) const
+                      const ElementContext &elemCtx,
+                      int timeIdx) const
     {
         const Element &elem = elemCtx.element();
         Dune::GeometryType geoType = elem.geometry().type();
@@ -366,22 +370,24 @@ protected:
                                                /*subEntityCodim=*/dim);
 
                 int boundaryFaceIdx =
-                    elemCtx.fvElemGeom().boundaryFaceIndex(faceIdx, faceVertIdx);
+                    elemCtx.fvElemGeom(timeIdx).boundaryFaceIndex(faceIdx, faceVertIdx);
 
                 // add the residual of all vertices of the boundary
                 // segment
                 evalNeumannSegment_(residual,
                                     neumannVars,
                                     scvIdx,
-                                    boundaryFaceIdx);
+                                    boundaryFaceIdx,
+                                    timeIdx);
             }
         }
     }
 
     void computeDirichlet_(PrimaryVariables &values,
                            const ElementContext &elemCtx,
-                           int scvIdx) const
-    { elemCtx.problem().dirichlet(values, elemCtx, scvIdx); }
+                           int scvIdx,
+                           int timeIdx) const
+    { elemCtx.problem().dirichlet(values, elemCtx, scvIdx, timeIdx); }
 
 
     /*!
@@ -391,10 +397,11 @@ protected:
     void evalNeumannSegment_(LocalBlockVector &residual,
                              const NeumannContext &neumannVars,
                              int scvIdx,
-                             int boundaryFaceIdx) const
+                             int boundaryFaceIdx,
+                             int timeIdx) const
     {
         // temporary vector to store the neumann boundary fluxes
-        const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx);
+        const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx, timeIdx);
         RateVector values;
 
         // deal with neumann boundaries
@@ -402,12 +409,13 @@ protected:
             Valgrind::SetUndefined(values);
             neumannVars.problem().neumann(values,
                                           neumannVars,
-                                          boundaryFaceIdx);
+                                          boundaryFaceIdx,
+                                          timeIdx);
             Valgrind::CheckDefined(values);
 
             values *=
-                neumannVars.fvElemGeom().boundaryFace[boundaryFaceIdx].area
-                * neumannVars.elemCtx().volVars(scvIdx, /*historyIdx*/0).extrusionFactor();
+                neumannVars.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
+                * neumannVars.elemCtx().volVars(scvIdx, timeIdx).extrusionFactor();
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (bcTypes.isNeumann(eqIdx))
@@ -432,7 +440,7 @@ protected:
         for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             Scalar extrusionFactor =
-                elemCtx.volVars(scvIdx, /*historyIdx=*/0).extrusionFactor();
+                elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
 
             // mass balance within the element. this is the
             // \f$\frac{m}{\partial t}\f$ term if using implicit
@@ -443,15 +451,15 @@ protected:
             asImp_().computeStorage(tmp2,
                                     elemCtx,
                                     scvIdx,
-                                    /*historyIdx=*/1);
+                                    /*timeIdx=*/1);
             asImp_().computeStorage(tmp,
                                     elemCtx,
                                     scvIdx,
-                                    /*historyIdx=*/0);
+                                    /*timeIdx=*/0);
 
             tmp -= tmp2;
             tmp *=
-                elemCtx.fvElemGeom().subContVol[scvIdx].volume
+                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume
                 * extrusionFactor
                 / elemCtx.problem().timeManager().timeStepSize();
 
@@ -459,8 +467,8 @@ protected:
             residual[scvIdx] += tmp;
 
             // subtract the source term from the residual
-            asImp_().computeSource(sourceRate, elemCtx, scvIdx);
-            sourceRate *= elemCtx.fvElemGeom().subContVol[scvIdx].volume * extrusionFactor;
+            asImp_().computeSource(sourceRate, elemCtx, scvIdx, /*timeIdx=*/0);
+            sourceRate *= elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume * extrusionFactor;
             residual[scvIdx] -= sourceRate;
 
             // make sure that only defined quantities were used

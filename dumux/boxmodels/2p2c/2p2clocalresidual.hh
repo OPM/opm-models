@@ -67,7 +67,6 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementSolutionVector) ElementSolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
@@ -122,11 +121,11 @@ public:
      */
     void addPhaseStorage(PrimaryVariables &storage,
                          const ElementContext &elemCtx,
-                         int historyIdx,
+                         int timeIdx,
                          int phaseIdx)
     {
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
+            const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
             const auto &fs = volVars.fluidState();
 
@@ -140,7 +139,7 @@ public:
                     * fs.saturation(phaseIdx)
                     * volVars.porosity()
                     * volVars.extrusionFactor()
-                    * elemCtx.fvElemGeom().subContVol[scvIdx].volume;
+                    * elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume;
             }
         }
     }
@@ -159,10 +158,10 @@ public:
     void computeStorage(PrimaryVariables &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
         const VolumeVariables &volVars =
-            elemCtx.volVars(scvIdx, historyIdx);
+            elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         storage = 0;
@@ -194,13 +193,14 @@ public:
      */
     void computeFlux(PrimaryVariables &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx) const
+                     int scvfIdx,
+                     int timeIdx) const
     {
         flux = 0.0;
-        asImp_().computeAdvectiveFlux(flux, elemCtx, scvfIdx);
+        asImp_().computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
-        asImp_().computeDiffusiveFlux(flux, elemCtx, scvfIdx);
+        asImp_().computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
@@ -213,10 +213,11 @@ public:
      */
     void computeAdvectiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -225,8 +226,8 @@ public:
         {
             // data attached to upstream and the downstream vertices
             // of the current phase
-            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx));
-            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx));
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {
@@ -274,10 +275,11 @@ public:
      */
     void computeDiffusiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         // add diffusive flux of gas component in liquid phase
         Scalar tmp = 0;
@@ -312,10 +314,10 @@ public:
     void computeSource(PrimaryVariables &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
-                       int historyIdx = 0) const
+                       int timeIdx) const
     {
         Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
 

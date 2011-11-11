@@ -31,6 +31,7 @@
 #define DUMUX_RICHARDS_LENS_SPATIAL_PARAMETERS_HH
 
 #include <dumux/material/spatialparameters/boxspatialparameters.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
@@ -59,7 +60,7 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    typedef RegularizedBrooksCorey<Scalar> EffectiveLaw;
 public:
     // define the material law parameterized by absolute saturations
     typedef EffToAbsLaw<EffectiveLaw> type;
@@ -77,6 +78,7 @@ class RichardsLensSpatialParameters : public BoxSpatialParameters<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
     typedef typename Grid::ctype CoordScalar;
 
     enum {
@@ -85,6 +87,7 @@ class RichardsLensSpatialParameters : public BoxSpatialParameters<TypeTag>
     };
 
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
+    typedef Dune::FieldMatrix<Scalar,dimWorld,dimWorld> Tensor;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -148,9 +151,9 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int localIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
             return lensK_;
         return outerK_;
@@ -164,11 +167,9 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar porosity(const Element &element,
-                    const FVElementGeometry &fvElemGeom,
-                    int scvIdx) const
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = fvElemGeom.subContVol[scvIdx].global;
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
             return lensPorosity_;
         return outerPorosity_;
@@ -182,9 +183,9 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const MaterialLawParams& materialLawParams(const Context &context, int localIdx) const
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const auto &globalPos = context.pos(localIdx);
+        const auto &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
             return lensMaterialParams_;
         return outerMaterialParams_;

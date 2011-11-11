@@ -78,18 +78,18 @@ class TwoPTwoCFluxVariables
 
 public:
 
-    void update(const ElementContext &elemCtx, int scvfIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        insideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].i;
-        outsideScvIdx_ = elemCtx.fvElemGeom().subContVolFace[scvfIdx].j;
+        insideScvIdx_ = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
+        outsideScvIdx_ = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
         extrusionFactor_ =
-            (elemCtx.volVars(insideScvIdx_).extrusionFactor()
-             + elemCtx.volVars(outsideScvIdx_).extrusionFactor()) / 2;
+            (elemCtx.volVars(insideScvIdx_, timeIdx).extrusionFactor()
+             + elemCtx.volVars(outsideScvIdx_, timeIdx).extrusionFactor()) / 2;
 
         // update the base module (i.e. advection)
-        calculateGradients_(elemCtx, scvfIdx);
-        calculateVelocities_(elemCtx, scvfIdx);
+        calculateGradients_(elemCtx, scvfIdx, timeIdx);
+        calculateVelocities_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -211,7 +211,8 @@ public:
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,
-                             int scvfIdx)
+                             int scvfIdx,
+                             int timeIdx)
     {
         // reset all quantities to 0
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -225,7 +226,7 @@ private:
         }
         temperatureGrad_ = Scalar(0);
 
-        const auto &scvf = elemCtx.fvElemGeom().subContVolFace[scvfIdx];
+        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
 
         // calculate gradients
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
@@ -233,7 +234,7 @@ private:
             // FE gradient at vertex
             const Vector &feGrad = scvf.grad[scvIdx];
             Scalar shapeValue = scvf.shapeValue[scvIdx];
-            const auto &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+            const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
             const auto &fluidState = volVars.fluidState();
             Vector tmp;
 
@@ -263,8 +264,8 @@ private:
         }
 
 
-        const auto &volVarsI = elemCtx.volVars(insideScvIdx_, /*historyIdx=*/0);
-        const auto &volVarsJ = elemCtx.volVars(outsideScvIdx_, /*historyIdx=*/0);
+        const auto &volVarsI = elemCtx.volVars(insideScvIdx_, timeIdx);
+        const auto &volVarsJ = elemCtx.volVars(outsideScvIdx_, timeIdx);
         const auto &fsI = volVarsI.fluidState();
         const auto &fsJ = volVarsJ.fluidState();
 
@@ -303,8 +304,8 @@ private:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_));
-            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_);
+            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
+            g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_, timeIdx);
             g /= 2;
 
             const auto &fsIn = volVarsI.fluidState();
@@ -336,7 +337,8 @@ private:
     }
 
     void calculateVelocities_(const ElementContext &elemCtx,
-                              int scvfIdx)
+                              int scvfIdx,
+                              int timeIdx)
     {
         const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
@@ -345,11 +347,13 @@ private:
         Tensor K;
         spatialParams.meanK(K,
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_),
+                                                                insideScvIdx_,
+                                                                timeIdx),
                             spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_));
+                                                                outsideScvIdx_,
+                                                                timeIdx));
 
-        const Vector &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         ///////////////
         // calculate the weights of the upstream and the downstream
@@ -369,7 +373,7 @@ private:
                 filterVelocityNormal_[phaseIdx] += filterVelocity_[phaseIdx][i]*normal[i];
 
             // multiply both with the upstream mobility
-            const auto &up = elemCtx.volVars(upstreamIdx(phaseIdx), /*historyIdx=*/0);
+            const auto &up = elemCtx.volVars(upstreamIdx(phaseIdx), timeIdx);
             filterVelocityNormal_[phaseIdx] *= up.mobility(phaseIdx);
             filterVelocity_[phaseIdx] *= up.mobility(phaseIdx);
         }

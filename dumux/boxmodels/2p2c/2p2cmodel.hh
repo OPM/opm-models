@@ -171,12 +171,12 @@ public:
 
 
                 // initialize phase presence
-                staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0]
-                    = this->problem_().initialPhasePresence(elemCtx, scvIdx);
+                staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0]
+                    = this->problem_().initialPhasePresence(elemCtx, scvIdx, /*timeIdx=*/0);
                 staticVertexDat_[globalIdx].wasSwitched = false;
 
-                staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/1]
-                    = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
+                staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/1]
+                    = staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0];
             }
         }
     }
@@ -197,9 +197,9 @@ public:
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
 
-            this->localResidual().addPhaseStorage(dest, elemCtx, /*historyIdx=*/0, phaseIdx);
+            this->localResidual().addPhaseStorage(dest, elemCtx, /*timeIdx=*/0, phaseIdx);
         };
 
         this->gridView_().comm().sum(dest);
@@ -262,8 +262,8 @@ public:
      * \param globalVertexIdx The global vertex index
      * \param oldSol Evaluate function with solution of current or previous time step
      */
-    int phasePresence(int globalVertexIdx, int historyIdx) const
-    { return staticVertexDat_[globalVertexIdx].phasePresence[historyIdx]; }
+    int phasePresence(int globalVertexIdx, int timeIdx) const
+    { return staticVertexDat_[globalVertexIdx].phasePresence[timeIdx]; }
 
 
     /*!
@@ -281,7 +281,7 @@ public:
         if (!outStream.good())
             DUNE_THROW(Dune::IOError, "Could not serialize vertex " << vertIdx);
 
-        outStream << staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0] << " ";
+        outStream << staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0] << " ";
     }
 
     /*!
@@ -302,9 +302,9 @@ public:
             DUNE_THROW(Dune::IOError,
                        "Could not deserialize vertex " << vertIdx);
 
-        inStream >> staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0];
-        staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/1]
-            = staticVertexDat_[vertIdx].phasePresence[/*historyIdx=*/0];
+        inStream >> staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0];
+        staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/1]
+            = staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0];
     }
 
     /*!
@@ -346,10 +346,10 @@ public:
                 // sub-control volume
                 elemCtx.updateScvVars(curGlobalSol[globalIdx],
                                        scvIdx,
-                                       /*historyIdx=*/0);
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*historyIdx=*/0);
+                                       /*timeIdx=*/0);
+                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
-                const GlobalPosition &globalPos = elemCtx.pos(scvIdx);
+                const GlobalPosition &globalPos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
                 if (primaryVarSwitch_(curGlobalSol,
                                       volVars,
                                       globalIdx,
@@ -404,8 +404,8 @@ protected:
         int numVertices = this->gridView_().size(dim);
         for (int i = 0; i < numVertices; ++i)
         {
-            staticVertexDat_[i].phasePresence[/*historyIdx=*/0]
-                = staticVertexDat_[i].phasePresence[/*historyIdx=*/1];
+            staticVertexDat_[i].phasePresence[/*timeIdx=*/0]
+                = staticVertexDat_[i].phasePresence[/*timeIdx=*/1];
             staticVertexDat_[i].wasSwitched = false;
         }
     }
@@ -418,8 +418,8 @@ protected:
         int numVertices = this->gridView_().size(dim);
         for (int i = 0; i < numVertices; ++i)
         {
-            staticVertexDat_[i].phasePresence[/*historyIdx=*/1]
-                = staticVertexDat_[i].phasePresence[/*historyIdx=*/0];
+            staticVertexDat_[i].phasePresence[/*timeIdx=*/1]
+                = staticVertexDat_[i].phasePresence[/*timeIdx=*/0];
             staticVertexDat_[i].wasSwitched = false;
         }
     }
@@ -440,7 +440,7 @@ protected:
     {
         // evaluate primary variable switch
         bool wouldSwitch = false;
-        int phasePresence = staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0];
+        int phasePresence = staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0];
         int newPhasePresence = phasePresence;
 
         // check if a primary var switch is necessary
@@ -532,7 +532,7 @@ protected:
             }
         }
 
-        staticVertexDat_[globalIdx].phasePresence[/*historyIdx=*/0] = newPhasePresence;
+        staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0] = newPhasePresence;
         staticVertexDat_[globalIdx].wasSwitched = wouldSwitch;
         return phasePresence != newPhasePresence;
     }

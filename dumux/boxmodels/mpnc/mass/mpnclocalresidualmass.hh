@@ -95,10 +95,11 @@ public:
     static void computeAdvectiveFlux(ComponentVector &compFlux,
                                      const ElementContext &elemCtx,
                                      int scvfIdx,
+                                     int timeIdx,
                                      int phaseIdx)
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx));
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx), timeIdx);
 
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             compFlux[compIdx] =
@@ -115,6 +116,7 @@ public:
     static void computeDiffusiveFlux(ComponentVector &flux,
                                      const ElementContext &elemCtx,
                                      int scvfIdx,
+                                     int timeIdx,
                                      int phaseIdx)
     {
         if (!enableDiffusion) {
@@ -122,9 +124,9 @@ public:
             return;
         }
 
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const VolumeVariables &volVarsI = elemCtx.volVars(fluxVars.insideIdx());
-        const VolumeVariables &volVarsJ = elemCtx.volVars(fluxVars.outsideIdx());
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const VolumeVariables &volVarsI = elemCtx.volVars(fluxVars.insideIdx(), timeIdx);
+        const VolumeVariables &volVarsJ = elemCtx.volVars(fluxVars.outsideIdx(), timeIdx);
         if (volVarsI.fluidState().saturation(phaseIdx) < 1e-4 ||
             volVarsJ.fluidState().saturation(phaseIdx) < 1e-4)
         {
@@ -214,7 +216,8 @@ public:
      */
     static void computeFlux(EqVector &flux,
                             const ElementContext &elemCtx,
-                            int scvfIdx)
+                            int scvfIdx,
+                            int timeIdx)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             flux[conti0EqIdx + compIdx] = 0.0;
@@ -227,10 +230,12 @@ public:
             MassCommon::computeAdvectiveFlux(advectiveFlux,
                                              elemCtx,
                                              scvfIdx,
+                                             timeIdx,
                                              phaseIdx);
             MassCommon::computeDiffusiveFlux(diffusiveFlux,
                                              elemCtx,
                                              scvfIdx,
+                                             timeIdx,
                                              phaseIdx);
 
             // add the fluxes to the primary variables vector
@@ -271,7 +276,8 @@ public:
      */
     static void computeSource(EqVector &source,
                               const ElementContext &elemCtx,
-                              int scvIdx)
+                              int scvIdx,
+                              int timeIdx)
     {
         // set source terms for mass to 0 for all components
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)

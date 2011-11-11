@@ -94,13 +94,13 @@ public:
     void computeStorage(PrimaryVariables &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
         // compute the storage term for phase mass
-        ParentType::computeStorage(storage, elemCtx, scvIdx, historyIdx);
+        ParentType::computeStorage(storage, elemCtx, scvIdx, timeIdx);
 
         const VolumeVariables &volVars =
-            elemCtx.volVars(scvIdx, historyIdx);
+            elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         storage[energyEqIdx] = 0;
@@ -133,19 +133,20 @@ public:
      */
     void computeAdvectiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
         // advective mass flux
-        ParentType::computeAdvectiveFlux(flux, elemCtx, scvfIdx);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
 
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
-            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx));
-            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx));
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
                 fluxVars.filterVelocityNormal(phaseIdx)
@@ -170,12 +171,13 @@ public:
      */
     void computeDiffusiveFlux(PrimaryVariables &flux,
                               const ElementContext &elemCtx,
-                              int scvfIdx) const
+                              int scvfIdx,
+                              int timeIdx) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx);
+        ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
 
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux
         flux[energyEqIdx] +=

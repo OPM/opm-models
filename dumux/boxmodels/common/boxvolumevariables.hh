@@ -102,9 +102,9 @@ public:
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
-        extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, scvIdx);
+        extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, scvIdx, timeIdx);
     }
 
     /*!

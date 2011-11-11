@@ -259,7 +259,7 @@ public:
 
     template <class Context>
     void source(PrimaryVariables &values,
-                const Context &context, int localIdx) const
+                const Context &context, int spaceIdx, int timeIdx) const
     {
         values = 0;
     }
@@ -279,9 +279,9 @@ public:
      * \param vertex The vertex for which the boundary type is set
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (globalPos[0] < eps_)
             values.setAllDirichlet();
@@ -305,9 +305,9 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         Scalar densityW = 1000.0;
         values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
@@ -334,9 +334,9 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         values = 0;
         if (globalPos[1] < 15 && globalPos[1] > 5) {
@@ -365,9 +365,9 @@ public:
      * variables.
      */
     template <class Context>
-    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         Scalar densityW = 1000.0;
         values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;

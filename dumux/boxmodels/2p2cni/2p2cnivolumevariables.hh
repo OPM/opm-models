@@ -87,9 +87,9 @@ protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
-                                   int historyIdx)
+                                   int timeIdx)
     {
-        const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState.setTemperature(priVars[temperatureIdx]);
     }
 
@@ -110,7 +110,7 @@ protected:
         const auto &problem = elemCtx.problem();
         const auto &heatCondParams = problem.heatConducionParams(elemCtx, scvIdx, timeIdx);
 
-        heatCapacitySolid_ = elemCtx.problem().spatialParameters().heatCapacity(elemCtx, scvIdx, timeIdx);
+        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
         heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
 
         Valgrind::CheckDefined(heatCapacitySolid_);

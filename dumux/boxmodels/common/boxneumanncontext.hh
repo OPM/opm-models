@@ -111,29 +111,29 @@ public:
     /*!
      * \brief Return the current finite element geometry.
      */
-    const FVElementGeometry &fvElemGeom() const
-    { return elemCtx_.fvElemGeom(); };
+    const FVElementGeometry &fvElemGeom(int timeIdx) const
+    { return elemCtx_.fvElemGeom(timeIdx); };
 
     /*!
      * \brief Return the position of a local entities in global coordinates
      */
-    const GlobalPosition &pos(int boundaryFaceIdx) const
-    { return fvElemGeom().boundaryFace[boundaryFaceIdx].ipGlobal; }
+    const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
+    { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
 
     /*!
      * \brief Return the local sub-control volume index of the interior of a neumann segment
      */
-    short scvIdx(int boundaryFaceIdx) const
-    { return fvElemGeom().subContVolIndex(boundaryFaceIdx); }
+    short scvIdx(int boundaryFaceIdx, int timeIdx) const
+    { return fvElemGeom(timeIdx).subContVolIndex(boundaryFaceIdx); }
 
     /*!
      * \brief Return the volume variables for the finite volume in the
      *        interiour of the current Neumann segment
      */
-    const VolumeVariables &volVars(int boundaryFaceIdx, int historyIdx) const
+    const VolumeVariables &volVars(int boundaryFaceIdx, int timeIdx) const
     {
-        short insideScvIdx = scvIdx(boundaryFaceIdx);
-        return elemCtx.volVars(insideScvIdx, historyIdx);
+        short insideScvIdx = scvIdx(boundaryFaceIdx, timeIdx);
+        return elemCtx_.volVars(insideScvIdx, timeIdx);
     }
 
     /*!

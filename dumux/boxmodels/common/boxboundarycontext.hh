@@ -119,7 +119,7 @@ public:
     /*!
      * \brief Return the current finite element geometry.
      */
-    const FVElementGeometry &fvElemGeom() const
+    const FVElementGeometry &fvElemGeom(int timeIdx) const
     {
         if (!fvElemGeomUpToDate_) {
             fvElemGeomUpToDate_ = true;
@@ -131,7 +131,7 @@ public:
     /*!
      * \brief Return the position of a local entities in global coordinates
      */
-    const GlobalPosition pos(int scvIdx) const
+    const GlobalPosition pos(int scvIdx, int timeIdx) const
     { return element().geometry().corner(scvIdx); }
 
 protected:

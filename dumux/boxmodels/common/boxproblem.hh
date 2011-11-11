@@ -149,7 +149,7 @@ public:
      *
      * \param values The dirichlet values for the primary variables
      * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
-     * \param localIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
      *
      * For this method, the \a values parameter stores primary variables.
      */
@@ -157,9 +157,9 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void boundaryTypes(BoundaryTypes &values,
                        const Context &context,
-                       int localIdx) const
+                       int spaceIdx, int timeIdx) const
     {
-        const auto vPtr = context.element().template subEntity<dim>(localIdx);
+        const auto vPtr = context.element().template subEntity<dim>(spaceIdx);
 
         asImp_().boundaryTypes(values, *vPtr);
    }
@@ -202,7 +202,7 @@ public:
      *
      * \param values The dirichlet values for the primary variables
      * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
-     * \param localIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
      *
      * For this method, the \a values parameter stores primary variables.
      */
@@ -210,9 +210,9 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
-                   int localIdx) const
+                   int spaceIdx, int timeIdx) const
     {
-        const auto vPtr = context.element().template subEntity<dim>(localIdx);
+        const auto vPtr = context.element().template subEntity<dim>(spaceIdx);
 
         asImp_().dirichlet(values, *vPtr);
     }
@@ -259,14 +259,14 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void neumann(EqVector &priVars,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
         asImp_().boxSDNeumann(priVars,
                               context.element(),
-                              context.fvElemGeom(),
-                              context.intersection(localIdx),
-                              context.scvIdx(localIdx),
-                              localIdx,
+                              context.fvElemGeom(timeIdx),
+                              context.intersection(spaceIdx),
+                              context.scvIdx(spaceIdx),
+                              spaceIdx,
                               context);
     }
 
@@ -357,13 +357,13 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void source(EqVector &priVars,
                 const Context &context,
-                int localIdx) const
+                int spaceIdx, int timeIdx) const
     {
-        return asImp_().boxSDSource(priVars,
-                                    context.element(),
-                                    context.fvElemGeom(),
-                                    localIdx,
-                                    context);
+        asImp_().boxSDSource(priVars,
+                             context.element(),
+                             context.fvElemGeom(timeIdx),
+                             spaceIdx,
+                             context);
     }
 
     /*!
@@ -447,9 +447,9 @@ public:
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void initial(EqVector &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        asImp_().initial(values, context.element(), context.fvElemGeom(), localIdx);
+        asImp_().initial(values, context.element(), context.fvElemGeom(timeIdx), spaceIdx);
     }
 
     /*!
@@ -503,11 +503,11 @@ public:
      */
     template <class Context>
     Scalar extrusionFactor(const Context &context,
-                           int localIdx) const
+                           int spaceIdx, int timeIdx) const
     {
         return asImp_().boxExtrusionFactor(context.element(),
-                                           context.fvElemGeom(),
-                                           localIdx);
+                                           context.fvElemGeom(timeIdx),
+                                           spaceIdx);
     }
 
     /*!
@@ -885,7 +885,7 @@ public:
             Scalar t = timeManager().time() + timeManager().timeStepSize();
             createResultWriter_();
             resultWriter_->beginWrite(t);
-            model().addOutputVtkFields(model().solution(/*historyIdx=*/0), *resultWriter_);
+            model().addOutputVtkFields(model().solution(/*timeIdx=*/0), *resultWriter_);
             asImp_().addOutputVtkFields();
             resultWriter_->endWrite();
         }

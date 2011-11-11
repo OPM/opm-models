@@ -69,7 +69,7 @@ public:
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
                 int scvIdx,
-                int historyIdx)
+                int timeIdx)
     {
     }
 

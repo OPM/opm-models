@@ -185,7 +185,7 @@ public:
      * This problem assumes a temperature of 36 degrees Celsius.
      */
     template <class Context>
-    Scalar temperature(const Context &context, int localIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return 273.15 + 36; }; // in [K]
 
     // \}
@@ -200,7 +200,7 @@ public:
      *        used for which equation on a given boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         values.setAllDirichlet();
     }
@@ -212,9 +212,9 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         initial_(values, globalPos);
     }
@@ -230,7 +230,7 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
         values = 0;
     }
@@ -254,9 +254,9 @@ public:
     template <class Context>
     void source(PrimaryVariables &values,
                 const Context &context,
-                int localIdx) const
+                int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         values = Scalar(0.0);
 
@@ -288,10 +288,10 @@ public:
      * variables.
      */
     template <class Context>
-    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos
-            = context.pos(localIdx);
+            = context.pos(spaceIdx, timeIdx);
 
         initial_(values, globalPos);
     }

@@ -151,14 +151,14 @@ public:
      * This problem assumes a temperature of 10 degrees Celsius.
      */
     template <class Context>
-    Scalar temperature(const Context &context, int localIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return 273.15 + 10; } // 10C
 
 
     template <class Context>
     void source(PrimaryVariables &values,
                 const Context &context,
-                int localIdx) const
+                int spaceIdx, int timeIdx) const
     {
         values = 0;
     }
@@ -173,9 +173,9 @@ public:
      *        used for which equation on a given boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         double eps = 1.0e-3;
         if (globalPos[dim-1] < eps || globalPos[dim-1] > this->bboxMax()[dim-1] - eps)
@@ -191,10 +191,10 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         double eps = 1.0e-3;
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (globalPos[dim-1] < eps) {
             values[pressureIdx] = 2.0e+5;
@@ -215,7 +215,7 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
         //  const GlobalPosition &globalPos = context.pos(boundaryIdx);
 
@@ -236,9 +236,9 @@ public:
      * variables.
      */
     template <class Context>
-    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        //const GlobalPosition &globalPos = context.pos(localIdx);
+        //const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         values[pressureIdx] = 1.0e+5;// + 9.81*1.23*(20-globalPos[dim-1]);
     }
 

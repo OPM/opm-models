@@ -191,7 +191,7 @@ public:
      * This problem assumes a temperature of 10 degrees Celsius.
      */
     template <class Context>
-    Scalar temperature(const Context &context, int localIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return 273.15 + 10; }; // -> 10°C
 
     /*!
@@ -207,11 +207,11 @@ public:
      *               volume geometry
      */
     template <class Context>
-    Scalar referencePressure(const Context &context, int localIdx) const
+    Scalar referencePressure(const Context &context, int spaceIdx, int timeIdx) const
     { return pnRef_; };
 
     template <class Context>
-    void source(PrimaryVariables &values, const Context &context, int localIdx) const
+    void source(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     { values = 0; }
 
     // \}
@@ -231,9 +231,9 @@ public:
     template <class Context>
     void boundaryTypes(BoundaryTypes &values,
                        const Context &context,
-                       int localIdx) const
+                       int spaceIdx, int timeIdx) const
     {
-        const auto &globalPos = context.pos(localIdx);
+        const auto &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(globalPos) ||
             onRightBoundary_(globalPos))
@@ -256,10 +256,10 @@ public:
     template <class Context>
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
-                   int localIdx) const
+                   int spaceIdx, int timeIdx) const
     {
         // use initial values as boundary conditions
-        initial(values, context, localIdx);
+        initial(values, context, spaceIdx, timeIdx);
     }
 
     /*!
@@ -275,9 +275,9 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         values = 0.0;
         if (onInlet_(globalPos)) {
@@ -303,9 +303,9 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const auto &materialParams = this->spatialParameters().materialLawParams(context, localIdx);
+        const auto &materialParams = this->spatialParameters().materialLawParams(context, spaceIdx, timeIdx);
         Scalar Sw = 0.0;
         Scalar pc = MaterialLaw::pC(materialParams, Sw);
         values[pwIdx] = pnRef_ - pc;

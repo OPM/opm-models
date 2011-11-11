@@ -222,13 +222,13 @@ public:
      * This problem assumes a temperature of 10 degrees Celsius.
      */
     template <class Context>
-    Scalar temperature(const Context &context, int localIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return temperature_; };
 
     template <class Context>
     void source(PrimaryVariables &values,
                 const Context &context,
-                int localIdx) const
+                int spaceIdx, int timeIdx) const
     { values = 0; }
 
     // \}
@@ -246,9 +246,9 @@ public:
      * \param vertex The vertex for which the boundary type is set
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (globalPos[0] < eps_)
             values.setAllDirichlet();
@@ -266,9 +266,9 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         initial_(values, globalPos);
     }
@@ -283,9 +283,9 @@ public:
     template <class Context>
     void neumann(PrimaryVariables &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         values = 0;
         if (globalPos[1] < 15 && globalPos[1] > 5) {
@@ -312,9 +312,9 @@ public:
      * variables.
      */
     template <class Context>
-    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         initial_(values, globalPos);
 
@@ -328,7 +328,7 @@ public:
      * \param globalPos The global position
      */
     template <class Context>
-    int initialPhasePresence(const Context &context, int localIdx) const
+    int initialPhasePresence(const Context &context, int spaceIdx, int timeIdx) const
     { return Indices::lPhaseOnly; }
 
     // \}

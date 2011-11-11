@@ -78,9 +78,9 @@ public:
     void computeStorage(PrimaryVariables &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
-                        int historyIdx) const
+                        int timeIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, historyIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
         result[contiEqIdx] =
@@ -102,15 +102,16 @@ public:
      */
     void computeFlux(PrimaryVariables &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx) const
+                     int scvfIdx,
+                     int timeIdx) const
     {
-        const auto &fluxVarsEval = elemCtx.evalPointFluxVars(scvfIdx);
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &fluxVarsEval = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx());
-        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.upstreamIdx());
+        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx(), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.upstreamIdx(), timeIdx);
 
         flux[contiEqIdx] =
             fluxVars.filterVelocityNormal(wPhaseIdx)
@@ -130,11 +131,13 @@ public:
      */
     void computeSource(PrimaryVariables &q,
                        const ElementContext &elemCtx,
-                       int scvIdx) const
+                       int scvIdx,
+                       int timeIdx) const
     {
         elemCtx.problem().source(q,
                                   elemCtx,
-                                  scvIdx);
+                                  scvIdx,
+                                  timeIdx);
     }
 };
 
