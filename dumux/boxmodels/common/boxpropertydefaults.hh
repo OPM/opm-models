@@ -103,26 +103,51 @@ SET_TYPE_PROP(BoxModel, BaseLocalResidual, Dumux::BoxLocalResidual<TypeTag>);
 SET_TYPE_PROP(BoxModel, LocalJacobian, Dumux::BoxLocalJacobian<TypeTag>);
 
 /*!
- * \brief The type of a solution for the whole grid at a fixed time.
+ * \brief A vector of quanties, each for one equation.
  */
 SET_TYPE_PROP(BoxModel,
-              SolutionVector,
-              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
+              EqVector,
+              Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
+                                GET_PROP_VALUE(TypeTag, NumEq)>);
 
 /*!
- * \brief The type of a solution for a whole element.
+ * \brief A vector for mass/energy rates.
+ *
+ * E.g. Neumann fluxes or source terms
  */
 SET_TYPE_PROP(BoxModel,
-              ElementSolutionVector,
-              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
+              RateVector,
+              typename GET_PROP_TYPE(TypeTag, EqVector));
 
 /*!
- * \brief A vector of primary variables.
+ * \brief The type for storing a residual for an element.
+ */
+SET_TYPE_PROP(BoxModel,
+              ElementEqVector,
+              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
+
+/*!
+ * \brief The type for storing a residual for the whole grid.
+ */
+SET_TYPE_PROP(BoxModel,
+              GlobalEqVector,
+              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
+
+
+/*!
+ * \brief An object representing a local set of primary variables.
  */
 SET_TYPE_PROP(BoxModel,
               PrimaryVariables,
               Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                 GET_PROP_VALUE(TypeTag, NumEq)>);
+
+/*!
+ * \brief The type of a solution for the whole grid at a fixed time.
+ */
+SET_TYPE_PROP(BoxModel,
+              SolutionVector,
+              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
 
 /*!
  * \brief The volume variable class.

@@ -164,6 +164,7 @@ class MPNCNewtonController : public NewtonController<TypeTag>
 {
     typedef NewtonController<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -193,7 +194,7 @@ public:
 
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,
-                      const SolutionVector &deltaU)
+                      const GlobalEqVector &deltaU)
     {
         if (this->enableRelativeCriterion_ || this->enablePartialReassemble_)
             this->newtonUpdateRelError(uLastIter, deltaU);
@@ -216,10 +217,11 @@ public:
         }
         else {
             for (int i = 0; i < uLastIter.size(); ++i) {
-                uCurrentIter[i] = uLastIter[i];
-                uCurrentIter[i] -= deltaU[i];
-            }
-
+                for (int j = 0; j < numEq; ++j) {
+                    uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
+                }
+           }
+           
             if (this->numSteps_ < 2 && enableChop_) {
                 // put crash barriers along the update path at the
                 // beginning...
@@ -228,7 +230,7 @@ public:
 
             if (this->enableAbsoluteCriterion_)
             {
-                SolutionVector tmp(uLastIter);
+                GlobalEqVector tmp(uLastIter.size());
                 this->absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
                 this->absoluteError_ /= this->initialAbsoluteError_;
             }
@@ -238,17 +240,19 @@ public:
 private:
     void lineSearchUpdate_(SolutionVector &uCurrentIter,
                            const SolutionVector &uLastIter,
-                           const SolutionVector &deltaU)
+                           const GlobalEqVector &deltaU)
     {
        Scalar lambda = 1.0;
        Scalar globDef;
 
-       SolutionVector tmp(uLastIter);
+       GlobalEqVector tmp(uLastIter.size());
        Scalar oldGlobDef = this->model_().globalResidual(tmp, uLastIter);
        while (true) {
-           uCurrentIter  = deltaU;
-           uCurrentIter *= -lambda;
-           uCurrentIter += uLastIter;
+           for (int i = 0; i < uLastIter.size(); ++i) {
+               for (int j = 0; j < numEq; ++j) {
+                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
+               }
+           }
 
            globDef = this->model_().globalResidual(tmp, uCurrentIter);
            if (globDef < oldGlobDef || lambda <= 1.0/64) {

@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2011 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -70,14 +72,12 @@ class BoxVtkEnergyModule : public BoxVtkOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    enum { dim = GridView::dimension };
-
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-
-    typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
-
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
+    typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
+
+    enum { dim = GridView::dimension };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
 public:
     BoxVtkEnergyModule(const Problem &problem)
@@ -108,7 +108,7 @@ public:
 
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             int I = vertexMapper.map(elem, i, dim);
-            const auto &volVars = elemCtx.volVars(i);
+            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fluidState();
 
             if (solidHeatCapacityOutput_()) solidHeatCapacity_[I] = volVars.heatCapacitySolid();

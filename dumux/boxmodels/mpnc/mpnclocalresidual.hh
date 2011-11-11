@@ -67,25 +67,21 @@ protected:
         phase0NcpIdx = Indices::phase0NcpIdx
     };
 
-
     typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
-
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
-
-
-
     typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyResid;
     typedef MPNCLocalResidualMass<TypeTag, enableKinetic> MassResid;
 
-    typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
-    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
+    typedef Dune::BlockVector<EqVector> LocalBlockVector;
 
 public:
     /*!
@@ -95,7 +91,7 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(PrimaryVariables &storage,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int historyIdx) const
@@ -122,7 +118,7 @@ public:
      *        (e.g. phase mass) within all sub-control volumes of an
      *        element.
      */
-    void addPhaseStorage(PrimaryVariables &storage,
+    void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
                          int phaseIdx) const
     {
@@ -153,7 +149,7 @@ public:
     /*!
      * \brief Calculate the source term of the equation
      */
-    void computeSource(PrimaryVariables &source,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int historyIdx = 0) const
@@ -161,7 +157,7 @@ public:
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, scvIdx);
 
-        PrimaryVariables tmp(0);
+        RateVector tmp(0);
         MassResid::computeSource(tmp, elemCtx, scvIdx);
         source += tmp;
         //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
@@ -172,7 +168,7 @@ public:
      * \brief Evaluates the total flux of all conservation quantities
      *        over a face of a subcontrol volume.
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx) const
     {

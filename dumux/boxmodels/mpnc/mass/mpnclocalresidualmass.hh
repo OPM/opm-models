@@ -53,11 +53,11 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
     enum { dim = GridView::dimension };
-    enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents    = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { enableDiffusion  = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    enum { enableEnergy     = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy     = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
 
     typedef typename Dune::FieldVector<Scalar, dim> Vector;
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
@@ -160,7 +160,7 @@ class MPNCLocalResidualMass
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -179,7 +179,7 @@ public:
     /*!
      * \brief Calculate the storage for all mass balance equations
      */
-    static void computeStorage(PrimaryVariables &storage,
+    static void computeStorage(EqVector &storage,
                                const VolumeVariables &volVars)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -194,7 +194,7 @@ public:
      * \brief Calculate the storage for all mass balance equations
      *        within a single fluid phase
      */
-    static void addPhaseStorage(PrimaryVariables &storage,
+    static void addPhaseStorage(EqVector &storage,
                                 const VolumeVariables &volVars,
                                 int phaseIdx)
     {
@@ -212,7 +212,7 @@ public:
     /*!
      * \brief Calculate the storage for all mass balance equations
      */
-    static void computeFlux(PrimaryVariables &flux,
+    static void computeFlux(EqVector &flux,
                             const ElementContext &elemCtx,
                             int scvfIdx)
     {
@@ -269,7 +269,7 @@ public:
      * \brief Calculate the source terms for all mass balance
      *        equations
      */
-    static void computeSource(PrimaryVariables &source,
+    static void computeSource(EqVector &source,
                               const ElementContext &elemCtx,
                               int scvIdx)
     {

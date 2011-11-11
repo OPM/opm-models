@@ -70,6 +70,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -241,7 +243,7 @@ public:
     void evalFluxes(LocalBlockVector &residual,
                     const ElementContext &elemCtx) const
     {
-        PrimaryVariables flux;
+        RateVector flux;
 
         // calculate the mass flux over the sub-control volume faces
         for (int scvfIdx = 0;
@@ -393,7 +395,7 @@ protected:
     {
         // temporary vector to store the neumann boundary fluxes
         const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx);
-        PrimaryVariables values;
+        RateVector values;
 
         // deal with neumann boundaries
         if (bcTypes.hasNeumann()) {
@@ -423,7 +425,8 @@ protected:
                           LocalBlockVector &storageTerm,
                           const ElementContext &elemCtx) const
     {
-        PrimaryVariables tmp, tmp2;
+        EqVector tmp, tmp2;
+        RateVector sourceRate;
 
         // evaluate the volume terms (storage + source terms)
         for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
@@ -456,9 +459,9 @@ protected:
             residual[scvIdx] += tmp;
 
             // subtract the source term from the residual
-            asImp_().computeSource(tmp2, elemCtx, scvIdx);
-            tmp2 *= elemCtx.fvElemGeom().subContVol[scvIdx].volume * extrusionFactor;
-            residual[scvIdx] -= tmp2;
+            asImp_().computeSource(sourceRate, elemCtx, scvIdx);
+            sourceRate *= elemCtx.fvElemGeom().subContVol[scvIdx].volume * extrusionFactor;
+            residual[scvIdx] -= sourceRate;
 
             // make sure that only defined quantities were used
             // to calculate the residual.

@@ -50,6 +50,7 @@ NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Model);
 NEW_PROP_TAG(NewtonController);
 NEW_PROP_TAG(SolutionVector);
+NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(JacobianAssembler);
 }
 
@@ -68,6 +69,7 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, NewtonController) NewtonController;
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 public:
     NewtonMethod(Problem &problem)
@@ -121,7 +123,7 @@ protected:
     {
         SolutionVector &uCurrentIter = model().solution(/*historyIdx=*/0);
         SolutionVector uLastIter(uCurrentIter);
-        SolutionVector deltaU(uCurrentIter);
+        GlobalEqVector deltaU(uCurrentIter.size());
 
         JacobianAssembler &jacobianAsm = model().jacobianAssembler();
 

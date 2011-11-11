@@ -54,6 +54,7 @@ NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, Vtk
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(MPNCIndices); //!< Enumerations for the 2pNc model
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(MPNCEnergyIndices); //!< Enumerations for the 2pNc model
 
 NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
@@ -89,8 +90,8 @@ NEW_PROP_TAG(EnableGravity);
 //! Use the smooth upwinding method?
 NEW_PROP_TAG(EnableSmoothUpwinding);
 
-//! Chop the Newton update at the beginning of the non-linear solver?
-NEW_PROP_TAG(NewtonEnableChop);
+//! Number of Newton iterations per time step where the update gets chopped?
+NEW_PROP_TAG(NewtonChoppedIterations);
 }
 }
 

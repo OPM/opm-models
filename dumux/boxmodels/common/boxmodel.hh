@@ -59,6 +59,8 @@ class BoxModel
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -174,10 +176,10 @@ public:
         hintsUsable_[historyIdx][globalIdx] = true;
     };
 
-    void shiftHints()
+    void shiftHints(int numSlots = 1)
     {
-        for (int historyIdx = 0; historyIdx < historySize - 1; ++ historyIdx)
-            hints_[historyIdx + 1] = hints_[historyIdx];
+        for (int historyIdx = 0; historyIdx < historySize - numSlots; ++ historyIdx)
+            hints_[historyIdx + numSlots] = hints_[historyIdx];
     };
 
     /*!
@@ -187,7 +189,7 @@ public:
      * \param dest Stores the result
      * \param u The solution for which the residual ought to be calculated
      */
-    Scalar globalResidual(SolutionVector &dest,
+    Scalar globalResidual(GlobalEqVector &dest,
                           const SolutionVector &u)
     {
         SolutionVector tmp(solution(/*historyIdx=*/0));
@@ -203,7 +205,7 @@ public:
      *
      * \param dest Stores the result
      */
-    Scalar globalResidual(SolutionVector &dest)
+    Scalar globalResidual(GlobalEqVector &dest)
     {
         dest = 0;
 
@@ -228,7 +230,7 @@ public:
 
         // add up the residuals on the process borders
         if (gridView_().comm().size() > 1) {
-            VertexHandleSum<PrimaryVariables, SolutionVector, VertexMapper>
+            VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
                 sumHandle(dest, vertexMapper());
             gridView_().communicate(sumHandle,
                                    Dune::InteriorBorder_InteriorBorder_Interface,
@@ -244,7 +246,7 @@ public:
      *
      * \param dest Stores the result
      */
-    void globalStorage(PrimaryVariables &dest)
+    void globalStorage(EqVector &dest)
     {
         dest = 0;
 
@@ -601,11 +603,11 @@ public:
     template <class MultiWriter>
     void addConvergenceVtkFields(MultiWriter &writer,
                                  const SolutionVector &u,
-                                 const SolutionVector &deltaU)
+                                 const GlobalEqVector &deltaU)
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
 
-        SolutionVector globalResid(u);
+        GlobalEqVector globalResid(u.size());
         asImp_().globalResidual(globalResid, u);
 
         // create the required scalar fields
@@ -636,7 +638,8 @@ public:
             }
 
             PrimaryVariables uOld(u[globalIdx]);
-            PrimaryVariables uNew(uOld - deltaU[globalIdx]);
+            PrimaryVariables uNew(uOld);
+            uNew -= deltaU[globalIdx];
             (*relError)[globalIdx] = asImp_().relativeErrorVertex(globalIdx,
                                                                   uOld,
                                                                   uNew);
@@ -718,16 +721,13 @@ public:
      * \param fluidState The fluid state to fill. 
      */
     template <class FluidState>
-    static void completeFluidState(const PrimaryVariables& primaryVariables,
-                                   const Problem& problem,
-                                   const Element& element,
-                                   const FVElementGeometry& elementGeometry,
+    static void completeFluidState(FluidState &fluidState,
+                                   const PrimaryVariables &primaryVars,
+                                   const ElementContext &elemCtx,
                                    int scvIdx,
-                                   FluidState& fluidState)
-    {
-      VolumeVariables::completeFluidState(primaryVariables, problem, element,
-                      elementGeometry, scvIdx, fluidState);
-    }
+                                   int historyIdx = 0)
+    { VolumeVariables::completeFluidState(fluidState, primaryVars, elemCtx, scvIdx, historyIdx); }
+    
 protected:
     static bool enableHints_()
     { return GET_PARAM(TypeTag, bool, EnableHints); }

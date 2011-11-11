@@ -80,10 +80,15 @@ NEW_PROP_TAG(JacobianMatrix); //!< Type of the global jacobian matrix
 NEW_PROP_TAG(BoundaryTypes); //!< Stores the boundary types of a single degree of freedom
 NEW_PROP_TAG(ElementBoundaryTypes); //!< Stores the boundary types on an element
 
-NEW_PROP_TAG(PrimaryVariables); //!< A vector of primary variables within a sub-control volume
-NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variable vector of the grid
-NEW_PROP_TAG(ElementSolutionVector); //!< A vector of primary variables within a sub-control volume
+NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation (usually at a given spatial location)
+NEW_PROP_TAG(ElementEqVector); //!< Vector containing a quantity of for equation on a single element
+NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation on the whole grid
 
+NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of quantities
+
+NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variables of the grid
+
+NEW_PROP_TAG(PrimaryVariables); //!< A vector of primary variables within a sub-control volume
 NEW_PROP_TAG(VolumeVariables);  //!< The secondary variables within a sub-control volume
 NEW_PROP_TAG(ElementContext); //!< The secondary variables of all sub-control volumes in an element
 NEW_PROP_TAG(FluxVariables); //!< Data required to calculate a flux over a face

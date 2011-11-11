@@ -57,6 +57,9 @@ NEW_PROP_TAG(NewtonMethod);
 //! Specifies the type of a solution
 NEW_PROP_TAG(SolutionVector);
 
+//! Vector containing a quantity of for equation on the whole grid
+NEW_PROP_TAG(GlobalEqVector);
+
 //! Specifies the type of a vector of primary variables at a degree of freedom
 NEW_PROP_TAG(PrimaryVariables);
 
@@ -156,6 +159,7 @@ class NewtonController
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
 
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
@@ -340,12 +344,11 @@ public:
      * \param deltaU The difference between the current and the next solution
      */
     void newtonUpdateRelError(const SolutionVector &uLastIter,
-                              const SolutionVector &deltaU)
+                              const GlobalEqVector &deltaU)
     {
         // calculate the relative error as the maximum relative
         // deflection in any degree of freedom.
         error_ = 0;
-
         for (int i = 0; i < int(uLastIter.size()); ++i) {
             PrimaryVariables uNewI = uLastIter[i];
             uNewI -= deltaU[i];
@@ -372,8 +375,8 @@ public:
      * \param b The right hand side of the linear system
      */
     void newtonSolveLinear(const JacobianMatrix &A,
-                           SolutionVector &x,
-                           const SolutionVector &b)
+                           GlobalEqVector &x,
+                           const GlobalEqVector &b)
     {
         try {
             if (numSteps_ == 0)
@@ -655,7 +658,7 @@ protected:
     { return *static_cast<const Implementation*>(this); }
 
     void writeConvergence_(const SolutionVector &uLastIter,
-                           const SolutionVector &deltaU)
+                           const GlobalEqVector &deltaU)
     {
         if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence)) {
             convergenceWriter_.beginIteration(this->gridView_());
@@ -666,7 +669,7 @@ protected:
 
     void lineSearchUpdate_(SolutionVector &uCurrentIter,
                            const SolutionVector &uLastIter,
-                           const SolutionVector &deltaU)
+                           const GlobalEqVector &deltaU)
     {
        Scalar lambda = 1.0;
        SolutionVector tmp(uLastIter);

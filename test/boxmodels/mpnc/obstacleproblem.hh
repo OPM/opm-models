@@ -37,13 +37,25 @@
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
+#if USE_2P2C
+#include <dumux/boxmodels/2p2c/2p2cmodel.hh>
+#else
 #include <dumux/boxmodels/mpnc/mpncmodel.hh>
+#endif
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
-#include "obstaclespatialparameters.hh"
+#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+
+#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+
+#include <dumux/material/heatconduction/somerton.hh>
 
 namespace Dumux
 {
@@ -53,7 +65,11 @@ class ObstacleProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxMPNC, ObstacleSpatialParameters));
+#if USE_2P2C
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxTwoPTwoC));
+#else
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxMPNC));
+#endif
 
 // Set the grid type
 SET_TYPE_PROP(ObstacleProblem, Grid, Dune::YaspGrid<2>);
@@ -63,20 +79,44 @@ SET_TYPE_PROP(ObstacleProblem,
               Problem,
               Dumux::ObstacleProblem<TypeTag>);
 
-
 // Set fluid configuration
 SET_TYPE_PROP(ObstacleProblem,
               FluidSystem,
               Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
+// Set the material Law
+SET_PROP(ObstacleProblem, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum {
+        lPhaseIdx = FluidSystem::lPhaseIdx,
+        gPhaseIdx = FluidSystem::gPhaseIdx
+    };
+    // define the material law
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    //    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
+    typedef RegularizedLinearMaterial<Scalar> EffMaterialLaw;
+    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    
+public:
+    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+};
+
+// Set the heat conduction law
+SET_PROP(ObstacleProblem, HeatConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    // define the material law parameterized by absolute saturations
+    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+};
+
 // Enable smooth upwinding?
 SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
-
-// Enable molecular diffusion of the components?
-SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
-
-// Use the chopped Newton method?
-SET_BOOL_PROP(ObstacleProblem, NewtonEnableChop, true);
 
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
@@ -88,13 +128,33 @@ SET_BOOL_PROP(ObstacleProblem, NewtonWriteConvergence, false);
 SET_BOOL_PROP(ObstacleProblem, NewtonUseLineSearch, false);
 
 // Enable the re-use of the jacobian matrix whenever possible?
-SET_BOOL_PROP(ObstacleProblem, EnableJacobianRecycling, true);
+SET_BOOL_PROP(ObstacleProblem, EnableJacobianRecycling, false);
 
 // Reassemble the jacobian matrix only where it changed?
-SET_BOOL_PROP(ObstacleProblem, EnablePartialReassemble, true);
+SET_BOOL_PROP(ObstacleProblem, EnablePartialReassemble, false);
 
 // use forward diffferences to approximate the partial derivatives
 SET_INT_PROP(ObstacleProblem, NumericDifferenceMethod, +1);
+
+#if USE_2P2C
+/////////
+// 2p-2c specific properties
+/////////
+
+// Verbosity of the 2p2c model (0=silent, 1=medium, 2=chatty)
+SET_INT_PROP(ObstacleProblem, TwoPTwoCVerbosity, 1);
+
+#else
+/////////
+// Mp-Nc specific properties
+/////////
+
+// Enable molecular diffusion of the components?
+SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
+
+// number of Newton iterations per time step where the update gets limited
+SET_INT_PROP(ObstacleProblem, NewtonChoppedIterations, 0);
+#endif
 }
 
 
@@ -124,18 +184,21 @@ SET_INT_PROP(ObstacleProblem, NumericDifferenceMethod, +1);
  */
 template <class TypeTag>
 class ObstacleProblem
-    : public MPNCProblem<TypeTag>
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef MPNCProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename HeatConductionLaw::Params HeatConductionLawParams;
 
     enum {
         // Grid and world dimension
@@ -143,7 +206,6 @@ class ObstacleProblem
         dimWorld = GridView::dimensionworld,
 
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         gPhaseIdx = FluidSystem::gPhaseIdx,
         lPhaseIdx = FluidSystem::lPhaseIdx,
@@ -152,24 +214,9 @@ class ObstacleProblem
         N2Idx = FluidSystem::N2Idx
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
-    typedef typename GridView::Intersection Intersection;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld> GlobalPosition;
-
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
-
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-    // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
-    enum {
-        fug0Idx = Indices::fug0Idx,
-        S0Idx = Indices::S0Idx,
-        p0Idx = Indices::p0Idx
-    };
 
 public:
     ObstacleProblem(TimeManager &timeManager)
@@ -181,7 +228,7 @@ public:
 
         // initialize the tables of the fluid system
         Scalar Tmin = temperature_ - 10.0;
-        Scalar Tmax = temperature_ + 40.0;
+        Scalar Tmax = temperature_ + 10.0;
         int nT = 3;
 
         Scalar pmin = 1.0e5 * 0.75;
@@ -189,10 +236,45 @@ public:
         int np = 1000;
 
         FluidSystem::init(Tmin, Tmax, nT, pmin, pmax, np);
+
+        // intrinsic permeabilities
+        coarseK_ = 1e-12;
+        fineK_ = 1e-15;
+
+        // the porosity
+        finePorosity_ = 0.3;
+        coarsePorosity_ = 0.3;
+
+        // residual saturations
+        fineMaterialParams_.setSwr(0.0);
+        fineMaterialParams_.setSnr(0.0);
+        coarseMaterialParams_.setSwr(0.0);
+        coarseMaterialParams_.setSnr(0.0);
+
+        // parameters for the linear law, i.e. minimum and maximum
+        // pressures
+        fineMaterialParams_.setEntryPC(0.0);
+        coarseMaterialParams_.setEntryPC(0.0);
+        fineMaterialParams_.setMaxPC(0.0);
+        coarseMaterialParams_.setMaxPC(0.0);
+
+        /*
+        // entry pressures for Brooks-Corey
+        fineMaterialParams_.setPe(5e3);
+        coarseMaterialParams_.setPe(1e3);
+
+        // Brooks-Corey shape parameters
+        fineMaterialParams_.setLambda(2);
+        coarseMaterialParams_.setLambda(2);
+        */
+
+        // parameters for the somerton law of heat conduction
+        computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
+        computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
     }
 
     /*!
-     * \brief Called directly after the time integration.
+     * \brief Called directly after successful time integration.
      */
     void postTimeStep()
     {
@@ -241,8 +323,74 @@ public:
      * \brief Returns the temperature [K] within the domain.
      */
     template <class Context>
-    Scalar temperature(const Context &context, int localIdx) const
-    { return temperature_; };
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
+    { return temperature_; }
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor.
+     */
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        if (isFineMaterial_(context.pos(spaceIdx, timeIdx)))
+            return fineK_;
+        return coarseK_;
+    }
+
+    /*!
+     * \brief Define the porosity \f$[-]\f$ of the soil
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return finePorosity_;
+        else
+            return coarsePorosity_;
+    }
+
+    /*!
+     * \brief Function for defining the parameters needed by constitutive relationships (kr-Sw, pc-Sw, etc.).
+     */
+    template <class Context>
+    const MaterialLawParams &materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineMaterialParams_;
+        else
+            return coarseMaterialParams_;
+    }
+
+    /*!
+     * \brief Returns the volumetric heat capacity \f$[J/m^3 K]\f$ of
+     *        the rock matrix.
+     *
+     * Porosity is _not_ taken into account by this method. This is
+     * only required for non-isothermal models.
+     */
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        return
+            790 // specific heat capacity of granite [J / (kg K)]
+            * 2700; // density of granite [kg/m^3]
+    }
+
+    /*!
+     * \brief Return the parameter object for the heat conductivty law
+     *        for a given position
+     */
+    template <class Context>
+    const HeatConductionLawParams&
+    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineHeatCondParams_;
+        return coarseHeatCondParams_;
+    }
 
     // \}
 
@@ -254,14 +402,11 @@ public:
     /*!
      * \brief Specifies which kind of boundary condition should be
      *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int localIdx) const
+    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (onInlet_(globalPos) || onOutlet_(globalPos))
             values.setAllDirichlet();
@@ -272,28 +417,22 @@ public:
     /*!
      * \brief Evaluate the boundary conditions for a dirichlet
      *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex for which the boundary type is set
-     *
-     * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int localIdx) const
-    { initial(values, context, localIdx); }
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
+    { initial(values, context, spaceIdx, timeIdx); }
 
     /*!
      * \brief Evaluate the boundary conditions for a neumann
      *        boundary segment.
      *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each component. Negative values mean
-     * influx.
+     * Negative components of the \a values argument mean influx of
+     * the corrosponding conservation quantity.
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
-                 int localIdx) const
+                 int spaceIdx, int timeIdx) const
     { values = 0; }
 
     // \}
@@ -308,15 +447,15 @@ public:
      *        sub-control-volume.
      *
      * For this method, the \a values parameter stores the rate mass
-     * of a component is generated or annihilate per volume
-     * unit. Positive values mean that mass is created, negative ones
-     * mean that it vanishes.
+     * of all conservation quantities that is generated or annihilated
+     * per volume unit. Positive values mean that mass is created,
+     * negative ones mean that it vanishes.
      */
     template <class Context>
-    void source(PrimaryVariables &values,
+    void source(RateVector &rate,
                 const Context &context,
-                int localIdx) const
-    { values = Scalar(0.0); }
+                int spaceIdx, int timeIdx) const
+    { rate = 0.0; }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -325,9 +464,9 @@ public:
      * variables.
      */
     template <class Context>
-    void initial(PrimaryVariables &values, const Context &context, int localIdx) const
+    void initial(PrimaryVariables &priVars, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(localIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> CompositionalFluidState;
         CompositionalFluidState fs;
@@ -336,7 +475,7 @@ public:
         int otherPhaseIdx;
 
         // set the fluid temperatures
-        fs.setTemperature(this->temperature(context, localIdx));
+        fs.setTemperature(this->temperature(context, spaceIdx, timeIdx));
 
         if (onInlet_(globalPos)) {
             // only liquid on inlet
@@ -374,7 +513,7 @@ public:
 
         // calulate the capillary pressure
         const MaterialLawParams &matParams =
-            this->spatialParameters().materialLawParamsAtPos(globalPos);
+            this->materialLawParams(context, spaceIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
         fs.setPressure(otherPhaseIdx,
@@ -394,19 +533,23 @@ public:
 
         ///////////
         // assign the primary variables
-        ///////////
-
-        // all N component fugacities
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            values[fug0Idx + compIdx] = fs.fugacity(refPhaseIdx, compIdx);
-
-        // first M - 1 saturations
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-            values[S0Idx + phaseIdx] = fs.saturation(phaseIdx);
-
-        // first pressure
-        values[p0Idx] = fs.pressure(/*phaseIdx=*/0);
+        ///////////          
+        priVars.assignMassConservative(fs,
+                                       matParams,
+                                       /*thermdynamicEquilibrium=*/true);
     }
+
+protected:
+    /*!
+     * \brief Returns whether a given global position is in the
+     *        fine-permeability region or not.
+     */
+    bool isFineMaterial_(const GlobalPosition &pos) const
+    {
+        return
+            10 <= pos[0] && pos[0] <= 20 &&
+            0 <= pos[1] && pos[1] <= 35;
+    };
 
     bool onInlet_(const GlobalPosition &globalPos) const
     {
@@ -421,6 +564,30 @@ public:
         Scalar y = globalPos[1];
         return x < eps_ && y <= 10;
     };
+
+    void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
+    {
+        Scalar lambdaWater = 0.6;
+        Scalar lambdaGranite = 2.8;
+
+        Scalar lambdaWet = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaWater, poro);
+        Scalar lambdaDry = std::pow(lambdaGranite, (1-poro));
+
+        params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
+        params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+    }
+
+    Scalar coarseK_;
+    Scalar fineK_;
+
+    Scalar coarsePorosity_;
+    Scalar finePorosity_;
+
+    MaterialLawParams fineMaterialParams_;
+    MaterialLawParams coarseMaterialParams_;
+
+    HeatConductionLawParams fineHeatCondParams_;
+    HeatConductionLawParams coarseHeatCondParams_;
 
     Scalar temperature_;
     Scalar eps_;

@@ -23,6 +23,8 @@
 #define DUMUX_MPNC_MODEL_HH
 
 #include "mpncproperties.hh"
+#include "energy/mpncvolumevariablesenergy.hh"
+#include "mass/mpncvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <tr1/array>
@@ -113,23 +115,49 @@ namespace Dumux
 template<class TypeTag>
 class MPNCModel : public BoxModel<TypeTag>
 {
-    typedef MPNCModel<TypeTag> ThisType;
     typedef BoxModel<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
+    enum { numPhases = FluidSystem::numPhases };
+    enum { numComponents = FluidSystem::numComponents };
+    enum { fug0Idx = Indices::fug0Idx };
+
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyModule;
+
+    enum { enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic) };
+    typedef MPNCVolumeVariablesMass<TypeTag, enableKinetic> MassModule;
+
 public:
+    /*!
+     * \brief Apply the initial conditions to the model.
+     *
+     * \param prob The object representing the problem which needs to
+     *             be simulated.
+     */
+    void init(Problem &prob)
+    {
+        ParentType::init(prob);
+        minActivityCoeff_.resize(this->numDofs());
+    }
+
     /*!
      * \brief Compute the total storage inside one phase of all
      *        conservation quantities.
      */
-    void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &dest, int phaseIdx)
     {
         dest = 0;
 
@@ -138,7 +166,7 @@ public:
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*historyIdx=*/0);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
 
             this->localResidual().addPhaseStorage(dest, elemCtx, phaseIdx);
         };
@@ -146,6 +174,108 @@ public:
         if (this->gridView_().comm().size() > 1)
             dest = this->gridView_().comm().sum(dest);
     }
+
+    /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    const char *name() const
+    { return "MpNc"; }
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    {
+        std::string s;
+        if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
+            return s;
+        else if (!(s = MassModule::primaryVarName(pvIdx)).empty())
+            return s;
+
+        std::ostringstream oss;
+        if (pvIdx == Indices::p0Idx)
+            oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        else if (Indices::S0Idx <= pvIdx && pvIdx < Indices::S0Idx + (numPhases - 1))
+            oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - Indices::S0Idx);
+        else
+            assert(false);
+        
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::string s;
+        if (!(s = EnergyModule::eqName(eqIdx)).empty())
+            return s;
+        else if (!(s = MassModule::eqName(eqIdx)).empty())
+            return s;
+
+        std::ostringstream oss;
+        if (Indices::phase0NcpIdx <= eqIdx && eqIdx < Indices::phase0NcpIdx + numPhases)
+            oss << "ncp_" << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - Indices::phase0NcpIdx);
+        else
+            assert(false);
+        
+        return oss.str();
+    }
+    
+    /*!
+     * \brief Update the weights of all primary variables within an
+     *        element given the complete set of volume variables
+     *
+     * \param element The DUNE codim 0 entity
+     * \param volVars All volume variables for the element
+     */
+    void updatePVWeights(const ElementContext &elemCtx) const
+    {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                minActivityCoeff_[globalIdx][compIdx] = 1e100;
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                    const auto &fs = elemCtx.volVars(scvIdx, /*timeIdx=*/0).fluidState();
+
+                    minActivityCoeff_[globalIdx][compIdx] =
+                        std::min(minActivityCoeff_[globalIdx][compIdx],
+                                 fs.fugacityCoefficient(phaseIdx, compIdx)
+                                 * fs.pressure(phaseIdx) );
+                };
+            };
+        };
+    };
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     *
+     * \param vertIdx The global index of the control volume
+     * \param pvIdx The index of the primary variable
+     */
+    Scalar primaryVarWeight(int vertIdx, int pvIdx) const
+    {
+        if (fug0Idx <= pvIdx && pvIdx < fug0Idx + numComponents) {
+            int compIdx = pvIdx - fug0Idx;
+
+            Valgrind::CheckDefined(minActivityCoeff_[vertIdx][compIdx]);
+            return 1.0 / minActivityCoeff_[vertIdx][compIdx];
+        }
+
+        return ParentType::primaryVarWeight(vertIdx, pvIdx);
+    }
+
+    /*!
+     * \brief Returns the smallest activity coefficient of a component for the most
+     *        current solution at a vertex.
+     */
+    Scalar minActivityCoeff(int vertIdx, int compIdx) const
+    {
+        return minActivityCoeff_[vertIdx][compIdx];
+    };
 
 protected:
     friend class BoxModel<TypeTag>;
@@ -159,6 +289,8 @@ protected:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     };
+
+    mutable std::vector<ComponentVector> minActivityCoeff_;
 };
 
 }

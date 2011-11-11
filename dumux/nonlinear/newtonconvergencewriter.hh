@@ -38,15 +38,17 @@ namespace Dumux
  *        the Newton scheme
  */
 template <class TypeTag>
-struct NewtonConvergenceWriter
+class NewtonConvergenceWriter
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonController) NewtonController;
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
 
     typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
+public:
     NewtonConvergenceWriter(NewtonController &ctl)
         : ctl_(ctl)
     {
@@ -73,7 +75,7 @@ struct NewtonConvergenceWriter
     };
 
     void writeFields(const SolutionVector &uLastIter,
-                     const SolutionVector &deltaU)
+                     const GlobalEqVector &deltaU)
     {
         ctl_.method().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
     };

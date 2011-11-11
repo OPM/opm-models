@@ -62,6 +62,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -256,7 +257,7 @@ public:
 
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void neumann(PrimaryVariables &priVars,
+    void neumann(EqVector &priVars,
                  const Context &context,
                  int localIdx) const
     {
@@ -289,7 +290,7 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void boxSDNeumann(PrimaryVariables &values,
+    void boxSDNeumann(EqVector &values,
                       const Element &element,
                       const FVElementGeometry &fvElemGeom,
                       const Intersection &is,
@@ -320,7 +321,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumann(PrimaryVariables &values,
+    void neumann(EqVector &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
                  const Intersection &is,
@@ -341,7 +342,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumannAtPos(PrimaryVariables &values,
+    void neumannAtPos(EqVector &values,
                       const GlobalPosition &pos) const
     {
         // Throw an exception (there is no reasonable default value
@@ -354,7 +355,7 @@ public:
 
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void source(PrimaryVariables &priVars,
+    void source(EqVector &priVars,
                 const Context &context,
                 int localIdx) const
     {
@@ -383,7 +384,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void boxSDSource(PrimaryVariables &values,
+    void boxSDSource(EqVector &values,
                      const Element &element,
                      const FVElementGeometry &fvElemGeom,
                      int scvIdx,
@@ -406,7 +407,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void source(PrimaryVariables &values,
+    void source(EqVector &values,
                 const Element &element,
                 const FVElementGeometry &fvElemGeom,
                 int scvIdx) const
@@ -428,7 +429,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void sourceAtPos(PrimaryVariables &values,
+    void sourceAtPos(EqVector &values,
                      const GlobalPosition &pos) const
     {
         DUNE_THROW(Dune::InvalidStateException,
@@ -444,7 +445,7 @@ public:
      */
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void initial(PrimaryVariables &values,
+    void initial(EqVector &values,
                  const Context &context,
                  int localIdx) const
     {

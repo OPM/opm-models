@@ -87,7 +87,7 @@ private:
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementSolutionVector) ElementSolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementEqVector) ElementEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;

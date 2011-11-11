@@ -59,7 +59,7 @@ class MPNCVolumeVariablesEnergy
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     //typedef typename GET_PROP_TYPE(TypeTag, MPNCEnergyIndices) EnergyIndices;
 
@@ -81,7 +81,6 @@ public:
         fs.setTemperature(T);
     }
 
-
     /*!
      * \brief Update the enthalpy and the internal energy for a given
      *        control volume.
@@ -97,6 +96,25 @@ public:
         // the phase temperatures where already set by the base volume
         // variables!
     }
+
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {}                                    
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &v,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { };
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
@@ -130,17 +148,19 @@ class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyT
     typedef typename GridView::template Codim<0>::Entity Element;
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
 
-    enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents    = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { temperatureIdx   = Indices::temperatureIdx };
-    enum { numEnergyEqs     = Indices::NumPrimaryEnergyVars};
-    enum { temperature0Idx = Indices::temperatureIdx };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+
+    enum { temperatureIdx = Indices::temperatureIdx };
+    enum { energyEqIdx = Indices::energyEqIdx };
+
+    enum { numEnergyEqs = Indices::NumPrimaryEnergyVars};
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -158,8 +178,7 @@ public:
     {
         // retrieve temperature from solution vector
         const auto &priVars = elemCtx.primaryVars(scvIdx, historyIdx);
-        Scalar T = priVars[temperatureIdx];
-        fs.setTemperature(T);
+        fs.setTemperature(priVars[temperatureIdx]);
     }
 
     /*!
@@ -192,6 +211,32 @@ public:
             fs.setEnthalpy(phaseIdx, h);
         }
     }
+
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {
+        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
+    }
+
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &rateVec,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    {
+        rateVec[energyEqIdx] = 
+            volume
+            * fluidState.density(phaseIdx)
+            * fluidState.enthalpy(phaseIdx);
+    };
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
