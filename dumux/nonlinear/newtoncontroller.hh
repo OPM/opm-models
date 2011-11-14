@@ -167,6 +167,8 @@ class NewtonController
 
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
 public:
     /*!
      * \brief
@@ -449,7 +451,7 @@ public:
      */
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,
-                      const SolutionVector &deltaU)
+                      const GlobalEqVector &deltaU)
     {
         if (enableRelativeCriterion_ || enablePartialReassemble_)
             newtonUpdateRelError(uLastIter, deltaU);
@@ -479,7 +481,7 @@ public:
 
             if (enableAbsoluteCriterion_)
             {
-                SolutionVector tmp(uLastIter);
+                GlobalEqVector tmp(uLastIter.size());
                 absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
                 absoluteError_ /= initialAbsoluteError_;
             }
@@ -672,13 +674,15 @@ protected:
                            const GlobalEqVector &deltaU)
     {
        Scalar lambda = 1.0;
-       SolutionVector tmp(uLastIter);
+       GlobalEqVector tmp(uLastIter.size());
 
        while (true) {
-           uCurrentIter = deltaU;
-           uCurrentIter *= -lambda;
-           uCurrentIter += uLastIter;
-
+           for (int i = 0; i < uCurrentIter.size(); ++i) {
+               for (int j = 0; j < numEq; ++j) {
+                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
+               }
+           }
+           
            // calculate the residual of the current solution
            absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
            absoluteError_ /= initialAbsoluteError_;

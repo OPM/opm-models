@@ -34,6 +34,9 @@
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+
+#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
+
 #include <dumux/material/heatconduction/somerton.hh>
 
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
@@ -61,9 +64,14 @@ private:
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
-public:
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffMaterialLaw> type;
+    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { lPhaseIdx = FluidSystem::lPhaseIdx };
+
+public:
+    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Set the heat conduction law

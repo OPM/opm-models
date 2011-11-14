@@ -191,23 +191,6 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Return the initial phase state inside a control volume.
-     */
-    template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    int initialPhasePresence(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        return asImp_().initialPhasePresence(context.element(),
-                                             context.fvElemGeom(timeIdx),
-                                             spaceIdx);
-    }
-
-    int initialPhasePresence(const Element &element,
-                             const FVElementGeometry fvGeom,
-                             int scvIdx) const
-    { DUNE_THROW(Dune::NotImplemented, "initialPhasePresence() method not implemented by the actual problem"); };
-
-    /*!
      * \brief Returns the spatial parameters object.
      */
     SpatialParameters &spatialParameters()

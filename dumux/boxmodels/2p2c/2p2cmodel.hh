@@ -144,41 +144,7 @@ public:
     {
         ParentType::init(problem);
 
-        staticVertexDat_.resize(this->gridView_().size(dim));
-
         setSwitched_(false);
-
-        ElementContext elemCtx(this->problem_());
-
-        // iterate through leaf grid and evaluate initial
-        // condition at the center of each sub control volume
-        //
-        // TODO: the initial condition needs to be unique for
-        // each vertex. we should think about the API...
-        ElementIterator it = this->gridView_().template begin<0>();
-        const ElementIterator &eendit = this->gridView_().template end<0>();
-        for (; it != eendit; ++it) {
-            // deal with the current element
-            elemCtx.updateFVElemGeom(*it);
-
-            // loop over all element vertices, i.e. sub control volumes
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
-            {
-                // map the local vertex index to the global one
-                int globalIdx = this->vertexMapper().map(*it,
-                                                         scvIdx,
-                                                         dim);
-
-
-                // initialize phase presence
-                staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0]
-                    = this->problem_().initialPhasePresence(elemCtx, scvIdx, /*timeIdx=*/0);
-                staticVertexDat_[globalIdx].wasSwitched = false;
-
-                staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/1]
-                    = staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0];
-            }
-        }
     }
 
     /*!
@@ -212,9 +178,7 @@ public:
     void updateFailed()
     {
         ParentType::updateFailed();
-
         setSwitched_(false);
-        resetPhasePresence_();
     };
 
     /*!
@@ -241,9 +205,6 @@ public:
     void advanceTimeLevel()
     {
         ParentType::advanceTimeLevel();
-
-        // update the phase state
-        updateOldPhasePresence_();
         setSwitched_(false);
     }
 
@@ -255,16 +216,6 @@ public:
     {
         return switchFlag_;
     }
-
-    /*!
-     * \brief Returns the phase presence of the current or the old solution of a vertex.
-     *
-     * \param globalVertexIdx The global vertex index
-     * \param oldSol Evaluate function with solution of current or previous time step
-     */
-    int phasePresence(int globalVertexIdx, int timeIdx) const
-    { return staticVertexDat_[globalVertexIdx].phasePresence[timeIdx]; }
-
 
     /*!
      * \brief Write the current solution to a restart file.
@@ -281,7 +232,7 @@ public:
         if (!outStream.good())
             DUNE_THROW(Dune::IOError, "Could not serialize vertex " << vertIdx);
 
-        outStream << staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0] << " ";
+        outStream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence() << " ";
     }
 
     /*!
@@ -302,24 +253,22 @@ public:
             DUNE_THROW(Dune::IOError,
                        "Could not deserialize vertex " << vertIdx);
 
-        inStream >> staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0];
-        staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/1]
-            = staticVertexDat_[vertIdx].phasePresence[/*timeIdx=*/0];
+        int tmp;
+        inStream >> tmp;
+        this->solution(/*timeIdx=*/0)[vertIdx].setPhasePresence(tmp);
+        this->solution(/*timeIdx=*/1)[vertIdx].setPhasePresence(tmp);
     }
 
     /*!
      * \brief Update the static data of all vertices in the grid.
      *
      * \param curGlobalSol The current global solution
-     * \param oldGlobalSol The previous global solution
      */
-    void updateStaticData_(SolutionVector &curGlobalSol,
-                           const SolutionVector &oldGlobalSol)
+    void updatePhasePresence_(SolutionVector &curGlobalSol)
     {
         bool wasSwitched = false;
 
-        for (unsigned i = 0; i < staticVertexDat_.size(); ++i)
-            staticVertexDat_[i].visited = false;
+        std::vector<bool> visited(curGlobalSol.size(), false);
 
         ElementContext elemCtx(this->problem_());
 
@@ -333,9 +282,9 @@ public:
             {
                 int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
 
-                if (staticVertexDat_[globalIdx].visited)
+                if (visited[globalIdx])
                     continue;
-                staticVertexDat_[globalIdx].visited = true;
+                visited[globalIdx] = true;
 
                 if (!fvElemGeomUpdated) {
                     fvElemGeomUpdated = true;
@@ -350,7 +299,7 @@ public:
                 const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
                 const GlobalPosition &globalPos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
-                if (primaryVarSwitch_(curGlobalSol,
+                if (primaryVarSwitch_(curGlobalSol[globalIdx],
                                       volVars,
                                       globalIdx,
                                       globalPos))
@@ -384,47 +333,6 @@ protected:
     };
 
     /*!
-     * \brief Data which is attached to each vertex and is not only
-     *        stored locally.
-     */
-    struct StaticVars
-    {
-        int phasePresence[historySize];
-        bool wasSwitched;
-        bool visited;
-    };
-
-    /*!
-     * \brief Reset the current phase presence of all vertices to the old one.
-     *
-     * This is done after an update failed.
-     */
-    void resetPhasePresence_()
-    {
-        int numVertices = this->gridView_().size(dim);
-        for (int i = 0; i < numVertices; ++i)
-        {
-            staticVertexDat_[i].phasePresence[/*timeIdx=*/0]
-                = staticVertexDat_[i].phasePresence[/*timeIdx=*/1];
-            staticVertexDat_[i].wasSwitched = false;
-        }
-    }
-
-    /*!
-     * \brief Set the old phase of all verts state to the current one.
-     */
-    void updateOldPhasePresence_()
-    {
-        int numVertices = this->gridView_().size(dim);
-        for (int i = 0; i < numVertices; ++i)
-        {
-            staticVertexDat_[i].phasePresence[/*timeIdx=*/1]
-                = staticVertexDat_[i].phasePresence[/*timeIdx=*/0];
-            staticVertexDat_[i].wasSwitched = false;
-        }
-    }
-
-    /*!
      * \brief Set whether there was a primary variable switch after in
      *        the last timestep.
      */
@@ -433,15 +341,18 @@ protected:
 
     //  perform variable switch at a vertex; Returns true if a
     //  variable switch was performed.
-    bool primaryVarSwitch_(SolutionVector &globalSol,
+    bool primaryVarSwitch_(PrimaryVariables &priVars,
                            const VolumeVariables &volVars,
                            int globalIdx,
                            const GlobalPosition &globalPos)
     {
         // evaluate primary variable switch
-        bool wouldSwitch = false;
-        int phasePresence = staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0];
+        int phasePresence = priVars.phasePresence();
         int newPhasePresence = phasePresence;
+
+        Scalar switchTol = 0.0;
+        if (priVars.wasSwitched())
+            switchTol = 0.02;
 
         // check if a primary var switch is necessary
         if (phasePresence == gPhaseOnly)
@@ -450,15 +361,9 @@ protected:
             Scalar xll = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/0);
             Scalar xlg = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
 
-            Scalar xlMax = 1.0;
-            if (xll + xlg > xlMax)
-                wouldSwitch = true;
-            if (staticVertexDat_[globalIdx].wasSwitched)
-                xlMax *= 1.02;
-
             // if the sum of the mole fractions would be larger than
             // 100%, liquid phase appears
-            if (xll + xlg > xlMax)
+            if (xll + xlg > 1.0 + switchTol)
             {
                 // liquid phase appears
                 std::cout << "liquid phase appears at vertex " << globalIdx
@@ -466,9 +371,9 @@ protected:
                           << xll + xlg << std::endl;
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
-                    globalSol[globalIdx][switchIdx] = 0.0;
+                    priVars[switchIdx] = 0.0;
                 else if (formulation == plSg)
-                    globalSol[globalIdx][switchIdx] = 1.0;
+                    priVars[switchIdx] = 1.0;
             };
         }
         else if (phasePresence == lPhaseOnly)
@@ -478,15 +383,9 @@ protected:
             Scalar xgl = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/0);
             Scalar xgg = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/1);
 
-            Scalar xgMax = 1.0;
-            if (xgl + xgg > xgMax)
-                wouldSwitch = true;
-            if (staticVertexDat_[globalIdx].wasSwitched)
-                xgMax *= 1.02;
-
             // if the sum of the mole fractions would be larger than
             // 100%, gas phase appears
-            if (xgl + xgg > xgMax)
+            if (xgl + xgg > 1.0 + switchTol)
             {
                 // gas phase appears
                 std::cout << "gas phase appears at vertex " << globalIdx
@@ -495,51 +394,49 @@ protected:
                 std::cout.flush();
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
-                    globalSol[globalIdx][switchIdx] = 0.999;
+                    priVars[switchIdx] = 0.999;
                 else if (formulation == plSg)
-                    globalSol[globalIdx][switchIdx] = 0.001;
+                    priVars[switchIdx] = 0.001;
             }
         }
         else if (phasePresence == bothPhases)
         {
-            Scalar Smin = 0.0;
-            if (staticVertexDat_[globalIdx].wasSwitched)
-                Smin = -0.01;
-
-            if (volVars.fluidState().saturation(/*phaseIdx=*/1) <= Smin)
+            if (volVars.fluidState().saturation(/*phaseIdx=*/1) <= 0.0 - switchTol)
             {
-                wouldSwitch = true;
                 // gas phase disappears
                 std::cout << "Gas phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sg: "
-                          << volVars.fluidState().saturation(/*phaseIdx=*/1) << std::endl;
+                          << volVars.fluidState().saturation(/*phaseIdx=*/1)
+                          << " X_0^1: " << volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
+                          << std::endl;
                 newPhasePresence = lPhaseOnly;
 
-                globalSol[globalIdx][switchIdx] =
+                priVars[switchIdx] =
                     volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
             }
-            else if (volVars.fluidState().saturation(/*phaseIdx=*/0) <= Smin)
+            else if (volVars.fluidState().saturation(/*phaseIdx=*/0) <= 0.0 - switchTol)
             {
-                wouldSwitch = true;
                 // liquid phase disappears
                 std::cout << "Liquid phase disappears at vertex " << globalIdx
                           << ", coordinates: " << globalPos << ", Sl: "
-                          << volVars.fluidState().saturation(/*phaseIdx=*/0) << std::endl;
+                          << volVars.fluidState().saturation(/*phaseIdx=*/0)
+                          << " X_1^0: " << volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0)
+                          << std::endl;
                 newPhasePresence = gPhaseOnly;
 
-                globalSol[globalIdx][switchIdx] =
+                priVars[switchIdx] =
                     volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0);
             }
         }
 
-        staticVertexDat_[globalIdx].phasePresence[/*timeIdx=*/0] = newPhasePresence;
-        staticVertexDat_[globalIdx].wasSwitched = wouldSwitch;
+        priVars.setPhasePresence(newPhasePresence);
+        priVars.setSwitched(phasePresence != newPhasePresence);
+
         return phasePresence != newPhasePresence;
     }
 
 protected:
     // parameters given in constructor
-    std::vector<StaticVars> staticVertexDat_;
     bool switchFlag_;
 };
 

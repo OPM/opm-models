@@ -1,9 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008,2009 by Klaus Mosthaf,                               *
- *                              Andreas Lauser,                              *
- *                              Bernd Flemisch                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf,                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser,                              *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -60,7 +60,7 @@ class TwoPTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -101,6 +101,7 @@ class TwoPTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef Dumux::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
     typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -126,6 +127,10 @@ public:
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
 
+        // calculate relative permeabilities
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
+
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
         // became part of the fluid state.
@@ -135,18 +140,8 @@ public:
         // energy related quantities
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // relative permeabilities
-            Scalar kr;
-            Scalar Sw = fluidState_.saturation(/*phaseIdx=*/0);
-            if (phaseIdx == 0)
-                kr = MaterialLaw::krw(materialParams, Sw);
-            else // ATTENTION: krn requires the liquid saturation
-                // as parameter!
-                kr = MaterialLaw::krn(materialParams, Sw);
-            relativePermeability_[phaseIdx] = kr;
-            Valgrind::CheckDefined(relativePermeability_[phaseIdx]);
 
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // binary diffusion coefficents
             diffCoeff_[phaseIdx] =
                 FluidSystem::binaryDiffusionCoefficient(fluidState_,
@@ -175,10 +170,8 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
-        const auto &model = elemCtx.model();
         const auto &spatialParams = problem.spatialParameters();
-        int globalVertIdx = model.dofMapper().map(elemCtx.element(), scvIdx, dim);
-        int phasePresence = model.phasePresence(globalVertIdx, timeIdx);
+        int phasePresence = priVars.phasePresence();
 
         /////////////
         // set the saturations
@@ -207,15 +200,16 @@ public:
         // calculate capillary pressure
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
-        Scalar pC = MaterialLaw::pC(materialParams, Sw);
-
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+        
         if (formulation == plSg) {
-            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
-            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx] + pC);
+            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] + (pC[0] - pC[0]));
+            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx] + (pC[1] - pC[0]));
         }
         else if (formulation == pgSl) {
-            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx]);
-            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] - pC);
+            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] + (pC[0] - pC[1]));
+            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx] + (pC[1] - pC[1]));
         }
         else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
         /////////////
@@ -329,12 +323,6 @@ public:
     { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
-     * \brief Returns the effective capillary pressure within the control volume.
-     */
-    Scalar capillaryPressure() const
-    { return fluidState_.pressure(/*phaseIdx=*/1) - fluidState_.pressure(/*phaseIdx=*/0); }
-
-    /*!
      * \brief Returns the average porosity within the control volume.
      */
     Scalar porosity() const
@@ -346,6 +334,24 @@ public:
     Scalar diffCoeff(int phaseIdx) const
     { return diffCoeff_[phaseIdx]; }
 
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {}                                    
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &v,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { };
+    
 protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,

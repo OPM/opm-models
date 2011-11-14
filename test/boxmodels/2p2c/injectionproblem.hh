@@ -2,7 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -133,14 +133,25 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
-        H2OIdx = FluidSystem::H2OIdx,
+        numPhases = FluidSystem::numPhases,
+        numComponents = FluidSystem::numComponents,
+
+        gPhaseIdx = FluidSystem::gPhaseIdx,
+        lPhaseIdx = FluidSystem::lPhaseIdx,
+
         N2Idx = FluidSystem::N2Idx,
+        H2OIdx = FluidSystem::H2OIdx,
 
         conti0EqIdx = Indices::conti0EqIdx,
-        contiN2EqIdx = conti0EqIdx + N2Idx
+        contiN2EqIdx = conti0EqIdx + N2Idx,
+        contiH2OEqIdx = conti0EqIdx + H2OIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
@@ -150,6 +161,9 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     /*!
@@ -226,7 +240,7 @@ public:
     { return temperature_; };
 
     template <class Context>
-    void source(PrimaryVariables &values,
+    void source(RateVector &values,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
     { values = 0; }
@@ -267,11 +281,7 @@ public:
      */
     template <class Context>
     void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        initial_(values, globalPos);
-    }
+    { initial(values, context, spaceIdx, timeIdx); }
 
     /*!
      * \brief Evaluate the boundary conditions for a neumann
@@ -281,16 +291,19 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        values = 0;
+        RateVector massRate(0.0);
         if (globalPos[1] < 15 && globalPos[1] > 5) {
-            values[contiN2EqIdx] = -1e-3; // kg/(s*m^2)
+            massRate[contiN2EqIdx] = -1e-3; // kg/(s*m^2)
         }
+
+        values = massRate;
+        //values.setMassRate(massRate);
     }
 
     // \}
@@ -316,41 +329,52 @@ public:
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        initial_(values, globalPos);
+        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
 
-    }
+        
+        //////
+        // set temperatures
+        //////
+        fs.setTemperature(temperature_);
+        
+        //////
+        // set saturations
+        //////
+        fs.setSaturation(FluidSystem::lPhaseIdx, 1.0);
+        fs.setSaturation(FluidSystem::gPhaseIdx, 0.0);
 
-    /*!
-     * \brief Return the initial phase state inside a control volume.
-     *
-     * \param vert The vertex
-     * \param globalIdx The index of the global vertex
-     * \param globalPos The global position
-     */
-    template <class Context>
-    int initialPhasePresence(const Context &context, int spaceIdx, int timeIdx) const
-    { return Indices::lPhaseOnly; }
+        //////
+        // set pressures
+        //////
+        Scalar densityL = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
+        Scalar pl = 1e5 - densityL*this->gravity()[1]*(maxDepth_ - globalPos[1]);
+        PhaseVector pC;
+        const auto &matParams =
+            this->spatialParameters().materialLawParams(context, spaceIdx, timeIdx);
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-    // \}
+        fs.setPressure(FluidSystem::lPhaseIdx, pl + (pC[lPhaseIdx] - pC[lPhaseIdx]));
+        fs.setPressure(FluidSystem::gPhaseIdx, pl + (pC[gPhaseIdx] - pC[lPhaseIdx]));
 
-private:
-    // the internal method for the initial condition
-    void initial_(PrimaryVariables &values, const GlobalPosition &globalPos) const
-    {
-        Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
+        //////
+        // set composition of the liquid phase
+        //////
+        fs.setMoleFraction(lPhaseIdx, N2Idx,
+                           pl*0.95/
+                           BinaryCoeff::H2O_N2::henry(temperature_));
+        fs.setMoleFraction(lPhaseIdx, H2OIdx,
+                           1.0 - fs.moleFraction(lPhaseIdx, N2Idx));
 
-        Scalar pl = 1e5 - densityW*this->gravity()[1]*(maxDepth_ - globalPos[1]);
-        Scalar moleFracLiquidN2 = pl*0.95/BinaryCoeff::H2O_N2::henry(temperature_);
-        Scalar moleFracLiquidH2O = 1.0 - moleFracLiquidN2;
+        //////
+        // set composition of the gas phase
+        //////
+        fs.setMoleFraction(gPhaseIdx, N2Idx, 0.9);
+        fs.setMoleFraction(gPhaseIdx, H2OIdx, 0.0);
 
-        Scalar meanM =
-            FluidSystem::molarMass(H2OIdx)*moleFracLiquidH2O +
-            FluidSystem::molarMass(N2Idx)*moleFracLiquidN2;
-
-        Scalar massFracLiquidN2 = moleFracLiquidN2*FluidSystem::molarMass(N2Idx)/meanM;
-
-        values[Indices::pressureIdx] = pl;
-        values[Indices::switchIdx] = massFracLiquidN2;
+        //////
+        // set the primary variables
+        //////
+        values.template assignMassConservative<MaterialLaw>(fs, matParams, /*inEquilibrium=*/true);
     }
 
     Scalar temperature_;

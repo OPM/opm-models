@@ -68,6 +68,8 @@ protected:
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
@@ -81,21 +83,9 @@ protected:
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
-        pressureIdx = Indices::pressureIdx,
-        switchIdx = Indices::switchIdx,
-
         conti0EqIdx = Indices::conti0EqIdx,
-
-        lPhaseOnly = Indices::lPhaseOnly,
-        gPhaseOnly = Indices::gPhaseOnly,
-        bothPhases = Indices::bothPhases,
-
-        plSg = TwoPTwoCFormulation::plSg,
-        pgSl = TwoPTwoCFormulation::pgSl,
-        formulation = GET_PROP_VALUE(TypeTag, Formulation)
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
@@ -119,7 +109,7 @@ public:
      * \param element The element
      * \param phaseIdx The index of the fluid phase
      */
-    void addPhaseStorage(PrimaryVariables &storage,
+    void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
                          int timeIdx,
                          int phaseIdx)
@@ -155,7 +145,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &storage,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -191,7 +181,7 @@ public:
      * \brief Evaluates the total flux of all conservation quantities
      *        over a face of a subcontrol volume.
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx,
                      int timeIdx) const
@@ -211,7 +201,7 @@ public:
      * \param flux The advective flux over the sub-control-volume face for each component
      * \param vars The flux variables at the current SCV
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
+    void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -273,7 +263,7 @@ public:
      * \param flux The diffusive flux over the sub-control-volume face for each component
      * \param vars The flux variables at the current sub control volume face
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
+    void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -308,10 +298,10 @@ public:
     /*!
      * \brief Calculate the source term of the equation
      *
-     * \param q The source/sink in the sub control volume for each component
-     * \param localVertexIdx The index of the sub control volume
+     * \param source The source/sink term [kg/m^3] in the sub control
+     *               volume for each component
      */
-    void computeSource(PrimaryVariables &source,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const

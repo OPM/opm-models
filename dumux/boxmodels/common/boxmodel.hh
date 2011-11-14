@@ -225,14 +225,13 @@ public:
 
         // calculate the square norm of the residual
         Scalar result2 = dest.two_norm2();
-        if (gridView_().comm().size() > 1)
-            result2 = gridView_().comm().sum(result2);
+        result2 = gridView().comm().sum(result2);
 
         // add up the residuals on the process borders
-        if (gridView_().comm().size() > 1) {
+        if (gridView().comm().size() > 1) {
             VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
                 sumHandle(dest, vertexMapper());
-            gridView_().communicate(sumHandle,
+            gridView().communicate(sumHandle,
                                    Dune::InteriorBorder_InteriorBorder_Interface,
                                    Dune::ForwardCommunication);
         }
@@ -262,8 +261,7 @@ public:
                 dest += localResidual().storageTerm()[i];
         };
 
-        if (gridView_().comm().size() > 1)
-            dest = gridView_().comm().sum(dest);
+        dest = gridView_().comm().sum(dest);
     }
 
     /*!
@@ -864,47 +862,26 @@ protected:
 
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
-                PrimaryVariables initVal;
-                Valgrind::SetUndefined(initVal);
-                problem_().initial(initVal,
+                problem_().initial(uCur[globalIdx],
                                    elemCtx,
                                    scvIdx,
                                    /*timeIdx=*/0);
-                Valgrind::CheckDefined(initVal);
-
-                // add up the initial values of all sub-control
-                // volumes. If the initial values disagree for
-                // different sub control volumes, the initial value
-                // will be the arithmetic mean.
-                Scalar scvVolume = elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
-                initVal *= scvVolume;
-                boxVolume_[globalIdx] += scvVolume;
-                uCur[globalIdx] += initVal;
                 Valgrind::CheckDefined(uCur[globalIdx]);
+
+                boxVolume_[globalIdx] += 
+                    elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
             }
         }
 
         // add up the primary variables and the volumes of the boxes
         // which cross process borders
-        if (gridView_().comm().size() > 1) {
+        if (gridView().comm().size() > 1) {
             VertexHandleSum<Dune::FieldVector<Scalar, 1>,
                 Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
                 VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
-            gridView_().communicate(sumVolumeHandle,
+            gridView().communicate(sumVolumeHandle,
                                    Dune::InteriorBorder_InteriorBorder_Interface,
                                    Dune::ForwardCommunication);
-
-            VertexHandleSum<PrimaryVariables, SolutionVector, VertexMapper>
-                sumPVHandle(uCur, vertexMapper());
-            gridView_().communicate(sumPVHandle,
-                                   Dune::InteriorBorder_InteriorBorder_Interface,
-                                   Dune::ForwardCommunication);
-        }
-
-        // divide all primary variables by the volume of their boxes
-        int n = gridView_().size(dim);
-        for (int i = 0; i < n; ++i) {
-            uCur[i] /= boxVolume(i);
         }
     }
 

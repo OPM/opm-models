@@ -36,10 +36,13 @@
 #include "2p2cmodel.hh"
 #include "2p2cproblem.hh"
 #include "2p2cindices.hh"
-#include "2p2cfluxvariables.hh"
-#include "2p2cvolumevariables.hh"
 #include "2p2cproperties.hh"
 #include "2p2cnewtoncontroller.hh"
+
+#include "2p2cprimaryvariables.hh"
+#include "2p2cratevector.hh"
+#include "2p2cvolumevariables.hh"
+#include "2p2cfluxvariables.hh"
 
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -130,6 +133,12 @@ SET_TYPE_PROP(BoxTwoPTwoC, NewtonController, TwoPTwoCNewtonController<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxTwoPTwoC, Model, TwoPTwoCModel<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxTwoPTwoC, PrimaryVariables, TwoPTwoCPrimaryVariables<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxTwoPTwoC, RateVector, TwoPTwoCRateVector<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, VolumeVariables, TwoPTwoCVolumeVariables<TypeTag>);
