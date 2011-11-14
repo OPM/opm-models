@@ -115,7 +115,7 @@ public:
      */
     void setMolarRate(const ParentType &value)
     {
-        (*this) = value;
+        ParentType::operator=(value);
     };
 
     /*!

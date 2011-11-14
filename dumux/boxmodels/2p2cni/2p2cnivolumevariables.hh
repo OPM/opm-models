@@ -57,8 +57,11 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { temperatureIdx = Indices::temperatureIdx };
+    enum { energyEqIdx = Indices::energyEqIdx };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
     typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
     //! \endcond
 
@@ -78,6 +81,36 @@ public:
      */
     Scalar heatConductivity() const
     { return heatConductivity_; };
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {
+        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
+#ifndef NDEBUG
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            assert(fs.temperature(/*phaseIdx=*/0) == fs.temperature(phaseIdx));
+        }
+#endif
+    }
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &rateVec,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    {
+        rateVec[energyEqIdx] = 
+            volume
+            * fluidState.density(phaseIdx)
+            * fluidState.enthalpy(phaseIdx);
+    };
 
 protected:
     // this method gets called by the parent class. since this method
@@ -108,9 +141,9 @@ protected:
 
         // compute and set the heat capacity of the solid phase
         const auto &problem = elemCtx.problem();
-        const auto &heatCondParams = problem.heatConducionParams(elemCtx, scvIdx, timeIdx);
+        const auto &heatCondParams = problem.heatConductionParams(elemCtx, scvIdx, timeIdx);
 
-        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
+        heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
         heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
 
         Valgrind::CheckDefined(heatCapacitySolid_);

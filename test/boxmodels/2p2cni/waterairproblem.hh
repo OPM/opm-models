@@ -67,7 +67,9 @@ SET_PROP(WaterAirProblem, Problem)
 };
 
 // Set the wetting phase
-SET_TYPE_PROP(WaterAirProblem, FluidSystem, Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar), false>);
+SET_TYPE_PROP(WaterAirProblem, FluidSystem, 
+              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar),
+                                         /*complexRelations=*/true>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
@@ -150,7 +152,7 @@ class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
         dimWorld = GridView::dimensionworld
     };
 
-
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -212,7 +214,7 @@ public:
 #endif
 
     template <class Context>
-    void source(PrimaryVariables &values,
+    void source(RateVector &values,
                 const Context &context, int spaceIdx, int timeIdx) const
     {
         values = 0;
@@ -279,7 +281,7 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
@@ -325,17 +327,6 @@ public:
 #endif
     }
 
-    /*!
-     * \brief Return the initial phase state inside a control volume.
-     *
-     * \param vert The vertex
-     * \param globalIdx The index of the global vertex
-     * \param globalPos The global position
-     */
-    template <class Context>
-    int initialPhasePresence(const Context &context, int spaceIdx, int timeIdx) const
-    { return lPhaseOnly; }
-
 private:
     // internal method for the initial condition (reused for the
     // dirichlet conditions!)
@@ -343,6 +334,9 @@ private:
                   const GlobalPosition &globalPos) const
     {
         Scalar densityW = 1000.0;
+
+        values.setPhasePresence(lPhaseOnly);
+
         values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
         values[switchIdx] = 0.0;
 #if !ISOTHERMAL

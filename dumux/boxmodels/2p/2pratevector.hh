@@ -20,33 +20,33 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing molar rates.
+ * \brief Implements a vector representing mass rates.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
  */
-#ifndef DUMUX_BOX_2P2C_RATE_VECTOR_HH
-#define DUMUX_BOX_2P2C_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_2P_RATE_VECTOR_HH
+#define DUMUX_BOX_2P_RATE_VECTOR_HH
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 
-#include "2p2cvolumevariables.hh"
+#include "2pvolumevariables.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup 2P2CModel
+ * \ingroup 2PModel
  *
- * \brief Implements a vector representing molar rates.
+ * \brief Implements a vector representing mass rates.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
  */
 template <class TypeTag>
-class TwoPTwoCRateVector
+class TwoPRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -56,7 +56,7 @@ class TwoPTwoCRateVector
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -65,28 +65,25 @@ class TwoPTwoCRateVector
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
-    static constexpr unsigned int replaceCompEqIdx =
-        GET_PROP_VALUE(TypeTag, ReplaceCompEqIdx);
-
 public:
     /*!
      * \brief Default constructor
      */
-    TwoPTwoCRateVector()
+    TwoPRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); };
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    TwoPTwoCRateVector(Scalar value)
+    TwoPRateVector(Scalar value)
         : ParentType(value)
     { };
 
     /*!
      * \brief Copy constructor
      */
-    TwoPTwoCRateVector(const TwoPTwoCRateVector &value)
+    TwoPRateVector(const TwoPRateVector &value)
         : ParentType(value)
     { };
 
@@ -100,16 +97,6 @@ public:
     void setMassRate(const ParentType &value)
     {
         ParentType::operator=(value);
-        
-#warning "HACKY: we should probably standardize on one formulation"
-        // flux of the total mass balance;
-        // this is only processed, if one component mass balance equation
-        // is replaced by a total mass balance equation
-        if (replaceCompEqIdx < numComponents) {
-            (*this)[replaceCompEqIdx] = 0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                (*this)[replaceCompEqIdx] += value[compIdx];
-        }
     };
 
     /*!
@@ -145,19 +132,6 @@ public:
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
                 * volume;
-
-#warning "HACKY: we should probably standardize on one formulation"
-        // flux of the total mass balance;
-        // this is only processed, if one component mass balance equation
-        // is replaced by a total mass balance equation
-        if (replaceCompEqIdx < numComponents) {
-            (*this)[replaceCompEqIdx] = 0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                (*this)[replaceCompEqIdx] += 
-                    fluidState.density(phaseIdx, compIdx)
-                    * fluidState.massFraction(phaseIdx, compIdx)
-                    * volume;
-        }
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     };

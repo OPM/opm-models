@@ -87,7 +87,7 @@ public:
 
         // scalar product of temperature gradient and scvf normal
         temperatureGradNormal_ = 0.0;
-        for (int i = 0; i < dim; ++ i)
+        for (int i = 0; i < dimWorld; ++ i)
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
         // arithmetic mean

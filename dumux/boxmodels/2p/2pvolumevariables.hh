@@ -55,7 +55,7 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
@@ -70,6 +70,7 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
@@ -90,15 +91,11 @@ public:
         const SpatialParameters &spatialParams =
             elemCtx.problem().spatialParameters();
 
-        // material law parameters
+        // calculate relative permeabilities
         const MaterialLawParams &materialParams =
             spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
-
-        relativePermeability_[wPhaseIdx] =
-            MaterialLaw::krw(materialParams, fluidState_.saturation(wPhaseIdx));
-        relativePermeability_[nPhaseIdx] =
-            MaterialLaw::krn(materialParams, fluidState_.saturation(wPhaseIdx));
-
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
         porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
@@ -130,20 +127,26 @@ public:
             fluidState.setSaturation(nPhaseIdx, Sn);
             fluidState.setSaturation(wPhaseIdx, 1 - Sn);
 
+            PhaseVector pC;
+            MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+
             Scalar pW = priVars[Indices::pressureIdx];
             fluidState.setPressure(wPhaseIdx, pW);
             fluidState.setPressure(nPhaseIdx,
-                                   pW + MaterialLaw::pC(materialParams, 1 - Sn));
+                                   pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
         }
         else if (formulation == Indices::pnSw) {
             Scalar Sw = priVars[Indices::saturationIdx];
             fluidState.setSaturation(wPhaseIdx, Sw);
             fluidState.setSaturation(nPhaseIdx, 1 - Sw);
 
+            PhaseVector pC;
+            MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+
             Scalar pN = priVars[Indices::pressureIdx];
             fluidState.setPressure(nPhaseIdx, pN);
             fluidState.setPressure(wPhaseIdx,
-                                   pN - MaterialLaw::pC(materialParams, Sw));
+                                   pN + (pC[wPhaseIdx] - pC[nPhaseIdx]));
         }
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -196,6 +199,24 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {}                                    
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &v,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { };
 
 protected:
     static void updateTemperature_(FluidState &fluidState,

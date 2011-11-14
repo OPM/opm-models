@@ -56,8 +56,8 @@ class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
@@ -91,7 +91,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &storage,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -131,7 +131,7 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
+    void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -169,7 +169,7 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
+    void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const

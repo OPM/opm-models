@@ -48,7 +48,8 @@ class TwoPLocalResidual : public BoxLocalResidual<TypeTag>
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -65,7 +66,9 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
@@ -88,7 +91,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result,
+    void computeStorage(EqVector &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -112,7 +115,7 @@ public:
      * \param flux The flux over the SCV (sub-control-volume) face for each phase
      * \param faceIdx The index of the SCV face
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx,
                      int timeIdx) const
@@ -132,7 +135,7 @@ public:
      * This method is called by compute flux and is mainly there for
      * derived models to ease adding equations selectively.
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
+    void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -180,7 +183,7 @@ public:
      * non-isothermal two-phase models to calculate diffusive heat
      * fluxes
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
+    void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -195,7 +198,7 @@ public:
      * \param localVertexIdx The index of the SCV
      *
      */
-    void computeSource(PrimaryVariables &values,
+    void computeSource(RateVector &values,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const

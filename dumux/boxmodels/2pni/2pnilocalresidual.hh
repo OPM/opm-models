@@ -51,23 +51,29 @@ class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
 {
     typedef TwoPLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+
     enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
+
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+
         energyEqIdx = Indices::energyEqIdx,
         temperatureIdx = Indices::temperatureIdx,
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum { dimWorld = GridView::dimensionworld };
+
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
 public:
     /*!
@@ -81,7 +87,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &storage,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -120,7 +126,7 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
+    void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -158,7 +164,7 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
+    void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const

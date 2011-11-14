@@ -60,8 +60,9 @@ private:
     // define the material law
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     //    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
-        typedef RegularizedLinearMaterial<Scalar> EffMaterialLaw;
-        typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    typedef RegularizedLinearMaterial<Scalar> EffMaterialLaw;
+    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    
 public:
     typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };

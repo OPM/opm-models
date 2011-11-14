@@ -36,7 +36,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
-#include <dumux/boxmodels/richards/richardsmodel.hh>
+#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
 
 namespace Dumux
 {
@@ -61,9 +61,14 @@ private:
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef RegularizedBrooksCorey<Scalar> EffectiveLaw;
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
 public:
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> type;
+    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 }
 

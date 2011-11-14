@@ -35,6 +35,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
 
 #include <dumux/boxmodels/2p/2pmodel.hh>
 
@@ -61,9 +62,14 @@ private:
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
-public:
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> type;
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
+public:
+    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 }
 /*!

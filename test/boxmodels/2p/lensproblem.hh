@@ -27,8 +27,8 @@
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  */
-#ifndef DUMUX_LENSPROBLEM_HH
-#define DUMUX_LENSPROBLEM_HH
+#ifndef DUMUX_LENS_PROBLEM_HH
+#define DUMUX_LENS_PROBLEM_HH
 
 //#include <dumux/common/quad.hh>
 
@@ -39,15 +39,19 @@
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 
+#include <dumux/boxmodels/2p/2pmodel.hh>
+
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/simplednapl.hh>
-#include <dumux/boxmodels/2p/2pmodel.hh>
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 
 #include "lensgridcreator.hh"
-#include "lensspatialparameters.hh"
-
 namespace Dumux
 {
 
@@ -59,7 +63,7 @@ class LensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxTwoP, LensSpatialParameters));
+NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxTwoP));
 
 // declare the properties specific for the lens problem
 NEW_PROP_TAG(LensLowerLeftX);
@@ -86,7 +90,7 @@ SET_TYPE_PROP(LensProblem, GridCreator, LensGridCreator<TypeTag>);
 // Set the problem property
 SET_TYPE_PROP(LensProblem, Problem, Dumux::LensProblem<TypeTag>);
 
-#if 0
+#if 1
 // Set the wetting phase
 SET_PROP(LensProblem, WettingPhase)
 {
@@ -108,6 +112,24 @@ public:
 // OR: set the fluid system
 SET_TYPE_PROP(LensProblem, FluidSystem, FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 #endif
+
+// Set the material Law
+SET_PROP(LensProblem, MaterialLaw)
+{
+private:
+    // define the material law which is parameterized by effective
+    // saturations
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    // define the material law parameterized by absolute saturations
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
+public:
+    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+};
 
 // Enable partial reassembly of the jacobian matrix?
 SET_BOOL_PROP(LensProblem, EnablePartialReassemble, true);
@@ -178,9 +200,10 @@ SET_INT_PROP(LensProblem, CellsY, 32);
  * <tt>./test_2p -parameterFile test_2p.input</tt>
  */
 template <class TypeTag>
-class LensProblem : public TwoPProblem<TypeTag>
+class LensProblem
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef TwoPProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -194,22 +217,25 @@ class LensProblem : public TwoPProblem<TypeTag>
 
     enum {
         // primary variable indices
-        pwIdx = Indices::pwIdx,
-        SnIdx = Indices::SnIdx,
+
 
         // phase indices
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
 
         // equation indices
-        contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
         contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
 
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+
 
 public:
     /*!
@@ -222,17 +248,79 @@ public:
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         eps_ = 3e-6;
+        FluidSystem::init();
+
         temperature_ = 273.15 + 20; // -> 20°C
-
-        GlobalPosition lensLowerLeft;
-        lensLowerLeft[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
-        lensLowerLeft[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
-
-        GlobalPosition lensUpperRight;
-        lensUpperRight[0] = GET_PARAM(TypeTag, Scalar, LensUpperRightX);
-        lensUpperRight[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
+        lensLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
+        lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
+        lensUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensUpperRightX);
+        lensUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
         
-        this->spatialParameters().setLensCoords(lensLowerLeft, lensUpperRight);
+        // parameters for the Van Genuchten law
+        // alpha and n
+        lensMaterialParams_.setVgAlpha(0.00045);
+        lensMaterialParams_.setVgN(7.3);
+        outerMaterialParams_.setVgAlpha(0.0037);
+        outerMaterialParams_.setVgN(4.7);
+
+        lensK_ = 9.05e-12;
+        outerK_ = 4.6e-10;
+    }
+
+    /*!
+     * \brief Intrinsic permability
+     *
+     * \param element The current element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume.
+     * \return Intrinsic permeability
+     */
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(globalPos))
+            return lensK_;
+        return outerK_;
+    }
+
+    /*!
+     * \brief Porosity
+     *
+     * \param element The current element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume.
+     * \return Porosity
+     */
+     template <class Context>
+     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+     { return 0.4; }
+
+    /*!
+     * \brief Function for defining the parameters needed by constitutive relationships (kr-Sw, pc-Sw, etc.).
+     *
+     * \param element The current element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume.
+     * \return the material parameters object
+     */
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+
+        if (isInLens_(globalPos))
+            return lensMaterialParams_;
+        return outerMaterialParams_;
+    }
+
+
+    //! Set the bounding box of the fine-sand lens
+    void setLensCoords(const GlobalPosition& lensLowerLeft,
+                       const GlobalPosition& lensUpperRight)
+    {
+        lensLowerLeft_ = lensLowerLeft;
+        lensUpperRight_ = lensUpperRight;
     }
 
     /*!
@@ -271,11 +359,11 @@ public:
     template <class Context>
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
-    { return temperature_; };
+    { return temperature_; }
 
 
     template <class Context>
-    void source(PrimaryVariables &values,
+    void source(RateVector &values,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
     { values = 0; }
@@ -323,13 +411,19 @@ public:
                    int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
-        fluidState.setTemperature(temperature_);
-        fluidState.setPressure(FluidSystem::wPhaseIdx, /*pressure=*/1e5);
-        fluidState.setPressure(FluidSystem::nPhaseIdx, /*pressure=*/1e5);
 
-        Scalar densityW = FluidSystem::density(fluidState, FluidSystem::wPhaseIdx);
+        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
+        fs.setTemperature(temperature_);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(fs, wPhaseIdx);
+        Scalar densityW = FluidSystem::density(fs, paramCache, wPhaseIdx);
 
+        // set the fluid state's temperature
+        Scalar T = temperature(context, spaceIdx, timeIdx);
+        Scalar pw, Sw;
+        
+        // set wetting phase pressure and saturation
         if (onLeftBoundary_(globalPos))
         {
             Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
@@ -337,19 +431,25 @@ public:
             Scalar alpha = (1 + 1.5/height);
 
             // hydrostatic pressure scaled by alpha
-            values[pwIdx] = 1e5 - alpha*densityW*this->gravity()[1]*depth;
-            values[SnIdx] = 0.0;
+            pw = 1e5 - alpha*densityW*this->gravity()[1]*depth;
+            Sw = 1.0;
         }
-        else if (onRightBoundary_(globalPos))
+        else
         {
+            // if this triggers, something went wrong in boundaryTypes()!
+            assert(onRightBoundary_(globalPos));
+
             Scalar depth = this->bboxMax()[1] - globalPos[1];
 
             // hydrostatic pressure
-            values[pwIdx] = 1e5 - densityW*this->gravity()[1]*depth;
-            values[SnIdx] = 0.0;
+            pw = 1e5 - densityW*this->gravity()[1]*depth;
+            Sw = 1.0;
         }
-        else
-            values = 0.0;
+        
+        // assign primary variables
+        const MaterialLawParams &matParams =
+            this->materialLawParams(context, spaceIdx, timeIdx);
+        values.assignImmiscibleFromWetting(T, pw, Sw, matParams);
     }
 
     /*!
@@ -363,15 +463,19 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        values = 0.0;
+
+        RateVector massRate(0.0);
+        massRate = 0.0;
         if (onInlet_(globalPos)) {
-            values[contiNEqIdx] = -0.04; // kg / (m * s)
+            massRate[contiNEqIdx] = -0.04; // kg / (m^2 * s)
         }
+
+        values.setMassRate(massRate);
     }
     // \}
 
@@ -396,18 +500,38 @@ public:
                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
         Scalar depth = this->bboxMax()[1] - globalPos[1];
-        Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
-        ImmiscibleFluidState<Scalar, FluidSystem> fluidState;
+        
+        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
+        fs.setTemperature(temperature_);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(fs, wPhaseIdx);
+        Scalar densityW = FluidSystem::density(fs, paramCache, wPhaseIdx);
 
+        // set the fluid state's temperature
+        Scalar T = temperature(context, spaceIdx, timeIdx);
+        
         // hydrostatic pressure
-        values[pwIdx] = 1e5 - densityW*this->gravity()[1]*depth;
-        values[SnIdx] = 0.0;
+        Scalar pw = 1e5 - densityW*this->gravity()[1]*depth;
+        Scalar Sw = 1.0;
+
+        // assign primary variables
+        const MaterialLawParams &matParams =
+            this->materialLawParams(context, spaceIdx, timeIdx);
+        values.assignImmiscibleFromWetting(T, pw, Sw, matParams);
     }
     // \}
 
 private:
+    bool isInLens_(const GlobalPosition &pos) const
+    {
+        for (int i = 0; i < dim; ++i) {
+            if (pos[i] < lensLowerLeft_[i] || pos[i] > lensUpperRight_[i])
+                return false;
+        }
+        return true;
+    }
 
     bool onLeftBoundary_(const GlobalPosition &globalPos) const
     {
@@ -435,6 +559,14 @@ private:
         Scalar lambda = (this->bboxMax()[0] - globalPos[0])/width;
         return onUpperBoundary_(globalPos) && 0.5 < lambda && lambda < 2.0/3.0;
     }
+
+    GlobalPosition lensLowerLeft_;
+    GlobalPosition lensUpperRight_;
+
+    Scalar lensK_;
+    Scalar outerK_;
+    MaterialLawParams lensMaterialParams_;
+    MaterialLawParams outerMaterialParams_;
 
     Scalar temperature_;
     Scalar eps_;

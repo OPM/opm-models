@@ -41,11 +41,13 @@
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 
-// use the same spatial parameters as the injection problem of the
-// 2p2c test program
-#include "../2p2c/injectionspatialparameters.hh"
+#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 #include <dumux/common/cubegridcreator.hh>
 
+#include <dumux/material/heatconduction/somerton.hh>
 #define ISOTHERMAL 0
 
 namespace Dumux {
@@ -56,13 +58,22 @@ class InjectionProblem2PNI;
 namespace Properties
 {
 #if !ISOTHERMAL
-NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoPNI, InjectionSpatialParameters));
+NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoPNI));
 #else
-NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoP, InjectionSpatialParameters));
+NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoP));
 #endif
 
 // declare the properties specific for the non-isothermal immiscible
 // injection problem
+NEW_PROP_TAG(MaxDepth);
+
+NEW_PROP_TAG(FluidSystemNumTemperature);
+NEW_PROP_TAG(FluidSystemTemperatureLow);
+NEW_PROP_TAG(FluidSystemTemperatureHigh);
+NEW_PROP_TAG(FluidSystemNumPressure);
+NEW_PROP_TAG(FluidSystemPressureLow);
+NEW_PROP_TAG(FluidSystemPressureHigh);
+
 // Set the grid type
 SET_PROP(InjectionProblem2PNI, Grid)
 {
@@ -101,6 +112,36 @@ public:
 };
 #endif
 
+// Set the material Law
+SET_PROP(InjectionProblem2PNI, MaterialLaw)
+{
+private:
+    // define the material law which is parameterized by effective
+    // saturations
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
+    // define the material law parameterized by absolute saturations
+    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { lPhaseIdx = FluidSystem::lPhaseIdx };
+
+public:
+    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+};
+
+// Set the heat conduction law
+SET_PROP(InjectionProblem2PNI, HeatConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    // define the material law parameterized by absolute saturations
+    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+};
+
 // Enable gravity
 SET_BOOL_PROP(InjectionProblem2PNI, EnableGravity, true);
 
@@ -116,6 +157,14 @@ SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeZ, 0.0);
 SET_INT_PROP(InjectionProblem2PNI, GridCellsX, 24);
 SET_INT_PROP(InjectionProblem2PNI, GridCellsY, 26);
 SET_INT_PROP(InjectionProblem2PNI, GridCellsZ, 0);
+SET_SCALAR_PROP(InjectionProblem2PNI, MaxDepth, 2700);
+
+SET_INT_PROP(InjectionProblem2PNI, FluidSystemNumTemperature, 100);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureLow, 300.0);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureHigh, 400.0);
+SET_INT_PROP(InjectionProblem2PNI, FluidSystemNumPressure, 200);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureLow, 1e5);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureHigh, 1e7);
 }
 
 /*!
@@ -150,14 +199,11 @@ SET_INT_PROP(InjectionProblem2PNI, GridCellsZ, 0);
  * <tt>./test_2pni -parameterFile test_2pni.input</tt>
  */
 template<class TypeTag>
-class InjectionProblem2PNI
-#if !ISOTHERMAL
-  : public TwoPNIProblem<TypeTag>
-#else
-  : public TwoPNIProblem<TypeTag>
-#endif
+class InjectionProblem2PNI 
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef TwoPNIProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
@@ -167,7 +213,6 @@ class InjectionProblem2PNI
     typedef typename GET_PROP_TYPE(TypeTag, TwoPNIIndices) Indices;
 #endif
     enum {
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
         conti0EqIdx = Indices::conti0EqIdx,
@@ -175,7 +220,6 @@ class InjectionProblem2PNI
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
 
-        contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
         contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
 #if !ISOTHERMAL
@@ -188,16 +232,15 @@ class InjectionProblem2PNI
         dimWorld = GridView::dimensionworld
     };
 
-
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
-    typedef typename GridView::Intersection Intersection;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename HeatConductionLaw::Params HeatConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
@@ -213,16 +256,127 @@ public:
         : ParentType(timeManager, 
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
-        maxDepth_ = 2700.0; // [m]
         eps_ = 1e-6;
 
+        maxDepth_ = GET_PARAM(TypeTag, Scalar, MaxDepth); // [m]
+
         // initialize the tables of the fluid system
-        FluidSystem::init(/*tempMin=*/273.15,
-                /*tempMax=*/423.15,
-                /*numTemp=*/50,
-                /*pMin=*/0.0,
-                /*pMax=*/30e6,
-                /*numP=*/300);
+        FluidSystem::init(GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureLow),
+                          GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureHigh),
+                          GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, NumTemperature),
+                          GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureLow),
+                          GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureHigh),
+                          GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, NumPressure));
+        
+        layerBottom_ = 22.0;
+
+        // intrinsic permeabilities
+        fineK_ = 1e-13;
+        coarseK_ = 1e-12;
+
+        // porosities
+        finePorosity_ = 0.3;
+        coarsePorosity_ = 0.3;
+
+        // residual saturations
+        fineMaterialParams_.setSwr(0.2);
+        fineMaterialParams_.setSnr(0.0);
+        coarseMaterialParams_.setSwr(0.2);
+        coarseMaterialParams_.setSnr(0.0);
+
+        // parameters for the Brooks-Corey law
+        fineMaterialParams_.setPe(1e4);
+        coarseMaterialParams_.setPe(1e4);
+        fineMaterialParams_.setLambda(2.0);
+        coarseMaterialParams_.setLambda(2.0);
+
+        // parameters for the somerton law of heat conduction
+        computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
+        computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
+    }
+
+    /*!
+     * \brief Apply the intrinsic permeability tensor to a pressure
+     *        potential gradient.
+     *
+     * \param element The current finite element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    const Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineK_;
+        return coarseK_;
+    }
+
+    /*!
+     * \brief Define the porosity \f$[-]\f$ of the spatial parameters
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the porosity needs to be defined
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return finePorosity_;
+        return coarsePorosity_;
+    }
+
+    /*!
+     * \brief Return the parameter object for the Brooks-Corey material law which depends on the position
+     *
+     * \param element The current finite element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineMaterialParams_;
+        return coarseMaterialParams_;
+    }
+
+    /*!
+     * \brief Returns the volumetric heat capacity \f$[J/m^3 K]\f$ of
+     *        the rock matrix.
+     *
+     * Porosity is _not_ taken into account by this method. This is
+     * only required for non-isothermal models.
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the heat capacity needs to be defined
+     */
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        return
+            790 // specific heat capacity of granite [J / (kg K)]
+            * 2700; // density of granite [kg/m^3]
+    }
+
+    /*!
+     * \brief Return the parameter object for the heat conductivty law
+     *        for a given position
+     */
+    template <class Context>
+    const HeatConductionLawParams&
+    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineHeatCondParams_;
+        return coarseHeatCondParams_;
     }
 
     /*!
@@ -249,16 +403,14 @@ public:
      * This problem assumes a temperature of 10 degrees Celsius.
      */
     template <class Context>
-    Scalar temperature(const Element &element,
-                       const FVElementGeometry &fvElemGeom,
-                       int scvIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     {
-        return 273.15 + 30; // [K]
+        return 273.15 + 40; // [K]
     };
 #endif
 
     template <class Context>
-    void source(PrimaryVariables &values,
+    void source(RateVector &values,
                 const Context &context, int spaceIdx, int timeIdx) const
     {
         values = 0;
@@ -332,7 +484,7 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
@@ -382,6 +534,34 @@ public:
     // \}
 
 private:
+    void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
+    {
+        Scalar lambdaWater = 0.6;
+        Scalar lambdaGranite = 2.8;
+
+        Scalar lambdaWet = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaWater, poro);
+        Scalar lambdaDry = std::pow(lambdaGranite, (1-poro));
+
+        params.setFullySaturatedLambda(nPhaseIdx, lambdaDry);
+        params.setFullySaturatedLambda(wPhaseIdx, lambdaWet);
+    }
+
+    bool isFineMaterial_(const GlobalPosition &pos) const
+    { return pos[dim-1] > layerBottom_; };
+
+    Scalar fineK_;
+    Scalar coarseK_;
+    Scalar layerBottom_;
+
+    Scalar finePorosity_;
+    Scalar coarsePorosity_;
+
+    MaterialLawParams fineMaterialParams_;
+    MaterialLawParams coarseMaterialParams_;
+
+    HeatConductionLawParams fineHeatCondParams_;
+    HeatConductionLawParams coarseHeatCondParams_;
+
     Scalar maxDepth_;
     Scalar eps_;
 };

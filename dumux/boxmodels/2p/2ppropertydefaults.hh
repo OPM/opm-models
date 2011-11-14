@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -36,7 +36,9 @@
 #include "2pproblem.hh"
 #include "2pindices.hh"
 #include "2pfluxvariables.hh"
+#include "2pprimaryvariables.hh"
 #include "2pvolumevariables.hh"
+#include "2pratevector.hh"
 #include "2pproperties.hh"
 
 #include <dumux/material/fluidsystems/gasphase.hh>
@@ -70,6 +72,12 @@ SET_TYPE_PROP(BoxTwoP,
 
 //! the Model property
 SET_TYPE_PROP(BoxTwoP, Model, TwoPModel<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(BoxTwoP, RateVector, TwoPRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxTwoP, PrimaryVariables, TwoPPrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoP, VolumeVariables, TwoPVolumeVariables<TypeTag>);
