@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2009-2011 by Andreas Lauser                               *
  *   Copyright (C) 2009 by Onur Dogan                                        *
- *   Copyright (C) 2009-2010 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -40,7 +40,10 @@
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 
-#include "richardslensspatialparameters.hh"
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 
 namespace Dumux
 {
@@ -53,7 +56,7 @@ class RichardsLensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(RichardsLensProblem, INHERITS_FROM(BoxRichards, RichardsLensSpatialParameters));
+NEW_TYPE_TAG(RichardsLensProblem, INHERITS_FROM(BoxRichards));
 
 // Set the grid type. Use UG if available, else SGrid
 #if HAVE_UG
@@ -76,6 +79,24 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
 };
 
+// Set the material Law
+SET_PROP(RichardsLensProblem, MaterialLaw)
+{
+private:
+    // define the material law which is parameterized by effective
+    // saturations
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    // define the material law parameterized by absolute saturations
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
+public:
+    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+};
+
 // Enable gravity?
 SET_BOOL_PROP(RichardsLensProblem, EnableGravity, true);
 
@@ -86,7 +107,7 @@ SET_BOOL_PROP(RichardsLensProblem, EnablePartialReassemble, true);
 // previous for the first iteration of the current time step?
 SET_BOOL_PROP(RichardsLensProblem, EnableJacobianRecycling, true);
 
-// Use forward diffferences to approximate the Jacobian matrix
+// Use forward differences to approximate the Jacobian matrix
 SET_INT_PROP(RichardsLensProblem, NumericDifferenceMethod, +1);
 
 // Set the maximum number of newton iterations of a time step
@@ -107,7 +128,7 @@ SET_BOOL_PROP(RichardsLensProblem, NewtonWriteConvergence, false);
  *        embedded into a high- permeability domain which uses the
  *        Richards box model.
  *
- * The domain is box shaped. Left and right boundaries are Dirichlet
+ * The domain is rectangular. Left and right boundaries are Dirichlet
  * boundaries with fixed water pressure (fixed Saturation \f$S_w = 0\f$),
  * bottom boundary is closed (Neumann 0 boundary), the top boundary
  * (Neumann 0 boundary) is also closed except for infiltration
@@ -124,16 +145,17 @@ SET_BOOL_PROP(RichardsLensProblem, NewtonWriteConvergence, false);
  * simulation time is 10,000,000 seconds (115.7 days)
  */
 template <class TypeTag>
-class RichardsLensProblem : public RichardsBoxProblem<TypeTag>
+class RichardsLensProblem
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef RichardsBoxProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
@@ -142,12 +164,22 @@ class RichardsLensProblem : public RichardsBoxProblem<TypeTag>
         pwIdx = Indices::pwIdx,
         contiEqIdx = Indices::contiEqIdx,
 
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
+
+        numPhases = FluidSystem::numPhases,
+
         // Grid and world dimension
         dim = GridView::dimensionworld
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
+    //get the material law from the property system
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    //! The parameters of the material law to be used
+    typedef typename MaterialLaw::Params MaterialLawParams;
+
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     /*!
@@ -159,7 +191,8 @@ public:
     RichardsLensProblem(TimeManager &timeManager)
         : ParentType(timeManager, 
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
-    {
+        , pnRef_(1e5)
+    {      
         eps_ = 3e-6;
         pnRef_ = 1e5;
 
@@ -169,7 +202,22 @@ public:
         lensUpperRight_[0] = 4.0;
         lensUpperRight_[1] = 3.0;
 
-        this->spatialParameters().setLensCoords(lensLowerLeft_, lensUpperRight_);
+        // parameters for the Van Genuchten law
+        // alpha and n
+        lensMaterialParams_.setVgAlpha(0.00045);
+        lensMaterialParams_.setVgN(7.3);
+        outerMaterialParams_.setVgAlpha(0.0037);
+        outerMaterialParams_.setVgN(4.7);
+
+        // parameters for the linear law
+        // minimum and maximum pressures
+//        lensMaterialParams_.setEntryPC(0);
+//        outerMaterialParams_.setEntryPC(0);
+//        lensMaterialParams_.setMaxPC(0);
+//        outerMaterialParams_.setMaxPC(0);
+
+        lensK_ = 1e-12;
+        outerK_ = 5e-12;
     }
 
     /*!
@@ -192,7 +240,51 @@ public:
      */
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
-    { return 273.15 + 10; }; // -> 10°C
+    { return 273.15 + 10; } // -> 10°C
+
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor [m^2] at a given location
+     *
+     * \param element An arbitrary DUNE Codim<0> entity of the grid view
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(globalPos))
+            return lensK_;
+        return outerK_;
+    }
+
+    /*!
+     * \brief Returns the porosity [] at a given location
+     *
+     * \param element An arbitrary DUNE Codim<0> entity of the grid view
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    { return 0.4; }
+
+    /*!
+     * \brief Returns the parameters for the material law at a given location
+     *
+     * \param element An arbitrary DUNE Codim<0> entity of the grid view
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const auto &globalPos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(globalPos))
+            return lensMaterialParams_;
+        return outerMaterialParams_;
+    }
 
     /*!
      * \brief Returns the reference pressure [Pa] of the non-wetting
@@ -208,10 +300,10 @@ public:
      */
     template <class Context>
     Scalar referencePressure(const Context &context, int spaceIdx, int timeIdx) const
-    { return pnRef_; };
+    { return pnRef_; }
 
     template <class Context>
-    void source(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
+    void source(RateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     { values = 0; }
 
     // \}
@@ -273,7 +365,7 @@ public:
      * \param globalPos The position for which the Neumann value is set
      */
     template <class Context>
-    void neumann(PrimaryVariables &values,
+    void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
@@ -305,10 +397,16 @@ public:
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        const auto &materialParams = this->spatialParameters().materialLawParams(context, spaceIdx, timeIdx);
+        const auto &materialParams = this->materialLawParams(context, spaceIdx, timeIdx);
+
         Scalar Sw = 0.0;
-        Scalar pc = MaterialLaw::pC(materialParams, Sw);
-        values[pwIdx] = pnRef_ - pc;
+        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        fs.setSaturation(wPhaseIdx, Sw);
+        fs.setSaturation(nPhaseIdx, 1.0 - Sw);
+
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, materialParams, fs);
+        values[pwIdx] = pnRef_ + (pC[wPhaseIdx] - pC[nPhaseIdx]);
     }
 
     // \}
@@ -341,11 +439,25 @@ private:
         return onUpperBoundary_(globalPos) && 0.5 < lambda && lambda < 2.0/3.0;
     }
 
-    Scalar eps_;
-    Scalar pnRef_;
+    bool isInLens_(const GlobalPosition &pos) const
+    {
+        for (int i = 0; i < dim; ++i) {
+            if (pos[i] < lensLowerLeft_[i] || pos[i] > lensUpperRight_[i])
+                return false;
+        }
+        return true;
+    }
 
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
+
+    Scalar lensK_;
+    Scalar outerK_;
+    MaterialLawParams lensMaterialParams_;
+    MaterialLawParams outerMaterialParams_;
+
+    Scalar eps_;
+    Scalar pnRef_;
 };
 } //end namespace
 

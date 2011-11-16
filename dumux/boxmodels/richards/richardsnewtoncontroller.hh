@@ -47,9 +47,12 @@ class RichardsNewtonController : public NewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -59,7 +62,14 @@ class RichardsNewtonController : public NewtonController<TypeTag>
     enum {
         dim = GridView::dimension,
         pwIdx = Indices::pwIdx,
+
+        numPhases = FluidSystem::numPhases,
+
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
     };
+
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     /*!
@@ -82,7 +92,7 @@ public:
      */
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,
-                      const SolutionVector &deltaU)
+                      const GlobalEqVector &deltaU)
     {
         ParentType::newtonUpdate(uCurrentIter, uLastIter, deltaU);
 
@@ -117,21 +127,57 @@ public:
                     // calculate the old wetting phase saturation
                     const SpatialParameters &spatialParams = this->problem_().spatialParameters();
                     const MaterialLawParams &matParams = spatialParams.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
+                    
+                    ImmiscibleFluidState<Scalar, FluidSystem> fs;
+                    EnergyModule::updateTemperature_(fs, elemCtx, scvIdx, /*timeIdx=*/0);
+                    
+                    /////////
+                    // calculate the phase pressures of the previous iteration
+                    /////////
+                    
+                    // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
+                    fs.setSaturation(wPhaseIdx, 1.0);
+                    fs.setSaturation(nPhaseIdx, 0.0);
+                    PhaseVector pC;
+                    MaterialLaw::capillaryPressures(pC, matParams, fs);
+                    
+                    // non-wetting pressure can be larger than the
+                    // reference pressure if the medium is fully
+                    // saturated by the wetting phase
+                    Scalar pWOld = uLastIter[globI][pwIdx];
+                    Scalar pNOld = std::max(this->problem_().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
+                                            pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                    
+                    /////////
+                    // find the saturations of the previous iteration
+                    /////////
+                    fs.setPressure(wPhaseIdx, pWOld);
+                    fs.setPressure(nPhaseIdx, pNOld);
 
-                    Scalar pcMin = MaterialLaw::pC(matParams, /*Sw=*/1.0);
-                    Scalar pW = uLastIter[globI][pwIdx];
-                    Scalar pN = std::max(this->problem_().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
-                                         pW + pcMin);
-                    Scalar pcOld = pN - pW;
-                    Scalar SwOld = std::max<Scalar>(0.0, MaterialLaw::Sw(matParams, pcOld));
+                    PhaseVector satOld;
+                    MaterialLaw::saturations(satOld, matParams, fs);
+                    satOld[wPhaseIdx] = std::max<Scalar>(0.0, satOld[wPhaseIdx]);
 
-                    // convert into minimum and maximum wetting phase
-                    // pressures
-                    Scalar pwMin = pN - MaterialLaw::pC(matParams, SwOld - 0.2);
-                    Scalar pwMax = pN - MaterialLaw::pC(matParams, SwOld + 0.2);
+                    /////////
+                    // find the wetting phase pressures which
+                    // corrospond to a 20% increase and a 20% decrease
+                    // of the wetting saturation
+                    /////////
+                    fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] - 0.2);
+                    fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
+                    MaterialLaw::capillaryPressures(pC, matParams, fs);
+                    Scalar pwMin = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
+                    
+                    fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] + 0.2);
+                    fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
+                    MaterialLaw::capillaryPressures(pC, matParams, fs);
+                    Scalar pwMax = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
 
-                    // clamp the result
-                    pW = uCurrentIter[globI][pwIdx];
+                    /////////
+                    // clamp the result to the minimum and the maximum
+                    // pressures we just calculated
+                    /////////
+                    Scalar pW = uCurrentIter[globI][pwIdx];
                     pW = std::max(pwMin, std::min(pW, pwMax));
                     uCurrentIter[globI][pwIdx] = pW;
                 }

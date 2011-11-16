@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -26,7 +26,7 @@
 #ifndef DUMUX_RICHARDS_PROBLEM_HH
 #define DUMUX_RICHARDS_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
 #include "richardsproperties.hh"
 
@@ -40,24 +40,24 @@ namespace Dumux
  * For a description of the Richards model, see Dumux::RichardsModel
  */
 template<class TypeTag>
-class RichardsBoxProblem : public BoxProblem<TypeTag>
+class RichardsBoxProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
+    typedef BoxMultiPhaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+
     enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::ctype CoordScalar;
+
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
@@ -77,7 +77,7 @@ public:
      */
     RichardsBoxProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
-          gravity_(0), spatialParams_(gridView)
+          gravity_(0)
     {
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
@@ -88,87 +88,6 @@ public:
      * \name Problem parameters
      */
     // \{
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
-     * \param localIdx The local index of the entity neighboring the Dirichlet boundary.
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    Scalar temperature(const Context &context,
-                       int localIdx) const
-    {
-        // if you get a deprecation warning here, please use context
-        // objects to specify your problem!
-        return boxTemperature(context.element(), context.fvElemGeom(), localIdx);
-   }
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
-     *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
-     */
-    template <class Context>
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
-    DUNE_DEPRECATED
-    Scalar temperature(const Context &context,
-                       int spaceIdx, int timeIdx) const
-    {
-        return asImp_().boxTemperature(context.element(),
-                                       context.fvElemGeom(timeIdx),
-                                       spaceIdx);
-    };
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
-     *
-     * This is the discretization specific interface for the box
-     * method. By default it just calls temperature(pos).
-     *
-     * \param element The DUNE Codim<0> enitiy which intersects with
-     *                the finite volume.
-     * \param fvGeom The finite volume geometry of the element.
-     * \param scvIdx The local index of the sub control volume inside the element
-     */
-    Scalar boxTemperature(const Element &element,
-                          const FVElementGeometry fvGeom,
-                          int scvIdx) const
-        DUNE_DEPRECATED // use context objects!
-    { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ at a given global position.
-     *
-     * This is not specific to the discretization. By default it just
-     * calls temperature().
-     *
-     * \param pos The position in global coordinates where the temperature should be specified.
-     */
-    Scalar temperatureAtPos(const GlobalPosition &pos) const
-        DUNE_DEPRECATED // use context objects!
-    { return asImp_().temperature(); }
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ for an isothermal problem.
-     *
-     * This is not specific to the discretization. By default it just
-     * throws an exception so it must be overloaded by the problem if
-     * no energy equation is used.
-     */
-    Scalar temperature() const
-        DUNE_DEPRECATED // use context objects!
-    { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
-
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
@@ -182,47 +101,8 @@ public:
     const Vector &gravity(const Context &context,
                           int spaceIdx, int timeIdx) const
     {
-        return asImp_().boxGravity(context.element(),
-                                   context.fvElemGeom(timeIdx),
-                                   spaceIdx);
-    };
-
-    /*!
-     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc 
-     * \param localIdx The local index of the sub control volume inside
-     *                 the element
-     */
-    template <class Context>
-    const Vector &gravity(const Context &context,
-                          int localIdx) const
-    {
-        return asImp_().boxGravity(context.element(),
-                                   context.fvElemGeom(),
-                                   localIdx);
-    };
-
-    /*!
-     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * This is the box discretization specific interface. By default
-     * it just calls gravityAtPos().
-     */
-    const Vector &boxGravity(const Element &element,
-                             const FVElementGeometry &fvGeom,
-                             int scvIdx) const
-    { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
-
-    /*!
-     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * This is discretization independent interface. By default it
-     * just calls gravity().
-     */
-    const Vector &gravityAtPos(const GlobalPosition &pos) const
-    { return asImp_().gravity(); }
+        return asImp_().gravity();
+    }
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
@@ -248,41 +128,10 @@ public:
      * \param fvGeom The finite volume geometry of the element.
      * \param scvIdx The local index of the sub control volume inside the element
      */
-    template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    Scalar referencePressure(const Context &context,
-                             int spaceIdx, int timeIdx) const
-    { return asImp_().referencePressure(context.element(), context.fvElemGeom(timeIdx), spaceIdx); }
-
-
-    /*!
-     * \brief Returns the reference pressure \f$\mathrm{[Pa]}\f$ of the non-wetting
-     *        phase within a control volume.
-     *
-     * This method MUST be overwritten by the actual problem.
-     *
-          * \param element The DUNE Codim<0> enitiy which intersects with
-     *                the finite volume.
-     * \param fvGeom The finite volume geometry of the element.
-     * \param scvIdx The local index of the sub control volume inside the element
-     */
     Scalar referencePressure(const Element &element,
                              const FVElementGeometry &fvGeom,
                              int scvIdx) const
     { DUNE_THROW(Dune::NotImplemented, "referencePressure() method not implemented by the actual problem"); };
-
-
-    /*!
-     * \brief Returns the spatial parameters object.
-     */
-    SpatialParameters &spatialParameters()
-    { return spatialParams_; }
-
-    /*!
-     * \copydoc spatialParameters()
-     */
-    const SpatialParameters &spatialParameters() const
-    { return spatialParams_; }
 
     // \}
 
@@ -293,10 +142,7 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     // the gravity vector
-    GlobalPosition gravity_;
-
-    // material properties
-    SpatialParameters spatialParams_;
+    Vector gravity_;
 };
 
 }

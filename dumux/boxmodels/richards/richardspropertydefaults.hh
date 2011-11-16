@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2009-2011 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -35,6 +35,8 @@
 #include "richardsproblem.hh"
 #include "richardsindices.hh"
 #include "richardsfluxvariables.hh"
+#include "richardsratevector.hh"
+#include "richardsprimaryvariables.hh"
 #include "richardsvolumevariables.hh"
 #include "richardsproperties.hh"
 #include "richardsnewtoncontroller.hh"
@@ -66,6 +68,12 @@ SET_TYPE_PROP(BoxRichards,
 //! The global model used
 SET_TYPE_PROP(BoxRichards, Model, RichardsModel<TypeTag>);
 
+//! the RateVector property
+SET_TYPE_PROP(BoxRichards, RateVector, RichardsRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxRichards, PrimaryVariables, RichardsPrimaryVariables<TypeTag>);
+
 //! The class for the volume averaged quantities
 SET_TYPE_PROP(BoxRichards, VolumeVariables, RichardsVolumeVariables<TypeTag>);
 
@@ -88,14 +96,9 @@ SET_TYPE_PROP(BoxRichards, RichardsIndices, Dumux::RichardsIndices);
  *
  * By default this is just retrieved from the material law.
  */
-SET_PROP(BoxRichards, MaterialLawParams)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-
-public:
-    typedef typename MaterialLaw::Params type;
-};
+SET_TYPE_PROP(BoxRichards,
+              MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(BoxRichards,

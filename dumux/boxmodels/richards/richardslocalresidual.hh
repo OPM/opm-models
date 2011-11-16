@@ -44,7 +44,8 @@ namespace Dumux
 template<class TypeTag>
 class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -75,7 +76,7 @@ public:
      * \param usePrevSol Calculate the storage term of the previous solution
      *                   instead of the model's current solution.
      */
-    void computeStorage(PrimaryVariables &result,
+    void computeStorage(EqVector &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -89,7 +90,6 @@ public:
             * volVars.porosity();
     }
 
-
     /*!
      * \brief Evaluates the mass flux over a face of a subcontrol
      *        volume.
@@ -100,25 +100,25 @@ public:
      * \param scvfIdx The sub control volume face index inside the current
      *                element
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx,
                      int timeIdx) const
     {
         const auto &fluxVarsEval = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        //const auto &fluxVarsEval = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx(), timeIdx);
-        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.upstreamIdx(), timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx(wPhaseIdx), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.downstreamIdx(wPhaseIdx), timeIdx);
 
         flux[contiEqIdx] =
             fluxVars.filterVelocityNormal(wPhaseIdx)
-            *
-            (fluxVars.upstreamWeight(wPhaseIdx)*up.fluidState().density(wPhaseIdx)
-             +
-             fluxVars.downstreamWeight(wPhaseIdx)*dn.fluidState().density(wPhaseIdx));
+            *( fluxVars.upstreamWeight(wPhaseIdx)*up.fluidState().density(wPhaseIdx)
+               +
+               fluxVars.downstreamWeight(wPhaseIdx)*dn.fluidState().density(wPhaseIdx));
     }
 
     /*!
@@ -129,7 +129,7 @@ public:
      * \param scvIdx The sub control volume index inside the current
      *               element
      */
-    void computeSource(PrimaryVariables &q,
+    void computeSource(RateVector &q,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const

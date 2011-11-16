@@ -56,18 +56,22 @@ class RichardsVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
         pwIdx = Indices::pwIdx,
+        numPhases = FluidSystem::numPhases,
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
+
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     //! The type returned by the fluidState() method
@@ -102,10 +106,7 @@ public:
         const auto &spatialParams = elemCtx.problem().spatialParameters();
         const MaterialLawParams &matParams =
             spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
-        relativePermeabilityWetting_ =
-            MaterialLaw::krw(matParams,
-                             fluidState_.saturation(wPhaseIdx));
-
+        MaterialLaw::relativePermeabilities(relativePermeability_, matParams, fluidState_);
         porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not belonging to the fluid state
@@ -129,30 +130,46 @@ public:
             spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
-        // pressures
-        Scalar minPc = MaterialLaw::pC(materialParams, 1.0);
-        Scalar pnRef = elemCtx.problem().referencePressure(elemCtx, scvIdx, timeIdx);
-        fluidState.setPressure(wPhaseIdx, priVars[pwIdx]);
-        fluidState.setPressure(nPhaseIdx, std::max(pnRef, priVars[pwIdx] + minPc));
+        /////////
+        // calculate the pressures
+        /////////
+                    
+        // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
+        fluidState.setSaturation(wPhaseIdx, 1.0);
+        fluidState.setSaturation(nPhaseIdx, 0.0);
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+                    
+        // non-wetting pressure can be larger than the
+        // reference pressure if the medium is fully
+        // saturated by the wetting phase
+        Scalar pW = priVars[pwIdx];
+        Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
+                             pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                    
+        /////////
+        // calculate the saturations
+        /////////
+        fluidState.setPressure(wPhaseIdx, pW);
+        fluidState.setPressure(nPhaseIdx, pN);
 
-        // saturations
-        Scalar Sw = MaterialLaw::Sw(materialParams,
-                                    fluidState.pressure(nPhaseIdx)
-                                    - fluidState.pressure(wPhaseIdx));
-        fluidState.setSaturation(wPhaseIdx, Sw);
-        fluidState.setSaturation(nPhaseIdx, 1 - Sw);
+        PhaseVector sat;
+        MaterialLaw::saturations(sat, materialParams, fluidState);
+        fluidState.setSaturation(wPhaseIdx, sat[wPhaseIdx]);
+        fluidState.setSaturation(nPhaseIdx, 1.0 - sat[wPhaseIdx]);
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
-        int phaseIdx = wPhaseIdx;
-        // compute and set the viscosity
-        Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-        fluidState.setViscosity(phaseIdx, mu);
+        // compute and set the wetting phase viscosity
+        Scalar mu = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+        fluidState.setViscosity(wPhaseIdx, mu);
+        fluidState.setViscosity(nPhaseIdx, 1e-20);
 
-        // compute and set the density
-        Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-        fluidState.setDensity(phaseIdx, rho);
+        // compute and set the wetting phase density
+        Scalar rho = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+        fluidState.setDensity(wPhaseIdx, rho);
+        fluidState.setDensity(nPhaseIdx, 1e-20);
 
         Implementation::updateEnthalpy_(fluidState,
                                         paramCache,
@@ -184,12 +201,7 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar relativePermeability(int phaseIdx) const
-    {
-        if (phaseIdx == wPhaseIdx)
-            return relativePermeabilityWetting_;
-        else
-            return 1.0;
-    }
+    { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective mobility of a given phase within
@@ -211,7 +223,24 @@ public:
     Scalar capillaryPressure() const
     { return fluidState_.pressure(nPhaseIdx) - fluidState_.pressure(wPhaseIdx); }
 
-protected:
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    { }
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &rateVec,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { };
+
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,
                                    int scvIdx,
@@ -228,6 +257,7 @@ protected:
                                 int timeIdx)
     { }
 
+protected:
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
@@ -237,7 +267,7 @@ protected:
     { }
 
     FluidState fluidState_;
-    Scalar relativePermeabilityWetting_;
+    Scalar relativePermeability_[numPhases];
     Scalar porosity_;
 
 private:

@@ -92,10 +92,14 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    const Vector &potentialGrad(int phaseIdx = wPhaseIdx) const
+    const Vector &potentialGrad(int phaseIdx) const
     {
-        assert(phaseIdx == wPhaseIdx);
-        return potentialGrad_;
+        static Vector nullVec(0);
+
+        if (phaseIdx == wPhaseIdx)
+            return potentialGrad_;
+        else
+            return nullVec;
     }
 
     /*!
@@ -151,10 +155,10 @@ public:
      * \param phaseIdx The index of the fluid phase for which the downstream
      *                 direction is requested.
      */
-    int downstreamIdx(int phaseIdx = wPhaseIdx) const
+    int downstreamIdx(int phaseIdx) const
     {
         assert(phaseIdx == wPhaseIdx);
-        return (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
+        return downstreamIdx_;
     }
 
     /*!
@@ -164,10 +168,10 @@ public:
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
      */
-    int upstreamIdx(int phaseIdx = wPhaseIdx) const
+    int upstreamIdx(int phaseIdx) const
     {
         assert(phaseIdx == wPhaseIdx);
-        return (filterVelocityNormal_ > 0)?insideScvIdx_:outsideScvIdx_;
+        return upstreamIdx_;
     }
 
     /*!
@@ -205,8 +209,7 @@ protected:
         {
             // FE gradient at vertex idx
             const Vector &feGrad = scvf.grad[scvIdx];
-
-            const auto &fs = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+            const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
             // compute pressure gradient for the wetting phase
             Vector tmp(feGrad);
@@ -281,19 +284,31 @@ protected:
         filterVelocity_ *= -1;
 
         // scalar product with the face normal
-        filterVelocityNormal_ = 0.0;
-        for (int i = 0; i < Vector::size; ++i)
-            filterVelocityNormal_ += filterVelocity_[i]*normal[i];
+        filterVelocityNormal_ = filterVelocity_ * normal;
 
+        const auto &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        if (&evalFluxVars == this) {
+            upstreamIdx_ = (filterVelocityNormal_ > 0)?insideScvIdx_:outsideScvIdx_;
+            downstreamIdx_ = (filterVelocityNormal_ > 0)?outsideScvIdx_:insideScvIdx_;
+        }
+        else {
+            upstreamIdx_ = evalFluxVars.upstreamIdx(wPhaseIdx);
+            downstreamIdx_ = evalFluxVars.downstreamIdx(wPhaseIdx);
+        }
+        
         // multiply both with the upstream mobility
-        const auto &up = elemCtx.volVars(upstreamIdx(wPhaseIdx), timeIdx);
+        const auto &up = elemCtx.volVars(upstreamIdx_, timeIdx);
         filterVelocityNormal_ *= up.mobility(wPhaseIdx);
         filterVelocity_ *= up.mobility(wPhaseIdx);
     }
 
     // local indices of the inside and the outside sub-control volumes
-    int insideScvIdx_;
-    int outsideScvIdx_;
+    short insideScvIdx_;
+    short outsideScvIdx_;
+
+    // the indices of the upstream and of the downstream sub-control volumes
+    short upstreamIdx_;
+    short downstreamIdx_;
 
     // extrusion factor
     Scalar extrusionFactor_;
