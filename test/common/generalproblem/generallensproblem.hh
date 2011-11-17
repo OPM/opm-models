@@ -50,7 +50,7 @@
 #include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
 #include <dumux/decoupled/2p/impes/impesproblem2p.hh>
 
-#include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 
 #include "generallensspatialparameters.hh"
 
@@ -223,7 +223,7 @@ class GeneralLensProblem : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
         dimWorld = GridView::dimensionworld
     };
 
-
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -312,7 +312,7 @@ public:
      * \param values return values
      * \param globalPos The global coordinates
      */
-    void sourceAtPos(PrimaryVariables &values,const GlobalPosition& globalPos) const
+    void sourceAtPos(RateVector &values,const GlobalPosition& globalPos) const
     {
         values = 0;
     }
@@ -388,7 +388,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumannAtPos(PrimaryVariables &values,
+    void neumannAtPos(RateVector &values,
                       const GlobalPosition &globalPos) const
     {
         values = 0.0;

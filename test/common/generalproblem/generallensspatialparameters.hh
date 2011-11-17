@@ -35,6 +35,7 @@
 #include <dumux/material/spatialparameters/fvspatialparameters.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
 
 #include <dumux/boxmodels/2p/2pmodel.hh>
 
@@ -61,8 +62,13 @@ SET_PROP(GeneralLensSpatialParameters, MaterialLaw)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
 public:
-    typedef EffToAbsLaw<EffectiveLaw> type;
+    typedef Dumux::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 }
 
