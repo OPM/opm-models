@@ -35,9 +35,11 @@
 
 #include "1pmodel.hh"
 #include "1plocalresidual.hh"
+#include "1pindices.hh"
+#include "1pprimaryvariables.hh"
+#include "1pratevector.hh"
 #include "1pvolumevariables.hh"
 #include "1pfluxvariables.hh"
-#include "1pindices.hh"
 
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
@@ -77,6 +79,12 @@ SET_TYPE_PROP(BoxOneP,
 
 //! the Model property
 SET_TYPE_PROP(BoxOneP, Model, OnePBoxModel<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(BoxOneP, RateVector, OnePRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxOneP, PrimaryVariables, OnePPrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxOneP, VolumeVariables, OnePVolumeVariables<TypeTag>);

@@ -50,7 +50,8 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -75,7 +76,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result,
+    void computeStorage(EqVector &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -101,7 +102,7 @@ public:
      * \param flux The flux over the SCV (sub-control-volume) face
      * \param faceIdx The index of the SCV face
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx, 
                      int timeIdx) const
@@ -127,7 +128,7 @@ public:
      * \param localVertexIdx The index of the SCV
      *
      */
-    void computeSource(PrimaryVariables &values,
+    void computeSource(RateVector &values,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const
