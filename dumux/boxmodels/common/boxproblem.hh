@@ -62,7 +62,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -257,11 +257,11 @@ public:
 
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void neumann(EqVector &priVars,
+    void neumann(RateVector &rate,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        asImp_().boxSDNeumann(priVars,
+        asImp_().boxSDNeumann(rate,
                               context.element(),
                               context.fvElemGeom(timeIdx),
                               context.intersection(spaceIdx),
@@ -290,7 +290,7 @@ public:
      * in normal direction of each phase. Negative values mean influx.
      */
     template <class Context>
-    void boxSDNeumann(EqVector &values,
+    void boxSDNeumann(RateVector &values,
                       const Element &element,
                       const FVElementGeometry &fvElemGeom,
                       const Intersection &is,
@@ -321,7 +321,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumann(EqVector &values,
+    void neumann(RateVector &values,
                  const Element &element,
                  const FVElementGeometry &fvElemGeom,
                  const Intersection &is,
@@ -342,7 +342,7 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumannAtPos(EqVector &values,
+    void neumannAtPos(RateVector &values,
                       const GlobalPosition &pos) const
     {
         // Throw an exception (there is no reasonable default value
@@ -355,11 +355,11 @@ public:
 
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void source(EqVector &priVars,
+    void source(RateVector &rate,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
     {
-        asImp_().boxSDSource(priVars,
+        asImp_().boxSDSource(rate,
                              context.element(),
                              context.fvElemGeom(timeIdx),
                              spaceIdx,
@@ -384,7 +384,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void boxSDSource(EqVector &values,
+    void boxSDSource(RateVector &values,
                      const Element &element,
                      const FVElementGeometry &fvElemGeom,
                      int scvIdx,
@@ -407,7 +407,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void source(EqVector &values,
+    void source(RateVector &values,
                 const Element &element,
                 const FVElementGeometry &fvElemGeom,
                 int scvIdx) const
@@ -429,7 +429,7 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void sourceAtPos(EqVector &values,
+    void sourceAtPos(RateVector &values,
                      const GlobalPosition &pos) const
     {
         DUNE_THROW(Dune::InvalidStateException,
@@ -445,7 +445,7 @@ public:
      */
     template <class Context>
     DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void initial(EqVector &values,
+    void initial(PrimaryVariables &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
