@@ -51,6 +51,7 @@ class OnePTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -191,6 +192,24 @@ public:
         assert(phaseIdx == 0);
         return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
     };
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {}                                    
+    
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &v,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { };
 
 protected:
     static void updateTemperature_(FluidState &fluidState,

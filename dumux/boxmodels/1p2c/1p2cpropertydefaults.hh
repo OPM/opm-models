@@ -38,6 +38,8 @@
 
 #include "1p2cmodel.hh"
 #include "1p2clocalresidual.hh"
+#include "1p2cratevector.hh"
+#include "1p2cprimaryvariables.hh"
 #include "1p2cvolumevariables.hh"
 #include "1p2cfluxvariables.hh"
 #include "1p2cindices.hh"
@@ -72,6 +74,12 @@ SET_TYPE_PROP(BoxOnePTwoC,
 
 //! define the model
 SET_TYPE_PROP(BoxOnePTwoC, Model, OnePTwoCBoxModel<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(BoxOnePTwoC, RateVector, OnePTwoCRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxOnePTwoC, PrimaryVariables, OnePTwoCPrimaryVariables<TypeTag>);
 
 //! define the VolumeVariables
 SET_TYPE_PROP(BoxOnePTwoC, VolumeVariables, OnePTwoCVolumeVariables<TypeTag>);

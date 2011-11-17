@@ -170,7 +170,6 @@ public:
                                 Scalar volume)
     { };
 
-
 protected:
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,

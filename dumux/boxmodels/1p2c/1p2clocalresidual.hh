@@ -68,7 +68,8 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
@@ -93,7 +94,7 @@ public:
      *        \param scvIdx The index of the considered face of the sub control volume
      *        \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result,
+    void computeStorage(EqVector &result,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -105,9 +106,6 @@ public:
 
         result = 0;
 
-                * volVars.porosity();
-                * fs.massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
-                * volVars.porosity();
         // storage term of continuity equation- molefractions
         //careful: molarDensity changes with moleFrac!
         result[contiEqIdx] +=
@@ -128,7 +126,7 @@ public:
      *        \param faceId The index of the considered face of the sub control volume
      *        \param onBoundary If the considered face exists at the boundary
      */
-    void computeFlux(PrimaryVariables &flux,
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx,
                      int timeIdx) const
@@ -145,7 +143,7 @@ public:
      * \param flux The advective flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
+    void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -193,7 +191,7 @@ public:
      * \param flux The diffusive flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
+    void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
@@ -227,7 +225,7 @@ public:
      *        \param localVertexIdx The index of the vertex of the sub control volume
      *
      */
-    void computeSource(PrimaryVariables &q,
+    void computeSource(RateVector &q,
                        const ElementContext &elemCtx,
                        int scvIdx, 
                        int timeIdx) const
