@@ -134,6 +134,9 @@ SET_TYPE_PROP(BoxTwoPTwoC, NewtonController, TwoPTwoCNewtonController<TypeTag>);
 //! the Model property
 SET_TYPE_PROP(BoxTwoPTwoC, Model, TwoPTwoCModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxTwoPTwoC, BaseProblem, TwoPTwoCProblem<TypeTag>);
+
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, PrimaryVariables, TwoPTwoCPrimaryVariables<TypeTag>);
 

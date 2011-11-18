@@ -80,6 +80,9 @@ SET_TYPE_PROP(BoxOneP,
 //! the Model property
 SET_TYPE_PROP(BoxOneP, Model, OnePBoxModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxOneP, BaseProblem, OnePBoxProblem<TypeTag>);
+
 //! the RateVector property
 SET_TYPE_PROP(BoxOneP, RateVector, OnePRateVector<TypeTag>);
 

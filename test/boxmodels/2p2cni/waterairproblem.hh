@@ -116,13 +116,14 @@ SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
  * <tt>./test_2p2cni -parameterFile test_2p2cni.input</tt>
  *  */
 template <class TypeTag >
-class WaterAirProblem : public TwoPTwoCNIProblem<TypeTag>
+class WaterAirProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
+    typedef WaterAirProblem<TypeTag> ThisType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::Grid Grid;
-
-    typedef TwoPTwoCNIProblem<TypeTag> ParentType;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

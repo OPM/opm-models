@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2009-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -69,6 +69,7 @@ NEW_PROP_TAG(GridView); //!< The type of the grid view
 NEW_PROP_TAG(FVElementGeometry); //! The type of the finite-volume geometry in the box scheme
 
 NEW_PROP_TAG(Problem); //!< The type of the problem
+NEW_PROP_TAG(BaseProblem);   //!< The type of the base class for all problems which use this model
 NEW_PROP_TAG(Model); //!< The type of the discretization
 NEW_PROP_TAG(NumEq); //!< Number of equations in the system of PDEs
 NEW_PROP_TAG(BaseLocalResidual); //!< The type of the base class of the local residual

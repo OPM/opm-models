@@ -68,6 +68,9 @@ SET_TYPE_PROP(BoxRichards,
 //! The global model used
 SET_TYPE_PROP(BoxRichards, Model, RichardsModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxRichards, BaseProblem, RichardsBoxProblem<TypeTag>);
+
 //! the RateVector property
 SET_TYPE_PROP(BoxRichards, RateVector, RichardsRateVector<TypeTag>);
 

@@ -75,6 +75,9 @@ SET_TYPE_PROP(BoxOnePTwoC,
 //! define the model
 SET_TYPE_PROP(BoxOnePTwoC, Model, OnePTwoCBoxModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxOnePTwoC, BaseProblem, OnePTwoCBoxProblem<TypeTag>);
+
 //! the RateVector property
 SET_TYPE_PROP(BoxOnePTwoC, RateVector, OnePTwoCRateVector<TypeTag>);
 

@@ -73,6 +73,9 @@ SET_TYPE_PROP(BoxTwoP,
 //! the Model property
 SET_TYPE_PROP(BoxTwoP, Model, TwoPModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxTwoP, BaseProblem, TwoPProblem<TypeTag>);
+
 //! the RateVector property
 SET_TYPE_PROP(BoxTwoP, RateVector, TwoPRateVector<TypeTag>);
 

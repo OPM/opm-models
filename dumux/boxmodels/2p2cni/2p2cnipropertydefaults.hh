@@ -62,6 +62,9 @@ SET_TYPE_PROP(BoxTwoPTwoCNI,
 //! the Model property
 SET_TYPE_PROP(BoxTwoPTwoCNI, Model, TwoPTwoCNIModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxTwoPTwoCNI, BaseProblem, TwoPTwoCNIProblem<TypeTag>);
+
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPTwoCNI, VolumeVariables, TwoPTwoCNIVolumeVariables<TypeTag>);
 

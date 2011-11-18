@@ -118,6 +118,9 @@ SET_TYPE_PROP(BoxMPNC, NewtonController, MPNCNewtonController<TypeTag>);
 //! the Model property
 SET_TYPE_PROP(BoxMPNC, Model, MPNCModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxMPNC, BaseProblem, MPNCProblem<TypeTag>);
+
 //! use an isothermal model by default
 SET_BOOL_PROP(BoxMPNC, EnableEnergy, false);
 

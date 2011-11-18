@@ -183,8 +183,7 @@ SET_INT_PROP(ObstacleProblem, NewtonChoppedIterations, 0);
  * <tt>./test_MpNc -parameterFile test_MpNc.input</tt>
  */
 template <class TypeTag>
-class ObstacleProblem
-    : public GET_PROP_TYPE(TypeTag, BaseProblem)
+class ObstacleProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
