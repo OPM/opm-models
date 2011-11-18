@@ -77,6 +77,7 @@ public:
                                   const EqVector &compMolFlux,
                                   const ElementContext &elemCtx,
                                   int scvfIdx,
+                                  int timeIdx,
                                   int phaseIdx)
     {
         // do nothing, we're isothermal!
@@ -84,7 +85,8 @@ public:
 
     static void heatConduction(EqVector &result,
                                const ElementContext &elemCtx,
-                               int scvfIdx)
+                               int scvfIdx,
+                               int timeIdx)
     {
         // do nothing, we're isothermal!
     }
@@ -93,6 +95,7 @@ public:
     static void computeFlux(EqVector & flux,
                             const ElementContext &elemCtx,
                             int scvfIdx,
+                            int timeIdx,
                             const ComponentVector *molarFluxes)
     {
         // do nothing, we're isothermal!
@@ -100,7 +103,8 @@ public:
 
     static void computeSource(EqVector &result,
                               const ElementContext &elemCtx,
-                              int scvIdx)
+                              int scvIdx,
+                              int timeIdx)
     {
         // do nothing, we're isothermal!
     }
@@ -159,14 +163,15 @@ public:
         // add the internal energy of the phase
         storage[energyEqIdx] +=
             volVars.porosity() * (
-                volVars.fluidState().density(phaseIdx)
-                * volVars.fluidState().internalEnergy(phaseIdx)
-                * volVars.fluidState().saturation(phaseIdx));
+                fs.density(phaseIdx)
+                * fs.internalEnergy(phaseIdx)
+                * fs.saturation(phaseIdx));
     }
 
     static void computeFlux(EqVector &flux,
                             const ElementContext &elemCtx,
                             int scvfIdx,
+                            int timeIdx,
                             const ComponentVector molarFlux[numPhases])
     {
         flux[energyEqIdx] = 0.0;
@@ -176,18 +181,21 @@ public:
             computePhaseEnthalpyFlux(flux,
                                      elemCtx,
                                      scvfIdx,
+                                     timeIdx,
                                      phaseIdx,
                                      molarFlux[phaseIdx]);
 
         //conduction is treated lumped in this model
         computeHeatConduction(flux,
                               elemCtx,
-                              scvfIdx);
+                              scvfIdx,
+                              timeIdx);
     }
 
     static void computePhaseEnthalpyFlux(EqVector &result,
                                          const ElementContext &elemCtx,
                                          int scvfIdx,
+                                         int timeIdx,
                                          const int phaseIdx,
                                          const ComponentVector &molarPhaseFlux)
     {
@@ -195,19 +203,17 @@ public:
 
         // calculate the mass flux in the phase i.e. make mass flux out of mole flux and add up the fluxes of a phase
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            massFlux +=
-                molarPhaseFlux[compIdx]
-                * FluidSystem::molarMass(compIdx);
+            massFlux += molarPhaseFlux[compIdx] * FluidSystem::molarMass(compIdx);
 
         // use the phase enthalpy of the upstream vertex to calculate
         // the enthalpy transport
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         int upIdx = fluxVars.upstreamIdx(phaseIdx);
         int dnIdx = fluxVars.downstreamIdx(phaseIdx);
 
-        const VolumeVariables &up = elemCtx.volVars(upIdx);
-        const VolumeVariables &dn = elemCtx.volVars(dnIdx);
+        const VolumeVariables &up = elemCtx.volVars(upIdx, timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(dnIdx, timeIdx);
 
         result[energyEqIdx] +=
             massFlux
@@ -220,9 +226,10 @@ public:
 
     static void computeHeatConduction(EqVector &result,
                                       const ElementContext &elemCtx,
-                                      int scvfIdx)
+                                      int scvfIdx,
+                                      int timeIdx)
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux
         result[energyEqIdx] +=
@@ -234,7 +241,8 @@ public:
 
     static void computeSource(EqVector &result,
                               const ElementContext &elemCtx,
-                              int scvIdx)
+                              int scvIdx,
+                              int timeIdx)
     {
         result[energyEqIdx] = 0.0;
     }

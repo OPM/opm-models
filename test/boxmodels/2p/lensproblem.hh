@@ -321,6 +321,8 @@ public:
     {
         lensLowerLeft_ = lensLowerLeft;
         lensUpperRight_ = lensUpperRight;
+            return lensMaterialParams_;
+        return outerMaterialParams_;
     }
 
     /*!

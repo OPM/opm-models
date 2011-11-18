@@ -103,11 +103,11 @@ public:
         //////////
         // specify the other parameters
         //////////
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
         const MaterialLawParams &matParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         MaterialLaw::relativePermeabilities(relativePermeability_, matParams, fluidState_);
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not belonging to the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
@@ -125,9 +125,9 @@ public:
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
         const typename MaterialLaw::Params &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         /////////

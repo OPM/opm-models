@@ -28,7 +28,7 @@
 
 #include "2pproperties.hh"
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
 namespace Dumux
 {
@@ -38,15 +38,15 @@ namespace Dumux
  * \brief Base class for all problems which use the two-phase box model
  */
 template<class TypeTag>
-class TwoPProblem : public BoxProblem<TypeTag>
+class TwoPProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
-
+    typedef BoxMultiPhaseProblem<TypeTag> ParentType;
+    typedef TwoPProblem<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
+    
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
 
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
     enum {
@@ -73,38 +73,8 @@ public:
         : ParentType(timeManager, gridView)
         , gravity_(0)
     {
-        newSpatialParams_ = true;
-        spatialParameters_ = new SpatialParameters(gridView);
-
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
-    }
-
-    /*!
-     * \brief The constructor
-     *
-     * \param timeManager The time manager
-     * \param gridView The grid view
-     * \param spatialParameters The spatial parameters object
-     * \param verbose Turn verbosity on or off
-     */
-    TwoPProblem(TimeManager &timeManager,
-                const GridView &gridView,
-                SpatialParameters &spatialParameters,
-                bool verbose = true)
-        : ParentType(timeManager, gridView), spatialParameters_(&spatialParameters)
-        , gravity_(0)
-    {
-        newSpatialParams_ = false;
-
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
-            gravity_[dim-1]  = -9.81;
-    }
-
-    ~TwoPProblem()
-    {
-        if (newSpatialParams_)
-            delete spatialParameters_;
     }
 
     /*!
@@ -222,14 +192,16 @@ public:
     /*!
      * \brief Returns the spatial parameters object.
      */
-    SpatialParameters &spatialParameters()
-    { return *spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    Implementation &spatialParameters()
+    { return asImp_(); }
 
     /*!
      * \brief Returns the spatial parameters object.
      */
-    const SpatialParameters &spatialParameters() const
-    { return *spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    const Implementation &spatialParameters() const
+    { return asImp_(); }
 
     // \}
 
@@ -242,10 +214,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 
     Vector gravity_;
-
-    // fluids and material properties
-    SpatialParameters*  spatialParameters_;
-    bool newSpatialParams_;
 };
 
 }

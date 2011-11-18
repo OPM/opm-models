@@ -74,8 +74,8 @@ public:
         completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         // porosity
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        const auto &problem = elemCtx.problem();
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not contained in the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);

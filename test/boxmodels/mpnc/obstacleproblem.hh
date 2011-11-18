@@ -114,6 +114,7 @@ public:
     // define the material law parameterized by absolute saturations
     typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
 };
+    
 
 // Enable smooth upwinding?
 SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
@@ -183,7 +184,8 @@ SET_INT_PROP(ObstacleProblem, NewtonChoppedIterations, 0);
  * <tt>./test_MpNc -parameterFile test_MpNc.input</tt>
  */
 template <class TypeTag>
-class ObstacleProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
+class ObstacleProblem
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
@@ -391,6 +393,26 @@ public:
         return coarseHeatCondParams_;
     }
 
+     *
+     * \param element       The current finite element
+     * \param fvElemGeom    The current finite volume geometry of the element
+     * \param scvIdx        The index sub-control volume where the
+     *                      intrinsic permeability is given.
+     *
+     * \param element     The finite element
+     * \param fvElemGeom  The finite volume geometry
+     * \param scvIdx      The local index of the sub-control volume where
+     *                    the porosity needs to be defined
+     *
+     * \param element The current element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume.
+     * \return the material parameters object
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the heat capacity needs to be defined
     // \}
 
     /*!

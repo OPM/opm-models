@@ -25,12 +25,12 @@
  * \file
  *
  * \brief Base class for all problems which use the single-phase,
- *        two-component box model.
+ *        two-component box model
  */
 #ifndef DUMUX_1P2C_PROBLEM_HH
 #define DUMUX_1P2C_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxporousproblem.hh>
 #include "1p2cproperties.hh"
 
 namespace Dumux
@@ -38,19 +38,18 @@ namespace Dumux
 /*!
  * \ingroup OnePTwoCBoxModel
  * \ingroup BoxBaseProblems
- * \brief Base class for all problems which use the single-phase, two-component box model.
+ * \brief Base class for all problems which use the single-phase, two-component box model
  *
  */
 template<class TypeTag>
-class OnePTwoCBoxProblem : public BoxProblem<TypeTag>
+class OnePTwoCBoxProblem : public BoxPorousProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
+    typedef BoxPorousProblem<TypeTag> ParentType;
+    typedef OnePTwoCBoxProblem<TypeTag> ThisType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
     enum {
@@ -65,15 +64,14 @@ class OnePTwoCBoxProblem : public BoxProblem<TypeTag>
 
 public:
     /*!
-     * \brief The constructor.
+     * \brief The constructor
      *
      * \param timeManager The time manager
      * \param gridView The grid view
      */
     OnePTwoCBoxProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
-          gravity_(0),
-          spatialParameters_(gridView)
+          gravity_(0)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
@@ -106,15 +104,15 @@ public:
     };
 
     /*!
-     * \brief Return the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
      * This is the discretization specific interface for the box
      * method. By default it just calls temperature(pos).
      *
-     * \param element The DUNE Codim<0> entity which intersects with
-     *                the finite volume
-     * \param fvGeom The finite volume geometry of the element
-     * \param scvIdx The local index of the sub-control volume inside the element
+     * \param element The DUNE Codim<0> enitiy which intersects with
+     *                the finite volume.
+     * \param fvGeom The finite volume geometry of the element.
+     * \param scvIdx The local index of the sub control volume inside the element
      */
     Scalar boxTemperature(const Element &element,
                           const FVElementGeometry fvGeom,
@@ -122,7 +120,7 @@ public:
     { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
-     * \brief Return the temperature \f$\mathrm{[K]}\f$ at a given global position.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ at a given global position.
      *
      * This is not specific to the discretization. By default it just
      * calls temperature().
@@ -133,7 +131,7 @@ public:
     { return asImp_().temperature(); }
 
     /*!
-     * \brief Return the temperature \f$\mathrm{[K]}\f$ for an isothermal problem.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ for an isothermal problem.
      *
      * This is not specific to the discretization. By default it just
      * throws an exception so it must be overloaded by the problem if
@@ -161,15 +159,10 @@ public:
     };
 
     /*!
-     * \brief Return the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * This is the box discretization specific interface. By default
      * it just calls gravityAtPos().
-     *
-     * \param element The DUNE Codim<0> entity which intersects with
-     *                the finite volume
-     * \param fvGeom The finite volume geometry of the element
-     * \param scvIdx The local index of the sub-control volume inside the element
      */
     const Vector &boxGravity(const Element &element,
                              const FVElementGeometry &fvGeom,
@@ -177,18 +170,16 @@ public:
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
 
     /*!
-     * \brief Return the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
-     * This is the discretization independent interface. By default it
+     * This is discretization independent interface. By default it
      * just calls gravity().
-     *
-     * \param pos Coordinate vector of the global position
      */
     const Vector &gravityAtPos(const GlobalPosition &pos) const
     { return asImp_().gravity(); }
 
     /*!
-     * \brief Return the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * This method is used for problems where the gravitational
      * acceleration does not depend on the spatial position. The
@@ -200,21 +191,34 @@ public:
     { return gravity_; }
 
     /*!
-     * \brief Return the spatial parameters object.
+     * \brief Used by the 1p2c model.
      */
-    SpatialParameters &spatialParameters()
-    { return spatialParameters_; }
+    template <class Context>
+    bool useTwoPointGradient(const Context &context,
+                             int spaceIdx,
+                             int timeIdx) const
+    {
+        return false; // use finite element gradient!
+    }
 
     /*!
      * \brief Returns the spatial parameters object.
      */
-    const SpatialParameters &spatialParameters() const
-    { return spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    Implementation &spatialParameters()
+    { return asImp_(); }
+
+    /*!
+     * \brief Returns the spatial parameters object.
+     */
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    const Implementation &spatialParameters() const
+    { return asImp_(); }
 
     // \}
 
 private:
-    //! Return the implementation of the problem (i.e. static polymorphism).
+    //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
     //! \copydoc asImp_()
@@ -222,9 +226,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 
     Vector gravity_;
-
-    // spatial parameters
-    SpatialParameters spatialParameters_;
 };
 
 }

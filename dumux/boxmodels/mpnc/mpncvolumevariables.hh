@@ -139,9 +139,9 @@ public:
         /////////////
 
         // retrieve capillary pressure parameters
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         // calculate capillary pressures
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
@@ -165,7 +165,7 @@ public:
         /////////////
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
         /////////////

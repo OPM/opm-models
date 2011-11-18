@@ -95,8 +95,8 @@ public:
         // gradients
         const GlobalPosition &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
-        GlobalPosition tmp = elemCtx.pos(j);
-        tmp -= elemCtx.pos(i);
+        GlobalPosition tmp = elemCtx.pos(j, timeIdx);
+        tmp -= elemCtx.pos(i, timeIdx);
         Scalar dist = tmp.two_norm();
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
         {

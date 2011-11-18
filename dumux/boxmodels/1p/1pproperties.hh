@@ -56,7 +56,6 @@ NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 1p models
-NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters object
 NEW_PROP_TAG(FluidSystem); //!< The type of the fluid system to use
 NEW_PROP_TAG(Fluid); //!< The fluid used for the default fluid system
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction

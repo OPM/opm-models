@@ -49,7 +49,6 @@ class RichardsFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
 
     enum { wPhaseIdx = Indices::wPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
@@ -258,17 +257,17 @@ protected:
                                 int scvfIdx, 
                                 int timeIdx)
     {
-        const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
         // calculate the intrinsic permeability
         Tensor K;
-        spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_,
-                                                                timeIdx),
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_,
-                                                                timeIdx));
+        problem.meanK(K,
+                      problem.intrinsicPermeability(elemCtx,
+                                                    insideScvIdx_,
+                                                    timeIdx),
+                      problem.intrinsicPermeability(elemCtx,
+                                                    outsideScvIdx_,
+                                                    timeIdx));
 
         const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 

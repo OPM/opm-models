@@ -145,15 +145,16 @@ protected:
                        int timeIdx)
     {
         // compute and set the heat capacity of the solid phase
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
-        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx, timeIdx);
+        const auto &problem = elemCtx.problem();
+        const auto &heatCondParams = problem.heatConductionParams(elemCtx, scvIdx, timeIdx);
 
-        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
+        heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
         heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
 
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);
     }
+
     Scalar heatCapacitySolid_;
     Scalar heatConductivity_;
 };

@@ -54,7 +54,6 @@ template <class TypeTag>
 class TwoPFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -66,11 +65,8 @@ class TwoPFluxVariables
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     /*
@@ -191,8 +187,7 @@ protected:
             potentialGrad_[phase] = Scalar(0);
         }
 
-        typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
-        const Scvf &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
+        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
 
         // calculate gradients
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx)
@@ -255,19 +250,18 @@ protected:
                                 int scvfIdx,
                                 int timeIdx)
     {
-        const SpatialParameters &spatialParams =
-            elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
         // calculate the intrinsic permeability
         Tensor K;
-        spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_,
-                                                                timeIdx),
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_,
-                                                                timeIdx));
-
+        problem.meanK(K,
+                      problem.intrinsicPermeability(elemCtx,
+                                                    insideScvIdx_,
+                                                    timeIdx),
+                      problem.intrinsicPermeability(elemCtx,
+                                                    outsideScvIdx_,
+                                                    timeIdx));
+        
         const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         // calculate the flux in the normal direction of the

@@ -71,7 +71,6 @@ SET_SCALAR_PROP(OnePTestProblem, LensUpperRightX, 0.75);
 SET_SCALAR_PROP(OnePTestProblem, LensUpperRightY, 0.75);
 SET_SCALAR_PROP(OnePTestProblem, Permeability, 1e-10);
 SET_SCALAR_PROP(OnePTestProblem, PermeabilityLens, 1e-12);
-
 // Linear solver settings
 SET_TYPE_PROP(OnePTestProblem, LinearSolver, Dumux::BoxCGILU0Solver<TypeTag> );
 SET_INT_PROP(OnePTestProblem, LinearSolverVerbosity, 0);
@@ -141,6 +140,16 @@ public:
         intrinsicPermLens_ = GET_PARAM(TypeTag, Scalar, PermeabilityLens);
     }
 
+    /*! \brief Define the porosity.
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    { return 0.4; }
+
     /*!
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
@@ -153,16 +162,6 @@ public:
     template <class Context>
     Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     { return isInLens_(context.pos(spaceIdx, timeIdx))?intrinsicPermLens_:intrinsicPerm_; }
-
-    /*! \brief Define the porosity.
-     *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
-     */
-    template <class Context>
-    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
-    { return 0.4; }
 
     /*!
      * \name Problem parameters

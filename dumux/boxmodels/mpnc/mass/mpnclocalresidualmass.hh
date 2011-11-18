@@ -141,7 +141,7 @@ public:
         molarDensityAtIP += volVarsJ.fluidState().molarDensity(phaseIdx);
         molarDensityAtIP /= 2;
 
-        Diffusion::flux(flux, elemCtx, scvfIdx, phaseIdx, molarDensityAtIP);
+        Diffusion::flux(flux, elemCtx, scvfIdx, timeIdx, phaseIdx, molarDensityAtIP);
     }
 };
 
@@ -266,6 +266,7 @@ public:
         EnergyResid::computeFlux(flux,
                                  elemCtx,
                                  scvfIdx,
+                                 timeIdx,
                                  totalFluxes);
         Valgrind::CheckDefined(flux);
     }

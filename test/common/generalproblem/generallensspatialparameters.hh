@@ -103,7 +103,6 @@ class GeneralLensSpatialParameters : public GET_PROP_TYPE(TypeTag, SpatialParams
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
-
 public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
@@ -131,7 +130,7 @@ public:
         }
     }
 
-        /*!
+    /*!
      * \brief Get the intrinsic permeability tensor
      *
      * \param globalPos The global coordinates of the finite volume

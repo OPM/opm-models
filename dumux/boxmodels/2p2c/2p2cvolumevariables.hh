@@ -123,9 +123,9 @@ public:
         /////////////
         // calculate the remaining quantities
         /////////////
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
 
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
@@ -153,7 +153,7 @@ public:
         }
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
     }
@@ -170,7 +170,6 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
-        const auto &spatialParams = problem.spatialParameters();
         int phasePresence = priVars.phasePresence();
 
         /////////////
@@ -199,7 +198,7 @@ public:
 
         // calculate capillary pressure
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
         

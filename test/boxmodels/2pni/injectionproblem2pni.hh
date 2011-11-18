@@ -48,6 +48,8 @@
 #include <dumux/common/cubegridcreator.hh>
 
 #include <dumux/material/heatconduction/somerton.hh>
+#include <dumux/material/heatconduction/somerton.hh>
+
 #define ISOTHERMAL 0
 
 namespace Dumux {

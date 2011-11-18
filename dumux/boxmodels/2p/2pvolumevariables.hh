@@ -58,7 +58,6 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum {
@@ -88,17 +87,17 @@ public:
 
         completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
-        const SpatialParameters &spatialParams =
-            elemCtx.problem().spatialParameters();
+        const auto &problem =
+            elemCtx.problem();
 
         // calculate relative permeabilities
         const MaterialLawParams &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities not belonging to the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
@@ -116,9 +115,9 @@ public:
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
         const typename MaterialLaw::Params &materialParams =
-            spatialParams.materialLawParams(elemCtx, scvIdx, timeIdx);
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         int formulation = GET_PROP_VALUE(TypeTag, Formulation);

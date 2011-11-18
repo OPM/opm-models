@@ -57,7 +57,6 @@ class OnePTwoCFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
 
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
 
@@ -289,9 +288,9 @@ private:
 
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
         const Scvf &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
-        if (!spatialParams.useTwoPointGradient(elemCtx, scvfIdx, timeIdx))
+        if (!problem.useTwoPointGradient(elemCtx, scvfIdx, timeIdx))
         {
             // calculate gradients
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx)
@@ -386,17 +385,17 @@ private:
                               int scvfIdx,
                               int timeIdx)
     {
-        const SpatialParameters &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
         // calculate the intrinsic permeability
         Tensor K;
-        spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_,
-                                                                timeIdx),
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_,
-                                                                timeIdx));
+        problem.meanK(K,
+                      problem.intrinsicPermeability(elemCtx,
+                                                    insideScvIdx_,
+                                                    timeIdx),
+                      problem.intrinsicPermeability(elemCtx,
+                                                    outsideScvIdx_,
+                                                    timeIdx));
 
         const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 

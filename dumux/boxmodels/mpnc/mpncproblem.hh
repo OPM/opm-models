@@ -30,7 +30,7 @@
 
 #include "dumux/boxmodels/mpnc/mpncnewtoncontroller.hh"
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
 namespace Dumux
 {
@@ -42,9 +42,10 @@ namespace Dumux
  * \todo Please doc me more!
  */
 template<class TypeTag>
-class MPNCProblem : public BoxProblem<TypeTag>
+class MPNCProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
+    typedef BoxMultiPhaseProblem<TypeTag> ParentType;
+    typedef MPNCProblem<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -54,7 +55,6 @@ class MPNCProblem : public BoxProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     enum {
@@ -68,8 +68,7 @@ class MPNCProblem : public BoxProblem<TypeTag>
 public:
     MPNCProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
-          gravity_(0),
-          spatialParameters_(gridView)
+          gravity_(0)
     {
         if (GET_PROP_VALUE(TypeTag, EnableGravity))
             gravity_[dim-1]  = -9.81;
@@ -189,14 +188,16 @@ public:
     /*!
      * \brief Returns the spatial parameters object.
      */
-    SpatialParameters &spatialParameters()
-    { return spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model")
+    Implementation &spatialParameters()
+    { return asImp_(); }
 
     /*!
      * \copydoc spatialParameters()
      */
-    const SpatialParameters &spatialParameters() const
-    { return spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model")
+    const Implementation &spatialParameters() const
+    { return asImp_(); }
 
     // \}
 
@@ -210,9 +211,6 @@ protected:
     { return *static_cast<const Implementation *>(this); }
 
     Vector gravity_;
-
-    // fluids and material properties
-    SpatialParameters spatialParameters_;
 };
 
 }

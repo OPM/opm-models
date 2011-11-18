@@ -50,7 +50,6 @@ class RichardsNewtonController : public NewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -125,8 +124,8 @@ public:
                         continue;
 
                     // calculate the old wetting phase saturation
-                    const SpatialParameters &spatialParams = this->problem_().spatialParameters();
-                    const MaterialLawParams &matParams = spatialParams.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
+                    const auto &problem = this->problem_();
+                    const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
                     
                     ImmiscibleFluidState<Scalar, FluidSystem> fs;
                     EnergyModule::updateTemperature_(fs, elemCtx, scvIdx, /*timeIdx=*/0);

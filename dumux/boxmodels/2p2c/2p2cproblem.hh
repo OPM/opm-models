@@ -25,10 +25,10 @@
  * \brief Base class for all problems which use the two-phase,
  *        two-component box model
  */
-#ifndef DUMUX_2P2C_PROBLEM_HH
-#define DUMUX_2P2C_PROBLEM_HH
+#ifndef DUMUX_BOX_2P2C_PROBLEM_HH
+#define DUMUX_BOX_2P2C_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
 #include "2p2cproperties.hh"
 
@@ -41,15 +41,14 @@ namespace Dumux
  *
  */
 template<class TypeTag>
-class TwoPTwoCProblem : public BoxProblem<TypeTag>
+class TwoPTwoCProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
+    typedef TwoPTwoCProblem<TypeTag> ThisType;
+    typedef BoxMultiPhaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
     enum {
@@ -71,8 +70,7 @@ public:
      */
     TwoPTwoCProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView),
-          gravity_(0),
-          spatialParams_(gridView)
+          gravity_(0)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
@@ -193,14 +191,16 @@ public:
     /*!
      * \brief Returns the spatial parameters object.
      */
-    SpatialParameters &spatialParameters()
-    { return spatialParams_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    Implementation &spatialParameters()
+    { return asImp_(); }
 
     /*!
      * \brief Returns the spatial parameters object.
      */
-    const SpatialParameters &spatialParameters() const
-    { return spatialParams_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    const Implementation &spatialParameters() const
+    { return asImp_(); }
 
     // \}
 
@@ -213,9 +213,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 
     Vector gravity_;
-
-    // spatial parameters
-    SpatialParameters spatialParams_;
 };
 
 }

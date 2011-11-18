@@ -191,18 +191,16 @@ public:
                 int scvIdx,
                 int timeIdx)
     {
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
         Valgrind::SetUndefined(*this);
 
         // heat capacities of the fluids plus the porous medium
-        heatCapacitySolid_ = spatialParams.heatCapacitySolid(elemCtx, scvIdx);
+        heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(heatCapacitySolid_);
 
-        const auto &heatCondParams = spatialParams.heatConducionParams(elemCtx, scvIdx);
-        heatConductivity_ =
-            HeatConductionLaw::heatConductivity(heatCondParams, fs);
+        const auto &heatCondParams = problem.heatConductionParams(elemCtx, scvIdx, timeIdx);
+        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, fs);
         Valgrind::CheckDefined(heatConductivity_);
 
         // set the enthalpies

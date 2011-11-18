@@ -43,6 +43,7 @@ template<class TypeTag>
 class RichardsBoxProblem : public BoxMultiPhaseProblem<TypeTag>
 {
     typedef BoxMultiPhaseProblem<TypeTag> ParentType;
+    typedef RichardsBoxProblem<TypeTag> ThisType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -116,22 +117,6 @@ public:
     const Vector &gravity() const
     { return gravity_; }
 
-
-    /*!
-     * \brief Returns the reference pressure \f$\mathrm{[Pa]}\f$ of the non-wetting
-     *        phase within a control volume.
-     *
-     * This method MUST be overwritten by the actual problem.
-     *
-          * \param element The DUNE Codim<0> enitiy which intersects with
-     *                the finite volume.
-     * \param fvGeom The finite volume geometry of the element.
-     * \param scvIdx The local index of the sub control volume inside the element
-     */
-    Scalar referencePressure(const Element &element,
-                             const FVElementGeometry &fvGeom,
-                             int scvIdx) const
-    { DUNE_THROW(Dune::NotImplemented, "referencePressure() method not implemented by the actual problem"); };
 
     // \}
 

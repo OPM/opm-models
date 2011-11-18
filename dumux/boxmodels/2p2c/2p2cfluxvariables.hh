@@ -52,29 +52,33 @@ namespace Dumux
 template <class TypeTag>
 class TwoPTwoCFluxVariables
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+
     typedef typename GridView::ctype CoordScalar;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+
+    enum {
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
+    };
+
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename FVElementGeometry::SubControlVolume SCV;
+    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
+
+    typedef Dune::FieldVector<Scalar, dim> Vector;
+    typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
     };
-
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
-    enum { dim = GridView::dimension };
-
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dim> Vector;
-    typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
 
 public:
 
@@ -340,18 +344,17 @@ private:
                               int scvfIdx,
                               int timeIdx)
     {
-        const SpatialParameters &spatialParams =
-            elemCtx.problem().spatialParameters();
+        const auto &problem = elemCtx.problem();
 
         // calculate the intrinsic permeability
         Tensor K;
-        spatialParams.meanK(K,
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                insideScvIdx_,
-                                                                timeIdx),
-                            spatialParams.intrinsicPermeability(elemCtx,
-                                                                outsideScvIdx_,
-                                                                timeIdx));
+        problem.meanK(K,
+                      problem.intrinsicPermeability(elemCtx,
+                                                    insideScvIdx_,
+                                                    timeIdx),
+                      problem.intrinsicPermeability(elemCtx,
+                                                    outsideScvIdx_,
+                                                    timeIdx));
 
         const Vector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 

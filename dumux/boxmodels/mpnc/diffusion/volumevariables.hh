@@ -77,11 +77,11 @@ public:
             diffCoeffG_[compIIdx][compIIdx] = 0;
             for (int compJIdx = compIIdx + 1; compJIdx < numComponents; ++compJIdx) {
                 diffCoeffG_[compIIdx][compJIdx] =
-                        FluidSystem::binaryDiffusionCoefficient(fluidState,
-                                                                paramCache,
-                                                                gPhaseIdx,
-                                                                compIIdx,
-                                                                compJIdx);
+                    FluidSystem::binaryDiffusionCoefficient(fluidState,
+                                                            paramCache,
+                                                            gPhaseIdx,
+                                                            compIIdx,
+                                                            compJIdx);
 
                 // fill the symmetric part of the diffusion coefficent
                 // matrix

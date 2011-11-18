@@ -28,7 +28,7 @@
 #ifndef DUMUX_1P_PROBLEM_HH
 #define DUMUX_1P_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxporousproblem.hh>
 #include "1pproperties.hh"
 
 namespace Dumux
@@ -40,15 +40,14 @@ namespace Dumux
  *
  */
 template<class TypeTag>
-class OnePBoxProblem : public BoxProblem<TypeTag>
+class OnePBoxProblem : public BoxPorousProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
+    typedef OnePBoxProblem<TypeTag> ThisType;
+    typedef BoxPorousProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
     enum { dimWorld = GridView::dimensionworld };
@@ -70,8 +69,6 @@ public:
         : ParentType(timeManager, gridView),
           gravity_(0)
     {
-        spatialParameters_ = new SpatialParameters(gridView);
-
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dimWorld-1]  = -9.81;
     }
@@ -199,14 +196,16 @@ public:
     /*!
      * \brief Return the spatial parameters object.
      */
-    SpatialParameters &spatialParameters()
-    { return *spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    Implementation &spatialParameters()
+    { return asImp_(); }
 
     /*!
      * \copydoc spatialParameters()
      */
-    const SpatialParameters &spatialParameters() const
-    { return *spatialParameters_; }
+    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
+    const Implementation &spatialParameters() const
+    { return asImp_(); }
 
 private:
     //! Return the implementation of the problem (i.e. static polymorphism)
@@ -217,7 +216,6 @@ private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    SpatialParameters* spatialParameters_;
     Vector gravity_;
 };
 

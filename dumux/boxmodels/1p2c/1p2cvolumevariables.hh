@@ -84,11 +84,11 @@ public:
 
         completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
-        const auto &spatialParams = elemCtx.problem().spatialParameters();
-        porosity_ = spatialParams.porosity(elemCtx, scvIdx, timeIdx);
-        tortuosity_ = spatialParams.tortuosity(elemCtx, scvIdx, timeIdx);
+        const auto &problem = elemCtx.problem();
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        tortuosity_ = problem.tortuosity(elemCtx, scvIdx, timeIdx);
 #warning "TODO: dispersivity"
-        dispersivity_ = 0; // spatialParams.dispersivity(elemCtx, scvIdx, timeIdx);
+        dispersivity_ = 0; // problem.dispersivity(elemCtx, scvIdx, timeIdx);
 
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also

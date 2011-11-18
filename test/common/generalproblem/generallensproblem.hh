@@ -51,8 +51,12 @@
 #include <dumux/decoupled/2p/impes/impesproblem2p.hh>
 
 #include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#include <dumux/material/spatialparameters/fvspatialparameters.hh>
 
-#include "generallensspatialparameters.hh"
+// material laws
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
 
 namespace Dumux
 {
@@ -66,7 +70,7 @@ class GeneralLensProblem;
 namespace Properties
 {
 //Set the general problem TypeTag which does not depend on the model
-NEW_TYPE_TAG(GeneralLensProblem, INHERITS_FROM(GeneralLensSpatialParameters));
+NEW_TYPE_TAG(GeneralLensProblem);
 
 // Property for defining the model specific problem base class
 NEW_PROP_TAG(ProblemBaseClass);
@@ -102,6 +106,21 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleDNAPL<Scalar> > type;
 };
 
+// Set the material Law
+SET_PROP(GeneralLensProblem, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+
+public:
+    typedef Dumux::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+};
+
 // Enable gravity
 SET_BOOL_PROP(GeneralLensProblem, EnableGravity, true);
 
@@ -118,13 +137,6 @@ SET_PROP(BoxGeneralLensProblem, ProblemBaseClass)
     typedef Dumux::TwoPProblem<TypeTag> type;
 };
 
-// Set the problem property
-SET_PROP(BoxGeneralLensProblem, SpatialParamsBaseClass)
-{
-    typedef Dumux::BoxSpatialParameters<TypeTag> type;
-};
-
-
 ///////////////////////////////////////////////////
 // Deoupled model TypeTag
 //////////////////////////////////////////////////
@@ -139,6 +151,7 @@ SET_PROP(DecoupledGeneralLensProblem, ProblemBaseClass)
 };
 
 // Set the problem property
+NEW_PROP_TAG(SpatialParamsBaseClass);
 SET_PROP(DecoupledGeneralLensProblem, SpatialParamsBaseClass)
 {
     typedef Dumux::FVSpatialParameters<TypeTag> type;
@@ -189,7 +202,8 @@ SET_SCALAR_PROP(DecoupledGeneralLensProblem, CFLFactor, 1.0);
  * <tt>./test_2p 20000 250</tt>
  */
 template <class TypeTag >
-class GeneralLensProblem : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
+class GeneralLensProblem
+    : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
 {
     typedef GeneralLensProblem<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, ProblemBaseClass) ParentType;
@@ -200,6 +214,7 @@ class GeneralLensProblem : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
@@ -235,6 +250,7 @@ class GeneralLensProblem : public GET_PROP_TYPE(TypeTag, ProblemBaseClass)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldMatrix<Scalar,dim,dim> Tensor;
 
 public:
     /*!
@@ -250,19 +266,40 @@ public:
                        const GlobalPosition &lensLowerLeft,
                        const GlobalPosition &lensUpperRight)
         : ParentType(timeManager, gridView)
+        , lensLowerLeft_(lensLowerLeft)
+        , lensUpperRight_(lensUpperRight)
     {
         eps_ = 3e-6;
         temperature_ = 273.15 + 20; // -> 20°C
-        this->spatialParameters().setLensCoords(lensLowerLeft, lensUpperRight);
         this->timeManager().startNextEpisode(500);
+
+        // residual saturations
+        lensMaterialParams_.setSwr(0.18);
+        lensMaterialParams_.setSnr(0.0);
+        outerMaterialParams_.setSwr(0.05);
+        outerMaterialParams_.setSnr(0.0);
+
+        // parameters for the Van Genuchten law
+        // alpha and n
+        lensMaterialParams_.setVgAlpha(0.00045);
+        lensMaterialParams_.setVgN(7.3);
+        outerMaterialParams_.setVgAlpha(0.0037);
+        outerMaterialParams_.setVgN(4.7);
+
+        lensK_ = 0.0;
+        outerK_ = 0.0;
+        for (int i=0; i < dim; i++)
+        {
+            lensK_[i][i] = 9.05e-12;
+            outerK_[i][i] = 4.6e-10;
+        }
+
     }
 
     /*!
      * \name Problem parameters
      */
     // \{
-
-
     bool shouldWriteRestartFile()
     {
         return false;
@@ -315,6 +352,46 @@ public:
     void sourceAtPos(RateVector &values,const GlobalPosition& globalPos) const
     {
         values = 0;
+    }
+
+    /*!
+     * \brief Get the intrinsic permeability tensor
+     *
+     * \param globalPos The global coordinates of the finite volume
+     */
+    template <class Context>
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+
+        if (isInLens_(globalPos))
+            return lensK_;
+        return outerK_;
+    }
+
+    /*!
+     * \brief Get the porosity
+     *
+     * \param globalPos The global coordinates of the finite volume
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    { return 0.4; }
+
+    /*!
+     * \brief Get the material law parameters
+     *
+     * \param globalPos The global coordinates of the finite volume
+     *
+     * \return the parameter object for the material law which depends on the position
+     */
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(globalPos))
+            return lensMaterialParams_;
+        return outerMaterialParams_;
     }
 
     // \}
@@ -454,6 +531,25 @@ private:
         Scalar lambda = (this->bboxMax()[0] - globalPos[0])/width;
         return onUpperBoundary_(globalPos) && 0.5 < lambda && lambda < 2.0/3.0;
     }
+
+    bool isInLens_(const GlobalPosition &pos) const
+    {
+        for (int i = 0; i < dim; ++i) {
+            if (pos[i] < lensLowerLeft_[i] || pos[i] > lensUpperRight_[i])
+                return false;
+        }
+        return true;
+    }
+
+
+    GlobalPosition lensLowerLeft_;
+    GlobalPosition lensUpperRight_;
+
+    Tensor lensK_;
+    Tensor  outerK_;
+
+    MaterialLawParams lensMaterialParams_;
+    MaterialLawParams outerMaterialParams_;
 
     Scalar temperature_;
     Scalar eps_;

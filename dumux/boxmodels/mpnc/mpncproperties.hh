@@ -57,8 +57,6 @@ NEW_PROP_TAG(MPNCIndices); //!< Enumerations for the 2pNc model
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(MPNCEnergyIndices); //!< Enumerations for the 2pNc model
 
-NEW_PROP_TAG(SpatialParameters); //!< The type of the soil properties object
-
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
 NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)
 

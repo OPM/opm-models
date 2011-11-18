@@ -57,13 +57,14 @@ public:
     static void flux(CompVector &fluxes,
                      const ElementContext &elemCtx,
                      int scvfIdx,
+                     int timeIdx,
                      int phaseIdx,
                      Scalar molarDensity)
     {
         if (phaseIdx == gPhaseIdx)
-            gasFlux_(fluxes, elemCtx, scvfIdx, molarDensity);
+            gasFlux_(fluxes, elemCtx, scvfIdx, timeIdx, molarDensity);
         else if (phaseIdx == lPhaseIdx)
-            liquidFlux_(fluxes, elemCtx, scvfIdx, molarDensity);
+            liquidFlux_(fluxes, elemCtx, scvfIdx, timeIdx, molarDensity);
         else
             DUNE_THROW(Dune::InvalidStateException,
                        "Invalid phase index: " << phaseIdx);
@@ -73,10 +74,11 @@ protected:
     static void liquidFlux_(CompVector &fluxes,
                             const ElementContext &elemCtx,
                             int scvfIdx,
+                            int timeIdx,
                             Scalar molarDensity)
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             // TODO: tensorial diffusion coefficients
@@ -92,10 +94,11 @@ protected:
     static void gasFlux_(CompVector &fluxes,
                          const ElementContext &elemCtx,
                          int scvfIdx,
+                         int timeIdx,
                          Scalar molarDensity)
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx);
-        const auto &normal = elemCtx.fvElemGeom().subContVolFace[scvfIdx].normal;
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
         // Stefan-Maxwell equation
         //
@@ -153,6 +156,7 @@ public:
     static void flux(CompVector &fluxes,
                      const ElementContext &fluxVars,
                      int scvfIdx,
+                     int timeIdx,
                      int phaseIdx,
                      Scalar totalConcentration)
     { fluxes = 0; }
