@@ -80,8 +80,52 @@ class TwoPModel : public BoxModel<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+    enum { formulation = GET_PROP_VALUE(TypeTag, Formulation) };
+    enum { numComponents = FluidSystem::numComponents };
 
 public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        
+        if (pvIdx == Indices::pressureIdx) {
+            if (formulation==Indices::pwSn)
+                oss << "pressure_w";
+            else
+                oss << "pressure_n";
+        }
+        else if (pvIdx == Indices::saturationIdx) {
+            if (formulation==Indices::pwSn)
+                oss << "saturation_n";
+            else
+                oss << "saturation_w";
+        }
+        else
+            assert(false);
+        
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::ostringstream oss;
+        
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        else
+            assert(false);
+        
+        return oss.str();
+    }
+
     /*!
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.

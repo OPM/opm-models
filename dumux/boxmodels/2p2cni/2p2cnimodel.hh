@@ -97,6 +97,30 @@ template<class TypeTag>
 class TwoPTwoCNIModel : public TwoPTwoCModel<TypeTag>
 {
     typedef TwoPTwoCModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCNIIndices) Indices;
+
+public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        if (pvIdx == Indices::temperatureIdx)
+           return "temperature";
+       
+        return ParentType::primaryVarName(pvIdx);
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        if (eqIdx == Indices::energyEqIdx)
+           return "energy";
+       
+        return ParentType::eqName(eqIdx);
+    }
 
 protected:
     friend class BoxModel<TypeTag>;

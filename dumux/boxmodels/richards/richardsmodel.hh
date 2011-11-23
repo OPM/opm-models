@@ -107,6 +107,7 @@ class RichardsModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
@@ -119,6 +120,34 @@ class RichardsModel : public BoxModel<TypeTag>
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::pwIdx)
+            oss << "pressure_" << FluidSystem::phaseName(wPhaseIdx);
+        else
+            assert(0);
+       
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::ostringstream oss;
+        if (eqIdx == Indices::contiEqIdx)
+            oss << "continuity_" << FluidSystem::phaseName(wPhaseIdx);
+        else
+            assert(0);
+
+        return oss.str();
+    }
+
     /*!
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.

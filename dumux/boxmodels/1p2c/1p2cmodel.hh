@@ -83,6 +83,41 @@ template<class TypeTag >
 class OnePTwoCBoxModel : public BoxModel<TypeTag>
 {
     typedef BoxModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::pressureIdx)
+            oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        else if (pvIdx == Indices::x1Idx)
+            oss << "moleFrac_" << FluidSystem::componentName(/*compIdx=*/1);
+        else
+            assert(false);
+
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::ostringstream oss;
+        if (eqIdx == Indices::contiEqIdx)
+            oss << "continuity_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        else if (eqIdx == Indices::transEqIdx)
+            oss << "transport^" << FluidSystem::componentName(/*compIdx=*/1);
+        else
+            assert(false);
+
+        return oss.str();
+    }
 
 protected:
     friend class BoxModel<TypeTag>;

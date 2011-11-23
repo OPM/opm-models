@@ -139,7 +139,7 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (primaryVarsOutput_()) this->commitEqBuffer_(writer, "PV_%s", primaryVars_);
+        if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
         if (boundaryTypesOutput_()) this->commitScalarBuffer_(writer, "BC_%s", boundaryTypes_);
         if (neumannOutput_()) this->commitEqBuffer_(writer, "neumann_%s", neumann_);
         if (dirichletOutput_()) this->commitEqBuffer_(writer, "dirichlet_%s", dirichlet_);

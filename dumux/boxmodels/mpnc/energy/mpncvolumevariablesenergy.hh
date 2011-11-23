@@ -116,6 +116,23 @@ public:
                                 Scalar volume)
     { };
 
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    static std::string primaryVarName(int pvIdx)
+    {
+        return "";
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    static std::string eqName(int eqIdx)
+    {
+        return "";
+    };
+
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
      *        with no pores in the sub-control volume.
@@ -234,6 +251,26 @@ public:
             volume
             * fluidState.density(phaseIdx)
             * fluidState.enthalpy(phaseIdx);
+    };
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    static std::string primaryVarName(int pvIdx)
+    {
+        if (pvIdx == Indices::temperatureIdx)
+            return "temperature";
+        return "";
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    static std::string eqName(int eqIdx)
+    {
+        if (eqIdx == Indices::energyEqIdx)
+            return "energy";
+        return "";
     };
 
     /*!

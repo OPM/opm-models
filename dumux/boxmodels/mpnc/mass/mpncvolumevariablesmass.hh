@@ -139,6 +139,28 @@ public:
     void checkDefined() const
     {
     }
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    static std::string primaryVarName(int pvIdx)
+    {
+        std::ostringstream oss;
+        if (Indices::fug0Idx <= pvIdx && pvIdx < Indices::fug0Idx + numComponents)
+            oss << "fugacity^" << FluidSystem::componentName(pvIdx - Indices::fug0Idx);
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    static std::string eqName(int eqIdx)
+    {
+        std::ostringstream oss;
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "continuity^" << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
+        return oss.str();
+    };
 };
 
 } // end namepace

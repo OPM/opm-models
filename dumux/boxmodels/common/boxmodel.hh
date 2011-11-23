@@ -39,6 +39,8 @@
 
 #include <dumux/parallel/vertexhandles.hh>
 
+#include <sstream>
+
 namespace Dumux
 {
 
@@ -578,6 +580,27 @@ public:
         return &boundaryTypes_[bvertIdx];
     }
 
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        oss << pvIdx;
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::ostringstream oss;
+        oss << eqIdx;
+        return oss.str();
+    }
+
     /*!
      * \brief Update the weights of all primary variables within an
      *        element given the complete set of volume variables
@@ -615,10 +638,12 @@ public:
         // global defect of the two auxiliary equations
         ScalarField* def[numEq];
         ScalarField* delta[numEq];
-        ScalarField* x[numEq];
+        ScalarField* priVars[numEq];
+        ScalarField* priVarWeight[numEq];
         ScalarField* relError = writer.allocateManagedBuffer(numVertices);
         for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
-            x[pvIdx] = writer.allocateManagedBuffer(numVertices);
+            priVars[pvIdx] = writer.allocateManagedBuffer(numVertices);
+            priVarWeight[pvIdx] = writer.allocateManagedBuffer(numVertices);
             delta[pvIdx] = writer.allocateManagedBuffer(numVertices);
             def[pvIdx] = writer.allocateManagedBuffer(numVertices);
         }
@@ -629,7 +654,8 @@ public:
         {
             int globalIdx = vertexMapper().map(*vIt);
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
-                (*x[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
+                (*priVars[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
+                (*priVarWeight[pvIdx])[globalIdx] = asImp_().primaryVarWeight(globalIdx, pvIdx);
                 (*delta[pvIdx])[globalIdx] =
                     - deltaU[globalIdx][pvIdx];
                 (*def[pvIdx])[globalIdx] = globalResid[globalIdx][pvIdx];
@@ -647,11 +673,16 @@ public:
 
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
-            oss.str(""); oss << "x_" << i;
-            writer.attachVertexData(*x[i], oss.str());
-            oss.str(""); oss << "delta_" << i;
+            oss.str(""); oss << "priVar_" << asImp_().primaryVarName(i);
+            writer.attachVertexData(*priVars[i], oss.str());
+
+            oss.str(""); oss << "delta_" << asImp_().primaryVarName(i);
             writer.attachVertexData(*delta[i], oss.str());
-            oss.str(""); oss << "defect_" << i;
+
+            oss.str(""); oss << "weight_" << asImp_().primaryVarName(i);
+            writer.attachVertexData(*priVarWeight[i], oss.str());
+
+            oss.str(""); oss << "defect_" << asImp_().eqName(i);
             writer.attachVertexData(*def[i], oss.str());
         }
 

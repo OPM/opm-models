@@ -60,10 +60,34 @@ class OnePBoxModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     enum { dim = GridView::dimension };
+
+public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        assert(pvIdx == 0);
+        std::ostringstream oss;
+        oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        assert(eqIdx == 0);
+        std::ostringstream oss;
+        oss << "conti_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        return oss.str();
+    }
 
 protected:
     friend class BoxModel<TypeTag>;

@@ -148,6 +148,40 @@ public:
     }
 
     /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::pressureIdx) {
+            if (formulation == plSg)
+                oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+            else
+                oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/1);
+        }
+        else if (pvIdx == Indices::switchIdx)
+            oss << "switch";
+        else
+            assert(false);
+
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        std::ostringstream oss;
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "continuity^" << FluidSystem::componentName(/*compIdx=*/1);
+        else
+            assert(false);
+
+        return oss.str();
+    }
+
+    /*!
      * \brief Compute the total storage inside one phase of all
      *        conservation quantities.
      *
