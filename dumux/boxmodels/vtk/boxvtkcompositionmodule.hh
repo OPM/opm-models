@@ -42,6 +42,8 @@ NEW_TYPE_TAG(VtkComposition);
 // create the property tags needed for the composition module
 NEW_PROP_TAG(VtkWriteMassFractions);
 NEW_PROP_TAG(VtkWriteMoleFractions);
+NEW_PROP_TAG(VtkWriteTotalMassFractions);
+NEW_PROP_TAG(VtkWriteTotalMoleFractions);
 NEW_PROP_TAG(VtkWriteMolarities);
 NEW_PROP_TAG(VtkWriteFugacities);
 NEW_PROP_TAG(VtkWriteFugacityCoeffs);
@@ -49,6 +51,8 @@ NEW_PROP_TAG(VtkWriteFugacityCoeffs);
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkComposition, VtkWriteMassFractions, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteMoleFractions, true);
+SET_BOOL_PROP(VtkComposition, VtkWriteTotalMassFractions, false);
+SET_BOOL_PROP(VtkComposition, VtkWriteTotalMoleFractions, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
@@ -104,6 +108,8 @@ public:
     {
         if (moleFracOutput_()) this->resizePhaseComponentBuffer_(moleFrac_);
         if (massFracOutput_()) this->resizePhaseComponentBuffer_(massFrac_);
+        if (totalMassFracOutput_()) this->resizeComponentBuffer_(totalMassFrac_);
+        if (totalMoleFracOutput_()) this->resizeComponentBuffer_(totalMoleFrac_);
         if (molarityOutput_()) this->resizePhaseComponentBuffer_(molarity_);
 
         if (fugacityOutput_()) this->resizeComponentBuffer_(fugacity_);
@@ -135,6 +141,24 @@ public:
             }
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                if (totalMassFracOutput_()) {
+                    Scalar compMass = 0;
+                    Scalar totalMass = 0;
+                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                        totalMass += fs.density(phaseIdx)*fs.saturation(phaseIdx);
+                        compMass += fs.density(phaseIdx)*fs.saturation(phaseIdx)*fs.massFraction(phaseIdx, compIdx);
+                    }
+                    totalMassFrac_[compIdx][I] = compMass/totalMass;
+                }
+                if (totalMoleFracOutput_()) {
+                    Scalar compMoles = 0;
+                    Scalar totalMoles = 0;
+                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                        totalMoles += fs.molarDensity(phaseIdx)*fs.saturation(phaseIdx);
+                        compMoles += fs.molarDensity(phaseIdx)*fs.saturation(phaseIdx)*fs.moleFraction(phaseIdx, compIdx);
+                    }
+                    totalMoleFrac_[compIdx][I] = compMoles/totalMoles;
+                }
                 if (fugacityOutput_()) fugacity_[compIdx][I] = volVars.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
             }
         }
@@ -148,6 +172,8 @@ public:
         if (moleFracOutput_()) this->commitPhaseComponentBuffer_(writer, "moleFrac_%s^%s", moleFrac_);
         if (massFracOutput_()) this->commitPhaseComponentBuffer_(writer, "massFrac_%s^%s", massFrac_);
         if (molarityOutput_()) this->commitPhaseComponentBuffer_(writer, "molarity_%s^%s", molarity_);
+        if (totalMassFracOutput_()) this->commitComponentBuffer_(writer, "totalMassFrac^%s", totalMassFrac_);
+        if (totalMoleFracOutput_()) this->commitComponentBuffer_(writer, "totalMoleFrac^%s", totalMoleFrac_);
 
         if (fugacityOutput_()) this->commitComponentBuffer_(writer, "fugacity^%s", fugacity_);
         if (fugacityCoeffOutput_()) this->commitPhaseComponentBuffer_(writer, "fugacityCoeff_%s^%s", fugacityCoeff_);
@@ -159,6 +185,12 @@ private:
 
     static bool moleFracOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMoleFractions); };
+
+    static bool totalMassFracOutput_()
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMassFractions); };
+
+    static bool totalMoleFracOutput_()
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMoleFractions); };
 
     static bool molarityOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMolarities); };
@@ -172,6 +204,8 @@ private:
     PhaseComponentBuffer moleFrac_;
     PhaseComponentBuffer massFrac_;
     PhaseComponentBuffer molarity_;
+    ComponentBuffer totalMassFrac_;
+    ComponentBuffer totalMoleFrac_;
 
     ComponentBuffer fugacity_;
     PhaseComponentBuffer fugacityCoeff_;
