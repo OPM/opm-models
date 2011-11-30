@@ -102,16 +102,6 @@ public:
     void setMassRate(const ParentType &value)
     {
         ParentType::operator=(value);
-        
-#warning "HACKY: we should probably standardize on one formulation"
-        // flux of the total mass balance;
-        // this is only processed, if one component mass balance equation
-        // is replaced by a total mass balance equation
-        if (replaceCompEqIdx < numComponents) {
-            (*this)[replaceCompEqIdx] = 0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                (*this)[replaceCompEqIdx] += value[compIdx];
-        }
     };
 
     /*!
@@ -147,19 +137,6 @@ public:
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
                 * volume;
-
-#warning "HACKY: we should probably standardize on one formulation"
-        // flux of the total mass balance;
-        // this is only processed, if one component mass balance equation
-        // is replaced by a total mass balance equation
-        if (replaceCompEqIdx < numComponents) {
-            (*this)[replaceCompEqIdx] = 0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                (*this)[replaceCompEqIdx] += 
-                    fluidState.density(phaseIdx, compIdx)
-                    * fluidState.massFraction(phaseIdx, compIdx)
-                    * volume;
-        }
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     };

@@ -165,14 +165,6 @@ public:
                     * fs.saturation(phaseIdx)
                     * fs.massFraction(phaseIdx, compIdx);
             }
-
-#warning "HACKY: we should probably standardize on one formulation"
-            // this is only processed, if one component mass balance equation
-            // is replaced by a total mass balance equation
-            if (replaceCompEqIdx < numComponents)
-                storage[replaceCompEqIdx] +=
-                    fs.density(phaseIdx)
-                    * fs.saturation(phaseIdx);
         }
         storage *= volVars.porosity();
     }
@@ -235,23 +227,6 @@ public:
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
-
-#warning "HACKY: we should probably standardize on one formulation"
-            // flux of the total mass balance;
-            // this is only processed, if one component mass balance equation
-            // is replaced by a total mass balance equation
-            if (replaceCompEqIdx < numComponents)
-            {
-                // upstream vertex
-                flux[replaceCompEqIdx] +=
-                    fluxVars.filterVelocityNormal(phaseIdx)
-                    *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.fluidState().density(phaseIdx)
-                      +
-                      fluxVars.downstreamWeight(phaseIdx)
-                      * dn.fluidState().density(phaseIdx));
-                Valgrind::CheckDefined(flux);
-            }
         }
 
     }
@@ -283,15 +258,6 @@ public:
             tmp *=
                 fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
                 fluxVars.molarDensity(phaseIdx);
-
-#warning "HACKY: we should probably standardize diffusion on one formulation"
-            // add the diffusive fluxes to the mass balance equations
-            int eq0Idx = conti0EqIdx + 0;
-            int eq1Idx = conti0EqIdx + 1;
-            if (replaceCompEqIdx != eq0Idx)
-                flux[eq0Idx] += tmp * FluidSystem::molarMass(0);
-            if (replaceCompEqIdx != eq1Idx)
-                flux[eq1Idx] -= tmp * FluidSystem::molarMass(1);
         }
     }
 
