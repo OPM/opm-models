@@ -99,7 +99,8 @@ public:
                                      int phaseIdx)
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx), timeIdx);
+        const FluxVariables &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(evalFluxVars.upstreamIdx(phaseIdx), timeIdx);
 
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             compFlux[compIdx] =

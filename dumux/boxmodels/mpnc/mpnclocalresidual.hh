@@ -31,7 +31,6 @@
 
 #include <dumux/common/math.hh>
 
-
 namespace Dumux
 {
 /*!
