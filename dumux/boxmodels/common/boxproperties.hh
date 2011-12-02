@@ -136,6 +136,12 @@ NEW_PROP_TAG(NumericDifferenceMethod);
  */
 NEW_PROP_TAG(EnableHints);
 
+/*!
+ * \brief Specify whether twopoint gradients ought to be used instead
+ *        of finite element gradients.
+ */
+NEW_PROP_TAG(UseTwoPointGradients);
+
 // mappers from local to global indices
 
 //! mapper for vertices

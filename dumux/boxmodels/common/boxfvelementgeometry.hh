@@ -49,6 +49,7 @@ namespace Properties
 {
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(UseTwoPointGradients);
 }
 
 /////////////////////
@@ -312,6 +313,8 @@ class BoxFVElementGeometry
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum{dim = GridView::dimension};
     enum{dimWorld = GridView::dimensionworld};
+
+    enum { computeGradients = !GET_PROP_VALUE(TypeTag, UseTwoPointGradients) };
 
     typedef BoxFVElementGeometry<TypeTag>   ThisType;
 
@@ -720,15 +723,17 @@ public:
             //                          << std::endl;
 
             // calculate the shape function gradients
-            //typedef Dune::FieldVector< Dune::FieldVector< CoordScalar, dim >, 1 > ShapeJacobian;
-            typedef Dune::FieldVector< Scalar, 1 > ShapeValue;
-            std::vector<ShapeJacobian> localJac;
-            std::vector<ShapeValue>    shapeVal;
-            localFiniteElement.localBasis().evaluateJacobian(subContVolFace[k].ipLocal, localJac);
-            localFiniteElement.localBasis().evaluateFunction(subContVolFace[k].ipLocal, shapeVal);
-            for (int vert = 0; vert < numVertices; vert++) {
-                jacInvT.mv(localJac[vert][0], subContVolFace[k].grad[vert]);
-                subContVolFace[k].shapeValue[vert] = Scalar(shapeVal[vert]);
+            if (computeGradients) {
+                //typedef Dune::FieldVector< Dune::FieldVector< CoordScalar, dim >, 1 > ShapeJacobian;
+                typedef Dune::FieldVector< Scalar, 1 > ShapeValue;
+                std::vector<ShapeJacobian> localJac;
+                std::vector<ShapeValue>    shapeVal;
+                localFiniteElement.localBasis().evaluateJacobian(subContVolFace[k].ipLocal, localJac);
+                localFiniteElement.localBasis().evaluateFunction(subContVolFace[k].ipLocal, shapeVal);
+                for (int vert = 0; vert < numVertices; vert++) {
+                    jacInvT.mv(localJac[vert][0], subContVolFace[k].grad[vert]);
+                    subContVolFace[k].shapeValue[vert] = Scalar(shapeVal[vert]);
+                }
             }
         } // end loop over edges / sub control volume faces
 
@@ -780,22 +785,24 @@ public:
                     boundaryFace[bfIdx].normal *= boundaryFace[bfIdx].area;
 
                     typedef Dune::FieldVector< Scalar, 1 > ShapeValue;
-                    std::vector<ShapeJacobian> localJac;
                     std::vector<ShapeValue>    shapeVal;
-                    localFiniteElement.localBasis().evaluateJacobian(boundaryFace[bfIdx].ipLocal, localJac);
                     localFiniteElement.localBasis().evaluateFunction(boundaryFace[bfIdx].ipLocal, shapeVal);
 
-                    Dune::FieldMatrix<CoordScalar,dim,dim> jacInvT = geometry.jacobianInverseTransposed(boundaryFace[bfIdx].ipLocal);
-                    for (int vert = 0; vert < numVertices; vert++)
-                    {
-                        jacInvT.mv(localJac[vert][0], boundaryFace[bfIdx].grad[vert]);
-                        boundaryFace[bfIdx].shapeValue[vert] = Scalar(shapeVal[vert]);
+                    if (computeGradients) {
+                        std::vector<ShapeJacobian> localJac;
+                        localFiniteElement.localBasis().evaluateJacobian(boundaryFace[bfIdx].ipLocal, localJac);
+                    
+                        Dune::FieldMatrix<CoordScalar,dim,dim> jacInvT = geometry.jacobianInverseTransposed(boundaryFace[bfIdx].ipLocal);
+                        for (int vert = 0; vert < numVertices; vert++)
+                        {
+                            jacInvT.mv(localJac[vert][0], boundaryFace[bfIdx].grad[vert]);
+                            boundaryFace[bfIdx].shapeValue[vert] = Scalar(shapeVal[vert]);
+                        }
+                        
+                        //                    std::cout << "boundary face " << face << ", vert = " << vertInElement << ", ipLocal = "
+                        //                        << boundaryFace[bfIdx].ipLocal << ", ipGlobal = " << boundaryFace[bfIdx].ipGlobal
+                        //                        << ", area = " << boundaryFace[bfIdx].area << std::endl;
                     }
-
-                    //                    std::cout << "boundary face " << face << ", vert = " << vertInElement << ", ipLocal = "
-                    //                        << boundaryFace[bfIdx].ipLocal << ", ipGlobal = " << boundaryFace[bfIdx].ipGlobal
-                    //                        << ", area = " << boundaryFace[bfIdx].area << std::endl;
-
                 }
             }
 
@@ -804,45 +811,42 @@ public:
             for (int scvIdx = 0; scvIdx < numVertices; scvIdx++)
                 if (dim == 2)
                 {
-//                    if (!subContVol[scvIdx].inner)
+                    switch (scvIdx)
                     {
-                        switch (scvIdx)
-                        {
-                        case 0:
-                            if (numVertices == 4) {
-                                subContVol[scvIdx].localCenter[0] = 0.25;
-                                subContVol[scvIdx].localCenter[1] = 0.25;
-                            }
-                            else {
-                                subContVol[scvIdx].localCenter[0] = 1.0/6.0;
-                                subContVol[scvIdx].localCenter[1] = 1.0/6.0;
-                            }
-                            break;
-                        case 1:
-                            if (numVertices == 4) {
-                                subContVol[scvIdx].localCenter[0] = 0.75;
-                                subContVol[scvIdx].localCenter[1] = 0.25;
-                            }
-                            else {
-                                subContVol[scvIdx].localCenter[0] = 4.0/6.0;
-                                subContVol[scvIdx].localCenter[1] = 1.0/6.0;
-                            }
-                            break;
-                        case 2:
-                            if (numVertices == 4) {
-                                subContVol[scvIdx].localCenter[0] = 0.25;
-                                subContVol[scvIdx].localCenter[1] = 0.75;
-                            }
-                            else {
-                                subContVol[scvIdx].localCenter[0] = 1.0/6.0;
-                                subContVol[scvIdx].localCenter[1] = 4.0/6.0;
-                            }
-                            break;
-                        case 3:
-                            subContVol[scvIdx].localCenter[0] = 0.75;
-                            subContVol[scvIdx].localCenter[1] = 0.75;
-                            break;
+                    case 0:
+                        if (numVertices == 4) {
+                            subContVol[scvIdx].localCenter[0] = 0.25;
+                            subContVol[scvIdx].localCenter[1] = 0.25;
                         }
+                        else {
+                            subContVol[scvIdx].localCenter[0] = 1.0/6.0;
+                            subContVol[scvIdx].localCenter[1] = 1.0/6.0;
+                        }
+                        break;
+                    case 1:
+                        if (numVertices == 4) {
+                            subContVol[scvIdx].localCenter[0] = 0.75;
+                            subContVol[scvIdx].localCenter[1] = 0.25;
+                        }
+                        else {
+                            subContVol[scvIdx].localCenter[0] = 4.0/6.0;
+                            subContVol[scvIdx].localCenter[1] = 1.0/6.0;
+                        }
+                        break;
+                    case 2:
+                        if (numVertices == 4) {
+                            subContVol[scvIdx].localCenter[0] = 0.25;
+                            subContVol[scvIdx].localCenter[1] = 0.75;
+                        }
+                        else {
+                            subContVol[scvIdx].localCenter[0] = 1.0/6.0;
+                            subContVol[scvIdx].localCenter[1] = 4.0/6.0;
+                        }
+                        break;
+                    case 3:
+                        subContVol[scvIdx].localCenter[0] = 0.75;
+                        subContVol[scvIdx].localCenter[1] = 0.75;
+                        break;
                     }
 
                     std::vector<ShapeJacobian> localJac;

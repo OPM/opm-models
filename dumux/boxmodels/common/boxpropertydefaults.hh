@@ -188,6 +188,9 @@ SET_INT_PROP(BoxModel, NumericDifferenceMethod, +1);
 //! do not use hints by default
 SET_BOOL_PROP(BoxModel, EnableHints, false);
 
+//! use FE gradients by default
+SET_BOOL_PROP(BoxModel, UseTwoPointGradients, false);
+
 // disable jacobian matrix recycling by default
 SET_BOOL_PROP(BoxModel, EnableJacobianRecycling, false);
 
