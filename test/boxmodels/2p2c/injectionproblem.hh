@@ -518,7 +518,7 @@ public:
         //////
         // set the primary variables
         //////
-        values.template assignMassConservative<MaterialLaw>(fs, matParams, /*inEquilibrium=*/true);
+        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
     }
 
 

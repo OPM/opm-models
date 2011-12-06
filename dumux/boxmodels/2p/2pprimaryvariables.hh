@@ -56,6 +56,8 @@ class TwoPPrimaryVariables
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
 
@@ -116,11 +118,10 @@ public:
      * \param Sw The saturation of the wetting phase []
      * \param matParams The capillary pressure law parameters
      */
-    template <class MaterialLaw>
     void assignImmiscibleFromWetting(Scalar T,
                                      Scalar pw,
                                      Scalar Sw,
-                                     const typename MaterialLaw::Params &matParams)
+                                     const MaterialLawParams &matParams)
     {
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         
@@ -147,11 +148,10 @@ public:
      * \param Sn The saturation of the non-wetting phase []
      * \param matParams The capillary pressure law parameters
      */
-    template <class MaterialLaw>
     void assignImmiscibleFromNonWetting(Scalar T,
                                         Scalar pn,
                                         Scalar Sn,
-                                        const typename MaterialLaw::Params &matParams)
+                                        const MaterialLawParams &matParams)
     {
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         
@@ -189,9 +189,9 @@ public:
      *                        the quantities mentioned above, the
      *                        fugacities are also defined.
      */
-    template <class MaterialLaw, class FluidState>
+    template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
-                                const typename MaterialLaw::Params &matParams,
+                                const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
         ComponentVector globalMolarities(0.0);

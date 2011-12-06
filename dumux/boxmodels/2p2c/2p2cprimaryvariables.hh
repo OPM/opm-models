@@ -57,6 +57,8 @@ class TwoPTwoCPrimaryVariables
     typedef TwoPTwoCPrimaryVariables<TypeTag> ThisType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
@@ -145,9 +147,9 @@ public:
      *                        the quantities mentioned above, the
      *                        fugacities are also defined.
      */
-    template <class MaterialLaw, class FluidState>
+    template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
-                                const typename MaterialLaw::Params &matParams,
+                                const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
 #ifndef NDEBUG

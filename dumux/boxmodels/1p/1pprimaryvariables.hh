@@ -111,9 +111,8 @@ public:
      *                        the quantities mentioned above, the
      *                        fugacities are also defined.
      */
-    template <class MaterialLaw, class FluidState>
+    template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
-                                const typename MaterialLaw::Params &matParams,
                                 bool isInEquilibrium = false)
     {
         assignNaive(fluidState);
