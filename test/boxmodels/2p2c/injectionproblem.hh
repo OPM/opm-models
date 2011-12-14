@@ -37,7 +37,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 
 #include <dumux/material/heatconduction/somerton.hh>
 
@@ -59,9 +59,9 @@ NEW_PROP_TAG(FluidSystemTemperatureLow);
 NEW_PROP_TAG(FluidSystemTemperatureHigh);
 NEW_PROP_TAG(FluidSystemNumTemperature);
 
-NEW_PROP_TAG(InitialConditionsMaxDepth);
-NEW_PROP_TAG(InitialConditionsTemperature);
-NEW_PROP_TAG(SimulationControlName);
+NEW_PROP_TAG(MaxDepth);
+NEW_PROP_TAG(Temperature);
+NEW_PROP_TAG(SimulationName);
 
 // Set the grid type
 SET_PROP(InjectionProblem, Grid)
@@ -127,9 +127,9 @@ SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureLow, 273.15);
 SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureHigh, 373.15);
 SET_INT_PROP(InjectionProblem, FluidSystemNumTemperature, 100);
 
-SET_SCALAR_PROP(InjectionProblem, InitialConditionsMaxDepth, 2500);
-SET_SCALAR_PROP(InjectionProblem, InitialConditionsTemperature, 293.15);
-SET_STRING_PROP(InjectionProblem, SimulationControlName, "injection");
+SET_SCALAR_PROP(InjectionProblem, MaxDepth, 2500);
+SET_SCALAR_PROP(InjectionProblem, Temperature, 293.15);
+SET_STRING_PROP(InjectionProblem, SimulationName, "injection");
 }
 
 
@@ -220,9 +220,9 @@ public:
         pressureLow_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureLow);
         pressureHigh_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureHigh);
         
-        temperature_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, InitialConditions, Temperature);
-        maxDepth_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, InitialConditions, MaxDepth);
-        name_ = GET_PARAM_FROM_GROUP(TypeTag, std::string, SimulationControl, Name);
+        temperature_ = GET_PARAM(TypeTag, Scalar, Temperature);
+        maxDepth_ = GET_PARAM(TypeTag, Scalar, MaxDepth);
+        name_ = GET_PARAM(TypeTag, std::string, SimulationName);
 
         // initialize the tables of the fluid system
         //FluidSystem::init();

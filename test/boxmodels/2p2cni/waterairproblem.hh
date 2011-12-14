@@ -34,13 +34,14 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 #include <dumux/boxmodels/2p2cni/2p2cnimodel.hh>
 
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 
 #include <dumux/material/heatconduction/somerton.hh>
 
@@ -167,6 +168,8 @@ class WaterAirProblem
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
+        numPhases = FluidSystem::numPhases,
+        numComponents = FluidSystem::numComponents,
 
         pressureIdx = Indices::pressureIdx,
         switchIdx = Indices::switchIdx,
@@ -174,7 +177,7 @@ class WaterAirProblem
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
 #endif
-
+       
         // component indices
         N2Idx = FluidSystem::N2Idx,
         H2OIdx = FluidSystem::H2OIdx,
@@ -336,7 +339,7 @@ public:
     }
 
     /*!
-     * \brief Returns the heat capacity \f$[J/m^3 K]\f$ of the rock matrix.
+     * \brief Returns the specific heat capacity \f$[J/(m^3 K)]\f$ of the rock matrix.
      *
      * This is only required for non-isothermal models.
      *
@@ -501,15 +504,35 @@ private:
 
 private:
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
-    {
-        Scalar lambdaWater = 0.6;
-        Scalar lambdaGranite = 2.8;
+    {            
+        Scalar lambdaGranite = 2.8; // [W / (K m)]
 
-        Scalar lambdaWet = pow(lambdaGranite, (1-poro)) * pow(lambdaWater, poro);
-        Scalar lambdaDry = pow(lambdaGranite, (1-poro));
+        // create a Fluid state which has all phases present
+        Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        fs.setTemperature(293.15);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            fs.setPressure(phaseIdx, 1.0135e5);
+        }
 
-        params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
-        params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fs);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar rho = FluidSystem::density(fs, paramCache, phaseIdx);
+            fs.setDensity(phaseIdx, rho);
+        }
+
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar lambdaSaturated;
+            if (FluidSystem::isLiquid(phaseIdx)) {
+                Scalar lambdaFluid =
+                    FluidSystem::thermalConductivity(fs, paramCache, phaseIdx);
+                lambdaSaturated = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaFluid, poro);
+            }
+            else
+                lambdaSaturated = std::pow(lambdaGranite, (1-poro));
+            
+            params.setFullySaturatedLambda(phaseIdx, lambdaSaturated);
+        }
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const
