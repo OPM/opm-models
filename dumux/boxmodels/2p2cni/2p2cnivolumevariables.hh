@@ -97,6 +97,14 @@ public:
     }
     
     /*!
+     * \brief Set the enthalpy rate per second of a rate vector, .
+     */
+    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    {
+        rateVec[energyEqIdx] = rate;
+    }
+
+    /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
      *        from a volumetric rate.
      */

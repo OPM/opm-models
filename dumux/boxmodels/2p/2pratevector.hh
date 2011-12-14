@@ -120,6 +120,14 @@ public:
     };
 
     /*!
+     * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
+     */
+    void setEnthalpyRate(Scalar rate)
+    {
+        EnergyModule::setEnthalpyRate(*this, rate);
+    }
+
+    /*!
      * \brief Set a volumetric rate of a phase.
      *
      * Enthalpy is taken into account here.
