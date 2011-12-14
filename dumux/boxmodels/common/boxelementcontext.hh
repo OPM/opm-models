@@ -72,7 +72,8 @@ class BoxElementContext
     enum { dim = GridView::dimension };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
-    typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:
     /*!
@@ -123,7 +124,7 @@ public:
         hasNeumann_ = false;
         hasDirichlet_ = false;
         for (int scvIdx = 0; scvIdx < numScv(); ++scvIdx) {
-            int globalIdx = globalIndex(scvIdx, /*timeIdx=*/0);
+            int globalIdx = globalSpaceIndex(scvIdx, /*timeIdx=*/0);
             boundaryTypes_[scvIdx] = model().boundaryTypes(globalIdx);
             hasDirichlet_ = hasDirichlet_ || boundaryTypes_[scvIdx]->hasDirichlet();
             hasNeumann_ = hasNeumann_ || boundaryTypes_[scvIdx]->hasNeumann();
@@ -255,9 +256,9 @@ public:
     { return fvElemGeom_.subContVol[scvIdx].global; }
 
     /*!
-     * \brief Return the global index for a sub-control volume
+     * \brief Return the global spatial index for a sub-control volume
      */
-    int globalIndex(int scvIdx, int timeIdx) const
+    int globalSpaceIndex(int scvIdx, int timeIdx) const
     { return model().vertexMapper().map(element(), scvIdx, dim); }
 
     /*!

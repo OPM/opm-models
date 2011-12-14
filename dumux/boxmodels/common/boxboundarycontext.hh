@@ -54,7 +54,8 @@ class BoxBoundaryContext
     enum { dim = GridView::dimension };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
-    typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:
     /*!
