@@ -580,6 +580,11 @@ public:
         return &boundaryTypes_[bvertIdx];
     }
 
+    /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    std::string name() const
+    { return "box"; }
 
     /*!
      * \brief Given an primary variable index, return a human readable name.

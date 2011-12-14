@@ -102,6 +102,12 @@ class TwoPNIModel : public TwoPModel<TypeTag>
 
 public:
     /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    const char *name() const
+    { return "2pni"; }
+
+    /*!
      * \brief Given an primary variable index, return a human readable name.
      */
     std::string primaryVarName(int pvIdx) const

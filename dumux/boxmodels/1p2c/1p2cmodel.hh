@@ -28,7 +28,6 @@
  *        two-component box model
  *        Adaption of the BOX scheme to the one-phase two-component flow model.
  */
-
 #ifndef DUMUX_ONEP_TWOC_MODEL_HH
 #define DUMUX_ONEP_TWOC_MODEL_HH
 
@@ -78,7 +77,6 @@ namespace Dumux
  *
  * The primary variables are the pressure \f$p\f$ and the mole fraction of dissolved component \f$x\f$.
  */
-
 template<class TypeTag >
 class OnePTwoCBoxModel : public BoxModel<TypeTag>
 {
@@ -87,6 +85,12 @@ class OnePTwoCBoxModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
+    /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    std::string name() const
+    { return "1p2c"; }
+
     /*!
      * \brief Given an primary variable index, return a human readable name.
      */

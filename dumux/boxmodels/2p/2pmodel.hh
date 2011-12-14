@@ -87,6 +87,12 @@ class TwoPModel : public BoxModel<TypeTag>
 
 public:
     /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    const char *name() const
+    { return "2p"; }
+
+    /*!
      * \brief Given an primary variable index, return a human readable name.
      */
     std::string primaryVarName(int pvIdx) const
@@ -125,6 +131,8 @@ public:
         
         return oss.str();
     }
+
+    /*!
 
     /*!
      * \brief Returns the relative weight of a primary variable for

@@ -26,7 +26,6 @@
  * \brief Base class for all models which use the one-phase,
  *        box model.
  */
-
 #ifndef DUMUX_1P_MODEL_HH
 #define DUMUX_1P_MODEL_HH
 
@@ -67,6 +66,12 @@ class OnePBoxModel : public BoxModel<TypeTag>
     enum { dim = GridView::dimension };
 
 public:
+    /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    std::string name() const
+    { return "1p"; }
+
     /*!
      * \brief Given an primary variable index, return a human readable name.
      */

@@ -121,6 +121,12 @@ class RichardsModel : public BoxModel<TypeTag>
 
 public:
     /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    std::string name() const
+    { return "richards"; }
+
+    /*!
      * \brief Given an primary variable index, return a human readable name.
      */
     std::string primaryVarName(int pvIdx) const
