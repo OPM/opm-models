@@ -250,6 +250,7 @@ public:
         eps_ = 3e-6;
         FluidSystem::init();
 
+
         temperature_ = 273.15 + 20; // -> 20°C
         lensLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
         lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
