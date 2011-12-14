@@ -97,6 +97,7 @@ class TwoPTwoCModel: public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -194,7 +195,7 @@ public:
      * \param dest Contains the storage of each component for one phase
      * \param phaseIdx The phase index
      */
-    void globalPhaseStorage(PrimaryVariables &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &dest, int phaseIdx)
     {
         dest = 0;
 

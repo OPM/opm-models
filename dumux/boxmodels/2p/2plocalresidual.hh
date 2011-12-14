@@ -84,6 +84,30 @@ public:
     };
 
     /*!
+     * \brief Adds the amount all conservation quantities (e.g. phase
+     *        mass) within a single fluid phase
+     *
+     *  \param result The phase mass within the sub-control volume
+     *  \param scvIdx The SCV (sub-control-volume) index
+     *  \param usePrevSol Evaluate function with solution of current or previous time step
+     */
+    void addPhaseStorage(EqVector &result,
+                         const ElementContext &elemCtx,
+                         int scvIdx,
+                         int timeIdx,
+                         int phaseIdx) const
+    {
+        // retrieve the volume variables for the SCV at the specified
+        // point in time
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+
+        result[conti0EqIdx + phaseIdx] +=
+            volVars.porosity()
+            * volVars.fluidState().saturation(phaseIdx)
+            * volVars.fluidState().density(phaseIdx);
+    };
+
+    /*!
      * \brief Evaluate the amount all conservation quantities
      *        (e.g. phase mass) within a finite sub-control volume.
      *

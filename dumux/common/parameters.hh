@@ -34,6 +34,7 @@
 #include <dumux/common/exceptions.hh>
 
 #include <dune/common/parametertree.hh>
+#include <dune/common/classname.hh>
 
 #include <iostream>
 #include <sstream>

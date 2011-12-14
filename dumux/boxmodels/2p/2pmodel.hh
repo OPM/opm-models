@@ -70,7 +70,7 @@ namespace Dumux
  * choosing either \f$p_w\f$ and \f$S_n\f$ or \f$p_n\f$ and \f$S_w\f$
  * as primary variables. The formulation which ought to be used can be
  * specified by setting the <tt>Formulation</tt> property to either
- * <tt>TwoPCommonIndices::pWsN</tt> or <tt>TwoPCommonIndices::pNsW</tt>. By
+
  * default, the model uses \f$p_w\f$ and \f$S_n\f$.
  */
 template<class TypeTag >
@@ -85,6 +85,14 @@ class TwoPModel : public BoxModel<TypeTag>
     enum { formulation = GET_PROP_VALUE(TypeTag, Formulation) };
     enum { numComponents = FluidSystem::numComponents };
 
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    
 public:
     /*!
      * \brief Returns a string with the model's human-readable name
@@ -133,6 +141,35 @@ public:
     }
 
     /*!
+     * \brief Compute the total storage inside one phase of all
+     *        conservation quantities.
+     *
+     * \param dest Contains the storage of each component for one phase
+     * \param phaseIdx The phase index
+     */
+    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    {
+        assert(0 <= phaseIdx && phaseIdx < numPhases);
+
+        dest = 0;
+
+        ElementContext elemCtx(this->problem_());
+        ElementIterator elemIt = this->gridView_().template begin<0>();
+        const ElementIterator elemEndIt = this->gridView_().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
+
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
+                this->localResidual().addPhaseStorage(dest,
+                                                      elemCtx,
+                                                      scvIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+        };
+
+        this->gridView_().comm().sum(dest);
+    }
 
     /*!
      * \brief Returns the relative weight of a primary variable for

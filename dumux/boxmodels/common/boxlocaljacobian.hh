@@ -155,7 +155,7 @@ public:
     {
         // update the hints for the element's volume variables
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalIndex(scvIdx, /*timeIdx=*/0);
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
             for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
                 model_().setHint(elemCtx.volVars(scvIdx, timeIdx),
                                  globalIdx,
@@ -212,7 +212,8 @@ public:
         static const Scalar baseEps = 1e-10;
         assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps);
 
-        Scalar pvWeight = elemCtx.model().primaryVarWeight(elemCtx.globalIndex(scvIdx), pvIdx);
+        int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+        Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
         return baseEps/pvWeight;
     }
 
