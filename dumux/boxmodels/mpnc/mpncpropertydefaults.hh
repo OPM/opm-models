@@ -153,6 +153,7 @@ SET_BOOL_PROP(BoxMPNC, NewtonEnableChop, true);
 
 //! The indices required by the compositional twophase model
 SET_TYPE_PROP(BoxMPNC, MPNCIndices, MPNCIndices<TypeTag, 0>);
+SET_TYPE_PROP(BoxMPNC, Indices, MPNCIndices<TypeTag, 0>);
 }
 }
 

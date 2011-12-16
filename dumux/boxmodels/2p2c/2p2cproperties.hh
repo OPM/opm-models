@@ -59,6 +59,7 @@ NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition,
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
 

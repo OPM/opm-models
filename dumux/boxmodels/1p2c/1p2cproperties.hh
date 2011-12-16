@@ -59,6 +59,7 @@ NEW_TYPE_TAG(BoxOnePTwoC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition,
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of fluid components in the system
 NEW_PROP_TAG(OnePTwoCIndices); //!< Enumerations for the 1p2c models
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations

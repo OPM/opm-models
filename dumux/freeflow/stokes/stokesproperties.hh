@@ -50,6 +50,7 @@ NEW_TYPE_TAG(BoxStokes, INHERITS_FROM(BoxModel));
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 
 //NEW_PROP_TAG(Soil); //!< The type of the soil properties object
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem

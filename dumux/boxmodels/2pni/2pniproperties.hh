@@ -52,6 +52,7 @@ NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP, VtkEnergy));
 //////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(TwoPNIIndices); //!< Enumerations for the non-isothermal 2p models
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 }

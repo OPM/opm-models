@@ -165,6 +165,7 @@ SET_PROP(BoxTwoPTwoC,
 public:
     typedef TwoPTwoCIndices<TypeTag, Formulation, 0> type;
 };
+SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP(TypeTag, TwoPTwoCIndices));
 // disable velocity output by default
 SET_BOOL_PROP(BoxTwoPTwoC, EnableVelocityOutput, false);
 }

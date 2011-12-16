@@ -93,6 +93,7 @@ SET_SCALAR_PROP(BoxRichards,
 
 //! The class with all index definitions for the model
 SET_TYPE_PROP(BoxRichards, RichardsIndices, Dumux::RichardsIndices);
+SET_TYPE_PROP(BoxRichards, Indices, Dumux::RichardsIndices);
 
 /*!
  * \brief Set type of the parameter objects for the material law

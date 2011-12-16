@@ -97,6 +97,7 @@ SET_TYPE_PROP(BoxOneP, FluxVariables, OnePFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal single-phase model
 SET_TYPE_PROP(BoxOneP, OnePIndices, OnePIndices);
+SET_TYPE_PROP(BoxOneP, Indices, OnePIndices);
 
 //! The weight of the upwind control volume when calculating
 //! fluxes. Use central differences by default.

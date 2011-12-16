@@ -50,6 +50,7 @@ NEW_TYPE_TAG(BoxTwoPTwoCNI, INHERITS_FROM(BoxTwoPTwoC, VtkEnergy));
 // Property tags
 //////////////////////////////////////////////////////////////////
 NEW_PROP_TAG(TwoPTwoCNIIndices); //!< Enumerations for the 2p2cni models
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 
 NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
