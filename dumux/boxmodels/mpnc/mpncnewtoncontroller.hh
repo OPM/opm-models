@@ -42,6 +42,7 @@ template <class TypeTag, bool enableKinetic /* = false */>
 class MpNcNewtonChop
 {
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
@@ -53,17 +54,36 @@ class MpNcNewtonChop
 
 public:
     static void chop(SolutionVector &uCurrentIter,
-                     const SolutionVector &uLastIter)
+                     const SolutionVector &uLastIter, 
+                     const Model &model)
     {
         for (int i = 0; i < uLastIter.size(); ++i) {
             for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
                 saturationChop_(uCurrentIter[i][S0Idx + phaseIdx],
-                                uLastIter[i][S0Idx + phaseIdx]);
-            pressureChop_(uCurrentIter[i][p0Idx], uLastIter[i][p0Idx]);
-            for (int comp = 0; comp < numComponents; ++comp) {
-                pressureChop_(uCurrentIter[i][fug0Idx + comp], uLastIter[i][fug0Idx + comp]);
+                                uLastIter[i][S0Idx + phaseIdx],
+                                model);
+            pressureChop_(uCurrentIter[i][p0Idx], 
+                          uLastIter[i][p0Idx],
+                          model);
+            
+            // fugacities
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar &val = uCurrentIter[i][fug0Idx + compIdx];
+                Scalar oldVal = uLastIter[i][fug0Idx + compIdx];
+
+                // allow the mole fraction of the component to change
+                // at most 70% (assuming composition independent
+                // fugacity coefficients)
+                Scalar minGamma = model.minActivityCoeff(i, compIdx);
+                Scalar maxDelta = 0.7 * minGamma;
+
+                clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
+
+                // do not allow mole fractions lager than 110% or
+                // smaller than -10%
+                val = std::max(-0.1*minGamma, val);
+                val = std::min(1.1*minGamma, val);
             }
-
         }
     };
 
@@ -73,80 +93,18 @@ private:
         val = std::max(minVal, std::min(val, maxVal));
     };
 
-    static void pressureChop_(Scalar &val, Scalar oldVal)
+    static void pressureChop_(Scalar &val, Scalar oldVal, const Model &model)
     {
-        const Scalar maxDelta = std::max(oldVal/4.0, 10e3);
-        clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-        val = std::max(0.0, val); // don't allow negative pressures
+        // limit pressure increases to 100% and decreases to 30% per
+        // iteration
+        clampValue_(val, oldVal*0.7, oldVal*2);
     }
 
-    static void saturationChop_(Scalar &val, Scalar oldVal)
+    static void saturationChop_(Scalar &val, Scalar oldVal, const Model &model)
     {
-        const Scalar maxDelta = 0.25;
-        clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-        clampValue_(val, -0.001, 1.001);
-    }
-
-};
-
-template <class TypeTag>
-class MpNcNewtonChop<TypeTag, /*enableKinetic=*/true>
-{
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-
-    enum { numPhases =  GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { moleFrac00Idx = Indices::moleFrac00Idx };
-    enum { S0Idx = Indices::S0Idx };
-    enum { p0Idx = Indices::p0Idx };
-
-public:
-    static void chop(SolutionVector &uCurrentIter,
-                     const SolutionVector &uLastIter)
-    {
-        for (int i = 0; i < uLastIter.size(); ++i) {
-            for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-                saturationChop_(uCurrentIter[i][S0Idx + phaseIdx],
-                                uLastIter[i][S0Idx + phaseIdx]);
-            pressureChop_(uCurrentIter[i][p0Idx], uLastIter[i][p0Idx]);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    moleFracChop_(uCurrentIter[i][moleFrac00Idx + phaseIdx*numComponents + compIdx],
-                                  uLastIter[i][moleFrac00Idx + phaseIdx*numComponents + compIdx]);
-                }
-            };
-
-        }
-    };
-
-private:
-    static void clampValue_(Scalar &val, Scalar minVal, Scalar maxVal)
-    {
-        val = std::max(minVal, std::min(val, maxVal));
-    };
-
-    static void pressureChop_(Scalar &val, Scalar oldVal)
-    {
-        const Scalar maxDelta = std::max(oldVal/4.0, 10e3);
-        clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-        val = std::max(0.0, val); // don't allow negative pressures
-    }
-
-    static void saturationChop_(Scalar &val, Scalar oldVal)
-    {
-        const Scalar maxDelta = 0.25;
-        clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-        clampValue_(val, -0.001, 1.001);
-    }
-
-    static void moleFracChop_(Scalar &val, Scalar oldVal)
-    {
-        // no component mole fraction can change by more than 20% per iteration
+        // limit saturation updates to 20% per iteration
         const Scalar maxDelta = 0.20;
         clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-        clampValue_(val, -0.001, 1.001);
     }
 
 };
@@ -188,7 +146,7 @@ public:
     MPNCNewtonController(const Problem &problem)
         : ParentType(problem)
     {
-        enableChop_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, EnableChop);
+        choppedIterations_ = GET_PARAM_FROM_GROUP(TypeTag, int, Newton, ChoppedIterations);
         Dune::FMatrixPrecision<>::set_singular_limit(1e-35);
     };
 
@@ -222,10 +180,10 @@ public:
                 }
            }
            
-            if (this->numSteps_ < 2 && enableChop_) {
-                // put crash barriers along the update path at the
-                // beginning...
-                NewtonChop::chop(uCurrentIter, uLastIter);
+           if (this->numSteps_ < choppedIterations_) {
+               // put crash barriers along the update path at the
+               // beginning...
+               NewtonChop::chop(uCurrentIter, uLastIter, this->model_());
             }
 
             if (this->enableAbsoluteCriterion_)
@@ -265,7 +223,7 @@ private:
        }
     };
 
-    bool enableChop_;
+    int choppedIterations_;
 };
 }
 
