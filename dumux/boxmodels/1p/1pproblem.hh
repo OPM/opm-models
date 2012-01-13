@@ -42,7 +42,6 @@ namespace Dumux
 template<class TypeTag>
 class OnePBoxProblem : public BoxPorousProblem<TypeTag>
 {
-    typedef OnePBoxProblem<TypeTag> ThisType;
     typedef BoxPorousProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;

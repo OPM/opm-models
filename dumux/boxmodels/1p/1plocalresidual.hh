@@ -46,23 +46,16 @@ namespace Dumux
 template<class TypeTag>
 class OnePLocalResidual : public BoxLocalResidual<TypeTag>
 {
-    typedef OnePLocalResidual<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum { dimWorld = GridView::dimensionworld };
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
     enum { contiEqIdx = Indices::contiEqIdx };
-    enum { pressureIdx = Indices::pressureIdx };
 
 public:
     /*!

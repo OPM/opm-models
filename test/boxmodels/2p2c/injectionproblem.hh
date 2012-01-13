@@ -197,7 +197,6 @@ class InjectionProblem
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:

@@ -36,8 +36,6 @@ namespace Dumux {
 template<class TypeTag, bool enableDiffusion>
 class MPNCVolumeVariablesDiffusion
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -130,9 +128,7 @@ protected:
 template<class TypeTag>
 class MPNCVolumeVariablesDiffusion<TypeTag, false>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:

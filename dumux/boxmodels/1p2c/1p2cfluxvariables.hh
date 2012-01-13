@@ -54,14 +54,10 @@ namespace Dumux
 template <class TypeTag>
 class OnePTwoCFluxVariables
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
     enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
@@ -74,7 +70,6 @@ class OnePTwoCFluxVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
 
 public:
     /*!

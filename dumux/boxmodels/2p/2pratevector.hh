@@ -61,9 +61,7 @@ class TwoPRateVector
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 

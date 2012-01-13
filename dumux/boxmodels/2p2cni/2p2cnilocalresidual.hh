@@ -49,12 +49,9 @@ namespace Dumux
 template<class TypeTag>
 class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
 {
-    typedef TwoPTwoCNILocalResidual<TypeTag> ThisType;
     typedef TwoPTwoCLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -73,11 +70,8 @@ class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
 
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef Dune::FieldVector<Scalar, dim> LocalPosition;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
     /*!

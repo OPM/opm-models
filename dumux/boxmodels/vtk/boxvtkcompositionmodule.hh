@@ -88,8 +88,6 @@ class BoxVtkCompositionModule : public BoxVtkOutputModule<TypeTag>
 
     typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    typedef typename ParentType::ScalarBuffer ScalarBuffer;
-    typedef typename ParentType::PhaseBuffer PhaseBuffer;
     typedef typename ParentType::ComponentBuffer ComponentBuffer;
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
 

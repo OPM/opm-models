@@ -157,7 +157,6 @@ template <class TypeTag >
 class WaterAirProblem 
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef WaterAirProblem<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

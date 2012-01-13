@@ -62,7 +62,6 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    typedef Dune::FieldVector<Scalar, numPhases> PhasesVector;
     //! \endcond
 
 public:

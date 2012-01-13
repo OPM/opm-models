@@ -52,7 +52,6 @@ class OnePTwoCPrimaryVariables
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
 
@@ -60,11 +59,7 @@ class OnePTwoCPrimaryVariables
     enum { pressureIdx = Indices::pressureIdx };
     enum { x1Idx = Indices::x1Idx };
 
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 

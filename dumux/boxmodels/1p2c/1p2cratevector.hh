@@ -59,13 +59,10 @@ class OnePTwoCRateVector
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
-    enum { transEqIdx = Indices::transEqIdx };
 
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { contiEqIdx = Indices::contiEqIdx };
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 public:
     /*!
      * \brief Default constructor

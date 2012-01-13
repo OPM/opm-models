@@ -39,13 +39,8 @@ class MPNCFluxVariablesDiffusion
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
-    typedef typename GridView::template Codim<0>::Entity Element;
 
     enum {
         dim = GridView::dimension,
@@ -60,10 +55,6 @@ class MPNCFluxVariablesDiffusion
 
     typedef Dune::FieldVector<Scalar, dimWorld>  GlobalPosition;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-
-
-
 public:
     MPNCFluxVariablesDiffusion()
     {}
@@ -73,8 +64,8 @@ public:
         int i = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
         int j = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
-        const VolumeVariables &volVarsI = elemCtx.volVars(i, timeIdx);
-        const VolumeVariables &volVarsJ = elemCtx.volVars(j, timeIdx);
+        const auto &volVarsI = elemCtx.volVars(i, timeIdx);
+        const auto &volVarsJ = elemCtx.volVars(j, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -205,11 +196,8 @@ protected:
 template<class TypeTag>
 class MPNCFluxVariablesDiffusion<TypeTag, false>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
 public:
     MPNCFluxVariablesDiffusion()

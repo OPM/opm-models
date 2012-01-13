@@ -74,7 +74,6 @@ class BoxModel
         dim = GridView::dimension
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
@@ -85,7 +84,6 @@ class BoxModel
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GridView::template Codim<dim>::Entity Vertex;
-    typedef typename GridView::template Codim<dim>::EntityPointer VertexPointer;
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
 
     typedef typename GridView::ctype CoordScalar;

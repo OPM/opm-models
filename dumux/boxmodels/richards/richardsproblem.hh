@@ -43,7 +43,6 @@ template<class TypeTag>
 class RichardsBoxProblem : public BoxMultiPhaseProblem<TypeTag>
 {
     typedef BoxMultiPhaseProblem<TypeTag> ParentType;
-    typedef RichardsBoxProblem<TypeTag> ThisType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;

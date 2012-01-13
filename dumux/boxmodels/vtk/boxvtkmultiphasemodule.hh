@@ -104,8 +104,6 @@ class BoxVtkMultiPhaseModule : public BoxVtkOutputModule<TypeTag>
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
-    typedef typename ParentType::ComponentBuffer ComponentBuffer;
-    typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
 
     typedef Dune::FieldVector<Scalar, dim> VelocityVector;
     typedef Dune::BlockVector<VelocityVector> VelocityField;

@@ -52,18 +52,13 @@ class OnePPrimaryVariables
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
 
     // primary variable indices
     enum { pressureIdx = Indices::pressureIdx };
 
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 

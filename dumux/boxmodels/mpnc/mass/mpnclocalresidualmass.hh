@@ -46,20 +46,17 @@ template<class TypeTag>
 class MPNCLocalResidualMassCommon
 {
 protected:
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
-    enum { dim = GridView::dimension };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
 
-    typedef typename Dune::FieldVector<Scalar, dim> Vector;
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef MPNCDiffusion<TypeTag, enableDiffusion> Diffusion;
 

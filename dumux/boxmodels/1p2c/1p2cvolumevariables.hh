@@ -49,8 +49,6 @@ class OnePTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef BoxVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -62,12 +60,8 @@ class OnePTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
         x1Idx = Indices::x1Idx
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
-    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar,dimWorld> Vector;
 
 public:
     //! The type returned by the fluidState() method

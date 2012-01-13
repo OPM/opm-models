@@ -69,7 +69,6 @@ class BoxVtkPrimaryVarsModule : public BoxVtkOutputModule<TypeTag>
     enum { dim = GridView::dimension };
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 

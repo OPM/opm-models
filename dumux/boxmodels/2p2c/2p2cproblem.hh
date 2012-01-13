@@ -43,7 +43,6 @@ namespace Dumux
 template<class TypeTag>
 class TwoPTwoCProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef TwoPTwoCProblem<TypeTag> ThisType;
     typedef BoxMultiPhaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;

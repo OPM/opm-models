@@ -45,7 +45,6 @@ template<class TypeTag>
 class OnePTwoCBoxProblem : public BoxPorousProblem<TypeTag>
 {
     typedef BoxPorousProblem<TypeTag> ParentType;
-    typedef OnePTwoCBoxProblem<TypeTag> ThisType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
