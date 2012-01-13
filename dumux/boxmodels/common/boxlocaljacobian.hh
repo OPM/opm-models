@@ -31,7 +31,6 @@
 #include <dune/istl/matrix.hh>
 
 #include <dumux/common/math.hh>
-#include "boxelementboundarytypes.hh"
 
 namespace Dumux
 {
@@ -92,7 +91,6 @@ private:
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;

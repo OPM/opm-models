@@ -36,7 +36,6 @@
 
 #include "boxassembler.hh"
 #include "boxfvelementgeometry.hh"
-#include "boxelementboundarytypes.hh"
 #include "boxlocalresidual.hh"
 #include "boxlocaljacobian.hh"
 #include "boxlocalresidual.hh"
@@ -71,9 +70,6 @@ SET_TYPE_PROP(BoxModel,
 
 //! Set the default for the FVElementGeometry
 SET_TYPE_PROP(BoxModel, FVElementGeometry, Dumux::BoxFVElementGeometry<TypeTag>);
-
-//! Set the default for the ElementBoundaryTypes
-SET_TYPE_PROP(BoxModel, ElementBoundaryTypes, Dumux::BoxElementBoundaryTypes<TypeTag>);
 
 //! use the plain newton method for the box scheme by default
 SET_TYPE_PROP(BoxModel, NewtonMethod, Dumux::NewtonMethod<TypeTag>);

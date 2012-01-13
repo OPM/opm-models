@@ -90,10 +90,6 @@ SET_TYPE_PROP(BoxOnePTwoC, VolumeVariables, OnePTwoCVolumeVariables<TypeTag>);
 //! define the FluxVariables
 SET_TYPE_PROP(BoxOnePTwoC, FluxVariables, OnePTwoCFluxVariables<TypeTag>);
 
-// the BoundaryVariables property
-#warning "TODO: implement outflow condition properly"
-//SET_TYPE_PROP(BoxOnePTwoC, BoundaryVariables, OnePTwoCBoundaryVariables<TypeTag>);
-
 //! set default upwind weight to 1.0, i.e. fully upwind
 SET_SCALAR_PROP(BoxOnePTwoC, UpwindWeight, 1.0);
 
