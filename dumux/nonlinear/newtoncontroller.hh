@@ -390,7 +390,7 @@ public:
                 initialAbsoluteError_ = std::sqrt(norm2);
                 lastAbsoluteError_ = initialAbsoluteError_;
             }
-
+            
             int converged = linearSolver_.solve(A, x, b);
 
             // make sure all processes converged

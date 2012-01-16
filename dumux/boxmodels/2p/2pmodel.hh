@@ -181,9 +181,8 @@ public:
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
         if (pvIdx == Indices::pressureIdx) {
-            Scalar absPv =
-                std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
-            return std::min(10.0/absPv, 1.0);
+            Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
+            return std::min(1.0/absPv, 1.0);
         }
         return 1;
     }

@@ -107,8 +107,9 @@ public:
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0)
             verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-        const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-        const double residReduction = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, ResidualReduction);
+
+        int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
+        double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
 
         if (!overlapMatrix_) {
             // make sure that the overlapping matrix and block vectors
@@ -122,7 +123,7 @@ public:
         overlapMatrix_->assignAdd(M);
         overlapb_->assignAdd(b);
         (*overlapx_) = 0.0;
-
+        
         // create sequential and overlapping preconditioners
         PrecBackend seqPreCond(*overlapMatrix_);
         typedef typename PrecBackend::Implementation SeqPreconditioner;
@@ -137,10 +138,18 @@ public:
         SolverBackend solver(opA,
                              scalarProd,
                              preCond,
-                             residReduction,
+                             tolerance,
                              maxIter,
                              verbosity);
 
+        OverlappingVector weightVec(*overlapx_);
+        for (int i = 0; i < weightVec.size(); ++i) {
+            for (int j = 0; j < OverlappingVector::block_type::dimension; ++j) {
+                weightVec[i][j] = this->problem_.model().primaryVarWeight(i, j);
+            }
+        }
+        solver.imp().convergenceCriterion().setWeight(weightVec);
+        
         // run the solver
         Dune::InverseOperatorResult result;
         solver.imp().apply(*overlapx_, *overlapb_, result);
@@ -151,6 +160,9 @@ public:
         // return the result of the solver
         return result.converged;
     }
+
+protected:
+    const Problem &problem_;
 
 private:
     void prepare_(const Matrix &M)
@@ -181,8 +193,6 @@ private:
         overlapb_ = 0;
         overlapx_ = 0;
     };
-
-    const Problem &problem_;
 
     int overlapSize_;
     OverlappingMatrix *overlapMatrix_;
@@ -244,8 +254,8 @@ public:
 
     template <class Operator, class ScalarProduct, class Prec>
     StandardSolverBackend(Operator& A, ScalarProduct& sp, Prec& prec,
-                          Scalar residReduction, int maxIter, int verbosity)
-        : imp_(A, sp, prec, residReduction, maxIter, verbosity)
+                          Scalar tolerance, int maxIter, int verbosity)
+        : imp_(A, sp, prec, tolerance, maxIter, verbosity)
     {}
 
     Imp& imp()
@@ -271,14 +281,17 @@ class BoxBiCGStabILU0Solver : public BoxLinearSolver<TypeTag>
     typedef Dumux::OverlappingBlockVector<typename Vector::block_type, Overlap> OverlappingVector;
     typedef Dune::SeqILU0<OverlappingMatrix, OverlappingVector, OverlappingVector> SeqPreconditioner;
     typedef PrecNoIterBackend<TypeTag, SeqPreconditioner> PrecBackend;
-    typedef Dune::BiCGSTABSolver<OverlappingVector> Solver;
+    //typedef Dune::ResidReductionCriterion<OverlappingVector> ConvergenceCrit;
+    typedef Dune::FixPointCriterion<OverlappingVector> ConvergenceCrit;
+    typedef Dune::BiCGSTABSolver<OverlappingVector, ConvergenceCrit> Solver;
     typedef StandardSolverBackend<TypeTag, Solver> SolverBackend;
 
 public:
     template <class Problem>
     BoxBiCGStabILU0Solver(const Problem &problem, int overlapSize = 1)
         : ParentType(problem, overlapSize)
-    {}
+    {      
+    }
 
     bool solve(const Matrix &M,
                Vector &x,

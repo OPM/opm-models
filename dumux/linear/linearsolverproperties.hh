@@ -51,8 +51,8 @@ NEW_PROP_TAG(LinearSolver);
  */
 NEW_PROP_TAG(LinearSolverVerbosity);
 
-//! target reduction of the initial residual
-NEW_PROP_TAG(LinearSolverResidualReduction);
+//! target tolerance of the initial residual
+NEW_PROP_TAG(LinearSolverTolerance);
 
 //! maximum number of iterations of solver
 NEW_PROP_TAG(LinearSolverMaxIterations);

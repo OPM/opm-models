@@ -56,7 +56,7 @@ public:
   {
       int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
     const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double residReduction = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, ResidualReduction);
+    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
 
     Vector bTmp(b);
 
@@ -68,7 +68,7 @@ public:
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
     MatrixAdapter operatorA(A);
 
-    Solver solver(operatorA, precond, residReduction, maxIter, verbosity);
+    Solver solver(operatorA, precond, tolerance, maxIter, verbosity);
 
     solver.apply(x, bTmp, result_);
 
@@ -81,7 +81,7 @@ public:
   {
     int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
     const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double residReduction = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, ResidualReduction);
+    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
 
     Vector bTmp(b);
 
@@ -93,7 +93,7 @@ public:
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
     MatrixAdapter operatorA(A);
 
-    Solver solver(operatorA, precond, residReduction, restartGMRes, maxIter, verbosity);
+    Solver solver(operatorA, precond, tolerance, restartGMRes, maxIter, verbosity);
 
     solver.apply(x, bTmp, result_);
 
@@ -391,7 +391,7 @@ public:
   {
     int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
     const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double residReduction = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, ResidualReduction);
+    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
 
     Vector bTmp(b);
 
@@ -402,7 +402,7 @@ public:
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
     MatrixAdapter operatorA(A);
 
-    Solver solver(operatorA, precond, residReduction, maxIter, verbosity);
+    Solver solver(operatorA, precond, tolerance, maxIter, verbosity);
 
     solver.apply(x, bTmp, result_);
 
@@ -415,7 +415,7 @@ public:
   {
     int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
     const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double residReduction = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, ResidualReduction);
+    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
 
     Vector bTmp(b);
 
@@ -427,7 +427,7 @@ public:
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
     MatrixAdapter operatorA(A);
 
-    Solver solver(operatorA, precond, residReduction, restartGMRes, maxIter, verbosity);
+    Solver solver(operatorA, precond, tolerance, restartGMRes, maxIter, verbosity);
 
     solver.apply(x, bTmp, result_);
 

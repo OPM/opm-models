@@ -77,8 +77,28 @@ public:
     {
     }
 
+    /*!
+     * \brief Copy constructor.
+     */
+    OverlappingBlockVector()
+    {}
+
     ~OverlappingBlockVector()
     {
+    }
+
+    using ParentType::operator=;
+    OverlappingBlockVector &operator=(const OverlappingBlockVector &obv)
+    {
+        ParentType::operator=(obv);
+        frontMaster_ = obv.frontMaster_;
+        numIndicesSendBuff_ = obv.numIndicesSendBuff_;
+        indicesSendBuff_ = obv.indicesSendBuff_;
+        indicesRecvBuff_ = obv.indicesRecvBuff_;
+        valuesSendBuff_ = obv.valuesSendBuff_;
+        valuesRecvBuff_ = obv.valuesRecvBuff_;
+        overlap_ = obv.overlap_;
+        return *this;
     }
 
     /*!
@@ -225,17 +245,6 @@ public:
         // wait until we have send everything
         waitSendFinished_();
     };
-
-    using ParentType::operator=;
-    /*!
-     * \brief Copy constructor.
-     */
-    OverlappingBlockVector &operator=(const OverlappingBlockVector &obv)
-    {
-        ParentType::operator=(obv);
-        overlap_ = obv.overlap_;
-        return *this;
-    }
 
     /*!
      * \brief Syncronize an overlapping block vector and take the
