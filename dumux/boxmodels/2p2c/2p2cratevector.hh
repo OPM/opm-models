@@ -53,20 +53,15 @@ class TwoPTwoCRateVector
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
-    enum { conti0EqIdx = Indices::conti0EqIdx };
-
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
-    static constexpr unsigned int replaceCompEqIdx =
-        GET_PROP_VALUE(TypeTag, ReplaceCompEqIdx);
+    enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
+    typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
 public:
     /*!

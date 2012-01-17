@@ -99,10 +99,6 @@ SET_TYPE_PROP(BoxOneP, FluxVariables, OnePFluxVariables<TypeTag>);
 SET_TYPE_PROP(BoxOneP, OnePIndices, OnePIndices);
 SET_TYPE_PROP(BoxOneP, Indices, OnePIndices);
 
-//! The weight of the upwind control volume when calculating
-//! fluxes. Use central differences by default.
-SET_SCALAR_PROP(BoxOneP, UpwindWeight, 0.5);
-
 //! The fluid system to use by default
 SET_TYPE_PROP(BoxOneP, FluidSystem, Dumux::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
 
@@ -113,11 +109,12 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-// use the conjugated gradient solver preconditioned by ILU-0.
-// WARNING: CG is only expected to work for symmetric Jacobian
-// matrices, which means that the either fluid used is incompressible
-// and/or you are _not_ use upwinding!
-SET_TYPE_PROP(BoxOneP, LinearSolver, Dumux::BoxCGILU0Solver<TypeTag> );
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxOneP, EnableSmoothUpwinding, false);
+
+// use the stabilized bi-conjugated gradient solver preconditioned by
+// ILU-0.
+SET_TYPE_PROP(BoxOneP, LinearSolver, Dumux::BoxBiCGStabILU0Solver<TypeTag> );
 
 // disable output of a few quantities which make sense in a
 // multip-hase but not in a single-phase context

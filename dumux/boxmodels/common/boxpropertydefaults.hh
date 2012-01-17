@@ -212,7 +212,7 @@ SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::BoxBiCGStabILU0Solver<TypeTag> );
 // that the initial value for the delta vector u is quite
 // close to the final value, a reduction of 6 orders of
 // magnitude in the defect should be sufficient...
-SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, GET_PROP_VALUE(TypeTag, NewtonRelTolerance)/100.0);
+SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, GET_PROP_VALUE(TypeTag, NewtonRelTolerance)/1000.0);
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);

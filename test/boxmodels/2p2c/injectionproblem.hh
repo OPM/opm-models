@@ -118,7 +118,7 @@ public:
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
 
 SET_BOOL_PROP(InjectionProblem, EnableJacobianRecycling, true);
-
+SET_BOOL_PROP(InjectionProblem, EnableSmoothUpwinding, false);
 // set the defaults for some injection problem specific properties
 SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureLow, 1e6);
 SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureHigh, 3e7);

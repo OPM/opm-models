@@ -86,10 +86,8 @@ SET_TYPE_PROP(BoxRichards, FluxVariables, RichardsFluxVariables<TypeTag>);
 //! The class of the newton controller
 SET_TYPE_PROP(BoxRichards, NewtonController, RichardsNewtonController<TypeTag>);
 
-//! The upwind weight for the mass conservation equations
-SET_SCALAR_PROP(BoxRichards,
-                MassUpwindWeight,
-                1.0);
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxRichards, EnableSmoothUpwinding, false);
 
 //! The class with all index definitions for the model
 SET_TYPE_PROP(BoxRichards, RichardsIndices, Dumux::RichardsIndices);

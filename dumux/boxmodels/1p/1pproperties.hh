@@ -62,7 +62,7 @@ NEW_PROP_TAG(Fluid); //!< The fluid used for the default fluid system
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(UpwindWeight); //!< Returns weight of the upwind cell when calculating fluxes
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 
 // \}
 }

@@ -140,8 +140,8 @@ public:
                                                 NonwettingPhase> type;
 };
 
-// disable velocity output by default
-SET_BOOL_PROP(BoxTwoP, EnableVelocityOutput, false);
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxTwoP, EnableSmoothUpwinding, false);
 
 }
 //

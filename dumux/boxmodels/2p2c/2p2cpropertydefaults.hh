@@ -96,21 +96,13 @@ SET_INT_PROP(BoxTwoPTwoC,
              Formulation,
              TwoPTwoCFormulation::plSg);
 
-//! set as default that no component mass balance is replaced by the total mass balance
-SET_INT_PROP(BoxTwoPTwoC, ReplaceCompEqIdx, 2);
-
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_PROP(BoxTwoPTwoC, MaterialLawParams)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-
-public:
-    typedef typename MaterialLaw::Params type;
-};
+SET_TYPE_PROP(BoxTwoPTwoC,
+              MaterialLawParams, 
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(BoxTwoPTwoC,
@@ -149,14 +141,6 @@ SET_TYPE_PROP(BoxTwoPTwoC, VolumeVariables, TwoPTwoCVolumeVariables<TypeTag>);
 //! the FluxVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, FluxVariables, TwoPTwoCFluxVariables<TypeTag>);
 
-#if 0
-//! the BoundaryVariables property
-SET_TYPE_PROP(BoxTwoPTwoC, BoundaryVariables, TwoPTwoCBoundaryVariables<TypeTag>);
-#endif
-
-//! the upwind weight for the mass conservation equations.
-SET_SCALAR_PROP(BoxTwoPTwoC, MassUpwindWeight, 1.0);
-
 //! The indices required by the isothermal 2p2c model
 SET_PROP(BoxTwoPTwoC,
          TwoPTwoCIndices)
@@ -166,8 +150,8 @@ public:
     typedef TwoPTwoCIndices<TypeTag, Formulation, 0> type;
 };
 SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP(TypeTag, TwoPTwoCIndices));
-// disable velocity output by default
-SET_BOOL_PROP(BoxTwoPTwoC, EnableVelocityOutput, false);
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxTwoPTwoC, EnableSmoothUpwinding, false);
 }
 
 }

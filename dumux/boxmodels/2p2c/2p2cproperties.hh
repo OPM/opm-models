@@ -69,10 +69,8 @@ NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
 NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
 
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(MassUpwindWeight); //!< The value of the upwind weight for the mass conservation equations
-NEW_PROP_TAG(ReplaceCompEqIdx); //!< The index of the total mass balance equation, if one component balance is replaced (ReplaceCompEqIdx < NumComponents)
-NEW_PROP_TAG(EnableVelocityOutput); //!< Returns whether vertex velocity vectors are written into the vtk output
+NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 }
 }
 
