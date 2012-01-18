@@ -148,8 +148,8 @@ SET_TYPE_PROP(BoxMPNC, VolumeVariables, MPNCVolumeVariables<TypeTag>);
 //! the FluxVariables property
 SET_TYPE_PROP(BoxMPNC, FluxVariables, MPNCFluxVariables<TypeTag>);
 
-//! truncate the newton update in the beginning
-SET_BOOL_PROP(BoxMPNC, NewtonEnableChop, true);
+//! truncate the newton update for the first 2 iterations of a time step
+SET_INT_PROP(BoxMPNC, NewtonChoppedIterations, 2);
 
 //! The indices required by the compositional twophase model
 SET_TYPE_PROP(BoxMPNC, MPNCIndices, MPNCIndices<TypeTag, 0>);

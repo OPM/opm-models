@@ -79,10 +79,11 @@ public:
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
 
-                // do not allow mole fractions lager than 110% or
-                // smaller than -10%
-                val = std::max(-0.1*minGamma, val);
-                val = std::min(1.1*minGamma, val);
+                // do not allow mole fractions lager than 101% or
+                // smaller than -1%
+                val = std::max(-0.01*minGamma, val);
+                val = std::min(1.01*minGamma, val);
+
             }
         }
     };
@@ -95,9 +96,8 @@ private:
 
     static void pressureChop_(Scalar &val, Scalar oldVal, const Model &model)
     {
-        // limit pressure increases to 100% and decreases to 30% per
-        // iteration
-        clampValue_(val, oldVal*0.7, oldVal*2);
+        // limit pressure updates to 20% per iteration
+        clampValue_(val, oldVal*0.8, oldVal*1.2);
     }
 
     static void saturationChop_(Scalar &val, Scalar oldVal, const Model &model)
