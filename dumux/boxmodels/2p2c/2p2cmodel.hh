@@ -138,7 +138,8 @@ public:
     {
         ParentType::init(problem);
 
-        setSwitched_(false);
+        verbosity_ = GET_PARAM(TypeTag, int, TwoPTwoCVerbosity);
+        numSwitched_ = 0;
     }
 
     /*!
@@ -212,7 +213,7 @@ public:
     void updateFailed()
     {
         ParentType::updateFailed();
-        setSwitched_(false);
+        numSwitched_ = 0;
     };
 
     /*!
@@ -239,7 +240,7 @@ public:
     void advanceTimeLevel()
     {
         ParentType::advanceTimeLevel();
-        setSwitched_(false);
+        numSwitched_ = 0;
     }
 
     /*!
@@ -248,7 +249,7 @@ public:
      */
     bool switched() const
     {
-        return switchFlag_;
+        return numSwitched_ > 0;
     }
 
     /*!
@@ -300,10 +301,9 @@ public:
      */
     void updatePhasePresence_(SolutionVector &curGlobalSol)
     {
-        bool wasSwitched = false;
+        numSwitched_ = 0;
 
         std::vector<bool> visited(curGlobalSol.size(), false);
-
         ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
@@ -339,7 +339,7 @@ public:
                                       globalPos))
                 {
                     this->jacobianAssembler().markVertexRed(globalIdx);
-                    wasSwitched = true;
+                    ++ numSwitched_;
                 }
             }
         }
@@ -348,9 +348,10 @@ public:
         // other partition we will also set the switch flag
         // for our partition.
         if (this->gridView_().comm().size() > 1)
-            wasSwitched = this->gridView_().comm().max(wasSwitched);
+            numSwitched_ = this->gridView_().comm().sum(numSwitched_);
 
-        setSwitched_(wasSwitched);
+        if (verbosity_ > 0)
+            this->problem_().newtonController().endIterMsg() << ", num switched=" << numSwitched_;
     }
 
 protected:
@@ -365,13 +366,6 @@ protected:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
     };
-
-    /*!
-     * \brief Set whether there was a primary variable switch after in
-     *        the last timestep.
-     */
-    void setSwitched_(bool yesno)
-    { switchFlag_ = yesno; }
 
     //  perform variable switch at a vertex; Returns true if a
     //  variable switch was performed.
@@ -400,9 +394,11 @@ protected:
             if (xll + xlg > 1.0 + switchTol)
             {
                 // liquid phase appears
-                std::cout << "liquid phase appears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << ", xll + xlg: "
-                          << xll + xlg << std::endl;
+                if (verbosity_ > 1)
+                    std::cout << "liquid phase appears at vertex " << globalIdx
+                              << ", coordinates: " << globalPos << ", xll + xlg: "
+                              << xll + xlg << std::endl;
+
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
                     priVars[switchIdx] = 0.0;
@@ -422,10 +418,11 @@ protected:
             if (xgl + xgg > 1.0 + switchTol)
             {
                 // gas phase appears
-                std::cout << "gas phase appears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << ", x_gl + x_gg: "
-                          << xgl + xgg << std::endl;
-                std::cout.flush();
+                if (verbosity_ > 1)
+                    std::cout << "gas phase appears at vertex " << globalIdx
+                              << ", coordinates: " << globalPos << ", x_gl + x_gg: "
+                              << xgl + xgg << std::endl;
+
                 newPhasePresence = bothPhases;
                 if (formulation == pgSl)
                     priVars[switchIdx] = 0.999;
@@ -438,26 +435,28 @@ protected:
             if (volVars.fluidState().saturation(/*phaseIdx=*/1) <= 0.0 - switchTol)
             {
                 // gas phase disappears
-                std::cout << "Gas phase disappears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << ", Sg: "
-                          << volVars.fluidState().saturation(/*phaseIdx=*/1)
-                          << " X_0^1: " << volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
-                          << std::endl;
-                newPhasePresence = lPhaseOnly;
+                if (verbosity_ > 1)
+                    std::cout << "Gas phase disappears at vertex " << globalIdx
+                              << ", coordinates: " << globalPos << ", Sg: "
+                              << volVars.fluidState().saturation(/*phaseIdx=*/1)
+                              << " X_0^1: " << volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
+                              << std::endl;
 
+                newPhasePresence = lPhaseOnly;
                 priVars[switchIdx] =
                     volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
             }
             else if (volVars.fluidState().saturation(/*phaseIdx=*/0) <= 0.0 - switchTol)
             {
                 // liquid phase disappears
-                std::cout << "Liquid phase disappears at vertex " << globalIdx
-                          << ", coordinates: " << globalPos << ", Sl: "
-                          << volVars.fluidState().saturation(/*phaseIdx=*/0)
-                          << " X_1^0: " << volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0)
-                          << std::endl;
-                newPhasePresence = gPhaseOnly;
+                if (verbosity_ > 1)
+                    std::cout << "Liquid phase disappears at vertex " << globalIdx
+                              << ", coordinates: " << globalPos << ", Sl: "
+                              << volVars.fluidState().saturation(/*phaseIdx=*/0)
+                              << " X_1^0: " << volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0)
+                              << std::endl;
 
+                newPhasePresence = gPhaseOnly;
                 priVars[switchIdx] =
                     volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0);
             }
@@ -470,8 +469,12 @@ protected:
     }
 
 protected:
-    // parameters given in constructor
-    bool switchFlag_;
+    // number of switches of the phase state in the last Newton
+    // iteration
+    int numSwitched_;
+    
+    // verbosity of the model
+    int verbosity_;
 };
 
 }

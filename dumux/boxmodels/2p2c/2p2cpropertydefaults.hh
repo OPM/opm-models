@@ -152,6 +152,9 @@ public:
 SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP(TypeTag, TwoPTwoCIndices));
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxTwoPTwoC, EnableSmoothUpwinding, false);
+
+// set the model to a medium verbosity
+SET_INT_PROP(BoxTwoPTwoC, TwoPTwoCVerbosity, 1);
 }
 
 }
