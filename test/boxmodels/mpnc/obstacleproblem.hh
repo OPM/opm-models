@@ -118,7 +118,6 @@ public:
 
 // Enable smooth upwinding?
 SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
-
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
 
@@ -393,26 +392,6 @@ public:
         return coarseHeatCondParams_;
     }
 
-     *
-     * \param element       The current finite element
-     * \param fvElemGeom    The current finite volume geometry of the element
-     * \param scvIdx        The index sub-control volume where the
-     *                      intrinsic permeability is given.
-     *
-     * \param element     The finite element
-     * \param fvElemGeom  The finite volume geometry
-     * \param scvIdx      The local index of the sub-control volume where
-     *                    the porosity needs to be defined
-     *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
-     * \return the material parameters object
-     *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
-     *                    the heat capacity needs to be defined
     // \}
 
     /*!
