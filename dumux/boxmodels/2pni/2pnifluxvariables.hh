@@ -34,8 +34,12 @@
 #ifndef DUMUX_2PNI_FLUX_VARIABLES_HH
 #define DUMUX_2PNI_FLUX_VARIABLES_HH
 
-#include <dumux/common/math.hh>
 #include <dune/common/fvector.hh>
+
+#include "2pniproperties.hh"
+
+#include <dumux/common/math.hh>
+#include <dumux/boxmodels/2p/2pfluxvariables.hh>
 
 namespace Dumux
 {

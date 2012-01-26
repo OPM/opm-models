@@ -230,11 +230,13 @@ public:
         {
             bcTypes.setAllDirichlet();
         }
+        /*
         else if (globalPos[0] > this->bboxMax()[0] - eps_)
         {
             bcTypes.setNeumann(eqIdxPress);
             bcTypes.setOutflow(eqIdxSat);
         }
+        */
         // all other boundaries
         else
         {

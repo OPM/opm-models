@@ -34,6 +34,8 @@
 
 #include <dumux/parallel/vertexhandles.hh>
 
+#include "boxproperties.hh"
+
 namespace Dumux {
 
 /*!
@@ -48,7 +50,6 @@ class BoxAssembler
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
-
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;

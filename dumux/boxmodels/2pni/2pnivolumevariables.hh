@@ -32,6 +32,8 @@
 
 #include <dumux/boxmodels/2p/2pvolumevariables.hh>
 
+#include "2pniproperties.hh"
+
 namespace Dumux
 {
 

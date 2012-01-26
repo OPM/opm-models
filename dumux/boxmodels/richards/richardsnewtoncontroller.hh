@@ -30,6 +30,7 @@
 #include "richardsproperties.hh"
 
 #include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 namespace Dumux {
 /*!

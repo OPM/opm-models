@@ -258,7 +258,7 @@ void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos)
         else if (globalPos[0] > this->bboxMax()[0] - eps_)
         {
             bcTypes.setNeumann(eqIdxPress);
-            bcTypes.setOutflow(eqIdxSat);
+            //bcTypes.setOutflow(eqIdxSat);
         }
         // all other boundaries
         else

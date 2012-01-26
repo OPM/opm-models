@@ -33,6 +33,8 @@
 
 #include <dumux/boxmodels/2p2c/2p2cvolumevariables.hh>
 
+#include "2p2cniproperties.hh"
+
 namespace Dumux
 {
 

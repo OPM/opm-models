@@ -32,21 +32,18 @@
 
 #include <dumux/common/spline.hh>
 #include <dumux/common/propertysystem.hh>
+#include <dumux/common/parameters.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
+#include "boxproperties.hh"
+
 namespace Dumux {
+
 namespace Properties {
-NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(GridView);
-NEW_PROP_TAG(ElementContext);
-NEW_PROP_TAG(VolumeVariables);
 NEW_PROP_TAG(EnableSmoothUpwinding);
-
-
-NEW_PROP_TAG(UseTwoPointGradients);
-NEW_PROP_TAG(NumPhases);
+NEW_PROP_TAG(EnableGravity);
 }
 
 /*!
@@ -409,12 +406,12 @@ private:
         else {
             // interpolate between zero and epsilon using a cubic
             // spline
-            Spline<Scalar> sp(/*x0=*/0.0,
-                              /*x1=*/eps,
-                              /*y0=*/0.0,
-                              /*y1=*/mUp*eps,
-                              /*m0=*/m0,
-                              /*m1=*/mUp);
+            Dumux::Spline<Scalar> sp(/*x0=*/0.0,
+                                     /*x1=*/eps,
+                                     /*y0=*/0.0,
+                                     /*y1=*/mUp*eps,
+                                     /*m0=*/m0,
+                                     /*m1=*/mUp);
             
             // set the length of the velocity component which is
             // parallel to the face normal to the one from the spline,

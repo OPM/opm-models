@@ -32,7 +32,13 @@
 #include <dumux/boxmodels/common/boxproblem.hh>
 #include <dumux/common/math.hh>
 
+#include "boxproperties.hh"
+
 namespace Dumux {
+namespace Properties {
+NEW_PROP_TAG(HeatConductionLawParams);
+}
+
 /*!
  * \ingroup BoxModels
  */
@@ -55,7 +61,6 @@ class BoxPorousProblem : public BoxProblem<TypeTag>
     enum {
         dimWorld = GridView::dimensionworld
     };
-
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 

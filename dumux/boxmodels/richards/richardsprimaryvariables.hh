@@ -35,6 +35,8 @@
 #include <dumux/material/constraintsolvers/immiscibleflash.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
+#include "richardsproperties.hh"
+
 namespace Dumux
 {
 /*!

@@ -32,6 +32,8 @@
 
 #include <dumux/common/math.hh>
 
+#include "boxproperties.hh"
+
 namespace Dumux
 {
 /*!

@@ -30,10 +30,15 @@
 #ifndef DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 #define DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxporousproblem.hh>
+#include "boxporousproblem.hh"
+
 #include <dumux/common/math.hh>
 
 namespace Dumux {
+namespace Properties {
+NEW_PROP_TAG(MaterialLawParams);
+}
+
 /*!
  * \ingroup BoxModels
  */

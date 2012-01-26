@@ -32,6 +32,8 @@
 
 #include <dune/common/fvector.hh>
 
+#include "1pproperties.hh"
+
 namespace Dumux
 {
 /*!

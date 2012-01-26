@@ -34,6 +34,10 @@
 #include <dune/common/fvector.hh>
 
 #include <dumux/material/constraintsolvers/ncpflash.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
+
+#include "2p2cindices.hh"
+#include "2p2cproperties.hh"
 
 namespace Dumux
 {

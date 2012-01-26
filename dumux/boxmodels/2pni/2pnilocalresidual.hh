@@ -38,6 +38,7 @@
 #include <dumux/boxmodels/2pni/2pnifluxvariables.hh>
 
 #include <dumux/boxmodels/2pni/2pniproperties.hh>
+
 namespace Dumux
 {
 /*!
