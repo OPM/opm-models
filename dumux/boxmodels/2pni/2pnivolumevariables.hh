@@ -114,7 +114,7 @@ public:
             volume
             * fluidState.density(phaseIdx)
             * fluidState.enthalpy(phaseIdx);
-    };
+    }
 
 protected:
     // this method gets called by the parent class. since this method

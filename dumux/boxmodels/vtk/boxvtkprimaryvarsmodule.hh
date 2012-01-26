@@ -48,7 +48,7 @@ SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteBoundaryTypes, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteNeumann, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteDirichlet, false);
-};
+}
 
 /*!
  * \ingroup BoxModels

@@ -242,7 +242,7 @@ public:
                                 const FluidState &fluidState, 
                                 int phaseIdx, 
                                 Scalar volume)
-    { };
+    { }
 
     static void updateTemperature_(FluidState &fluidState,
                                    const ElementContext &elemCtx,

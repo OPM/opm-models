@@ -140,7 +140,7 @@ public:
                 * volume;
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
-    };
+    }
 };
 
 } // end namepace

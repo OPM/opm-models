@@ -31,13 +31,12 @@
 #ifndef DUMUX_GENERALLENSSPATIALPARAMETERS_HH
 #define DUMUX_GENERALLENSSPATIALPARAMETERS_HH
 
-#include <dumux/material/spatialparameters/boxspatialparameters.hh>
+//#include <dumux/material/spatialparameters/boxspatialparameters.hh>
 #include <dumux/material/spatialparameters/fvspatialparameters.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/Mp/2padapter.hh>
 
-#include <dumux/boxmodels/2p/2pmodel.hh>
+//#include <dumux/boxmodels/2p/2pmodel.hh>
 
 namespace Dumux
 {
@@ -62,13 +61,8 @@ SET_PROP(GeneralLensSpatialParameters, MaterialLaw)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
-
 public:
-    typedef Dumux::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef EffToAbsLaw<EffectiveLaw> type;
 };
 }
 
@@ -103,6 +97,7 @@ class GeneralLensSpatialParameters : public GET_PROP_TYPE(TypeTag, SpatialParams
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
+
 public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
@@ -130,7 +125,7 @@ public:
         }
     }
 
-    /*!
+        /*!
      * \brief Get the intrinsic permeability tensor
      *
      * \param globalPos The global coordinates of the finite volume

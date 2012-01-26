@@ -381,7 +381,7 @@ public:
      */
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
-    { return temperature_; };
+    { return temperature_; }
 
     template <class Context>
     void source(RateVector &values,

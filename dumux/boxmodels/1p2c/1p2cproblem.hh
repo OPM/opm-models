@@ -100,7 +100,7 @@ public:
         return asImp_().boxTemperature(context.element(),
                                        context.fvElemGeom(timeIdx),
                                        spaceIdx);
-    };
+    }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
@@ -155,7 +155,7 @@ public:
         return asImp_().boxGravity(context.element(),
                                    context.fvElemGeom(timeIdx),
                                    spaceIdx);
-    };
+    }
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.

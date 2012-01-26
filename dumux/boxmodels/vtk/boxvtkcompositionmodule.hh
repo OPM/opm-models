@@ -56,7 +56,7 @@ SET_BOOL_PROP(VtkComposition, VtkWriteTotalMoleFractions, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
-};
+}
 
 /*!
  * \ingroup BoxModels

@@ -53,17 +53,14 @@ int main(int argc, char** argv)
     try {
 #endif
         //TypeTag which chooses the box model
-        typedef TTAG(BoxGeneralLensProblem) BoxTypeTag;
-
+        //typedef TTAG(BoxGeneralLensProblem) BoxTypeTag;
         //TypeTag which chooses the decoupled model
-        //typedef TTAG(DecoupledGeneralLensProblem) DecoupledTypeTag;
-        
-        typedef GET_PROP_TYPE(BoxTypeTag, Scalar) Scalar;
-        typedef GET_PROP_TYPE(BoxTypeTag, Grid) Grid;
+        typedef TTAG(DecoupledGeneralLensProblem) DecoupledTypeTag;
+        typedef GET_PROP_TYPE(DecoupledTypeTag, Scalar) Scalar;
+        typedef GET_PROP_TYPE(DecoupledTypeTag, Grid) Grid;
 //        typedef GET_PROP_TYPE(TypeTag, Problem) Problem;
-        typedef GET_PROP_TYPE(BoxTypeTag, TimeManager) BoxTimeManager;
-        
-        //typedef GET_PROP_TYPE(DecoupledTypeTag, TimeManager) DecoupledTimeManager;
+        //typedef GET_PROP_TYPE(BoxTypeTag, TimeManager) BoxTimeManager;
+        typedef GET_PROP_TYPE(DecoupledTypeTag, TimeManager) DecoupledTimeManager;
         typedef Dune::FieldVector<Scalar, Grid::dimensionworld> GlobalPosition;
 
         static const int dim = Grid::dimension;
@@ -132,15 +129,18 @@ int main(int argc, char** argv)
         // instantiate and run the concrete problem
         if (useBoxModel)
         {
+            std::cerr << "the box model is not implemented in this branch.\n";
+            /*
             BoxTimeManager timeManager;
             Dumux::GeneralLensProblem<BoxTypeTag> problem(timeManager, grid->leafView(), lowerLeftLens, upperRightLens);
             problem.setName("generallens_box");
             timeManager.init(problem, 0, dt, tEnd, false);
             Dumux::Properties::print<BoxTypeTag>();
             timeManager.run();
+            */
             return 0;
         }
-/*        else if (useDecoupledModel)
+        else if (useDecoupledModel)
         {
             DecoupledTimeManager timeManager;
             Dumux::GeneralLensProblem<DecoupledTypeTag> problem(timeManager, grid->leafView(), lowerLeftLens, upperRightLens);
@@ -150,7 +150,6 @@ int main(int argc, char** argv)
             timeManager.run();
             return 0;
         }
-*/
         else
         {
             std::cout<<"No valid model chosen!\n";

@@ -67,7 +67,7 @@ class BoxMultiPhaseFluxVariables
         dimWorld = GridView::dimensionworld,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
-        useTwoPointGradients = GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+        useTwoPointGradients = GET_PROP_VALUE(TypeTag, UseTwoPointGradients)
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;

@@ -72,7 +72,7 @@ protected:
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
-        conti0EqIdx = Indices::conti0EqIdx,
+        conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;

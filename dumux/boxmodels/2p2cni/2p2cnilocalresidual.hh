@@ -61,11 +61,10 @@ class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
     enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
-
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
-        energyEqIdx = Indices::energyEqIdx,
-        temperatureIdx = Indices::temperatureIdx,
+        energyEqIdx = Indices::energyEqIdx
+        temperatureIdx = Indices::temperatureIdx
     };
 
 

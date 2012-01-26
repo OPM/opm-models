@@ -150,7 +150,7 @@ public:
         return asImp_().boxGravity(context.element(),
                                    context.fvElemGeom(timeIdx),
                                    spaceIdx);
-    };
+    }
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.

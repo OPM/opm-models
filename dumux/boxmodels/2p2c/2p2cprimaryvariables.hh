@@ -70,14 +70,14 @@ class TwoPTwoCPrimaryVariables
     enum {
         lPhaseOnly = Indices::lPhaseOnly,
         gPhaseOnly = Indices::gPhaseOnly,
-        bothPhases = Indices::bothPhases,
+        bothPhases = Indices::bothPhases
     };
 
     enum {
         formulation = GET_PROP_VALUE(TypeTag, Formulation),
         
         plSg = TwoPTwoCFormulation::plSg,
-        pgSl = TwoPTwoCFormulation::pgSl,
+        pgSl = TwoPTwoCFormulation::pgSl
     };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -199,7 +199,7 @@ public:
         
         // use the result to assign the primary variables
         assignNaive(fsFlash);
-    };
+    }
 
     /*!
      * \brief Return the fluid phases which are present in a given

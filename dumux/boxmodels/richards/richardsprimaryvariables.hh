@@ -65,7 +65,7 @@ class RichardsPrimaryVariables
 
     enum {
         wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
     };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -202,7 +202,7 @@ public:
         ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
         
         assignNaive(fsFlash);
-    };
+    }
 
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)

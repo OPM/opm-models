@@ -160,7 +160,7 @@ public:
         
         // use the result to assign the primary variables
         assignNaive_(fsFlash);
-    };
+    }
 
 protected:
     template <class FluidState>

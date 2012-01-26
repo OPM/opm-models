@@ -60,7 +60,7 @@ class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
         energyEqIdx = Indices::energyEqIdx,
-        temperatureIdx = Indices::temperatureIdx,
+        temperatureIdx = Indices::temperatureIdx
     };
 
 

@@ -111,7 +111,7 @@ public:
                                 bool isInEquilibrium = false)
     {
         assignNaive(fluidState);
-    };
+    }
 
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)

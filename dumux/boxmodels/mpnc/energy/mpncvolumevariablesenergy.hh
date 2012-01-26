@@ -117,7 +117,7 @@ public:
                                 const FluidState &fluidState, 
                                 int phaseIdx, 
                                 Scalar volume)
-    { };
+    { }
 
 
     /*!
@@ -259,7 +259,7 @@ public:
             volume
             * fluidState.density(phaseIdx)
             * fluidState.enthalpy(phaseIdx);
-    };
+    }
 
     /*!
      * \brief Given an primary variable index, return a human readable name.

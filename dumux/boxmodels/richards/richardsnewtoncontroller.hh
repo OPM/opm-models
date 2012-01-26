@@ -65,7 +65,7 @@ class RichardsNewtonController : public NewtonController<TypeTag>
         numPhases = FluidSystem::numPhases,
 
         wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
     };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
