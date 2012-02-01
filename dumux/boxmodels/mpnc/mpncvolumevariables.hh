@@ -57,9 +57,7 @@ class MPNCVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -67,7 +65,6 @@ class MPNCVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),

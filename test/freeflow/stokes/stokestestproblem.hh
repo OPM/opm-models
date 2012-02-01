@@ -114,7 +114,6 @@ class StokesTestProblem : public StokesProblem<TypeTag>
         // copy some indices for convenience
         massBalanceIdx = Indices::massBalanceIdx,
         momentumXIdx = Indices::momentumXIdx, //!< Index of the x-component of the momentum balance
-        momentumYIdx = Indices::momentumYIdx //!< Index of the y-component of the momentum balance
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

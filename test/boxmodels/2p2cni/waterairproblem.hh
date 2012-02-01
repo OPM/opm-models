@@ -168,7 +168,6 @@ class WaterAirProblem
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         numPhases = FluidSystem::numPhases,
-        numComponents = FluidSystem::numComponents,
 
         pressure0Idx = Indices::pressure0Idx,
         switch0Idx = Indices::switch0Idx,
@@ -179,15 +178,12 @@ class WaterAirProblem
        
         // component indices
         N2Idx = FluidSystem::N2Idx,
-        H2OIdx = FluidSystem::H2OIdx,
 
         // phase indices
         lPhaseIdx = FluidSystem::lPhaseIdx,
-        gPhaseIdx = FluidSystem::gPhaseIdx,
 
         // equation indices
         contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
-        contiH2OEqIdx = Indices::conti0EqIdx + H2OIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,

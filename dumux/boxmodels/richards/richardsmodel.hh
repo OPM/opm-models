@@ -97,13 +97,10 @@ class RichardsModel : public BoxModel<TypeTag>
     typedef BoxModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
-        dim = GridView::dimension,
-        nPhaseIdx = Indices::nPhaseIdx,
         wPhaseIdx = Indices::wPhaseIdx
     };
 

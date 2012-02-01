@@ -48,18 +48,14 @@ class RichardsBoxProblem : public BoxMultiPhaseProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::ctype CoordScalar;
 
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
-    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!

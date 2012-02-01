@@ -57,16 +57,12 @@ class TwoPTwoCLocalResidual: public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
     enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 

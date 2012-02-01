@@ -68,8 +68,6 @@ class MPNCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
         enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy)
     };
 
-    typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
     typedef MPNCFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;

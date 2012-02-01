@@ -156,7 +156,6 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
         switch2Idx = Indices::switch2Idx,
 
         // Phase State
-        wgPhaseOnly = Indices::wgPhaseOnly,
 
         // Grid and world dimension
         dim = GridView::dimension,
@@ -170,11 +169,7 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
-    typedef typename GridView::Intersection Intersection;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;

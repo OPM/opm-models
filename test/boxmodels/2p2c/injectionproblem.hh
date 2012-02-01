@@ -173,7 +173,6 @@ class InjectionProblem
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
     enum {
         numPhases = FluidSystem::numPhases,
-        numComponents = FluidSystem::numComponents,
 
         gPhaseIdx = FluidSystem::gPhaseIdx,
         lPhaseIdx = FluidSystem::lPhaseIdx,
@@ -182,8 +181,7 @@ class InjectionProblem
         H2OIdx = FluidSystem::H2OIdx,
 
         conti0EqIdx = Indices::conti0EqIdx,
-        contiN2EqIdx = conti0EqIdx + N2Idx,
-        contiH2OEqIdx = conti0EqIdx + H2OIdx
+        contiN2EqIdx = conti0EqIdx + N2Idx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

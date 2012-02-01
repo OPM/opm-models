@@ -51,7 +51,6 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef BoxLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
 
     enum {

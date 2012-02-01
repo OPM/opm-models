@@ -55,16 +55,11 @@ class TwoPTwoCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
-    };
+    enum { dim = GridView::dimension };
 
     typedef Dune::FieldVector<Scalar, dim> Vector;
-    typedef Dune::FieldMatrix<Scalar, dim, dim> Tensor;
 
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),

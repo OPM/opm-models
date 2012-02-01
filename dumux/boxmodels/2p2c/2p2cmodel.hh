@@ -99,12 +99,10 @@ class TwoPTwoCModel: public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
     enum {
         dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
 
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
@@ -113,7 +111,6 @@ class TwoPTwoCModel: public BoxModel<TypeTag>
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
     /*!

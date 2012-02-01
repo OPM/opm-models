@@ -52,16 +52,11 @@ class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
 {
     typedef TwoPLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
-
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
-        energyEqIdx = Indices::energyEqIdx,
-        temperatureIdx = Indices::temperatureIdx
+        energyEqIdx = Indices::energyEqIdx
     };
 
 

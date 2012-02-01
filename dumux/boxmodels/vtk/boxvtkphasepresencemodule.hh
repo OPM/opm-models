@@ -63,7 +63,6 @@ class BoxVtkPhasePresenceModule : public BoxVtkOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
     enum { dim = GridView::dimension };
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
     BoxVtkPhasePresenceModule(const Problem &problem)

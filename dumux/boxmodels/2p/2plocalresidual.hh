@@ -58,8 +58,6 @@ protected:
     enum
     {
         conti0EqIdx = Indices::conti0EqIdx,
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 

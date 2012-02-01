@@ -104,17 +104,12 @@ class ThreePThreeCModel: public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum {
         dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
 
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
@@ -143,9 +138,7 @@ class ThreePThreeCModel: public BoxModel<TypeTag>
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 public:
     /*!
      * \brief Initialize the static data with the initial solution.

@@ -59,7 +59,6 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -70,11 +69,6 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
 
     enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        pressureIdx = Indices::pressureIdx,
-        x1Idx = Indices::x1Idx,
         // indices of the equations
         contiEqIdx = Indices::contiEqIdx,
         transEqIdx = Indices::transEqIdx

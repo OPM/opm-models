@@ -81,7 +81,6 @@ private:
 
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        dim = GridView::dimension,
 
         historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize)
     };

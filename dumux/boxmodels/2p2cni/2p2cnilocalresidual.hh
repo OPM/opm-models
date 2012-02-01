@@ -51,26 +51,18 @@ class TwoPTwoCNILocalResidual : public TwoPTwoCLocalResidual<TypeTag>
 {
     typedef TwoPTwoCLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCNIIndices) Indices;
 
     enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
         energyEqIdx = Indices::energyEqIdx
-        temperatureIdx = Indices::temperatureIdx
     };
-
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
 
 public:
     /*!
