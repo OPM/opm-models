@@ -132,8 +132,8 @@ class Stokes2cniTestProblem : public StokesProblem<TypeTag>
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:
-    Stokes2cniTestProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView)
+    Stokes2cniTestProblem(TimeManager &timeManager)
+        : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         eps_ = 1e-6;
 

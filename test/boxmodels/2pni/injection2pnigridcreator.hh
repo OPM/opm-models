@@ -21,41 +21,67 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
+ *
+ * \brief Grid creator for the 2pni injection problem used for testing
+ *        the fully implicit non-isothermal two-phase model.
  */
-#ifndef DUMUX_DGF_GRID_CREATOR_HH
-#define DUMUX_DGF_GRID_CREATOR_HH
+#ifndef DUMUX_INJECTION_2PNI_GRID_CREATOR_HH
+#define DUMUX_INJECTION_2PNI_GRID_CREATOR_HH
 
-#include <dune/grid/io/file/dgfparser.hh>
-
-#include <dumux/common/propertysystem.hh>
-#include <dumux/common/parameters.hh>
+#include "injectionproblem2pni.hh"
 
 namespace Dumux
 {
+//////////
+// Specify the properties for the lens problem
+//////////
 namespace Properties
 {
-NEW_PROP_TAG(Grid);
+// declare the properties required by the for the lens grid creator
+NEW_PROP_TAG(Scalar);
+
+NEW_PROP_TAG(GridSizeX);
+NEW_PROP_TAG(GridSizeY);
+
+NEW_PROP_TAG(CellsX);
+NEW_PROP_TAG(CellsY);
 }
 
 /*!
- * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
+ * \brief Helper class for grid instantiation of the lens problem.
  */
 template <class TypeTag>
-class DgfGridCreator
+class Injection2PNIGridCreator
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    typedef Dune::GridPtr<Grid> GridPointer;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef Dune::YaspGrid<2> Grid;
 
 public:
     /*!
-     * \brief Load the grid from the file.
+     * \brief Create the Grid
      */
     static void makeGrid()
     {
-        const std::string dgfFileName = GET_RUNTIME_PARAM(TypeTag, std::string, GridFile);
+        Dune::FieldVector<int, 2> cellRes;
+        Dune::FieldVector<Scalar, 2> upperRight;
+        Dune::FieldVector<Scalar, 2> lowerLeft;
 
-        gridPtr_ = GridPointer(dgfFileName.c_str());
+        lowerLeft[0] = 0.0;
+        lowerLeft[1] = 0.0;
+        upperRight[0] = 6.0;
+        upperRight[1] = 4.0;
+
+        cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
+        cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
+
+        grid_ = new Dune::YaspGrid<2>(
+#ifdef HAVE_MPI
+            Dune::MPIHelper::getCommunicator(),
+#endif
+            upperRight, // upper right
+            cellRes, // number of cells
+            Dune::FieldVector<bool,2>(false), // periodic
+            0); // overlap
     };
 
     /*!
@@ -63,35 +89,15 @@ public:
      */
     static Grid &grid()
     {
-        return *gridPtr_;
-    };
-
-    /*!
-     * \brief Returns a reference to the grid pointer.
-     *
-     * This method is specific to the DgfGridCreator!
-     */
-    static GridPointer &gridPtr()
-    {
-        return gridPtr_;
-    };
-
-    /*!
-     * \brief Distribute the grid (and attached data) over all
-     *        processes.
-     */
-    static void loadBalance()
-    {
-        gridPtr_.loadBalance();
+        return *grid_;
     };
 
 private:
-    static GridPointer gridPtr_;
+    static Grid *grid_;
 };
 
 template <class TypeTag>
-typename DgfGridCreator<TypeTag>::GridPointer DgfGridCreator<TypeTag>::gridPtr_;
-
-} // namespace Dumux
+Dune::YaspGrid<2> *Injection2PNIGridCreator<TypeTag>::grid_;
+}
 
 #endif

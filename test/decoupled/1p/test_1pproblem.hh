@@ -85,8 +85,16 @@ SET_BOOL_PROP(TestProblemOneP, EnableGravity, false);
 //Set the problem
 SET_TYPE_PROP(TestProblemOneP, Problem, Dumux::TestProblemOneP<TypeTag>);
 
-
 SET_INT_PROP(TestProblemOneP, LinearSolverVerbosity, 1);
+
+// define the properties required by the cube grid creator
+SET_SCALAR_PROP(TestProblemOneP, GridSizeX, 1.0);
+SET_SCALAR_PROP(TestProblemOneP, GridSizeY, 1.0);
+SET_SCALAR_PROP(TestProblemOneP, GridSizeZ, 0.0);
+
+SET_INT_PROP(TestProblemOneP, GridCellsX, 30);
+SET_INT_PROP(TestProblemOneP, GridCellsY, 30);
+SET_INT_PROP(TestProblemOneP, GridCellsZ, 0);
 }
 
 /*!
@@ -123,17 +131,17 @@ class TestProblemOneP: public DiffusionProblem1P<TypeTag >
 
 
 public:
-    TestProblemOneP(TimeManager &timeManager, const GridView &gridView) :
-        ParentType(gridView), velocity_(*this)
+    TestProblemOneP(TimeManager &timeManager) :
+        ParentType(GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), velocity_(*this)
     {
         delta_ = 1e-3 ;
 
         try
         {
-            if (ParameterTree::tree().hasKey("delta"))
-                delta_       = GET_RUNTIME_PARAM(TypeTag, Scalar, delta_);
+            if (ParameterTree::tree().hasKey("Delta"))
+                delta_       = GET_RUNTIME_PARAM(TypeTag, Scalar, Delta);
             int numRefine;
-            numRefine = GET_RUNTIME_PARAM(TypeTag, int, numRefine);
+            numRefine = GET_RUNTIME_PARAM(TypeTag, int, NumRefine);
             GridCreator::grid().globalRefine(numRefine);
         }
         catch (Dumux::ParameterException &e) {

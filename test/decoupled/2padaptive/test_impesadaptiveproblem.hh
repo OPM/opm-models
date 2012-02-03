@@ -99,6 +99,15 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 //SET_TYPE_PROP(TestIMPESAdaptiveProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
 
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, CFLFactor, 0.95);
+
+// define the properties required by the cube grid creator
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeX, 300.0);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeY, 100.0);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeZ, 0.0);
+
+SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsX, 2);
+SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsY, 1);
+SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsZ, 0);
 }
 
 /*!
@@ -156,8 +165,8 @@ class TestIMPESAdaptiveProblem: public IMPESProblem2P<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
 
 public:
-    TestIMPESAdaptiveProblem(TimeManager &timeManager, const GridView &gridView) :
-            ParentType(timeManager, gridView), eps_(1e-6)
+    TestIMPESAdaptiveProblem(TimeManager &timeManager) :
+          ParentType(timeManager, GridCreator::grid().leafView()), eps_(1e-6)
     {
         GridCreator::grid().setClosureType(Grid::ClosureType::NONE);
         GridCreator::grid().globalRefine(GET_PARAM(TypeTag, int, MaxLevel));

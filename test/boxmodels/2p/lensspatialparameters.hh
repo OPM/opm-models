@@ -99,22 +99,6 @@ public:
     LensSpatialParameters(const GridView& gridView)
         : ParentType(gridView)
     {
-        try
-        {
-            lensLowerLeft_[0]   = GET_RUNTIME_PARAM(TypeTag, Scalar, SpatialParameters.lensLowerLeftX);
-            lensLowerLeft_[1]   = GET_RUNTIME_PARAM(TypeTag, Scalar, SpatialParameters.lensLowerLeftY);
-            lensUpperRight_[0]  = GET_RUNTIME_PARAM(TypeTag, Scalar, SpatialParameters.lensUpperRightX);
-            lensUpperRight_[1]  = GET_RUNTIME_PARAM(TypeTag, Scalar, SpatialParameters.lensUpperRightY);
-        }
-        catch (Dumux::ParameterException &e) {
-            std::cerr << e << ". Abort!\n";
-            exit(1) ;
-        }
-        catch (...) {
-            std::cerr << "Unknown exception thrown!\n";
-            exit(1);
-        }
-
         // residual saturations
         lensMaterialParams_.setSwr(0.18);
         lensMaterialParams_.setSnr(0.0);
@@ -130,13 +114,24 @@ public:
 
         // parameters for the linear law
         // minimum and maximum pressures
- //        lensMaterialParams_.setEntryPC(0);
+//        lensMaterialParams_.setEntryPC(0);
 //        outerMaterialParams_.setEntryPC(0);
 //        lensMaterialParams_.setMaxPC(0);
 //        outerMaterialParams_.setMaxPC(0);
 
         lensK_ = 9.05e-12;
         outerK_ = 4.6e-10;
+    }
+
+    /*!
+     * \brief Set the lower-left and upper-right coordinates of the
+     *        low-permeability lens.
+     */
+    void setLensCoords(const GlobalPosition &lensLowerLeft,
+                       const GlobalPosition &lensUpperRight)
+    {
+        lensLowerLeft_ = lensLowerLeft;
+        lensUpperRight_ = lensUpperRight;
     }
 
     /*!

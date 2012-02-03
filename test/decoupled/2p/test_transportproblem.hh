@@ -147,8 +147,8 @@ class TestTransportProblem: public TransportProblem2P<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-    TestTransportProblem(TimeManager &timeManager, const GridView &gridView) :
-        ParentType(timeManager, gridView), eps_(1e-6)
+    TestTransportProblem(TimeManager &timeManager) :
+        ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), eps_(1e-6)
     {}
 
 

@@ -46,6 +46,14 @@ namespace Properties
 {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
+
+NEW_PROP_TAG(GridSizeX);
+NEW_PROP_TAG(GridSizeY);
+NEW_PROP_TAG(GridSizeZ);
+
+NEW_PROP_TAG(GridCellsX);
+NEW_PROP_TAG(GridCellsY);
+NEW_PROP_TAG(GridCellsZ);
 }
 
 /*!
@@ -72,22 +80,19 @@ public:
     {
         Dune::array< unsigned int, dim > cellRes;
         Dune::FieldVector<Scalar, dim> upperRight;
-        Dune::FieldVector<Scalar, dim> lowerLeft;
+        Dune::FieldVector<Scalar, dim> lowerLeft(0.0);
 
-        lowerLeft[0] = 0.0;
-        upperRight[0] = GET_RUNTIME_PARAM(TypeTag, Scalar, Grid.upperRightX);
-        cellRes[0] = GET_RUNTIME_PARAM(TypeTag, int, Grid.numberOfCellsX);
+        upperRight[0] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeX);
+        cellRes[0] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsX);
         if (dim > 1)
         {
-            lowerLeft[1] = 0.0;
-            upperRight[1] = GET_RUNTIME_PARAM(TypeTag, Scalar, Grid.upperRightY);
-            cellRes[1] = GET_RUNTIME_PARAM(TypeTag, int, Grid.numberOfCellsY);
+            upperRight[1] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeY);
+            cellRes[1] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsY);
         }
         if (dim > 2)
         {
-            lowerLeft[2] = 0.0;
-            upperRight[2] = GET_RUNTIME_PARAM(TypeTag, Scalar, Grid.upperRightZ);
-            cellRes[2] = GET_RUNTIME_PARAM(TypeTag, int, Grid.numberOfCellsZ);
+            upperRight[2] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeZ);
+            cellRes[2] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsZ);
         }
 
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);

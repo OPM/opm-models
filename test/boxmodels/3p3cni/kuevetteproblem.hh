@@ -167,8 +167,10 @@ public:
      * \param timeManager The time manager
      * \param gridView The grid view
      */
-    KuevetteProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView), eps_(1e-6)
+    KuevetteProblem(TimeManager &timeManager)
+        : ParentType(timeManager, 
+                     GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
+        , eps_(1e-6)
     {
         FluidSystem::init();
     }

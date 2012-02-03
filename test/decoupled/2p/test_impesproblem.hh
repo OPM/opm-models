@@ -130,6 +130,16 @@ SET_BOOL_PROP(IMPESTestProblem, EnableGravity, false);
 SET_TYPE_PROP(IMPESTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
 
 SET_SCALAR_PROP(IMPESTestProblem, CFLFactor, 0.95);
+
+// define the properties required by the cube grid creator
+SET_SCALAR_PROP(IMPESTestProblem, GridSizeX, 300.0);
+SET_SCALAR_PROP(IMPESTestProblem, GridSizeY, 60.0);
+SET_SCALAR_PROP(IMPESTestProblem, GridSizeZ, 0.0);
+
+SET_INT_PROP(IMPESTestProblem, GridCellsX, 30);
+SET_INT_PROP(IMPESTestProblem, GridCellsY, 6);
+SET_INT_PROP(IMPESTestProblem, GridCellsZ, 0);
+
 }
 
 /*!
@@ -185,8 +195,8 @@ typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
 
 public:
-IMPESTestProblem(TimeManager &timeManager, const GridView &gridView) :
-ParentType(timeManager, gridView), eps_(1e-6)
+IMPESTestProblem(TimeManager &timeManager) :
+ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), eps_(1e-6)
 {}
 
 /*!

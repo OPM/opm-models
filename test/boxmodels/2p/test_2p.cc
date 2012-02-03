@@ -28,6 +28,7 @@
  */
 #include "config.h"
 #include "lensproblem.hh"
+#include "lensgridcreator.hh"
 #include <dumux/common/start.hh>
 
 /*!
@@ -41,24 +42,42 @@
 void usage(const char *progName, const std::string &errorMsg)
 {
     if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-tEnd                               The end of the simulation [s] \n"
-                                        "\t-dtInitial                          The initial timestep size [s] \n"
-                                        "\t-gridFile                           The file name of the file containing the grid \n"
-                                        "\t                                        definition in DGF format\n"
-                                        "\t-SpatialParameters.lensLowerLeftX   Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensLowerLeftY   Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensUpperRightX  Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensUpperRighty  Dimension of the lens [m] \n"
-                                        "\n";
-
-        std::cout << errorMessageOut
+        std::cout << errorMsg << "\n"
                   << "\n";
     }
+    std::cout
+        << "Usage: " << progName << " [options]\n"
+        << "Mandatory options are:\n"
+        << "\t--t-end=ENDTIME                  The time of the end of the simlation [s]\n"
+        << "\t--dt-initial=STEPSIZE            The initial time step size [s]\n"
+        << "\n"
+        << "Important optional options include:\n"
+        << "\t--help,-h                        Print this usage message and exit\n"
+        << "\t--print-parameters[=true|false]  Print the run-time modifiable parameters _after_ \n"
+        << "\t                                 the simulation [default: true]\n"
+        << "\t--print-properties[=true|false]  Print the compile-time parameters _before_ \n"
+        << "\t                                 the simulation [default: true]\n"
+        << "\t--parameter-file=FILENAME        File with parameter definitions\n"
+        << "\t--restart=RESTARTTIME            Restart simulation from a restart file\n"
+        << "\t--cells-x=NUM                    Number of cells in horizontal direction\n"
+        << "\t--cells-y=NUM                    Number of cells in vertical direction\n"
+        << "\t--lens-lower-left-x=VALUE        X-Coordinate of the lower-left corner\n"
+        << "                                   of the low permeability lens\n"
+        << "\t--lens-lower-left-y=VALUE        Y-Coordinate of the lower-left corner\n"
+        << "                                   of the low permeability lens\n"
+        << "\t--lens-upper-right-x=VALUE       X-Coordinate of the upper-right corner\n"
+        << "                                   of the low permeability lens\n"
+        << "\t--lens-upper-right-y=VALUE       Y-Coordinate of the upper-right corner\n"
+        << "                                   of the low permeability lens\n"
+        << "\n"
+        << "All parameters can also be specified using the alternative syntax:\n"
+        << "\t-tEnd ENDTIME                    The time of the end of the simlation [s]\n"
+        << "\t-dtInitial STEPSIZE              The initial time step size [s]\n"
+        << "\n"
+        << "If --parameter-file is specified, parameters can also be defined there. In this case,\n"
+        << "camel case is used for the parameters (e.g.: --grid-file becomes GridFile). Parameters\n"
+        << "specified on the command line have priority over those in the parameter file.\n"
+        << "\n";
 }
 
 ////////////////////////
@@ -67,5 +86,6 @@ void usage(const char *progName, const std::string &errorMsg)
 int main(int argc, char** argv)
 {
     typedef TTAG(LensProblem) TypeTag;
+
     return Dumux::start<TypeTag>(argc, argv, usage);
 }

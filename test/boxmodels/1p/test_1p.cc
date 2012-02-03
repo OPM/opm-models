@@ -29,40 +29,8 @@
 #include "1ptestproblem.hh"
 #include <dumux/common/start.hh>
 
-/*!
- * \brief Provides an interface for customizing error messages associated with
- *        reading in parameters.
- *
- * \param progName  The name of the program, that was tried to be started.
- * \param errorMsg  The error message that was issued by the start function.
- *                  Comprises the thing that went wrong and a general help message.
- */
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-tEnd                          The end of the simulation. [s] \n"
-                                        "\t-dtInitial                     The initial timestep size. [s] \n"
-                                        "\t-gridFile                      The file name of the file containing the grid \n"
-                                        "\t                                   definition in DGF format\n"
-                                        "\t-SpatialParameters.lensLowerLeftX   Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensLowerLeftY   Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensUpperRightX  Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.lensUpperRighty  Dimension of the lens [m] \n"
-                                        "\t-SpatialParameters.permeability     Permeability of the domain [mm^2] \n"
-                                        "\t-SpatialParameters.permeabilityLens Permeability of the lens [mm^2] \n";
-
-        std::cout << errorMessageOut
-                  << "\n";
-    }
-}
-
 int main(int argc, char** argv)
 {
     typedef TTAG(OnePTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv, usage);
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }

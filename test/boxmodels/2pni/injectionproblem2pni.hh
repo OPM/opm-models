@@ -36,8 +36,6 @@
 #endif
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-#include <dumux/common/simplexgridcreator.hh>
-#include <dumux/common/cubegridcreator.hh>
 
 #include <dumux/boxmodels/2pni/2pnimodel.hh>
 
@@ -46,6 +44,9 @@
 // use the same spatial parameters as the injection problem of the
 // 2p2c test program
 #include "../2p2c/injectionspatialparameters.hh"
+
+// include the grid creator for this problem
+#include "injection2pnigridcreator.hh"
 
 #define ISOTHERMAL 0
 
@@ -62,25 +63,22 @@ NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoPNI, InjectionSpatialPara
 NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoP, InjectionSpatialParameters));
 #endif
 
-// set the GridCreator property
-SET_PROP(InjectionProblem2PNI, GridCreator)
-{
-#if HAVE_UG
-    typedef Dumux::SimplexGridCreator<TypeTag> type;
-#else
-    typedef Dumux::CubeGridCreator<TypeTag> type;
-#endif
-};
+// declare the properties specific for the non-isothermal immiscible
+// injection problem
+NEW_PROP_TAG(GridSizeX);
+NEW_PROP_TAG(GridSizeY);
+
+NEW_PROP_TAG(CellsX);
+NEW_PROP_TAG(CellsY);
 
 // Set the grid type
 SET_PROP(InjectionProblem2PNI, Grid)
 {
-#if HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#else
     typedef Dune::YaspGrid<2> type;
-#endif
 };
+
+// set the GridCreator property
+SET_TYPE_PROP(InjectionProblem2PNI, GridCreator, CubeGridCreator<TypeTag>);
 
 // Set the problem property
 SET_PROP(InjectionProblem2PNI, Problem)
@@ -116,6 +114,14 @@ SET_BOOL_PROP(InjectionProblem2PNI, EnableGravity, true);
 
 // write convergence behaviour to disk?
 SET_BOOL_PROP(InjectionProblem2PNI, NewtonWriteConvergence, true);
+
+// define the properties specific for the non-isothermal immiscible
+// injection problem
+SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeX, 60.0);
+SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeY, 40.0);
+
+SET_INT_PROP(InjectionProblem2PNI, CellsX, 24);
+SET_INT_PROP(InjectionProblem2PNI, CellsY, 26);
 }
 
 /*!
@@ -203,8 +209,9 @@ public:
      * \param timeManager The time manager
      * \param gridView The grid view
      */
-    InjectionProblem2PNI(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView)
+    InjectionProblem2PNI(TimeManager &timeManager)
+        : ParentType(timeManager, 
+                     GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         maxDepth_ = 2700.0; // [m]
         eps_ = 1e-6;

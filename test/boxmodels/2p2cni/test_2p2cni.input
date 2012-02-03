@@ -8,15 +8,15 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-dtInitial = 250 # seconds
-tEnd = 1e4 # seconds
-gridFile = ./grids/test_2p2cni.dgf
+DtInitial = 250 # seconds
+TEnd = 1e4 # seconds
+GridFile = ./grids/test_2p2cni.dgf
  
 ####################################################################
 # Simulation restart
 #
 # DuMux simulations can be restarted from *.drs files
-# Set restart to the value of a specific file, e.g.:  'restart = 27184.1'
+# Set restart to the value of a specific file, e.g.: 'restart = 27184.1'
 # for the restart file
 # name_time = 27184.1_rank = 0.drs
 # Please comment in the below value, if restart is desired.

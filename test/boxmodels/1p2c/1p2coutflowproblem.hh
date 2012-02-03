@@ -150,8 +150,8 @@ class OnePTwoCOutflowProblem : public OnePTwoCBoxProblem<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-    OnePTwoCOutflowProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView)
+    OnePTwoCOutflowProblem(TimeManager &timeManager)
+        : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {
         //initialize fluid system

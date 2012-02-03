@@ -46,6 +46,18 @@ namespace Properties
 {
 NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxTwoPTwoC, InjectionSpatialParameters));
 
+// declare some injection problem specific property tags
+NEW_PROP_TAG(FluidSystemPressureLow);
+NEW_PROP_TAG(FluidSystemPressureHigh);
+NEW_PROP_TAG(FluidSystemNumPressure);
+NEW_PROP_TAG(FluidSystemTemperatureLow);
+NEW_PROP_TAG(FluidSystemTemperatureHigh);
+NEW_PROP_TAG(FluidSystemNumTemperature);
+
+NEW_PROP_TAG(InitialConditionsMaxDepth);
+NEW_PROP_TAG(InitialConditionsTemperature);
+NEW_PROP_TAG(SimulationControlName);
+
 // Set the grid type
 SET_PROP(InjectionProblem, Grid)
 {
@@ -72,6 +84,18 @@ SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
 
 SET_BOOL_PROP(InjectionProblem, EnableJacobianRecycling, true);
 SET_BOOL_PROP(InjectionProblem, EnableVelocityOutput, false);
+
+// set the defaults for some injection problem specific properties
+SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureLow, 1e6);
+SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureHigh, 3e7);
+SET_INT_PROP(InjectionProblem, FluidSystemNumPressure, 100);
+SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureLow, 273.15);
+SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureHigh, 373.15);
+SET_INT_PROP(InjectionProblem, FluidSystemNumTemperature, 100);
+
+SET_SCALAR_PROP(InjectionProblem, InitialConditionsMaxDepth, 2500);
+SET_SCALAR_PROP(InjectionProblem, InitialConditionsTemperature, 293.15);
+SET_STRING_PROP(InjectionProblem, SimulationControlName, "injection");
 }
 
 
@@ -121,7 +145,6 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
         contiN2EqIdx = conti0EqIdx + N2Idx
     };
 
-
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -131,7 +154,6 @@ class InjectionProblem : public TwoPTwoCProblem<TypeTag>
     typedef typename GridView::Intersection Intersection;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
@@ -142,43 +164,22 @@ public:
      * \param timeManager The time manager
      * \param gridView The grid view
      */
-    InjectionProblem(TimeManager &timeManager,
-                     const GridView &gridView)
-        : ParentType(timeManager, GridCreator::grid().leafView())
-    {
-        try
-        {
-            nTemperature_       = GET_RUNTIME_PARAM(TypeTag, int, FluidSystem.nTemperature);
-            nPressure_          = GET_RUNTIME_PARAM(TypeTag, int, FluidSystem.nPressure);
-            pressureLow_        = GET_RUNTIME_PARAM(TypeTag, Scalar, FluidSystem.pressureLow);
-            pressureHigh_       = GET_RUNTIME_PARAM(TypeTag, Scalar, FluidSystem.pressureHigh);
-            temperatureLow_     = GET_RUNTIME_PARAM(TypeTag, Scalar, FluidSystem.temperatureLow);
-            temperatureHigh_    = GET_RUNTIME_PARAM(TypeTag, Scalar, FluidSystem.temperatureHigh);
-            temperature_        = GET_RUNTIME_PARAM(TypeTag, Scalar, InitialConditions.temperature);
-            depthBOR_           = GET_RUNTIME_PARAM(TypeTag, Scalar, InitialConditions.depthBOR);
-            name_               = GET_RUNTIME_PARAM(TypeTag, std::string, SimulationControl.name);
-        }
-        catch (Dumux::ParameterException &e) {
-            std::cerr << e << ". Abort!\n";
-            exit(1) ;
-        }
-        catch (...) {
-            std::cerr << "Unknown exception thrown!\n";
-            exit(1);
-        }
-
-/* Alternative syntax:
- * typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
- * const Dune::ParameterTree &tree = ParameterTree::tree();
- * nTemperature_       = tree.template get<int>("FluidSystem.nTemperature");
- *
- * + We see what we do
- * - Reporting whether it was used does not work
- * - Overwriting on command line not possible
-*/
-
-
+    InjectionProblem(TimeManager &timeManager)
+        : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
+    {      
         eps_ = 1e-6;
+
+        temperatureLow_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureLow);
+        temperatureHigh_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureHigh);
+        nTemperature_ = GET_PARAM_FROM_GROUP(TypeTag, int, FluidSystem, NumTemperature);
+
+        nPressure_ = GET_PARAM_FROM_GROUP(TypeTag, int, FluidSystem, NumPressure);
+        pressureLow_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureLow);
+        pressureHigh_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureHigh);
+        
+        temperature_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, InitialConditions, Temperature);
+        maxDepth_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, InitialConditions, MaxDepth);
+        name_ = GET_PARAM_FROM_GROUP(TypeTag, std::string, SimulationControl, Name);
 
         // initialize the tables of the fluid system
         //FluidSystem::init();
@@ -231,9 +232,7 @@ public:
 
     void sourceAtPos(PrimaryVariables &values,
                 const GlobalPosition &globalPos) const
-    {
-        values = 0;
-    }
+    { values = 0; }
 
     // \}
 
@@ -279,13 +278,6 @@ public:
      * \brief Evaluate the boundary conditions for a neumann
      *        boundary segment.
      *
-     * \param values The neumann values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     *
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
@@ -330,6 +322,7 @@ public:
         const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
 
         initial_(values, globalPos);
+
     }
 
     /*!
@@ -353,7 +346,7 @@ private:
     {
         Scalar densityW = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
 
-        Scalar pl = 1e5 - densityW*this->gravity()[1]*(depthBOR_ - globalPos[1]);
+        Scalar pl = 1e5 - densityW*this->gravity()[1]*(maxDepth_ - globalPos[1]);
         Scalar moleFracLiquidN2 = pl*0.95/BinaryCoeff::H2O_N2::henry(temperature_);
         Scalar moleFracLiquidH2O = 1.0 - moleFracLiquidN2;
 
@@ -368,7 +361,7 @@ private:
     }
 
     Scalar temperature_;
-    Scalar depthBOR_;
+    Scalar maxDepth_;
     Scalar eps_;
 
     int nTemperature_;
@@ -378,10 +371,6 @@ private:
 
     Scalar pressureLow_, pressureHigh_;
     Scalar temperatureLow_, temperatureHigh_;
-
-
-
-
 };
 } //end namespace
 

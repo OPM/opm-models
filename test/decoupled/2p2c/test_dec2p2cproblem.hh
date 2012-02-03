@@ -114,6 +114,15 @@ SET_INT_PROP(TestDecTwoPTwoCProblem,
         BoundaryMobility,
         GET_PROP_TYPE(TypeTag, Indices)::satDependent);
 SET_SCALAR_PROP(TestDecTwoPTwoCProblem, CFLFactor, 0.8);
+
+// define the properties required by the cube grid creator
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeX, 10.0);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeY, 10.0);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeZ, 10.0);
+
+SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsX, 10);
+SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsY, 10);
+SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsZ, 10);
 }
 
 /*!
@@ -159,8 +168,8 @@ typedef typename GridView::Intersection Intersection;
 typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-TestDecTwoPTwoCProblem(TimeManager &timeManager, const GridView &gridView) :
-ParentType(timeManager, gridView), eps_(1e-6), depthBOR_(1000.0)
+TestDecTwoPTwoCProblem(TimeManager &timeManager) :
+ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), eps_(1e-6), depthBOR_(1000.0)
 {
 //    this->setOutputInterval(20);
     // initialize the tables of the fluid system
