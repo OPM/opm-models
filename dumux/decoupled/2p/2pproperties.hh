@@ -102,7 +102,7 @@ NEW_PROP_TAG( ErrorTermUpperBound );//!Upper threshold used for the error term e
 #include <dumux/decoupled/common/variableclass.hh>
 #include <dumux/decoupled/2p/cellData2p.hh>
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/isothermalimmisciblefluidstate.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 namespace Dumux
 {
@@ -170,7 +170,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef IsothermalImmiscibleFluidState<Scalar, FluidSystem> type;
+    typedef ImmiscibleFluidState<Scalar, FluidSystem> type;
 };
 
 /*!
