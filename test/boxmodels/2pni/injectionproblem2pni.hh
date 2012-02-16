@@ -141,7 +141,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+    typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
 
 // Enable gravity
@@ -546,6 +546,7 @@ private:
 
         params.setFullySaturatedLambda(nPhaseIdx, lambdaDry);
         params.setFullySaturatedLambda(wPhaseIdx, lambdaWet);
+        params.setVacuumLambda(lambdaDry);
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const

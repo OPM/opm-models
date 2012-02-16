@@ -112,7 +112,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+    typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
     
 
@@ -575,6 +575,7 @@ protected:
 
         params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
         params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+        params.setVacuumLambda(lambdaDry);
     }
 
     Scalar coarseK_;

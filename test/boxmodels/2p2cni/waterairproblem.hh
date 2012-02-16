@@ -100,7 +100,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+    typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
 
 
@@ -531,6 +531,8 @@ private:
                 lambdaSaturated = std::pow(lambdaGranite, (1-poro));
             
             params.setFullySaturatedLambda(phaseIdx, lambdaSaturated);
+            if (!FluidSystem::isLiquid(phaseIdx))
+                params.setVacuumLambda(lambdaSaturated);
         }
     }
 
