@@ -51,7 +51,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature));
+NEW_TYPE_TAG(BoxTwoPTwoC, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -62,7 +62,6 @@ NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(TwoPTwoCVerbosity); //!< The verbosity of the model (0 -> do not print anything, 2 -> spam stdout a lot)
 NEW_PROP_TAG(TwoPTwoCIndices); //!< Enumerations for the 2p2c models
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(Formulation);   //!< The formulation of the model
 NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used

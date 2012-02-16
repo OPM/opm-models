@@ -170,8 +170,8 @@ class WaterAirProblem
         numPhases = FluidSystem::numPhases,
         numComponents = FluidSystem::numComponents,
 
-        pressureIdx = Indices::pressureIdx,
-        switchIdx = Indices::switchIdx,
+        pressure0Idx = Indices::pressure0Idx,
+        switch0Idx = Indices::switch0Idx,
 #if !ISOTHERMAL
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
@@ -188,9 +188,6 @@ class WaterAirProblem
         // equation indices
         contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
         contiH2OEqIdx = Indices::conti0EqIdx + H2OIdx,
-
-        // Phase State
-        lPhaseOnly = Indices::lPhaseOnly,
 
         // Grid and world dimension
         dim = GridView::dimension,
@@ -474,12 +471,12 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-           const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         initial_(values, globalPos);
 
 #if !ISOTHERMAL
-            if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] < 30)
+        if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] < 30)
                values[temperatureIdx] = 380;
 #endif
     }
@@ -492,13 +489,16 @@ private:
     {
         Scalar densityW = 1000.0;
 
-        values.setPhasePresence(lPhaseOnly);
+        values.setPhasePresent(lPhaseIdx);
 
-        values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
-        values[switchIdx] = 0.0;
+        values[pressure0Idx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
+        values[switch0Idx] = 0.0;
 #if !ISOTHERMAL
         values[temperatureIdx] = 283.0 + (maxDepth_ - globalPos[1])*0.03;
 #endif
+        Valgrind::CheckDefined(values.phasePresence());
+        Valgrind::CheckDefined(values.wasSwitched());
+        Valgrind::CheckDefined(values);
     }
 
 private:

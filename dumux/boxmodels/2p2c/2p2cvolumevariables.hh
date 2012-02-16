@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2008-2012 by Andreas Lauser,                              *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf,                               *
- *   Copyright (C) 2008-2011 by Andreas Lauser,                              *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -64,34 +64,15 @@ class TwoPTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+    enum {  numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
-    };
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
-    enum {
-    };
-
-    // present phases
-    enum {
-        lPhaseOnly = Indices::lPhaseOnly,
-        gPhaseOnly = Indices::gPhaseOnly,
-        bothPhases = Indices::bothPhases
-    };
-
-    // formulations
-    enum {
-        formulation = GET_PROP_VALUE(TypeTag, Formulation),
-        plSg = TwoPTwoCFormulation::plSg,
-        pgSl = TwoPTwoCFormulation::pgSl
-    };
 
     // primary variable indices
     enum {
-        switchIdx = Indices::switchIdx,
-        pressureIdx = Indices::pressureIdx
+        switch0Idx = Indices::switch0Idx,
+        pressure0Idx = Indices::pressure0Idx
     };
-
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -136,7 +117,6 @@ public:
         // energy related quantities
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
-
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // binary diffusion coefficents
             diffCoeff_[phaseIdx] =
@@ -166,27 +146,16 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
-        int phasePresence = priVars.phasePresence();
 
         /////////////
         // set the saturations
         /////////////
-        Scalar Sw;
-        if (phasePresence == gPhaseOnly)
-            Sw = 0.0;
-        else if (phasePresence == lPhaseOnly) {
-            Sw = 1.0;
+        Scalar sumSat = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            fluidState.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
+            sumSat += fluidState.saturation(phaseIdx);
         }
-        else if (phasePresence == bothPhases) {
-            if (formulation == plSg)
-                Sw = 1.0 - priVars[switchIdx];
-            else if (formulation == pgSl)
-                Sw = priVars[switchIdx];
-            else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
-        }
-        else DUNE_THROW(Dune::InvalidStateException, "phasePresence: " << phasePresence << " is invalid.");
-        fluidState.setSaturation(/*phaseIdx=*/0, Sw);
-        fluidState.setSaturation(/*phaseIdx=*/1, 1 - Sw);
+        fluidState.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
 
         /////////////
         // set the pressures of the fluid phases
@@ -197,98 +166,70 @@ public:
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
-        
-        if (formulation == plSg) {
-            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] + (pC[0] - pC[0]));
-            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx] + (pC[1] - pC[0]));
-        }
-        else if (formulation == pgSl) {
-            fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx] + (pC[0] - pC[1]));
-            fluidState.setPressure(/*phaseIdx=*/1, priVars[pressureIdx] + (pC[1] - pC[1]));
-        }
-        else DUNE_THROW(Dune::InvalidStateException, "Formulation: " << formulation << " is invalid.");
+
+        // set the absolute phase pressures in the fluid state
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            fluidState.setPressure(phaseIdx, 
+                                   priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
+
         /////////////
         // calculate the phase compositions
         /////////////
 
         typename FluidSystem::ParameterCache paramCache;
         // now comes the tricky part: calculate phase compositions
-        if (phasePresence == bothPhases) {
-            // both phases are present, phase compositions are a
+        if (priVars.phaseIsPresent(/*phaseIdx=*/0) && 
+            priVars.phaseIsPresent(/*phaseIdx=*/1))
+        {
+            // both phases are present, i.e. phase compositions are a
             // result of the the gas <-> liquid equilibrium. This is
             // the job of the "MiscibleMultiPhaseComposition"
             // constraint solver
             MiscibleMultiPhaseComposition::solve(fluidState,
                                                  paramCache,
                                                  /*setViscosity=*/true,
-                                                 /*setInternalEnergy=*/false);
+                                                 /*setEnthalpy=*/false);
 
         }
-        else if (phasePresence == gPhaseOnly) {
-            // only the gas phase is present, i.e. gas phase
-            // composition is stored explicitly.
-
-            // extract _mass_ fractions in the gas phase
-            Scalar massFractionG[numComponents];
-            massFractionG[/*compIdx=*/0] = priVars[switchIdx];
-            massFractionG[/*compIdx=*/1] = 1 - massFractionG[/*compIdx=*/0];
-
-            // calculate average molar mass of the gas phase
-            Scalar M1 = FluidSystem::molarMass(/*compIdx=*/0);
-            Scalar M2 = FluidSystem::molarMass(/*compIdx=*/1);
-            Scalar X2 = massFractionG[/*compIdx=*/1];
-            Scalar avgMolarMass = M1*M2/(M2 + X2*(M1 - M2));
+        else if (priVars.phaseIsPresent(/*phaseIdx=*/0)) {
+            // only the first phase is present, i.e. the switch index
+            // contains the mole fraction of the second component of
+            // the first phase
+            Scalar x0 = 1.0 - priVars[switch0Idx];
+            Scalar x1 = priVars[switch0Idx];
 
             // convert mass to mole fractions and set the fluid state
-            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/0, massFractionG[/*compIdx=*/0]*avgMolarMass/M1);
-            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/1, massFractionG[/*compIdx=*/1]*avgMolarMass/M2);
+            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, x0); 
+            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, x1);
 
             // calculate the composition of the remaining phases (as
             // well as the densities of all phases). this is the job
             // of the "ComputeFromReferencePhase" constraint solver
             ComputeFromReferencePhase::solve(fluidState,
                                              paramCache,
-                                             /*phaseIdx=*/1,
+                                             /*refPhaseIdx=*/0,
                                              /*setViscosity=*/true,
-                                             /*setInternalEnergy=*/false);
+                                             /*setEnthalpy=*/false);
         }
-        else if (phasePresence == lPhaseOnly) {
-            // only the liquid phase is present, i.e. liquid phase
-            // composition is stored explicitly.
-
-            // extract _mass_ fractions in the gas phase
-            Scalar massFractionL[numComponents];
-            massFractionL[/*compIdx=*/1] = priVars[switchIdx];
-            massFractionL[/*compIdx=*/0] = 1 - massFractionL[/*compIdx=*/1];
-
-            // calculate average molar mass of the gas phase
-            Scalar M1 = FluidSystem::molarMass(/*compIdx=*/0);
-            Scalar M2 = FluidSystem::molarMass(/*compIdx=*/1);
-            Scalar X2 = massFractionL[/*compIdx=*/1];
-            Scalar avgMolarMass = M1*M2/(M2 + X2*(M1 - M2));
+        else if (priVars.phaseIsPresent(/*phaseIdx=*/1)) {
+            // only the first phase is present, i.e. the switch index
+            // contains the mole fraction of the second component of
+            // the first phase
+            Scalar x0 = 1.0 - priVars[switch0Idx];
+            Scalar x1 = priVars[switch0Idx];
 
             // convert mass to mole fractions and set the fluid state
-            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, massFractionL[/*compIdx=*/0]*avgMolarMass/M1);
-            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, massFractionL[/*compIdx=*/1]*avgMolarMass/M2);
+            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/0, x0); 
+            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/1, x1);
 
             // calculate the composition of the remaining phases (as
             // well as the densities of all phases). this is the job
             // of the "ComputeFromReferencePhase" constraint solver
             ComputeFromReferencePhase::solve(fluidState,
                                              paramCache,
-                                             /*phaseIdx=*/0,
+                                             /*refPhaseIdx=*/1,
                                              /*setViscosity=*/true,
-                                             /*setInternalEnergy=*/false);
-        }
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-            fluidState.setViscosity(phaseIdx, mu);
-
-            // compute and set the density
-            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            fluidState.setDensity(phaseIdx, rho);
+                                             /*setEnthalpy=*/false);
         }
     }
 
@@ -297,7 +238,6 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-
 
     /*!
      * \brief Returns the relative permeability of a given phase
@@ -340,8 +280,7 @@ public:
      * \brief Set the enthalpy rate per second of a rate vector, .
      */
     static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    {
-    }
+    { }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges

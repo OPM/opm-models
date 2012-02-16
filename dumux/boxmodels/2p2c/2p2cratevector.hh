@@ -61,6 +61,7 @@ class TwoPTwoCRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
+    typedef TwoPTwoCRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
 public:
@@ -74,7 +75,7 @@ public:
     /*!
      * \brief Constructor with assignment from scalar
      */
-    TwoPTwoCRateVector(Scalar value)
+    explicit TwoPTwoCRateVector(Scalar value)
         : ParentType(value)
     { };
 
@@ -94,7 +95,12 @@ public:
      */
     void setMassRate(const ParentType &value)
     {
-        ParentType::operator=(value);
+        // convert to molar rates
+        ParentType molarRate(value);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
+        
+        setMolarRate(molarRate);
     };
 
     /*!
@@ -105,23 +111,13 @@ public:
      * parameter.
      */
     void setMolarRate(const ParentType &value)
-    {
-        // convert to mass rates
-        ParentType massRate(value);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            massRate[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
-        
-        // set the mass rate
-        setMassRate(massRate);
-    };
+    { ParentType::operator=(value); };
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
      */
     void setEnthalpyRate(Scalar rate)
-    {
-        EnergyModule::setEnthalpyRate(*this, rate);
-    }
+    { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
      * \brief Set a volumetric rate of a phase.
@@ -136,11 +132,23 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] = 
                 fluidState.density(phaseIdx, compIdx)
-                * fluidState.massFraction(phaseIdx, compIdx)
+                * fluidState.moleFraction(phaseIdx, compIdx)
                 * volume;
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
+
+    /*!
+     * \brief Assign the rate vector from another rate vector
+     */
+    ThisType &operator=(const ParentType &value)
+    { ParentType::operator=(value); return *this; };
+
+    /*!
+     * \brief Set all entries of the rate vector to a scalar value.
+     */
+    ThisType &operator=(Scalar value)
+    { ParentType::operator=(value); return *this; };
 };
 
 } // end namepace

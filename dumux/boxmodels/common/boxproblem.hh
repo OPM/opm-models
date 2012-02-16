@@ -154,47 +154,10 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void boundaryTypes(BoundaryTypes &values,
                        const Context &context,
                        int spaceIdx, int timeIdx) const
-    {
-        const auto vPtr = context.element().template subEntity<dim>(spaceIdx);
-
-        asImp_().boundaryTypes(values, *vPtr);
-   }
-
-    /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
-     */
-    DUNE_DEPRECATED
-    void boundaryTypes(BoundaryTypes &values,
-                       const Vertex &vertex) const
-    {
-        // forward it to the method which only takes the global coordinate
-        asImp_().boundaryTypesAtPos(values, vertex.geometry().center());
-    }
-
-    /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param pos The position of the finite volume in global coordinates
-     */
-    void boundaryTypesAtPos(BoundaryTypes &values,
-                            const GlobalPosition &pos) const
-    {
-        // Throw an exception (there is no reasonable default value
-        // for the boundary type)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "The problem does not provide "
-                   "a boundaryTypes() method.");
-    }
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a boundaryTypes() method"); }
 
     /*!
      * \brief Evaluate the boundary conditions for a dirichlet
@@ -207,164 +170,17 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
                    int spaceIdx, int timeIdx) const
-    {
-        const auto vPtr = context.element().template subEntity<dim>(spaceIdx);
-
-        asImp_().dirichlet(values, *vPtr);
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex representing the "half volume on the boundary"
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    void dirichlet(PrimaryVariables &values,
-                   const Vertex &vertex) const
-    {
-        // forward it to the method which only takes the global coordinate
-        asImp_().dirichletAtPos(values, vertex.geometry().center());
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param pos The position of the center of the finite volume
-     *            for which the dirichlet condition ought to be
-     *            set in global coordinates
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    void dirichletAtPos(PrimaryVariables &values,
-                        const GlobalPosition &pos) const
-    {
-        // Throw an exception (there is no reasonable default value
-        // for Dirichlet conditions)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "The problem specifies that some boundary "
-                   "segments are dirichlet, but does not provide "
-                   "a dirichlet() method.");
-    }
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a dirichlet() method"); }
 
     template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void neumann(RateVector &rate,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
-    {
-        asImp_().boxSDNeumann(rate,
-                              context.element(),
-                              context.fvElemGeom(timeIdx),
-                              context.intersection(spaceIdx),
-                              context.scvIdx(spaceIdx),
-                              spaceIdx,
-                              context);
-    }
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a neumann() method"); }
 
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * This is the method for the case where the Neumann condition is
-     * potentially solution dependent and requires some box method
-     * specific things.
-     *
-     * \param values The neumann values for the conservation equations [kg / (m^2 *s )]
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     * \param elemVolVars All volume variables for the element
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void boxSDNeumann(RateVector &values,
-                      const Element &element,
-                      const FVElementGeometry &fvElemGeom,
-                      const Intersection &is,
-                      int scvIdx,
-                      int boundaryFaceIdx,
-                      const Context &elemCtx) const
-    {
-        // forward it to the interface without the volume variables
-        asImp_().neumann(values,
-                         element,
-                         fvElemGeom,
-                         is,
-                         scvIdx,
-                         boundaryFaceIdx);
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * \param values The neumann values for the conservation equations [kg / (m^2 *s )]
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    void neumann(RateVector &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
-    {
-        // forward it to the interface with only the global position
-        asImp_().neumannAtPos(values, fvElemGeom.boundaryFace[boundaryFaceIdx].ipGlobal);
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * \param values The neumann values for the conservation equations [kg / (m^2 *s )]
-     * \param pos The position of the boundary face's integration point in global coordinates
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    void neumannAtPos(RateVector &values,
-                      const GlobalPosition &pos) const
-    {
-        // Throw an exception (there is no reasonable default value
-        // for Neumann conditions)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "The problem specifies that some boundary "
-                   "segments are neumann, but does not provide "
-                   "a neumannAtPos() method.");
-    }
-
-    template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
-    void source(RateVector &rate,
-                const Context &context,
-                int spaceIdx, int timeIdx) const
-    {
-        asImp_().boxSDSource(rate,
-                             context.element(),
-                             context.fvElemGeom(timeIdx),
-                             spaceIdx,
-                             context);
-    }
 
     /*!
      * \brief Evaluate the source term for all phases within a given
@@ -373,69 +189,12 @@ public:
      * This is the method for the case where the source term is
      * potentially solution dependent and requires some box method
      * specific things.
-     *
-     * \param values The source and sink values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index
-     * \param elemVolVars All volume variables for the element
-     *
-     * For this method, the \a values parameter stores the rate mass
-     * generated or annihilate per volume unit. Positive values mean
-     * that mass is created, negative ones mean that it vanishes.
      */
-    void boxSDSource(RateVector &values,
-                     const Element &element,
-                     const FVElementGeometry &fvElemGeom,
-                     int scvIdx,
-                     const ElementContext &elemCtx) const
-    {
-        // forward to solution independent, box specific interface
-        asImp_().source(values, element, fvElemGeom, scvIdx);
-    }
-
-    /*!
-     * \brief Evaluate the source term for all phases within a given
-     *        sub-control-volume.
-     *
-     * \param values The source and sink values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index
-     *
-     * For this method, the \a values parameter stores the rate mass
-     * generated or annihilate per volume unit. Positive values mean
-     * that mass is created, negative ones mean that it vanishes.
-     */
-    void source(RateVector &values,
-                const Element &element,
-                const FVElementGeometry &fvElemGeom,
-                int scvIdx) const
-    {
-        // forward to generic interface
-        asImp_().sourceAtPos(values, fvElemGeom.subContVol[scvIdx].global);
-    }
-
-    /*!
-     * \brief Evaluate the source term for all phases within a given
-     *        sub-control-volume.
-     *
-     * \param values The source and sink values for the conservation equations
-     * \param pos The position of the center of the finite volume
-     *            for which the source term ought to be
-     *            specified in global coordinates
-     *
-     * For this method, the \a values parameter stores the rate mass
-     * generated or annihilate per volume unit. Positive values mean
-     * that mass is created, negative ones mean that it vanishes.
-     */
-    void sourceAtPos(RateVector &values,
-                     const GlobalPosition &pos) const
-    {
-        DUNE_THROW(Dune::InvalidStateException,
-                   "The problem does not provide "
-                   "a sourceAtPos() method.");
-    }
+    template <class Context>
+    void source(RateVector &rate,
+                const Context &context,
+                int spaceIdx, int timeIdx) const
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a source() method"); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -444,53 +203,10 @@ public:
      * variables.
      */
     template <class Context>
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     void initial(PrimaryVariables &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
-    {
-        asImp_().initial(values, context.element(), context.fvElemGeom(timeIdx), spaceIdx);
-    }
-
-    /*!
-     * \brief Evaluate the initial value for a control volume.
-     *
-     * \param values The initial values for the primary variables
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index
-     *
-     * For this method, the \a values parameter stores primary
-     * variables.
-     */
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
-    {
-        // forward to generic interface
-        asImp_().initialAtPos(values, fvElemGeom.subContVol[scvIdx].global);
-    }
-
-    /*!
-     * \brief Evaluate the initial value for a control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param pos The position of the center of the finite volume
-     *            for which the initial values ought to be
-     *            set (in global coordinates)
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    void initialAtPos(PrimaryVariables &values,
-                      const GlobalPosition &pos) const
-    {
-        // Throw an exception (there is no reasonable default value
-        // for Dirichlet conditions)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "The problem does not provide "
-                   "a initialAtPos() method.");
-    }
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a initial() method"); }
 
     /*!
      * \brief Return how much the domain is extruded at a given sub-control volume.
@@ -504,39 +220,9 @@ public:
     template <class Context>
     Scalar extrusionFactor(const Context &context,
                            int spaceIdx, int timeIdx) const
-    {
-        return asImp_().boxExtrusionFactor(context.element(),
-                                           context.fvElemGeom(timeIdx),
-                                           spaceIdx);
-    }
+    { return asImp_().extrusionFactor(); }
 
-    /*!
-     * \brief Return how much the domain is extruded at a given sub-control volume.
-     *
-     * This means the factor by which a lower-dimensional (1D or 2D)
-     * entity needs to be expanded to get a full dimensional cell. The
-     * default is 1.0 which means that 1D problems are actually
-     * thought as pipes with a cross section of 1 m^2 and 2D problems
-     * are assumed to extend 1 m to the back.
-     */
-    Scalar boxExtrusionFactor(const Element &element,
-                              const FVElementGeometry &fvElemGeom,
-                              int scvIdx) const
-    {
-        // forward to generic interface
-        return asImp_().extrusionFactorAtPos(fvElemGeom.subContVol[scvIdx].global);
-    }
-
-    /*!
-     * \brief Return how much the domain is extruded at a given position.
-     *
-     * This means the factor by which a lower-dimensional (1D or 2D)
-     * entity needs to be expanded to get a full dimensional cell. The
-     * default is 1.0 which means that 1D problems are actually
-     * thought as pipes with a cross section of 1 m^2 and 2D problems
-     * are assumed to extend 1 m to the back.
-     */
-    Scalar extrusionFactorAtPos(const GlobalPosition &pos) const
+    Scalar extrusionFactor() const
     { return 1.0; }
 
     /*!

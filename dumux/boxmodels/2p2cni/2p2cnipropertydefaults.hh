@@ -72,13 +72,7 @@ SET_TYPE_PROP(BoxTwoPTwoCNI, VolumeVariables, TwoPTwoCNIVolumeVariables<TypeTag>
 SET_TYPE_PROP(BoxTwoPTwoCNI, FluxVariables, TwoPTwoCNIFluxVariables<TypeTag>);
 
 //! The indices required by the non-isothermal 2p2c model
-SET_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices)
-{ private:
-    enum { formulation = GET_PROP_VALUE(TypeTag, Formulation) };
-public:
-    typedef TwoPTwoCNIIndices<TypeTag, formulation, 0> type;
-};
-
+SET_TYPE_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices, TwoPTwoCNIIndices<TypeTag, 0>);
 SET_TYPE_PROP(BoxTwoPTwoCNI, Indices, typename GET_PROP_TYPE(TypeTag, TwoPTwoCNIIndices));
 
 //! extract the type parameter objects for the heat conduction law

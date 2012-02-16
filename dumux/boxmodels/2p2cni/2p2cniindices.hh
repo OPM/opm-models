@@ -45,8 +45,8 @@ namespace Dumux
  * \tparam formulation The formulation, either pwSn or pnSw.
  * \tparam PVOffset The first index in a primary variable vector.
  */
-template <class TypeTag, int formulation, int PVOffset>
-class TwoPTwoCNIIndices : public TwoPTwoCIndices<TypeTag, formulation, PVOffset>
+template <class TypeTag, int PVOffset>
+class TwoPTwoCNIIndices : public TwoPTwoCIndices<TypeTag, PVOffset>
 {
 public:
     static const int temperatureIdx = PVOffset + 2; //! The index for temperature in primary variable vectors.

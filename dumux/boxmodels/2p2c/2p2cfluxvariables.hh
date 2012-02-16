@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -170,14 +170,14 @@ private:
             Scalar tauI =
                 1.0/(volVarsI.porosity() * volVarsI.porosity())
                 *
-                pow(volVarsI.porosity() * fsI.saturation(phaseIdx),
-                    7.0/3);
+                std::pow(std::max(0.0, volVarsI.porosity() * fsI.saturation(phaseIdx)),
+                         7.0/3);
             Scalar tauJ =
                 1.0/(volVarsJ.porosity() * volVarsJ.porosity())
                 *
-                pow(volVarsJ.porosity() * fsJ.saturation(phaseIdx),
-                    7.0/3);
-
+                std::pow(std::max(0.0, volVarsJ.porosity() * fsJ.saturation(phaseIdx)),
+                         7.0/3);
+            
             // Diffusion coefficient in the porous medium
             // -> harmonic mean
             porousDiffCoeff_[phaseIdx] =

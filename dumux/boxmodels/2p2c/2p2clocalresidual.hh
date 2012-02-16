@@ -1,9 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
- *   Copyright (C) 2009-2010 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -28,8 +28,8 @@
  *        using the two-phase two-component box model.
  */
 
-#ifndef DUMUX_2P2C_LOCAL_RESIDUAL_BASE_HH
-#define DUMUX_2P2C_LOCAL_RESIDUAL_BASE_HH
+#ifndef DUMUX_2P2C_LOCAL_RESIDUAL_HH
+#define DUMUX_2P2C_LOCAL_RESIDUAL_HH
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/common/math.hh>
@@ -63,11 +63,9 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
-    enum
-    {
+    enum {
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
-
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
@@ -100,8 +98,7 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] +=
-                    fs.density(phaseIdx)
-                    * fs.massFraction(phaseIdx, compIdx)
+                    fs.molarity(phaseIdx, compIdx)
                     * fs.saturation(phaseIdx)
                     * volVars.porosity()
                     * volVars.extrusionFactor()
@@ -117,7 +114,7 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      *
-     *  \param result The mass of the component within the sub-control volume
+     *  \param result The number of moles of the component within the sub-control volume
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
@@ -126,8 +123,7 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        const VolumeVariables &volVars =
-            elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         storage = 0;
@@ -137,9 +133,8 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] +=
-                    fs.density(phaseIdx)
-                    * fs.saturation(phaseIdx)
-                    * fs.massFraction(phaseIdx, compIdx);
+                    fs.molarity(phaseIdx, compIdx)
+                    * fs.saturation(phaseIdx);
             }
         }
         storage *= volVars.porosity();
@@ -194,12 +189,10 @@ public:
                 flux[eqIdx] +=
                     fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.fluidState().density(phaseIdx)
-                      * up.fluidState().massFraction(phaseIdx, compIdx)
+                      * up.fluidState().molarity(phaseIdx, compIdx)
                       +
                       fluxVars.downstreamWeight(phaseIdx)
-                      * dn.fluidState().density(phaseIdx)
-                      * dn.fluidState().massFraction(phaseIdx, compIdx));
+                      * dn.fluidState().molarity(phaseIdx, compIdx));
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
@@ -226,14 +219,13 @@ public:
         Scalar tmp = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             int compIdx = 1; // HACK
-            const auto &xGrad = fluxVars.moleFracGrad(phaseIdx, compIdx);
-            for (int i = 0; i < dim; ++i)
-                tmp += xGrad[i] * normal[i];
-            tmp *= -1;
-
+            tmp = - (fluxVars.moleFracGrad(phaseIdx, compIdx)*normal);
             tmp *=
                 fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
                 fluxVars.molarDensity(phaseIdx);
+
+            flux[conti0EqIdx + compIdx] += tmp;
+            flux[conti0EqIdx + (1 - compIdx)] -= tmp;
         }
     }
 

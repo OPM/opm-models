@@ -106,21 +106,8 @@ class TwoPTwoCModel: public BoxModel<TypeTag>
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
 
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-        historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
-
-        pressureIdx = Indices::pressureIdx,
-        switchIdx = Indices::switchIdx,
-
-        lPhaseOnly = Indices::lPhaseOnly,
-        gPhaseOnly = Indices::gPhaseOnly,
-        bothPhases = Indices::bothPhases,
-
-        plSg = TwoPTwoCFormulation::plSg,
-        pgSl = TwoPTwoCFormulation::pgSl,
-        formulation = GET_PROP_VALUE(TypeTag, Formulation)
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
     typedef typename GridView::template Codim<dim>::Entity Vertex;
@@ -154,14 +141,10 @@ public:
     std::string primaryVarName(int pvIdx) const
     { 
         std::ostringstream oss;
-        if (pvIdx == Indices::pressureIdx) {
-            if (formulation == plSg)
-                oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-            else
-                oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/1);
-        }
-        else if (pvIdx == Indices::switchIdx)
-            oss << "switch";
+        if (pvIdx == Indices::pressure0Idx)
+            oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
+        else if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx + numPhases - 1)
+            oss << "switch_" << pvIdx - Indices::switch0Idx;
         else
             assert(false);
 
@@ -174,8 +157,10 @@ public:
     std::string eqName(int eqIdx) const
     { 
         std::ostringstream oss;
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
-            oss << "continuity^" << FluidSystem::componentName(/*compIdx=*/1);
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents) {
+            int compIdx = eqIdx - Indices::conti0EqIdx;
+            oss << "continuity^" << FluidSystem::componentName(compIdx);
+        }
         else
             assert(false);
 
@@ -225,7 +210,7 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        if (Indices::pressureIdx == pvIdx)
+        if (Indices::pressure0Idx == pvIdx)
             return std::min(1.0/this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx], 1.0);
         return 1;
     }
@@ -248,9 +233,7 @@ public:
      *        at least one vertex after the last timestep.
      */
     bool switched() const
-    {
-        return numSwitched_ > 0;
-    }
+    { return numSwitched_ > 0; }
 
     /*!
      * \brief Write the current solution to a restart file.
@@ -295,15 +278,13 @@ public:
     }
 
     /*!
-     * \brief Update the static data of all vertices in the grid.
-     *
-     * \param curGlobalSol The current global solution
+     * \brief Do the primary variable switching after a Newton iteration.
      */
-    void updatePhasePresence_(SolutionVector &curGlobalSol)
+    void switchPrimaryVars_()
     {
         numSwitched_ = 0;
 
-        std::vector<bool> visited(curGlobalSol.size(), false);
+        std::vector<bool> visited(this->numDofs(), false);
         ElementContext elemCtx(this->problem_());
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
@@ -327,20 +308,33 @@ public:
 
                 // compute the volume variables of the current
                 // sub-control volume
-                elemCtx.updateScvVars(curGlobalSol[globalIdx],
+                auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
+                elemCtx.updateScvVars(priVars,
                                        scvIdx,
                                        /*timeIdx=*/0);
                 const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
-                const GlobalPosition &globalPos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
-                if (primaryVarSwitch_(curGlobalSol[globalIdx],
-                                      volVars,
-                                      globalIdx,
-                                      globalPos))
+                // evaluate primary variable switch
+                short oldPhasePresence = priVars.phasePresence();
+
+                // set the primary variables and the new phase state
+                // from the current fluid state
+                priVars.assignNaive(volVars.fluidState(), oldPhasePresence);
+
+                if (oldPhasePresence != priVars.phasePresence())
                 {
+                    if (verbosity_ > 1)
+                        printSwitchedPhases_(elemCtx,
+                                             scvIdx,
+                                             volVars.fluidState(),
+                                             oldPhasePresence,
+                                             priVars);
+                    priVars.setSwitched(true);
                     this->jacobianAssembler().markVertexRed(globalIdx);
                     ++ numSwitched_;
                 }
+                else
+                    priVars.setSwitched(false);
             }
         }
 
@@ -357,116 +351,51 @@ public:
 protected:
     friend class BoxModel<TypeTag>;
 
+    template <class FluidState>
+    void printSwitchedPhases_(const ElementContext &elemCtx,
+                              int scvIdx,
+                              const FluidState &fs,
+                              int oldPhasePresence,
+                              const PrimaryVariables &newPv) const
+    {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            bool oldPhasePresent = (oldPhasePresence & (1 << phaseIdx)) > 0; 
+            bool newPhasePresent = newPv.phaseIsPresent(phaseIdx); 
+            if (oldPhasePresent == newPhasePresent)
+                continue;
+            
+            const auto &pos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
+            if (oldPhasePresent && !newPhasePresent) {
+                std::cout << "'" << FluidSystem::phaseName(phaseIdx)
+                          << "' phase disappears at position " << pos 
+                          << ". saturation=" << fs.saturation(phaseIdx);
+            }
+            else {
+                Scalar sumx = 0;
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                    sumx += fs.moleFraction(phaseIdx, compIdx);
+
+                std::cout << "'" << FluidSystem::phaseName(phaseIdx)
+                          << "' phase appears at position " << pos 
+                          << " sum x = " << sumx;
+            }
+        };
+        
+        std::cout << ", new primary variables: ";
+        newPv.print();
+        std::cout << "\n";
+    }
+
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkPhasePresenceModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
     };
-
-    //  perform variable switch at a vertex; Returns true if a
-    //  variable switch was performed.
-    bool primaryVarSwitch_(PrimaryVariables &priVars,
-                           const VolumeVariables &volVars,
-                           int globalIdx,
-                           const GlobalPosition &globalPos)
-    {
-        // evaluate primary variable switch
-        int phasePresence = priVars.phasePresence();
-        int newPhasePresence = phasePresence;
-
-        Scalar switchTol = 0.0;
-        if (priVars.wasSwitched())
-            switchTol = 0.02;
-
-        // check if a primary var switch is necessary
-        if (phasePresence == gPhaseOnly)
-        {
-            // calculate mole fraction in the hypothetic liquid phase
-            Scalar xll = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/0);
-            Scalar xlg = volVars.fluidState().moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
-
-            // if the sum of the mole fractions would be larger than
-            // 100%, liquid phase appears
-            if (xll + xlg > 1.0 + switchTol)
-            {
-                // liquid phase appears
-                if (verbosity_ > 1)
-                    std::cout << "liquid phase appears at vertex " << globalIdx
-                              << ", coordinates: " << globalPos << ", xll + xlg: "
-                              << xll + xlg << std::endl;
-
-                newPhasePresence = bothPhases;
-                if (formulation == pgSl)
-                    priVars[switchIdx] = 0.0;
-                else if (formulation == plSg)
-                    priVars[switchIdx] = 1.0;
-            };
-        }
-        else if (phasePresence == lPhaseOnly)
-        {
-            // calculate fractions of the partial pressures in the
-            // hypothetic gas phase
-            Scalar xgl = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/0);
-            Scalar xgg = volVars.fluidState().moleFraction(/*phaseIdx=*/1, /*compIdx=*/1);
-
-            // if the sum of the mole fractions would be larger than
-            // 100%, gas phase appears
-            if (xgl + xgg > 1.0 + switchTol)
-            {
-                // gas phase appears
-                if (verbosity_ > 1)
-                    std::cout << "gas phase appears at vertex " << globalIdx
-                              << ", coordinates: " << globalPos << ", x_gl + x_gg: "
-                              << xgl + xgg << std::endl;
-
-                newPhasePresence = bothPhases;
-                if (formulation == pgSl)
-                    priVars[switchIdx] = 0.999;
-                else if (formulation == plSg)
-                    priVars[switchIdx] = 0.001;
-            }
-        }
-        else if (phasePresence == bothPhases)
-        {
-            if (volVars.fluidState().saturation(/*phaseIdx=*/1) <= 0.0 - switchTol)
-            {
-                // gas phase disappears
-                if (verbosity_ > 1)
-                    std::cout << "Gas phase disappears at vertex " << globalIdx
-                              << ", coordinates: " << globalPos << ", Sg: "
-                              << volVars.fluidState().saturation(/*phaseIdx=*/1)
-                              << " X_0^1: " << volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1)
-                              << std::endl;
-
-                newPhasePresence = lPhaseOnly;
-                priVars[switchIdx] =
-                    volVars.fluidState().massFraction(/*phaseIdx=*/0, /*compIdx=*/1);
-            }
-            else if (volVars.fluidState().saturation(/*phaseIdx=*/0) <= 0.0 - switchTol)
-            {
-                // liquid phase disappears
-                if (verbosity_ > 1)
-                    std::cout << "Liquid phase disappears at vertex " << globalIdx
-                              << ", coordinates: " << globalPos << ", Sl: "
-                              << volVars.fluidState().saturation(/*phaseIdx=*/0)
-                              << " X_1^0: " << volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0)
-                              << std::endl;
-
-                newPhasePresence = gPhaseOnly;
-                priVars[switchIdx] =
-                    volVars.fluidState().massFraction(/*phaseIdx=*/1, /*compIdx=*/0);
-            }
-        }
-
-        priVars.setPhasePresence(newPhasePresence);
-        priVars.setSwitched(phasePresence != newPhasePresence);
-
-        return phasePresence != newPhasePresence;
-    }
 
 protected:
     // number of switches of the phase state in the last Newton

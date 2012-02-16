@@ -67,7 +67,7 @@ public:
                        const SolutionVector &uLastIter)
     {
         ParentType::newtonEndStep(uCurrentIter, uLastIter);
-        this->method().model().updatePhasePresence_(uCurrentIter);
+        this->method().model().switchPrimaryVars_();
     }
 
     /*!

@@ -29,7 +29,7 @@
 #ifndef DUMUX_INJECTION_PROBLEM_HH
 #define DUMUX_INJECTION_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
@@ -43,7 +43,6 @@
 
 namespace Dumux
 {
-
 template <class TypeTag>
 class InjectionProblem;
 
@@ -64,10 +63,7 @@ NEW_PROP_TAG(Temperature);
 NEW_PROP_TAG(SimulationName);
 
 // Set the grid type
-SET_PROP(InjectionProblem, Grid)
-{
-    typedef Dune::SGrid<2,2> type;
-};
+SET_TYPE_PROP(InjectionProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
 SET_PROP(InjectionProblem, Problem)
@@ -111,15 +107,22 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem::lPhaseIdx, Scalar> type;
+    typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
+
+// Write the Newton convergence behavior to disk?
+SET_BOOL_PROP(InjectionProblem, NewtonWriteConvergence, false);
 
 // Enable gravity
 SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
 
+// Reuse Jacobian matrices if possible?
 SET_BOOL_PROP(InjectionProblem, EnableJacobianRecycling, true);
+
+// Smoothen the upwinding method?
 SET_BOOL_PROP(InjectionProblem, EnableSmoothUpwinding, false);
-// set the defaults for some injection problem specific properties
+
+// set the defaults for some problem specific properties
 SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureLow, 1e6);
 SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureHigh, 3e7);
 SET_INT_PROP(InjectionProblem, FluidSystemNumPressure, 100);
@@ -474,7 +477,6 @@ public:
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
-
         
         //////
         // set temperatures
@@ -492,18 +494,20 @@ public:
         //////
         Scalar densityL = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
         Scalar pl = 1e5 - densityL*this->gravity()[1]*(maxDepth_ - globalPos[1]);
+
         PhaseVector pC;
         const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-        fs.setPressure(FluidSystem::lPhaseIdx, pl + (pC[lPhaseIdx] - pC[lPhaseIdx]));
-        fs.setPressure(FluidSystem::gPhaseIdx, pl + (pC[gPhaseIdx] - pC[lPhaseIdx]));
+        fs.setPressure(lPhaseIdx, pl + (pC[lPhaseIdx] - pC[lPhaseIdx]));
+        fs.setPressure(gPhaseIdx, pl + (pC[gPhaseIdx] - pC[lPhaseIdx]));
+        Scalar pg = fs.pressure(gPhaseIdx);
 
         //////
         // set composition of the liquid phase
         //////
         fs.setMoleFraction(lPhaseIdx, N2Idx,
-                           pl*0.95/
+                           pg*0.5 /
                            BinaryCoeff::H2O_N2::henry(temperature_));
         fs.setMoleFraction(lPhaseIdx, H2OIdx,
                            1.0 - fs.moleFraction(lPhaseIdx, N2Idx));
@@ -511,8 +515,14 @@ public:
         //////
         // set composition of the gas phase
         //////
-        fs.setMoleFraction(gPhaseIdx, N2Idx, 0.9);
-        fs.setMoleFraction(gPhaseIdx, H2OIdx, 0.0);
+        fs.setMoleFraction(gPhaseIdx, N2Idx, 
+                           fs.moleFraction(lPhaseIdx, N2Idx) 
+                           * BinaryCoeff::H2O_N2::henry(temperature_)
+                           / pg );
+        fs.setMoleFraction(gPhaseIdx, H2OIdx, 
+                           fs.moleFraction(lPhaseIdx, H2OIdx) 
+                           * FluidSystem::H2O::vaporPressure(temperature_)
+                           / pg);
 
         //////
         // set the primary variables

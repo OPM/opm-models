@@ -536,7 +536,7 @@ public:
         ///////////          
         priVars.assignMassConservative(fs,
                                        matParams,
-                                       /*thermdynamicEquilibrium=*/true);
+                                       /*inThermodynamicEquilibrium=*/true);
     }
 
 protected:

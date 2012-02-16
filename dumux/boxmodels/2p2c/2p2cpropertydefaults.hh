@@ -89,12 +89,10 @@ public:
                   "Only fluid systems with 2 phases are supported by the 2p-2c model!");
 };
 
-SET_INT_PROP(BoxTwoPTwoC, NumEq, 2); //!< set the number of equations to 2
-
-//! Set the default formulation to pl-Sg
-SET_INT_PROP(BoxTwoPTwoC,
-             Formulation,
-             TwoPTwoCFormulation::plSg);
+/*!
+ * \brief Set the number of PDEs to 2
+ */
+SET_INT_PROP(BoxTwoPTwoC, NumEq, 2);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -142,14 +140,9 @@ SET_TYPE_PROP(BoxTwoPTwoC, VolumeVariables, TwoPTwoCVolumeVariables<TypeTag>);
 SET_TYPE_PROP(BoxTwoPTwoC, FluxVariables, TwoPTwoCFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal 2p2c model
-SET_PROP(BoxTwoPTwoC,
-         TwoPTwoCIndices)
-{ private:
-    enum { Formulation = GET_PROP_VALUE(TypeTag, Formulation) };
-public:
-    typedef TwoPTwoCIndices<TypeTag, Formulation, 0> type;
-};
+SET_TYPE_PROP(BoxTwoPTwoC, TwoPTwoCIndices, TwoPTwoCIndices<TypeTag, /*PVIdx=*/0>);
 SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP(TypeTag, TwoPTwoCIndices));
+
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxTwoPTwoC, EnableSmoothUpwinding, false);
 
