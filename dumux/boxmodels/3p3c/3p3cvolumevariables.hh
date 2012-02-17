@@ -67,6 +67,7 @@ class ThreePThreeCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     // constraint solvers
     typedef Dumux::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
@@ -89,7 +90,7 @@ class ThreePThreeCVolumeVariables : public BoxVolumeVariables<TypeTag>
 
         switch1Idx = Indices::switch1Idx,
         switch2Idx = Indices::switch2Idx,
-        pressureIdx = Indices::pressureIdx
+        pressure0Idx = Indices::pressure0Idx
     };
 
     // present phases
@@ -103,8 +104,6 @@ class ThreePThreeCVolumeVariables : public BoxVolumeVariables<TypeTag>
     };
 
     typedef typename GridView::template Codim<0>::Entity Element;
-
-    static const Scalar R; // universial gas constant
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -121,107 +120,85 @@ public:
      * \param scvIdx The local index of the SCV (sub-control volume)
      * \param isOldSol Evaluate function with solution of current or previous time step
      */
-    void update(const PrimaryVariables &primaryVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvIdx,
-                bool isOldSol)
+    void update(const ElementContext &elemCtx,
+                int spaceIdx,
+                int timeIdx)
     {
-        ParentType::update(primaryVars,
-                           problem,
-                           element,
-                           elemGeom,
-                           scvIdx,
-                           isOldSol);
+        ParentType::update(elemCtx, spaceIdx, timeIdx);
 
-        // capillary pressure parameters
-        const MaterialLawParams &materialParams =
-            problem.spatialParameters().materialLawParams(element, elemGeom, scvIdx);
+        Implementation::updateTemperature_(fluidState_, elemCtx, spaceIdx, timeIdx);
 
-        int globalVertIdx = problem.model().dofMapper().map(element, scvIdx, dim);
-        int phasePresence = problem.model().phasePresence(globalVertIdx, isOldSol);
-
-        Scalar temp = Implementation::temperature_(primaryVars, problem, element, elemGeom, scvIdx);
-        fluidState_.setTemperature(temp);
-
-        /* first the saturations */
+        const auto &problem = elemCtx.problem();
+        const auto &primaryVars = elemCtx.primaryVars(spaceIdx, timeIdx);
+        int phasePresence = primaryVars.phasePresence();
+        Valgrind::CheckDefined(primaryVars);
+        
+        // first, set the the saturations
         if (phasePresence == threePhases)
         {
-            Sw_ = primaryVars[switch1Idx];
-            Sn_ = primaryVars[switch2Idx];
-            Sg_ = 1. - Sw_ - Sn_;
+            fluidState_.setSaturation(wPhaseIdx, primaryVars[switch1Idx]);
+            fluidState_.setSaturation(nPhaseIdx, primaryVars[switch2Idx]);
+            fluidState_.setSaturation(gPhaseIdx, 
+                                      1.0
+                                      - fluidState_.saturation(wPhaseIdx) 
+                                      - fluidState_.saturation(nPhaseIdx));
         }
         else if (phasePresence == wPhaseOnly)
         {
-            Sw_ = 1.;
-            Sn_ = 0.;
-            Sg_ = 0.;
+            fluidState_.setSaturation(wPhaseIdx, 1.0);
+            fluidState_.setSaturation(nPhaseIdx, 0.0);
+            fluidState_.setSaturation(gPhaseIdx, 0.0);
         }
         else if (phasePresence == gnPhaseOnly)
         {
-            Sw_ = 0.;
-            Sn_ = primaryVars[switch2Idx];
-            Sg_ = 1. - Sn_;
+            fluidState_.setSaturation(wPhaseIdx, 0.0);
+            fluidState_.setSaturation(nPhaseIdx, primaryVars[switch2Idx]);
+            fluidState_.setSaturation(gPhaseIdx, 1.0 - primaryVars[switch2Idx]);
         }
         else if (phasePresence == wnPhaseOnly)
         {
-            Sn_ = primaryVars[switch2Idx];
-            Sw_ = 1. - Sn_;
-            Sg_ = 0.;
+            fluidState_.setSaturation(nPhaseIdx, primaryVars[switch2Idx]);
+            fluidState_.setSaturation(wPhaseIdx, 1.0 - primaryVars[switch2Idx]);
+            fluidState_.setSaturation(gPhaseIdx, 0.0);
         }
         else if (phasePresence == gPhaseOnly)
         {
-            Sw_ = 0.;
-            Sn_ = 0.;
-            Sg_ = 1.;
+            fluidState_.setSaturation(wPhaseIdx, 0.0);
+            fluidState_.setSaturation(nPhaseIdx, 0.0);
+            fluidState_.setSaturation(gPhaseIdx, 1.0);
         }
         else if (phasePresence == wgPhaseOnly)
         {
-            Sw_ = primaryVars[switch1Idx];
-            Sn_ = 0.;
-            Sg_ = 1. - Sw_;
+            fluidState_.setSaturation(wPhaseIdx, primaryVars[switch1Idx]);
+            fluidState_.setSaturation(nPhaseIdx, 0.0);
+            fluidState_.setSaturation(gPhaseIdx, 1.0 - primaryVars[switch1Idx]);
         }
         else DUNE_THROW(Dune::InvalidStateException, "phasePresence: " << phasePresence << " is invalid.");
-        Valgrind::CheckDefined(Sg_);
+        Valgrind::CheckDefined(fluidState_.saturation(gPhaseIdx));
+        Valgrind::CheckDefined(fluidState_.saturation(wPhaseIdx));
+        Valgrind::CheckDefined(fluidState_.saturation(nPhaseIdx));
 
-        fluidState_.setSaturation(wPhaseIdx, Sw_);
-        fluidState_.setSaturation(gPhaseIdx, Sg_);
-        fluidState_.setSaturation(nPhaseIdx, Sn_);
-
-        /* now the pressures */
-        pg_ = primaryVars[pressureIdx];
-
+        // next, calculate the pressures
+        Scalar p0 = primaryVars[pressure0Idx];
+        
         // calculate capillary pressures
-        Scalar pCGW = MaterialLaw::pCGW(materialParams, Sw_);
-        Scalar pCNW = MaterialLaw::pCNW(materialParams, Sw_);
-        Scalar pCGN = MaterialLaw::pCGN(materialParams, Sw_ + Sn_);
+        const auto &matParams = problem.materialLawParams(elemCtx, spaceIdx, timeIdx);
 
-        Scalar pcAlpha = MaterialLaw::pCAlpha(materialParams, Sn_);
-        Scalar pcNW1 = 0.0; // TODO: this should be possible to assign in the problem file
+        Scalar pC[numPhases];
+        MaterialLaw::capillaryPressures(pC, matParams, fluidState_);
+        Valgrind::CheckDefined(pC);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+            fluidState_.setPressure(phaseIdx, p0 + pC[phaseIdx] - pC[/*phaseIdx=*/0]);
 
-        pn_ = pg_- pcAlpha * pCGN - (1.-pcAlpha)*(pCGW - pcNW1);
-        pw_ = pn_ - pcAlpha * pCNW - (1.-pcAlpha)*pcNW1;
-
-        fluidState_.setPressure(wPhaseIdx, pw_);
-        fluidState_.setPressure(gPhaseIdx, pg_);
-        fluidState_.setPressure(nPhaseIdx, pn_);
-
-        // calculate and set all fugacity coefficients. this is
-        // possible because we require all phases to be an ideal
-        // mixture, i.e. fugacity coefficients are not supposed to
-        // depend on composition!
-        typename FluidSystem::ParameterCache paramCache;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            assert(FluidSystem::isIdealMixture(phaseIdx));
-
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-                Scalar phi = FluidSystem::fugacityCoefficient(fluidState_, paramCache, phaseIdx, compIdx);
-                fluidState_.setFugacityCoefficient(phaseIdx, compIdx, phi);
-            }
-        }
+        Scalar pg = fluidState_.pressure(gPhaseIdx);
+        Scalar pw = fluidState_.pressure(wPhaseIdx);
+        Scalar pn = fluidState_.pressure(nPhaseIdx);
+        Valgrind::CheckDefined(pg);
+        Valgrind::CheckDefined(pw);
+        Valgrind::CheckDefined(pn);
 
         // now comes the tricky part: calculate phase composition
+        typename FluidSystem::ParameterCache paramCache;
         if (phasePresence == threePhases) {
             // all phases are present, phase compositions are a
             // result of the the gas <-> liquid equilibrium. This is
@@ -261,13 +238,17 @@ public:
             // and temperature and the mole fraction of water in
             // the gas phase
 
+            // calculate and set the required fugacity coefficients 
+            Scalar phi = FluidSystem::fugacityCoefficient(fluidState_, paramCache, nPhaseIdx, cCompIdx);
+            fluidState_.setFugacityCoefficient(nPhaseIdx, cCompIdx, phi);
+
             // we have all (partly hypothetical) phase pressures
             // and temperature and the mole fraction of water in
             // the gas phase
-            Scalar partPressNAPL = fluidState_.fugacityCoefficient(nPhaseIdx, cCompIdx)*pn_;
+            Scalar partPressNAPL = fluidState_.fugacityCoefficient(nPhaseIdx, cCompIdx)*pn;
 
             Scalar xgw = primaryVars[switch1Idx];
-            Scalar xgc = partPressNAPL/pg_;
+            Scalar xgc = partPressNAPL/pg;
             Scalar xga = 1.-xgw-xgc;
 
             // write mole fractions in the fluid state
@@ -286,8 +267,15 @@ public:
         }
         else if (phasePresence == wnPhaseOnly) {
             // only water and NAPL phases are present
-            Scalar pPartialC = fluidState_.fugacityCoefficient(nPhaseIdx,cCompIdx)*pn_;
-            Scalar henryC = fluidState_.fugacityCoefficient(wPhaseIdx,cCompIdx)*pw_;
+
+            // calculate and set the required fugacity coefficients 
+            Scalar phi = FluidSystem::fugacityCoefficient(fluidState_, paramCache, nPhaseIdx, cCompIdx);
+            fluidState_.setFugacityCoefficient(nPhaseIdx, cCompIdx, phi);
+            phi = FluidSystem::fugacityCoefficient(fluidState_, paramCache, wPhaseIdx, cCompIdx);
+            fluidState_.setFugacityCoefficient(wPhaseIdx, cCompIdx, phi);
+
+            Scalar pPartialC = fluidState_.fugacityCoefficient(nPhaseIdx,cCompIdx)*pn;
+            Scalar henryC = fluidState_.fugacityCoefficient(wPhaseIdx,cCompIdx)*pw;
 
             Scalar xwa = primaryVars[switch1Idx];
             Scalar xwc = pPartialC/henryC;
@@ -310,7 +298,6 @@ public:
         else if (phasePresence == gPhaseOnly) {
             // only the gas phase is present, gas phase composition is
             // stored explicitly here below.
-
             const Scalar xgw = primaryVars[switch1Idx];
             const Scalar xgc = primaryVars[switch2Idx];
             Scalar xga = 1 - xgw - xgc;
@@ -331,10 +318,15 @@ public:
         }
         else if (phasePresence == wgPhaseOnly) {
             // only water and gas phases are present
-            Scalar xgc = primaryVars[switch2Idx];
-            Scalar partPressH2O = fluidState_.fugacityCoefficient(wPhaseIdx, wCompIdx)*pw_;
 
-            Scalar xgw = partPressH2O/pg_;
+            // calculate the required fugacity coefficients
+            Scalar phi = FluidSystem::fugacityCoefficient(fluidState_, paramCache, wPhaseIdx, wCompIdx);
+            fluidState_.setFugacityCoefficient(wPhaseIdx, wCompIdx, phi);
+
+            Scalar xgc = primaryVars[switch2Idx];
+            Scalar partPressH2O = fluidState_.fugacityCoefficient(wPhaseIdx, wCompIdx)*pw;
+
+            Scalar xgw = partPressH2O/pg;
             Scalar xga = 1.-xgc-xgw;
 
             // write mole fractions in the fluid state
@@ -361,22 +353,14 @@ public:
                                        paramCache,
                                        phaseIdx);
             fluidState_.setViscosity(phaseIdx,mu);
-
-            Scalar kr;
-            kr = MaterialLaw::kr(materialParams, phaseIdx,
-                                 fluidState_.saturation(wPhaseIdx),
-                                 fluidState_.saturation(nPhaseIdx),
-                                 fluidState_.saturation(gPhaseIdx));
-            mobility_[phaseIdx] = kr / mu;
-            Valgrind::CheckDefined(mobility_[phaseIdx]);
         }
 
-        // material dependent parameters for NAPL adsorption
-        bulkDensTimesAdsorpCoeff_ =
-            MaterialLaw::bulkDensTimesAdsorpCoeff(materialParams);
+        MaterialLaw::relativePermeabilities(relativePermeability_, matParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
 
         /* ATTENTION: The conversion to effective diffusion parameters
-         *            for the porous media happens at another place!
+         *            for the porous media happens in the flux
+         *            variables!
          */
 
         // diffusivity coefficents
@@ -412,19 +396,11 @@ public:
         Valgrind::CheckDefined(diffusionCoefficient_);
 
         // porosity
-        porosity_ = problem.spatialParameters().porosity(element,
-                                                         elemGeom,
-                                                         scvIdx);
+        porosity_ = problem.porosity(elemCtx, spaceIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
-        // permeability
-        permeability_ = problem.spatialParameters().intrinsicPermeability(element,
-                                                                          elemGeom,
-                                                                          scvIdx);
-        Valgrind::CheckDefined(permeability_);
-
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(primaryVars, problem, element, elemGeom, scvIdx, isOldSol);
+        asImp_().updateEnergy_(elemCtx, spaceIdx, timeIdx);
     }
 
     /*!
@@ -433,51 +409,15 @@ public:
     const FluidState &fluidState() const
     { return fluidState_; }
 
+
     /*!
-     * \brief Returns the effective saturation of a given phase within
-     *        the control volume.
+     * \brief Returns the relative permeability of a given phase
+     *        within the control volume.
      *
      * \param phaseIdx The phase index
      */
-    Scalar saturation(int phaseIdx) const
-    { return fluidState_.saturation(phaseIdx); }
-
-    /*!
-     * \brief Returns the mass density of a given phase within the
-     *        control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar density(int phaseIdx) const
-    { return fluidState_.density(phaseIdx); }
-
-    /*!
-     * \brief Returns the molar density of a given phase within the
-     *        control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar molarDensity(int phaseIdx) const
-    { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
-
-    /*!
-     * \brief Returns the effective pressure of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar pressure(int phaseIdx) const
-    { return fluidState_.pressure(phaseIdx); }
-
-    /*!
-     * \brief Returns temperature inside the sub-control volume.
-     *
-     * Note that we assume thermodynamic equilibrium, i.e. the
-     * temperatures of the rock matrix and of all fluid phases are
-     * identical.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(/*phaseIdx=*/0); }
+    Scalar relativePermeability(int phaseIdx) const
+    { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective mobility of a given phase within
@@ -486,15 +426,7 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar mobility(int phaseIdx) const
-    {
-        return mobility_[phaseIdx];
-    }
-
-    /*!
-     * \brief Returns the effective capillary pressure within the control volume.
-     */
-    Scalar capillaryPressure() const
-    { return fluidState_.capillaryPressure(); }
+    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the average porosity within the control volume.
@@ -503,58 +435,25 @@ public:
     { return porosity_; }
 
     /*!
-     * \brief Returns the permeability within the control volume.
+     * \brief Returns the molecular diffusion coefficent of a component in a phase;
      */
-    Scalar permeability() const
-    { return permeability_; }
-
-    /*!
-     * \brief Returns the diffusivity coefficient matrix
-     */
-    Dune::FieldMatrix<Scalar, numPhases, numComponents> diffusionCoefficient() const
-    { return diffusionCoefficient_; }
-
-    /*!
-     * \brief Returns the adsorption information
-     */
-    Scalar bulkDensTimesAdsorpCoeff() const
-    { return bulkDensTimesAdsorpCoeff_; }
-
+    Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
+    { return diffusionCoefficient_[phaseIdx][compIdx]; }
 
 protected:
-
-    static Scalar temperature_(const PrimaryVariables &primaryVars,
-                               const Problem &problem,
-                               const Element &element,
-                               const FVElementGeometry &elemGeom,
-                               int scvIdx)
-    {
-        return problem.boxTemperature(element, elemGeom, scvIdx);
-    }
+    static void updateTemperature_(FluidState &fs, const ElementContext &elemCtx, int spaceIdx, int timeIdx)
+    { fs.setTemperature(elemCtx.problem().temperature(elemCtx, spaceIdx, timeIdx)); }
 
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const PrimaryVariables &sol,
-                       const Problem &problem,
-                       const Element &element,
-                       const FVElementGeometry &elemGeom,
-                       int vertIdx,
-                       bool isOldSol)
-    { }
+    void updateEnergy_(const ElementContext &elemCtx, int spaceIdx, int timeIdx)
+    {}
 
-    Scalar Sw_, Sg_, Sn_, pg_, pw_, pn_;
+    Scalar porosity_;
+    Scalar relativePermeability_[numPhases];
+    Scalar diffusionCoefficient_[numPhases][numComponents];
 
-    Scalar moleFrac_[numPhases][numComponents];
-    Scalar massFrac_[numPhases][numComponents];
-
-    Scalar porosity_;        //!< Effective porosity within the control volume
-    Scalar permeability_;        //!< Effective porosity within the control volume
-    Scalar mobility_[numPhases];  //!< Effective mobility within the control volume
-    Scalar bulkDensTimesAdsorpCoeff_; //!< the basis for calculating adsorbed NAPL
-    /* We need a tensor here !! */
-    //!< Binary diffusion coefficients of the 3 components in the phases
-    Dune::FieldMatrix<Scalar, numPhases, numComponents> diffusionCoefficient_;
     FluidState fluidState_;
 
 private:
@@ -564,9 +463,6 @@ private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
-
-template <class TypeTag>
-const typename ThreePThreeCVolumeVariables<TypeTag>::Scalar ThreePThreeCVolumeVariables<TypeTag>::R = Constants<typename GET_PROP_TYPE(TypeTag, Scalar)>::R;
 
 } // end namepace
 

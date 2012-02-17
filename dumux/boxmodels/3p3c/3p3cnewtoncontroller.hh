@@ -68,7 +68,7 @@ public:
                        const SolutionVector &uLastIter)
     {
         // call the method of the base class
-        this->method().model().updateStaticData(uCurrentIter, uLastIter);
+        this->method().model().switchPrimaryVars_();
         ParentType::newtonEndStep(uCurrentIter, uLastIter);
     }
 

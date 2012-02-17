@@ -53,26 +53,23 @@ public:
     static const int gPhaseIdx = FluidSystem::gPhaseIdx; //!< Index of the gas phase
 
     // Component indices
-    static const int wCompIdx = 0; //!< Index of the water component
-    static const int cCompIdx = 1; //!< Index of the NAPL component
-    static const int aCompIdx = 2; //!< Index of the air component
+    static const int wCompIdx = FluidSystem::wCompIdx; //!< Index of the water component
+    static const int cCompIdx = FluidSystem::cCompIdx; //!< Index of the NAPL component
+    static const int aCompIdx = FluidSystem::aCompIdx; //!< Index of the air component
 
     // present phases (-> 'pseudo' primary variable)
-    static const int threePhases = 1; //!< All three phases are present
-    static const int wPhaseOnly = 2; //!< Only the water phase is present
-    static const int gnPhaseOnly = 3; //!< Only gas and NAPL phases are present
-    static const int wnPhaseOnly = 4; //!< Only water and NAPL phases are present
-    static const int gPhaseOnly = 5; //!< Only gas phase is present
-    static const int wgPhaseOnly = 6; //!< Only water and gas phases are present
+    static const int wPhaseOnly = (1 << wPhaseIdx); //!< Only the water phase is present
+    static const int nPhaseOnly = (1 << nPhaseIdx); //!< Only gas phase is present
+    static const int gPhaseOnly = (1 << gPhaseIdx); //!< Only gas phase is present
+    static const int threePhases = wPhaseOnly | nPhaseOnly | gPhaseOnly; //!< All three phases are present
+    static const int gnPhaseOnly = nPhaseOnly | gPhaseOnly; //!< Only gas and NAPL phases are present
+    static const int wnPhaseOnly = wPhaseOnly | nPhaseOnly; //!< Only water and NAPL phases are present
+    static const int wgPhaseOnly = wPhaseOnly | gPhaseOnly; //!< Only water and gas phases are present
 
     // Primary variable indices
-    static const int pressureIdx = PVOffset + 0; //!< Index for gas phase pressure in a solution vector
+    static const int pressure0Idx = PVOffset + 0; //!< Index pressure of the phase with the lowest index
     static const int switch1Idx = PVOffset + 1; //!< Index 1 of saturation or mole fraction
     static const int switch2Idx = PVOffset + 2; //!< Index 2 of saturation or mole fraction
-
-    static const int pgIdx = pressureIdx; //!< Index for gas phase pressure in a solution vector
-    static const int SOrX1Idx = switch1Idx; //!< Index of the either the saturation of the gas phase or the mass fraction secondary component if a phase is not present
-    static const int SOrX2Idx = switch2Idx; //!< Index of the either the saturation of the gas phase or the mass fraction secondary component if a phase is not present
 
     // equation indices
     static const int conti0EqIdx = PVOffset; //!< Index of the mass conservation equation for the first component

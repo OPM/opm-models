@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011 by Holger Class                                      *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -23,13 +22,13 @@
 /*!
  * \file
  *
- * \brief Base class for all problems which use the two-phase,
- *        two-component box model
+ * \brief Base class for all problems which use the three-phase,
+ *        three-component box model
  */
-#ifndef DUMUX_3P3C_PROBLEM_HH
-#define DUMUX_3P3C_PROBLEM_HH
+#ifndef DUMUX_BOX_3P3C_PROBLEM_HH
+#define DUMUX_BOX_3P3C_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
 #include "3p3cproperties.hh"
 
@@ -37,33 +36,29 @@ namespace Dumux
 {
 /*!
  * \ingroup ThreePThreeCModel
+ * \ingroup BoxBaseProblems
+ * \brief Base class for all problems which use the two-phase, two-component box model
  *
- * \brief Base class for all problems which use the two-phase,
- *        two-component box model
  */
 template<class TypeTag>
-class ThreePThreeCProblem : public BoxProblem<TypeTag>
+class ThreePThreeCProblem : public BoxMultiPhaseProblem<TypeTag>
 {
-    typedef BoxProblem<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
+    typedef BoxMultiPhaseProblem<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::Grid Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-
-    // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::template Codim<0>::Entity Element;
     enum {
-        dim = Grid::dimension,
-        dimWorld = Grid::dimensionworld
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef Dune::FieldVector<Scalar, dim> Vector;
 
 public:
     /*!
@@ -73,11 +68,10 @@ public:
      * \param gridView The grid view
      */
     ThreePThreeCProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView),
-          gravity_(0),
-          spatialParams_(gridView)
+        : ParentType(timeManager, gridView)
+        , gravity_(0)
     {
-        if (GET_PROP_VALUE(TypeTag, EnableGravity))
+        if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
     }
 
@@ -87,51 +81,65 @@ public:
     // \{
 
     /*!
-     * \brief Returns the temperature within the domain.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
-     * This method MUST be overwritten by the actual problem.
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
      */
-    Scalar boxTemperature(const Element &element,
-                          const FVElementGeometry &fvElemGeom,
-                          int scvIdx) const
-    { DUNE_THROW(Dune::NotImplemented, "The Problem must implement a temperature() method for isothermal problems!"); };
+    template <class Context>
+    Scalar temperature(const Context &context,
+                       int spaceIdx, int timeIdx) const
+    { return asImp_().temperature(); }
 
     /*!
-     * \brief Returns the acceleration due to gravity.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ for an isothermal problem.
      *
-     * If the <tt>EnableGravity</tt> property is true, this means
-     * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
+     * This is not specific to the discretization. By default it just
+     * throws an exception so it must be overloaded by the problem if
+     * no energy equation is used.
      */
-    const GlobalPosition &gravity() const
+    Scalar temperature() const
+    { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
+
+
+    /*!
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     */
+    template <class Context>
+    const Vector &gravity(const Context &context,
+                          int spaceIdx, int timeIdx) const
+    { return asImp_().gravity(); }
+
+    /*!
+     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
+     *
+     * This method is used for problems where the gravitational
+     * acceleration does not depend on the spatial position. The
+     * default behaviour is that if the <tt>EnableGravity</tt>
+     * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
+     * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
+     */
+    const Vector &gravity() const
     { return gravity_; }
-
-    /*!
-     * \brief Returns the spatial parameters object.
-     */
-    SpatialParameters &spatialParameters()
-    { return spatialParams_; }
-
-    /*!
-     * \brief Returns the spatial parameters object.
-     */
-    const SpatialParameters &spatialParameters() const
-    { return spatialParams_; }
 
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation *asImp_()
-    { return static_cast<Implementation *>(this); }
-
+    Implementation &asImp_()
+    { return *static_cast<Implementation *>(this); }
     //! \copydoc asImp_()
-    const Implementation *asImp_() const
-    { return static_cast<const Implementation *>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation *>(this); }
 
-    GlobalPosition gravity_;
-
-    // spatial parameters
-    SpatialParameters spatialParams_;
+    Vector gravity_;
 };
 
 }

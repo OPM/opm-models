@@ -2,7 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2011-2012 by Holger Class                                 *
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
@@ -35,6 +35,10 @@
 #define DUMUX_3P3C_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkphasepresencemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 
 namespace Dumux
 {
@@ -46,7 +50,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxThreePThreeC, INHERITS_FROM(BoxModel));
+NEW_TYPE_TAG(BoxThreePThreeC, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -55,14 +59,18 @@ NEW_TYPE_TAG(BoxThreePThreeC, INHERITS_FROM(BoxModel));
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(ThreePThreeCIndices); //!< Enumerations for the 3p3c models
-NEW_PROP_TAG(SpatialParameters); //!< The type of the spatial parameters
+NEW_PROP_TAG(ThreePThreeCVerbosity); //!< Verbosity of the model (0.. complete silence, 1.. some statistical information after each iteration, 2.. grandma at a very good day)
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
 NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law (extracted from the spatial parameters)
 
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(MassUpwindWeight); //!< The value of the upwind parameter for the mobility
+NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
+
+NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 }
 }
 

@@ -1,8 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011 by Holger Class                                      *
- *   Copyright (C) 2008-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2011-2012 by Holger Class                                 *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2010 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2010 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -39,11 +39,15 @@
 #include "3p3cmodel.hh"
 #include "3p3cproblem.hh"
 #include "3p3cindices.hh"
-#include "3p3cfluxvariables.hh"
-#include "3p3cvolumevariables.hh"
 #include "3p3cproperties.hh"
 #include "3p3cnewtoncontroller.hh"
-// #include "3p3cboundaryvariables.hh"
+
+#include "3p3cprimaryvariables.hh"
+#include "3p3cratevector.hh"
+#include "3p3cfluxvariables.hh"
+#include "3p3cvolumevariables.hh"
+
+#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Dumux
 {
@@ -61,10 +65,10 @@ namespace Properties {
  */
 SET_PROP(BoxThreePThreeC, NumComponents)
 {
- private:
+private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
- public:
+    
+public:
     static const int value = FluidSystem::numComponents;
 
     static_assert(value == 3,
@@ -79,22 +83,38 @@ SET_PROP(BoxThreePThreeC, NumComponents)
  */
 SET_PROP(BoxThreePThreeC, NumPhases)
 {
- private:
+private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
- public:
+    
+public:
     static const int value = FluidSystem::numPhases;
     static_assert(value == 3,
                   "Only fluid systems with 3 phases are supported by the 3p3c model!");
 };
 
-SET_INT_PROP(BoxThreePThreeC, NumEq, 3); //!< set the number of equations to 2
+/*!
+ * \brief Set the number of PDEs to 3
+ */
+SET_INT_PROP(BoxThreePThreeC, NumEq, 3);
 
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(BoxThreePThreeC, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
+SET_TYPE_PROP(BoxThreePThreeC, 
+              MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
+
+//! set the heat conduction law to a dummy one by default
+SET_TYPE_PROP(BoxThreePThreeC,
+              HeatConductionLaw,
+              Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxThreePThreeC,
+              HeatConductionLawParams,
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! The local residual function of the conservation equations
 SET_TYPE_PROP(BoxThreePThreeC, LocalResidual, ThreePThreeCLocalResidual<TypeTag>);
@@ -105,19 +125,31 @@ SET_TYPE_PROP(BoxThreePThreeC, NewtonController, ThreePThreeCNewtonController<Ty
 //! the Model property
 SET_TYPE_PROP(BoxThreePThreeC, Model, ThreePThreeCModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxThreePThreeC, BaseProblem, ThreePThreeCProblem<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxThreePThreeC, PrimaryVariables, ThreePThreeCPrimaryVariables<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BoxThreePThreeC, RateVector, ThreePThreeCRateVector<TypeTag>);
+
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxThreePThreeC, VolumeVariables, ThreePThreeCVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
 SET_TYPE_PROP(BoxThreePThreeC, FluxVariables, ThreePThreeCFluxVariables<TypeTag>);
 
-//! the upwind factor for the mobility.
-SET_SCALAR_PROP(BoxThreePThreeC, MassUpwindWeight, 1.0);
-
 //! The indices required by the isothermal 3p3c model
 SET_TYPE_PROP(BoxThreePThreeC, ThreePThreeCIndices, ThreePThreeCIndices<TypeTag, /*PVOffset=*/0>);
-}
+SET_TYPE_PROP(BoxThreePThreeC, Indices, typename GET_PROP(TypeTag, ThreePThreeCIndices));
 
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxThreePThreeC, EnableSmoothUpwinding, false);
+
+// set the model to medium chattyness by default
+SET_INT_PROP(BoxThreePThreeC, ThreePThreeCVerbosity, 1);
+}
 }
 
 #endif

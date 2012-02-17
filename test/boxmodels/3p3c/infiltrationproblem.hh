@@ -36,7 +36,10 @@
 
 #include <dumux/boxmodels/3p3c/3p3cmodel.hh>
 
-#include "infiltrationspatialparameters.hh"
+#include <dumux/material/fluidmatrixinteractions/3p/parkerVanGen3p.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
+
+#include <dumux/material/heatconduction/somerton.hh>
 
 namespace Dumux
 {
@@ -45,7 +48,7 @@ class InfiltrationProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxThreePThreeC, InfiltrationSpatialParameters));
+NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxThreePThreeC));
 
 // Set the grid type
 SET_TYPE_PROP(InfiltrationProblem, Grid, Dune::YaspGrid<2>);
@@ -62,13 +65,46 @@ SET_TYPE_PROP(InfiltrationProblem,
 SET_BOOL_PROP(InfiltrationProblem, EnableGravity, true);
 
 // Write newton convergence?
-SET_BOOL_PROP(InfiltrationProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(InfiltrationProblem, NewtonWriteConvergence, true);
 
 // Maximum tolerated relative error in the Newton method
 SET_SCALAR_PROP(InfiltrationProblem, NewtonRelTolerance, 1e-8);
 
 // -1 backward differences, 0: central differences, +1: forward differences
-SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, 0);
+SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, +1);
+
+// Set the material Law
+SET_PROP(InfiltrationProblem, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+    enum { nPhaseIdx = FluidSystem::nPhaseIdx };
+    enum { gPhaseIdx = FluidSystem::gPhaseIdx };
+
+    // define the three-phase material law
+    typedef Dumux::ParkerVanGen3P<Scalar> ThreePLaw;
+    
+public:
+    // wrap the three-phase law in an adaptor to make use the generic
+    // material law API
+    typedef Dumux::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
+};
+
+// Set the heat conduction law
+SET_PROP(InfiltrationProblem, HeatConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    // define the material law parameterized by absolute saturations
+    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+};
+
 }
 
 /*!
@@ -102,7 +138,7 @@ SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, 0);
  * <tt>./test_3p3c -parameterFile test_3p3c.input</tt>
  *  */
 template <class TypeTag >
-class InfiltrationProblem : public ThreePThreeCProblem<TypeTag>
+class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef ThreePThreeCProblem<TypeTag> ParentType;
 
@@ -115,7 +151,7 @@ class InfiltrationProblem : public ThreePThreeCProblem<TypeTag>
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
     enum {
-        pressureIdx = Indices::pressureIdx,
+        pressure0Idx = Indices::pressure0Idx,
         switch1Idx = Indices::switch1Idx,
         switch2Idx = Indices::switch2Idx,
 
@@ -129,6 +165,8 @@ class InfiltrationProblem : public ThreePThreeCProblem<TypeTag>
 
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
@@ -160,12 +198,39 @@ public:
                           /*pressMin=*/0.8*1e5,
                           /*pressMax=*/3*1e5,
                           /*nPress=*/200);
+
+        // intrinsic permeabilities
+        fineK_ = 1.e-11;
+        coarseK_ = 1.e-11;
+
+        // porosities
+        porosity_ = 0.40;
+
+        // residual saturations
+        materialParams_.setSwr(0.12);
+        materialParams_.setSwrx(0.12);
+        materialParams_.setSnr(0.07);
+        materialParams_.setSgr(0.03);
+
+        // parameters for the 3phase van Genuchten law
+        materialParams_.setVgAlpha(0.0005);
+        materialParams_.setVgN(4.);
+        materialParams_.setkrRegardsSnr(false);
+
+        // parameters for adsorption
+        materialParams_.setKdNAPL(0.);
+        materialParams_.setRhoBulk(1500.);
+
+        materialParams_.checkDefined();
     }
 
     /*!
      * \name Problem parameters
      */
     // \{
+    
+    bool shouldWriteRestartFile() const
+    { return true; }
 
     /*!
      * \brief The problem name.
@@ -176,6 +241,89 @@ public:
     { return "infiltration"; }
 
     /*!
+     * \brief Apply the intrinsic permeability tensor to a pressure
+     *        potential gradient.
+     *
+     * \param element The current finite element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineK_;
+        return coarseK_;
+    }
+
+    /*!
+     * \brief Define the porosity \f$[-]\f$ of the spatial parameters
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the porosity needs to be defined
+     */
+    template <class Context>
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        //const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        // if (isFineMaterial_(pos))
+        //     return finePorosity_;
+        // else
+        //     return coarsePorosity_;
+        return porosity_;
+    }
+
+
+    /*!
+     * \brief return the parameter object for the material law which depends on the position
+     *
+     * \param element The current finite element
+     * \param fvElemGeom The current finite volume geometry of the element
+     * \param scvIdx The index of the sub-control volume
+     */
+    template <class Context>
+    const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    { return materialParams_; }
+
+#warning TODO
+#if 0
+    /*!
+     * \brief Return the parameter object for the heat conductivty law
+     *        for a given position
+     */
+    template <class Context>
+    const HeatConductionLawParams&
+    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isFineMaterial_(pos))
+            return fineHeatCondParams_;
+        return coarseHeatCondParams_;
+    }
+#endif
+
+    /*!
+     * \brief Returns the heat capacity \f$[J/m^3 K]\f$ of the rock matrix.
+     *
+     * This is only required for non-isothermal models.
+     *
+     * \param element The finite element
+     * \param fvElemGeom The finite volume geometry
+     * \param scvIdx The local index of the sub-control volume where
+     *                    the heat capacity needs to be defined
+     */
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        return
+            850. // specific heat capacity [J / (kg K)]
+            * 2650.; // density of sand [kg/m^3]
+    }
+
+    /*!
      * \brief Returns the temperature within the domain.
      *
      * \param element The element
@@ -184,18 +332,13 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    Scalar boxTemperature(const Element &element,
-                          const FVElementGeometry &fvElemGeom,
-                          int scvIdx) const
-    {
-        return temperature_;
-    };
+    template <class Context>
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
+    { return temperature_; }
 
-    void sourceAtPos(PrimaryVariables &values,
-                     const GlobalPosition &globalPos) const
-    {
-        values = 0;
-    }
+    template <class Context>
+    void source(RateVector &values, const Context &context, int spaceIdx, int timeIdx) const
+    { values = 0; }
 
     // \}
 
@@ -211,9 +354,11 @@ public:
      * \param values The boundary types for the conservation equations
      * \param vertex The vertex for which the boundary type is set
      */
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, 
+                       const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if(globalPos[0] > 500. - eps_)
             values.setAllDirichlet();
@@ -232,68 +377,69 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
 
         Scalar y = globalPos[1];
         Scalar x = globalPos[0];
-        Scalar Sw, Swr=0.12, Sgr=0.03;
+        Scalar Sw;
+        Scalar Swr=0.12;
+        Scalar Sgr=0.03;
 
-        if(y >(-1.E-3*x+5) )
-        {
-            Scalar pc = 9.81 * 1000.0 * (y - (-5E-4*x+5));
+        values = 0.0;
+        if (y >(-1.E-3*x+5)) {
+            Scalar pc = 9.81 * 1000.0 * (y - (5 - 5e-4*x));
             if (pc < 0.0) pc = 0.0;
 
-            Sw = invertPCGW_(pc,
-                             this->spatialParameters().materialLawParams());
+            Sw = invertPCGW_(pc, materialLawParams(context, spaceIdx, timeIdx));
             if (Sw < Swr) Sw = Swr;
             if (Sw > 1.-Sgr) Sw = 1.-Sgr;
 
-            values[pressureIdx] = 1e5 ;
+            values[pressure0Idx] = 1e5 ;
             values[switch1Idx] = Sw;
             values[switch2Idx] = 1.e-6;
-        }else {
-            values[pressureIdx] = 1e5 + 9.81 * 1000.0 * ((-5E-4*x+5) - y);
+
+            values.setPhasePresent(FluidSystem::gPhaseIdx);
+            values.setPhasePresent(FluidSystem::wPhaseIdx);
+
+            Valgrind::CheckDefined(values);
+        } 
+        else {
+            values[pressure0Idx] = 1e5 + 9.81 * 1000.0 * ((-5E-4*x+5) - y);
             values[switch1Idx] = 1.-Sgr;
             values[switch2Idx] = 1.e-6;
-        }
 
-        //initial_(values, globalPos, element);
-        //const MaterialLawParams& materialParams = this->spatialParameters().materialLawParams();;
-        //MaterialLaw::pCGW(materialParams, 1.0);
+            values.setPhasePresent(FluidSystem::gPhaseIdx);
+            values.setPhasePresent(FluidSystem::wPhaseIdx);
+
+            Valgrind::CheckDefined(values);
+        }
     }
 
     /*!
      * \brief Evaluate the boundary conditions for a neumann
      *        boundary segment.
      *
-     * \param values The neumann values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     *
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+    template <class Context>
+    void neumann(RateVector &values,
+                 const Context &context,
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         values = 0;
 
         // negative values for injection
         if ((globalPos[0] <= 75.+eps_) && (globalPos[0] >= 50.+eps_) && (globalPos[1] >= 10.-eps_))
         {
             values[Indices::contiWEqIdx] = -0.0;
-            values[Indices::contiCEqIdx] = -0.001, // /*Molfluss, umr. über M(Mesit.)=0,120 kg/mol --> 1.2e-4  kg/(sm)
-                values[Indices::contiAEqIdx] = -0.0;
+            values[Indices::contiCEqIdx] = -0.001;
+            values[Indices::contiAEqIdx] = -0.0;
+            Valgrind::CheckDefined(values);
         }
     }
 
@@ -315,61 +461,50 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
-    void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+    template <class Context>
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        initial_(values, globalPos, element);
-    }
-
-    /*!
-     * \brief Return the initial phase state inside a control volume.
-     *
-     * \param vert The vertex
-     * \param globalIdx The index of the global vertex
-     * \param globalPos The global position
-     */
-    int initialPhasePresence(const Vertex &vert,
-                             int &globalIdx,
-                             const GlobalPosition &globalPos) const
-    {
-        // return threePhases;
-        return wgPhaseOnly;
-    }
-
-private:
-    // internal method for the initial condition (reused for the
-    // dirichlet conditions!)
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos, const Element &element) const
-    {
         Scalar y = globalPos[1];
         Scalar x = globalPos[0];
-        Scalar Sw, Swr=0.12, Sgr=0.03;
+        Scalar Sw;
+        Scalar Swr=0.12;
+        Scalar Sgr=0.03;
 
-        if(y >(-1.E-3*x+5) )
+        values = 0.0;
+        if (y > -eps_*x + 5)
         {
             Scalar pc = 9.81 * 1000.0 * (y - (-5E-4*x+5));
             if (pc < 0.0) pc = 0.0;
 
             Sw = invertPCGW_(pc,
-                             this->spatialParameters().materialLawParams());
+                             materialLawParams(context, spaceIdx, timeIdx));
+            Valgrind::CheckDefined(Sw);
             if (Sw < Swr) Sw = Swr;
             if (Sw > 1.-Sgr) Sw = 1.-Sgr;
 
-            values[pressureIdx] = 1e5 ;
+            values[pressure0Idx] = 1e5 ;
             values[switch1Idx] = Sw;
             values[switch2Idx] = 1.e-6;
-        }else {
-            values[pressureIdx] = 1e5 + 9.81 * 1000.0 * ((-5E-4*x+5) - y);
-            values[switch1Idx] = 1.-Sgr;
-            values[switch2Idx] = 1.e-6;
+
+            values.setPhasePresent(FluidSystem::gPhaseIdx);
+            values.setPhasePresent(FluidSystem::wPhaseIdx);
+            Valgrind::CheckDefined(values);
+        } else {
+            values[pressure0Idx] = 1e5 + 9.81 * 1000.0 * ((5 - x*5e-4) - y);
+            Valgrind::CheckDefined(values[pressure0Idx]);
+            Valgrind::CheckDefined(Sgr);
+            values[switch1Idx] = 1.0 - Sgr;
+            values[switch2Idx] = 1.0e-6;
+
+            values.setPhasePresent(FluidSystem::gPhaseIdx);
+            values.setPhasePresent(FluidSystem::wPhaseIdx);
+            Valgrind::CheckDefined(values);
         }
     }
 
+private:
     static Scalar invertPCGW_(Scalar pcIn, const MaterialLawParams &pcParams)
     {
         Scalar lower,upper;
@@ -396,6 +531,20 @@ private:
         }
         return(Sw);
     }
+
+    bool isFineMaterial_(const GlobalPosition &pos) const
+    {
+        return
+            70. <= pos[0] && pos[0] <= 85. &&
+            7.0 <= pos[1] && pos[1] <= 7.50;
+    };
+
+    Scalar fineK_;
+    Scalar coarseK_;
+
+    Scalar porosity_;
+
+    MaterialLawParams materialParams_;
 
     Scalar temperature_;
     Scalar eps_;
