@@ -15,6 +15,18 @@ AC_DEFUN([DUMUX_CHECKS],
   else
      DUNE_ADD_SUMMARY_ENTRY([Valgrind client requests],["no"])
   fi
+
+  AC_CHECK_HEADER([dune/istl/convergencecriteria.hh], 
+                  [HAVE_ISTL_FIXPOINT_CRITERION="1"],
+                  AC_MSG_WARN([dune/istl/convergencecriteria.hh not found]))
+  AS_IF([test "$HAVE_ISTL_FIXPOINT_CRITERION" = "1"],[
+    AC_DEFINE(HAVE_ISTL_FIXPOINT_CRITERION, 1, [Define whether ISTL provides pluggable convergence criteria.])
+    ])
+  if test "$HAVE_ISTL_FIXPOINT_CRITERION" == "1"; then
+     DUNE_ADD_SUMMARY_ENTRY([ISTL patch for pluggable convergence criteria],["yes"])
+  else
+     DUNE_ADD_SUMMARY_ENTRY([ISTL patch for pluggable convergence criteria],["no"])
+  fi
   
   # check for the availablility of quadruple precision floating point
   # math and enable it if requested.

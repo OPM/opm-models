@@ -142,6 +142,7 @@ public:
                              maxIter,
                              verbosity);
 
+#if HAVE_ISTL_FIXPOINT_CRITERION
         OverlappingVector weightVec(*overlapx_);
         for (int i = 0; i < weightVec.size(); ++i) {
             for (int j = 0; j < OverlappingVector::block_type::dimension; ++j) {
@@ -149,6 +150,7 @@ public:
             }
         }
         solver.imp().convergenceCriterion().setWeight(weightVec);
+#endif
         
         // run the solver
         Dune::InverseOperatorResult result;
@@ -281,9 +283,13 @@ class BoxBiCGStabILU0Solver : public BoxLinearSolver<TypeTag>
     typedef Dumux::OverlappingBlockVector<typename Vector::block_type, Overlap> OverlappingVector;
     typedef Dune::SeqILU0<OverlappingMatrix, OverlappingVector, OverlappingVector> SeqPreconditioner;
     typedef PrecNoIterBackend<TypeTag, SeqPreconditioner> PrecBackend;
+#if HAVE_ISTL_FIXPOINT_CRITERION
     //typedef Dune::ResidReductionCriterion<OverlappingVector> ConvergenceCrit;
     typedef Dune::FixPointCriterion<OverlappingVector> ConvergenceCrit;
     typedef Dune::BiCGSTABSolver<OverlappingVector, ConvergenceCrit> Solver;
+#else
+    typedef Dune::BiCGSTABSolver<OverlappingVector> Solver;
+#endif
     typedef StandardSolverBackend<TypeTag, Solver> SolverBackend;
 
 public:
