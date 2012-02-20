@@ -39,6 +39,7 @@
 #include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkphasepresencemodule.hh>
 
 namespace Dumux
 {
