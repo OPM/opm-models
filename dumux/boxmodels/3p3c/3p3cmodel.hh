@@ -465,6 +465,8 @@ protected:
 
             // calculate fractions in the hypothetical NAPL phase
             Scalar xnc = fs.moleFraction(nPhaseIdx, cCompIdx);
+            Scalar xna = fs.moleFraction(nPhaseIdx, aCompIdx);
+            Scalar xnw = fs.moleFraction(nPhaseIdx, wCompIdx);
             /* take care:
                for xnc in case wPhaseOnly we compute xnc=henry_mesitylene*xcw,
                where a hypothetical gas pressure is assumed for the Henry
@@ -478,7 +480,7 @@ protected:
 
             // if the sum of the hypothetical mole fractions would be larger than
             // 100%, NAPL phase appears
-            if (xnc > xnMax)
+            if (xnc + xna + xnw > xnMax)
             {
                 // NAPL phase appears
                 if (verbosity_ > 1)
@@ -528,6 +530,8 @@ protected:
 
             // calculate fractions of the hypothetical water phase
             Scalar xww = fs.moleFraction(wPhaseIdx, wCompIdx);
+            Scalar xwa = fs.moleFraction(wPhaseIdx, aCompIdx);
+            Scalar xwc = fs.moleFraction(wPhaseIdx, cCompIdx);
             /*
               take care:, xww, if no water is present, then take xww=xwg*pg/pwsat .
               If this is larger than 1, then water appears
@@ -538,7 +542,7 @@ protected:
 
             // if the sum of the mole fractions would be larger than
             // 100%, gas phase appears
-            if (xww > xwMax)
+            if (xww + xwa + xwc > xwMax)
             {
                 // water phase appears
                 if (verbosity_ > 1)
@@ -638,6 +642,8 @@ protected:
 
             // calculate fractions in the hypothetical NAPL phase
             Scalar xnc = fs.moleFraction(nPhaseIdx, cCompIdx);
+            Scalar xnw = fs.moleFraction(nPhaseIdx, wCompIdx);
+            Scalar xna = fs.moleFraction(nPhaseIdx, aCompIdx);
             /*
               take care:, xnc, if no NAPL phase is there, take xnc=xcg*pg/pcsat
               if this is larger than 1, then NAPL appears
@@ -649,7 +655,7 @@ protected:
 
             // if the sum of the hypothetical mole fraction would be larger than
             // 100%, NAPL phase appears
-            if (xnc > xnMax)
+            if (xnc + xnw + xna > xnMax)
             {
                 // NAPL phase appears
                 if (verbosity_ > 1)
@@ -660,6 +666,8 @@ protected:
             }
             // calculate fractions of the hypothetical water phase
             Scalar xww = fs.moleFraction(wPhaseIdx, wCompIdx);
+            Scalar xwa = fs.moleFraction(wPhaseIdx, aCompIdx);
+            Scalar xwc = fs.moleFraction(wPhaseIdx, cCompIdx);
             /*
               take care:, xww, if no water is present, then take xww=xwg*pg/pwsat .
               If this is larger than 1, then water appears
@@ -670,7 +678,7 @@ protected:
 
             // if the sum of the mole fractions would be larger than
             // 100%, gas phase appears
-            if (xww > xwMax)
+            if (xww + xwa + xwc > xwMax)
             {
                 // water phase appears
                 if (verbosity_ > 1)
@@ -706,6 +714,8 @@ protected:
 
             // get the fractions in the hypothetical NAPL phase
             Scalar xnc = fs.moleFraction(nPhaseIdx, cCompIdx);
+            Scalar xna = fs.moleFraction(nPhaseIdx, aCompIdx);
+            Scalar xnw = fs.moleFraction(nPhaseIdx, wCompIdx);
 
             // take care: if the NAPL phase is not present, take
             // xnc=xcg*pg/pcsat if this is larger than 1, then NAPL
@@ -716,7 +726,7 @@ protected:
 
             // if the sum of the hypothetical mole fraction would be larger than
             // 100%, NAPL phase appears
-            if (xnc > xnMax)
+            if (xnc + xna + xnw > xnMax)
             {
                 if (verbosity_ > 1)
                     // NAPL phase appears
