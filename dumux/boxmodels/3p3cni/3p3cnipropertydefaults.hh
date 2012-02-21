@@ -1,7 +1,6 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011-     by Holger Class                                 *
  *   Copyright (C) 2008-2010 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
@@ -24,9 +23,9 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
+ * \ingroup Properties
+ * \ingroup BoxProperties
  * \ingroup ThreePThreeCNIModel
- */
-/*!
  * \file
  *
  * \brief Defines default values for most properties required by the 3p3cni
@@ -63,18 +62,24 @@ SET_TYPE_PROP(BoxThreePThreeCNI,
 //! the Model property
 SET_TYPE_PROP(BoxThreePThreeCNI, Model, ThreePThreeCNIModel<TypeTag>);
 
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(BoxThreePThreeCNI, BaseProblem, ThreePThreeCNIProblem<TypeTag>);
+
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxThreePThreeCNI, VolumeVariables, ThreePThreeCNIVolumeVariables<TypeTag>);
-
 
 //! the FluxVariables property
 SET_TYPE_PROP(BoxThreePThreeCNI, FluxVariables, ThreePThreeCNIFluxVariables<TypeTag>);
 
 //! The indices required by the non-isothermal 3p3c model
-SET_PROP(BoxThreePThreeCNI, ThreePThreeCIndices)
-{ typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) type; };
-
 SET_TYPE_PROP(BoxThreePThreeCNI, ThreePThreeCNIIndices, ThreePThreeCNIIndices<TypeTag, 0>);
+SET_TYPE_PROP(BoxThreePThreeCNI, Indices, typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices));
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxThreePThreeCNI,
+              HeatConductionLawParams,
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 }
 

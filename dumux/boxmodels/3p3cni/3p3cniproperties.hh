@@ -1,7 +1,6 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011 by Holger Class                                      *
  *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -21,9 +20,9 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
+ * \ingroup Properties
+ * \ingroup BoxProperties
  * \ingroup ThreePThreeCNIModel
- */
-/*!
  * \file
  *
  * \brief Defines the properties required for the non-isothermal three-phase,
@@ -33,6 +32,7 @@
 #define DUMUX_3P3CNI_PROPERTIES_HH
 
 #include <dumux/boxmodels/3p3c/3p3cproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux
 {
@@ -44,12 +44,16 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the non-isothermal three-phase, three-component problems
-NEW_TYPE_TAG(BoxThreePThreeCNI, INHERITS_FROM(BoxThreePThreeC));
+NEW_TYPE_TAG(BoxThreePThreeCNI, INHERITS_FROM(BoxThreePThreeC, VtkEnergy));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 NEW_PROP_TAG(ThreePThreeCNIIndices); //!< Enumerations for the 3p3cni models
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
+
+NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
 }
 }
 

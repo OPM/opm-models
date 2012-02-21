@@ -34,6 +34,7 @@ namespace Dumux
 {
 /*!
  * \ingroup ThreePThreeCNIModel
+ * \ingroup BoxBaseProblems
  * \brief Base class for all problems which use the non-isothermal
  *         three-phase, three-component box model.
  */

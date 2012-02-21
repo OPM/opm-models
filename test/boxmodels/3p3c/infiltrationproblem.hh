@@ -140,13 +140,17 @@ public:
 template <class TypeTag >
 class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef ThreePThreeCProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
@@ -161,16 +165,6 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
-
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
@@ -282,23 +276,6 @@ public:
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     { return materialParams_; }
-
-#warning TODO
-#if 0
-    /*!
-     * \brief Return the parameter object for the heat conductivty law
-     *        for a given position
-     */
-    template <class Context>
-    const HeatConductionLawParams&
-    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
-        if (isFineMaterial_(pos))
-            return fineHeatCondParams_;
-        return coarseHeatCondParams_;
-    }
-#endif
 
     /*!
      * \brief Returns the heat capacity \f$[J/m^3 K]\f$ of the rock matrix.

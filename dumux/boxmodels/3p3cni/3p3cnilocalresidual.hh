@@ -1,7 +1,6 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011-     by Holger Class                                 *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
@@ -27,58 +26,43 @@
  * \file
  *
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the non-isothermal three-phase three-component box model.
+ *        using the non-isothermal three-phase, three-component box model.
  *
  */
-#ifndef DUMUX_NEW_3P3CNI_LOCAL_RESIDUAL_HH
-#define DUMUX_NEW_3P3CNI_LOCAL_RESIDUAL_HH
+#ifndef DUMUX_3P3CNI_LOCAL_RESIDUAL_HH
+#define DUMUX_3P3CNI_LOCAL_RESIDUAL_HH
 
 #include <dumux/boxmodels/3p3c/3p3clocalresidual.hh>
 
-
-#include "3p3cnivolumevariables.hh"
-#include "3p3cnifluxvariables.hh"
-
-#include "3p3cniproperties.hh"
+#include <dumux/boxmodels/3p3cni/3p3cnivolumevariables.hh>
+#include <dumux/boxmodels/3p3cni/3p3cnifluxvariables.hh>
+#include <dumux/boxmodels/3p3cni/3p3cniproperties.hh>
 
 namespace Dumux
 {
 /*!
  * \ingroup ThreePThreeCNIModel
+ * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the three-phase three-component box model.
+ *        using the three-phasem, three-component box model.
  */
 template<class TypeTag>
 class ThreePThreeCNILocalResidual : public ThreePThreeCLocalResidual<TypeTag>
 {
     typedef ThreePThreeCLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) Indices;
 
     enum {
-
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
-        energyEqIdx = Indices::energyEqIdx,
-        temperatureIdx = Indices::temperatureIdx,
-
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
-        gPhaseIdx = Indices::gPhaseIdx
+        energyEqIdx = Indices::energyEqIdx
     };
 
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
-
-
-    static constexpr Scalar massUpwindWeight = GET_PROP_VALUE(TypeTag, MassUpwindWeight);
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     /*!
@@ -92,52 +76,34 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int timeIdx) const
     {
         // compute the storage term for phase mass
-        ParentType::computeStorage(result, scvIdx, usePrevSol);
+        ParentType::computeStorage(storage, elemCtx, scvIdx, timeIdx);
 
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const ElementVolumeVariables &elemDat = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &vertDat = elemDat[scvIdx];
+        const VolumeVariables &volVars =
+            elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
 
-        // compute the energy storage
-        Scalar wdens = vertDat.density(wPhaseIdx);
-        Scalar ndens = vertDat.density(nPhaseIdx);
-        Scalar gdens = vertDat.density(gPhaseIdx);
-        Scalar wInEnerg = vertDat.internalEnergy(wPhaseIdx);
-        Scalar nInEnerg = vertDat.internalEnergy(nPhaseIdx);
-        Scalar gInEnerg = vertDat.internalEnergy(gPhaseIdx);
-        Scalar wsat = vertDat.saturation(wPhaseIdx);
-        Scalar nsat = vertDat.saturation(nPhaseIdx);
-        Scalar gsat = vertDat.saturation(gPhaseIdx);
-        Scalar temp = vertDat.temperature();
-        Scalar heatCap = vertDat.heatCapacity();
-        Scalar poro = vertDat.porosity();
+        storage[energyEqIdx] = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        {
+            // add the internal energy of the phase
+            storage[energyEqIdx] +=
+                volVars.porosity() * (
+                    fs.density(phaseIdx)
+                    * fs.internalEnergy(phaseIdx)
+                    * fs.saturation(phaseIdx));
+        };
 
-        result[energyEqIdx] = temp*heatCap
-            + poro * (gdens*gInEnerg*gsat
-                      + wdens*wInEnerg*wsat
-                      + ndens*nInEnerg*nsat);
-        /*
-          vertDat.porosity()*(vertDat.density(wPhaseIdx) *
-          vertDat.internalEnergy(wPhaseIdx) *
-          vertDat.saturation(wPhaseIdx)
-          +
-          vertDat.density(nPhaseIdx) *
-          vertDat.internalEnergy(nPhaseIdx) *
-          vertDat.saturation(nPhaseIdx)
-          +
-          vertDat.density(gPhaseIdx) *
-          vertDat.internalEnergy(gPhaseIdx) *
-          vertDat.saturation(gPhaseIdx))
-          +
-          vertDat.temperature()*vertDat.heatCapacity();
-        */
+        // handle the heat capacity of the solid
+        storage[energyEqIdx] +=
+            fs.temperature(/*phaseIdx=*/0)
+            * volVars.heatCapacitySolid()
+            * (1 - volVars.porosity());
     }
 
     /*!
@@ -150,30 +116,32 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxData) const
+    void computeAdvectiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx) const
     {
         // advective mass flux
-        ParentType::computeAdvectiveFlux(flux, fluxData);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         // advective heat flux in all phases
-        flux[energyEqIdx] = 0;
-        for (int phase = 0; phase < numPhases; ++phase) {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
-            const VolumeVariables &up = this->curVolVars_(fluxData.upstreamIdx(phase));
-            const VolumeVariables &dn = this->curVolVars_(fluxData.downstreamIdx(phase));
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
-                fluxData.KmvpNormal(phase) * (
-                                              massUpwindWeight * // upstream vertex
-                                              (  up.density(phase) *
-                                                 up.mobility(phase) *
-                                                 up.enthalpy(phase))
-                                              +
-                                              (1-massUpwindWeight) * // downstream vertex
-                                              (  dn.density(phase) *
-                                                 dn.mobility(phase) *
-                                                 dn.enthalpy(phase)) );
+                fluxVars.filterVelocityNormal(phaseIdx)
+                * (fluxVars.upstreamWeight(phaseIdx)
+                   * up.fluidState().enthalpy(phaseIdx)
+                   * up.fluidState().density(phaseIdx)
+                   +
+                   fluxVars.downstreamWeight(phaseIdx)
+                   * dn.fluidState().enthalpy(phaseIdx)
+                   * dn.fluidState().density(phaseIdx));
         }
     }
 
@@ -186,15 +154,20 @@ public:
      *
      * This method is called by compute flux (base class)
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxData) const
+    void computeDiffusiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, fluxData);
+        ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux
-        flux[temperatureIdx] +=
-            fluxData.normalMatrixHeatFlux();
+        flux[energyEqIdx] +=
+            -fluxVars.temperatureGradNormal()
+            * fluxVars.heatConductivity();
     }
 };
 

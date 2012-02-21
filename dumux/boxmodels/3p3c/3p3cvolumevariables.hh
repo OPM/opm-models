@@ -393,7 +393,7 @@ public:
         Valgrind::CheckDefined(porosity_);
 
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(elemCtx, spaceIdx, timeIdx);
+        asImp_().updateEnergy_(paramCache, elemCtx, spaceIdx, timeIdx);
     }
 
     /*!
@@ -440,7 +440,11 @@ protected:
     /*!
      * \brief Called by update() to compute the energy related quantities
      */
-    void updateEnergy_(const ElementContext &elemCtx, int spaceIdx, int timeIdx)
+    template <class ParameterCache>
+    void updateEnergy_(const ParameterCache &paramCache, 
+                       const ElementContext &elemCtx,
+                       int spaceIdx,
+                       int timeIdx)
     {}
 
     Scalar porosity_;

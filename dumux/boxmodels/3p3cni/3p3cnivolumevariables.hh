@@ -1,9 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011-     by Holger Class                                 *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -34,14 +33,16 @@
 
 #include <dumux/boxmodels/3p3c/3p3cvolumevariables.hh>
 
+#include "3p3cniproperties.hh"
 
 namespace Dumux
 {
 
 /*!
  * \ingroup ThreePThreeCNIModel
+ * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the non-isothermal three-phase, three-component
+ *        finite volume in the non-isothermal three-phase
  *        model.
  */
 template <class TypeTag>
@@ -51,121 +52,115 @@ class ThreePThreeCNIVolumeVariables : public ThreePThreeCVolumeVariables<TypeTag
     typedef ThreePThreeCVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-
-    enum {
-    };
-
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) Indices;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { temperatureIdx = Indices::temperatureIdx };
+    enum { energyEqIdx = Indices::energyEqIdx };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+
     //! \endcond
 
 public:
-    /*!
-     * \brief Update all quantities for a given control volume.
-     *
-     * \param sol The solution primary variables
-     * \param problem The problem
-     * \param element The element
-     * \param elemGeom Evaluate function with solution of current or previous time step
-     * \param vertIdx The local index of the SCV (sub-control volume)
-     * \param isOldSol Evaluate function with solution of current or previous time step
-     */
-    void update(const PrimaryVariables &sol,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int vertIdx,
-                bool isOldSol)
-    {
-        // vertex update data for the mass balance
-        ParentType::update(sol,
-                           problem,
-                           element,
-                           elemGeom,
-                           vertIdx,
-                           isOldSol);
-
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(this->fluidState());
-
-        // the internal energies and the enthalpies
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
-            this->fluidState_.setEnthalpy(phaseIdx, h);
-        }
-    };
-
-    /*!
-     * \brief Returns the total internal energy of a phase in the
-     *        sub-control volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar internalEnergy(int phaseIdx) const
-    { return this->fluidState_.internalEnergy(phaseIdx); };
-
-    /*!
-     * \brief Returns the total enthalpy of a phase in the sub-control
-     *        volume.
-     *
-     * \param phaseIdx The phase index
-     */
-    Scalar enthalpy(int phaseIdx) const
-    { return this->fluidState_.enthalpy(phaseIdx); };
-
+    typedef typename ParentType::FluidState FluidState;
     /*!
      * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */
-    Scalar heatCapacity() const
-    { return heatCapacity_; };
+    Scalar heatCapacitySolid() const
+    { return heatCapacitySolid_; };
+
+    /*!
+     * \brief Returns the total conductivity capacity
+     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
+     *        sub-control volume.
+     */
+    Scalar heatConductivity() const
+    { return heatConductivity_; };
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {
+        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
+#ifndef NDEBUG
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            assert(fs.temperature(/*phaseIdx=*/0) == fs.temperature(phaseIdx));
+        }
+#endif
+    }
+    
+    /*!
+     * \brief Set the enthalpy rate per second of a rate vector, .
+     */
+    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    {
+        rateVec[energyEqIdx] = rate;
+    }
+
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &rateVec,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    {
+        rateVec[energyEqIdx] = 
+            volume
+            * fluidState.density(phaseIdx)
+            * fluidState.enthalpy(phaseIdx);
+    }
 
 protected:
     // this method gets called by the parent class. since this method
     // is protected, we are friends with our parent..
     friend class ThreePThreeCVolumeVariables<TypeTag>;
 
-    static Scalar temperature_(const PrimaryVariables &primaryVars,
-                               const Problem& problem,
-                               const Element &element,
-                               const FVElementGeometry &elemGeom,
-                               int scvIdx)
+    static void updateTemperature_(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
+                                   int scvIdx,
+                                   int timeIdx)
     {
-        return primaryVars[temperatureIdx];
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        fluidState.setTemperature(priVars[temperatureIdx]);
     }
 
-    /*!
-     * \brief Update all quantities for a given control volume.
-     *
-     * \param sol The solution primary variables
-     * \param problem The problem
-     * \param element The element
-     * \param elemGeom Evaluate function with solution of current or previous time step
-     * \param scvIdx The local index of the SCV (sub-control volume)
-     * \param isOldSol Evaluate function with solution of current or previous time step
-     */
-    void updateEnergy_(const PrimaryVariables &sol,
-                       const Problem &problem,
-                       const Element &element,
-                       const FVElementGeometry &elemGeom,
+    template <class ParameterCache>
+    void updateEnergy_(const ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
                        int scvIdx,
-                       bool isOldSol)
+                       int timeIdx)
     {
-        // copmute and set the heat capacity of the solid phase
-        heatCapacity_ = problem.spatialParameters().heatCapacity(element, elemGeom, scvIdx);
-        Valgrind::CheckDefined(heatCapacity_);
-    };
+        // compute and set the internal energies of the fluid phases
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
 
-    Scalar heatCapacity_;
+            this->fluidState_.setEnthalpy(phaseIdx, h);
+        }
+
+        // compute and set the heat capacity of the solid phase
+        const auto &problem = elemCtx.problem();
+        const auto &heatCondParams = problem.heatConductionParams(elemCtx, scvIdx, timeIdx);
+
+        heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, scvIdx, timeIdx);
+        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, this->fluidState());
+
+        Valgrind::CheckDefined(heatCapacitySolid_);
+        Valgrind::CheckDefined(heatConductivity_);
+    }
+
+    Scalar heatCapacitySolid_;
+    Scalar heatConductivity_;
 };
 
 } // end namepace

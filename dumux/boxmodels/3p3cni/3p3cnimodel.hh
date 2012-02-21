@@ -1,7 +1,6 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011-     by Holger Class                                 *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
@@ -26,12 +25,13 @@
 /*!
  * \file
  *
- * \brief Adaption of the BOX scheme to the non-isothermal three-phase three-component flow model.
+ * \brief Adaption of the BOX scheme to the non-isothermal three-phase, three-component flow model.
  */
-#ifndef DUMUX_NEW_3P3CNI_MODEL_HH
-#define DUMUX_NEW_3P3CNI_MODEL_HH
+#ifndef DUMUX_3P3CNI_MODEL_HH
+#define DUMUX_3P3CNI_MODEL_HH
 
 #include <dumux/boxmodels/3p3c/3p3cmodel.hh>
+#include "3p3cniproperties.hh"
 
 namespace Dumux {
 /*!
@@ -101,11 +101,50 @@ namespace Dumux {
  *  <li> Only gas phase is present: Primary variables \f$(x_g^w\f$, \f$x_g^c\f$, \f$p_g\f$, \f$T)\f$. </li>
  *  <li> Water and gas phases are present: Primary variables \f$(S_w\f$, \f$x_w^g\f$, \f$p_g\f$, \f$T)\f$. </li>
  * </ul>
- *
  */
 template<class TypeTag>
 class ThreePThreeCNIModel : public ThreePThreeCModel<TypeTag>
 {
+    typedef ThreePThreeCModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) Indices;
+
+public:
+    /*!
+     * \brief Returns a string with the model's human-readable name
+     */
+    std::string name() const
+    { return "3p3cni"; }
+
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        if (pvIdx == Indices::temperatureIdx)
+           return "temperature";
+       
+        return ParentType::primaryVarName(pvIdx);
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    { 
+        if (eqIdx == Indices::energyEqIdx)
+           return "energy";
+       
+        return ParentType::eqName(eqIdx);
+    }
+
+protected:
+    friend class BoxModel<TypeTag>;
+
+    void registerVtkModules_()
+    {
+        ParentType::registerVtkModules_();
+        this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
+    }
 };
 
 }
