@@ -342,9 +342,9 @@ protected:
         Dune::GeometryType geoType = elem.geometry().type();
         const ReferenceElement &refElem = ReferenceElements::general(geoType);
 
-        NeumannContext neumannVars(elemCtx);
+        NeumannContext neumannCtx(elemCtx);
         const GridView &gridView = elemCtx.gridView();
-        IntersectionIterator &isIt = neumannVars.intersectionIt();
+        IntersectionIterator &isIt = neumannCtx.intersectionIt();
         const IntersectionIterator &endIt = gridView.iend(elem);
         for (; isIt != endIt; ++isIt)
         {
@@ -371,7 +371,7 @@ protected:
                 // add the residual of all vertices of the boundary
                 // segment
                 evalNeumannSegment_(residual,
-                                    neumannVars,
+                                    neumannCtx,
                                     scvIdx,
                                     boundaryFaceIdx,
                                     timeIdx);
@@ -391,27 +391,27 @@ protected:
      *        volume face to the local residual.
      */
     void evalNeumannSegment_(LocalBlockVector &residual,
-                             const NeumannContext &neumannVars,
+                             const NeumannContext &neumannCtx,
                              int scvIdx,
                              int boundaryFaceIdx,
                              int timeIdx) const
     {
         // temporary vector to store the neumann boundary fluxes
-        const BoundaryTypes &bcTypes = neumannVars.elemCtx().boundaryTypes(scvIdx, timeIdx);
+        const BoundaryTypes &bcTypes = neumannCtx.elemContext().boundaryTypes(scvIdx, timeIdx);
         RateVector values;
 
         // deal with neumann boundaries
         if (bcTypes.hasNeumann()) {
             Valgrind::SetUndefined(values);
-            neumannVars.problem().neumann(values,
-                                          neumannVars,
-                                          boundaryFaceIdx,
-                                          timeIdx);
+            neumannCtx.problem().neumann(values,
+                                         neumannCtx,
+                                         boundaryFaceIdx,
+                                         timeIdx);
             Valgrind::CheckDefined(values);
 
             values *=
-                neumannVars.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
-                * neumannVars.elemCtx().volVars(scvIdx, timeIdx).extrusionFactor();
+                neumannCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
+                * neumannCtx.elemContext().volVars(scvIdx, timeIdx).extrusionFactor();
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (bcTypes.isNeumann(eqIdx))

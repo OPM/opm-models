@@ -45,6 +45,8 @@ class BoxNeumannContext
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -63,7 +65,8 @@ public:
     explicit BoxNeumannContext(const ElementContext &elemCtx)
         : elemCtx_(elemCtx)
         , intersectionIt_(gridView().ibegin(element()))
-    { }
+    {
+    }
 
     /*!
      * \brief Return a reference to the problem.
@@ -92,7 +95,7 @@ public:
     /*!
      * \brief Returns a reference to the element variables.
      */
-    const ElementContext &elemCtx() const
+    const ElementContext &elemContext() const
     { return elemCtx_; }
 
     /*!
@@ -114,10 +117,20 @@ public:
     { return elemCtx_.fvElemGeom(timeIdx); };
 
     /*!
+     * \brief Returns the boundary types for a given vertex
+     */
+    const BoundaryTypes &boundaryTypes(int boundaryFaceIdx, int timeIdx) const
+    {
+        short insideScvIdx = scvIdx(boundaryFaceIdx, timeIdx);
+        return elemCtx_.boundaryTypes(insideScvIdx, timeIdx);
+    }
+
+    /*!
      * \brief Return the position of a local entities in global coordinates
      */
     const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
     { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
+
 
     /*!
      * \brief Return the local sub-control volume index of the interior of a neumann segment
@@ -134,6 +147,12 @@ public:
         short insideScvIdx = scvIdx(boundaryFaceIdx, timeIdx);
         return elemCtx_.volVars(insideScvIdx, timeIdx);
     }
+
+    /*!
+     * \brief Return the flux variables for a given boundary face.
+     */
+    const FluxVariables &fluxVars(int boundaryFaceIdx, int timeIdx) const
+    { return elemCtx_.boundaryFluxVars(boundaryFaceIdx, timeIdx); }
 
     /*!
      * \brief Return the intersection for the neumann segment

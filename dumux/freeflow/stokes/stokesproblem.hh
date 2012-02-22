@@ -60,12 +60,12 @@ class StokesProblem : public BoxProblem<TypeTag>
         dimWorld = Grid::dimensionworld
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     StokesProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView),
-          gravity_(0)
+        : ParentType(timeManager, gridView)
+        , gravity_(0)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
@@ -77,12 +77,20 @@ public:
     // \{
 
     /*!
+     * \brief Returns the temperature at a spatial and temporal
+     *        position within the domain.
+     */
+    template <class Context>
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
+    { return asImp_().temperature(); }
+
+    /*!
      * \brief Returns the temperature within the domain.
      *
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { return asImp_()->temperature(); };
+    { DUNE_THROW(Dune::NotImplemented, "Problem does not provide a temperature() method"); };
 
     /*!
      * \brief Returns the acceleration due to gravity.
@@ -90,34 +98,31 @@ public:
      * If the <tt>EnableGravity</tt> property is true, this means
      * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
      */
-    const GlobalPosition &gravity() const
-    { return gravity_; }
+    template <class Context>
+    const Vector &gravity(const Context &context, int spaceIdx, int timeIdx) const
+    { return asImp_().gravity(); }
 
     /*!
-     * \brief Evaluate the intrinsic permeability
-     *        at the corner of a given element
+     * \brief Returns the acceleration due to gravity.
      *
-     * \return (Scalar) permeability
+     * If the <tt>EnableGravity</tt> property is true, this means
+     * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
      */
-    Scalar permeability(const Element &element,
-                        const FVElementGeometry &fvElemGeom,
-                        const Intersection &is,
-                        int scvIdx,
-                        int boundaryFaceIdx) const
-    { DUNE_THROW(Dune::NotImplemented, "permeability()"); }
+    const Vector &gravity() const
+    { return gravity_; }
 
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation *asImp_()
-    { return static_cast<Implementation *>(this); }
+    Implementation &asImp_()
+    { return *static_cast<Implementation *>(this); }
 
     //! \copydoc asImp_()
-    const Implementation *asImp_() const
-    { return static_cast<const Implementation *>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation *>(this); }
 
-    GlobalPosition gravity_;
+    Vector gravity_;
 };
 
 }

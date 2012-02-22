@@ -56,9 +56,10 @@ class StokesFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar, dim> FieldVector;
@@ -66,27 +67,18 @@ class StokesFluxVariables
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
     typedef Dune::FieldMatrix<Scalar, dim, dim> VectorGradient;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename FVElementGeometry::SubControlVolumeFace SCVFace;
-
 public:
-    StokesFluxVariables(const Problem &problem,
-                        const Element &element,
-                        const FVElementGeometry &elemGeom,
-                        int faceIdx,
-                        const ElementVolumeVariables &elemVolVars,
-                        bool onBoundary = false)
-        : fvGeom_(elemGeom), onBoundary_(onBoundary), faceIdx_(faceIdx)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
-        calculateValues_(problem, element, elemVolVars);
-        determineUpwindDirection_(elemVolVars);
-    };
+        const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &scvf = 
+            isBoundaryFace?
+            fvGeom.boundaryFace[scvfIdx]:
+            fvGeom.subContVolFace[scvfIdx];
 
-protected:
-    void calculateValues_(const Problem &problem,
-                          const Element &element,
-                          const ElementVolumeVariables &elemVolVars)
-    {
+        onBoundary_ = isBoundaryFace;
+        normal_ = scvf.normal;
+
         // calculate gradients and secondary variables at IPs
         FieldVector tmp(0.0);
         densityAtIP_ = Scalar(0);
@@ -99,31 +91,36 @@ protected:
         velocityGradAtIP_ = Scalar(0);
         velocityDivAtIP_ = Scalar(0);
 
-        for (int idx = 0;
-             idx < fvGeom_.numVertices;
-             idx++) // loop over adjacent vertices
+        for (int idx = 0; idx < elemCtx.numScv(); idx++)
         {
+            const auto &volVars = elemCtx.volVars(idx, timeIdx);
+            const auto &fs = volVars.fluidState();
+
             // phase density and viscosity at IP
-            densityAtIP_ += elemVolVars[idx].density() *
-                face().shapeValue[idx];
-            molarDensityAtIP_ += elemVolVars[idx].molarDensity()*
-                face().shapeValue[idx];
-            viscosityAtIP_ += elemVolVars[idx].viscosity() *
-                face().shapeValue[idx];
-            pressureAtIP_ += elemVolVars[idx].pressure() *
-                face().shapeValue[idx];
+            densityAtIP_ += 
+                fs.density(phaseIdx)
+                * scvf.shapeValue[idx];
+            molarDensityAtIP_ += 
+                fs.molarDensity(phaseIdx)
+                * scvf.shapeValue[idx];
+            viscosityAtIP_ +=
+                fs.viscosity(phaseIdx) 
+                * scvf.shapeValue[idx];
+            pressureAtIP_ +=
+                fs.pressure(phaseIdx)
+                * scvf.shapeValue[idx];
 
             // velocity at the IP (fluxes)
-            VelocityVector velocityTimesShapeValue = elemVolVars[idx].velocity();
-            velocityTimesShapeValue *= face().shapeValue[idx];
+            VelocityVector velocityTimesShapeValue = volVars.velocity();
+            velocityTimesShapeValue *= scvf.shapeValue[idx];
             velocityAtIP_ += velocityTimesShapeValue;
 
             // the pressure gradient
-            tmp = face().grad[idx];
-            tmp *= elemVolVars[idx].pressure();
+            tmp = scvf.grad[idx];
+            tmp *= fs.pressure(phaseIdx);
             pressureGradAtIP_ += tmp;
             // take gravity into account
-            tmp = problem.gravity();
+            tmp = elemCtx.problem().gravity(elemCtx, idx, timeIdx);
             tmp *= densityAtIP_;
             // pressure gradient including influence of gravity
             pressureGradAtIP_ -= tmp;
@@ -131,18 +128,25 @@ protected:
             // the velocity gradients and divergence
             for (int dimIdx = 0; dimIdx<dim; ++dimIdx)
             {
-                tmp = face().grad[idx];
-                tmp *= elemVolVars[idx].velocity()[dimIdx];
+                tmp = scvf.grad[idx];
+                tmp *= volVars.velocity()[dimIdx];
                 velocityGradAtIP_[dimIdx] += tmp;
 
-                velocityDivAtIP_ += face().grad[idx][dimIdx]*elemVolVars[idx].velocity()[dimIdx];
+                velocityDivAtIP_ += scvf.grad[idx][dimIdx]*volVars.velocity()[dimIdx];
             }
         }
 
-        normalVelocityAtIP_ = velocityAtIP_ * face().normal;
+        normalVelocityAtIP_ = velocityAtIP_ * normal_;
+
+        // set the upstream and downstream vertices
+        upstreamIdx_ = scvf.i;
+        downstreamIdx_ = scvf.j;
+        if (normalVelocityAtIP_ < 0)
+            std::swap(upstreamIdx_, downstreamIdx_);
 
         Valgrind::CheckDefined(densityAtIP_);
         Valgrind::CheckDefined(viscosityAtIP_);
+        Valgrind::CheckDefined(normal_);
         Valgrind::CheckDefined(normalVelocityAtIP_);
         Valgrind::CheckDefined(velocityAtIP_);
         Valgrind::CheckDefined(pressureGradAtIP_);
@@ -150,40 +154,7 @@ protected:
         Valgrind::CheckDefined(velocityDivAtIP_);
     };
 
-    void determineUpwindDirection_(const ElementVolumeVariables &elemVolVars)
-    {
-
-        // set the upstream and downstream vertices
-        upstreamIdx_ = face().i;
-        downstreamIdx_ = face().j;
-
-        if (normalVelocityAtIP() < 0)
-            std::swap(upstreamIdx_, downstreamIdx_);
-    };
-
 public:
-    /*!
-     * \brief The face of the current sub-control volume. This may be either
-     *        an inner sub-control-volume face or a face on the boundary.
-     */
-    const SCVFace &face() const
-    {
-        if (onBoundary_)
-            return fvGeom_.boundaryFace[faceIdx_];
-        else
-            return fvGeom_.subContVolFace[faceIdx_];
-    }
-
-    /*!
-     * \brief Return the average volume of the upstream and the downstream sub-control volume;
-     *        this is required for the stabilization.
-     */
-    const Scalar averageSCVVolume() const
-    {
-        return 0.5*(fvGeom_.subContVol[upstreamIdx_].volume +
-                fvGeom_.subContVol[downstreamIdx_].volume);
-    }
-
     /*!
      * \brief Return the pressure \f$\mathrm{[Pa]}\f$ at the integration
      *        point.
@@ -262,10 +233,21 @@ public:
      */
     bool onBoundary() const
     { return onBoundary_; }
+    
+    /*!
+     * \brief Returns the extrusionFactor of the face.
+     */
+    Scalar extrusionFactor() const
+    { return 1.0; }
+
+    /*!
+     * \brief Returns normal vector of the face of the flux variables.
+     */
+    const FieldVector &normal() const
+    { return normal_; }
 
 protected:
-    const FVElementGeometry &fvGeom_;
-    const bool onBoundary_;
+    bool onBoundary_;
 
     // values at the integration point
     Scalar densityAtIP_;
@@ -275,6 +257,7 @@ protected:
     Scalar normalVelocityAtIP_;
     Scalar velocityDivAtIP_;
     VelocityVector velocityAtIP_;
+    FieldVector normal_;
 
     // gradients at the IPs
     ScalarGradient pressureGradAtIP_;
@@ -284,8 +267,6 @@ protected:
     int upstreamIdx_;
     // local index of the downwind vertex
     int downstreamIdx_;
-    // the index of the considered face
-    int faceIdx_;
 };
 
 } // end namepace

@@ -46,13 +46,15 @@ class StokesLocalJacobian : public BoxLocalJacobian<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     //! \copydoc BoxLocalJacobian::numericEpsilon()
-    Scalar numericEpsilon(int scvIdx,
+    Scalar numericEpsilon(ElementContext elemCtx,
+                          int scvIdx,
                           int pvIdx) const
     {
-        Scalar pv = this->curVolVars_[scvIdx].primaryVars()[pvIdx];
+        Scalar pv = elemCtx.primaryVars(scvIdx, /*timeIdx=*/0)[pvIdx];
         if (pvIdx < GridView::dimension){
             return 1e-7*(std::abs(pv) + 1);
         }

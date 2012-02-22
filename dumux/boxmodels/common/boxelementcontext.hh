@@ -158,9 +158,7 @@ public:
     void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
     {
         scvVars_[scvIdx].priVars[timeIdx] = priVars;
-        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this,
-                                                    scvIdx,
-                                                    timeIdx);
+        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this, scvIdx, timeIdx);
     }
 
     void updateAllScvfVars()
@@ -282,9 +280,7 @@ public:
      * \brief Returns the boundary types for a given vertex
      */
     const BoundaryTypes &boundaryTypes(int scvIdx, int timeIdx) const
-    {
-        return *boundaryTypes_[scvIdx];
-    }
+    { return *boundaryTypes_[scvIdx]; }
 
     /*!
      * \brief Save the current flux variables and use them as the
@@ -370,6 +366,19 @@ public:
     { return scvfVars_[scvIdx]; }
 
     /*!
+     * \brief Return the flux variables for a given boundary face.
+     */
+    const FluxVariables &boundaryFluxVars(int boundaryFaceIdx, int timeIdx) const
+    {
+        // HACK
+        boundaryFluxVars_.update(*this,
+                                 boundaryFaceIdx, 
+                                 timeIdx,
+                                 /*onBoundary=*/true);
+        return boundaryFluxVars_;
+    }
+
+    /*!
      * \brief Return a reference to the flux variables of a
      *        sub-control volume face for the evaluation point.
      *
@@ -416,6 +425,8 @@ protected:
     bool hasNeumann_;
     bool hasDirichlet_;
     std::vector<const BoundaryTypes*> boundaryTypes_;
+
+    mutable FluxVariables boundaryFluxVars_;
 };
 
 } // namespace Dumux

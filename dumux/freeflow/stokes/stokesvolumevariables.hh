@@ -69,6 +69,7 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef Dune::FieldVector<Scalar, dim> VelocityVector;
 
@@ -76,22 +77,13 @@ public:
     /*!
      * \copydoc BoxVolumeVariables::update()
      */
-    void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvIdx,
-                bool isOldSol)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(priVars,
-                           problem,
-                           element,
-                           elemGeom,
-                           scvIdx,
-                           isOldSol);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(priVars, problem, element, elemGeom, scvIdx, fluidState_, isOldSol);
+        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         for (int dimIdx=momentumXIdx; dimIdx<=lastMomentumIdx; ++dimIdx)
             velocity_[dimIdx] = priVars[dimIdx];
     }
@@ -100,18 +92,15 @@ public:
      * \copydoc BoxModel::completeFluidState()
      * \param isOldSol Specifies whether this is the previous solution or the current one
      */
-    static void completeFluidState(const PrimaryVariables& primaryVariables,
-                                   const Problem& problem,
-                                   const Element& element,
-                                   const FVElementGeometry& elementGeometry,
+    static void completeFluidState(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
                                    int scvIdx,
-                                   FluidState& fluidState,
-                                   bool isOldSol = false)
+                                   int timeIdx)
     {
-        Scalar temperature = Implementation::temperature_(primaryVariables, problem,
-                                                          element, elementGeometry, scvIdx);
-        fluidState.setTemperature(temperature);
-        fluidState.setPressure(phaseIdx, primaryVariables[pressureIdx]);
+        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
+
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        fluidState.setPressure(phaseIdx, priVars[pressureIdx]);
 
         // create NullParameterCache and do dummy update
         typename FluidSystem::ParameterCache paramCache;
@@ -138,42 +127,13 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-    FluidState &fluidState()
-    { return fluidState_; }
-
-    /*!
-     * \brief Returns the mass density \f$\mathrm{[kg/m^3]}\f$ of the fluid within the
-     *        sub-control volume.
-     */
-    Scalar density() const
-    { return fluidState_.density(phaseIdx); }
-
+    
     /*!
      * \brief Returns the molar density \f$\mathrm{[mol/m^3]}\f$ of the fluid within the
      *        sub-control volume.
      */
     Scalar molarDensity() const
     { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
-
-    /*!
-     * \brief Returns the fluid pressure \f$\mathrm{[Pa]}\f$ within
-     *        the sub-control volume.
-     */
-    Scalar pressure() const
-    { return fluidState_.pressure(phaseIdx); }
-
-    /*!
-     * \brief Returns temperature\f$\mathrm{[T]}\f$ inside the sub-control volume.
-     */
-    Scalar temperature() const
-    { return fluidState_.temperature(phaseIdx); }
-
-    /*!
-     * \brief Returns the viscosity \f$ \mathrm{[m^2/s]} \f$ of the fluid in
-     *        the sub-control volume.
-     */
-    Scalar viscosity() const
-    { return fluidState_.viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the velocity vector in the sub-control volume.
@@ -190,13 +150,12 @@ protected:
         return 0;
     }
 
-    static Scalar temperature_(const PrimaryVariables &primaryVars,
-                            const Problem& problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int scvIdx)
+    static void updateTemperature_(FluidState &fluidState, 
+                                   const ElementContext &elemCtx,
+                                   int scvIdx, int timeIdx)
     {
-        return problem.boxTemperature(element, elemGeom, scvIdx);
+        Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx);
+        fluidState.setTemperature(T);
     }
 
     VelocityVector velocity_;

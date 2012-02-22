@@ -72,12 +72,23 @@ SET_PROP(BoxStokes, NumEq) //!< set the number of equations
     static constexpr int value = 1 + dim;
 };
 
+//! the number of phases
+SET_INT_PROP(BoxStokes, NumPhases, 1);
+
+//! the number of components
+SET_INT_PROP(BoxStokes, NumComponents, 1);
+
 SET_SCALAR_PROP(BoxStokes, Scaling, 1); //!< set scaling to 1 by default
 
 //! Use the Stokes local residual function for the Stokes model
 SET_TYPE_PROP(BoxStokes,
               LocalResidual,
               StokesLocalResidual<TypeTag>);
+
+//! Use the Stokes local residual function for the Stokes model
+SET_TYPE_PROP(BoxStokes,
+              BaseProblem,
+              StokesProblem<TypeTag>);
 
 //! Use the Stokes specific newton controller for the Stokes model
 SET_PROP(BoxStokes, NewtonController)
@@ -87,6 +98,8 @@ SET_PROP(BoxStokes, NewtonController)
 
 #if HAVE_SUPERLU
 SET_TYPE_PROP(BoxStokes, LinearSolver, SuperLUBackend<TypeTag>);
+#else
+#warning "No SuperLU installed. SuperLU is the recomended linear solver for the Stokes models."
 #endif
 
 //! the Model property
@@ -119,6 +132,7 @@ public:
 };
 
 SET_TYPE_PROP(BoxStokes, StokesIndices, StokesCommonIndices<TypeTag>);
+SET_TYPE_PROP(BoxStokes, Indices, typename GET_PROP_TYPE(TypeTag, StokesIndices));
 
 //! Choose the type of the employed fluid state.
 SET_PROP(BoxStokes, FluidState)

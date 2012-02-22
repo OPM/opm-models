@@ -99,34 +99,33 @@ SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
  * <tt>./test_stokes -parameterFile ./test_stokes.input</tt>
  */
 template <class TypeTag>
-class StokesTestProblem : public StokesProblem<TypeTag>
+class StokesTestProblem 
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef StokesProblem<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
     typedef typename GET_PROP_TYPE(TypeTag, StokesIndices) Indices;
-    enum {
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
+    enum {
         // Number of equations and grid dimension
         dim = GridView::dimension,
 
         // copy some indices for convenience
         massBalanceIdx = Indices::massBalanceIdx,
-        momentumXIdx = Indices::momentumXIdx, //!< Index of the x-component of the momentum balance
+        momentumXIdx = Indices::momentumXIdx //!< Index of the x-component of the momentum balance
     };
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Intersection Intersection;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:
@@ -154,12 +153,12 @@ public:
      *
      * This problem assumes a constant temperature of 10 degrees Celsius.
      */
-    Scalar boxTemperature(const Element &element,
-                       const FVElementGeometry &fvElemGeom,
-                       int scvIdx) const
+    template <class Context>   
+    Scalar temperature(const Context &context,
+                       int spaceIdx, int timeIdx) const
     {
         return 273.15 + 10; // -> 10C
-    };
+    }
 
     // \}
 
@@ -176,9 +175,12 @@ public:
      * \param vertex The vertex on the boundary for which the
      *               conditions needs to be specified
      */
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, 
+                       const Context &context,
+                       int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
 
         values.setAllDirichlet();
 
@@ -205,11 +207,14 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values,
+                   const Context &context,
+                   int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
-
-        initial_(values, globalPos);
+        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
+        
+        initial(values, context, spaceIdx, timeIdx);
 
         const Scalar v0 = 1.0;
         // parabolic velocity profile
@@ -227,12 +232,10 @@ public:
      * A NEUMANN condition for the Stokes equation corresponds to:
      * \f[ -\mu \nabla {\bf v} \cdot {\bf n} + p \cdot {\bf n} = q_N \f]
      */
-    void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+    template <class Context>
+    void neumann(RateVector &values,
+                 const Context &context,
+                 int spaceIdx, int timeIdx) const
     {
         values = 0.0;
     }
@@ -251,10 +254,10 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void source(PrimaryVariables &values,
-                const Element &element,
-                const FVElementGeometry &,
-                int subControlVolumeIdx) const
+    template <class Context>
+    void source(RateVector &values,
+                const Context &context,
+                int spaceIdx, int timeIdx) const
     {
         // ATTENTION: The source term of the mass balance has to be chosen as
         // div (q_momentum) in the problem file
@@ -267,27 +270,16 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    template <class Context>
     void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
-    {
-        const GlobalPosition &globalPos = element.geometry().corner(scvIdx);
-
-        initial_(values, globalPos);
-    }
-    // \}
-
-private:
-    // internal method for the initial condition (reused for the
-    // dirichlet conditions!)
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos) const
+                 const Context &context,
+                 int spaceIdx, int timeIdx) const
     {
         values = 0.0;
         values[massBalanceIdx] = 1e5;
     }
 
+private:
     bool onLeftBoundary_(const GlobalPosition &globalPos) const
     { return globalPos[0] < this->bboxMin()[0] + eps_; }
 

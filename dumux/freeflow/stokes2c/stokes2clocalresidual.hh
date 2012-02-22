@@ -75,26 +75,28 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(EqVector &result,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int timeIdx) const
     {
         // compute the storage term for the transport equation
-        ParentType::computeStorage(result, scvIdx, usePrevSol);
+        ParentType::computeStorage(result, elemCtx, scvIdx, timeIdx);
 
         // if flag usePrevSol is set, the solution from the previous
         // time step is used, otherwise the current solution is
         // used. The secondary variables are used accordingly.  This
         // is required to compute the derivative of the storage term
         // using the implicit euler method.
-        const ElementVolumeVariables &elemDat = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &vertexDat = elemDat[scvIdx];
+        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // compute the storage of the component
         result[transportIdx] =
-            vertexDat.density() *
-            vertexDat.fluidState().massFraction(phaseIdx, lCompIdx);
+            volVars.fluidState().density() *
+            volVars.fluidState().massFraction(phaseIdx, lCompIdx);
 
-        Valgrind::CheckDefined(vertexDat.density());
-        Valgrind::CheckDefined(vertexDat.fluidState().massFraction(phaseIdx, lCompIdx));
+        Valgrind::CheckDefined(volVars.fluidState().density());
+        Valgrind::CheckDefined(volVars.fluidState().massFraction(phaseIdx, lCompIdx));
     }
 
     /*!
