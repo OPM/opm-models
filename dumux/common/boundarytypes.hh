@@ -26,6 +26,8 @@
 #ifndef BOUNDARY_TYPES_HH
 #define BOUNDARY_TYPES_HH
 
+
+
 #include <dumux/common/valgrind.hh>
 
 namespace Dumux
@@ -56,6 +58,9 @@ public:
 
             boundaryInfo_[i].isDirichlet = 0;
             boundaryInfo_[i].isNeumann = 0;
+            boundaryInfo_[i].isOutflow = 0;
+            boundaryInfo_[i].isCouplingInflow = 0;
+            boundaryInfo_[i].isCouplingOutflow = 0;
 
             eq2pvIdx_[i] = i;
             pv2eqIdx_[i] = i;
@@ -95,6 +100,9 @@ public:
             boundaryInfo_[eqIdx].visited = 1;
             boundaryInfo_[eqIdx].isDirichlet = 0;
             boundaryInfo_[eqIdx].isNeumann = 1;
+            boundaryInfo_[eqIdx].isOutflow = 0;
+            boundaryInfo_[eqIdx].isCouplingInflow = 0;
+            boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
             Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
@@ -109,9 +117,63 @@ public:
             boundaryInfo_[eqIdx].visited = 1;
             boundaryInfo_[eqIdx].isDirichlet = 1;
             boundaryInfo_[eqIdx].isNeumann = 0;
+            boundaryInfo_[eqIdx].isOutflow = 0;
+            boundaryInfo_[eqIdx].isCouplingInflow = 0;
+            boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
+
+            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        }
+    }
+
+    /*!
+     * \brief Set all boundary conditions to neuman.
+     */
+    void setAllOutflow()
+    {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            boundaryInfo_[eqIdx].visited = 1;
+            boundaryInfo_[eqIdx].isDirichlet = 0;
+            boundaryInfo_[eqIdx].isNeumann = 0;
+            boundaryInfo_[eqIdx].isOutflow = 1;
+            boundaryInfo_[eqIdx].isCouplingInflow = 0;
+            boundaryInfo_[eqIdx].isCouplingOutflow = 0;
+
+            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        }
+    }
+
+    /*!
+     * \brief Set all boundary conditions to coupling inflow.
+     */
+    void setAllCouplingInflow()
+    {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            boundaryInfo_[eqIdx].visited = 1;
+            boundaryInfo_[eqIdx].isDirichlet = 0;
+            boundaryInfo_[eqIdx].isNeumann = 0;
+            boundaryInfo_[eqIdx].isOutflow = 0;
+            boundaryInfo_[eqIdx].isCouplingInflow = 1;
+            boundaryInfo_[eqIdx].isCouplingOutflow = 0;
+
+            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        }
+    }
+
+    /*!
+     * \brief Set all boundary conditions to coupling outflow.
+     */
+    void setAllCouplingOutflow()
+    {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            boundaryInfo_[eqIdx].visited = 1;
+            boundaryInfo_[eqIdx].isDirichlet = 0;
+            boundaryInfo_[eqIdx].isNeumann = 0;
+            boundaryInfo_[eqIdx].isOutflow = 0;
+            boundaryInfo_[eqIdx].isCouplingInflow = 0;
+            boundaryInfo_[eqIdx].isCouplingOutflow = 1;
 
             Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
@@ -128,6 +190,9 @@ public:
         boundaryInfo_[eqIdx].visited = 1;
         boundaryInfo_[eqIdx].isDirichlet = 0;
         boundaryInfo_[eqIdx].isNeumann = 1;
+        boundaryInfo_[eqIdx].isOutflow = 0;
+        boundaryInfo_[eqIdx].isCouplingInflow = 0;
+        boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
         Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
@@ -146,10 +211,62 @@ public:
         boundaryInfo_[eqIdx].visited = 1;
         boundaryInfo_[eqIdx].isDirichlet = 1;
         boundaryInfo_[eqIdx].isNeumann = 0;
+        boundaryInfo_[eqIdx].isOutflow = 0;
+        boundaryInfo_[eqIdx].isCouplingInflow = 0;
+        boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
         // update the equation <-> primary variable mapping
         eq2pvIdx_[eqIdx] = pvIdx;
         pv2eqIdx_[pvIdx] = eqIdx;
+
+        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+    }
+
+    /*!
+     * \brief Set a neumann boundary condition for a single a single
+     *        equation.
+     *
+     * \param eqIdx The index of the equation on which the outflow
+     *              condition applies.
+     */
+    void setOutflow(int eqIdx)
+    {
+        boundaryInfo_[eqIdx].visited = 1;
+        boundaryInfo_[eqIdx].isDirichlet = 0;
+        boundaryInfo_[eqIdx].isNeumann = 0;
+        boundaryInfo_[eqIdx].isOutflow = 1;
+        boundaryInfo_[eqIdx].isCouplingInflow = 0;
+        boundaryInfo_[eqIdx].isCouplingOutflow = 0;
+
+        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+    }
+
+    /*!
+     * \brief Set a boundary condition for a single equation to coupling inflow.
+     */
+    void setCouplingInflow(int eqIdx)
+    {
+        boundaryInfo_[eqIdx].visited = 1;
+        boundaryInfo_[eqIdx].isDirichlet = 0;
+        boundaryInfo_[eqIdx].isNeumann = 0;
+        boundaryInfo_[eqIdx].isOutflow = 0;
+        boundaryInfo_[eqIdx].isCouplingInflow = 1;
+        boundaryInfo_[eqIdx].isCouplingOutflow = 0;
+
+        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+    }
+
+    /*!
+     * \brief Set a boundary condition for a single equation to coupling outflow.
+     */
+    void setCouplingOutflow(int eqIdx)
+    {
+        boundaryInfo_[eqIdx].visited = 1;
+        boundaryInfo_[eqIdx].isDirichlet = 0;
+        boundaryInfo_[eqIdx].isNeumann = 0;
+        boundaryInfo_[eqIdx].isOutflow = 0;
+        boundaryInfo_[eqIdx].isCouplingInflow = 0;
+        boundaryInfo_[eqIdx].isCouplingOutflow = 1;
 
         Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
@@ -213,6 +330,69 @@ public:
     };
 
     /*!
+     * \brief Returns true if an equation is used to specify an
+     *        outflow condition.
+     *
+     * \param eqIdx The index of the equation
+     */
+    bool isOutflow(unsigned eqIdx) const
+    { return boundaryInfo_[eqIdx].isOutflow; };
+
+    /*!
+     * \brief Returns true if some equation is used to specify an
+     *        outflow condition.
+     */
+    bool hasOutflow() const
+    {
+        for (int i = 0; i < numEq; ++i)
+            if (boundaryInfo_[i].isOutflow)
+                return true;
+        return false;
+    };
+
+    /*!
+     * \brief Returns true if an equation is used to specify an
+     *        inflow coupling condition.
+     *
+     * \param eqIdx The index of the equation
+     */
+    bool isCouplingInflow(unsigned eqIdx) const
+    { return boundaryInfo_[eqIdx].isCouplingInflow; };
+
+    /*!
+     * \brief Returns true if some equation is used to specify an
+     *        inflow coupling condition.
+     */
+    bool hasCouplingInflow() const
+    {
+        for (int i = 0; i < numEq; ++i)
+            if (boundaryInfo_[i].isCouplingInflow)
+                return true;
+        return false;
+    };
+
+    /*!
+     * \brief Returns true if an equation is used to specify an
+     *        outflow coupling condition.
+     *
+     * \param eqIdx The index of the equation
+     */
+    bool isCouplingOutflow(unsigned eqIdx) const
+    { return boundaryInfo_[eqIdx].isCouplingOutflow; };
+
+    /*!
+     * \brief Returns true if some equation is used to specify an
+     *        outflow coupling condition.
+     */
+    bool hasCouplingOutflow() const
+    {
+        for (int i = 0; i < numEq; ++i)
+            if (boundaryInfo_[i].isCouplingOutflow)
+                return true;
+        return false;
+    };
+
+    /*!
      * \brief Returns the index of the equation which should be used
      *        for the Dirichlet condition of the pvIdx's primary
      *        variable.
@@ -240,6 +420,9 @@ private:
         unsigned char visited : 1;
         unsigned char isDirichlet : 1;
         unsigned char isNeumann : 1;
+        unsigned char isOutflow : 1;
+        unsigned char isCouplingInflow : 1;
+        unsigned char isCouplingOutflow : 1;
     } boundaryInfo_[numEq];
 
     unsigned char eq2pvIdx_[numEq];

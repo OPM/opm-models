@@ -840,6 +840,43 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
         }
 
     } //end neumann boundary
+    if (bcType.isOutflow(satEqIdx))
+    {
+        //get mobilities
+        Scalar lambdaW = cellDataI.mobility(wPhaseIdx);
+        Scalar lambdaNW = cellDataI.mobility(nPhaseIdx);
+        if (compressibility_)
+        {
+            lambdaW /= cellDataI.density(wPhaseIdx);
+            lambdaNW /= cellDataI.density(nPhaseIdx);
+        }
+
+        if (velocityType_ == vt)
+        {
+            switch (saturationType_)
+            {
+            case Sw:
+            {
+                //vt*fw
+                factorTotal *= lambdaW / (lambdaW + lambdaNW);
+                this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], factorTotal, intersection);
+                break;
+            }
+            case Sn:
+            {
+                //vt*fn
+                factorTotal *= lambdaNW / (lambdaW + lambdaNW);
+                this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], factorTotal, intersection);
+                break;
+            }
+            }
+        }
+        else
+        {
+            this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], factorW, intersection, wPhaseIdx);
+            this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], factorNW, intersection, nPhaseIdx);
+        }
+    }
     switch (velocityType_)
     {
     case vt:
