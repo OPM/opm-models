@@ -25,23 +25,11 @@
  * \brief Test for the isothermal two-component Stokes box model.
  */
 #include "config.h"
-
-#if !HAVE_SUPERLU
-int main(int argc, char** argv)
-{
-#warning "No SuperLU installed. Stokes currently only works with SuperLU."
-    std::cout << "No SuperLU installed. Stokes currently only works with SuperLU." << std::endl;
-    return 1;
-}
-#else
-
 #include "stokes2ctestproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
     typedef TTAG(Stokes2cTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv, usage);
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }
-
-#endif

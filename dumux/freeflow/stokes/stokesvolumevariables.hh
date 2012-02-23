@@ -81,7 +81,7 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
+        Implementation::completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         for (int dimIdx=momentumXIdx; dimIdx<=lastMomentumIdx; ++dimIdx)
@@ -116,10 +116,7 @@ public:
                                                        phaseIdx));
 
         // compute and set the enthalpy
-        Scalar h = Implementation::enthalpy_(fluidState, paramCache, phaseIdx);
-        fluidState.setEnthalpy(phaseIdx, h);
-
-//        int globalVertIdx = problem.model().dofMapper().map(element, scvIdx, dim);
+        Implementation::updateEnthalpy_(fluidState, paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -143,12 +140,11 @@ public:
 
 protected:
     template<class ParameterCache>
-    static Scalar enthalpy_(const FluidState& fluidState,
-                            const ParameterCache& paramCache,
-                            int phaseIdx)
-    {
-        return 0;
-    }
+    static void updateEnthalpy_(FluidState& fluidState,
+                                const ParameterCache& paramCache,
+                                const ElementContext &elemCtx,
+                                int scvIdx, int timeIdx)
+    { }
 
     static void updateTemperature_(FluidState &fluidState, 
                                    const ElementContext &elemCtx,

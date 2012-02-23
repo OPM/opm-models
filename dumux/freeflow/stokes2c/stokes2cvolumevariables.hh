@@ -47,19 +47,17 @@ class Stokes2cVolumeVariables : public StokesVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
+    typedef typename GridView::template Codim<0>::Entity Element;
 
-    enum {
-        lCompIdx = Indices::lCompIdx,
-        gCompIdx = Indices::gCompIdx
-    };
+    enum { lCompIdx = Indices::lCompIdx };
+    enum { gCompIdx = Indices::gCompIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
     enum { transportIdx = Indices::transportIdx };
@@ -68,31 +66,17 @@ public:
     /*!
      * \copydoc BoxVolumeVariables::update()
      */
-    void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvIdx,
-                bool isOldSol)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        // set the mole fractions first
-        completeFluidState(priVars, problem, element, elemGeom, scvIdx, this->fluidState(), isOldSol);
-
-        // update vertex data for the mass and momentum balance
-        ParentType::update(priVars,
-                           problem,
-                           element,
-                           elemGeom,
-                           scvIdx,
-                           isOldSol);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
         // became part of the fluid state.
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(this->fluidState());
+        paramCache.updateAll(this->fluidState_);
 
-        diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(this->fluidState(),
+        diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(this->fluidState_,
                                                              paramCache,
                                                              phaseIdx,
                                                              lCompIdx,
@@ -105,16 +89,15 @@ public:
      * \copydoc BoxModel::completeFluidState()
      * \param isOldSol Specifies whether this is the previous solution or the current one
      */
-    static void completeFluidState(const PrimaryVariables& primaryVariables,
-                                   const Problem& problem,
-                                   const Element& element,
-                                   const FVElementGeometry& elementGeometry,
+    static void completeFluidState(FluidState &fluidState,
+                                   const ElementContext &elemCtx,
                                    int scvIdx,
-                                   FluidState& fluidState,
-                                   bool isOldSol = false)
+                                   int timeIdx)
     {
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+
         Scalar massFraction[numComponents];
-        massFraction[lCompIdx] = primaryVariables[transportIdx];
+        massFraction[lCompIdx] = priVars[transportIdx];
         massFraction[gCompIdx] = 1 - massFraction[lCompIdx];
 
         // calculate average molar mass of the gas phase
@@ -126,6 +109,8 @@ public:
         // convert mass to mole fractions and set the fluid state
         fluidState.setMoleFraction(phaseIdx, lCompIdx, massFraction[lCompIdx]*avgMolarMass/M1);
         fluidState.setMoleFraction(phaseIdx, gCompIdx, massFraction[gCompIdx]*avgMolarMass/M2);
+
+        ParentType::completeFluidState(fluidState, elemCtx, scvIdx, timeIdx);
     }
 
     /*!

@@ -50,18 +50,19 @@ class Stokes2cLocalResidual : public StokesLocalResidual<TypeTag>
     typedef StokesLocalResidual<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dim = GridView::dimension };
     enum { transportIdx = Indices::transportIdx }; //!< Index of the transport equation
     enum { lCompIdx = Indices::lCompIdx }; //!< Index of the liquid component
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex)}; //!< Index of the considered phase (only of interest when using two-phase fluidsystems)
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
     /*!
@@ -92,10 +93,10 @@ public:
 
         // compute the storage of the component
         result[transportIdx] =
-            volVars.fluidState().density() *
+            volVars.fluidState().density(phaseIdx) *
             volVars.fluidState().massFraction(phaseIdx, lCompIdx);
 
-        Valgrind::CheckDefined(volVars.fluidState().density());
+        Valgrind::CheckDefined(volVars.fluidState().density(phaseIdx));
         Valgrind::CheckDefined(volVars.fluidState().massFraction(phaseIdx, lCompIdx));
     }
 
@@ -109,25 +110,38 @@ public:
      * \param flux The advective flux over the sub-control-volume face for each component
      * \param fluxVars The flux variables at the current SCV/boundary face
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxVars) const
+    void computeAdvectiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int faceIdx,
+                              int timeIdx,
+                              bool onBoundary) const
     {
         // call computation of the advective fluxes of the stokes model
         // (momentum and mass fluxes)
-        ParentType::computeAdvectiveFlux(flux, fluxVars);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+
+        const auto &fluxVars = 
+            onBoundary
+            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
+            : elemCtx.fluxVars(faceIdx, timeIdx);
 
         // vertex data of the upstream and the downstream vertices
-        const VolumeVariables &up = this->curVolVars_(fluxVars.upstreamIdx());
-        const VolumeVariables &dn = this->curVolVars_(fluxVars.downstreamIdx());
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx(), timeIdx);
+
+        const auto &fsUp = up.fluidState();
+        const auto &fsDn = dn.fluidState();
 
         Scalar tmp = fluxVars.normalVelocityAtIP();
 
-        if (this->massUpwindWeight_ > 0.0)
-            tmp *=  this->massUpwindWeight_ *         // upwind data
-                up.density() * up.fluidState().massFraction(phaseIdx, lCompIdx);
-        if (this->massUpwindWeight_ < 1.0)
-            tmp += (1.0 - this->massUpwindWeight_) *     // rest
-                dn.density() * dn.fluidState().massFraction(phaseIdx, lCompIdx);
+        tmp *=  
+            this->massUpwindWeight_
+            * fsUp.density(phaseIdx)
+            * fsUp.massFraction(phaseIdx, lCompIdx)
+            +
+            (1.0 - this->massUpwindWeight_)
+            * fsDn.density(phaseIdx)
+            * fsDn.massFraction(phaseIdx, lCompIdx);
 
         flux[transportIdx] += tmp;
         Valgrind::CheckDefined(flux[transportIdx]);
@@ -140,17 +154,25 @@ public:
      * \param flux The diffusive flux over the SCV face or boundary face
      * \param fluxVars The flux variables at the current SCV/boundary face
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxVars) const
+    void computeDiffusiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int faceIdx,
+                              int timeIdx,
+                              bool onBoundary) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, fluxVars);
-
+        ParentType::computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+        
+        const auto &fluxVars = 
+            onBoundary
+            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
+            : elemCtx.fluxVars(faceIdx, timeIdx);
+        
         // diffusive component flux
         for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
             flux[transportIdx] -=
                 fluxVars.moleFractionGradAtIP()[dimIdx] *
-                fluxVars.face().normal[dimIdx] *
+                fluxVars.normal()[dimIdx] *
                 fluxVars.diffusionCoeffAtIP() *
                 fluxVars.molarDensityAtIP() *
                 FluidSystem::molarMass(lCompIdx);

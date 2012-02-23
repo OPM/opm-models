@@ -61,7 +61,7 @@ class Stokes2cFluxVariables : public StokesFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
 
@@ -72,73 +72,42 @@ class Stokes2cFluxVariables : public StokesFluxVariables<TypeTag>
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
 
-
 public:
-    Stokes2cFluxVariables(const Problem &problem,
-                          const Element &element,
-                          const FVElementGeometry &elemGeom,
-                          int faceIdx,
-                          const ElementVolumeVariables &elemVolVars,
-                          bool onBoundary = false)
-        : ParentType(problem, element, elemGeom, faceIdx, elemVolVars, onBoundary)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
-        calculateValues_(problem, element, elemVolVars);
-    }
+        ParentType::update(elemCtx, scvfIdx, timeIdx, isBoundaryFace);
 
-    /*!
-     * \brief Return the mass fraction at the integration point.
-     */
-    Scalar massFractionAtIP() const
-    { return massFractionAtIP_; }
-
-    /*!
-     * \brief Return the diffusion coefficient at the integration point.
-     */
-    Scalar diffusionCoeffAtIP() const
-    { return diffusionCoeffAtIP_; }
-
-    /*!
-     * \brief Return the gradient of the mass fraction at the integration point.
-     */
-    const ScalarGradient &massFractionGradAtIP() const
-    { return massFractionGradAtIP_; }
-
-    /*!
-     * \brief Return the gradient of the mole fraction at the integration point.
-     */
-    const ScalarGradient &moleFractionGradAtIP() const
-    { return moleFractionGradAtIP_; }
-
-
-protected:
-    void calculateValues_(const Problem &problem,
-                          const Element &element,
-                          const ElementVolumeVariables &elemVolVars)
-    {
         massFractionAtIP_ = Scalar(0);
         diffusionCoeffAtIP_ = Scalar(0);
         massFractionGradAtIP_ = Scalar(0);
         moleFractionGradAtIP_ = Scalar(0);
 
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
+
         // calculate gradients and secondary variables at IPs
         for (int idx = 0;
-             idx < this->fvGeom_.numVertices;
+             idx < elemCtx.numScv();
              idx++) // loop over vertices of the element
         {
-            massFractionAtIP_ += elemVolVars[idx].fluidState().massFraction(phaseIdx, lCompIdx) *
-                this->face().shapeValue[idx];
-            diffusionCoeffAtIP_ += elemVolVars[idx].diffusionCoeff() *
-                this->face().shapeValue[idx];
+            const auto &volVars = elemCtx.volVars(idx, timeIdx);
+
+            massFractionAtIP_ += 
+                volVars.fluidState().massFraction(phaseIdx, lCompIdx)
+                * scvf.shapeValue[idx];
+            diffusionCoeffAtIP_ += 
+                volVars.diffusionCoeff()
+                * scvf.shapeValue[idx];
 
             // the gradient of the mass fraction at the IP
             for (int dimIdx=0; dimIdx<dim; ++dimIdx)
             {
                 massFractionGradAtIP_ +=
-                    this->face().grad[idx][dimIdx]*
-                    elemVolVars[idx].fluidState().massFraction(phaseIdx, lCompIdx);
+                    scvf.grad[idx][dimIdx]*
+                    volVars.fluidState().massFraction(phaseIdx, lCompIdx);
                 moleFractionGradAtIP_ +=
-                    this->face().grad[idx][dimIdx] *
-                    elemVolVars[idx].fluidState().moleFraction(phaseIdx, lCompIdx);
+                    scvf.grad[idx][dimIdx] *
+                    volVars.fluidState().moleFraction(phaseIdx, lCompIdx);
             }
         };
 
@@ -147,6 +116,28 @@ protected:
         Valgrind::CheckDefined(massFractionGradAtIP_);
     }
 
+    /*!
+     * \brief Return the gradient of the mole fraction at the integration point.
+     */
+    const ScalarGradient &moleFractionGradAtIP() const
+    { return moleFractionGradAtIP_; }
+
+    /*!
+     * \brief Return the mass fraction at the integration point.
+     */
+    Scalar massFractionAtIP() const
+    { return massFractionAtIP_; }
+    
+    /*!
+     * \brief Return the diffusion coefficient at the integration point.
+     */
+    Scalar diffusionCoeffAtIP() const
+    { return diffusionCoeffAtIP_; }
+
+    const ScalarGradient &massFractionGradAtIP() const
+    { return massFractionGradAtIP_; }
+
+protected:
     Scalar massFractionAtIP_;
     Scalar diffusionCoeffAtIP_;
     ScalarGradient massFractionGradAtIP_;
