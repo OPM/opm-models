@@ -98,14 +98,19 @@ SET_BOOL_PROP(Stokes2cniTestProblem, EnableGravity, true);
  * <tt>./test_stokes2cni  -parameterFile ./test_stokes2cni.input</tt>
  */
 template <class TypeTag>
-class Stokes2cniTestProblem : public StokesProblem<TypeTag>
+class Stokes2cniTestProblem 
+    : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-    typedef StokesProblem<TypeTag> ParentType;
-
+    typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     enum { // Number of equations and grid dimension
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
@@ -119,11 +124,6 @@ class Stokes2cniTestProblem : public StokesProblem<TypeTag>
         transportIdx = Indices::transportIdx, //!< Index of the transport equation (massfraction)
         energyIdx =    Indices::energyIdx     //!< Index of the energy equation (temperature)
     };
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<dim>::Entity Vertex;
@@ -169,9 +169,12 @@ public:
      * \param vertex The vertex on the boundary for which the
      *               conditions needs to be specified
      */
-    void boundaryTypes(BoundaryTypes &values, const Vertex &vertex) const
+    template <class Context>
+    void boundaryTypes(BoundaryTypes &values, 
+                       const Context &context,
+                       int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
+        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
 
         values.setAllDirichlet();
 
@@ -197,11 +200,12 @@ public:
      *
      * For this method, the \a values parameter stores primary variables.
      */
-    void dirichlet(PrimaryVariables &values, const Vertex &vertex) const
+    template <class Context>
+    void dirichlet(PrimaryVariables &values,
+                   const Context &context,
+                   int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = vertex.geometry().center();
-
-        initial_(values, globalPos);
+        initial(values, context, spaceIdx, timeIdx);
     }
 
     /*!
@@ -211,12 +215,10 @@ public:
      * For this method, the \a values parameter stores the mass flux
      * in normal direction of each phase. Negative values mean influx.
      */
-    void neumann(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 const Intersection &is,
-                 int scvIdx,
-                 int boundaryFaceIdx) const
+    template <class Context>
+    void neumann(RateVector &values,
+                 const Context &context,
+                 int spaceIdx, int timeIdx) const
     {
         values = 0.0;
     }
@@ -236,10 +238,10 @@ public:
      * generated or annihilate per volume unit. Positive values mean
      * that mass is created, negative ones mean that it vanishes.
      */
-    void source(PrimaryVariables &values,
-                const Element &element,
-                const FVElementGeometry &,
-                int subControlVolumeIdx) const
+    template <class Context>
+    void source(RateVector &values,
+                const Context &context,
+                int spaceIdx, int timeIdx) const
     {
         // ATTENTION: The source term of the mass balance has to be chosen as
         // div (q_momentum) in the problem file
@@ -252,24 +254,13 @@ public:
      * For this method, the \a values parameter stores primary
      * variables.
      */
+    template <class Context>
     void initial(PrimaryVariables &values,
-                 const Element &element,
-                 const FVElementGeometry &fvElemGeom,
-                 int scvIdx) const
+                 const Context &context,
+                 int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos
-            = element.geometry().corner(scvIdx);
+        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        initial_(values, globalPos);
-    }
-   // \}
-
-private:
-    // internal method for the initial condition (reused for the
-    // dirichlet conditions!)
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos) const
-    {
         const Scalar v1 = 0.5;
         values[momentumXIdx] = 0.0;
         values[momentumYIdx] = v1*(globalPos[0] - this->bboxMin()[0])*(this->bboxMax()[0] - globalPos[0])
@@ -286,6 +277,7 @@ private:
             values[energyIdx] = 284.15;
         }
     }
+
     // \}
 
 private:

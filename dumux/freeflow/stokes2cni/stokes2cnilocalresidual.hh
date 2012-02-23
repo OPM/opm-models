@@ -55,16 +55,17 @@ class Stokes2cniLocalResidual : public Stokes2cLocalResidual<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
-
-    enum { dim = GridView::dimension };
-    enum { energyIdx = Indices::energyIdx }; //!< Index of the transport equation
-
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
+    enum { dim = GridView::dimension };
+    enum { energyIdx = Indices::energyIdx };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
 
 public:
     /*!
@@ -74,23 +75,19 @@ public:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(PrimaryVariables &result, int scvIdx, bool usePrevSol) const
+    void computeStorage(EqVector &result,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int timeIdx) const
     {
         // compute the storage term for the transport equation
-        ParentType::computeStorage(result, scvIdx, usePrevSol);
-
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const ElementVolumeVariables &elemDat = usePrevSol ? this->prevVolVars_() : this->curVolVars_();
-        const VolumeVariables &vertexDat = elemDat[scvIdx];
+        ParentType::computeStorage(result, elemCtx, scvIdx, timeIdx);
 
         // compute the storage of energy
+        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
         result[energyIdx] =
-            vertexDat.density() *
-            vertexDat.internalEnergy();
+            volVars.fluidState().density(phaseIdx) *
+            volVars.fluidState().internalEnergy(phaseIdx);
     }
 
     /*!
@@ -101,23 +98,38 @@ public:
      * \param flux The vector for the fluxes over the SCV/boundary face
      * \param fluxVars The flux variables at the current SCV/boundary face
      */
-    void computeAdvectiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxVars) const
+    void computeAdvectiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int faceIdx,
+                              int timeIdx,
+                              bool onBoundary) const
     {
         // call computation of the advective fluxes of the stokes model
         // (momentum and mass fluxes)
-        ParentType::computeAdvectiveFlux(flux, fluxVars);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+
+        const auto &fluxVars = 
+            onBoundary
+            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
+            : elemCtx.fluxVars(faceIdx, timeIdx);
 
         // vertex data of the upstream and the downstream vertices
-        const VolumeVariables &up = this->curVolVars_(fluxVars.upstreamIdx());
-        const VolumeVariables &dn = this->curVolVars_(fluxVars.downstreamIdx());
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx(), timeIdx);
 
+        const auto &fsUp = up.fluidState();
+        const auto &fsDn = dn.fluidState();
+        
         Scalar tmp = fluxVars.normalVelocityAtIP();
 
-        tmp *=  this->massUpwindWeight_ *         // upwind data
-            up.density() * up.enthalpy() +
-            (1.0 - this->massUpwindWeight_) *     // rest
-            dn.density() * dn.enthalpy();
+        tmp *=  
+            this->massUpwindWeight_
+            * fsUp.density(phaseIdx)
+            * fsUp.enthalpy(phaseIdx) 
+            +
+            (1.0 - this->massUpwindWeight_)
+            * fsDn.density(phaseIdx)
+            * fsDn.enthalpy(phaseIdx);
 
         flux[energyIdx] += tmp;
         Valgrind::CheckDefined(flux[energyIdx]);
@@ -130,17 +142,26 @@ public:
      * \param flux The vector for the fluxes over the SCV face
      * \param fluxVars The flux variables at the current SCV face
      */
-    void computeDiffusiveFlux(PrimaryVariables &flux,
-                              const FluxVariables &fluxVars) const
+    void computeDiffusiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int faceIdx,
+                              int timeIdx,
+                              bool onBoundary) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, fluxVars);
+        ParentType::computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+        
+        const auto &fluxVars = 
+            onBoundary
+            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
+            : elemCtx.fluxVars(faceIdx, timeIdx);
+        
 
         // diffusive heat flux
         for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
             flux[energyIdx] -=
                 fluxVars.temperatureGradAtIP()[dimIdx] *
-                fluxVars.face().normal[dimIdx] *
+                fluxVars.normal()[dimIdx] *
                 fluxVars.heatConductivityAtIP();
     }
 };

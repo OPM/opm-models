@@ -54,27 +54,46 @@ class Stokes2cniFluxVariables : public Stokes2cFluxVariables<TypeTag>
     typedef Stokes2cFluxVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     enum { dim = GridView::dimension };
-
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-
 public:
-    Stokes2cniFluxVariables(const Problem &problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int faceIdx,
-                            const ElementVolumeVariables &elemVolVars,
-                            bool onBoundary = false)
-        : ParentType(problem, element, elemGeom, faceIdx, elemVolVars, onBoundary)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
-        calculateValues_(problem, element, elemVolVars);
+        ParentType::update(elemCtx, scvfIdx, timeIdx, isBoundaryFace);
+
+        heatConductivityAtIP_ = Scalar(0);
+        temperatureGradAtIP_ = Scalar(0);
+
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
+
+        // calculate gradients and secondary variables at IPs
+        ScalarGradient tmp(0.0);
+        for (int idx = 0;
+             idx < elemCtx.numScv();
+             idx++) // loop over vertices of the element
+        {
+            const auto &volVars = elemCtx.volVars(idx, timeIdx);
+
+            heatConductivityAtIP_ += 
+                volVars.heatConductivity()
+                * scvf.shapeValue[idx];
+
+            // the gradient of the temperature at the IP
+            for (int dimIdx=0; dimIdx<dim; ++dimIdx)
+                temperatureGradAtIP_ +=
+                    scvf.grad[idx][dimIdx]
+                    * volVars.fluidState().temperature(phaseIdx);
+        }
+        Valgrind::CheckDefined(heatConductivityAtIP_);
+        Valgrind::CheckDefined(temperatureGradAtIP_);
     }
 
     /*!
@@ -90,32 +109,6 @@ public:
     { return temperatureGradAtIP_; }
 
 protected:
-    void calculateValues_(const Problem &problem,
-                          const Element &element,
-                          const ElementVolumeVariables &elemVolVars)
-    {
-        heatConductivityAtIP_ = Scalar(0);
-        temperatureGradAtIP_ = Scalar(0);
-
-        // calculate gradients and secondary variables at IPs
-        ScalarGradient tmp(0.0);
-        for (int idx = 0;
-             idx < this->fvGeom_.numVertices;
-             idx++) // loop over vertices of the element
-        {
-            heatConductivityAtIP_ += elemVolVars[idx].heatConductivity() *
-                this->face().shapeValue[idx];
-
-            // the gradient of the temperature at the IP
-            for (int dimIdx=0; dimIdx<dim; ++dimIdx)
-                temperatureGradAtIP_ +=
-                    this->face().grad[idx][dimIdx]*
-                    elemVolVars[idx].temperature();
-        }
-        Valgrind::CheckDefined(heatConductivityAtIP_);
-        Valgrind::CheckDefined(temperatureGradAtIP_);
-    }
-
     Scalar heatConductivityAtIP_;
     ScalarGradient temperatureGradAtIP_;
 };

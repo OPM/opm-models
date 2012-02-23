@@ -84,11 +84,6 @@ public:
         // compute the storage term for the transport equation
         ParentType::computeStorage(result, elemCtx, scvIdx, timeIdx);
 
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // compute the storage of the component

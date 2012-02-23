@@ -83,19 +83,16 @@ class Stokes2cniModel : public Stokes2cModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
     enum { dim = GridView::dimension };
     enum { lCompIdx = Indices::lCompIdx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementBoundaryTypes) ElementBoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
 public:
     //! \copydoc BoxModel::addOutputVtkFields
@@ -115,56 +112,42 @@ public:
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
         ScalarField &h = *writer.allocateManagedBuffer(numVertices);
-//        ScalarField &D = *writer.allocateManagedBuffer(numVertices);
         VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
 
-        unsigned numElements = this->gridView_().size(0);
-        ScalarField &rank = *writer.allocateManagedBuffer(numElements);
+        // iterate over grid
+        ElementContext elemCtx(this->problem_());
 
-        FVElementGeometry fvElemGeom;
-        VolumeVariables volVars;
-        ElementBoundaryTypes elemBcTypes;
-
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator endit = this->gridView_().template end<0>();
-        for (; elemIt != endit; ++elemIt)
+        ElementIterator elemIt = this->gridView().template begin<0>();
+        ElementIterator elemEndIt = this->gridView().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt)
         {
-            int idx = this->elementMapper().map(*elemIt);
-            rank[idx] = this->gridView_().comm().rank();
-
-            fvElemGeom.update(this->gridView_(), *elemIt);
-            elemBcTypes.update(this->problem_(), *elemIt, fvElemGeom);
+            elemCtx.updateAll(*elemIt);
 
             int numLocalVerts = elemIt->template count<dim>();
-            for (int vertexIdx = 0; vertexIdx < numLocalVerts; ++vertexIdx)
+            for (int i = 0; i < numLocalVerts; ++i)
             {
-                int globalIdx = this->vertexMapper().map(*elemIt, vertexIdx, dim);
-                volVars.update(sol[globalIdx],
-                               this->problem_(),
-                               *elemIt,
-                               fvElemGeom,
-                               vertexIdx,
-                               false);
-
-                pN  [globalIdx] = volVars.pressure();
-                delP[globalIdx] = volVars.pressure() - 1e5;
-                Xw  [globalIdx] = volVars.fluidState().massFraction(phaseIdx, lCompIdx);
-                T   [globalIdx] = volVars.temperature();
-                rho [globalIdx] = volVars.density();
-                mu  [globalIdx] = volVars.viscosity();
-                h   [globalIdx] = volVars.enthalpy();
-//                D   [globalIdx] = volVars.diffusionCoeff();
+                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
+                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0);
+                const auto &fs = volVars.fluidState();
+                
+                pN[globalIdx] = fs.pressure(phaseIdx);
+                delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
+                Xw[globalIdx] = fs.massFraction(phaseIdx, lCompIdx);
+                T[globalIdx] = fs.temperature(phaseIdx);
+                rho[globalIdx] = fs.density(phaseIdx);
+                mu[globalIdx] = fs.viscosity(phaseIdx);
+                h[globalIdx] = fs.enthalpy(phaseIdx);
                 velocity[globalIdx] = volVars.velocity();
             };
         }
-        writer.attachVertexData(pN, "pg");
+
+        writer.attachVertexData(pN, "P");
         writer.attachVertexData(delP, "delP");
-//        writer.attachVertexData(D, "Dwg");
         std::ostringstream outputNameX;
         outputNameX << "X^" << FluidSystem::componentName(lCompIdx);
         writer.attachVertexData(Xw, outputNameX.str());
-        writer.attachVertexData(T, "temperature");
-        writer.attachVertexData(rho, "rhoG");
+        writer.attachVertexData(T, "T");
+        writer.attachVertexData(rho, "rho");
         writer.attachVertexData(mu, "mu");
         writer.attachVertexData(h, "h");
         writer.attachVertexData(velocity, "v", dim);

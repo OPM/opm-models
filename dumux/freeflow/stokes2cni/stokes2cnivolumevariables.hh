@@ -48,56 +48,36 @@ class Stokes2cniVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
-    enum { energyIdx = Indices::energyIdx };
-
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
+    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
+    typedef typename GridView::template Codim<0>::Entity Element;
+
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { energyIdx = Indices::energyIdx };
+    enum { temperatureIdx = Indices::temperatureIdx };
 
 public:
     /*!
      * \copydoc BoxVolumeVariables::update()
      */
-    void update(const PrimaryVariables &priVars,
-                const Problem &problem,
-                const Element &element,
-                const FVElementGeometry &elemGeom,
-                int scvIdx,
-                bool isOldSol)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        // the internal energies and the enthalpies
-        heatConductivity_ = 0.0257;
+        ParentType::update(elemCtx, scvIdx, timeIdx);
+
+        // set the heat conductivity
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(this->fluidState_, phaseIdx);
+        heatConductivity_ = FluidSystem::thermalConductivity(this->fluidState_,
+                                                             paramCache,
+                                                             phaseIdx);
+        //heatConductivity_ = 0.0257;
         //TODO: value (Source: www.engineeringtoolbox.com/air-properties-d_156.html)
-
-        // vertex update data for the mass balance
-        ParentType::update(priVars,
-                           problem,
-                           element,
-                           elemGeom,
-                           scvIdx,
-                           isOldSol);
     };
-
-    /*!
-     * \brief Returns the total internal energy of the fluid phase in the
-     *        sub-control volume.
-     */
-    Scalar internalEnergy() const
-    { return this->fluidState_.internalEnergy(phaseIdx); };
-
-    /*!
-     * \brief Returns the total enthalpy of the fluid phase in the sub-control
-     *        volume.
-     */
-    Scalar enthalpy() const
-    { return this->fluidState_.enthalpy(phaseIdx); };
 
     /*!
      * \brief Returns the heat conductivity of the fluid phase in
@@ -112,21 +92,22 @@ protected:
     // is protected, we are friends with our parent...
     friend class StokesVolumeVariables<TypeTag>;
 
-    static Scalar temperature_(const PrimaryVariables &priVars,
-                            const Problem& problem,
-                            const Element &element,
-                            const FVElementGeometry &elemGeom,
-                            int scvIdx)
+    template<class ParameterCache>
+    static void updateEnthalpy_(FluidState& fluidState,
+                                const ParameterCache& paramCache,
+                                const ElementContext &elemCtx,
+                                int scvIdx, int timeIdx)
     {
-        return priVars[energyIdx];
+        Scalar h = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+        fluidState.setEnthalpy(phaseIdx, h);
     }
 
-    template<class ParameterCache>
-    static Scalar enthalpy_(const FluidState& fluidState,
-                            const ParameterCache& paramCache,
-                            int phaseIdx)
+    static void updateTemperature_(FluidState &fluidState, 
+                                   const ElementContext &elemCtx,
+                                   int scvIdx, int timeIdx)
     {
-        return FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+        Scalar T = elemCtx.primaryVars(scvIdx, timeIdx)[temperatureIdx];
+        fluidState.setTemperature(T);
     }
 
     Scalar heatConductivity_;
