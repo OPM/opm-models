@@ -1035,6 +1035,16 @@ const std::string getDiagnostic(std::string propTagName)
     return result;
 }
 
+void myReplaceAll_(std::string &s,
+                   const std::string &pattern,
+                   const std::string &replacement)
+{
+    int pos;
+    while ( (pos = s.find(pattern)) != s.npos) {
+        s.replace(pos, pattern.size(), replacement);
+    };
+}
+
 inline void print_(const std::string &typeTagName,
                    std::ostream &os,
                    const std::string indent,
@@ -1058,8 +1068,14 @@ inline void print_(const std::string &typeTagName,
         }
         os << indent << "  "
            << key.propertyKind() << " " << key.propertyName();
-        if (key.propertyKind() != "opaque")
-            os << " = '" << key.propertyValue() << "'";
+        if (key.propertyKind() != "opaque") {
+            std::string s(key.propertyValue());
+            myReplaceAll_(s, "typename ", "");
+            myReplaceAll_(s, "::Dumux::Properties::PTag::", "");
+            myReplaceAll_(s, "::Dumux::Properties::GetProperty<", "GET_PROP(");
+            myReplaceAll_(s, ">::p::", ")::");
+            os << " = '" << s << "'";
+        }
         os << " defined at " << key.fileDefined()
            << ":" << key.lineDefined()
            << "\n";
