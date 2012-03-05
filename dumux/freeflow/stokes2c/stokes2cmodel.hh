@@ -93,8 +93,8 @@ public:
     void addOutputVtkFields(const SolutionVector &sol,
                             MultiWriter &writer)
     {
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, dim> > VelocityField;
+        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VelocityField;
 
         const Scalar scale_ = GET_PROP_VALUE(TypeTag, Scaling);
 
@@ -105,7 +105,7 @@ public:
         ScalarField &Xw = *writer.allocateManagedBuffer(numVertices);
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity = *writer.template allocateManagedBuffer<Scalar, dim> (numVertices);
+        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
 
         unsigned numElements = this->gridView_().size(0);
         ScalarField &rank = *writer.allocateManagedBuffer(numElements);

@@ -63,6 +63,7 @@ class MPNCProblem : public BoxProblem<TypeTag>
     };
 
     typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld>      GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     MPNCProblem(TimeManager &timeManager, const GridView &gridView)
@@ -122,7 +123,7 @@ public:
      * This is the box discretization specific interface. By default
      * it just calls gravityAtPos().
      */
-    const GlobalPosition &boxGravity(const Element &element,
+    const Vector &boxGravity(const Element &element,
                                      const FVElementGeometry &fvGeom,
                                      int scvIdx) const
     { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
@@ -133,7 +134,7 @@ public:
      * This is discretization independent interface. By default it
      * just calls gravity().
      */
-    const GlobalPosition &gravityAtPos(const GlobalPosition &pos) const
+    const Vector &gravityAtPos(const GlobalPosition &pos) const
     { return asImp_().gravity(); }
 
     /*!
@@ -145,7 +146,7 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const GlobalPosition &gravity() const
+    const Vector &gravity() const
     { return gravity_; }
 
     /*!
@@ -171,7 +172,7 @@ protected:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    GlobalPosition gravity_;
+    Vector gravity_;
 
     // fluids and material properties
     SpatialParameters spatialParameters_;

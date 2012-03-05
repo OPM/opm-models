@@ -89,7 +89,7 @@ class WaterAirSpatialParameters : public BoxSpatialParameters<TypeTag>
     };
 
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
-    typedef Dune::FieldVector<CoordScalar,dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar,dimWorld> Vector;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementVolumeVariables) ElementVolumeVariables;

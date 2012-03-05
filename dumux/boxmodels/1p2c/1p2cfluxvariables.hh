@@ -343,8 +343,12 @@ protected:
             // use two-point gradients
             const GlobalPosition &posI = element.geometry().corner(face().i);
             const GlobalPosition &posJ = element.geometry().corner(face().j);
+
+            // tmp = pos_i - pos_j
             tmp = posI;
-            tmp -= posJ;
+            for (int i=0; i < Vector::dimension; ++i)
+                tmp[i] -= posJ[i];
+
             Scalar dist = tmp.two_norm();
 
             tmp = face().normal;

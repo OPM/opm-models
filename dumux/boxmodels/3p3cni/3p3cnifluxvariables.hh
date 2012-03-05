@@ -70,7 +70,7 @@ class ThreePThreeCNIFluxVariables : public ThreePThreeCFluxVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
-    typedef Dune::FieldVector<CoordScalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     /*
