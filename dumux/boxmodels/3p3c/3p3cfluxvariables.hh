@@ -336,10 +336,10 @@ private:
 
             Scalar tau_i =
                 1.0/(vDat_i.porosity() * vDat_i.porosity()) *
-                pow(vDat_i.porosity() * vDat_i.saturation(phaseIdx), 7.0/3);
+                std::pow(vDat_i.porosity() * vDat_i.saturation(phaseIdx), 7.0/3);
             Scalar tau_j =
                 1.0/(vDat_j.porosity() * vDat_j.porosity()) *
-                pow(vDat_j.porosity() * vDat_j.saturation(phaseIdx), 7.0/3);
+                std::pow(vDat_j.porosity() * vDat_j.saturation(phaseIdx), 7.0/3);
             // Diffusion coefficient in the porous medium
 
             // -> harmonic mean

@@ -237,7 +237,7 @@ public:
                 double fluxDiff = exactFlux + approximateFlux;
 
                 // update mean value error
-                erflm = std::max(erflm, fabs(fluxDiff));
+                erflm = std::max(erflm, std::abs(fluxDiff));
 
                 numeratorFlux += volume*fluxDiff*fluxDiff;
                 denominatorFlux += volume*exactFlux*exactFlux;
@@ -249,12 +249,12 @@ public:
 
                 //if (is.boundary()) {
                 if (!is->neighbor()) {
-                    if (fabs(faceGlobal[1]) < 1e-6) {
+                    if (std::abs(faceGlobal[1]) < 1e-6) {
                         fluy0 += approximateFlux;
                         exactfluy0 += exactFlux;
                         ener2 += -approximateFlux*approximateFace;
                     }
-                    else if (fabs(faceGlobal[1] - 1.0) < 1e-6) {
+                    else if (std::abs(faceGlobal[1] - 1.0) < 1e-6) {
                         fluy1 += approximateFlux;
                         exactfluy1 += exactFlux;
                         ener2 += -approximateFlux*approximateFace;
@@ -264,7 +264,7 @@ public:
                         exactflux0 += exactFlux;
                         ener2 += -approximateFlux*approximateFace;
                     }
-                    else if (fabs(faceGlobal[0] - 1.0) < 1e-6) {
+                    else if (std::abs(faceGlobal[0] - 1.0) < 1e-6) {
                         flux1 += approximateFlux;
                         exactflux1 += exactFlux;
                         ener2 += -approximateFlux*approximateFace;
@@ -311,15 +311,15 @@ public:
             denominatorGrad += volume*(exactGradient*exactGradient);
         }
 
-        relativeL2Error = sqrt(numerator/denominator);
-        ergrad = sqrt(numeratorGrad/denominatorGrad);
-        ervell2 = sqrt(numeratorFlux/denominatorFlux);
+        relativeL2Error = std::sqrt(numerator/denominator);
+        ergrad = std::sqrt(numeratorGrad/denominatorGrad);
+        ervell2 = std::sqrt(numeratorFlux/denominatorFlux);
         sumflux = flux0 + flux1 + fluy0 + fluy1 - sumf;
-        errflx0 = fabs((flux0 + exactflux0)/exactflux0);
-        errflx1 = fabs((flux1 + exactflux1)/exactflux1);
-        errfly0 = fabs((fluy0 + exactfluy0)/exactfluy0);
-        errfly1 = fabs((fluy1 + exactfluy1)/exactfluy1);
-        eren = fabs(ener1 - ener2)/std::max(ener1, ener2);
+        errflx0 = std::abs((flux0 + exactflux0)/exactflux0);
+        errflx1 = std::abs((flux1 + exactflux1)/exactflux1);
+        errfly0 = std::abs((fluy0 + exactfluy0)/exactfluy0);
+        errfly1 = std::abs((fluy1 + exactfluy1)/exactfluy1);
+        eren = std::abs(ener1 - ener2)/std::max(ener1, ener2);
 
         return;
     }
@@ -480,7 +480,7 @@ public:
                 double fluxDiff = exactFlux + approximateFlux;
 
                 // update mean value error
-                erflm = std::max(erflm, fabs(fluxDiff));
+                erflm = std::max(erflm, std::abs(fluxDiff));
 
                 numeratorFlux += volume*fluxDiff*fluxDiff;
                 denominatorFlux += volume*exactFlux*exactFlux;
@@ -491,11 +491,11 @@ public:
                 fluxVector[faceIdx] = approximateFlux;
 
                 if (!is->neighbor()) {
-                    if (fabs(faceGlobal[1]) < 1e-6) {
+                    if (std::abs(faceGlobal[1]) < 1e-6) {
                         fluy0 += approximateFlux;
                         exactfluy0 += exactFlux;
                     }
-                    else if (fabs(faceGlobal[1] - 1.0) < 1e-6) {
+                    else if (std::abs(faceGlobal[1] - 1.0) < 1e-6) {
                         fluy1 += approximateFlux;
                         exactfluy1 += exactFlux;
                     }
@@ -503,7 +503,7 @@ public:
                         flux0 += approximateFlux;
                         exactflux0 += exactFlux;
                     }
-                    else if (fabs(faceGlobal[0] - 1.0) < 1e-6) {
+                    else if (std::abs(faceGlobal[0] - 1.0) < 1e-6) {
                         flux1 += approximateFlux;
                         exactflux1 += exactFlux;
                     }
@@ -550,14 +550,14 @@ public:
             denominatorGrad += volume*(exactGradient*exactGradient);
         }
 
-        relativeL2Error = sqrt(numerator/denominator);
-        ergrad = sqrt(numeratorGrad/denominatorGrad);
-        ervell2 = sqrt(numeratorFlux/denominatorFlux);
+        relativeL2Error = std::sqrt(numerator/denominator);
+        ergrad = std::sqrt(numeratorGrad/denominatorGrad);
+        ervell2 = std::sqrt(numeratorFlux/denominatorFlux);
         sumflux = flux0 + flux1 + fluy0 + fluy1 - sumf;
-        errflx0 = fabs((flux0 + exactflux0)/exactflux0);
-        errflx1 = fabs((flux1 + exactflux1)/exactflux1);
-        errfly0 = fabs((fluy0 + exactfluy0)/exactfluy0);
-        errfly1 = fabs((fluy1 + exactfluy1)/exactfluy1);
+        errflx0 = std::abs((flux0 + exactflux0)/exactflux0);
+        errflx1 = std::abs((flux1 + exactflux1)/exactflux1);
+        errfly0 = std::abs((fluy0 + exactfluy0)/exactfluy0);
+        errfly1 = std::abs((fluy1 + exactfluy1)/exactfluy1);
 
         return;
     }
@@ -666,7 +666,7 @@ public:
                 //                }
 
                 // update mean value error
-                erflm = std::max(erflm, fabs(fluxDiff));
+                erflm = std::max(erflm, std::abs(fluxDiff));
 
                 maxFlux = std::max(maxFlux, std::abs(exactFlux));
 
@@ -674,7 +674,7 @@ public:
             }
         }
 
-        relativeL2Error = sqrt(numerator/denominator);
+        relativeL2Error = std::sqrt(numerator/denominator);
         sumflux -= sumf;
         erflm /= std::max(1e-6, maxFlux);
 

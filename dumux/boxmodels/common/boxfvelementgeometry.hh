@@ -341,7 +341,7 @@ class BoxFVElementGeometry
 
     Scalar quadrilateralArea(const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
     {
-        return 0.5*fabs((p3[0] - p1[0])*(p2[1] - p0[1]) - (p3[1] - p1[1])*(p2[0] - p0[0]));
+        return 0.5*std::abs((p3[0] - p1[0])*(p2[1] - p0[1]) - (p3[1] - p1[1])*(p2[0] - p0[0]));
     }
 
     void crossProduct(Vector& c, const Vector& a, const Vector& b)
@@ -389,7 +389,7 @@ class BoxFVElementGeometry
         for (int k = 0; k < dimWorld; ++k)
             a[k] -= p0[k];
 
-        return fabs(1.0/6.0*(n*a));
+        return std::abs(1.0/6.0*(n*a));
     }
 
     Scalar hexahedronVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3,

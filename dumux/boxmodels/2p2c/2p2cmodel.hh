@@ -426,7 +426,7 @@ public:
                       GlobalPosition localNormal(0);
                       jacobianT1.mv(globalNormal, localNormal);
                         // note only works for cubes
-                      const Scalar localArea = pow(2,-(dim-1));
+                      const Scalar localArea = std::pow(2,-(dim-1));
 
                       localNormal /= localNormal.two_norm();
 

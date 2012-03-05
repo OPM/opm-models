@@ -542,7 +542,7 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                                             fluidState.saturation(wPhaseIdx));
                         // TODO: get right criterion, do output for evaluation
                         //converge criterion
-                        if (abs(oldPc-pc)<10)
+                        if (std::abs(oldPc-pc)<10)
                             iter = maxiter;
 
                         pc = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(*eIt),
@@ -651,7 +651,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
     for(int compIdx = 0; compIdx< numComponents; compIdx++)
     {
         massIncrement[compIdx] = updateEstimate_[compIdx][globalIdx];
-        if(fabs(massIncrement[compIdx]) < 1e-8 * cellData.density(compIdx))
+        if(std::abs(massIncrement[compIdx]) < 1e-8 * cellData.density(compIdx))
             massIncrement[compIdx] = 1e-8* cellData.density(compIdx);   // as phaseIdx = compIdx
     }
     Scalar incp = 1e-2;
@@ -710,7 +710,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
         mass[comp] -= massIncrement[comp];
 
         //check routines if derivatives are meaningful
-        if (isnan(cellData.dv(comp)) || isinf(cellData.dv(comp)) )
+        if (std::isnan(cellData.dv(comp)) || std::isinf(cellData.dv(comp)) )
         {
             DUNE_THROW(Dune::MathError, "NAN/inf of dV_dm. If that happens in first timestep, try smaller firstDt!");
         }

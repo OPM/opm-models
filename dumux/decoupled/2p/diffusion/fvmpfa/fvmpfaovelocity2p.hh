@@ -573,19 +573,19 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                     // compute dF1, dF2, dF3, dF4 i.e., the area of quadrilateral made by normal vectors 'nu'
                     FieldVector Rnu21(0);
                     R.umv(nu21, Rnu21);
-                    Scalar dF1 = fabs(nu11 * Rnu21);
+                    Scalar dF1 = std::abs(nu11 * Rnu21);
 
                     FieldVector Rnu22(0);
                     R.umv(nu22, Rnu22);
-                    Scalar dF2 = fabs(nu12 * Rnu22);
+                    Scalar dF2 = std::abs(nu12 * Rnu22);
 
                     FieldVector Rnu23(0);
                     R.umv(nu23, Rnu23);
-                    Scalar dF3 = fabs(nu13 * Rnu23);
+                    Scalar dF3 = std::abs(nu13 * Rnu23);
 
                     FieldVector Rnu24(0);
                     R.umv(nu24, Rnu24);
-                    Scalar dF4 = fabs(nu14 * Rnu24);
+                    Scalar dF4 = std::abs(nu14 * Rnu24);
 
                     // compute components needed for flux calculation, denoted as 'g'
                     FieldVector K1nu11(0);
@@ -769,11 +769,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
-                            Scalar dF2 = fabs(nu12 * Rnu22);
+                            Scalar dF2 = std::abs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -895,11 +895,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
-                            Scalar dF2 = fabs(nu12 * Rnu22);
+                            Scalar dF2 = std::abs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1022,11 +1022,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
-                            Scalar dF2 = fabs(nu12 * Rnu22);
+                            Scalar dF2 = std::abs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1151,11 +1151,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu22(0);
                             R.umv(nu22, Rnu22);
-                            Scalar dF2 = fabs(nu12 * Rnu22);
+                            Scalar dF2 = std::abs(nu12 * Rnu22);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1294,7 +1294,7 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1406,11 +1406,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
-                            Scalar dF3 = fabs(nu13 * Rnu23);
+                            Scalar dF3 = std::abs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1547,11 +1547,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
-                            Scalar dF3 = fabs(nu13 * Rnu23);
+                            Scalar dF3 = std::abs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1728,7 +1728,7 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1780,7 +1780,7 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -1934,11 +1934,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
-                            Scalar dF3 = fabs(nu13 * Rnu23);
+                            Scalar dF3 = std::abs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -2012,11 +2012,11 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
                             // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
                             FieldVector Rnu21(0);
                             R.umv(nu21, Rnu21);
-                            Scalar dF1 = fabs(nu11 * Rnu21);
+                            Scalar dF1 = std::abs(nu11 * Rnu21);
 
                             FieldVector Rnu23(0);
                             R.umv(nu23, Rnu23);
-                            Scalar dF3 = fabs(nu13 * Rnu23);
+                            Scalar dF3 = std::abs(nu13 * Rnu23);
 
                             // compute components needed for flux calculation, denoted as 'g'
                             FieldVector K1nu11(0);
@@ -2093,15 +2093,15 @@ void FVMPFAOVelocity2P<TypeTag>::calculateVelocity()
         // check if local mass conservative
         if (dim == 2 && GET_PROP_VALUE(TypeTag, VelocityFormulation) == vt)
         {
-            Scalar diff = fabs(cellData1.fluxData().velocityTotal(0) * unitOuterNormal[0] * facevol[0]
+            Scalar diff = std::abs(cellData1.fluxData().velocityTotal(0) * unitOuterNormal[0] * facevol[0]
                     + cellData1.fluxData().velocityTotal(1) * unitOuterNormal[1] * facevol[1]
                     + cellData1.fluxData().velocityTotal(2) * unitOuterNormal[2] * facevol[2]
                     + cellData1.fluxData().velocityTotal(3) * unitOuterNormal[3] * facevol[3] - q1
-                    * volume1) / (fabs((cellData1.fluxData().velocityTotal(0) * unitOuterNormal[0])
-                    * facevol[0]) + fabs((cellData1.fluxData().velocityTotal(1) * unitOuterNormal[1])
-                    * facevol[1]) + fabs((cellData1.fluxData().velocityTotal(2) * unitOuterNormal[2])
-                    * facevol[2]) + fabs((cellData1.fluxData().velocityTotal(3) * unitOuterNormal[3])
-                    * facevol[3]) + fabs(q1 * volume1));
+                    * volume1) / (std::abs((cellData1.fluxData().velocityTotal(0) * unitOuterNormal[0])
+                    * facevol[0]) + std::abs((cellData1.fluxData().velocityTotal(1) * unitOuterNormal[1])
+                    * facevol[1]) + std::abs((cellData1.fluxData().velocityTotal(2) * unitOuterNormal[2])
+                    * facevol[2]) + std::abs((cellData1.fluxData().velocityTotal(3) * unitOuterNormal[3])
+                    * facevol[3]) + std::abs(q1 * volume1));
 
             // without source/sink
             if (diff > 1e-8)

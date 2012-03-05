@@ -263,7 +263,7 @@ public:
 
         // the heat conductivity of the matrix. in general this is a
         // tensorial value, but we assume isotropic heat conductivity.
-        Scalar heatCond = ldry + sqrt(Sw) * (lSw1-ldry) + sqrt(Sn) * (lSn1-ldry);
+        Scalar heatCond = ldry + std::sqrt(Sw) * (lSw1-ldry) + std::sqrt(Sn) * (lSn1-ldry);
 
         // the matrix heat flux is the negative temperature gradient
         // times the heat conductivity.

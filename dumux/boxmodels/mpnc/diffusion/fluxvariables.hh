@@ -133,10 +133,10 @@ public:
             // that's a bad idea, though)
             Scalar red_i =
                 vDat[i].fluidState().saturation(phaseIdx)/vDat[i].porosity() *
-                pow(vDat[i].porosity() * vDat[i].fluidState().saturation(phaseIdx), 7.0/3);
+                std::pow(vDat[i].porosity() * vDat[i].fluidState().saturation(phaseIdx), 7.0/3);
             Scalar red_j =
                 vDat[j].fluidState().saturation(phaseIdx)/vDat[j].porosity() *
-                pow(vDat[j].porosity() * vDat[j].fluidState().saturation(phaseIdx), 7.0/3);
+                std::pow(vDat[j].porosity() * vDat[j].fluidState().saturation(phaseIdx), 7.0/3);
 
             if (phaseIdx == FluidSystem::lPhaseIdx) {
                 // Liquid phase diffusion coefficients in the porous medium

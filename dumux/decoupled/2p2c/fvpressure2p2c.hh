@@ -271,7 +271,7 @@ void FVPressure2P2C<TypeTag>::getStorage(Dune::FieldVector<Scalar, 2>& storageEn
         // the pressure Index used as a Primary Variable
         storageEntry[rhs] -= cellDataI.pressure(pressureType) * compress_term * volume;
 
-        if (isnan(compress_term) || isinf(compress_term))
+        if (std::isnan(compress_term) || std::isinf(compress_term))
             DUNE_THROW(Dune::MathError, "Compressibility term leads to NAN matrix entry at index " << globalIdxI);
 
         if(!GET_PROP_VALUE(TypeTag, EnableCompressibility))
@@ -291,7 +291,7 @@ void FVPressure2P2C<TypeTag>::getStorage(Dune::FieldVector<Scalar, 2>& storageEn
     // if damping is not done, the solution method gets unstable!
     problem().variables().cellData(globalIdxI).volumeError() /= timestep_;
     Scalar maxError = maxError_;
-    Scalar erri = fabs(cellDataI.volumeError());
+    Scalar erri = std::abs(cellDataI.volumeError());
     Scalar x_lo = ErrorTermLowerBound_;
     Scalar x_mi = ErrorTermUpperBound_;
     Scalar fac  = ErrorTermFactor_;
@@ -419,7 +419,7 @@ void FVPressure2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& entries,
         Scalar lambda = (cellDataI.mobility(wPhaseIdx) + cellDataJ.mobility(wPhaseIdx)) * 0.5
                 + (cellDataI.mobility(nPhaseIdx) + cellDataJ.mobility(nPhaseIdx)) * 0.5;
 
-        entries[0] = fabs(lambda*faceArea*(permeability*unitOuterNormal)/(dist));
+        entries[0] = std::abs(lambda*faceArea*(permeability*unitOuterNormal)/(dist));
 
         Scalar factor = (fractionalWI + fractionalWJ) * (rhoMeanW) * 0.5
                     + (fractionalNWI + fractionalNWJ) * (rhoMeanNW) * 0.5;
@@ -513,7 +513,7 @@ void FVPressure2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& entries,
         entries[0] = faceArea * (lambdaW * dV_w + lambdaN * dV_n);
         if(enableVolumeIntegral)
             entries[0] -= volume * faceArea / perimeter * (lambdaW * gV_w + lambdaN * gV_n);     // = boundary integral - area integral
-        entries[0] *= fabs((permeability*unitOuterNormal)/(dist));
+        entries[0] *= std::abs((permeability*unitOuterNormal)/(dist));
 
         //calculate right hand side
         entries[rhs] = faceArea  * (unitOuterNormal * unitDistVec) * (densityW * lambdaW * dV_w + densityNW * lambdaN * dV_n);
@@ -828,7 +828,7 @@ void FVPressure2P2C<TypeTag>::updateMaterialLaws()
 
         this->updateMaterialLawsInElement(*eIt);
 
-        maxError = std::max(maxError, fabs(cellData.volumeError()));
+        maxError = std::max(maxError, std::abs(cellData.volumeError()));
     }
     maxError_ = maxError/problem().timeManager().timeStepSize();
     return;
@@ -953,12 +953,12 @@ void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& element
                                 fluidState.saturation(wPhaseIdx));
             // TODO: get right criterion, do output for evaluation
             //converge criterion
-            if (fabs(oldPc-pc)<10)
+            if (std::abs(oldPc-pc)<10)
                 maxiter = 1;
             iterout = iter;
         }
         if(iterout !=0)
-        Dune::dinfo << iterout << "times iteration of pc was applied at Idx " << globalIdx << ", pc delta still " << fabs(oldPc-pc) << std::endl;
+        Dune::dinfo << iterout << "times iteration of pc was applied at Idx " << globalIdx << ", pc delta still " << std::abs(oldPc-pc) << std::endl;
     }
     // initialize phase properties not stored in fluidstate
     cellData.setViscosity(wPhaseIdx, FluidSystem::viscosity(fluidState, wPhaseIdx));

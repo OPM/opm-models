@@ -315,17 +315,17 @@ public:
 
     Scalar exact (const GlobalPosition& globalPos) const
     {
-        Scalar pi = 4.0*atan(1.0);
+        Scalar pi = 4.0*std::atan(1.0);
 
-        return (sin(pi*globalPos[0])*sin(pi*globalPos[1]));
+        return (std::sin(pi*globalPos[0])*std::sin(pi*globalPos[1]));
     }
 
     Dune::FieldVector<Scalar,dim> exactGrad (const GlobalPosition& globalPos) const
         {
         Dune::FieldVector<Scalar,dim> grad(0);
-        Scalar pi = 4.0*atan(1.0);
-        grad[0] = pi*cos(pi*globalPos[0])*sin(pi*globalPos[1]);
-        grad[1] = pi*cos(pi*globalPos[1])*sin(pi*globalPos[0]);
+        Scalar pi = 4.0*std::atan(1.0);
+        grad[0] = pi*std::cos(pi*globalPos[0])*std::sin(pi*globalPos[1]);
+        grad[1] = pi*std::cos(pi*globalPos[1])*std::sin(pi*globalPos[0]);
 
         return grad;
         }
@@ -357,14 +357,14 @@ private:
         Scalar temp = temperatureAtPos(globalPos);
         Scalar referencePress = referencePressureAtPos(globalPos);
 
-        Scalar pi = 4.0 * atan(1.0);
+        Scalar pi = 4.0 * std::atan(1.0);
         Scalar x = globalPos[0];
         Scalar y = globalPos[1];
 
-        Scalar dpdx = pi * cos(pi * x) * sin(pi * y);
-        Scalar dpdy = pi * sin(pi * x) * cos(pi * y);
-        Scalar dppdxx = -pi * pi * sin(pi * x) * sin(pi * y);
-        Scalar dppdxy = pi * pi * cos(pi * x) * cos(pi * y);
+        Scalar dpdx = pi * std::cos(pi * x) * std::sin(pi * y);
+        Scalar dpdy = pi * std::sin(pi * x) * std::cos(pi * y);
+        Scalar dppdxx = -pi * pi * std::sin(pi * x) * std::sin(pi * y);
+        Scalar dppdxy = pi * pi * std::cos(pi * x) * std::cos(pi * y);
         Scalar dppdyx = dppdxy;
         Scalar dppdyy = dppdxx;
         Scalar kxx = (delta_* x*x + y*y)/(x*x + y*y);

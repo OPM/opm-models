@@ -176,8 +176,8 @@ public:
          if (Sl < 0.1) {
              // regularization
              Dumux::Spline<Scalar> sp(0, 0.1, // x1, x2
-                                      0, sqrt(0.1), // y1, y2
-                                      5*0.5/sqrt(0.1), 0.5/sqrt(0.1)); // m1, m2
+                                      0, std::sqrt(0.1), // y1, y2
+                                      5*0.5/std::sqrt(0.1), 0.5/std::sqrt(0.1)); // m1, m2
              result = lambdaDry + sp.eval(Sl)*(lambdaWet - lambdaDry);
          }
          else

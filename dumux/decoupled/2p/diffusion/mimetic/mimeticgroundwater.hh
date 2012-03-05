@@ -245,7 +245,7 @@ public:
         Scalar norm = R[0][0]*R[0][0];
         for (int i = 1; i < numFaces; i++)
             norm += R[i][0]*R[i][0];
-        norm = sqrt(norm);
+        norm = std::sqrt(norm);
         for (int i = 0; i < numFaces; i++)
             R[i][0] /= norm;
         Scalar weight = R[0][1]*R[0][0];
@@ -256,7 +256,7 @@ public:
         norm = R[0][1]*R[0][1];
         for (int i = 1; i < numFaces; i++)
             norm += R[i][1]*R[i][1];
-        norm = sqrt(norm);
+        norm = std::sqrt(norm);
         for (int i = 0; i < numFaces; i++)
             R[i][1] /= norm;
         if (dim == 3)
@@ -273,7 +273,7 @@ public:
             norm = R[0][2]*R[0][2];
             for (int i = 1; i < numFaces; i++)
                 norm += R[i][2]*R[i][2];
-            norm = sqrt(norm);
+            norm = std::sqrt(norm);
             for (int i = 0; i < numFaces; i++)
                 R[i][2] /= norm;
         }

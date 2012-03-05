@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010 by Markus Wolff                                 *
+ *   Copyright (C) 2010 by Markus Wolff                                      *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -126,7 +126,7 @@ private:
     void addFlux(Scalar& lambdaW, Scalar& lambdaNW, Scalar& viscosityW, Scalar& viscosityNW, Scalar flux, int phaseIdx = -1)
     {
         Scalar krSum = lambdaW * viscosityW + lambdaNW * viscosityNW;
-        Scalar viscosityRatio = 1 - fabs(0.5 - viscosityNW / (viscosityW + viscosityNW));//1 - fabs(viscosityWI-viscosityNWI)/(viscosityWI+viscosityNWI);
+        Scalar viscosityRatio = 1 - std::abs(0.5 - viscosityNW / (viscosityW + viscosityNW));//1 - std::abs(viscosityWI-viscosityNWI)/(viscosityWI+viscosityNWI);
 
         switch (phaseIdx)
          {

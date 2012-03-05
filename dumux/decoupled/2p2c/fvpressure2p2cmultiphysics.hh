@@ -359,7 +359,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
         storageEntry[0] -= compress_term*volume;
         storageEntry[1] -= cellDataI.pressure(pressureType) * compress_term * volume;
 
-        if (isnan(compress_term) || isinf(compress_term))
+        if (std::isnan(compress_term) || std::isinf(compress_term))
             DUNE_THROW(Dune::MathError, "Compressibility term leads to NAN matrix entry at index " << globalIdxI);
 
         if(!GET_PROP_VALUE(TypeTag, EnableCompressibility))
@@ -371,7 +371,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
     // if damping is not done, the solution method gets unstable!
     problem().variables().cellData(globalIdxI).volumeError() /= timestep_;
     Scalar maxError = this->maxError_;
-    Scalar erri = fabs(cellDataI.volumeError());
+    Scalar erri = std::abs(cellDataI.volumeError());
     Scalar x_lo = this->ErrorTermLowerBound_;
     Scalar x_mi = this->ErrorTermUpperBound_;
     Scalar fac  = this->ErrorTermFactor_;
@@ -746,7 +746,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
 
 
         }
-        maxError = std::max(maxError, fabs(cellData.volumeError()));
+        maxError = std::max(maxError, std::abs(cellData.volumeError()));
     }// end grid traversal
     this->maxError_ = maxError/problem().timeManager().timeStepSize();
     // update subdomain information

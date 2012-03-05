@@ -808,7 +808,7 @@ void FVTransport2P2C<TypeTag>::evalBoundary(GlobalPosition globalPosFace,
                         BCfluidState.saturation(wPhaseIdx));
                 // TODO: get right criterion, do output for evaluation
                 //converge criterion
-                if (abs(oldPc-pcBound)<10)
+                if (std::abs(oldPc-pcBound)<10)
                     iter = maxiter;
             }
         }
