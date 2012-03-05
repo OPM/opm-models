@@ -235,13 +235,7 @@ protected:
 
             // TODO: dilatation term has to be accounted for in outflow, coupling, neumann
             //            velGradComp[velIdx] += 2./3*fluxVars.velocityDivAtIP;
-
-            if (massUpwindWeight_ == 1.0) // fully upwind
-                velGradComp *= up.fluidState().viscosity(phaseIdx);
-            else
-                velGradComp *=
-                    massUpwindWeight_ * fsUp.viscosity(phaseIdx) +
-                    (1.0 - massUpwindWeight_) * fsDn.viscosity(phaseIdx);
+            velGradComp *= fluxVars.viscosityAtIP()
 
             flux[momentumXIdx + velIdx] -=
                 velGradComp*fluxVars.normal();
