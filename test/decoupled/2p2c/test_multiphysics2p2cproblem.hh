@@ -43,7 +43,7 @@
 // fluid properties
 //#include <dumux/material/fluidsystems/brine_co2_system.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+//#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 
 #include "test_dec2p2c_spatialparams.hh"
 
@@ -89,25 +89,14 @@ SET_INT_PROP(TestMultTwoPTwoCProblem, PressureFormulation,
 
 
 //// Select fluid system
-//SET_PROP(TestMultTwoPTwoCProblem, FluidSystem)
-//{
-//    typedef Dumux::Brine_CO2_System<TypeTag, Dumux::Benchmark3::CO2Tables> type;
-//};
-// Select fluid system
-SET_PROP(TestMultTwoPTwoCProblem, FluidSystem)
-{
-    typedef Dumux::H2ON2FluidSystem<TypeTag> type;
-};
-// Select fluid system
-SET_BOOL_PROP(TestMultTwoPTwoCProblem, EnableComplicatedFluidSystem, true);
+SET_PROP(TestMultTwoPTwoCProblem, 
+         FluidSystem)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-//// Select water formulation
-//SET_PROP(TestMultTwoPTwoCProblem, Components) : public GET_PROP(TypeTag, DefaultComponents)
-//{
-//    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-////    typedef Dumux::TabulatedComponent<Scalar, typename Dumux::H2O<Scalar> > H20;
-//        typedef Dumux::H2O<Scalar> H2O;
-//};
+public:
+    typedef Dumux::FluidSystems::H2ON2<Scalar, /*complex=*/true> type;
+};
 
 // Enable gravity
 SET_BOOL_PROP(TestMultTwoPTwoCProblem, EnableGravity, true);

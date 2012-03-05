@@ -410,10 +410,13 @@ public:
             fluidState.setTemperature(problem_.temperature(element));
             fluidState.setSaturation(wPhaseIdx, 1.);
             fluidState.setSaturation(nPhaseIdx, 0.);
-            density_[wPhaseIdx] = FluidSystem::density(fluidState, wPhaseIdx);
-            density_[nPhaseIdx] = FluidSystem::density(fluidState, nPhaseIdx);
-            viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, wPhaseIdx);
-            viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, nPhaseIdx);
+
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(fluidState);
+            density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+            density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
+            viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+            viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
         }
     }
 
@@ -820,10 +823,12 @@ const Intersection& intersection, const CellData& cellData, const bool first)
             fluidState.setPressure(wPhaseIdx, pressW);
             fluidState.setPressure(nPhaseIdx, pressNW);
 
-            densityWBound = FluidSystem::density(fluidState, wPhaseIdx);
-            densityNWBound = FluidSystem::density(fluidState, nPhaseIdx);
-            viscosityWBound = FluidSystem::viscosity(fluidState, wPhaseIdx) / densityWBound;
-            viscosityNWBound = FluidSystem::viscosity(fluidState, nPhaseIdx) / densityNWBound;
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(fluidState);
+            densityWBound = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+            densityNWBound = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
+            viscosityWBound = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx) / densityWBound;
+            viscosityNWBound = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx) / densityNWBound;
 
             rhoMeanW = 0.5 * (cellData.density(wPhaseIdx) + densityWBound);
             rhoMeanNW = 0.5 * (cellData.density(nPhaseIdx) + densityNWBound);
@@ -1010,11 +1015,13 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
             fluidState.setPressure(wPhaseIdx, pressW);
             fluidState.setPressure(nPhaseIdx, pressNW);
 
-            density_[wPhaseIdx] = FluidSystem::density(fluidState, wPhaseIdx);
-            density_[nPhaseIdx] = FluidSystem::density(fluidState, nPhaseIdx);
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(fluidState);
+            density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+            density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
 
-            viscosity_[wPhaseIdx]= FluidSystem::viscosity(fluidState, wPhaseIdx);
-            viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, nPhaseIdx);
+            viscosity_[wPhaseIdx]= FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+            viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
 
             //store density
             fluidState.setDensity(wPhaseIdx, density_[wPhaseIdx]);

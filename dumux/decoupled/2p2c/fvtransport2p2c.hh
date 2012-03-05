@@ -575,8 +575,10 @@ void FVTransport2P2C<TypeTag>::getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& f
         // determine fluid properties at the boundary
         Scalar densityWBound = BCfluidState.density(wPhaseIdx);
         Scalar densityNWBound = BCfluidState.density(nPhaseIdx);
-        Scalar viscosityWBound = FluidSystem::viscosity(BCfluidState, wPhaseIdx);
-        Scalar viscosityNWBound = FluidSystem::viscosity(BCfluidState, nPhaseIdx);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(BCfluidState);
+        Scalar viscosityWBound = FluidSystem::viscosity(BCfluidState, paramCache, wPhaseIdx);
+        Scalar viscosityNWBound = FluidSystem::viscosity(BCfluidState, paramCache, nPhaseIdx);
         if(GET_PROP_VALUE(TypeTag, EnableCapillarity))
             pcBound = BCfluidState.capillaryPressure();
         // average

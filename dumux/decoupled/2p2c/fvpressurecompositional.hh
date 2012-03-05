@@ -564,8 +564,10 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
         problem_.transportModel().totalConcentration(nCompIdx,globalIdx) = fluidState.massConcentration(nCompIdx);
 
         // initialize phase properties not stored in fluidstate
-        cellData.setViscosity(wPhaseIdx, FluidSystem::viscosity(fluidState, wPhaseIdx));
-        cellData.setViscosity(nPhaseIdx, FluidSystem::viscosity(fluidState, nPhaseIdx));
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState);
+        cellData.setViscosity(wPhaseIdx, FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx));
+        cellData.setViscosity(nPhaseIdx, FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx));
 
         // initialize mobilities
         cellData.setMobility(wPhaseIdx, MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*eIt), fluidState.saturation(wPhaseIdx))

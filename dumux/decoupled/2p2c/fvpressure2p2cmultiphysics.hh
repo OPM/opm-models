@@ -333,7 +333,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
         pseudoFluidState.update(Z1, p_, cellDataI.subdomain(),
                 problem().temperatureAtPos(elementI.geometry().center()));
 
-        Scalar v_ = 1. / FluidSystem::density(pseudoFluidState, presentPhaseIdx);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(pseudoFluidState, presentPhaseIdx);
+        Scalar v_ = 1. / FluidSystem::density(pseudoFluidState, paramCache, presentPhaseIdx);
         cellDataI.dv_dp() = (sumC * ( v_ - (1. /cellDataI.density(presentPhaseIdx)))) /incp;
 
         if (cellDataI.dv_dp()>0)
@@ -344,7 +346,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
             p_ -= 2*incp;
             pseudoFluidState.update(Z1, p_, cellDataI.subdomain(),
                     problem().temperatureAtPos(elementI.geometry().center()));
-            v_ = 1. / FluidSystem::density(pseudoFluidState, presentPhaseIdx);
+            v_ = 1. / FluidSystem::density(pseudoFluidState, paramCache, presentPhaseIdx);
             cellDataI.dv_dp() = (sumC * ( v_ - (1. /cellDataI.density(presentPhaseIdx)))) /incp;
             // dV_dp > 0 is unphysical: Try inverse increment for secant
             if (cellDataI.dv_dp()>0)
@@ -540,10 +542,12 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFluxOnBoundary(Dune::FieldVector<
                                                                     pressBC);
 
                         // determine fluid properties at the boundary
+                        typename FluidSystem::ParameterCache paramCache;
+                        paramCache.updatePhase(BCfluidState, phaseIdx);
                         Scalar densityBound =
-                            FluidSystem::density(BCfluidState, phaseIdx);
+                            FluidSystem::density(BCfluidState, paramCache, phaseIdx);
                         Scalar viscosityBound =
-                            FluidSystem::viscosity(BCfluidState, phaseIdx);
+                            FluidSystem::viscosity(BCfluidState, paramCache, phaseIdx);
 
                         // mobility at the boundary
                         Scalar lambdaBound = 0.;
@@ -725,7 +729,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
 
             timer_.stop();
             // initialize viscosities
-            cellData.setViscosity(presentPhaseIdx, FluidSystem::viscosity(pseudoFluidState, presentPhaseIdx));
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(pseudoFluidState);
+            cellData.setViscosity(presentPhaseIdx, FluidSystem::viscosity(pseudoFluidState, paramCache, presentPhaseIdx));
 
             // initialize mobilities
             if(presentPhaseIdx == wPhaseIdx)

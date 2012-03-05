@@ -89,21 +89,10 @@ SET_INT_PROP(TestDecTwoPTwoCProblem, PressureFormulation,
         GET_PROP_TYPE(TypeTag, Indices)::pressureNW);
 
 // Select fluid system
-SET_PROP(TestDecTwoPTwoCProblem, FluidSystem)
-{
-    typedef Dumux::H2ON2FluidSystem<TypeTag> type;
-};
-// Select fluid system
-SET_BOOL_PROP(TestDecTwoPTwoCProblem, EnableComplicatedFluidSystem, true);
-
-
-// Select water formulation
-SET_PROP(TestDecTwoPTwoCProblem, Components) : public GET_PROP(TypeTag, DefaultComponents)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-//    typedef Dumux::TabulatedComponent<Scalar, typename Dumux::H2O<Scalar> > H20;
-        typedef Dumux::H2O<Scalar> H2O;
-};
+SET_TYPE_PROP(TestDecTwoPTwoCProblem, 
+              FluidSystem,
+              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar),
+                                         /*complex=*/true>);
 
 //SET_TYPE_PROP(TestDecTwoPTwoCProblem, LinearSolver, IMPETBiCGStabILU0Solver<TypeTag> );
 

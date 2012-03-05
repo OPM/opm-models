@@ -161,7 +161,17 @@ SET_TYPE_PROP(DecoupledTwoP, Variables, VariableClass<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoP, CellData, CellData2P<TypeTag, GET_PROP_VALUE(TypeTag, EnableCompressibility)>);
 
 //! Set default fluid system
-SET_TYPE_PROP(DecoupledTwoP, FluidSystem, TwoPImmiscibleFluidSystem<TypeTag>);
+SET_PROP(DecoupledTwoP, FluidSystem)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
+
+public:
+    typedef Dumux::FluidSystems::TwoPImmiscible<Scalar,
+                                                WettingPhase,
+                                                NonwettingPhase> type;
+};
 
 //! Set default fluid state
 SET_PROP(DecoupledTwoP, FluidState)

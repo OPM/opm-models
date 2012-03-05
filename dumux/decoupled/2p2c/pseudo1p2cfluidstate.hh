@@ -111,7 +111,9 @@ public:
             Dune::dgrave << __FILE__ <<": Twophase conditions in single-phase flash!"
                 << " Z1 is "<<Z1<< std::endl;
 
-        density_ = FluidSystem::density(*this, presentPhaseIdx);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(*this);
+        density_ = FluidSystem::density(*this, paramCache, presentPhaseIdx);
 
         aveMoMass_ =  moleFractionWater_[presentPhaseIdx]*FluidSystem::molarMass(wCompIdx)
         +   (1.-moleFractionWater_[presentPhaseIdx])*FluidSystem::molarMass(nCompIdx);
@@ -147,8 +149,12 @@ public:
     {
         if(phaseIdx == presentPhaseIdx_)
             return density_;
-        else
-            return FluidSystem::density(*this, phaseIdx);
+        else {
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updatePhase(*this, phaseIdx);
+
+            return FluidSystem::density(*this, paramCache, phaseIdx);
+        }
     }
 
     /*!

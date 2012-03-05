@@ -94,8 +94,10 @@ public:
 
 
         //mole equilibrium ratios K for in case wPhase is reference phase
-        double k1 = FluidSystem::fugacityCoefficient(*this, wPhaseIdx, wCompIdx);    // = p^wComp_vap / p
-        double k2 = FluidSystem::fugacityCoefficient(*this, wPhaseIdx, nCompIdx);    // = H^nComp_w / p
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(*this);
+        double k1 = FluidSystem::fugacityCoefficient(*this, paramCache, wPhaseIdx, wCompIdx);    // = p^wComp_vap / p
+        double k2 = FluidSystem::fugacityCoefficient(*this, paramCache, wPhaseIdx, nCompIdx);    // = H^nComp_w / p
 
         // get mole fraction from equilibrium konstants
         moleFraction_[wPhaseIdx][wCompIdx] = (1. - k2) / (k1 -k2);
@@ -159,8 +161,8 @@ public:
         nu_[wPhaseIdx] = 1. - nu_[nPhaseIdx];
 
         // get densities with correct composition
-        density_[wPhaseIdx] = FluidSystem::density(*this, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(*this, nPhaseIdx);
+        density_[wPhaseIdx] = FluidSystem::density(*this, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(*this, paramCache, nPhaseIdx);
 
         Sw_ = (nu_[wPhaseIdx]) / density_[wPhaseIdx];
         Sw_ /= (nu_[wPhaseIdx]/density_[wPhaseIdx] + nu_[nPhaseIdx]/density_[nPhaseIdx]);
@@ -196,8 +198,10 @@ public:
 
 
         //mole equilibrium ratios K for in case wPhase is reference phase
-        double k1 = FluidSystem::fugacityCoefficient(*this, wPhaseIdx, wCompIdx);    // = p^wComp_vap / p
-        double k2 = FluidSystem::fugacityCoefficient(*this, wPhaseIdx, nCompIdx);    // = H^nComp_w / p
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(*this);
+        double k1 = FluidSystem::fugacityCoefficient(*this, paramCache, wPhaseIdx, wCompIdx);    // = p^wComp_vap / p
+        double k2 = FluidSystem::fugacityCoefficient(*this, paramCache, wPhaseIdx, nCompIdx);    // = H^nComp_w / p
 
         // get mole fraction from equilibrium konstants
         moleFraction_[wPhaseIdx][wCompIdx] = (1. - k2) / (k1 -k2);
@@ -223,8 +227,8 @@ public:
         equilRatio_[wPhaseIdx][nCompIdx] = equilRatio_[wPhaseIdx][wCompIdx] = 1.;
 
         // get densities with correct composition
-        density_[wPhaseIdx] = FluidSystem::density(*this, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(*this, nPhaseIdx);
+        density_[wPhaseIdx] = FluidSystem::density(*this, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(*this, paramCache, nPhaseIdx);
 
         massConcentration_[wCompIdx] =
                 poro * (massFraction_[wPhaseIdx][wCompIdx] * Sw_ * density_[wPhaseIdx]

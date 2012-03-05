@@ -121,8 +121,10 @@ public:
         fluidState.setTemperature(problem_.temperature(element));
         fluidState.setSaturation(wPhaseIdx, 1.);
         fluidState.setSaturation(nPhaseIdx, 0.);
-        density_[wPhaseIdx] = FluidSystem::density(fluidState, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(fluidState, nPhaseIdx);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState);
+        density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
     }
 
     //! assemble local stiffness matrix for given element and order

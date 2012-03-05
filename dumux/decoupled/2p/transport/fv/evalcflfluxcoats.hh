@@ -334,9 +334,10 @@ public:
             fluidState.setPressure(nPhaseIdx, referencePressure);
             fluidState.setTemperature(temperature);
 
-            Scalar viscosityWBound = FluidSystem::viscosity(fluidState, wPhaseIdx);
-            Scalar viscosityNWBound =
-                    FluidSystem::viscosity(fluidState, nPhaseIdx);
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(fluidState);
+            Scalar viscosityWBound = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+            Scalar viscosityNWBound = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
             lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(element), satWBound) / viscosityWBound;
             lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(element), satWBound) / viscosityNWBound;
 

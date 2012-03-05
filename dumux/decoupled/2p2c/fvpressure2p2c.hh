@@ -647,14 +647,16 @@ void FVPressure2P2C<TypeTag>::getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& en
             Scalar lambdaWBound = 0.;
             Scalar lambdaNWBound = 0.;
 
+            typename FluidSystem::ParameterCache paramCache;
+            paramCache.updateAll(BCfluidState);
             Scalar densityWBound =
-                FluidSystem::density(BCfluidState, wPhaseIdx);
+                FluidSystem::density(BCfluidState, paramCache, wPhaseIdx);
             Scalar densityNWBound =
-                FluidSystem::density(BCfluidState, nPhaseIdx);
+                FluidSystem::density(BCfluidState, paramCache, nPhaseIdx);
             Scalar viscosityWBound =
-                FluidSystem::viscosity(BCfluidState, wPhaseIdx);
+                FluidSystem::viscosity(BCfluidState, paramCache, wPhaseIdx);
             Scalar viscosityNWBound =
-                FluidSystem::viscosity(BCfluidState, nPhaseIdx);
+                FluidSystem::viscosity(BCfluidState, paramCache, nPhaseIdx);
 
             // mobility at the boundary
             if(GET_PROP_VALUE(TypeTag, BoundaryMobility) == Indices::satDependent)
@@ -960,9 +962,12 @@ void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& element
         if(iterout !=0)
         Dune::dinfo << iterout << "times iteration of pc was applied at Idx " << globalIdx << ", pc delta still " << std::abs(oldPc-pc) << std::endl;
     }
+
     // initialize phase properties not stored in fluidstate
-    cellData.setViscosity(wPhaseIdx, FluidSystem::viscosity(fluidState, wPhaseIdx));
-    cellData.setViscosity(nPhaseIdx, FluidSystem::viscosity(fluidState, nPhaseIdx));
+    typename FluidSystem::ParameterCache paramCache;
+    paramCache.updateAll(fluidState);
+    cellData.setViscosity(wPhaseIdx, FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx));
+    cellData.setViscosity(nPhaseIdx, FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx));
 
     // initialize mobilities
     cellData.setMobility(wPhaseIdx, MaterialLaw::krw(problem().spatialParameters().materialLawParams(elementI), fluidState.saturation(wPhaseIdx))
