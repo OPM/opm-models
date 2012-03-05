@@ -82,33 +82,7 @@ public:
                            scvIdx,
                            timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
-
-        const auto &problem =
-            elemCtx.problem();
-
-        // calculate relative permeabilities
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
-
-        // porosity
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
-
-        // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
-    }
-
-    /*!
-     * \copydoc BoxModel::completeFluidState
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -120,50 +94,59 @@ public:
         int formulation = GET_PROP_VALUE(TypeTag, Formulation);
         if (formulation == Indices::pwSn) {
             Scalar Sn = priVars[Indices::saturationIdx];
-            fluidState.setSaturation(nPhaseIdx, Sn);
-            fluidState.setSaturation(wPhaseIdx, 1 - Sn);
+            fluidState_.setSaturation(nPhaseIdx, Sn);
+            fluidState_.setSaturation(wPhaseIdx, 1 - Sn);
 
             PhaseVector pC;
-            MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+            MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
             Scalar pW = priVars[Indices::pressureIdx];
-            fluidState.setPressure(wPhaseIdx, pW);
-            fluidState.setPressure(nPhaseIdx,
+            fluidState_.setPressure(wPhaseIdx, pW);
+            fluidState_.setPressure(nPhaseIdx,
                                    pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
         }
         else if (formulation == Indices::pnSw) {
             Scalar Sw = priVars[Indices::saturationIdx];
-            fluidState.setSaturation(wPhaseIdx, Sw);
-            fluidState.setSaturation(nPhaseIdx, 1 - Sw);
+            fluidState_.setSaturation(wPhaseIdx, Sw);
+            fluidState_.setSaturation(nPhaseIdx, 1 - Sw);
 
             PhaseVector pC;
-            MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+            MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
             Scalar pN = priVars[Indices::pressureIdx];
-            fluidState.setPressure(nPhaseIdx, pN);
-            fluidState.setPressure(wPhaseIdx,
+            fluidState_.setPressure(nPhaseIdx, pN);
+            fluidState_.setPressure(wPhaseIdx,
                                    pN + (pC[wPhaseIdx] - pC[nPhaseIdx]));
         }
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
+        paramCache.updateAll(fluidState_);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-            fluidState.setViscosity(phaseIdx, mu);
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            fluidState_.setViscosity(phaseIdx, mu);
 
             // compute and set the density
-            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            fluidState.setDensity(phaseIdx, rho);
+            Scalar rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
+            fluidState_.setDensity(phaseIdx, rho);
         }
 
-        Implementation::updateEnthalpy_(fluidState,
-                                        paramCache,
-                                        elemCtx,
-                                        scvIdx,
-                                        timeIdx);
+        asImp_().updateEnergy_(paramCache,
+                               elemCtx,
+                               scvIdx,
+                               timeIdx);
+
+        // calculate relative permeabilities
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
+
+        // porosity
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+
+        // energy related quantities not belonging to the fluid state
+        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -222,26 +205,14 @@ public:
     { }
 
 protected:
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    }
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
+    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
 
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int timeIdx)
-    { }
-
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(const ElementContext &elemCtx,
+    void updateEnergy_(const ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx)
     { }

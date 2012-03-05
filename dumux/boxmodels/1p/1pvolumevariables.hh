@@ -71,7 +71,34 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        fluidState_.setPressure(/*phaseIdx=*/0, priVars[Indices::pressureIdx]);
+
+        // saturation in a single phase is always 1 and thus redundant
+        // to set. But since we use the fluid state shared by the
+        // immiscible multi-phase models, so we have to set it here...
+        fluidState_.setSaturation(/*phaseIdx=*/0, 1.0);
+
+        typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState_);
+
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            // compute and set the viscosity
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            fluidState_.setViscosity(phaseIdx, mu);
+
+            // compute and set the density
+            Scalar rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
+            fluidState_.setDensity(phaseIdx, rho);
+        }
+
+        asImp_().updateEnthalpy_(paramCache,
+                                 elemCtx,
+                                 scvIdx,
+                                 timeIdx);
 
         // porosity
         const auto &problem = elemCtx.problem();
@@ -80,45 +107,6 @@ public:
         // energy related quantities not contained in the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
     };
-
-    /*!
-     * \copydoc BoxModel::completeFluidState
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
-
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        fluidState.setPressure(/*phaseIdx=*/0, priVars[Indices::pressureIdx]);
-
-        // saturation in a single phase is always 1 and thus redundant
-        // to set. But since we use the fluid state shared by the
-        // immiscible multi-phase models, so we have to set it here...
-        fluidState.setSaturation(/*phaseIdx=*/0, 1.0);
-
-        typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-            fluidState.setViscosity(phaseIdx, mu);
-
-            // compute and set the density
-            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            fluidState.setDensity(phaseIdx, rho);
-        }
-
-        Implementation::updateEnthalpy_(fluidState,
-                                        paramCache,
-                                        elemCtx,
-                                        scvIdx,
-                                        timeIdx);
-    }
 
     /*!
      * \brief Returns the thermodynamic state of the fluid.
@@ -178,20 +166,18 @@ public:
     { }
 
 protected:
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     }
 
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int timeIdx)
+    void updateEnthalpy_(const ParameterCache &paramCache,
+                         const ElementContext &elemCtx,
+                         int scvIdx,
+                         int timeIdx)
     { }
 
     /*!

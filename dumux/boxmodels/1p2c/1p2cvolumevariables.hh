@@ -76,7 +76,23 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        fluidState_.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
+
+        Scalar x1 = priVars[x1Idx]; //mole or mass fraction of component 1
+        fluidState_.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, 1 - x1);
+        fluidState_.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, x1);
+
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(fluidState_, /*phaseIdx=*/0);
+
+        Scalar value;
+        value = FluidSystem::density(fluidState_, paramCache, /*phaseIdx=*/0);
+        fluidState_.setDensity(/*phaseIdx=*/0, value);
+        value = FluidSystem::viscosity(fluidState_, paramCache, /*phaseIdx=*/0);
+        fluidState_.setViscosity(/*phaseIdx=*/0, value);
 
         const auto &problem = elemCtx.problem();
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
@@ -87,7 +103,6 @@ public:
         // Second instance of a parameter cache.
         // Could be avoided if diffusion coefficients also
         // became part of the fluid state.
-        typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fluidState_, /*phaseIdx=*/0);
 
         diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(fluidState_,
@@ -102,44 +117,7 @@ public:
         Valgrind::CheckDefined(diffCoeff_);
 
         // energy related quantities not contained in the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
-    }
-
-    /*!
-     * \copydoc BoxModel::completeFluidState
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
-
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        fluidState.setPressure(/*phaseIdx=*/0, priVars[pressureIdx]);
-
-        Scalar x1 = priVars[x1Idx]; //mole or mass fraction of component 1
-        if(!useMolarFormulation) //mass-fraction formulation
-        {
-            // convert mass to mole fractions
-            Scalar M0 = FluidSystem::molarMass(/*compIdx=*/0);
-            Scalar M1 = FluidSystem::molarMass(/*compIdx=*/1);
-            //meanMolarMass if x1_ is a massfraction
-            Scalar meanMolarMass = M0*M1/(M1 + x1*(M0 - M1));
-
-            x1 *= meanMolarMass/M1;
-        }
-        fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, 1 - x1);
-        fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, x1);
-
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updatePhase(fluidState, /*phaseIdx=*/0);
-
-        Scalar value;
-        value = FluidSystem::density(fluidState, paramCache, /*phaseIdx=*/0);
-        fluidState.setDensity(/*phaseIdx=*/0, value);
-        value = FluidSystem::viscosity(fluidState, paramCache, /*phaseIdx=*/0);
-        fluidState.setViscosity(/*phaseIdx=*/0, value);
+        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -212,26 +190,14 @@ public:
     { }
 
 protected:
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    }
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
+    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
 
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int timeIdx)
-    { }
-
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(const ElementContext &elemCtx,
+    void updateEnergy_(const ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx)
     { }

@@ -129,7 +129,7 @@ public:
                     const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
                     
                     ImmiscibleFluidState<Scalar, FluidSystem> fs;
-                    EnergyModule::updateTemperature_(fs, elemCtx, scvIdx, /*timeIdx=*/0);
+                    EnergyModule::updateTemperature(fs, elemCtx, scvIdx, /*timeIdx=*/0);
                     
                     /////////
                     // calculate the phase pressures of the previous iteration

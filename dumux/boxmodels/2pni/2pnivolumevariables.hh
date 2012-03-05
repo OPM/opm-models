@@ -123,27 +123,25 @@ protected:
     // is protected, we are friends with our parent..
     friend class TwoPVolumeVariables<TypeTag>;
 
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
     {
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        fluidState.setTemperature(priVars[temperatureIdx]);
+        this->fluidState_.setTemperature(priVars[temperatureIdx]);
     }
 
     template <class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int timeIdx)
+    void updateEnergy_(const ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int timeIdx)
     {
         // compute and set the internal energies of the fluid phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar h = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+            Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
 
-            fluidState.setEnthalpy(phaseIdx, h);
+            this->fluidState_.setEnthalpy(phaseIdx, h);
         }
     }
 

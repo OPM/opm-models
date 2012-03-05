@@ -81,43 +81,32 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        Implementation::completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
+
+        // create NullParameterCache and do dummy update
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState_);
+
+        fluidState_.setDensity(phaseIdx,
+                               FluidSystem::density(fluidState_,
+                                                    paramCache,
+                                                    phaseIdx));
+        fluidState_.setViscosity(phaseIdx,
+                                 FluidSystem::viscosity(fluidState_,
+                                                        paramCache,
+                                                        phaseIdx));
+
+        // compute and set the energy related quantities
+        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
+
+        // momentum conservation
         for (int dimIdx=momentumXIdx; dimIdx<=lastMomentumIdx; ++dimIdx)
             velocity_[dimIdx] = priVars[dimIdx];
     }
 
-    /*!
-     * \copydoc BoxModel::completeFluidState()
-     * \param isOldSol Specifies whether this is the previous solution or the current one
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
-
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        fluidState.setPressure(phaseIdx, priVars[pressureIdx]);
-
-        // create NullParameterCache and do dummy update
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
-
-        fluidState.setDensity(phaseIdx,
-                              FluidSystem::density(fluidState,
-                                                   paramCache,
-                                                   phaseIdx));
-        fluidState.setViscosity(phaseIdx,
-                                FluidSystem::viscosity(fluidState,
-                                                       paramCache,
-                                                       phaseIdx));
-
-        // compute and set the enthalpy
-        Implementation::updateEnthalpy_(fluidState, paramCache, elemCtx, scvIdx, timeIdx);
-    }
 
     /*!
      * \brief Returns the phase state for the control-volume.
@@ -140,27 +129,25 @@ public:
 
 protected:
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState& fluidState,
-                                const ParameterCache& paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx, int timeIdx)
+    void updateEnergy_(const ParameterCache &paramCache,
+                       const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx)
     { }
 
-    static void updateTemperature_(FluidState &fluidState, 
-                                   const ElementContext &elemCtx,
-                                   int scvIdx, int timeIdx)
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx, int timeIdx)
     {
         Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx);
-        fluidState.setTemperature(T);
+        this->fluidState_.setTemperature(T);
     }
 
     VelocityVector velocity_;
     FluidState fluidState_;
 
 private:
-    Implementation &asImp()
+    Implementation &asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp() const
+    const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
 

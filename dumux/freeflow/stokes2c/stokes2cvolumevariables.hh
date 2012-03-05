@@ -68,32 +68,6 @@ public:
      */
     void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
-
-        // Second instance of a parameter cache.
-        // Could be avoided if diffusion coefficients also
-        // became part of the fluid state.
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(this->fluidState_);
-
-        diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(this->fluidState_,
-                                                             paramCache,
-                                                             phaseIdx,
-                                                             lCompIdx,
-                                                             gCompIdx);
-
-        Valgrind::CheckDefined(diffCoeff_);
-    };
-
-    /*!
-     * \copydoc BoxModel::completeFluidState()
-     * \param isOldSol Specifies whether this is the previous solution or the current one
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         Scalar massFraction[numComponents];
@@ -107,11 +81,24 @@ public:
         Scalar avgMolarMass = M1*M2/(M2 + X2*(M1 - M2));
 
         // convert mass to mole fractions and set the fluid state
-        fluidState.setMoleFraction(phaseIdx, lCompIdx, massFraction[lCompIdx]*avgMolarMass/M1);
-        fluidState.setMoleFraction(phaseIdx, gCompIdx, massFraction[gCompIdx]*avgMolarMass/M2);
+        this->fluidState_.setMoleFraction(phaseIdx, lCompIdx, massFraction[lCompIdx]*avgMolarMass/M1);
+        this->fluidState_.setMoleFraction(phaseIdx, gCompIdx, massFraction[gCompIdx]*avgMolarMass/M2);
 
-        ParentType::completeFluidState(fluidState, elemCtx, scvIdx, timeIdx);
-    }
+        ParentType::update(elemCtx, scvIdx, timeIdx);
+
+        // Second instance of a parameter cache.
+        // This should be avoided if possible.
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(this->fluidState_);
+
+        diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(this->fluidState_,
+                                                             paramCache,
+                                                             phaseIdx,
+                                                             lCompIdx,
+                                                             gCompIdx);
+
+        Valgrind::CheckDefined(diffCoeff_);
+    };
 
     /*!
      * \brief Returns the binary (mass) diffusion coefficient

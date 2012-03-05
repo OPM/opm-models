@@ -126,13 +126,12 @@ protected:
     // is protected, we are friends with our parent..
     friend class TwoPTwoCVolumeVariables<TypeTag>;
 
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
     {
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        fluidState.setTemperature(priVars[temperatureIdx]);
+        this->fluidState_.setTemperature(priVars[temperatureIdx]);
     }
 
     template <class ParameterCache>

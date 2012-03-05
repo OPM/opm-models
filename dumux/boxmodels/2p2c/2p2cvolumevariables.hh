@@ -94,24 +94,104 @@ public:
                            scvIdx,
                            timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
+
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+
+        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto &problem = elemCtx.problem();
+
+        /////////////
+        // set the saturations
+        /////////////
+        Scalar sumSat = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
+            sumSat += fluidState_.saturation(phaseIdx);
+        }
+        fluidState_.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
+
+        /////////////
+        // set the pressures of the fluid phases
+        /////////////
+
+        // calculate capillary pressure
+        const MaterialLawParams &materialParams =
+            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
+
+        // set the absolute phase pressures in the fluid state
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            fluidState_.setPressure(phaseIdx, 
+                                   priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
+
+        /////////////
+        // calculate the phase compositions
+        /////////////
+
+        typename FluidSystem::ParameterCache paramCache;
+        // now comes the tricky part: calculate phase compositions
+        if (priVars.phaseIsPresent(/*phaseIdx=*/0) && 
+            priVars.phaseIsPresent(/*phaseIdx=*/1))
+        {
+            // both phases are present, i.e. phase compositions are a
+            // result of the the gas <-> liquid equilibrium. This is
+            // the job of the "MiscibleMultiPhaseComposition"
+            // constraint solver
+            MiscibleMultiPhaseComposition::solve(fluidState_,
+                                                 paramCache,
+                                                 /*setViscosity=*/true,
+                                                 /*setEnthalpy=*/false);
+
+        }
+        else if (priVars.phaseIsPresent(/*phaseIdx=*/0)) {
+            // only the first phase is present, i.e. the switch index
+            // contains the mole fraction of the second component of
+            // the first phase
+            Scalar x0 = 1.0 - priVars[switch0Idx];
+            Scalar x1 = priVars[switch0Idx];
+
+            // convert mass to mole fractions and set the fluid state
+            fluidState_.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, x0); 
+            fluidState_.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, x1);
+
+            // calculate the composition of the remaining phases (as
+            // well as the densities of all phases). this is the job
+            // of the "ComputeFromReferencePhase" constraint solver
+            ComputeFromReferencePhase::solve(fluidState_,
+                                             paramCache,
+                                             /*refPhaseIdx=*/0,
+                                             /*setViscosity=*/true,
+                                             /*setEnthalpy=*/false);
+        }
+        else if (priVars.phaseIsPresent(/*phaseIdx=*/1)) {
+            // only the first phase is present, i.e. the switch index
+            // contains the mole fraction of the second component of
+            // the first phase
+            Scalar x0 = 1.0 - priVars[switch0Idx];
+            Scalar x1 = priVars[switch0Idx];
+
+            // convert mass to mole fractions and set the fluid state
+            fluidState_.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/0, x0); 
+            fluidState_.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/1, x1);
+
+            // calculate the composition of the remaining phases (as
+            // well as the densities of all phases). this is the job
+            // of the "ComputeFromReferencePhase" constraint solver
+            ComputeFromReferencePhase::solve(fluidState_,
+                                             paramCache,
+                                             /*refPhaseIdx=*/1,
+                                             /*setViscosity=*/true,
+                                             /*setEnthalpy=*/false);
+        }
 
         /////////////
         // calculate the remaining quantities
         /////////////
-        const auto &problem = elemCtx.problem();
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
 
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
-
-        // Second instance of a parameter cache.
-        // Could be avoided if diffusion coefficients also
-        // became part of the fluid state.
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState_);
 
         // energy related quantities
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
@@ -141,95 +221,6 @@ public:
                                    int scvIdx,
                                    int timeIdx)
     {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
-
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
-        const auto &problem = elemCtx.problem();
-
-        /////////////
-        // set the saturations
-        /////////////
-        Scalar sumSat = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            fluidState.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
-            sumSat += fluidState.saturation(phaseIdx);
-        }
-        fluidState.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
-
-        /////////////
-        // set the pressures of the fluid phases
-        /////////////
-
-        // calculate capillary pressure
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        PhaseVector pC;
-        MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
-
-        // set the absolute phase pressures in the fluid state
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState.setPressure(phaseIdx, 
-                                   priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
-
-        /////////////
-        // calculate the phase compositions
-        /////////////
-
-        typename FluidSystem::ParameterCache paramCache;
-        // now comes the tricky part: calculate phase compositions
-        if (priVars.phaseIsPresent(/*phaseIdx=*/0) && 
-            priVars.phaseIsPresent(/*phaseIdx=*/1))
-        {
-            // both phases are present, i.e. phase compositions are a
-            // result of the the gas <-> liquid equilibrium. This is
-            // the job of the "MiscibleMultiPhaseComposition"
-            // constraint solver
-            MiscibleMultiPhaseComposition::solve(fluidState,
-                                                 paramCache,
-                                                 /*setViscosity=*/true,
-                                                 /*setEnthalpy=*/false);
-
-        }
-        else if (priVars.phaseIsPresent(/*phaseIdx=*/0)) {
-            // only the first phase is present, i.e. the switch index
-            // contains the mole fraction of the second component of
-            // the first phase
-            Scalar x0 = 1.0 - priVars[switch0Idx];
-            Scalar x1 = priVars[switch0Idx];
-
-            // convert mass to mole fractions and set the fluid state
-            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/0, x0); 
-            fluidState.setMoleFraction(/*phaseIdx=*/0, /*compIdx=*/1, x1);
-
-            // calculate the composition of the remaining phases (as
-            // well as the densities of all phases). this is the job
-            // of the "ComputeFromReferencePhase" constraint solver
-            ComputeFromReferencePhase::solve(fluidState,
-                                             paramCache,
-                                             /*refPhaseIdx=*/0,
-                                             /*setViscosity=*/true,
-                                             /*setEnthalpy=*/false);
-        }
-        else if (priVars.phaseIsPresent(/*phaseIdx=*/1)) {
-            // only the first phase is present, i.e. the switch index
-            // contains the mole fraction of the second component of
-            // the first phase
-            Scalar x0 = 1.0 - priVars[switch0Idx];
-            Scalar x1 = priVars[switch0Idx];
-
-            // convert mass to mole fractions and set the fluid state
-            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/0, x0); 
-            fluidState.setMoleFraction(/*phaseIdx=*/1, /*compIdx=*/1, x1);
-
-            // calculate the composition of the remaining phases (as
-            // well as the densities of all phases). this is the job
-            // of the "ComputeFromReferencePhase" constraint solver
-            ComputeFromReferencePhase::solve(fluidState,
-                                             paramCache,
-                                             /*refPhaseIdx=*/1,
-                                             /*setViscosity=*/true,
-                                             /*setEnthalpy=*/false);
-        }
     }
 
     /*!
@@ -293,13 +284,10 @@ public:
     { }
     
 protected:
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    }
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
+    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
 
     /*!
      * \brief Called by update() to compute the energy related quantities

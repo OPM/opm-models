@@ -95,30 +95,7 @@ public:
 
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        completeFluidState(fluidState_, elemCtx, scvIdx, timeIdx);
-
-        //////////
-        // specify the other parameters
-        //////////
-        const auto &problem = elemCtx.problem();
-        const MaterialLawParams &matParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        MaterialLaw::relativePermeabilities(relativePermeability_, matParams, fluidState_);
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
-
-        // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
-    }
-
-    /*!
-     * \copydoc BoxModel::completeFluidState
-     */
-    static void completeFluidState(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
-    {
-        Implementation::updateTemperature_(fluidState, elemCtx, scvIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -132,10 +109,10 @@ public:
         /////////
                     
         // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
-        fluidState.setSaturation(wPhaseIdx, 1.0);
-        fluidState.setSaturation(nPhaseIdx, 0.0);
+        fluidState_.setSaturation(wPhaseIdx, 1.0);
+        fluidState_.setSaturation(nPhaseIdx, 0.0);
         PhaseVector pC;
-        MaterialLaw::capillaryPressures(pC, materialParams, fluidState);
+        MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
                     
         // non-wetting pressure can be larger than the
         // reference pressure if the medium is fully
@@ -147,32 +124,37 @@ public:
         /////////
         // calculate the saturations
         /////////
-        fluidState.setPressure(wPhaseIdx, pW);
-        fluidState.setPressure(nPhaseIdx, pN);
+        fluidState_.setPressure(wPhaseIdx, pW);
+        fluidState_.setPressure(nPhaseIdx, pN);
 
         PhaseVector sat;
-        MaterialLaw::saturations(sat, materialParams, fluidState);
-        fluidState.setSaturation(wPhaseIdx, sat[wPhaseIdx]);
-        fluidState.setSaturation(nPhaseIdx, 1.0 - sat[wPhaseIdx]);
+        MaterialLaw::saturations(sat, materialParams, fluidState_);
+        fluidState_.setSaturation(wPhaseIdx, sat[wPhaseIdx]);
+        fluidState_.setSaturation(nPhaseIdx, 1.0 - sat[wPhaseIdx]);
 
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
+        paramCache.updateAll(fluidState_);
 
         // compute and set the wetting phase viscosity
-        Scalar mu = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
-        fluidState.setViscosity(wPhaseIdx, mu);
-        fluidState.setViscosity(nPhaseIdx, 1e-20);
+        Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, wPhaseIdx);
+        fluidState_.setViscosity(wPhaseIdx, mu);
+        fluidState_.setViscosity(nPhaseIdx, 1e-20);
 
         // compute and set the wetting phase density
-        Scalar rho = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
-        fluidState.setDensity(wPhaseIdx, rho);
-        fluidState.setDensity(nPhaseIdx, 1e-20);
+        Scalar rho = FluidSystem::density(fluidState_, paramCache, wPhaseIdx);
+        fluidState_.setDensity(wPhaseIdx, rho);
+        fluidState_.setDensity(nPhaseIdx, 1e-20);
 
-        Implementation::updateEnthalpy_(fluidState,
-                                        paramCache,
-                                        elemCtx,
-                                        scvIdx,
-                                        timeIdx);
+        asImp_().updateEnergy_(paramCache,
+                               elemCtx,
+                               scvIdx,
+                               timeIdx);
+
+        //////////
+        // specify the other parameters
+        //////////
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -180,7 +162,6 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-
 
     /*!
      * \brief Returns the average porosity [] within the control volume.
@@ -244,29 +225,27 @@ public:
                                 Scalar volume)
     { }
 
-    static void updateTemperature_(FluidState &fluidState,
-                                   const ElementContext &elemCtx,
-                                   int scvIdx,
-                                   int timeIdx)
+    static void updateTemperature(FluidState &fs,
+                                  const ElementContext &elemCtx,
+                                  int scvIdx,
+                                  int timeIdx)
     {
-        fluidState.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+        fs.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+    };
+
+protected:
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
+    {
+        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
     };
 
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState &fluidState,
-                                const ParameterCache &paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx,
-                                int timeIdx)
-    { }
-
-protected:
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx)
+    void updateEnergy_(const ParameterCache &paramCache,
+                         const ElementContext &elemCtx,
+                         int scvIdx,
+                         int timeIdx)
     { }
 
     FluidState fluidState_;

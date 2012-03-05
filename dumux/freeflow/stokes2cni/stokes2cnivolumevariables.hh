@@ -93,21 +93,19 @@ protected:
     friend class StokesVolumeVariables<TypeTag>;
 
     template<class ParameterCache>
-    static void updateEnthalpy_(FluidState& fluidState,
-                                const ParameterCache& paramCache,
-                                const ElementContext &elemCtx,
-                                int scvIdx, int timeIdx)
+    void updateEnergy_(const ParameterCache& paramCache,
+                       const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx)
     {
-        Scalar h = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
-        fluidState.setEnthalpy(phaseIdx, h);
+        Scalar h = FluidSystem::enthalpy(this->fluidState_, paramCache, phaseIdx);
+        this->fluidState_.setEnthalpy(phaseIdx, h);
     }
 
-    static void updateTemperature_(FluidState &fluidState, 
-                                   const ElementContext &elemCtx,
-                                   int scvIdx, int timeIdx)
+    void updateTemperature_(const ElementContext &elemCtx,
+                            int scvIdx, int timeIdx)
     {
         Scalar T = elemCtx.primaryVars(scvIdx, timeIdx)[temperatureIdx];
-        fluidState.setTemperature(T);
+        this->fluidState_.setTemperature(T);
     }
 
     Scalar heatConductivity_;
