@@ -51,35 +51,11 @@ NEW_PROP_TAG(TimeManager);
 }
 
 /*!
- * \brief Print a usage string for simulations using
- *        Dumux::startFromDGF() as their main() function.
- *
- * \param progname The name of the executable
- */
-void printUsageDGF(const char *progname)
-{
-    std::cout << "usage: " << progname << " [--restart restartTime] gridfile.dgf tEnd dt\n";
-    exit(1);
-}
-
-/*!
- * \brief Print a usage string for simulations using
- *        Dumux::startWithGrid() as their main() function.
- *
- * \param progname The name of the executable
- */
-void printUsageGrid(const char *progname)
-{
-    std::cout << "usage: " << progname << " [--restart restartTime] tEnd dt\n";
-    exit(1);
-}
-
-/*!
  * \ingroup Start
  *
  * \brief Prints the default usage message for the startWithParameters() function
  */
-void usageStartWithParameters(const char *progName, const std::string &errorMsg)
+void printDefaultUsage(const char *progName, const std::string &errorMsg)
 {
     if (errorMsg.size() > 0) {
         std::cout << errorMsg << "\n"
@@ -112,166 +88,6 @@ void usageStartWithParameters(const char *progName, const std::string &errorMsg)
         "parameter file '"<<progName <<".input'\n"
         "\n";
 }
-
-/*!
- * \ingroup Start
- * \brief Provides a default main function for simulations requiring
- *        only a single DGF file as their grid specification.
- *
- * \tparam TypeTag  The type tag of the problem which needs to be solved
- *
- * \param argc  The 'argc' argument of the main function
- * \param argv  The 'argv' argument of the main function
- */
-template <class TypeTag>
-DUMUX_DEPRECATED_MSG("Please use Dumux::start() instead")
-int startFromDGF(int argc, char **argv)
-{
-#ifdef NDEBUG
-    try {
-#endif
-
-        typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-        typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-        typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-        typedef Dune::GridPtr<Grid> GridPointer;
-
-        // initialize MPI, finalize is done automatically on exit
-        static Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
-
-        // parse the command line arguments for the program
-        if (argc < 4)
-            printUsageDGF(argv[0]);
-
-        // deal with the restart stuff
-        int argIdx = 1;
-        bool restart = false;
-        double startTime = 0;
-        if (std::string("--restart") == argv[argIdx]) {
-            restart = true;
-            ++argIdx;
-
-            std::istringstream(argv[argIdx++]) >> startTime;
-        }
-
-        if (argc - argIdx != 3) {
-            printUsageDGF(argv[0]);
-        }
-
-        double tEnd, dt;
-        const char *dgfFileName = argv[argIdx++];
-        std::istringstream(argv[argIdx++]) >> tEnd;
-        std::istringstream(argv[argIdx++]) >> dt;
-
-        // create grid
-        // -> load the grid from file
-        GridPointer gridPtr(dgfFileName);
-        if (mpiHelper.size() > 1) {
-            if (!Dune::Capabilities::isParallel<Grid>::v) {
-                std::cerr << "DUMUX WARNING: THE PROGRAM IS STARTED USING MPI, BUT THE GRID IMPLEMENTATION\n"
-                          << "               YOU HAVE CHOSEN IS NOT PARALLEL!\n";
-            }
-            gridPtr.loadBalance();
-        }
-
-        // instantiate and run the concrete problem
-        TimeManager timeManager;
-        Problem problem(timeManager, gridPtr->leafView());
-        timeManager.init(problem, startTime, dt, tEnd, restart);
-
-        // print all properties
-        Dumux::Properties::print<TypeTag>();
-
-        timeManager.run();
-        return 0;
-
-#ifdef NDEBUG
-    }
-    catch (Dune::Exception &e) {
-        std::cerr << "Dune reported error: " << e << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Unknown exception thrown!\n";
-    }
-#endif
-
-    return 3;
-}
-
-
-/*!
- * \ingroup Start
- * \brief Provides a default main function for simulations which
- *        create the grid themselves but do not require any other
- *        parameters.
- *
- * \tparam TypeTag  The type tag of the problem which needs to be solved
- *
- * \param grid  The grid used by the simulation
- * \param argc  The 'argc' argument of the main function
- * \param argv  The 'argv' argument of the main function
- */
-template <class TypeTag>
-DUMUX_DEPRECATED_MSG("Please use Dumux::start() instead")
-int startWithGrid(const typename GET_PROP_TYPE(TypeTag, Grid) &grid,
-                  int argc,
-                  char **argv)
-{
-#ifdef NDEBUG
-    try {
-#endif
-
-        typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-        typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-        typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-        // parse the command line arguments for the program
-        if (argc < 3)
-            printUsageGrid(argv[0]);
-
-        // deal with the restart stuff
-        int argIdx = 1;
-        bool restart = false;
-        double startTime = 0;
-        if (std::string("--restart") == argv[argIdx]) {
-            restart = true;
-            ++argIdx;
-
-            std::istringstream(argv[argIdx++]) >> startTime;
-        }
-
-        if (argc - argIdx != 2) {
-            printUsageGrid(argv[0]);
-        }
-
-        double tEnd, dt;
-        std::istringstream(argv[argIdx++]) >> tEnd;
-        std::istringstream(argv[argIdx++]) >> dt;
-
-        // instantiate and run the concrete problem
-        TimeManager timeManager;
-        Problem problem(timeManager, grid.leafView());
-        timeManager.init(problem, startTime, dt, tEnd, restart);
-
-        // print all properties
-        Dumux::Properties::print<TypeTag>();
-
-        timeManager.run();
-        return 0;
-
-#ifdef NDEBUG
-    }
-    catch (Dune::Exception &e) {
-        std::cerr << "Dune reported error: " << e << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Unknown exception thrown!\n";
-    }
-#endif
-
-    return 3;
-}
-
 /*!
  * \ingroup Start
  * \brief Read the command line arguments and write them into the parameter tree.
@@ -413,7 +229,7 @@ int start_(int argc,
 
     // make sure we have a meaningful usage function
     if (!usage)
-        usage = usageStartWithParameters;
+        usage = printDefaultUsage;
     
     ////////////////////////////////////////////////////////////
     // parse the command line arguments
@@ -555,28 +371,6 @@ int start(int argc,
         return 3;
     }
 }
-
-/*!
- * \ingroup Start
- *
- * \brief Provides a main function which reads in parameters from the
- *        command line and a parameter file.
- *
- *        In this function only the differentiation between debugger
- *        or not is made.
- *
- * \tparam TypeTag  The type tag of the problem which needs to be solved
- *
- * \param argc  The number of command line arguments of the program
- * \param argv  The contents of the command line arguments of the program
- * \param usage Callback function for printing the usage message
- */
-template <class TypeTag>
-DUMUX_DEPRECATED_MSG("Please use Dumux::start() instead")
-int startWithParameters(int argc,
-                        char **argv,
-                        void (*usage)(const char *, const std::string &) = 0)
-{ return start<TypeTag>(argc, argv, usage); }
 
 } // namespace Dumux
 

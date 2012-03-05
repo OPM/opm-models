@@ -91,28 +91,6 @@ namespace Properties
     int PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::foo =   \
     PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::init();
 
-#define PROP_INFO_DEPRECATED_(DeprecationMsg, EffTypeTagName, PropKind, PropTagName, ...) \
-    template <>                                                         \
-    struct PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>       \
-    {                                                                   \
-    static int init() {                                                 \
-        PropertyRegistryKey key(                                        \
-            /*effTypeTagName=*/ Dune::className<TTAG(EffTypeTagName)>(), \
-            /*kind=*/PropKind,                                          \
-            /*name=*/#PropTagName,                                      \
-            /*value=*/#__VA_ARGS__,                                     \
-            /*file=*/__FILE__,                                          \
-            /*line=*/__LINE__);                                         \
-        PropertyRegistry::addKey(key);                                  \
-        int blubb = foo; /* <- trigger deprecation message */           \
-        blubb = blubb;                                                  \
-        return 0;                                                       \
-    };                                                                  \
-    static DUMUX_DEPRECATED_MSG(DeprecationMsg) int foo;                \
-    };                                                                  \
-    int PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::foo =   \
-    PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::init();
-
 //! Internal macro which is only required if the property introspection is enabled
 #define TTAG_INFO_(...)                                                 \
     template <>                                                         \
@@ -198,32 +176,6 @@ namespace Properties
 #define NEW_PROP_TAG(PTagName)                             \
     namespace PTag {                                       \
     struct PTagName; } extern int semicolonHack_
-
-/*!
- * \brief Set the default for a property.
- *
- * SET_PROP_DEFAULT works exactly like SET_PROP, except that it does
- * not require an effective type tag. Defaults are used whenever a
- * property was not explicitly set or explicitly unset for a type tag.
- *
- * Example:
- *
- * // set a default for the blabbPropTag property tag
- * SET_PROP_DEFAULT(blabbPropTag)
- * {
- *    static const int value = 3;
- * };
- */
-#define SET_PROP_DEFAULT(PropTagName) \
-    template <class TypeTag>                                            \
-    struct DefaultProperty<TypeTag, PTAG_(PropTagName)>;                \
-    PROP_INFO_DEPRECATED_("Default properties are deprecated and will be removed in the future", \
-                          __Default,                                    \
-                          /*kind=*/"<opaque>",                          \
-                          PropTagName,                                  \
-                          /*value=*/"<opaque>")                         \
-    template <class TypeTag>                                            \
-    struct DefaultProperty<TypeTag, PTAG_(PropTagName) >
 
 //! Internal macro
 #define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)       \
@@ -887,8 +839,6 @@ public:
     typedef Child5T Child5;
 };
 
-NEW_TYPE_TAG(__Default);
-
 //! \internal
 template <class EffectiveTypeTag,
           class PropertyTag,
@@ -1012,26 +962,6 @@ const std::string getDiagnostic(std::string propTagName)
     propTagName.replace(n - 1, 1, "");
     //TypeTagName.replace(0, strlen("Dumux::Properties::TTag::"), "");
 
-    if (!getDiagnostic_(TypeTagName, propTagName, result, "")) {
-        // check whether the property is a default property
-        const PropertyRegistry::KeyList &keys =
-            PropertyRegistry::getKeys(Dune::className<TTAG(__Default)>());
-        PropertyRegistry::KeyList::const_iterator it = keys.begin();
-        for (; it != keys.end(); ++it) {
-            const PropertyRegistryKey &key = it->second;
-            if (key.propertyName() != propTagName)
-                continue; // property already printed
-
-            std::ostringstream oss;
-            oss << "fallback " << key.propertyName()
-                << " defined at " << key.fileDefined()
-                << ":" << key.lineDefined()
-                <<"\n";
-            result = oss.str();
-        };
-    }
-
-
     return result;
 }
 
@@ -1099,21 +1029,6 @@ void print(std::ostream &os = std::cout)
 {
     std::set<std::string> printedProps;
     print_(Dune::className<TypeTag>(), os, "", printedProps);
-
-    // print the default properties
-    const PropertyRegistry::KeyList &keys =
-        PropertyRegistry::getKeys(Dune::className<TTAG(__Default)>());
-    PropertyRegistry::KeyList::const_iterator it = keys.begin();
-    for (; it != keys.end(); ++it) {
-        const PropertyRegistryKey &key = it->second;
-        if (printedProps.count(key.propertyName()) > 0)
-            continue; // property already printed
-        os << "  default " << key.propertyName()
-           << " (" << key.fileDefined()
-           << ":" << key.lineDefined()
-           << ")\n";
-        printedProps.insert(key.propertyName());
-    };
 }
 #else // !defined NO_PROPERTY_INTROSPECTION
 template <class TypeTag>

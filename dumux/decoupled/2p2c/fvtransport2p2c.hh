@@ -157,16 +157,6 @@ public:
                  >> totalConcentration_[nCompIdx][globalIdx];
     }
 
-    /*! \name Access functions for protected variables  */
-    //@{
-    //! Return the vector of the transported quantity
-    /*! For an immiscible IMPES scheme, this is the saturation. For Miscible simulations, however,
-     *  the total concentration of all components is transported.
-     */
-    TransportSolutionType& transportedQuantity() DUNE_DEPRECATED
-    {
-        return totalConcentration_;
-    }
     //! \copydoc transportedQuantity()
     void getTransportedQuantity(TransportSolutionType& transportedQuantity)
     {

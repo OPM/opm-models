@@ -90,42 +90,8 @@ public:
      *                 the element
      */
     template <class Context>
-    // if you get an deprecated warning here, please use context
-    // objects to specify your problem!
-    DUMUX_DEPRECATED_MSG("Old problem API used. Please use context objects for your problem!")
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
-    {
-        return asImp_().boxTemperature(context.element(),
-                                       context.fvElemGeom(timeIdx),
-                                       spaceIdx);
-    }
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
-     *
-     * This is the discretization specific interface for the box
-     * method. By default it just calls temperature(pos).
-     *
-     * \param element The DUNE Codim<0> enitiy which intersects with
-     *                the finite volume.
-     * \param fvGeom The finite volume geometry of the element.
-     * \param scvIdx The local index of the sub control volume inside the element
-     */
-    Scalar boxTemperature(const Element &element,
-                          const FVElementGeometry fvGeom,
-                          int scvIdx) const
-    { return asImp_().temperatureAtPos(fvGeom.subContVol[scvIdx].global); }
-
-    /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ at a given global position.
-     *
-     * This is not specific to the discretization. By default it just
-     * calls temperature().
-     *
-     * \param pos The position in global coordinates where the temperature should be specified.
-     */
-    Scalar temperatureAtPos(const GlobalPosition &pos) const
     { return asImp_().temperature(); }
 
     /*!
@@ -150,30 +116,6 @@ public:
     template <class Context>
     const Vector &gravity(const Context &context,
                           int spaceIdx, int timeIdx) const
-    {
-        return asImp_().boxGravity(context.element(),
-                                   context.fvElemGeom(timeIdx),
-                                   spaceIdx);
-    }
-
-    /*!
-     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * This is the box discretization specific interface. By default
-     * it just calls gravityAtPos().
-     */
-    const Vector &boxGravity(const Element &element,
-                             const FVElementGeometry &fvGeom,
-                             int scvIdx) const
-    { return asImp_().gravityAtPos(fvGeom.subContVol[scvIdx].global); }
-
-    /*!
-     * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * This is discretization independent interface. By default it
-     * just calls gravity().
-     */
-    const Vector &gravityAtPos(const GlobalPosition &pos) const
     { return asImp_().gravity(); }
 
     /*!
@@ -187,20 +129,6 @@ public:
      */
     const Vector &gravity() const
     { return gravity_; }
-
-    /*!
-     * \brief Returns the spatial parameters object.
-     */
-    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
-    Implementation &spatialParameters()
-    { return asImp_(); }
-
-    /*!
-     * \brief Returns the spatial parameters object.
-     */
-    DUMUX_DEPRECATED_MSG("Spatial parameters are merged with the problem in the box model") 
-    const Implementation &spatialParameters() const
-    { return asImp_(); }
 
     // \}
 
