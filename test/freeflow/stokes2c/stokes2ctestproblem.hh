@@ -110,7 +110,6 @@ class Stokes2cTestProblem
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     // Number of equations and grid dimension
@@ -123,10 +122,7 @@ class Stokes2cTestProblem
         transportIdx = Indices::transportIdx  //!< Index of the transport equation (massfraction)
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::ctype CoordScalar;
-    typedef typename GridView::Intersection Intersection;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:

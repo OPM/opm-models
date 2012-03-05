@@ -49,19 +49,16 @@ class MPNCProblem : public BoxMultiPhaseProblem<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::Grid Grid;
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     enum {
         dim = Grid::dimension,
         dimWorld = Grid::dimensionworld
     };
 
-    typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:

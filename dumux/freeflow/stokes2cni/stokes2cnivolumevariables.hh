@@ -47,18 +47,11 @@ class Stokes2cniVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
     typedef Stokes2cVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
-    typedef typename GridView::template Codim<0>::Entity Element;
 
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
-    enum { energyIdx = Indices::energyIdx };
     enum { temperatureIdx = Indices::temperatureIdx };
 
 public:

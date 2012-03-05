@@ -55,13 +55,11 @@ class StokesFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef Dune::FieldVector<Scalar, dim> FieldVector;
     typedef Dune::FieldVector<Scalar, dim> VelocityVector;
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;

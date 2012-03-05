@@ -109,7 +109,6 @@ class Stokes2cniTestProblem
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     enum { // Number of equations and grid dimension
@@ -125,10 +124,7 @@ class Stokes2cniTestProblem
         energyIdx =    Indices::energyIdx     //!< Index of the energy equation (temperature)
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::ctype CoordScalar;
-    typedef typename GridView::Intersection Intersection;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
 public:

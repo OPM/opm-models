@@ -66,18 +66,12 @@ class StokesModel : public BoxModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     enum { dim = GridView::dimension };
-    enum { dimWorld = GridView::dimensionworld };
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:

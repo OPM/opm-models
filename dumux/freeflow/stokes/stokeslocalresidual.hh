@@ -95,8 +95,6 @@ protected:
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
 
-    typedef typename GridView::Intersection Intersection;
-    typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
  public:

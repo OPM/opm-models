@@ -50,10 +50,7 @@ class StokesProblem : public BoxProblem<TypeTag>
     typedef typename GridView::Grid Grid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::Intersection Intersection;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
     enum {
         dim = Grid::dimension,

@@ -65,7 +65,6 @@ class ThreePThreeCNIFluxVariables : public ThreePThreeCFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:

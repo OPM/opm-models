@@ -86,7 +86,6 @@ class Stokes2cniModel : public Stokes2cModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
     enum { dim = GridView::dimension };
     enum { lCompIdx = Indices::lCompIdx };
