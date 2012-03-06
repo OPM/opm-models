@@ -235,7 +235,7 @@ protected:
 
             // TODO: dilatation term has to be accounted for in outflow, coupling, neumann
             //            velGradComp[velIdx] += 2./3*fluxVars.velocityDivAtIP;
-            velGradComp *= fluxVars.viscosityAtIP()
+            velGradComp *= fluxVars.viscosityAtIP();
 
             flux[momentumXIdx + velIdx] -=
                 velGradComp*fluxVars.normal();
