@@ -7,7 +7,7 @@ which does not consider backward compatibility a high priority. Also,
 Dumux-eWoms uses git [1] as source-code management system which
 makes distributed development much easier compared to subversion.
 
-Quick, I want to get it!
+Quick, I want to try it!
 ========================
 
 git clone git@gitorious.org:dumux-ewoms/dumux-ewoms.git dumux-eWoms
