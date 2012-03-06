@@ -49,12 +49,10 @@ class OnePTwoCBoxProblem : public BoxPorousProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum {
-        dim = GridView::dimension,
-    };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dim> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     /*!
@@ -68,7 +66,7 @@ public:
           gravity_(0)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
-            gravity_[dim-1]  = -9.81;
+            gravity_[dimWorld-1]  = -9.81;
     }
 
     /*!
