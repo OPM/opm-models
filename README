@@ -10,6 +10,14 @@ therapy and more. Multi-scale and multi-physics methods are currently
 actively worked on. See [2] for a more detailed description of the 
 goals and motivations behind DuMuX.
 
+What is Dumux-eWoms?
+====================
+
+Dumux-eWoms is a branch of the Dumux [0] simulator for flow and
+transport porous media. It follows a more agile development model
+which does not consider backward compatibility a high priority. Also,
+Dumux-eWoms uses git [1] as source-code management system which
+makes distributed development much easier compared to subversion.
 
 INSTALLATION
 ============

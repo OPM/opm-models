@@ -1,0 +1,42 @@
+What is Dumux-eWoms?
+====================
+
+Dumux-eWoms is a branch of the Dumux [0] simulator for flow and
+transport porous media. It follows a more agile development model
+which does not consider backward compatibility a high priority. Also,
+Dumux-eWoms uses git [1] as source-code management system which
+makes distributed development much easier compared to subversion.
+
+Quick, I want to get it!
+========================
+
+git clone git@gitorious.org:dumux-ewoms/dumux-ewoms.git dumux-eWoms
+
+If you prefer a tarball, you may download one of the releases from the
+Dumux-eWoms homepage at https://gitorious.org/dumux-ewoms/pages/Home
+
+How do I get changes in?
+========================
+
+If you want to only occasionally contribute a patch, you may create a
+merge request on gitorious [2, 3]. After you've aquired a track
+record, we will offer you full push rights.
+
+What is the Dumux-eWoms release model?
+======================================
+
+A new release of Dumux-eWoms is prepared every six months if there are
+enough changes to justify a major release. Point releases are released
+ad-hoc with the sole purpose of fixing errors which creeped inte the
+last major release (i.e. they do not contain any new features). Each
+major release drops out of support after two successor releases,
+i.e. usually after a year.
+
+
+Links
+=====
+
+[0] http://www.dumux.org
+[1] http://git-scm.com
+[2] http://blog.gitorious.org/2009/07/15/new-merge-request-functionality/
+[3] https://gitorious.org/dumux-ewoms/dumux-ewoms/merge_requests
