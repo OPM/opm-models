@@ -74,9 +74,7 @@ public:
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx, isBoundaryFace);
 
-        massFractionAtIP_ = Scalar(0);
         diffusionCoeffAtIP_ = Scalar(0);
-        massFractionGradAtIP_ = Scalar(0);
         moleFractionGradAtIP_ = Scalar(0);
 
         const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
@@ -89,9 +87,6 @@ public:
         {
             const auto &volVars = elemCtx.volVars(idx, timeIdx);
 
-            massFractionAtIP_ += 
-                volVars.fluidState().massFraction(phaseIdx, lCompIdx)
-                * scvf.shapeValue[idx];
             diffusionCoeffAtIP_ += 
                 volVars.diffusionCoeff()
                 * scvf.shapeValue[idx];
@@ -99,18 +94,14 @@ public:
             // the gradient of the mass fraction at the IP
             for (int dimIdx=0; dimIdx<dim; ++dimIdx)
             {
-                massFractionGradAtIP_ +=
-                    scvf.grad[idx][dimIdx]*
-                    volVars.fluidState().massFraction(phaseIdx, lCompIdx);
                 moleFractionGradAtIP_ +=
                     scvf.grad[idx][dimIdx] *
                     volVars.fluidState().moleFraction(phaseIdx, lCompIdx);
             }
         };
 
-        Valgrind::CheckDefined(massFractionAtIP_);
         Valgrind::CheckDefined(diffusionCoeffAtIP_);
-        Valgrind::CheckDefined(massFractionGradAtIP_);
+        Valgrind::CheckDefined(moleFractionGradAtIP_);
     }
 
     /*!
@@ -118,12 +109,6 @@ public:
      */
     const ScalarGradient &moleFractionGradAtIP() const
     { return moleFractionGradAtIP_; }
-
-    /*!
-     * \brief Return the mass fraction at the integration point.
-     */
-    Scalar massFractionAtIP() const
-    { return massFractionAtIP_; }
     
     /*!
      * \brief Return the diffusion coefficient at the integration point.
@@ -131,13 +116,8 @@ public:
     Scalar diffusionCoeffAtIP() const
     { return diffusionCoeffAtIP_; }
 
-    const ScalarGradient &massFractionGradAtIP() const
-    { return massFractionGradAtIP_; }
-
 protected:
-    Scalar massFractionAtIP_;
     Scalar diffusionCoeffAtIP_;
-    ScalarGradient massFractionGradAtIP_;
     ScalarGradient moleFractionGradAtIP_;
 };
 

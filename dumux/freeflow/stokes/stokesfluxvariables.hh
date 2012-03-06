@@ -87,7 +87,6 @@ public:
         velocityAtIP_ = Scalar(0);
         pressureGradAtIP_ = Scalar(0);
         velocityGradAtIP_ = Scalar(0);
-        velocityDivAtIP_ = Scalar(0);
 
         for (int idx = 0; idx < elemCtx.numScv(); idx++)
         {
@@ -129,8 +128,6 @@ public:
                 tmp = scvf.grad[idx];
                 tmp *= volVars.velocity()[dimIdx];
                 velocityGradAtIP_[dimIdx] += tmp;
-
-                velocityDivAtIP_ += scvf.grad[idx][dimIdx]*volVars.velocity()[dimIdx];
             }
         }
 
@@ -149,7 +146,6 @@ public:
         Valgrind::CheckDefined(velocityAtIP_);
         Valgrind::CheckDefined(pressureGradAtIP_);
         Valgrind::CheckDefined(velocityGradAtIP_);
-        Valgrind::CheckDefined(velocityDivAtIP_);
     };
 
 public:
@@ -181,8 +177,8 @@ public:
     { return viscosityAtIP_; }
 
     /*!
-     * \brief Return the normal velocity \f$ \mathrm{[m/s]} \f$ at the integration
-     *        point.
+     * \brief Return the velocity \f$ \mathrm{[m/s]} \f$ at the integration
+     *        point multiplied by the normal and the area.
      */
     Scalar normalVelocityAtIP() const
     { return normalVelocityAtIP_; }
@@ -205,13 +201,6 @@ public:
      */
     const VectorGradient &velocityGradAtIP() const
     { return velocityGradAtIP_; }
-
-    /*!
-     * \brief Return the divergence of the normal velocity at the
-     *        integration point.
-     */
-    Scalar velocityDivAtIP() const
-    { return velocityDivAtIP_; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.
@@ -253,7 +242,6 @@ protected:
     Scalar viscosityAtIP_;
     Scalar pressureAtIP_;
     Scalar normalVelocityAtIP_;
-    Scalar velocityDivAtIP_;
     VelocityVector velocityAtIP_;
     FieldVector normal_;
 
