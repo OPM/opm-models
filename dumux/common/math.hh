@@ -372,131 +372,20 @@ int invertCubicPolynomial(SolContainer *sol,
 }
 
 /*!
- * \ingroup Math
- * \brief Comparison of two position vectors
- *
- * Compares an current position vector with a reference vector, and returns true
- * if the position vector is larger.
- * "Larger" in this case means that all the entries of each spacial dimension are
- * larger compared to the reference vector.
- *
- * \param pos Vektor holding the current Position that is to be checked
- * \param smallerVec Reference vector, holding the minimum values for comparison.
- */
-template <class Scalar, int dim>
-bool isLarger(const Dune::FieldVector<Scalar, dim> &pos,
-              const Dune::FieldVector<Scalar, dim> &smallerVec)
-{
-    for (int i=0; i < dim; i++)
-    {
-        if (pos[i]<= smallerVec[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-/*!
- * \ingroup Math
- * \brief Comparison of two position vectors
- *
- * Compares an current position vector with a reference vector, and returns true
- * if the position vector is smaller.
- * "Smaller" in this case means that all the entries of each spacial dimension are
- * smaller in comparison with the reference vector.
- *
- * \param pos Vektor holding the current Position that is to be checked
- * \param largerVec Reference vector, holding the maximum values for comparison.
- */
-template <class Scalar, int dim>
-bool isSmaller(const Dune::FieldVector<Scalar, dim> &pos,
-               const Dune::FieldVector<Scalar, dim> &largerVec)
-{
-    for (int i=0; i < dim; i++)
-    {
-        if (pos[i]>= largerVec[i])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
-/*!
- * \ingroup Math
- * \brief Comparison of three position vectors
- *
- * Compares an current position vector with two reference vector, and returns true
- * if the position vector lies in between them.
- * "Between" in this case means that all the entries of each spacial dimension are
- * smaller in comparison with the larger reference vector as well as larger campared
- * to the smaller reference.
- * This is comfortable to cheack weather the current position is located inside or
- * outside of a lense with different properties.
- *
- * \param pos Vektor holding the current Position that is to be checked
- * \param smallerVec Reference vector, holding the minimum values for comparison.
- * \param largerVec Reference vector, holding the maximum values for comparison.
- */
-template <class Scalar, int dim>
-bool isBetween(const Dune::FieldVector<Scalar, dim> &pos,
-              const Dune::FieldVector<Scalar, dim> &smallerVec,
-              const Dune::FieldVector<Scalar, dim> &largerVec)
-{
-   if (isLarger(pos, smallerVec) && isSmaller(pos, largerVec))
-       {
-           return true;
-       }
-   else
-       return false;
-}
-
-
-/*!
- * \ingroup Math
- * \brief Evaluates the Antoine equation used to calculate the vapour
- *        pressure of various liquids.
- *
- * See http://en.wikipedia.org/wiki/Antoine_equation
- *
- * \param temperature The temperature [K] of the fluid
- * \param A The first coefficient for the Antoine equation
- * \param B The first coefficient for the Antoine equation
- * \param C The first coefficient for the Antoine equation
- */
-template <class Scalar>
-Scalar antoine(Scalar temperature,
-               Scalar A,
-               Scalar B,
-               Scalar C)
-{
-    const Scalar ln10 = 2.3025850929940459;
-    return std::exp(ln10*(A - B/(C + temperature)));
-}
-
-/*!
- * \brief cross product of two vectors in three-dimensional Euclidean space
+ * \brief Cross product of two vectors in three-dimensional Euclidean space
  *
  * \param vec1 The first vector
  * \param vec2 The second vector
  */
-template <class Scalar, int dim>
-Dune::FieldVector<Scalar, dim> crossProduct(const Dune::FieldVector<Scalar, dim> &vec1,
-              const Dune::FieldVector<Scalar, dim> &vec2)
+template <class Scalar>
+Dune::FieldVector<Scalar, 3> crossProduct(const Dune::FieldVector<Scalar, 3> &vec1,
+                                          const Dune::FieldVector<Scalar, 3> &vec2)
 {
-    Dune::FieldVector<Scalar, dim> result(0);
-
-    if (dim == 3)
-    {
-        result[0] = vec1[1]*vec2[2]-vec1[2]*vec2[1];
-        result[1] = vec1[2]*vec2[0]-vec1[0]*vec2[2];
-        result[2] = vec1[0]*vec2[1]-vec1[1]*vec2[0];
-    }
-    else
-    {
-        DUNE_THROW(Dune::NotImplemented, "Cross product is so far only supported for three dimensions!");
-    }
+    Dune::FieldVector<Scalar, 3> result;
+    
+    result[0] = vec1[1]*vec2[2] - vec1[2]*vec2[1];
+    result[1] = vec1[2]*vec2[0] - vec1[0]*vec2[2];
+    result[2] = vec1[0]*vec2[1] - vec1[1]*vec2[0];
 
     return result;
 }

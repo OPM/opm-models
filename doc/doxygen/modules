@@ -63,7 +63,16 @@
 	 */
 		/*!
 		 * \ingroup Components
-		 * \defgroup IAPWS IAPWS
+		 * \defgroup IAPWS IAPWS'97 Water
+         *
+         * This module implements the properties of water according to
+         * the 1997 specifications of the International Association
+         * for the Properties of Water and Steam. See:
+         * 
+         * Revised Release on the IAPWS Industrial Formulation 1997
+         * for the Thermodynamic Properties of Water and Steam,
+         * International Association for the Properties of Water and
+         * Steam, 2007. http://www.iapws.org/relguide/IF97-Rev.pdf
 		 */
 	/*!
 	 * \ingroup Material

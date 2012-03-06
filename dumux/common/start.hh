@@ -50,6 +50,7 @@ NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(TimeManager);
 }
 
+//! \cond 0
 /*!
  * \ingroup Start
  *
@@ -332,17 +333,13 @@ int start_(int argc,
     }
     return 0;
 }
+//! \endcond
 
 /*!
  * \ingroup Start
  *
-    return false;
-    
  * \brief Provides a main function which reads in parameters from the
  *        command line and a parameter file.
- *
- *        In this function only the differentiation between debugger
- *        or not is made.
  *
  * \tparam TypeTag  The type tag of the problem which needs to be solved
  *

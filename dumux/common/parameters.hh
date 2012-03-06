@@ -48,9 +48,11 @@
  *
  * Example:
  *
+ * \code
  * // -> retrieves scalar value UpwindWeight, default
  * // is taken from the property UpwindWeight
  * GET_PARAM(TypeTag, Scalar, UpwindWeight);
+ * \endcode
  */
 #define GET_PARAM(TypeTag, ParamType, ParamName)                        \
     Dumux::Parameters::get<TypeTag,                                     \
@@ -67,9 +69,11 @@
  *
  * Example:
  *
+ * \code
  * // -> retrieves Boolean value Newton.WriteConvergence, default
  * // is taken from the property NewtonWriteConvergence
  * GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence);
+ * \endcode
  */
 #define GET_PARAM_FROM_GROUP(TypeTag, ParamType, GroupName, ParamName)  \
     Dumux::Parameters::get<TypeTag,                                     \
@@ -83,8 +87,10 @@
  *
  * Example:
  *
+ * \code
  * // -> retrieves global integer value NumberOfCellsX
  * GET_RUNTIME_PARAM(TypeTag, int, NumberOfCellsX);
+ * \endcode
  */
 #define GET_RUNTIME_PARAM(TypeTag, ParamType, ParamName) \
         Dumux::Parameters::getRuntime<TypeTag, ParamType>(#ParamName)
@@ -98,9 +104,11 @@
  *
  * Example:
  *
+ * \code
  * // -> retrieves global integer value NumberOfCellsX which is
  * // located int the parameter group "Geometry"
  * GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, int, Geometry, NumberOfCellsX);
+ * \endcode
  */
 #define GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, ParamType, GroupName, ParamName) \
     Dumux::Parameters::getRuntime<TypeTag, ParamType>(#GroupName, #ParamName)
