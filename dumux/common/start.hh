@@ -89,6 +89,7 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
         "parameter file '"<<progName <<".input'\n"
         "\n";
 }
+
 /*!
  * \ingroup Start
  * \brief Read the command line arguments and write them into the parameter tree.
@@ -215,156 +216,145 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
  * \param   usage   Callback function for printing the usage message
  */
 template <class TypeTag>
-int start_(int argc,
-           char **argv,
-           void (*usage)(const char *, const std::string &))
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator; 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-    // initialize MPI, finalize is done automatically on exit
-    const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
-
-    // make sure we have a meaningful usage function
-    if (!usage)
-        usage = printDefaultUsage;
-    
-    ////////////////////////////////////////////////////////////
-    // parse the command line arguments
-    ////////////////////////////////////////////////////////////
-
-    // check whether the user wanted to see the help message
-    for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-        {
-            usage(argv[0], "");
-            return 0;
-        }
-    }
-
-    // fill the parameter tree with the options from the command line
-    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
-    std::string s = readOptions_(argc, argv, ParameterTree::tree());
-    if (!s.empty()) {
-        usage(argv[0], s);
-        return 1;
-    }
-
-    if (!ParameterTree::tree().hasKey("ParameterFile")) {
-        std::string paramFileName;
-        paramFileName += argv[0];
-        paramFileName += ".input";
-            
-        std::ifstream ifs(paramFileName.c_str());
-        if (ifs) {
-            ifs.close();
-            std::cout << "Using fallback parameter file '" << paramFileName << "'\n";
-            ParameterTree::tree()["ParameterFile"] = paramFileName;
-        }
-    }
-
-    if (ParameterTree::tree().hasKey("ParameterFile")) {
-        std::string inputFileName =
-            GET_RUNTIME_PARAM(TypeTag, std::string, ParameterFile);
-
-        // check whether the parameter file is readable.
-        std::ifstream tmp;
-        tmp.open(inputFileName.c_str());
-        if (!tmp.is_open()){
-            std::ostringstream oss;
-            oss << "Parameter file \"" << inputFileName << "\" is does not exist or is not readable.";
-            usage(argv[0], oss.str());
-            return 1;
-        }
-
-        // read the parameter file.
-        Dune::ParameterTreeParser::readINITree(inputFileName,
-                                               ParameterTree::tree(),
-                                               /*overwrite=*/false);
-    }
-
-    bool printProps = true;
-    if (ParameterTree::tree().hasKey("PrintProperties"))
-        printProps = GET_RUNTIME_PARAM(TypeTag, bool, PrintProperties);
-
-    if (printProps && mpiHelper.rank() == 0) {
-        Dumux::Properties::print<TypeTag>();
-    }
-
-    // deal with the restart stuff
-    bool restart = false;
-    Scalar restartTime = 0;
-    if (ParameterTree::tree().hasKey("RestartTime")) {
-        restart = true;
-        restartTime = GET_RUNTIME_PARAM(TypeTag, Scalar, RestartTime);
-    }
-
-    // read the PrintParams parameter
-    bool printParams = true;
-    if (ParameterTree::tree().hasKey("PrintParameters"))
-        printParams = GET_RUNTIME_PARAM(TypeTag, bool, PrintParameters);
-
-    // try to create a grid (from the given grid file)
-    try { GridCreator::makeGrid(); }
-    catch (...) { usage(argv[1], "Creation of the grid failed!"); throw; }
-    GridCreator::loadBalance();
-
-    // read the initial time step and the end time
-    double tEnd;
-    double dt;
-
-    try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, TEnd); }
-    catch (...) { usage(argv[1], "Mandatory parameter '--t-end' not specified!"); throw; }
-
-    try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, DtInitial); }
-    catch (...) { usage(argv[1], "Mandatory parameter '--dt-initial' not specified!"); throw; }
-
-    // instantiate and run the concrete problem
-    TimeManager timeManager;
-    Problem problem(timeManager);
-    timeManager.init(problem, restartTime, dt, tEnd, restart);
-    timeManager.run();
-
-    if (printParams && mpiHelper.rank() == 0) {
-        Dumux::Parameters::print<TypeTag>();
-    }
-    return 0;
-}
-//! \endcond
-
-/*!
- * \ingroup Start
- *
- * \brief Provides a main function which reads in parameters from the
- *        command line and a parameter file.
- *
- * \tparam TypeTag  The type tag of the problem which needs to be solved
- *
- * \param argc  The number of command line arguments of the program
- * \param argv  The contents of the command line arguments of the program
- * \param usage Callback function for printing the usage message
- */
-template <class TypeTag>
 int start(int argc,
           char **argv,
           void (*usage)(const char *, const std::string &) = 0)
 {
+    // initialize MPI, finalize is done automatically on exit
+    const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
+    
+    // make sure that we always have a meaningful usage function
+    if (!usage)
+        usage = printDefaultUsage;
+    
+    int myRank = mpiHelper.rank();
+
     try {
-        return start_<TypeTag>(argc, argv, usage);
+        typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+        typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+        typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator; 
+        typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+        typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+
+        ////////////////////////////////////////////////////////////
+        // parse the command line arguments
+        ////////////////////////////////////////////////////////////
+
+        // check whether the user wanted to see the help message
+        for (int i = 1; i < argc; ++i) {
+            if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
+            {
+                if (myRank == 0)
+                    usage(argv[0], "");
+                return 0;
+            }
+        }
+
+        // fill the parameter tree with the options from the command line
+        typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
+        std::string s = readOptions_(argc, argv, ParameterTree::tree());
+        if (!s.empty()) {
+            if (myRank == 0)
+                usage(argv[0], s);
+            return 1;
+        }
+
+        if (!ParameterTree::tree().hasKey("ParameterFile")) {
+            std::string paramFileName;
+            paramFileName += argv[0];
+            paramFileName += ".input";
+            
+            std::ifstream ifs(paramFileName.c_str());
+            if (ifs) {
+                ifs.close();
+                if (myRank == 0)
+                    std::cout << "Using fallback parameter file '" << paramFileName << "'\n";
+                ParameterTree::tree()["ParameterFile"] = paramFileName;
+            }
+        }
+
+        if (ParameterTree::tree().hasKey("ParameterFile")) {
+            std::string inputFileName =
+                GET_RUNTIME_PARAM(TypeTag, std::string, ParameterFile);
+
+            // check whether the parameter file is readable.
+            std::ifstream tmp;
+            tmp.open(inputFileName.c_str());
+            if (!tmp.is_open()){
+                std::ostringstream oss;
+                if (myRank == 0) {
+                    oss << "Parameter file \"" << inputFileName << "\" is does not exist or is not readable.";
+                    usage(argv[0], oss.str());
+                }
+                return 1;
+            }
+
+            // read the parameter file.
+            Dune::ParameterTreeParser::readINITree(inputFileName,
+                                                   ParameterTree::tree(),
+                                                   /*overwrite=*/false);
+        }
+
+        bool printProps = true;
+        if (ParameterTree::tree().hasKey("PrintProperties"))
+            printProps = GET_RUNTIME_PARAM(TypeTag, bool, PrintProperties);
+
+        if (printProps && myRank == 0) {
+            Dumux::Properties::print<TypeTag>();
+        }
+
+        // deal with the restart stuff
+        bool restart = false;
+        Scalar restartTime = 0;
+        if (ParameterTree::tree().hasKey("RestartTime")) {
+            restart = true;
+            restartTime = GET_RUNTIME_PARAM(TypeTag, Scalar, RestartTime);
+        }
+
+        // read the PrintParams parameter
+        bool printParams = true;
+        if (ParameterTree::tree().hasKey("PrintParameters"))
+            printParams = GET_RUNTIME_PARAM(TypeTag, bool, PrintParameters);
+
+        // try to create a grid (from the given grid file)
+        try { GridCreator::makeGrid(); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Creation of the grid failed!"); throw; }
+        GridCreator::loadBalance();
+
+        // read the initial time step and the end time
+        double tEnd;
+        double dt;
+
+        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, TEnd); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--t-end' not specified!"); throw; }
+
+        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, DtInitial); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--dt-initial' not specified!"); throw; }
+
+        // instantiate and run the concrete problem
+        TimeManager timeManager;
+        Problem problem(timeManager);
+        timeManager.init(problem, restartTime, dt, tEnd, restart);
+        timeManager.run();
+
+        if (printParams && myRank == 0) {
+            Dumux::Parameters::print<TypeTag>();
+        }
+        return 0;
     }
     catch (Dumux::ParameterException &e) {
-        std::cerr << e << ". Abort!\n";
+        if (myRank == 0)
+            std::cerr << e << ". Abort!\n";
         return 1;
     }
     catch (Dune::Exception &e) {
-        std::cerr << "Dune reported error: " << e << std::endl;
+        if (myRank == 0)
+            std::cerr << "Dune reported error: " << e << std::endl;
         return 2;
     }
     catch (...) {
-        std::cerr << "Unknown exception thrown!\n";
+        if (myRank == 0)
+            std::cerr << "Unknown exception thrown!\n";
         return 3;
     }
 }
