@@ -70,6 +70,8 @@ public:
      */
     static void makeGrid()
     {
+        grid_ = new Grid;
+        
         Dune::FieldVector<int, 2> cellRes;
         Dune::FieldVector<Scalar, 2> upperRight;
         Dune::FieldVector<Scalar, 2> lowerLeft;
@@ -82,7 +84,7 @@ public:
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         
-        Dune::GridFactory<Dune::UGGrid<2> > factory;
+        Dune::GridFactory<Dune::UGGrid<2> > factory(grid_);
         for (int i=0; i<=cellRes[0]; i++) {
             for (int j=0; j<=cellRes[1]; j++) {
                 Dune::FieldVector<double,2> pos;
@@ -126,7 +128,6 @@ public:
         }
 
         grid_ = factory.createGrid();
-        grid_->loadBalance();
     }
 
     /*!
@@ -141,6 +142,7 @@ public:
      */
     static void loadBalance()
     { grid_->loadBalance(); };
+
 private:
     static Grid *grid_;
 };
