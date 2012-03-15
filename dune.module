@@ -2,7 +2,7 @@
 # Dune module information file #
 ################################
 
-Module: dumux
-Version: 2.2-eWoms
+Module: ewoms
+Version: 2.2-git
 Maintainer: andreas.lauser@iws.uni-stuttgart.de
 Depends: dune-grid (>= 2.1) dune-localfunctions  (>= 2.1) dune-istl  (>= 2.1)
