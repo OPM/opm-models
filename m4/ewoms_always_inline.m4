@@ -9,6 +9,6 @@ AC_DEFUN([EWOMS_CHECK_ALWAYS_INLINE],[
                  [EWOMS_ALWAYS_INLINE=""
                   AC_MSG_RESULT(no)])
   AC_LANG_POP([C++])
-  AC_DEFINE_UNQUOTED(EWOMS_ALWAYS_INLINE, $DUMUX_ALWAYS_INLINE,
+  AC_DEFINE_UNQUOTED(DUMUX_ALWAYS_INLINE, $EWOMS_ALWAYS_INLINE,
                      [USE WITH CARE: Forces a function to be inlined even for non-optimized builds])
 ])

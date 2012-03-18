@@ -9,6 +9,6 @@ AC_DEFUN([EWOMS_CHECK_UNUSED],[
                  [EWOMS_UNUSED=""
                   AC_MSG_RESULT(no)])
   AC_LANG_POP([C++])
-  AC_DEFINE_UNQUOTED(EWOMS_UNUSED, $DUMUX_UNUSED,
+  AC_DEFINE_UNQUOTED(DUMUX_UNUSED, $EWOMS_UNUSED,
                      [USE WITH CARE: Prevents the compiler from prining a warning if it thinks that a variable might be unused])
 ])
