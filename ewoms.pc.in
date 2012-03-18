@@ -8,8 +8,8 @@ DEPENDENCIES=@REQUIRES@
 
 Name: @PACKAGE_NAME@
 Version: @VERSION@
-Description: dumux module
-URL: http://dune-project.org/
-Requires: dune-pdelab
+Description: The eWoms simulation framework
+URL: https://gitorious.org/ewoms
+Requires: dune-common dune-grid dune-localfunctions dune-istl 
 Libs: -L
 Cflags: -I

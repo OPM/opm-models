@@ -1,4 +1,4 @@
-AC_DEFUN([DUMUX_CHECK_QUAD],
+AC_DEFUN([EWOMS_CHECK_QUAD],
 [
   AC_ARG_ENABLE(quad,
     AS_HELP_STRING([--enable-quad], [provide quad-precision floating point math]))
