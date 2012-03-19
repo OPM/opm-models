@@ -262,8 +262,10 @@ public:
             timeManager().setTimeStepSize(nextDt);
 
             // update failed
-            std::cout << "Newton solver did not converge with dt="<<dt<<" seconds. Retrying with time step of "
-                      << nextDt << " seconds\n";
+            if (gridView().comm().rank() == 0)
+                std::cout << "Newton solver did not converge with "
+                          << "dt=" << dt << " seconds. Retrying with time step of "
+                          << nextDt << " seconds\n";
         }
 
         DUNE_THROW(Dune::MathError,
