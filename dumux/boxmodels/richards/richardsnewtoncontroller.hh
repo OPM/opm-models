@@ -29,7 +29,7 @@
 
 #include "richardsproperties.hh"
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 namespace Dumux {
@@ -41,9 +41,9 @@ namespace Dumux {
  * and can thus do update smarter than the plain Newton controller.
  */
 template <class TypeTag>
-class RichardsNewtonController : public NewtonController<TypeTag>
+class RichardsNewtonController : public BoxNewtonController<TypeTag>
 {
-    typedef NewtonController<TypeTag> ParentType;
+    typedef BoxNewtonController<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -75,7 +75,7 @@ public:
     /*!
      * \brief Constructor
      */
-    RichardsNewtonController(const Problem &problem)
+    RichardsNewtonController(Problem &problem)
         : ParentType(problem)
     {}
 
@@ -94,20 +94,22 @@ public:
                       const SolutionVector &uLastIter,
                       const GlobalEqVector &deltaU)
     {
+        const auto &assembler = this->problem().model().jacobianAssembler();
+        const auto &problem = this->problem();
+
         ParentType::newtonUpdate(uCurrentIter, uLastIter, deltaU);
 
-        const auto &assembler = this->model_().jacobianAssembler();
-        if (!GET_PARAM(TypeTag, bool, NewtonUseLineSearch))
+        if (!this->useLineSearch_)
         {
             // do not clamp anything after 5 iterations
             if (this->numSteps_ > 4)
                 return;
 
             // clamp saturation change to at most 20% per iteration
-            ElementContext elemCtx(this->problem_());
+            ElementContext elemCtx(problem);
 
-            ElementIterator elemIt = this->gridView_().template begin<0>();
-            const ElementIterator &elemEndIt = this->gridView_().template end<0>();
+            ElementIterator elemIt = problem.gridView().template begin<0>();
+            const ElementIterator &elemEndIt = problem.gridView().template end<0>();
             for (; elemIt != elemEndIt; ++elemIt)
             {
                 if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
@@ -118,14 +120,13 @@ public:
                 elemCtx.updateFVElemGeom(*elemIt);
 
                 for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-                    int globI = this->problem_().vertexMapper().map(*elemIt, scvIdx, dim);
+                    int globI = problem.vertexMapper().map(*elemIt, scvIdx, dim);
                     if (assembler.vertexColor(globI) == JacobianAssembler::Green)
                         // don't limit at green vertices, since they
                         // probably have not changed much anyways
                         continue;
 
                     // calculate the old wetting phase saturation
-                    const auto &problem = this->problem_();
                     const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
                     
                     ImmiscibleFluidState<Scalar, FluidSystem> fs;
@@ -145,7 +146,7 @@ public:
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
                     Scalar pWOld = uLastIter[globI][pwIdx];
-                    Scalar pNOld = std::max(this->problem_().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
+                    Scalar pNOld = std::max(problem.referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                                             pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
                     
                     /////////

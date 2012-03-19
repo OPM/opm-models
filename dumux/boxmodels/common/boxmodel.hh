@@ -90,16 +90,18 @@ class BoxModel
     typedef typename Dune::GenericReferenceElements<CoordScalar, dim> ReferenceElements;
     typedef typename Dune::GenericReferenceElement<CoordScalar, dim> ReferenceElement;
 
+    typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
+    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
+
     // copying a model is not a good idea
     BoxModel(const BoxModel &);
 
 public:
-    /*!
-     * \brief The constructor.
-     */
+    // this constructor required to be explicitly specified because
+    // we've defined a constructor above which deletes all implicitly
+    // generated constructors in C++.
     BoxModel()
-    {
-    }
+    {}
 
     ~BoxModel()
     {
@@ -190,12 +192,12 @@ public:
      * \param u The solution for which the residual ought to be calculated
      */
     Scalar globalResidual(GlobalEqVector &dest,
-                          const SolutionVector &u)
+                          const SolutionVector &u) const
     {
         SolutionVector tmp(solution(/*timeIdx=*/0));
-        solution(/*timeIdx=*/0) = u;
+        solution_[/*timeIdx=*/0] = u;
         Scalar res = globalResidual(dest);
-        solution(/*timeIdx=*/0) = tmp;
+        solution_[/*timeIdx=*/0] = tmp;
         return res;
     }
 
@@ -205,21 +207,25 @@ public:
      *
      * \param dest Stores the result
      */
-    Scalar globalResidual(GlobalEqVector &dest)
+    Scalar globalResidual(GlobalEqVector &dest) const
     {
         dest = 0;
+
+        LocalBlockVector residual, storageTerm;
 
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = gridView_().template begin<0>();
         const ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateAll(*elemIt);
-            localResidual().eval(elemCtx);
+            residual.resize(elemCtx.numScv());
+            storageTerm.resize(elemCtx.numScv());
+            localResidual().eval(residual, storageTerm, elemCtx);
 
             int numScv = elemCtx.numScv();
             for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
                 int globalI = vertexMapper().map(*elemIt, scvIdx, dim);
-                dest[globalI] += localResidual().residual(scvIdx);
+                dest[globalI] += residual[scvIdx];
             }
         };
 
@@ -355,7 +361,7 @@ public:
      */
     Scalar relativeErrorVertex(int vertexIdx,
                                const PrimaryVariables &pv1,
-                               const PrimaryVariables &pv2)
+                               const PrimaryVariables &pv2) const
     {
         Scalar result = 0.0;
         for (int j = 0; j < numEq; ++j) {
@@ -627,7 +633,7 @@ public:
     template <class MultiWriter>
     void addConvergenceVtkFields(MultiWriter &writer,
                                  const SolutionVector &u,
-                                 const GlobalEqVector &deltaU)
+                                 const GlobalEqVector &deltaU) const
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
 
@@ -706,7 +712,7 @@ public:
      */
     template <class MultiWriter>
     void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
+                            MultiWriter &writer) const
     {
         auto modIt = vtkOutputModules_.begin();
         const auto &modEndIt = vtkOutputModules_.end();
@@ -925,7 +931,7 @@ protected:
 
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
-    SolutionVector solution_[historySize];
+    mutable SolutionVector solution_[historySize];
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<int> boundaryVertexIndex_;

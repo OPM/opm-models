@@ -23,13 +23,13 @@
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH
 
-#include <dumux/common/propertysystem.hh>
+#include "boxnewtoncontroller.hh"
 
-#include <dumux/common/basicproperties.hh>
-#include <dumux/linear/linearsolverproperties.hh>
 #include <dumux/nonlinear/newtonmethod.hh>
-
+#include <dumux/linear/linearsolverproperties.hh>
 #include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
+#include <dumux/common/basicproperties.hh>
+#include <dumux/common/propertysystem.hh>
 
 /*!
  * \ingroup Properties
@@ -54,7 +54,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for models based on the box-scheme
-NEW_TYPE_TAG(BoxModel, INHERITS_FROM(NewtonMethod,
+NEW_TYPE_TAG(BoxModel, INHERITS_FROM(BoxNewtonMethod,
                                      LinearSolverTypeTag,
                                      ImplicitModel,
                                      VtkPrimaryVars));

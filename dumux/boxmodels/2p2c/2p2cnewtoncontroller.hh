@@ -32,7 +32,7 @@
 
 #include "2p2cproperties.hh"
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 
 namespace Dumux {
 
@@ -46,14 +46,14 @@ namespace Dumux {
  * way out of bounds.
  */
 template <class TypeTag>
-class TwoPTwoCNewtonController : public NewtonController<TypeTag>
+class TwoPTwoCNewtonController : public BoxNewtonController<TypeTag>
 {
-    typedef NewtonController<TypeTag> ParentType;
+    typedef BoxNewtonController<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    TwoPTwoCNewtonController(const Problem &problem)
+    TwoPTwoCNewtonController(Problem &problem)
         : ParentType(problem)
     {}
 
@@ -67,7 +67,7 @@ public:
                        const SolutionVector &uLastIter)
     {
         ParentType::newtonEndStep(uCurrentIter, uLastIter);
-        this->method().model().switchPrimaryVars_();
+        this->problem().model().switchPrimaryVars_();
     }
 
     /*!
@@ -76,7 +76,7 @@ public:
      */
     bool newtonConverged()
     {
-        if (this->method().model().switched())
+        if (this->problem().model().switched())
             return false;
 
         return ParentType::newtonConverged();

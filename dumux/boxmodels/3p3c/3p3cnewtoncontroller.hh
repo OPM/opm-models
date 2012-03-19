@@ -34,7 +34,7 @@
 
 #include "3p3cproperties.hh"
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 
 namespace Dumux {
 /*!
@@ -46,14 +46,14 @@ namespace Dumux {
  * way out of bounds.
  */
 template <class TypeTag>
-class ThreePThreeCNewtonController : public NewtonController<TypeTag>
+class ThreePThreeCNewtonController : public BoxNewtonController<TypeTag>
 {
-    typedef NewtonController<TypeTag> ParentType;
+    typedef BoxNewtonController<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    ThreePThreeCNewtonController(const Problem &problem)
+    ThreePThreeCNewtonController(Problem &problem)
         : ParentType(problem)
     {};
 
@@ -68,7 +68,7 @@ public:
                        const SolutionVector &uLastIter)
     {
         // call the method of the base class
-        this->method().model().switchPrimaryVars_();
+        this->problem().model().switchPrimaryVars_();
         ParentType::newtonEndStep(uCurrentIter, uLastIter);
     }
 
@@ -79,7 +79,7 @@ public:
      */
     bool newtonConverged()
     {
-        if (this->method().model().switched())
+        if (this->problem().model().switched())
             return false;
 
         return ParentType::newtonConverged();

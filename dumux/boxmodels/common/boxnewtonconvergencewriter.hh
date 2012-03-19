@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010-11 by Andreas Lauser                                 *
+ *   Copyright (C) 2010-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -22,23 +22,32 @@
 /*!
  * \file
  *
- * \brief This class provides the infrastructure to write the
- *        convergence behaviour of the newton method into a VTK file.
+ * \brief Writes the intermediate solutions during the Newton scheme
+ *        for models using the box scheme
  */
-#ifndef DUMUX_NEWTON_CONVERGENCE_WRITER_HH
-#define DUMUX_NEWTON_CONVERGENCE_WRITER_HH
+#ifndef DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
+#define DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
 
-#include "newtoncontroller.hh"
+#include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/io/vtkmultiwriter.hh>
+#include <dumux/common/propertysystem.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+namespace Properties {
+// forward declaration of the required property tags
+NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(NewtonController);
+NEW_PROP_TAG(SolutionVector);
+NEW_PROP_TAG(GlobalEqVector);
+}
+
 /*!
  * \ingroup Newton
- * \brief Writes the intermediate solutions during
- *        the Newton scheme
+ * \brief Writes the intermediate solutions during the Newton scheme
+ *        for models using the box scheme
  */
 template <class TypeTag>
-class NewtonConvergenceWriter
+class BoxNewtonConvergenceWriter
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonController) NewtonController;
@@ -49,7 +58,7 @@ class NewtonConvergenceWriter
     typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
 public:
-    NewtonConvergenceWriter(NewtonController &ctl)
+    BoxNewtonConvergenceWriter(NewtonController &ctl)
         : ctl_(ctl)
     {
         timeStepIndex_ = 0;
@@ -57,7 +66,7 @@ public:
         vtkMultiWriter_ = 0;
     }
 
-    ~NewtonConvergenceWriter()
+    ~BoxNewtonConvergenceWriter()
     { delete vtkMultiWriter_; };
 
     void beginTimestep()
@@ -66,18 +75,18 @@ public:
         iteration_ = 0;
     };
 
-    void beginIteration(const GridView &gv)
+    void beginIteration()
     {
         ++ iteration_;
         if (!vtkMultiWriter_)
-            vtkMultiWriter_ = new VtkMultiWriter(gv, "convergence");
+            vtkMultiWriter_ = new VtkMultiWriter(ctl_.problem().gridView(), "convergence");
         vtkMultiWriter_->beginWrite(timeStepIndex_ + iteration_ / 100.0);
     };
 
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
     {
-        ctl_.method().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
+        ctl_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
     };
 
     void endIteration()

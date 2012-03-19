@@ -39,10 +39,18 @@
 #include <dumux/linear/overlappingpreconditioner.hh>
 #include <dumux/linear/overlappingscalarproduct.hh>
 #include <dumux/linear/overlappingoperator.hh>
-#include <dumux/boxmodels/common/boxproperties.hh>
 
-namespace Dumux
-{
+#include <dumux/common/propertysystem.hh>
+
+namespace Dumux {
+namespace Properties {
+// forward declaration of the required property tags
+NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(GlobalEqVector);
+NEW_PROP_TAG(VertexMapper);
+NEW_PROP_TAG(GridView);
+}
 
 /*!
  * \ingroup Linear

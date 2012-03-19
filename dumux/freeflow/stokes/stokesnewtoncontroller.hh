@@ -27,7 +27,7 @@
 #ifndef DUMUX_STOKES_NEWTON_CONTROLLER_HH
 #define DUMUX_STOKES_NEWTON_CONTROLLER_HH
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 
 namespace Dumux {
 /*!
@@ -37,16 +37,17 @@ namespace Dumux {
  *        different parameters for the relative tolerance, target steps and maximum steps.
  */
 template <class TypeTag>
-class StokesNewtonController : public NewtonController<TypeTag>
+class StokesNewtonController : public BoxNewtonController<TypeTag>
 {
-    typedef NewtonController<TypeTag> ParentType;
+    typedef BoxNewtonController<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
 public:
-    StokesNewtonController(const Problem &problem)
+    StokesNewtonController(Problem &problem)
         : ParentType(problem)
     {
-        Dune::FMatrixPrecision<>::set_singular_limit(1e-35);
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
 
         this->setRelTolerance(1e-6);
         this->setTargetSteps(10);

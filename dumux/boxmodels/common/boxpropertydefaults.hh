@@ -31,9 +31,6 @@
 #ifndef DUMUX_BOX_PROPERTY_DEFAULTS_HH
 #define DUMUX_BOX_PROPERTY_DEFAULTS_HH
 
-#include <dumux/nonlinear/newtonmethod.hh>
-#include <dumux/nonlinear/newtoncontroller.hh>
-
 #include "boxassembler.hh"
 #include "boxfvelementgeometry.hh"
 #include "boxlocalresidual.hh"
@@ -41,7 +38,9 @@
 #include "boxlocalresidual.hh"
 #include "boxelementcontext.hh"
 #include "boxvolumevariables.hh"
+#include "boxnewtoncontroller.hh"
 
+#include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/common/boundarytypes.hh>
 #include <dumux/common/timemanager.hh>
 
@@ -75,7 +74,7 @@ SET_TYPE_PROP(BoxModel, FVElementGeometry, Dumux::BoxFVElementGeometry<TypeTag>)
 SET_TYPE_PROP(BoxModel, NewtonMethod, Dumux::NewtonMethod<TypeTag>);
 
 //! use the plain newton controller for the box scheme by default
-SET_TYPE_PROP(BoxModel, NewtonController, Dumux::NewtonController<TypeTag>);
+SET_TYPE_PROP(BoxModel, NewtonController, Dumux::BoxNewtonController<TypeTag>);
 
 //! Mapper for the grid view's vertices.
 SET_TYPE_PROP(BoxModel,

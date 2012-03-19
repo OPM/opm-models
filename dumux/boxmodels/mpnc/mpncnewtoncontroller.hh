@@ -33,7 +33,8 @@
 
 #include "mpncproperties.hh"
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
+
 #include <algorithm>
 
 namespace Dumux {
@@ -118,15 +119,13 @@ private:
  * way out of bounds.
  */
 template <class TypeTag>
-class MPNCNewtonController : public NewtonController<TypeTag>
+class MPNCNewtonController : public BoxNewtonController<TypeTag>
 {
-    typedef NewtonController<TypeTag> ParentType;
+    typedef BoxNewtonController<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
@@ -143,20 +142,17 @@ class MPNCNewtonController : public NewtonController<TypeTag>
     typedef MpNcNewtonChop<TypeTag, enableKinetic> NewtonChop;
 
 public:
-    MPNCNewtonController(const Problem &problem)
+    MPNCNewtonController(Problem &problem)
         : ParentType(problem)
     {
         choppedIterations_ = GET_PARAM_FROM_GROUP(TypeTag, int, Newton, ChoppedIterations);
-        Dune::FMatrixPrecision<>::set_singular_limit(1e-35);
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     };
 
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,
                       const GlobalEqVector &deltaU)
     {
-        if (this->enableRelativeCriterion_ || this->enablePartialReassemble_)
-            this->newtonUpdateRelError(uLastIter, deltaU);
-
         // compute the vertex and element colors for partial
         // reassembly
         if (this->enablePartialReassemble_) {
@@ -168,11 +164,8 @@ public:
             this->model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
-        this->writeConvergence_(uLastIter, deltaU);
-
-        if (GET_PROP_VALUE(TypeTag, NewtonUseLineSearch)) {
-            lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
-        }
+        if (this->useLineSearch_)
+            this->lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
         else {
             for (int i = 0; i < uLastIter.size(); ++i) {
                 for (int j = 0; j < numEq; ++j) {
@@ -185,44 +178,10 @@ public:
                // beginning...
                NewtonChop::chop(uCurrentIter, uLastIter, this->model_());
             }
-
-            if (this->enableAbsoluteCriterion_)
-            {
-                GlobalEqVector tmp(uLastIter.size());
-                this->absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
-                this->absoluteError_ /= this->initialAbsoluteError_;
-            }
         }
     }
 
-private:
-    void lineSearchUpdate_(SolutionVector &uCurrentIter,
-                           const SolutionVector &uLastIter,
-                           const GlobalEqVector &deltaU)
-    {
-       Scalar lambda = 1.0;
-       Scalar globDef;
-
-       GlobalEqVector tmp(uLastIter.size());
-       Scalar oldGlobDef = this->model_().globalResidual(tmp, uLastIter);
-       while (true) {
-           for (int i = 0; i < uLastIter.size(); ++i) {
-               for (int j = 0; j < numEq; ++j) {
-                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
-               }
-           }
-
-           globDef = this->model_().globalResidual(tmp, uCurrentIter);
-           if (globDef < oldGlobDef || lambda <= 1.0/64) {
-               this->endIterMsg() << ", defect " << oldGlobDef << "->"  << globDef << "@lambda=1/" << 1/lambda;
-               return;
-           }
-
-           // try with a smaller update
-           lambda /= 2;
-       }
-    };
-
+protected:
     int choppedIterations_;
 };
 }

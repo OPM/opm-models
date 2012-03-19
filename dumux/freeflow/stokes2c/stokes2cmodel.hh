@@ -87,7 +87,7 @@ public:
     //! \copydoc BoxModel::addOutputVtkFields
     template <class MultiWriter>
     void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer)
+                            MultiWriter &writer) const
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
         typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VelocityField;

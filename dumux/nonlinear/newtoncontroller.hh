@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
-/****************************************************************************
- *   Copyright (C) 2008-2011 by Andreas Lauser                               *
+/*****************************************************************************
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2010 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -22,32 +22,33 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Reference implementation of a controller class for the Newton solver.
+ * \brief Base controller class for the Newton solver.
  *
- * Usually this controller should be sufficient.
+ * The actual discretizations are supposed to provide a more
+ * specialized class which handles stuff like actually updating the
+ * solution, etc.
  */
 #ifndef DUMUX_NEWTON_CONTROLLER_HH
 #define DUMUX_NEWTON_CONTROLLER_HH
 
+#include <dumux/common/parameters.hh>
 #include <dumux/common/propertysystem.hh>
-#include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/common/exceptions.hh>
 #include <dumux/common/math.hh>
-#include <dumux/io/vtkmultiwriter.hh>
-#include <dumux/linear/boxlinearsolver.hh>
 
-#include "newtonconvergencewriter.hh"
+#include <dune/istl/istlexception.hh>
+#include <dune/istl/ilu.hh> // required for Dune::MatrixBlockError. WTF?
+#include <dune/common/mpihelper.hh>
 
-namespace Dumux
-{
-template <class TypeTag>
-class NewtonController;
+namespace Dumux {
+namespace Properties {
 
-template <class TypeTag>
-class NewtonConvergenceWriter;
+//! create a new type tag on which the properties for the Newton method can be attached
+NEW_TYPE_TAG(NewtonMethod);
 
-namespace Properties
-{
+//! The type of scalar values
+NEW_PROP_TAG(Scalar);
+
 //! Specifies the implementation of the Newton controller
 NEW_PROP_TAG(NewtonController);
 
@@ -60,35 +61,25 @@ NEW_PROP_TAG(SolutionVector);
 //! Vector containing a quantity of for equation on the whole grid
 NEW_PROP_TAG(GlobalEqVector);
 
-//! Specifies the type of a vector of primary variables at a degree of freedom
-NEW_PROP_TAG(PrimaryVariables);
+//! Specifies the class of the physical problem
+NEW_PROP_TAG(Problem);
 
 //! Specifies the type of a global Jacobian matrix
 NEW_PROP_TAG(JacobianMatrix);
 
-//! Specifies the type of the Vertex mapper
-NEW_PROP_TAG(VertexMapper);
+//! Specifies the type of the linear solver to be used
+NEW_PROP_TAG(LinearSolver);
 
-//! specifies the type of the time manager
-NEW_PROP_TAG(TimeManager);
+//! Specifies the type of the class which writes out the Newton convergence
+NEW_PROP_TAG(NewtonConvergenceWriter);
 
 //! specifies whether the convergence rate and the global residual
 //! gets written out to disk for every Newton iteration (default is false)
 NEW_PROP_TAG(NewtonWriteConvergence);
 
-//! Specifies whether the Jacobian matrix should only be reassembled
-//! if the current solution deviates too much from the evaluation point
-NEW_PROP_TAG(EnablePartialReassemble);
-
-/*!
- * \brief Specifies whether the update should be done using the line search
- *        method instead of the plain Newton method.
- *
- * Whether this property has any effect depends on whether the line
- * search method is implemented for the actual model's Newton
- * controller's update() method. By default line search is not used.
- */
-NEW_PROP_TAG(NewtonUseLineSearch);
+//! specifies whether the convergence rate and the global residual
+//! gets written out to disk for every Newton iteration (default is false)
+NEW_PROP_TAG(ConvergenceWriter);
 
 //! indicate whether the relative error should be used
 NEW_PROP_TAG(NewtonEnableRelativeCriterion);
@@ -118,13 +109,8 @@ NEW_PROP_TAG(NewtonTargetSteps);
 //! Number of maximum iterations for the Newton method.
 NEW_PROP_TAG(NewtonMaxSteps);
 
-//! The assembler for the Jacobian matrix
-NEW_PROP_TAG(JacobianAssembler);
-
 // set default values
-SET_TYPE_PROP(NewtonMethod, NewtonController, Dumux::NewtonController<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonWriteConvergence, false);
-SET_BOOL_PROP(NewtonMethod, NewtonUseLineSearch, false);
 SET_BOOL_PROP(NewtonMethod, NewtonEnableRelativeCriterion, true);
 SET_BOOL_PROP(NewtonMethod, NewtonEnableAbsoluteCriterion, false);
 SET_BOOL_PROP(NewtonMethod, NewtonSatisfyAbsAndRel, false);
@@ -149,63 +135,69 @@ class NewtonController
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonController) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) NewtonConvergenceWriterNewtonMethod;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
-
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-
-    typedef NewtonConvergenceWriter<TypeTag> ConvergenceWriter;
-
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) NewtonConvergenceWriter;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
 
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef Dune::MPIHelper::MPICommunicator MPICommunicator;
+    typedef Dune::CollectiveCommunication<MPICommunicator> CollectiveCommunication;
 
 public:
-    /*!
-     * \brief
-     */
-    NewtonController(const Problem &problem)
+    NewtonController(Problem &problem)
         : endIterMsgStream_(std::ostringstream::out)
+        , problem_(problem)
         , convergenceWriter_(asImp_())
         , linearSolver_(problem)
+        , comm_(Dune::MPIHelper::getCommunicator())
     {
-        enablePartialReassemble_ = GET_PARAM(TypeTag, bool, EnablePartialReassemble);
-        enableJacobianRecycling_ = GET_PARAM(TypeTag, bool, EnableJacobianRecycling);
-
-        useLineSearch_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, UseLineSearch);
         enableRelativeCriterion_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, EnableRelativeCriterion);
         enableAbsoluteCriterion_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, EnableAbsoluteCriterion);
         satisfyAbsAndRel_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, SatisfyAbsAndRel);
         if (!enableRelativeCriterion_ && !enableAbsoluteCriterion_)
         {
-            DUNE_THROW(Dune::NotImplemented, "at least one of NewtonEnableRelativeCriterion or "
-                    << "NewtonEnableAbsoluteCriterion has to be set to true");
+            DUNE_THROW(Dune::InvalidStateException,
+                       "At least one of Newton.EnableRelativeCriterion or "
+                       "Newton.EnableAbsoluteCriterion has to be set to true");
         }
+/*
+        else if (satisfyAbsAndRel &&
+                 (!enableRelativeCriterion_ || !enableAbsoluteCriterion_))
+        {
+            DUNE_THROW(Dune::InvalidStateException,
+                       "If you set Newton.SatisfyAbsAndRel to true, you also must set "
+                       "Newton.EnableRelativeCriterion and Newton.EnableAbsoluteCriterion");
+
+        }
+*/
 
         setRelTolerance(GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, RelTolerance));
         setAbsTolerance(GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, AbsTolerance));
         setTargetSteps(GET_PARAM_FROM_GROUP(TypeTag, int, Newton, TargetSteps));
         setMaxSteps(GET_PARAM_FROM_GROUP(TypeTag, int, Newton, MaxSteps));
 
+        lastError_ = 1e100;
+        lastAbsoluteError_ = 1e100;
+
+        error_ = 1e100;
+        absoluteError_ = 1e100;
+
         verbose_ = true;
         numSteps_ = 0;
     };
 
     /*!
-     * \brief Destructor
+     * \brief Returns a reference to the object which describes the
+     *        physical problem.
      */
-    ~NewtonController()
-    {
-    };
+    const Problem &problem() const
+    { return problem_; }
+    Problem &problem()
+    { return problem_; }
 
     /*!
      * \brief Set the maximum acceptable difference for convergence of
@@ -282,23 +274,21 @@ public:
     bool newtonConverged() const
     {
         if (enableRelativeCriterion_ && !enableAbsoluteCriterion_)
-        {
+            // only look at the relative error
             return error_ <= tolerance_;
-        }
         else if (!enableRelativeCriterion_ && enableAbsoluteCriterion_)
-        {
+            // only look at the absolute error
             return absoluteError_ <= absoluteTolerance_;
-        }
         else if (satisfyAbsAndRel_)
-        {
-            return error_ <= tolerance_
-                    && absoluteError_ <= absoluteTolerance_;
-        }
+            // both, the absolute and the relative tolerances must be attained
+            return 
+                error_ <= tolerance_
+                && absoluteError_ <= absoluteTolerance_;
         else
-        {
+            // we're done as soon as either the absolute or the
+            // relative tolerance is achieved.
             return error_ <= tolerance_
-                    || absoluteError_ <= absoluteTolerance_;
-        }
+                || absoluteError_ <= absoluteTolerance_;
 
         return false;
     }
@@ -345,25 +335,26 @@ public:
      * \param uLastIter The current iterative solution
      * \param deltaU The difference between the current and the next solution
      */
-    void newtonUpdateRelError(const SolutionVector &uLastIter,
+    void newtonUpdateRelError(const SolutionVector &uCurrentIter,
+                              const SolutionVector &uLastIter,
                               const GlobalEqVector &deltaU)
     {
-        // calculate the relative error as the maximum relative
-        // deflection in any degree of freedom.
-        error_ = 0;
-        for (int i = 0; i < int(uLastIter.size()); ++i) {
-            PrimaryVariables uNewI = uLastIter[i];
-            uNewI -= deltaU[i];
+        DUNE_THROW(Dune::NotImplemented,
+                   "The Newton controller (" << Dune::className<Implementation>() << ") "
+                   "does not provide a newtonUpdateRelError() method!");
+    }
 
-            Scalar vertError = model_().relativeErrorVertex(i,
-                                                            uLastIter[i],
-                                                            uNewI);
-            error_ = std::max(error_, vertError);
-
-        }
-
-        if (gridView_().comm().size() > 1)
-            error_ = gridView_().comm().max(error_);
+    /*!
+     * \brief Update the absolute error of the solution compared to
+     *        the previous iteration.
+     */
+    void newtonUpdateAbsError(const SolutionVector &uCurrentIter,
+                              const SolutionVector &uLastIter,
+                              const GlobalEqVector &deltaU)
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "The Newton controller (" << Dune::className<Implementation>() << ") "
+                   "does not provide a newtonUpdateAbsError() method!");
     }
 
     /*!
@@ -384,19 +375,14 @@ public:
             if (numSteps_ == 0)
             {
                 Scalar norm2 = b.two_norm2();
-                if (gridView_().comm().size() > 1)
-                    norm2 = gridView_().comm().sum(norm2);
-
-                initialAbsoluteError_ = std::sqrt(norm2);
-                lastAbsoluteError_ = initialAbsoluteError_;
+                norm2 = comm_.sum(norm2);
             }
             
             int converged = linearSolver_.solve(A, x, b);
 
             // make sure all processes converged
             int convergedRemote = converged;
-            if (gridView_().comm().size() > 1)
-                convergedRemote = gridView_().comm().min(converged);
+            convergedRemote = comm_.min(converged);
 
             if (!converged) {
                 DUNE_THROW(NumericalProblem,
@@ -410,8 +396,7 @@ public:
         catch (Dune::MatrixBlockError e) {
             // make sure all processes converged
             int converged = 0;
-            if (gridView_().comm().size() > 1)
-                converged = gridView_().comm().min(converged);
+            converged = comm_.min(converged);
 
             Dumux::NumericalProblem p;
             std::string msg;
@@ -423,8 +408,7 @@ public:
         catch (const Dune::Exception &e) {
             // make sure all processes converged
             int converged = 0;
-            if (gridView_().comm().size() > 1)
-                converged = gridView_().comm().min(converged);
+            converged = comm_.min(converged);
 
             Dumux::NumericalProblem p;
             p.message(e.what());
@@ -449,44 +433,15 @@ public:
      *               system of equations. This parameter also stores
      *               the updated solution.
      */
-    void newtonUpdate(SolutionVector &uCurrentIter,
-                      const SolutionVector &uLastIter,
-                      const GlobalEqVector &deltaU)
+    void newtonUpdateErrors(const SolutionVector &uCurrentIter,
+                            const SolutionVector &uLastIter,
+                            const GlobalEqVector &deltaU)
     {
-        if (enableRelativeCriterion_ || enablePartialReassemble_)
-            newtonUpdateRelError(uLastIter, deltaU);
-
-        // compute the vertex and element colors for partial reassembly
-        if (enablePartialReassemble_) {
-            const Scalar minReasmTol = 1e-2*tolerance_;
-            const Scalar maxReasmTol = 1e1*tolerance_;
-            Scalar reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, this->error_/1e4));
-            //Scalar reassembleTol = minReasmTol;
-
-            this->model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
-            this->model_().jacobianAssembler().computeColors(reassembleTol);
-        }
-
+        lastError_ = error_;
+        lastAbsoluteError_ = absoluteError_;
+        asImp_().newtonUpdateRelError(uCurrentIter, uLastIter, deltaU);
+        asImp_().newtonUpdateAbsError(uCurrentIter, uLastIter, deltaU);       
         writeConvergence_(uLastIter, deltaU);
-
-        if (useLineSearch_)
-        {
-            lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
-        }
-        else {
-            for (int i = 0; i < uLastIter.size(); ++i) {
-                uCurrentIter[i] = uLastIter[i];
-                uCurrentIter[i] -= deltaU[i];
-            }
-
-            if (enableAbsoluteCriterion_)
-            {
-                GlobalEqVector tmp(uLastIter.size());
-                absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
-                absoluteError_ /= initialAbsoluteError_;
-            }
-        }
-
     }
 
     /*!
@@ -530,7 +485,6 @@ public:
      */
     void newtonFail()
     {
-        model_().jacobianAssembler().reassembleAll();
         numSteps_ = targetSteps_*2;
     }
 
@@ -541,10 +495,6 @@ public:
      */
     void newtonSucceed()
     {
-        if (enableJacobianRecycling_)
-            model_().jacobianAssembler().setMatrixReuseable(true);
-        else
-            model_().jacobianAssembler().reassembleAll();
     }
 
     /*!
@@ -572,20 +522,6 @@ public:
         }
     }
 
-    /*!
-     * \brief Returns a reference to the current Newton method
-     *        which is controlled by this controller.
-     */
-    NewtonMethod &method()
-    { return *method_; }
-
-    /*!
-     * \brief Returns a reference to the current Newton method
-     *        which is controlled by this controller.
-     */
-    const NewtonMethod &method() const
-    { return *method_; }
-
     std::ostringstream &endIterMsg()
     { return endIterMsgStream_; }
 
@@ -599,56 +535,58 @@ public:
      * \brief Returns true if the Newton method ought to be chatty.
      */
     bool verbose() const
-    { return verbose_ && gridView_().comm().rank() == 0; }
+    { return verbose_ && comm_.rank() == 0; }
 
 protected:
-    /*!
-     * \brief Returns a reference to the grid view.
-     */
-    const GridView &gridView_() const
-    { return problem_().gridView(); }
+    std::ostringstream endIterMsgStream_;
 
-    /*!
-     * \brief Returns a reference to the vertex mapper.
-     */
-    const VertexMapper &vertexMapper_() const
-    { return model_().vertexMapper(); }
+    NewtonMethod *method_;
+    Problem &problem_;
 
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    Problem &problem_()
-    { return method_->problem(); }
+    NewtonConvergenceWriterNewtonMethod convergenceWriter_;
 
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    const Problem &problem_() const
-    { return method_->problem(); }
+    // relative errors and tolerance
+    Scalar error_;
+    Scalar lastError_;
+    Scalar tolerance_;
 
-    /*!
-     * \brief Returns a reference to the time manager.
-     */
-    TimeManager &timeManager_()
-    { return problem_().timeManager(); }
+    // absolute errors and tolerance
+    Scalar absoluteError_;
+    Scalar lastAbsoluteError_;
+    Scalar absoluteTolerance_;
+    
+    // which criteria do we have to satisfy in order to be converged?
+    bool enableRelativeCriterion_;
+    bool enableAbsoluteCriterion_;
+    bool satisfyAbsAndRel_;
 
-    /*!
-     * \brief Returns a reference to the time manager.
-     */
-    const TimeManager &timeManager_() const
-    { return problem_().timeManager(); }
+    // optimal number of iterations we want to achieve
+    int targetSteps_;
+    // maximum number of iterations we do before giving up
+    int maxSteps_;
+    // actual number of steps done so far
+    int numSteps_;
 
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    Model &model_()
-    { return problem_().model(); }
+    // are we supposed to be chatty or not?
+    bool verbose_;
 
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    const Model &model_() const
-    { return problem_().model(); }
+    // the linear solver
+    LinearSolver linearSolver_;
+
+    // the collective communication used by the simulation (i.e. fake
+    // or MPI)
+    CollectiveCommunication comm_;
+
+private:
+    void writeConvergence_(const SolutionVector &uLastIter,
+                           const GlobalEqVector &deltaU)
+    {
+        if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence)) {
+            convergenceWriter_.beginIteration();
+            convergenceWriter_.writeFields(uLastIter, deltaU);
+            convergenceWriter_.endIteration();
+        }
+    };
 
     // returns the actual implementation for the controller we do
     // it this way in order to allow "poor man's virtual methods",
@@ -659,78 +597,6 @@ protected:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    void writeConvergence_(const SolutionVector &uLastIter,
-                           const GlobalEqVector &deltaU)
-    {
-        if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence)) {
-            convergenceWriter_.beginIteration(this->gridView_());
-            convergenceWriter_.writeFields(uLastIter, deltaU);
-            convergenceWriter_.endIteration();
-        }
-    };
-
-    void lineSearchUpdate_(SolutionVector &uCurrentIter,
-                           const SolutionVector &uLastIter,
-                           const GlobalEqVector &deltaU)
-    {
-       Scalar lambda = 1.0;
-       GlobalEqVector tmp(uLastIter.size());
-
-       while (true) {
-           for (int i = 0; i < uCurrentIter.size(); ++i) {
-               for (int j = 0; j < numEq; ++j) {
-                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
-               }
-           }
-           
-           // calculate the residual of the current solution
-           absoluteError_ = this->method().model().globalResidual(tmp, uCurrentIter);
-           absoluteError_ /= initialAbsoluteError_;
-
-           if (absoluteError_ < lastAbsoluteError_ || lambda <= 0.125) {
-               this->endIterMsg() << ", defect " << lastAbsoluteError_ << "->"  << absoluteError_ << "@lambda=" << lambda;
-               return;
-           }
-
-           // try with a smaller update
-           lambda /= 2.0;
-       }
-    }
-
-    std::ostringstream endIterMsgStream_;
-
-    NewtonMethod *method_;
-    bool verbose_;
-
-    ConvergenceWriter convergenceWriter_;
-
-    // relative errors and tolerance
-    Scalar error_;
-    Scalar lastError_;
-    Scalar tolerance_;
-
-    // absolute errors and tolerance
-    Scalar absoluteError_;
-    Scalar lastAbsoluteError_;
-    Scalar initialAbsoluteError_;
-    Scalar absoluteTolerance_;
-
-    // optimal number of iterations we want to achieve
-    int targetSteps_;
-    // maximum number of iterations we do before giving up
-    int maxSteps_;
-    // actual number of steps done so far
-    int numSteps_;
-
-    // the linear solver
-    LinearSolver linearSolver_;
-
-    bool enablePartialReassemble_;
-    bool enableJacobianRecycling_;
-    bool useLineSearch_;
-    bool enableRelativeCriterion_;
-    bool enableAbsoluteCriterion_;
-    bool satisfyAbsAndRel_;
 };
 } // namespace Dumux
 
