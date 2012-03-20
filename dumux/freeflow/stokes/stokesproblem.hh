@@ -27,9 +27,11 @@
 #ifndef DUMUX_STOKES_PROBLEM_HH
 #define DUMUX_STOKES_PROBLEM_HH
 
+#include "stokesproperties.hh"
+
 #include <dumux/boxmodels/common/boxproblem.hh>
 
-#include "stokesproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -31,9 +31,11 @@
 #ifndef DUMUX_2P2C_FLUX_VARIABLES_HH
 #define DUMUX_2P2C_FLUX_VARIABLES_HH
 
+#include "2p2cproperties.hh"
+
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
-#include "2p2cproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

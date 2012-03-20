@@ -31,19 +31,16 @@
 #ifndef DUMUX_3P3C_VOLUME_VARIABLES_HH
 #define DUMUX_3P3C_VOLUME_VARIABLES_HH
 
-#include <dumux/boxmodels/common/boxmodel.hh>
-#include <dumux/common/math.hh>
-
-#include <dune/common/collectivecommunication.hh>
-#include <vector>
-#include <iostream>
-
 #include "3p3cproperties.hh"
 
+#include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/constants.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <dumux/common/math.hh>
+
+#include <dune/common/collectivecommunication.hh>
 
 namespace Dumux
 {

@@ -28,11 +28,12 @@
 #ifndef DUMUX_SIMPLEX_GRID_CREATOR_HH
 #define DUMUX_SIMPLEX_GRID_CREATOR_HH
 
+#include <dumux/common/basicproperties.hh>
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#include <dumux/common/basicproperties.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

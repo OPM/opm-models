@@ -28,9 +28,11 @@
 #ifndef DUMUX_BOX_2P2C_PROBLEM_HH
 #define DUMUX_BOX_2P2C_PROBLEM_HH
 
+#include "2p2cproperties.hh"
+
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
-#include "2p2cproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

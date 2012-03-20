@@ -36,10 +36,10 @@
 #include <dune/istl/io.hh>
 
 #include <algorithm>
-#include <list>
 #include <set>
 #include <map>
-#include <memory>
+#include <iostream>
+#include <vector>
 #include <tr1/memory>
 
 namespace Dumux {

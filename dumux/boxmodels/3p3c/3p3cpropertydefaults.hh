@@ -34,18 +34,15 @@
 #ifndef DUMUX_3P3C_PROPERTY_DEFAULTS_HH
 #define DUMUX_3P3C_PROPERTY_DEFAULTS_HH
 
-#include "3p3cindices.hh"
-
 #include "3p3cmodel.hh"
 #include "3p3cproblem.hh"
-#include "3p3cindices.hh"
-#include "3p3cproperties.hh"
 #include "3p3cnewtoncontroller.hh"
-
 #include "3p3cprimaryvariables.hh"
 #include "3p3cratevector.hh"
 #include "3p3cfluxvariables.hh"
 #include "3p3cvolumevariables.hh"
+#include "3p3cindices.hh"
+#include "3p3cproperties.hh"
 
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 

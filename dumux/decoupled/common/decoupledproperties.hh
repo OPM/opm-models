@@ -26,6 +26,8 @@
 #include <dumux/common/basicproperties.hh>
 #include <dumux/decoupled/common/gridadaptproperties.hh>
 
+#include <dune/common/fvector.hh>
+
 /*!
  * \ingroup Sequential
  * \ingroup IMPETProperties

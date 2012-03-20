@@ -31,6 +31,8 @@
 #include <dune/common/timer.hh>
 #include <dune/common/mpihelper.hh>
 
+#include <iostream>
+#include <string>
 
 namespace Dumux
 {

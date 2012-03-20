@@ -38,8 +38,6 @@
 #include <dumux/boxmodels/1p2c/1p2cfluxvariables.hh>
 
 #include <dune/common/collectivecommunication.hh>
-#include <vector>
-#include <iostream>
 
 namespace Dumux
 {

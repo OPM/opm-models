@@ -30,6 +30,8 @@
 
 #include "injectionproblem2pni.hh"
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 //////////

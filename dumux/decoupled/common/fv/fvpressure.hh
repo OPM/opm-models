@@ -27,6 +27,12 @@
 // dumux environment
 #include "dumux/common/math.hh"
 #include <dumux/decoupled/common/pressureproperties.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+#include <string>
+
 /**
  * @file
  * @brief  Finite Volume Diffusion Model

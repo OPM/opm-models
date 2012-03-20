@@ -24,6 +24,9 @@
 
 #include<dumux/decoupled/1p/1pproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /**
  * @file
  * @brief  Single phase finite volume velocity reconstruction

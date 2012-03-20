@@ -28,10 +28,14 @@
 #ifndef DUMUX_STOKES2C_MODEL_HH
 #define DUMUX_STOKES2C_MODEL_HH
 
-#include <dumux/freeflow/stokes/stokesmodel.hh>
-
 #include "stokes2clocalresidual.hh"
 #include "stokes2cproperties.hh"
+
+#include <dumux/freeflow/stokes/stokesmodel.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <sstream>
 
 namespace Dumux {
 /*!

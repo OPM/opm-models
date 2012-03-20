@@ -28,9 +28,12 @@
 #ifndef DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 #define DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 
-#include <dune/common/version.hh>
-#include <dune/grid/common/intersectioniterator.hh>
+#include <dumux/common/propertysystem.hh>
 
+#include <dune/grid/common/intersectioniterator.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+#include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2, 2, 0)
 // dune 2.2
 #include <dune/geometry/referenceelements.hh>
@@ -38,10 +41,9 @@
 // dune 2.1
 #include <dune/grid/common/genericreferenceelements.hh>
 #endif
-
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
 
-#include <dumux/common/propertysystem.hh>
+#include <vector>
 
 namespace Dumux
 {

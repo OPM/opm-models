@@ -30,7 +30,6 @@
 #define DUMUX_GLOBAL_INDICES_HH
 
 #include <dune/grid/common/datahandleif.hh>
-#include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/operators.hh>
@@ -39,6 +38,7 @@
 #include <list>
 #include <set>
 #include <map>
+#include <iostream>
 #include <tr1/tuple>
 
 #if HAVE_MPI
@@ -64,11 +64,7 @@ class GlobalIndices
     typedef int Index;
 
     typedef std::set<ProcessRank> PeerSet;
-
-
     typedef std::list<BorderIndex> BorderList;
-
-
     typedef std::map<Index, Index> GlobalToDomesticMap;
     typedef std::map<Index, Index> DomesticToGlobalMap;
 

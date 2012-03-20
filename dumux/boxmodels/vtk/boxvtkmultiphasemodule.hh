@@ -32,6 +32,11 @@
 #include "boxvtkoutputmodule.hh"
 
 #include <dumux/common/propertysystem.hh>
+#include <dumux/common/parameters.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <stdio.h>
 
 namespace Dumux
 {

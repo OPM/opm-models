@@ -27,22 +27,23 @@
 #ifndef DUMUX_TEST_1P_PROBLEM_HH
 #define DUMUX_TEST_1P_PROBLEM_HH
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
+#include "test_1pspatialparams.hh"
 
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/sgrid.hh>
 #include <dumux/common/cubegridcreator.hh>
-
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/unit.hh>
-
 #include <dumux/decoupled/1p/diffusion/fv/fvpressureproperties1p.hh>
 #include <dumux/decoupled/1p/diffusion/diffusionproblem1p.hh>
 #include <dumux/decoupled/common/fv/fvvelocity.hh>
 
-#include "test_1pspatialparams.hh"
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+#include <dune/common/fvector.hh>
+
+#include <iostream>
 
 namespace Dumux
 {

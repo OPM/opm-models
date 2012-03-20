@@ -28,7 +28,6 @@
 #ifndef DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
 #define DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
 
-#include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/common/propertysystem.hh>
 

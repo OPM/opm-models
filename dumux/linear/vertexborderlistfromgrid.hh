@@ -32,18 +32,14 @@
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
-#include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/operators.hh>
 
 #include <algorithm>
 #include <list>
-#include <set>
-#include <map>
 
 namespace Dumux {
-
 /*!
  * \brief Uses communication on the grid to find the initial seed list
  *        of indices.

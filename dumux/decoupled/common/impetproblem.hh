@@ -28,6 +28,12 @@
 
 #include <dumux/decoupled/common/gridadapt.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+#include <limits>
+#include <string>
+
 /**
  * @file
  * @brief  Base class for defining an instance of the diffusion problem

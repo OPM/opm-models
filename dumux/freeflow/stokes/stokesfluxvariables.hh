@@ -31,10 +31,13 @@
 #ifndef DUMUX_STOKES_FLUX_VARIABLES_HH
 #define DUMUX_STOKES_FLUX_VARIABLES_HH
 
+#include "stokesproperties.hh"
+
 #include <dumux/common/math.hh>
 #include <dumux/common/valgrind.hh>
 
-#include "stokesproperties.hh"
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {

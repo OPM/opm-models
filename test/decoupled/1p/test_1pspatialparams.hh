@@ -29,6 +29,9 @@
 
 #include <dumux/material/spatialparameters/fvspatialparameters1p.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Dumux
 {
 

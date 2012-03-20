@@ -29,14 +29,15 @@
 #ifndef DUMUX_KUEVETTE_PROBLEM_HH
 #define DUMUX_KUEVETTE_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
+#include <dumux/boxmodels/3p3cni/3p3cnimodel.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/parkerVanGen3p.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
 #include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/boxmodels/3p3cni/3p3cnimodel.hh>
+
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

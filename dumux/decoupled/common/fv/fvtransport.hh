@@ -26,6 +26,10 @@
 #include <dumux/decoupled/common/transportproperties.hh>
 #include <dumux/decoupled/common/decoupledproperties.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+
 /**
  * @file
  * @brief  Finite Volume discretization of a  transport equation

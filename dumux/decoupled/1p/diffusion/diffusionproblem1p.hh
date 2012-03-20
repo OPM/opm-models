@@ -33,6 +33,8 @@
 #include <dumux/decoupled/1p/diffusion/diffusionproperties1p.hh>
 #include <dumux/decoupled/1p/cellData1p.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 namespace Properties

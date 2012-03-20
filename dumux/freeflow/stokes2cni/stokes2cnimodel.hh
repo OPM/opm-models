@@ -29,10 +29,14 @@
 #ifndef DUMUX_STOKES2CNI_MODEL_HH
 #define DUMUX_STOKES2CNI_MODEL_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cmodel.hh>
-
 #include "stokes2cnilocalresidual.hh"
 #include "stokes2cniproperties.hh"
+
+#include <dumux/freeflow/stokes2c/stokes2cmodel.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <sstream>
 
 namespace Dumux {
 /*!

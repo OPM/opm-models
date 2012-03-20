@@ -32,6 +32,8 @@
 #include <dumux/boxmodels/mpnc/mpncproperties.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
+#include <string>
+
 namespace Dumux {
 
 /*!

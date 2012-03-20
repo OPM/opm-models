@@ -24,6 +24,8 @@
 
 #include <dumux/decoupled/2p2c/fvtransport2p2c.hh>
 
+#include <dune/common/fvector.hh>
+
 /**
  * @file
  * @brief  Finite Volume discretization of the component transport equation

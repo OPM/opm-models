@@ -31,13 +31,13 @@
 #define DUMUX_1P2C_OUTFLOW_PROBLEM_HH
 
 #include <dumux/boxmodels/1p2c/1p2cmodel.hh>
+#include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #if HAVE_UG
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #endif
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

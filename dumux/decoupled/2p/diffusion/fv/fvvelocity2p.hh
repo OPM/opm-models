@@ -31,6 +31,9 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Dumux
 {
 //! \ingroup FVPressure2p

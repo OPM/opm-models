@@ -29,10 +29,12 @@
 #ifndef DUMUX_BOX_POROUS_PROBLEM_HH
 #define DUMUX_BOX_POROUS_PROBLEM_HH
 
+#include "boxproperties.hh"
+
 #include <dumux/boxmodels/common/boxproblem.hh>
 #include <dumux/common/math.hh>
 
-#include "boxproperties.hh"
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux {
 namespace Properties {

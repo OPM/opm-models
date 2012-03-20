@@ -40,6 +40,11 @@
 #include <dumux/decoupled/common/mimetic/mimeticproperties.hh>
 #include <dumux/decoupled/2p/diffusion/mimetic/mimeticoperator.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <iostream>
+
 namespace Dumux
 {
 

@@ -29,15 +29,15 @@
 #ifndef DUMUX_TEST_TRANSPORT_PROBLEM_HH
 #define DUMUX_TEST_TRANSPORT_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/unit.hh>
+#include "test_transportspatialparams.hh"
 
 #include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
 #include <dumux/decoupled/2p/transport/transportproblem2p.hh>
+#include <dumux/material/fluidsystems/liquidphase.hh>
+#include <dumux/material/components/unit.hh>
 
-#include "test_transportspatialparams.hh"
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

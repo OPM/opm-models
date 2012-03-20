@@ -30,6 +30,8 @@
 #include <dumux/linear/linearsolverproperties.hh>
 #include <dumux/linear/seqsolverbackend.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 /*!
  * \ingroup Sequential

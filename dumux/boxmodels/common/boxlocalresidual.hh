@@ -27,10 +27,12 @@
 #ifndef DUMUX_BOX_LOCAL_RESIDUAL_HH
 #define DUMUX_BOX_LOCAL_RESIDUAL_HH
 
+#include <dumux/common/valgrind.hh>
+
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/geometry.hh>
 
-#include <dumux/common/valgrind.hh>
+#include <dune/common/fvector.hh>
 
 #include "boxproperties.hh"
 #include "boxboundarycontext.hh"

@@ -28,18 +28,23 @@
 #ifndef DUMUX_BOX_MODEL_HH
 #define DUMUX_BOX_MODEL_HH
 
-#include "boxproperties.hh"
-#include "boxpropertydefaults.hh"
-
 #include "boxelementcontext.hh"
 #include "boxlocaljacobian.hh"
 #include "boxlocalresidual.hh"
+#include "boxproperties.hh"
+#include "boxpropertydefaults.hh"
+
 #include <dumux/boxmodels/vtk/boxvtkoutputmodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
-
 #include <dumux/parallel/vertexhandles.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+#include <list>
 #include <sstream>
+#include <string>
+#include <vector>
 
 namespace Dumux
 {

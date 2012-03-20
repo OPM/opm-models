@@ -29,6 +29,7 @@
 #define DUMUX_1P_PROBLEM_HH
 
 #include <dumux/boxmodels/common/boxporousproblem.hh>
+#include <dune/common/fvector.hh>
 #include "1pproperties.hh"
 
 namespace Dumux

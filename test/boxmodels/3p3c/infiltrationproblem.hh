@@ -28,18 +28,16 @@
 #ifndef DUMUX_INFILTRATIONPROBLEM_HH
 #define DUMUX_INFILTRATIONPROBLEM_HH
 
+#include <dumux/boxmodels/3p3c/3p3cmodel.hh>
+#include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
+#include <dumux/material/fluidmatrixinteractions/3p/parkerVanGen3p.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <dumux/material/heatconduction/somerton.hh>
+
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-
-#include <dumux/boxmodels/3p3c/3p3cmodel.hh>
-
-#include <dumux/material/fluidmatrixinteractions/3p/parkerVanGen3p.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
-
-#include <dumux/material/heatconduction/somerton.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

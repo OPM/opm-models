@@ -39,9 +39,6 @@
 #include "2p2cfluxvariables.hh"
 #include "2p2cnewtoncontroller.hh"
 
-#include <iostream>
-#include <vector>
-
 namespace Dumux
 {
 /*!

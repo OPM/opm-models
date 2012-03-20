@@ -26,6 +26,11 @@
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/common/math.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <iostream>
+
 /**
  * @file
  * @brief  Finite Volume discretization of the component transport equation

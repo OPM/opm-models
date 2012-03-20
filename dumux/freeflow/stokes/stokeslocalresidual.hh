@@ -30,19 +30,16 @@
 #ifndef DUMUX_STOKES_LOCAL_RESIDUAL_HH
 #define DUMUX_STOKES_LOCAL_RESIDUAL_HH
 
-#include <dumux/boxmodels/common/boxmodel.hh>
-#include <dumux/boxmodels/common/boxneumanncontext.hh>
-//#include <dumux/boxmodels/common/boxcouplinglocalresidual.hh>
-
-#include "stokesproperties.hh"
 #include "stokesvolumevariables.hh"
 #include "stokesfluxvariables.hh"
+#include "stokesproperties.hh"
 
-#include <dune/common/collectivecommunication.hh>
-#include <vector>
-#include <iostream>
+#include <dumux/boxmodels/common/boxmodel.hh>
+#include <dumux/boxmodels/common/boxneumanncontext.hh>
 
-#include<dune/grid/common/grid.hh>
+#include <dune/grid/common/grid.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {

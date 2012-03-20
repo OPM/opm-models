@@ -30,9 +30,12 @@
 #ifndef DUMUX_2PNI_MODEL_HH
 #define DUMUX_2PNI_MODEL_HH
 
+#include "2pniproperties.hh"
+
 #include <dumux/boxmodels/2p/2pmodel.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
-#include "2pniproperties.hh"
+
+#include <string>
 
 namespace Dumux {
 /*!

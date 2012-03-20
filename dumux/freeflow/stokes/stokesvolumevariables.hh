@@ -30,9 +30,11 @@
 #define DUMUX_STOKES_VOLUME_VARIABLES_HH
 
 #include "stokesproperties.hh"
-#include "dumux/boxmodels/common/boxvolumevariables.hh"
 
+#include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

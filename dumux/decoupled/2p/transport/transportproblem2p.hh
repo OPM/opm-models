@@ -32,6 +32,8 @@
 #include <dumux/decoupled/common/onemodelproblem.hh>
 #include <dumux/decoupled/common/fv/fvvelocitydefault.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 namespace Properties

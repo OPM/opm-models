@@ -28,13 +28,15 @@
 #ifndef DUMUX_STOKES_MODEL_HH
 #define DUMUX_STOKES_MODEL_HH
 
-#include <dumux/boxmodels/common/boxmodel.hh>
-
 #include "stokeslocalresidual.hh"
 #include "stokesnewtoncontroller.hh"
 #include "stokeslocaljacobian.hh"
 #include "stokesproblem.hh"
 #include "stokesproperties.hh"
+
+#include <dumux/boxmodels/common/boxmodel.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -29,21 +29,19 @@
 #ifndef DUMUX_WATER_AIR_PROBLEM_HH
 #define DUMUX_WATER_AIR_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
-
 #include <dumux/boxmodels/2p2cni/2p2cnimodel.hh>
-
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-
 #include <dumux/material/heatconduction/somerton.hh>
+
+#include <dune/grid/io/file/dgfparser/dgfug.hh>
+#include <dune/grid/io/file/dgfparser/dgfs.hh>
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
 
 #define ISOTHERMAL 0
 

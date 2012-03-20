@@ -24,8 +24,7 @@
 
 #include "decoupledproperties.hh"
 
-// for  parallelization
-//#include <dumux/parallel/elementhandles.hh>
+#include <vector>
 
 /**
  * @file

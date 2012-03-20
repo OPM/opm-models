@@ -28,6 +28,11 @@
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/io/restart.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+#include <limits>
+#include <string>
 
 /**
  * @file

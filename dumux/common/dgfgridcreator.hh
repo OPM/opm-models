@@ -32,6 +32,8 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
+#include <string>
+
 namespace Dumux
 {
 namespace Properties

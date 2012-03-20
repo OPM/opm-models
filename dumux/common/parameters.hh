@@ -37,8 +37,9 @@
 #include <dune/common/classname.hh>
 
 #include <iostream>
-#include <sstream>
 #include <list>
+#include <sstream>
+#include <string>
 #include <tr1/unordered_map>
 
 /*!

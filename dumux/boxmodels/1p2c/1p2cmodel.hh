@@ -37,6 +37,9 @@
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
+#include <sstream>
+#include <string>
+
 namespace Dumux
 {
 

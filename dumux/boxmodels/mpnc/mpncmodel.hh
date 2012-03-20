@@ -27,6 +27,12 @@
 #include "mass/mpncvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <sstream>
+#include <string>
+#include <vector>
 #include <tr1/array>
 
 namespace Dumux

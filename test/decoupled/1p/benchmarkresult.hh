@@ -30,6 +30,9 @@
 
 #include <dumux/decoupled/common/onemodelproblem.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Dumux
 {
 

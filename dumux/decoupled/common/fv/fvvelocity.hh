@@ -27,6 +27,8 @@
 #include <dumux/decoupled/common/pressureproperties.hh>
 #include "fvvelocitydefault.hh"
 
+#include <dune/common/fvector.hh>
+
 /**
  * @file
  * @brief  Finite volume velocity reconstruction

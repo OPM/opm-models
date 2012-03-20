@@ -37,9 +37,11 @@
 #include <dumux/parallel/mpibuffer.hh>
 
 #include <algorithm>
+#include <limits>
 #include <list>
 #include <set>
 #include <map>
+#include <vector>
 
 namespace Dumux {
 

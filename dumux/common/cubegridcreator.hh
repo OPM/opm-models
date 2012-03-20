@@ -28,16 +28,13 @@
 #ifndef DUMUX_CUBE_GRID_CREATOR_HH
 #define DUMUX_CUBE_GRID_CREATOR_HH
 
-#include <dune/grid/io/file/dgfparser.hh>
-
+#include <dumux/common/basicproperties.hh>
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-
-#include <dumux/common/basicproperties.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
-//#include <dumux/../util/structuredgridfactorysg.hh> //under discussion!
 
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

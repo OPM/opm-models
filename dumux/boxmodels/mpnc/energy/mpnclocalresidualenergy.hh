@@ -31,6 +31,8 @@
 
 #include <dumux/boxmodels/mpnc/mpncproperties.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux {
 
 /*!

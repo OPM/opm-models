@@ -28,13 +28,14 @@
 #ifndef DUMUX_SOLVER_BACKEND_HH
 #define DUMUX_SOLVER_BACKEND_HH
 
-#include <dune/istl/solvers.hh>
-#include <dune/istl/superlu.hh>
-
 #include <dumux/common/parameters.hh>
 #include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/decoupled/common/decoupledproperties.hh>
 #include <dumux/linear/linearsolverproperties.hh>
+
+#include <dune/istl/solvers.hh>
+#include <dune/istl/superlu.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {

@@ -35,10 +35,12 @@
 #ifndef DUMUX_3P3C_FLUX_VARIABLES_HH
 #define DUMUX_3P3C_FLUX_VARIABLES_HH
 
+#include "3p3cproperties.hh"
+
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/common/math.hh>
 
-#include "3p3cproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

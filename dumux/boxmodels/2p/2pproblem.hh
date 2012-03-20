@@ -30,6 +30,8 @@
 
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 /*!

@@ -30,28 +30,21 @@
 #ifndef DUMUX_LENS_PROBLEM_HH
 #define DUMUX_LENS_PROBLEM_HH
 
-//#include <dumux/common/quad.hh>
-
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/sgrid.hh>
+#include "lensgridcreator.hh"
 
 #include <dumux/boxmodels/2p/2pmodel.hh>
-
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-
+#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/simplednapl.hh>
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dune/common/fvector.hh>
 
-#include "lensgridcreator.hh"
+#include <iostream>
+
 namespace Dumux
 {
 

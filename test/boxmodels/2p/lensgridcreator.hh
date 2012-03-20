@@ -28,7 +28,17 @@
 #ifndef DUMUX_LENS_GRID_CREATOR_HH
 #define DUMUX_LENS_GRID_CREATOR_HH
 
-#include "lensproblem.hh"
+#include <dumux/common/propertysystem.hh>
+#include <dumux/common/parameters.hh>
+
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+#include <dune/common/fvector.hh>
+
+#include <vector>
 
 namespace Dumux
 {
@@ -42,6 +52,7 @@ class LensProblem;
 namespace Properties
 {
 // declare the properties required by the for the lens grid creator
+NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
 
 NEW_PROP_TAG(GridSizeX);

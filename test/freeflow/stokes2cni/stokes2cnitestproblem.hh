@@ -29,14 +29,15 @@
 #ifndef DUMUX_STOKES2CNITESTPROBLEM_HH
 #define DUMUX_STOKES2CNITESTPROBLEM_HH
 
+#include <dumux/freeflow/stokes2cni/stokes2cnimodel.hh>
+#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+
 #if HAVE_UG
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #endif
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
-#include <dumux/freeflow/stokes2cni/stokes2cnimodel.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -23,8 +23,15 @@
 #define DUMUX_BOX_VTK_OUTPUT_MODULE_HH
 
 #include <dumux/io/vtkmultiwriter.hh>
-#include <dune/istl/bvector.hh>
+#include <dumux/common/parameters.hh>
+#include <dumux/common/propertysystem.hh>
 
+#include <dune/istl/bvector.hh>
+#include <dune/common/fvector.hh>
+
+#include <vector>
+#include <sstream>
+#include <string>
 #include <tr1/array>
 
 #include <stdio.h>

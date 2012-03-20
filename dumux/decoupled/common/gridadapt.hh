@@ -29,6 +29,8 @@
 #include "decoupledproperties.hh"
 #include "gridadaptproperties.hh"
 
+#include <map>
+
 namespace Dumux
 {
 

@@ -30,8 +30,10 @@
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/material/spatialparameters/fvspatialparameters.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-//#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {

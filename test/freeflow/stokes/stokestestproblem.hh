@@ -30,16 +30,17 @@
 #ifndef DUMUX_STOKESTESTPROBLEM_HH
 #define DUMUX_STOKESTESTPROBLEM_HH
 
+#include <dumux/freeflow/stokes/stokesmodel.hh>
+#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidsystems/gasphase.hh>
+
 #if HAVE_UG
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #endif
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidsystems/gasphase.hh>
-
-#include <dumux/freeflow/stokes/stokesmodel.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

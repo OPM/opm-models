@@ -31,12 +31,12 @@
 #ifndef DUMUX_GENERALLENSSPATIALPARAMETERS_HH
 #define DUMUX_GENERALLENSSPATIALPARAMETERS_HH
 
-//#include <dumux/material/spatialparameters/boxspatialparameters.hh>
 #include <dumux/material/spatialparameters/fvspatialparameters.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
-//#include <dumux/boxmodels/2p/2pmodel.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {
@@ -82,14 +82,9 @@ class GeneralLensSpatialParameters : public GET_PROP_TYPE(TypeTag, SpatialParams
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename Grid::ctype CoordScalar;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
-
     enum {
         dim=GridView::dimension,
         dimWorld=GridView::dimensionworld,
-
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx
     };
 
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;

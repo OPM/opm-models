@@ -24,17 +24,21 @@
 #ifndef DUMUX_FVPRESSURE2P2C_HH
 #define DUMUX_FVPRESSURE2P2C_HH
 
-// dune environent:
-#include <dune/istl/bvector.hh>
-#include <dune/istl/operators.hh>
-#include <dune/istl/solvers.hh>
-#include <dune/istl/preconditioners.hh>
 
 // dumux environment
 #include <dumux/decoupled/2p2c/fvpressurecompositional.hh>
 #include <dumux/common/math.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
+
+// dune environent:
+#include <dune/istl/bvector.hh>
+#include <dune/istl/operators.hh>
+#include <dune/istl/solvers.hh>
+#include <dune/istl/preconditioners.hh>
+
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 /**
  * @file

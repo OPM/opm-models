@@ -33,10 +33,12 @@
 #ifndef DUMUX_MPNC_FLUX_VARIABLES_HH
 #define DUMUX_MPNC_FLUX_VARIABLES_HH
 
-#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
-
 #include "diffusion/fluxvariables.hh"
 #include "energy/mpncfluxvariablesenergy.hh"
+
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

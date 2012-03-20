@@ -31,11 +31,11 @@
 #ifndef DUMUX_BOX_PROPERTY_DEFAULTS_HH
 #define DUMUX_BOX_PROPERTY_DEFAULTS_HH
 
+#include "boxproperties.hh"
 #include "boxassembler.hh"
 #include "boxfvelementgeometry.hh"
 #include "boxlocalresidual.hh"
 #include "boxlocaljacobian.hh"
-#include "boxlocalresidual.hh"
 #include "boxelementcontext.hh"
 #include "boxvolumevariables.hh"
 #include "boxnewtoncontroller.hh"
@@ -44,7 +44,8 @@
 #include <dumux/common/boundarytypes.hh>
 #include <dumux/common/timemanager.hh>
 
-#include "boxproperties.hh"
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 #include <limits>
 

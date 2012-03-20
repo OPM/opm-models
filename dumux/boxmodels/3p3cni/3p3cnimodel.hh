@@ -30,8 +30,11 @@
 #ifndef DUMUX_3P3CNI_MODEL_HH
 #define DUMUX_3P3CNI_MODEL_HH
 
-#include <dumux/boxmodels/3p3c/3p3cmodel.hh>
 #include "3p3cniproperties.hh"
+
+#include <dumux/boxmodels/3p3c/3p3cmodel.hh>
+
+#include <string>
 
 namespace Dumux {
 /*!

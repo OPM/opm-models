@@ -26,8 +26,6 @@
 #ifndef DUMUX_START_HH
 #define DUMUX_START_HH
 
-#include <iostream>
-
 #include "propertysystem.hh"
 #include "parameters.hh"
 #include "valgrind.hh"
@@ -35,8 +33,12 @@
 #include <dune/common/mpihelper.hh>
 #include <dune/common/version.hh>
 #include <dune/common/parametertreeparser.hh>
-
 #include <dune/grid/io/file/dgfparser.hh>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace Dumux
 {

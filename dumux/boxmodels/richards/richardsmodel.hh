@@ -20,22 +20,23 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
-* \file
-*
-* \brief Adaption of the box scheme to the Richards model.
-*/
+ * \file
+ *
+ * \brief Adaption of the box scheme to the Richards model.
+ */
 #ifndef DUMUX_RICHARDS_MODEL_HH
 #define DUMUX_RICHARDS_MODEL_HH
-
-#include <dumux/boxmodels/common/boxmodel.hh>
 
 #include "richardslocalresidual.hh"
 #include "richardsproblem.hh"
 
-namespace Dumux
-{
+#include <dumux/boxmodels/common/boxmodel.hh>
+
+#include <sstream>
+#include <string>
+
+namespace Dumux {
 /*!
  * \ingroup RichardsModel
  *

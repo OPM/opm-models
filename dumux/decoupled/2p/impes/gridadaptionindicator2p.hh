@@ -25,6 +25,8 @@
 #include <dumux/decoupled/common/impetproperties.hh>
 #include <dumux/decoupled/2p/2pproperties.hh>
 
+#include <dune/common/fvector.hh>
+
 /**
  * @file
  * @brief  Class defining a standard, saturation dependent indicator for grid adaption

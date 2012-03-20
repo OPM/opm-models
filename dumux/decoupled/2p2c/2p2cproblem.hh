@@ -30,6 +30,7 @@
 #include <dumux/decoupled/common/variableclass.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

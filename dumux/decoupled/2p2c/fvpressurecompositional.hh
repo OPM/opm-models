@@ -30,13 +30,16 @@
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <iostream>
 
 /**
  * @file
  * @brief  Base Class for compositional pressure Equations
  * @author Benjamin Faigle, Bernd Flemisch, Jochen Fritz, Markus Wolff
  */
-
 namespace Dumux
 {
 //! The finite volume model for the solution of the compositional pressure equation

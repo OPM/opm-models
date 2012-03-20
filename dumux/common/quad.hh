@@ -26,9 +26,9 @@
 #if !defined DUMUX_QUAD_HH && HAVE_QUAD
 #define DUMUX_QUAD_HH
 
-#include <iostream>
 #include <cmath>
 #include <limits>
+#include <iostream>
 
 extern "C" {
 #include <quadmath.h>

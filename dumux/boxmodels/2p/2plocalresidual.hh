@@ -28,9 +28,11 @@
 #ifndef DUMUX_TWOP_LOCAL_RESIDUAL_BASE_HH
 #define DUMUX_TWOP_LOCAL_RESIDUAL_BASE_HH
 
+#include "2pproperties.hh"
+
 #include <dumux/boxmodels/common/boxmodel.hh>
 
-#include "2pproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

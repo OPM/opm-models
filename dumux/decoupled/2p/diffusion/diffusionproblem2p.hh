@@ -31,6 +31,8 @@
 #include <dumux/decoupled/common/onemodelproblem.hh>
 #include "diffusionproperties2p.hh"
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 namespace Properties

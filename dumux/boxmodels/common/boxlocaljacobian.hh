@@ -27,12 +27,17 @@
 #ifndef DUMUX_BOX_LOCAL_JACOBIAN_HH
 #define DUMUX_BOX_LOCAL_JACOBIAN_HH
 
-#include <dune/istl/bvector.hh>
-#include <dune/istl/matrix.hh>
+#include "boxproperties.hh"
 
 #include <dumux/common/math.hh>
 
-#include "boxproperties.hh"
+#include <dune/istl/bvector.hh>
+#include <dune/istl/matrix.hh>
+
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <limits>
 
 namespace Dumux
 {

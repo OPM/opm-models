@@ -31,31 +31,28 @@
 #ifndef DUMUX_OBSTACLEPROBLEM_HH
 #define DUMUX_OBSTACLEPROBLEM_HH
 
-#include <dune/common/parametertreeparser.hh>
-
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #if USE_2P2C
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 #else
 #include <dumux/boxmodels/mpnc/mpncmodel.hh>
 #endif
-
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
-
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-
 #include <dumux/material/heatconduction/somerton.hh>
+
+#include <dune/grid/io/file/dgfparser/dgfug.hh>
+#include <dune/grid/io/file/dgfparser/dgfs.hh>
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
+
+#include <iostream>
 
 namespace Dumux
 {

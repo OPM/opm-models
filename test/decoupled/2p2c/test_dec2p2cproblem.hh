@@ -29,24 +29,23 @@
 #ifndef DUMUX_TEST_2P2C_PROBLEM_HH
 #define DUMUX_TEST_2P2C_PROBLEM_HH
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/sgrid.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include "test_dec2p2c_spatialparams.hh"
 
 #include <dumux/decoupled/2p2c/2p2cproblem.hh>
 #include <dumux/decoupled/2p2c/fvpressure2p2c.hh>
 #include <dumux/decoupled/2p2c/fvtransport2p2c.hh>
-
-// fluid properties
-//#include <dumux/material/old_fluidsystems/simple_h2o_n2_system.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-
-#include "test_dec2p2c_spatialparams.hh"
 #include <dumux/linear/impetbicgstabilu0solver.hh>
+#include <dumux/common/cubegridcreator.hh>
+
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 

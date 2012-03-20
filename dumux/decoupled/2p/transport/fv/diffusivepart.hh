@@ -25,6 +25,8 @@
 
 #include <dumux/decoupled/2p/transport/transportproperties2p.hh>
 
+#include <dune/common/fvector.hh>
+
 /**
  * \file
  * \brief  Base class for defining a diffusive part of the saturation transport equation

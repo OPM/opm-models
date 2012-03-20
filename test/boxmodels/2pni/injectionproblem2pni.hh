@@ -27,28 +27,19 @@
  *        water saturated medium. During buoyancy driven upward migration the gas
  *        passes a high temperature area.
  */
-
 #ifndef DUMUX_INJECTION_PROBLEM_2PNI_HH
 #define DUMUX_INJECTION_PROBLEM_2PNI_HH
 
-#if HAVE_UG
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#endif
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #include <dumux/boxmodels/2pni/2pnimodel.hh>
-
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <dumux/material/heatconduction/somerton.hh>
 #include <dumux/common/cubegridcreator.hh>
 
-#include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/material/heatconduction/somerton.hh>
+#include <dune/common/fvector.hh>
 
 #define ISOTHERMAL 0
 

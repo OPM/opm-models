@@ -34,6 +34,7 @@
 //DEPRECATED: include should be removed!!! -> Goal: Only include property files in the problem!
 #include "impesproperties2padaptive.hh"
 
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -34,7 +34,6 @@
 #include "borderindex.hh"
 
 #include <dune/grid/common/datahandleif.hh>
-#include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/operators.hh>
@@ -43,6 +42,8 @@
 #include <list>
 #include <set>
 #include <map>
+#include <iostream>
+#include <vector>
 #include <tr1/tuple>
 
 #if HAVE_MPI

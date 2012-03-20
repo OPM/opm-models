@@ -29,11 +29,12 @@
 #ifndef DUMUX_1PTEST_PROBLEM_HH
 #define DUMUX_1PTEST_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #include <dumux/boxmodels/1p/1pmodel.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
+
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

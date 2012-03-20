@@ -28,6 +28,9 @@
 #include <dumux/decoupled/common/fv/fvpressure.hh>
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /**
  * @file
  * @brief  Finite Volume discretization of a two-phase flow pressure equation.

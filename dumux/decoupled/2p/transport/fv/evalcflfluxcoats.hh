@@ -30,6 +30,9 @@
 
 #include "evalcflfluxdefault.hh"
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Dumux
 {
 /*!\ingroup IMPES

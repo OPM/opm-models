@@ -29,30 +29,26 @@
 #ifndef DUMUX_TEST_IMPES_PROBLEM_HH
 #define DUMUX_TEST_IMPES_PROBLEM_HH
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/sgrid.hh>
-#include <dumux/common/cubegridcreator.hh>
-
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/simplednapl.hh>
-#include <dumux/material/components/oil.hh>
+#include "test_impesspatialparams.hh"
 
 #include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
 #include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
 #include <dumux/decoupled/2p/impes/impesproblem2p.hh>
-
-//following includes are only needed if a global pressure formulation is chosen! Then only a total velocity can be reconstructed for the transport step
 #include <dumux/decoupled/2p/transport/fv/capillarydiffusion.hh>
 #include <dumux/decoupled/2p/transport/fv/gravitypart.hh>
+#include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#include <dumux/material/fluidsystems/liquidphase.hh>
+#include <dumux/material/components/simpleh2o.hh>
+#include <dumux/material/components/simplednapl.hh>
+#include <dumux/material/components/oil.hh>
+#include <dumux/common/cubegridcreator.hh>
 
-#include "test_impesspatialparams.hh"
-
-#include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

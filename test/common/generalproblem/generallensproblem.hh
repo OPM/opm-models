@@ -28,31 +28,25 @@
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  */
-
 #ifndef DUMUX_GENERALLENSPROBLEM_HH
 #define DUMUX_GENERALLENSPROBLEM_HH
 
-//common includes
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-#include <dune/grid/yaspgrid.hh>
+#include "generallensspatialparameters.hh"
 
+#include <dumux/boxmodels/2p/2pmodel.hh>
+#include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
+#include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
+#include <dumux/decoupled/2p/impes/impesproblem2p.hh>
+#include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/simplednapl.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 
-//box model
-#include <dumux/boxmodels/2p/2pmodel.hh>
-
-//decoupled model
-#include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
-#include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
-#include <dumux/decoupled/2p/impes/impesproblem2p.hh>
-
-#include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
-
-#include "generallensspatialparameters.hh"
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

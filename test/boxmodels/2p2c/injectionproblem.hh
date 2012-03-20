@@ -29,17 +29,19 @@
 #ifndef DUMUX_INJECTION_PROBLEM_HH
 #define DUMUX_INJECTION_PROBLEM_HH
 
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-
 #include <dumux/material/heatconduction/somerton.hh>
+
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+#include <string>
 
 namespace Dumux
 {

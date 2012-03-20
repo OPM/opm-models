@@ -20,11 +20,15 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 #ifndef DUMUX_MPFAOVELOCITY2P_HH
 #define DUMUX_MPFAOVELOCITY2P_HH
 
 #include "fvmpfaopressure2p.hh"
+
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <iostream>
 
 /**
  * @file

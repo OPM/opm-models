@@ -24,6 +24,8 @@
 
 #include "1pproperties.hh"
 
+#include <dune/common/fvector.hh>
+
 /**
  * @file
  * @brief  Class storing data assigned to a cell-cell interfaces, so-called flux-data

@@ -27,13 +27,6 @@
 #ifndef DUMUX_MIMETICOPERATOR_HH
 #define DUMUX_MIMETICOPERATOR_HH
 
-#include<iostream>
-#include<vector>
-#include<set>
-#include<map>
-#include<stdio.h>
-#include<stdlib.h>
-
 #include<dune/common/timer.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
@@ -46,6 +39,7 @@
 #include<dune/istl/operators.hh>
 #include<dune/istl/bcrsmatrix.hh>
 #include<dumux/common/boundaryconditions.hh>
+
 #include"croperator.hh"
 
 namespace Dumux

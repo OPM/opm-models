@@ -32,8 +32,10 @@
 #ifndef DUMUX_STOKES2C_FLUX_VARIABLES_HH
 #define DUMUX_STOKES2C_FLUX_VARIABLES_HH
 
-#include <dumux/common/math.hh>
 #include <dumux/freeflow/stokes/stokesfluxvariables.hh>
+#include <dumux/common/math.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -29,22 +29,21 @@
 #ifndef DUMUX_TEST_2P_PROBLEM_HH
 #define DUMUX_TEST_2P_PROBLEM_HH
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/sgrid.hh>
+#include "test_diffusionspatialparams.hh"
 
 #include <dumux/material/components/unit.hh>
-
 #include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
 #include <dumux/decoupled/2p/diffusion/fvmpfa/fvmpfaopressureproperties2p.hh>
 #include <dumux/decoupled/2p/diffusion/mimetic/mimeticpressureproperties2p.hh>
 #include <dumux/decoupled/2p/diffusion/diffusionproblem2p.hh>
 #include <dumux/decoupled/common/fv/fvvelocity.hh>
 
-#include "test_diffusionspatialparams.hh"
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

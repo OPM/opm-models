@@ -27,13 +27,6 @@
 #ifndef DUMUX_MIMETICGROUNDWATER_HH
 #define DUMUX_MIMETICGROUNDWATER_HH
 
-#include<map>
-#include<iostream>
-#include<iomanip>
-#include<fstream>
-#include<vector>
-#include<sstream>
-
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/grid.hh>
 #include<dune/common/geometrytype.hh>
@@ -42,6 +35,12 @@
 #include<dumux/common/boundaryconditions.hh>
 #include "localstiffness.hh"
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
+
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include<iomanip>
+
 namespace Dumux
 {
 /*!

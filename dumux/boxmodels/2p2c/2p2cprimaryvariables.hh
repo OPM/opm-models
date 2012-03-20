@@ -39,6 +39,8 @@
 #include "2p2cindices.hh"
 #include "2p2cproperties.hh"
 
+#include <iostream>
+
 namespace Dumux
 {
 /*!

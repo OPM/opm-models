@@ -40,6 +40,10 @@
 #include <dune/istl/ilu.hh> // required for Dune::MatrixBlockError. WTF?
 #include <dune/common/mpihelper.hh>
 
+#include <iostream>
+#include <sstream>
+#include <string>
+
 namespace Dumux {
 namespace Properties {
 

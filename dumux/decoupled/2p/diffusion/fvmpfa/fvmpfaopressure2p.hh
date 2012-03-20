@@ -28,6 +28,9 @@
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /**
  * @file
  * @brief  Finite Volume MPFA O-method discretization of a two-phase pressure equation.

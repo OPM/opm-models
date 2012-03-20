@@ -22,14 +22,6 @@
 #ifndef DUMUX_CROPERATOR_HH
 #define DUMUX_CROPERATOR_HH
 
-#include<iostream>
-#include<vector>
-#include<set>
-#include<map>
-#include<cassert>
-#include<stdio.h>
-#include<stdlib.h>
-
 #include<dune/common/timer.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
@@ -43,6 +35,9 @@
 #include<dune/istl/bcrsmatrix.hh>
 #include<dumux/common/boundaryconditions.hh>
 #include<dumux/decoupled/2p/diffusion/mimetic/localstiffness.hh>
+
+#include<vector>
+#include<cassert>
 
 /**
  * @file

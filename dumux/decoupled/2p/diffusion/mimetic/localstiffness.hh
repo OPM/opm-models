@@ -17,13 +17,6 @@
 #ifndef DUMUX_LOCAL_STIFFNESS_HH
 #define DUMUX_LOCAL_STIFFNESS_HH
 
-#include<iostream>
-#include<vector>
-#include<set>
-#include<map>
-#include<stdio.h>
-#include<stdlib.h>
-
 #include<dune/common/timer.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
@@ -36,6 +29,10 @@
 #include<dune/istl/matrix.hh>
 #include<dumux/common/boundaryconditions.hh>
 #include<dumux/decoupled/common/decoupledproperties.hh>
+
+#include <iostream>
+#include <vector>
+
 /**
  * @file
  * @brief  defines a class for piecewise linear finite element functions

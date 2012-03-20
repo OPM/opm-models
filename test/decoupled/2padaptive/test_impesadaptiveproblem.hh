@@ -29,22 +29,21 @@
 #ifndef DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 #define DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
-#include <dumux/common/cubegridcreator.hh>
+#include "test_impesadaptivespatialparams.hh"
 
+#include <dumux/common/cubegridcreator.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/oil.hh>
-
 #include <dumux/decoupled/2p/impes/impesproblem2p.hh>
 #include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2padaptive.hh>
 #include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
-
-#include "test_impesadaptivespatialparams.hh"
-
 #include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

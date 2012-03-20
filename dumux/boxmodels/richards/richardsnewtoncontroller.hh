@@ -32,6 +32,8 @@
 #include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux {
 /*!
  * \ingroup Newton

@@ -27,12 +27,13 @@
 #ifndef VTK_NESTED_FUNCTION_HH
 #define VTK_NESTED_FUNCTION_HH
 
-#include <dune/common/fvector.hh>
-#include <dune/istl/bvector.hh>
-#include <dune/common/version.hh>
 #include <dune/grid/io/file/vtk/function.hh>
+#include <dune/istl/bvector.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 
 #include <string>
+#include <limits>
 
 namespace Dumux {
 

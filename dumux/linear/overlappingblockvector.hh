@@ -28,15 +28,16 @@
 #ifndef DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
 #define DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
 
+#include <dumux/parallel/mpibuffer.hh>
+#include <dumux/common/valgrind.hh>
+
+#include <dune/istl/bvector.hh>
+#include <dune/common/fvector.hh>
+
 #include <tr1/memory>
 #include <vector>
 #include <map>
 #include <iostream>
-
-#include <dune/istl/bvector.hh>
-
-#include <dumux/parallel/mpibuffer.hh>
-#include <dumux/common/valgrind.hh>
 
 namespace Dumux {
 

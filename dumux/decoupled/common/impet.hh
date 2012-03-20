@@ -31,6 +31,8 @@
 
 #include "impetproperties.hh"
 
+#include <iostream>
+
 namespace Dumux
 {
 /**

@@ -22,19 +22,16 @@
 #ifndef DUMUX_MPNC_PROPERTY_DEFAULTS_HH
 #define DUMUX_MPNC_PROPERTY_DEFAULTS_HH
 
-#include "mpncindices.hh"
-
 #include "mpncmodel.hh"
-
 #include "mpncproblem.hh"
-#include "mpncindices.hh"
 #include "mpnclocalresidual.hh"
 #include "mpncfluxvariables.hh"
 #include "mpncprimaryvariables.hh"
 #include "mpncratevector.hh"
 #include "mpncvolumevariables.hh"
-#include "mpncproperties.hh"
 #include "mpncnewtoncontroller.hh"
+#include "mpncindices.hh"
+#include "mpncproperties.hh"
 
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>

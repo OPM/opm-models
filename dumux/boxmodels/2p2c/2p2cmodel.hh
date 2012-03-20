@@ -31,6 +31,11 @@
 #include "2p2clocalresidual.hh"
 #include "2p2cproblem.hh"
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 namespace Dumux
 {
 /*!

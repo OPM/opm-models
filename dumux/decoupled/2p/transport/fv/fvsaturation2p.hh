@@ -25,6 +25,10 @@
 #include <dumux/decoupled/2p/transport/transportproperties2p.hh>
 #include "dumux/decoupled/common/fv/fvtransport.hh"
 
+#include <dune/common/fvector.hh>
+
+#include <iostream>
+
 /**
  * @file
  * @brief  Finite Volume discretization of a saturation transport equation

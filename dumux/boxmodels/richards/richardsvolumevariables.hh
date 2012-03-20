@@ -32,6 +32,7 @@
 
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

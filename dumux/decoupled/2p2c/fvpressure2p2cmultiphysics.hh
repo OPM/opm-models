@@ -29,6 +29,9 @@
 #include <dumux/decoupled/2p2c/fvpressure2p2c.hh>
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /**
  * @file
  * @brief  Finite Volume Diffusion Model

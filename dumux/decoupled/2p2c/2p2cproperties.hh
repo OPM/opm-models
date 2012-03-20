@@ -19,7 +19,6 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
  * \ingroup IMPEC
  * \ingroup IMPETProperties
@@ -34,6 +33,8 @@
 #include <dumux/decoupled/common/pressureproperties.hh>
 #include <dumux/decoupled/common/transportproperties.hh>
 #include <dumux/decoupled/common/impetproperties.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

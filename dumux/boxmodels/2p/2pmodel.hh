@@ -20,13 +20,11 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
-* \file
-*
-* \brief Adaption of the box scheme to the two-phase flow model.
-*/
-
+ * \file
+ *
+ * \brief Adaption of the box scheme to the two-phase flow model.
+ */
 #ifndef DUMUX_TWOP_MODEL_HH
 #define DUMUX_TWOP_MODEL_HH
 
@@ -34,9 +32,10 @@
 #include "2plocalresidual.hh"
 #include "2pproblem.hh"
 
-namespace Dumux
-{
+#include <sstream>
+#include <string>
 
+namespace Dumux {
 /*!
  * \ingroup TwoPBoxModel
  * \brief A two-phase, isothermal flow model using the box scheme.

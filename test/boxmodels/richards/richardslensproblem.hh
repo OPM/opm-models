@@ -30,20 +30,20 @@
 #ifndef DUMUX_RICHARDS_LENSPROBLEM_HH
 #define DUMUX_RICHARDS_LENSPROBLEM_HH
 
+#include <dumux/boxmodels/richards/richardsmodel.hh>
+#include <dumux/material/components/simpleh2o.hh>
+#include <dumux/material/fluidsystems/liquidphase.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+
 #if HAVE_UG
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #endif
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#include <dumux/boxmodels/richards/richardsmodel.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/fluidsystems/liquidphase.hh>
-
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

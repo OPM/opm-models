@@ -37,6 +37,8 @@
 
 #include <dumux/common/math.hh>
 #include <dumux/common/valgrind.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Dumux
 {

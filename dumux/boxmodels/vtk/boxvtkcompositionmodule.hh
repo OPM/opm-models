@@ -31,6 +31,7 @@
 #include "boxvtkoutputmodule.hh"
 
 #include <dumux/common/propertysystem.hh>
+#include <dumux/common/parameters.hh>
 
 namespace Dumux
 {

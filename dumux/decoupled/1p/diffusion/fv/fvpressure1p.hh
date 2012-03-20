@@ -28,6 +28,9 @@
 #include <dumux/decoupled/common/fv/fvpressure.hh>
 #include <dumux/decoupled/1p/1pproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /**
  * @file
  * @brief  Single Phase Finite Volume Model

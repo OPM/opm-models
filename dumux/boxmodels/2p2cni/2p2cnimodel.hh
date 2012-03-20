@@ -30,8 +30,11 @@
 #ifndef DUMUX_2P2CNI_MODEL_HH
 #define DUMUX_2P2CNI_MODEL_HH
 
-#include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 #include "2p2cniproperties.hh"
+
+#include <dumux/boxmodels/2p2c/2p2cmodel.hh>
+
+#include <string>
 
 namespace Dumux {
 /*!

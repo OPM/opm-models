@@ -29,6 +29,8 @@
 
 #include "boxproperties.hh"
 
+#include <dune/common/fvector.hh>
+
 namespace Dumux
 {
 
