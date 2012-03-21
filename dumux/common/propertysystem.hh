@@ -1004,6 +1004,8 @@ inline void print_(const std::string &typeTagName,
             myReplaceAll_(s, "::Dumux::Properties::PTag::", "");
             myReplaceAll_(s, "::Dumux::Properties::GetProperty<", "GET_PROP(");
             myReplaceAll_(s, ">::p::", ")::");
+            myReplaceAll_(s, "GET_PROP(TypeTag, Scalar)::type", "Scalar");
+            
             os << " = '" << s << "'";
         }
         os << " defined at " << key.fileDefined()
