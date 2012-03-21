@@ -63,7 +63,7 @@ class Stokes2cniLocalResidual : public Stokes2cLocalResidual<TypeTag>
 
     enum { dim = GridView::dimension };
     enum { energyIdx = Indices::energyIdx };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
 public:
     /*!

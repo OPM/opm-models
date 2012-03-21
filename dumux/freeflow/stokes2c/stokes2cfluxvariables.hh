@@ -66,8 +66,8 @@ class Stokes2cFluxVariables : public StokesFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
 
     enum { dim = GridView::dimension };
-    enum { lCompIdx = Indices::lCompIdx };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
 
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
 
@@ -98,7 +98,7 @@ public:
             {
                 moleFractionGradAtIP_ +=
                     scvf.grad[idx][dimIdx] *
-                    volVars.fluidState().moleFraction(phaseIdx, lCompIdx);
+                    volVars.fluidState().moleFraction(phaseIdx, compIdx);
             }
         };
 

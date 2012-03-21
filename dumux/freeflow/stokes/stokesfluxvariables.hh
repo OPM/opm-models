@@ -61,7 +61,7 @@ class StokesFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef Dune::FieldVector<Scalar, dim> FieldVector;
     typedef Dune::FieldVector<Scalar, dim> VelocityVector;

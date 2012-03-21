@@ -50,11 +50,17 @@ class Stokes2cVolumeVariables : public StokesVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
 
-    enum { lCompIdx = Indices::lCompIdx };
-    enum { gCompIdx = Indices::gCompIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
     enum { transportIdx = Indices::transportIdx };
+
+    static_assert(FluidSystem::numComponents == 2,
+                  "Only fluid systems with two components are supported by the stokes2c model");
+    static_assert(0 <= phaseIdx && phaseIdx < FluidSystem::numPhases,
+                  "Invalid phase index");
+    static_assert(0 <= compIdx && compIdx < FluidSystem::numComponents,
+                  "Invalid component index");
 
 public:
     /*!
@@ -64,19 +70,17 @@ public:
     {
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
-        Scalar massFraction[numComponents];
-        massFraction[lCompIdx] = priVars[transportIdx];
-        massFraction[gCompIdx] = 1 - massFraction[lCompIdx];
+        Scalar X1 = priVars[transportIdx];
+        Scalar X2 = 1.0 - X1;
 
         // calculate average molar mass of the gas phase
-        Scalar M1 = FluidSystem::molarMass(lCompIdx);
-        Scalar M2 = FluidSystem::molarMass(gCompIdx);
-        Scalar X2 = massFraction[gCompIdx];
+        Scalar M1 = FluidSystem::molarMass(compIdx);
+        Scalar M2 = FluidSystem::molarMass(1 - compIdx);
         Scalar avgMolarMass = M1*M2/(M2 + X2*(M1 - M2));
 
         // convert mass to mole fractions and set the fluid state
-        this->fluidState_.setMoleFraction(phaseIdx, lCompIdx, massFraction[lCompIdx]*avgMolarMass/M1);
-        this->fluidState_.setMoleFraction(phaseIdx, gCompIdx, massFraction[gCompIdx]*avgMolarMass/M2);
+        this->fluidState_.setMoleFraction(phaseIdx, compIdx, X1*avgMolarMass/M1);
+        this->fluidState_.setMoleFraction(phaseIdx, 1 - compIdx, X2*avgMolarMass/M2);
 
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
@@ -88,8 +92,8 @@ public:
         diffCoeff_ = FluidSystem::binaryDiffusionCoefficient(this->fluidState_,
                                                              paramCache,
                                                              phaseIdx,
-                                                             lCompIdx,
-                                                             gCompIdx);
+                                                             compIdx,
+                                                             1 - compIdx);
 
         Valgrind::CheckDefined(diffCoeff_);
     };

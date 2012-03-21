@@ -30,13 +30,14 @@
 
 #include "stokeslocalresidual.hh"
 #include "stokesnewtoncontroller.hh"
-#include "stokeslocaljacobian.hh"
 #include "stokesproblem.hh"
 #include "stokesproperties.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dune/common/fvector.hh>
+
+#include <dumux/boxmodels/common/boxmodel.hh>
 
 namespace Dumux
 {
@@ -66,17 +67,64 @@ class StokesModel : public BoxModel<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { dim = GridView::dimension };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
 public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::pressureIdx)
+            oss << "pressure";
+        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx + dim)
+            oss << "velocity_" << pvIdx - Indices::velocity0Idx;
+        else
+            assert(false);
+
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    {
+        std::ostringstream oss;
+        if (eqIdx == Indices::massBalanceIdx) {
+            oss << "continuity";
+        }
+        else if (Indices::momentum0Idx <= eqIdx && eqIdx < Indices::momentum0Idx + dim)
+            oss << "momentum_" << eqIdx - Indices::momentum0Idx;
+        else
+            assert(false);
+
+        return oss.str();
+    }
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     *
+     * \param globalVertexIdx The global vertex index
+     * \param pvIdx The primary variable index
+     */
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    {
+        if (Indices::pressureIdx == pvIdx)
+            return 1.0/1e5;
+        return 1;
+    }
+
     //! \copydoc BoxModel::addOutputVtkFields
     template <class MultiWriter>
     void addOutputVtkFields(const SolutionVector &sol,
@@ -117,11 +165,22 @@ public:
             };
         }
 
-        writer.attachVertexData(pN, "P");
-        writer.attachVertexData(delP, "delP");
-        writer.attachVertexData(rho, "rho");
-        writer.attachVertexData(mu, "mu");
-        writer.attachVertexData(velocity, "v", dim);
+        std::ostringstream tmp;
+
+        tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(pN, tmp.str());
+
+        tmp.str(""); tmp << "delta pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(delP, tmp.str());
+
+        tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(rho, tmp.str());
+
+        tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(mu, tmp.str());
+
+        tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(velocity, tmp.str(), dim);
     }
 };
 }

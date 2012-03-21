@@ -59,7 +59,7 @@ class Stokes2cniFluxVariables : public Stokes2cFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
 
 public:

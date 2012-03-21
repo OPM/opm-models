@@ -38,7 +38,6 @@
 
 #include "stokesproperties.hh"
 #include "stokesindices.hh"
-#include "stokeslocaljacobian.hh"
 #include "stokeslocalresidual.hh"
 #include "stokesmodel.hh"
 #include "stokesvolumevariables.hh"
@@ -60,9 +59,6 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 // Properties
 //////////////////////////////////////////////////////////////////
-
-//! The local jacobian operator for the stokes box scheme
-SET_TYPE_PROP(BoxStokes, LocalJacobian, Dumux::StokesLocalJacobian<TypeTag>);
 
 SET_PROP(BoxStokes, NumEq) //!< set the number of equations
 {
@@ -145,7 +141,7 @@ public:
 };
 
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
-SET_INT_PROP(BoxStokes, PhaseIndex, 0);
+SET_INT_PROP(BoxStokes, StokesPhaseIndex, 0);
 
 //
 }

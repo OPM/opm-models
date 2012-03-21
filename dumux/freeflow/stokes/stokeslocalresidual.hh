@@ -23,8 +23,8 @@
 /*!
  * \file
  *
- * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the Stokes box model.
+ * \brief The local residual function for problems using the
+ *        Stokes box model.
  */
 
 #ifndef DUMUX_STOKES_LOCAL_RESIDUAL_HH
@@ -46,11 +46,8 @@ namespace Dumux
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxLocalResidual
- * \brief Element-wise calculation of the local Jacobian matrix for problems
- *        using the Stokes box model.
- *
- * This class is also used for the non-isothermal and the two-component Stokes
- * model (static polymorphism).
+ * \brief The local residual function for problems using the
+ *        Stokes box model.
  */
 template<class TypeTag>
 class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
@@ -58,21 +55,25 @@ class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, BaseLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
-
-    typedef typename GET_PROP_TYPE(TypeTag, StokesIndices) Indices;
-
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     enum {
         dim = GridView::dimension,
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex)
+        phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex)
     };
     enum {
         massBalanceIdx = Indices::massBalanceIdx, //!< Index of the mass balance
-        momentumXIdx = Indices::momentumXIdx, //!< Index of the x-component of the momentum balance
-        lastMomentumIdx = Indices::lastMomentumIdx //!< Index of the last component of the momentum balance
+        momentum0Idx = Indices::momentum0Idx //!< Index of the x-component of the momentum balance
     };
     enum { pressureIdx = Indices::pressureIdx }; //!< Index of the pressure in a solution vector
 
@@ -83,16 +84,8 @@ protected:
     typedef Dune::FieldVector<Scalar, dim> FieldVector;
     typedef Dumux::BoxNeumannContext<TypeTag> NeumannContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
  public:
     /*!
@@ -132,10 +125,10 @@ protected:
         result[massBalanceIdx] = fs.density(phaseIdx);
 
         // momentum balance
-        for (int momentumIdx = momentumXIdx; momentumIdx <= lastMomentumIdx; ++momentumIdx)
-            result[momentumIdx] = 
+        for (int dimIdx = 0; dimIdx < dim; ++ dimIdx)
+            result[momentum0Idx + dimIdx] = 
                 fs.density(phaseIdx)
-                * volVars.velocity()[momentumIdx-momentumXIdx];
+                * volVars.velocity()[dimIdx];
     }
 
     /*!
@@ -200,13 +193,18 @@ protected:
             massUpwindWeight_ * fsUp.density(phaseIdx)
             +
             (1.-massUpwindWeight_) * fsDn.density(phaseIdx);
-        
-        if (onBoundary)
+
+        if (!onBoundary)
         {
             // stabilization of the mass balance
             // with 0.5*alpha*(V_i + V_j)*grad P
             FieldVector stabilizationTerm = fluxVars.pressureGradAtIP();
-            stabilizationTerm *= stabilizationAlpha_;
+            const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
+            Scalar tmp = fvGeom.subContVol[fluxVars.upstreamIdx()].volume;
+            tmp += fvGeom.subContVol[fluxVars.upstreamIdx()].volume;
+            tmp /= 2;
+
+            stabilizationTerm *= stabilizationAlpha_*tmp;
             massBalanceResidual += stabilizationTerm;
         }
 
@@ -226,27 +224,28 @@ protected:
                 symmVelGrad[i][j] += fluxVars.velocityGradAtIP()[j][i];
 
         FieldVector velGradComp(0.);
-        for (int velIdx = 0; velIdx < dim; ++velIdx)
+        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
         {
-            velGradComp = symmVelGrad[velIdx];
+            velGradComp = symmVelGrad[dimIdx];
 
             // TODO: dilatation term has to be accounted for in outflow, coupling, neumann
-            //            velGradComp[velIdx] += 2./3*fluxVars.velocityDivAtIP;
+            //            velGradComp[dimIdx] += 2./3*fluxVars.velocityDivAtIP;
             velGradComp *= fluxVars.viscosityAtIP();
 
-            flux[momentumXIdx + velIdx] -=
+            flux[momentum0Idx + dimIdx] -=
                 velGradComp*fluxVars.normal();
 
             // gravity is accounted for in computeSource; alternatively:
             //            Scalar gravityTerm = fluxVars.densityAtIP *
             //                    this->problem_().gravity()[dim-1] *
             //                    fluxVars.face().ipGlobal[dim-1]*
-            //                    fluxVars.face().normal[velIdx];
-            //            flux[momentumXIdx + velIdx] -=
+            //                    fluxVars.face().normal[dimIdx];
+            //            flux[momentumXIdx + dimIdx] -=
             //                    gravityTerm;
 
         }
     }
+
 
     /*!
      * \brief Adds the diffusive flux to the flux vector over
@@ -314,8 +313,8 @@ protected:
         const auto &g = elemCtx.problem().gravity(elemCtx, scvIdx, timeIdx);
         for (int dimIdx=0; dimIdx<dim; ++dimIdx)
         {
-            q[momentumXIdx + dimIdx] -= pressureGradAtSCVCenter[dimIdx];
-            q[momentumXIdx + dimIdx] += fs.density(phaseIdx)*g[dimIdx];
+            q[momentum0Idx + dimIdx] -= pressureGradAtSCVCenter[dimIdx];
+            q[momentum0Idx + dimIdx] += fs.density(phaseIdx)*g[dimIdx];
         }
     }
 
@@ -330,8 +329,10 @@ protected:
     {
         assert(residual.size() == elemCtx.numScv());
         
+        /*
         if (!elemCtx.onBoundary())
             return;
+        */
 
         NeumannContext neumannCtx(elemCtx);
         const auto &elem = elemCtx.element();
@@ -396,7 +397,7 @@ protected:
                             Valgrind::CheckDefined(residual[i]);
 
                         for (int dimIdx=0; dimIdx < dim; ++dimIdx)
-                            momentumResidual[dimIdx] = residual[vertexIdx][momentumXIdx+dimIdx];
+                            momentumResidual[dimIdx] = residual[vertexIdx][momentum0Idx+dimIdx];
 
                         //Sign is right!!!: boundary flux: -mu grad v n
                         //but to compensate outernormal -> residual - (-mu grad v n)
@@ -417,11 +418,14 @@ protected:
             if(!bcTypes.isDirichlet(massBalanceIdx))
             {
                 // replace the mass balance by the sum of the residua of the momentum balance
-                if (momentumBalanceDirichlet_(bcTypes))
+                if (momentumBalanceDirichlet_(bcTypes)) {
                     replaceMassbalanceResidual_(residual, momentumResidual, averagedNormal, vertexIdx);
-                else // de-stabilize (remove alpha*grad p - alpha div f
-                     // from computeFlux on the boundary)
+                }
+                else {
+                    // de-stabilize (remove alpha*grad p - alpha div f
+                    // from computeFlux on the boundary)
                     removeStabilizationAtBoundary_(residual, elemCtx, vertexIdx);
+                }
             }
             if (numberOfOuterFaces == 2)
                 interpolateCornerPoints_(residual, elemCtx, vertexIdx);
@@ -466,9 +470,9 @@ protected:
                 const auto &volVars = neumannCtx.volVars(boundaryFaceIdx, timeIdx);
                 const auto &boundaryVars = neumannCtx.fluxVars(boundaryFaceIdx, timeIdx);
                 pressureCorrection *= volVars.fluidState().pressure(phaseIdx);
-                for (int momentumIdx = momentumXIdx; momentumIdx <= lastMomentumIdx; momentumIdx++)
-                    if(bcTypes.isNeumann(momentumIdx))
-                        residual[scvIdx][momentumIdx] += pressureCorrection[momentumIdx];
+                for (int dimIdx = 0; dimIdx < dim; dimIdx++)
+                    if(bcTypes.isNeumann(momentum0Idx + dimIdx))
+                        residual[scvIdx][momentum0Idx  + dimIdx] += pressureCorrection[momentum0Idx + dimIdx];
 
                 // beta-stabilization at the boundary
                 // in case of neumann conditions for the momentum equation;
@@ -491,9 +495,9 @@ protected:
                         stabilizationBeta_*0.5*
                         (tangentialVelGrad*tangent);
 
-                    for (int momentumIdx = momentumXIdx; momentumIdx <= lastMomentumIdx; momentumIdx++)
+                    for (int dimIdx = 0; dimIdx < dim; dimIdx++)
                         residual[scvIdx][massBalanceIdx] -= stabilizationBeta_*0.5
-                            * values[momentumIdx]*elementUnitNormal[momentumIdx-momentumXIdx];
+                            * values[momentum0Idx + dimIdx]*elementUnitNormal[dimIdx];
                 }
                 Valgrind::CheckDefined(residual);
             }
@@ -563,31 +567,27 @@ protected:
         if (stabilizationAlpha_ != 0)
         {
             FluxVariables fluxVars;
+            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
 
             // loop over the edges of the element
-            for (int faceIdx = 0; faceIdx < elemCtx.numScv(); faceIdx++)
+            for (int faceIdx = 0; faceIdx < fvElemGeom.numEdges; faceIdx++)
             {
-                fluxVars.update(elemCtx, vertexIdx, /*timeIdx=*/0, /*isBoundary=*/true);
-                const auto &scvf = elemCtx.fvElemGeom(/*timeIdx=*/0).subContVolFace[faceIdx];
+                const auto &scvf = fvElemGeom.subContVolFace[faceIdx];
                 
                 const int i = scvf.i;
                 const int j = scvf.j;
 
                 if (i != vertexIdx && j != vertexIdx)
                     continue;
+                fluxVars.update(elemCtx, faceIdx, /*timeIdx=*/0);
 
-                const Scalar alphaH2 = stabilizationAlpha_;
+                Scalar tmp = 0.5*(fvElemGeom.subContVol[i].volume + fvElemGeom.subContVol[j].volume);
+                const Scalar alphaH2 = stabilizationAlpha_*tmp;
                 Scalar stabilizationTerm = 
-                    fluxVars.pressureGradAtIP() *
-                    fluxVars.normal();
-                stabilizationTerm = 
-                    0.5*(elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[j].volume
-                         * elemCtx.volVars(i, /*timeIdx=*/0).extrusionFactor()
-                         +
-                         elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[i].volume
-                         * elemCtx.volVars(j, /*timeIdx=*/0).extrusionFactor());
-
-                stabilizationTerm *= alphaH2;
+                    fluxVars.pressureGradAtIP()
+                    * fluxVars.normal()
+                    * alphaH2;
+                
                 if (vertexIdx == i)
                     residual[i][massBalanceIdx] += stabilizationTerm;
                 if (vertexIdx == j)
@@ -666,8 +666,8 @@ protected:
      */
     bool momentumBalanceDirichlet_(const BoundaryTypes& bcTypes) const
     {
-        for (int momentumIdx=momentumXIdx; momentumIdx<=lastMomentumIdx; ++momentumIdx)
-            if (!bcTypes.isDirichlet(momentumIdx))
+        for (int dimIdx=0; dimIdx < dim; ++dimIdx)
+            if (!bcTypes.isDirichlet(momentum0Idx + dimIdx))
                 return false;
         return true;
     }
@@ -677,8 +677,8 @@ protected:
      */
     bool momentumBalanceHasNeumann_(const BoundaryTypes& bcTypes) const
     {
-        for (int momentumIdx=momentumXIdx; momentumIdx<=lastMomentumIdx; ++momentumIdx)
-            if (bcTypes.isNeumann(momentumIdx))
+        for (int dimIdx=0; dimIdx < dim; ++dimIdx)
+            if (bcTypes.isNeumann(momentum0Idx + dimIdx))
                 return true;
         return false;
     }
@@ -688,8 +688,8 @@ protected:
      */
     bool momentumBalanceOutflow_(const BoundaryTypes& bcTypes) const
     {
-        for (int momentumIdx=momentumXIdx; momentumIdx<=lastMomentumIdx; ++momentumIdx)
-            if (!bcTypes.isOutflow(momentumIdx))
+        for (int dimIdx=0; dimIdx < dim; ++dimIdx)
+            if (!bcTypes.isOutflow(momentum0Idx + dimIdx))
                 return false;
         return true;
     }

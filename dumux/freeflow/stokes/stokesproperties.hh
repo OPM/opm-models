@@ -60,11 +60,12 @@ NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using 
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);
 NEW_PROP_TAG(FluidState);
+
+NEW_PROP_TAG(StokesPhaseIndex); //!< The index of the considered fluid phase
 NEW_PROP_TAG(StabilizationAlpha); //!< The parameter for the stabilization
 NEW_PROP_TAG(StabilizationBeta); //!< The parameter for the stabilization at boundaries
 
-NEW_PROP_TAG(PhaseIndex); //!< A phase index in case that a two-phase fluidsystem is used
-NEW_PROP_TAG(Scaling); //!Defines Scaling of the model
+NEW_PROP_TAG(Scaling); //! Defines scaling of the model
 NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using the stokes model
 }
 }

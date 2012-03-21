@@ -54,7 +54,8 @@ SET_PROP(BoxStokes2c, NumEq) //!< set the number of equations
 {
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     static const int dim = Grid::dimension;
- public:
+
+public:
     static constexpr int value = 2 + dim;
 };
 
@@ -76,28 +77,20 @@ SET_TYPE_PROP(BoxStokes2c, FluxVariables, Stokes2cFluxVariables<TypeTag>);
 SET_TYPE_PROP(BoxStokes2c,
               Stokes2cIndices,
               Stokes2cCommonIndices<TypeTag>);
+//! The Indices as the generic property name
+SET_TYPE_PROP(BoxStokes2c,
+              Indices,
+              typename GET_PROP_TYPE(TypeTag, Stokes2cIndices));
 
-//! Set the number of components to 2
-SET_INT_PROP(BoxStokes2c, NumComponents, 2);
+SET_INT_PROP(BoxStokes2c, StokesComponentIndex, 0);
 
-//! Choose the type of the employed fluid state
-SET_PROP(BoxStokes2c, FluidState)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-public:
-    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> type;
+// unset the FluidSystem property, because it must be explicitly set
+// by the user
+UNSET_PROP(BoxStokes2c, FluidSystem);
 
-};
-
-//! Choose the considered phase (single-phase system); the gas phase is used
-SET_PROP(BoxStokes2c, PhaseIndex)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-public:
-    static constexpr int value = FluidSystem
-::gPhaseIdx;
-};
+SET_TYPE_PROP(BoxStokes2c, FluidState, 
+              Dumux::CompositionalFluidState<typename GET_PROP_TYPE(TypeTag, Scalar),
+                                             typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 }
 

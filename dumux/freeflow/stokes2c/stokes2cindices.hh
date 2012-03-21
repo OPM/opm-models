@@ -43,19 +43,19 @@ namespace Dumux
  * \tparam PVOffset The first index in a primary variable vector.
  */
 template <class TypeTag, int PVOffset = 0>
-struct Stokes2cCommonIndices : public StokesCommonIndices<TypeTag>
+struct Stokes2cCommonIndices : public StokesCommonIndices<TypeTag, PVOffset>
 {
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
+    static const int dim = GridView::dimensionworld;
 
 public:
-    // Component indices
-    static const int lCompIdx = 0; //!< Index of the liquid's primary component
-    static const int gCompIdx = 1; //!< Index of the gas' primary component
-
-    // equation and primary variable indices
-    static const int dim = StokesCommonIndices<TypeTag>::dim;
-    static const int transportIdx = PVOffset + dim+1; //! The index for the transport equation.
-    static const int massOrMoleFracIndex = transportIdx; //! The index for the mass or mole fraction in primary variable vectors.
+    // equation indices
+    static const int massFracIdx = PVOffset + dim + 1; //! The index for the mass or mole fraction in primary variable vectors.
+  
+    // primary variable indices
+    static const int transportIdx = PVOffset + dim + 1; //! The index for the transport equation.
 };
 } // end namespace
 

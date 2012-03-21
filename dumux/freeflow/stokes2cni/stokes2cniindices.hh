@@ -43,11 +43,12 @@ namespace Dumux
 template <class TypeTag, int PVOffset=0>
 struct Stokes2cniCommonIndices : public Stokes2cCommonIndices<TypeTag, PVOffset>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    static const int dim = GridView::dimensionworld;
+
 public:
-    // number of dimensions
-    static const int dim = StokesCommonIndices<TypeTag>::dim;
-    static const int energyIdx = PVOffset + dim+2; //! The index for the energy balance equation.
-    static const int temperatureIdx = energyIdx; //! The index for temperature in primary variable vectors.
+    static const int energyIdx = PVOffset + dim + 2; //! The index for the energy balance equation.
+    static const int temperatureIdx = PVOffset + dim + 2; //! The index for temperature in primary variable vectors.
 };
 } // end namespace
 

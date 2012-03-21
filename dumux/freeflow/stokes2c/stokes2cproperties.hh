@@ -52,6 +52,7 @@ NEW_TYPE_TAG(BoxStokes2c, INHERITS_FROM(BoxStokes));
 
 NEW_PROP_TAG(Stokes2cIndices); //!< Enumerations for the compositional stokes models
 NEW_PROP_TAG(NumComponents); //!< Number of components
+NEW_PROP_TAG(StokesComponentIndex); //!< The index of the component which should be explicitly considered by the transport equation
 
 }
 

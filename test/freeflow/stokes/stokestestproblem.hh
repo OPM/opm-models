@@ -69,14 +69,13 @@ public:
     typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
 };
 //! Scalar is set to type long double for higher accuracy
-SET_TYPE_PROP(BoxStokes, Scalar, double);
-//SET_TYPE_PROP(BoxStokes, Scalar, long double);
+SET_TYPE_PROP(StokesTestProblem, Scalar, double);
 
 //! A stabilization factor. Set negative for stabilization and to zero for no stabilization
-SET_SCALAR_PROP(BoxStokes, StabilizationAlpha, -1.0);
+SET_SCALAR_PROP(StokesTestProblem, StabilizationAlpha, -1.0);
 
 //! Stabilization factor for the boundaries
-SET_SCALAR_PROP(BoxStokes, StabilizationBeta, 0.0);
+SET_SCALAR_PROP(StokesTestProblem, StabilizationBeta, 0.0);
 
 // Enable gravity
 SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
@@ -119,7 +118,7 @@ class StokesTestProblem
 
         // copy some indices for convenience
         massBalanceIdx = Indices::massBalanceIdx,
-        momentumXIdx = Indices::momentumXIdx //!< Index of the x-component of the momentum balance
+        momentum0Idx = Indices::momentum0Idx //!< Index of the x-component of the momentum balance
     };
 
     typedef typename GridView::ctype CoordScalar;
@@ -215,7 +214,7 @@ public:
 
         const Scalar v0 = 1.0;
         // parabolic velocity profile
-        values[momentumXIdx] =  v0*(globalPos[1] - this->bboxMin()[1])*(this->bboxMax()[1] - globalPos[1])
+        values[momentum0Idx] =  v0*(globalPos[1] - this->bboxMin()[1])*(this->bboxMax()[1] - globalPos[1])
                                / (0.25*(this->bboxMax()[1] - this->bboxMin()[1])*(this->bboxMax()[1] - this->bboxMin()[1]));
     }
 

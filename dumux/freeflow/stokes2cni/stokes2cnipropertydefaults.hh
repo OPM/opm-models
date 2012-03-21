@@ -74,6 +74,10 @@ SET_TYPE_PROP(BoxStokes2cni, FluxVariables, Stokes2cniFluxVariables<TypeTag>);
 SET_TYPE_PROP(BoxStokes2cni,
               Stokes2cniIndices,
               Stokes2cniCommonIndices<TypeTag>);
+SET_TYPE_PROP(BoxStokes2cni,
+              Indices,
+              typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices));
+
 }
 }
 #endif

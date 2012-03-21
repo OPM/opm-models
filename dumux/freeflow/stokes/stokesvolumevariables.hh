@@ -58,12 +58,11 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum {
         dim = GridView::dimension,
 
-        momentumXIdx = Indices::momentumXIdx,
-        lastMomentumIdx = Indices::lastMomentumIdx,
+        momentum0Idx = Indices::momentum0Idx,
         pressureIdx = Indices::pressureIdx
     };
 
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
@@ -101,8 +100,8 @@ public:
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
         // momentum conservation
-        for (int dimIdx=momentumXIdx; dimIdx<=lastMomentumIdx; ++dimIdx)
-            velocity_[dimIdx] = priVars[dimIdx];
+        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
+            velocity_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
     }
 
 

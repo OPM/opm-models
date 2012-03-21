@@ -92,8 +92,8 @@ class Stokes2cniModel : public Stokes2cModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dim = GridView::dimension };
-    enum { lCompIdx = Indices::lCompIdx };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
@@ -135,7 +135,7 @@ public:
                 
                 pN[globalIdx] = fs.pressure(phaseIdx);
                 delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
-                Xw[globalIdx] = fs.massFraction(phaseIdx, lCompIdx);
+                Xw[globalIdx] = fs.massFraction(phaseIdx, compIdx);
                 T[globalIdx] = fs.temperature(phaseIdx);
                 rho[globalIdx] = fs.density(phaseIdx);
                 mu[globalIdx] = fs.viscosity(phaseIdx);
@@ -144,16 +144,31 @@ public:
             };
         }
 
-        writer.attachVertexData(pN, "P");
-        writer.attachVertexData(delP, "delP");
-        std::ostringstream outputNameX;
-        outputNameX << "X^" << FluidSystem::componentName(lCompIdx);
-        writer.attachVertexData(Xw, outputNameX.str());
-        writer.attachVertexData(T, "T");
-        writer.attachVertexData(rho, "rho");
-        writer.attachVertexData(mu, "mu");
-        writer.attachVertexData(h, "h");
-        writer.attachVertexData(velocity, "v", dim);
+        std::ostringstream tmp;
+
+        tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(pN, tmp.str());
+
+        tmp.str(""); tmp << "delta pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(delP, tmp.str());
+
+        tmp.str(""); tmp << "mass fraction_" << FluidSystem::phaseName(phaseIdx)
+                         << "^" << FluidSystem::componentName(compIdx);
+        writer.attachVertexData(Xw, tmp.str());
+
+        writer.attachVertexData(T, "temperature");
+
+        tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(rho, tmp.str());
+
+        tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(mu, tmp.str());
+
+        tmp.str(""); tmp << "enthalpy_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(h, tmp.str());
+
+        tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(velocity, tmp.str(), dim);
     }
 };
 

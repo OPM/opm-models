@@ -74,6 +74,8 @@ namespace Dumux {
 template<class TypeTag>
 class Stokes2cModel : public StokesModel<TypeTag>
 {
+    typedef StokesModel<TypeTag> ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
@@ -82,12 +84,40 @@ class Stokes2cModel : public StokesModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dim = GridView::dimension };
-    enum { lCompIdx = Indices::lCompIdx };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::massFracIdx)
+            oss << "X^" << FluidSystem::componentName(compIdx);
+        else
+            return ParentType::primaryVarName(pvIdx);
+
+        return oss.str();
+    }
+
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    {
+        std::ostringstream oss;
+        if (eqIdx == Indices::transportIdx)
+            oss << "transport^" << FluidSystem::componentName(compIdx);
+        else
+            return ParentType::eqName(eqIdx);
+
+        return oss.str();
+    }
+
     //! \copydoc BoxModel::addOutputVtkFields
     template <class MultiWriter>
     void addOutputVtkFields(const SolutionVector &sol,
@@ -123,21 +153,33 @@ public:
                 
                 pN[globalIdx] = fs.pressure(phaseIdx);
                 delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
-                Xw[globalIdx] = fs.massFraction(phaseIdx, lCompIdx);
+                Xw[globalIdx] = fs.massFraction(phaseIdx, compIdx);
                 rho[globalIdx] = fs.density(phaseIdx);
                 mu[globalIdx] = fs.viscosity(phaseIdx);
                 velocity[globalIdx] = volVars.velocity();
             };
         }
 
-        writer.attachVertexData(pN, "P");
-        writer.attachVertexData(delP, "delP");
-        std::ostringstream outputNameX;
-        outputNameX << "X^" << FluidSystem::componentName(lCompIdx);
-        writer.attachVertexData(Xw, outputNameX.str());
-        writer.attachVertexData(rho, "rho");
-        writer.attachVertexData(mu, "mu");
-        writer.attachVertexData(velocity, "v", dim);
+        std::ostringstream tmp;
+
+        tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(pN, tmp.str());
+
+        tmp.str(""); tmp << "delta pressure_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(delP, tmp.str());
+
+        tmp.str(""); tmp << "mass fraction_" << FluidSystem::phaseName(phaseIdx)
+                         << "^" << FluidSystem::componentName(compIdx);
+        writer.attachVertexData(Xw, tmp.str());
+
+        tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(rho, tmp.str());
+
+        tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(mu, tmp.str());
+
+        tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(velocity, tmp.str(), dim);
     }
 };
 

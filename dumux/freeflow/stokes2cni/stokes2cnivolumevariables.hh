@@ -51,7 +51,7 @@ class Stokes2cniVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
 
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex) };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { temperatureIdx = Indices::temperatureIdx };
 
 public:
@@ -68,8 +68,6 @@ public:
         heatConductivity_ = FluidSystem::thermalConductivity(this->fluidState_,
                                                              paramCache,
                                                              phaseIdx);
-        //heatConductivity_ = 0.0257;
-        //TODO: value (Source: www.engineeringtoolbox.com/air-properties-d_156.html)
     };
 
     /*!

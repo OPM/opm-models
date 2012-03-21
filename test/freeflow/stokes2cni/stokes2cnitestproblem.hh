@@ -59,20 +59,25 @@ SET_TYPE_PROP(Stokes2cniTestProblem, Grid, Dune::SGrid<2,2>);
 SET_TYPE_PROP(Stokes2cniTestProblem, Problem, Stokes2cniTestProblem<TypeTag>);
 
 //! Select the fluid system
-SET_PROP(BoxStokes2cni, FluidSystem)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dumux::FluidSystems::H2OAir<Scalar> type;
-};
+SET_TYPE_PROP(Stokes2cniTestProblem, 
+              FluidSystem,
+              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
-//! Scalar is set to type long double for higher accuracy
-//SET_TYPE_PROP(BoxStokes, Scalar, long double);
+//! Select the phase to be considered
+SET_INT_PROP(Stokes2cniTestProblem,
+             StokesPhaseIndex,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::gPhaseIdx);
+
+//! Select the phase to be considered by the transport equation
+SET_INT_PROP(Stokes2cniTestProblem, 
+             StokesComponentIndex,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::H2OIdx);
 
 //! a stabilization factor. Set to zero for no stabilization
-SET_SCALAR_PROP(BoxStokes2cni, StabilizationAlpha, -1.0);
+SET_SCALAR_PROP(Stokes2cniTestProblem, StabilizationAlpha, -1.0);
 
 //! stabilization at the boundaries
-SET_SCALAR_PROP(BoxStokes2cni, StabilizationBeta, 0.0);
+SET_SCALAR_PROP(Stokes2cniTestProblem, StabilizationBeta, 0.0);
 
 // Enable gravity
 SET_BOOL_PROP(Stokes2cniTestProblem, EnableGravity, true);
@@ -114,19 +119,22 @@ class Stokes2cniTestProblem
 
     enum { // Number of equations and grid dimension
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        dim = GridView::dimension
+        dimWorld = GridView::dimensionworld
     };
     enum { // copy some indices for convenience
         massBalanceIdx = Indices::massBalanceIdx,
-        momentumXIdx = Indices::momentumXIdx, //!< Index of the x-component of the momentum balance
-        momentumYIdx = Indices::momentumYIdx, //!< Index of the y-component of the momentum balance
-        momentumZIdx = Indices::momentumZIdx, //!< Index of the z-component of the momentum balance
-        transportIdx = Indices::transportIdx, //!< Index of the transport equation (massfraction)
-        energyIdx =    Indices::energyIdx     //!< Index of the energy equation (temperature)
+        momentum0Idx = Indices::momentum0Idx,
+        transportIdx = Indices::transportIdx,
+        energyIdx = Indices::energyIdx,
+
+        pressureIdx = Indices::pressureIdx,
+        velocity0Idx = Indices::velocity0Idx,
+        massFracIdx = Indices::massFracIdx,
+        temperatureIdx = Indices::temperatureIdx
     };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     Stokes2cniTestProblem(TimeManager &timeManager)
@@ -179,13 +187,19 @@ public:
         values.setOutflow(massBalanceIdx);
 
         if (onUpperBoundary_(globalPos) &&
-                !onLeftBoundary_(globalPos) && !onRightBoundary_(globalPos))
+            !onLeftBoundary_(globalPos) && 
+            !onRightBoundary_(globalPos))
+        {
             values.setAllOutflow();
+        }
 
         // set pressure at one point
         if (onUpperBoundary_(globalPos) &&
-                !onLeftBoundary_(globalPos) && !onRightBoundary_(globalPos))
+            !onLeftBoundary_(globalPos) && 
+            !onRightBoundary_(globalPos))
+        {
             values.setDirichlet(massBalanceIdx);
+        }
     }
 
     /*!
@@ -201,9 +215,7 @@ public:
     void dirichlet(PrimaryVariables &values,
                    const Context &context,
                    int spaceIdx, int timeIdx) const
-    {
-        initial(values, context, spaceIdx, timeIdx);
-    }
+    { initial(values, context, spaceIdx, timeIdx); }
 
     /*!
      * \brief Evaluate the boundary conditions for a neumann
@@ -216,9 +228,7 @@ public:
     void neumann(RateVector &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
-    {
-        values = 0.0;
-    }
+    { values = 0.0; }
 
     // \}
 
@@ -259,19 +269,18 @@ public:
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         const Scalar v1 = 0.5;
-        values[momentumXIdx] = 0.0;
-        values[momentumYIdx] = v1*(globalPos[0] - this->bboxMin()[0])*(this->bboxMax()[0] - globalPos[0])
+        values[velocity0Idx + 0] = 0.0;
+        values[velocity0Idx + 1] = v1*(globalPos[0] - this->bboxMin()[0])*(this->bboxMax()[0] - globalPos[0])
                                    / (0.25*(this->bboxMax()[0] - this->bboxMin()[0])*(this->bboxMax()[0] - this->bboxMin()[0]));
-        values[massBalanceIdx] = 1e5 - 1.189*this->gravity()[1]*globalPos[1];
-        values[transportIdx] = 1e-4;
-        values[energyIdx] = 283.15;
-        if(globalPos[0]<0.75 && globalPos[0]>0.25 &&
-                globalPos[1]<0.75 && globalPos[1]>0.25)
-//        if(onLowerBoundary_(globalPos) &&
-//                !onLeftBoundary_(globalPos) && !onRightBoundary_(globalPos))
+        values[pressureIdx] = 1e5 - 1.189*this->gravity()[1]*globalPos[1];
+        values[massFracIdx] = 1e-4;
+        values[temperatureIdx] = 283.15;
+
+        if (globalPos[0]<0.75 && globalPos[0]>0.25 &&
+            globalPos[1]<0.75 && globalPos[1]>0.25)
         {
-            values[transportIdx] = 0.9e-4;
-            values[energyIdx] = 284.15;
+            values[massFracIdx] = 0.9e-4;
+            values[temperatureIdx] = 284.15;
         }
     }
 
@@ -292,8 +301,10 @@ private:
 
     bool onBoundary_(const GlobalPosition &globalPos) const
     {
-        return (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)
-                || onLowerBoundary_(globalPos) || onUpperBoundary_(globalPos));
+        return onLeftBoundary_(globalPos)
+            || onRightBoundary_(globalPos)
+            || onLowerBoundary_(globalPos)
+            || onUpperBoundary_(globalPos);
     }
 
     Scalar eps_;

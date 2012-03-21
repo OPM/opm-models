@@ -63,10 +63,6 @@ NEW_PROP_TAG(FluidSystem);
 template<class TypeTag>
 class BoxVtkOutputModule
 {
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -75,6 +71,9 @@ class BoxVtkOutputModule
 
     typedef typename Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { dim = GridView::dimension };
 
 public:

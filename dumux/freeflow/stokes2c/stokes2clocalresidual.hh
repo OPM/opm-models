@@ -58,9 +58,9 @@ class Stokes2cLocalResidual : public StokesLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dim = GridView::dimension };
-    enum { transportIdx = Indices::transportIdx }; //!< Index of the transport equation
-    enum { lCompIdx = Indices::lCompIdx }; //!< Index of the liquid component
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, PhaseIndex)}; //!< Index of the considered phase (only of interest when using two-phase fluidsystems)
+    enum { transportIdx = Indices::transportIdx };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
 
 public:
     /*!
@@ -87,10 +87,10 @@ public:
         // compute the storage of the component
         result[transportIdx] =
             volVars.fluidState().density(phaseIdx) *
-            volVars.fluidState().massFraction(phaseIdx, lCompIdx);
+            volVars.fluidState().massFraction(phaseIdx, compIdx);
 
         Valgrind::CheckDefined(volVars.fluidState().density(phaseIdx));
-        Valgrind::CheckDefined(volVars.fluidState().massFraction(phaseIdx, lCompIdx));
+        Valgrind::CheckDefined(volVars.fluidState().massFraction(phaseIdx, compIdx));
     }
 
     /*!
@@ -130,11 +130,11 @@ public:
         tmp *=  
             this->massUpwindWeight_
             * fsUp.density(phaseIdx)
-            * fsUp.massFraction(phaseIdx, lCompIdx)
+            * fsUp.massFraction(phaseIdx, compIdx)
             +
             (1.0 - this->massUpwindWeight_)
             * fsDn.density(phaseIdx)
-            * fsDn.massFraction(phaseIdx, lCompIdx);
+            * fsDn.massFraction(phaseIdx, compIdx);
 
         flux[transportIdx] += tmp;
         Valgrind::CheckDefined(flux[transportIdx]);
@@ -168,7 +168,7 @@ public:
                 fluxVars.normal()[dimIdx] *
                 fluxVars.diffusionCoeffAtIP() *
                 fluxVars.molarDensityAtIP() *
-                FluidSystem::molarMass(lCompIdx);
+                FluidSystem::molarMass(compIdx);
 
         Valgrind::CheckDefined(flux[transportIdx]);
     }
