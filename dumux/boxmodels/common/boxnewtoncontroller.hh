@@ -22,7 +22,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief A Newton controller models using for the box scheme.
+ * \brief A Newton controller for models using the box scheme.
  *
  * Usually, this controller should be sufficient for models using the
  * box scheme.
@@ -33,7 +33,6 @@
 #include "boxnewtonconvergencewriter.hh"
 
 #include <dumux/nonlinear/newtoncontroller.hh>
-#include <dumux/linear/boxlinearsolver.hh>
 #include <dumux/common/propertysystem.hh>
 
 namespace Dumux
@@ -49,6 +48,18 @@ namespace Properties
 //! create a type tag for the box specific Newton method
 NEW_TYPE_TAG(BoxNewtonMethod, INHERITS_FROM(NewtonMethod));
 
+//! The class dealing with the balance equations
+NEW_PROP_TAG(Model);
+
+//! The assembler for the Jacobian matrix
+NEW_PROP_TAG(JacobianAssembler);
+
+//! The class storing primary variables plus pseudo primary variables
+NEW_PROP_TAG(PrimaryVariables);
+
+//! The number of balance equations.
+NEW_PROP_TAG(NumEq);
+
 //! Specifies whether the Jacobian matrix should only be reassembled
 //! if the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialReassemble);
@@ -62,9 +73,6 @@ NEW_PROP_TAG(EnablePartialReassemble);
  * controller's update() method. By default line search is not used.
  */
 NEW_PROP_TAG(NewtonUseLineSearch);
-
-//! The assembler for the Jacobian matrix
-NEW_PROP_TAG(JacobianAssembler);
 
 //! Enable Jacobian recycling?
 NEW_PROP_TAG(EnableJacobianRecycling);
@@ -84,7 +92,7 @@ SET_BOOL_PROP(NewtonMethod, NewtonUseLineSearch, false);
 
 /*!
  * \ingroup Newton
- * \brief A Newton controller models using for the box scheme.
+ * \brief A Newton controller for models using the box scheme.
  *
  * If you want to specialize only some methods but are happy with the
  * defaults of the reference controller, derive your controller from

@@ -25,9 +25,8 @@
 
 #include "boxnewtoncontroller.hh"
 
-#include <dumux/nonlinear/newtonmethod.hh>
-#include <dumux/linear/linearsolverproperties.hh>
 #include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
+#include <dumux/linear/boxlinearsolver.hh>
 #include <dumux/common/basicproperties.hh>
 #include <dumux/common/propertysystem.hh>
 
