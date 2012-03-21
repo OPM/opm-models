@@ -446,14 +446,14 @@ protected:
             //
             // TODO (?): we might need a more explicit way for
             // doing the time discretization...
-            asImp_().computeStorage(tmp2,
-                                    elemCtx,
-                                    scvIdx,
-                                    /*timeIdx=*/1);
             asImp_().computeStorage(tmp,
                                     elemCtx,
                                     scvIdx,
                                     /*timeIdx=*/0);
+            asImp_().computeStorage(tmp2,
+                                    elemCtx,
+                                    scvIdx,
+                                    /*timeIdx=*/1);
 
             tmp -= tmp2;
             tmp *=
