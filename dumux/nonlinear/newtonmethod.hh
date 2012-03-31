@@ -116,6 +116,36 @@ public:
         };
     }
 
+    /*!
+     * \brief Returns the wall time spend so far for linearizing the
+     *        non-linear system for all iterations of the current time
+     *        step.
+     */
+    Scalar assembleTime() const
+    {
+        return assembleTimer_.elapsed();
+    }
+
+    /*!
+     * \brief Returns the wall time spend so far for solving the
+     *        linear systems for all iterations of the current time
+     *        step.
+     */
+    Scalar solveTime() const
+    {
+        return solveTimer_.elapsed();
+    }
+
+    /*!
+     * \brief Returns the wall time spend so far for updating the
+     *        iterative solutions of the non-linear system for all
+     *        iterations of the current time step.
+     */
+    Scalar updateTime() const
+    {
+        return updateTimer_.elapsed();
+    }
+
 protected:
     bool execute_(NewtonController &ctl)
     {
@@ -125,12 +155,12 @@ protected:
 
         JacobianAssembler &jacobianAsm = model().jacobianAssembler();
 
-        Dune::Timer assembleTimer(false);
-        Dune::Timer solveTimer(false);
-        Dune::Timer updateTimer(false);
-
         // tell the controller that we begin solving
         ctl.newtonBegin(*this, uCurrentIter);
+
+        assembleTimer_.reset();
+        solveTimer_.reset();
+        updateTimer_.reset();
 
         // execute the method as long as the controller thinks
         // that we should do another iteration
@@ -153,9 +183,9 @@ protected:
             ///////////////
 
             // linearize the problem at the current solution
-            assembleTimer.start();
-            jacobianAsm.assemble();
-            assembleTimer.stop();
+            assembleTimer_.start();
+            ctl.newtonAssemble();
+            assembleTimer_.stop();
 
             ///////////////
             // linear solve
@@ -173,7 +203,7 @@ protected:
             }
 
             // solve the resulting linear equation system
-            solveTimer.start();
+            solveTimer_.start();
 
             // set the delta vector to zero before solving the linear system!
             deltaU = 0;
@@ -181,7 +211,7 @@ protected:
             ctl.newtonSolveLinear(jacobianAsm.matrix(),
                                   deltaU,
                                   jacobianAsm.residual());
-            solveTimer.stop();
+            solveTimer_.stop();
 
             ///////////////
             // update
@@ -194,10 +224,10 @@ protected:
 
             // update the current solution (i.e. uOld) with the delta
             // (i.e. u). The result is stored in u
-            updateTimer.start();
+            updateTimer_.start();
             ctl.newtonUpdate(uCurrentIter, uLastIter, deltaU);
             ctl.newtonUpdateErrors(uCurrentIter, uLastIter, deltaU);
-            updateTimer.stop();
+            updateTimer_.stop();
 
             // tell the controller that we're done with this iteration
             ctl.newtonEndStep(uCurrentIter, uLastIter);
@@ -207,11 +237,11 @@ protected:
         ctl.newtonEnd();
 
         if (ctl.verbose()) {
-            Scalar elapsedTot = assembleTimer.elapsed() + solveTimer.elapsed() + updateTimer.elapsed();
+            Scalar elapsedTot = assembleTimer_.elapsed() + solveTimer_.elapsed() + updateTimer_.elapsed();
             std::cout << "Assemble/solve/update time: "
-                      <<  assembleTimer.elapsed() << "(" << 100*assembleTimer.elapsed()/elapsedTot << "%)/"
-                      <<  solveTimer.elapsed() << "(" << 100*solveTimer.elapsed()/elapsedTot << "%)/"
-                      <<  updateTimer.elapsed() << "(" << 100*updateTimer.elapsed()/elapsedTot << "%)"
+                      <<  assembleTimer_.elapsed() << "(" << 100*assembleTimer_.elapsed()/elapsedTot << "%)/"
+                      <<  solveTimer_.elapsed() << "(" << 100*solveTimer_.elapsed()/elapsedTot << "%)/"
+                      <<  updateTimer_.elapsed() << "(" << 100*updateTimer_.elapsed()/elapsedTot << "%)"
                       << "\n";
         }
 
@@ -226,6 +256,10 @@ protected:
 
 private:
     Problem &problem_;
+
+    Dune::Timer assembleTimer_;
+    Dune::Timer solveTimer_;
+    Dune::Timer updateTimer_;
 };
 
 }

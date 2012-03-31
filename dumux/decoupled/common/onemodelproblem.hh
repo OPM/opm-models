@@ -353,6 +353,13 @@ public:
     }
 
     /*!
+     * \brief Called after the simulation has been finished
+     *        sucessfully.
+     */
+    void finalize()
+    { }
+
+    /*!
      * \brief Called by Dumux::TimeManager just before the time
      *        integration.
      */

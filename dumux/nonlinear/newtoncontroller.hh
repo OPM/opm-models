@@ -314,6 +314,14 @@ public:
     }
 
     /*!
+     * \brief Assemble the global linear system of equations.
+     */
+    void newtonAssemble()
+    {
+        problem().model().jacobianAssembler().assemble();
+    }
+
+    /*!
      * \brief Indicates the beginning of a Newton iteration.
      */
     void newtonBeginStep()

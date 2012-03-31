@@ -205,7 +205,6 @@ public:
                       const SolutionVector &uLastIter,
                       const GlobalEqVector &deltaU)
     {
-        
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_) {
             const Scalar minReasmTol = 1e-2*this->tolerance_;

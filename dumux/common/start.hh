@@ -301,9 +301,15 @@ int start(int argc,
         if (ParameterTree::tree().hasKey("PrintProperties"))
             printProps = GET_RUNTIME_PARAM(TypeTag, bool, PrintProperties);
 
-        if (printProps && myRank == 0) {
-            Dumux::Properties::print<TypeTag>();
-        }
+        // read the initial time step and the end time
+        double tEnd;
+        double dt;
+
+        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, TEnd); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--t-end' not specified!"); throw; }
+
+        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, DtInitial); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--dt-initial' not specified!"); throw; }
 
         // deal with the restart stuff
         bool restart = false;
@@ -318,20 +324,27 @@ int start(int argc,
         if (ParameterTree::tree().hasKey("PrintParameters"))
             printParams = GET_RUNTIME_PARAM(TypeTag, bool, PrintParameters);
 
+
+        if (myRank == 0)
+            std::cout
+                << "eWoms " << EWOMS_VERSION 
+#ifdef EWOMS_CODENAME
+                << " (\"" << EWOMS_CODENAME << "\")"
+#endif
+                <<" will now start the trip. "
+                << "Please sit back, relax and enjoy the ride.\n";
+
         // try to create a grid (from the given grid file)
+        if (myRank ==  0) std::cout << "Creating the grid\n";
         try { GridCreator::makeGrid(); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Creation of the grid failed!"); throw; }
+        catch (...) { std::cout << "Creation of the grid failed!"; throw; }
+        if (myRank ==  0) std::cout << "Distributing the grid\n";
         GridCreator::loadBalance();
 
-        // read the initial time step and the end time
-        double tEnd;
-        double dt;
-
-        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, TEnd); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--t-end' not specified!"); throw; }
-
-        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, DtInitial); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--dt-initial' not specified!"); throw; }
+        // print  parameters if requested
+        if (printProps && myRank == 0) {
+            Dumux::Properties::print<TypeTag>();
+        }
 
         // instantiate and run the concrete problem
         TimeManager timeManager;
@@ -340,7 +353,14 @@ int start(int argc,
         timeManager.run();
 
         if (printParams && myRank == 0) {
+            std::cout << "Parameters used:\n";
             Dumux::Parameters::print<TypeTag>();
+        }
+        
+        if (myRank == 0) {
+            std::cout
+                << "eWoms reached the destination. "
+                << "If it took a wrong corner, change your booking and try again.\n";
         }
         return 0;
     }

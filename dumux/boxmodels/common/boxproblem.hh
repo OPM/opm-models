@@ -143,7 +143,46 @@ public:
     {
         // set the initial condition of the model
         model().init(asImp_());
+
+        assembleTime_ = 0.0; 
+        solveTime_ = 0.0; 
+        updateTime_ = 0.0; 
     }
+
+
+    /*!
+     * \brief Called after the simulation has been finished
+     *        sucessfully.
+     */
+    void finalize()
+    { 
+        if (gridView().comm().rank() == 0) {
+            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_); 
+            int numCores = this->gridView().comm().size();
+            std::cout.precision(5);
+            std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
+                      << "Timing receipt [s] (total/assemble/solve/update): "
+                      << totalTime  << " (" << totalTime*numCores << " cummulative, " << numCores <<" processes) / "
+                      << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
+                      << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
+                      << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
+                      << "\n";
+        }
+    }
+            
+    /*!
+     * \brief Returns the total wall time spend on solving the
+     *        system [s].
+     */
+    Scalar solveTime() const
+    { return solveTime_; }
+
+    /*!
+     * \brief Returns the total wall time spend on updating the
+     *        iterative solutions [s].
+     */
+    Scalar updateTime() const
+    { return updateTime_; }
 
     /*!
      * \brief Evaluate the boundary conditions for a dirichlet
@@ -259,9 +298,18 @@ public:
     {
         const int maxFails = 10;
         for (int i = 0; i < maxFails; ++i) {
-            if (model_.update(newtonMethod_, newtonCtl_))
+            if (model_.update(newtonMethod_, newtonCtl_)) {
+                assembleTime_ += newtonMethod_.assembleTime();
+                solveTime_ += newtonMethod_.solveTime();
+                updateTime_ += newtonMethod_.updateTime();
+                
                 return;
+            }
 
+            assembleTime_ += newtonMethod_.assembleTime();
+            solveTime_ += newtonMethod_.solveTime();
+            updateTime_ += newtonMethod_.updateTime();
+            
             Scalar dt = timeManager().timeStepSize();
             Scalar nextDt = dt / 2;
             timeManager().setTimeStepSize(nextDt);
@@ -603,6 +651,10 @@ protected:
         return *resultWriter_;
     }
 
+    // CPU time keeping
+    Scalar assembleTime_; 
+    Scalar solveTime_; 
+    Scalar updateTime_; 
 
 private:
     // makes sure that the result writer exists

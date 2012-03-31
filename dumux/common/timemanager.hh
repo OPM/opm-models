@@ -85,10 +85,6 @@ public:
         finished_ = false;
 
         episodeLength_ = 1e100;
-
-        if (verbose_)
-            std::cout <<
-                "Welcome aboard DuMuX airlines. Please fasten your seatbelts! Emergency exits are near the time integration.\n";
     }
 
     /*!
@@ -99,7 +95,9 @@ public:
      * \param tStart The start time \f$\mathrm{[s]}\f$ of the simulation (typically 0)
      * \param dtInitial The initial time step size \f$\mathrm{[s]}\f$
      * \param tEnd The time at which the simulation is finished \f$\mathrm{[s]}\f$
-     * \param restart Specifies whether the initial condition should be written to disk
+     * \param restart Specifies whether a restart file should be
+     *                loaded or if the problem should provide the
+     *                initial condition.
      */
     void init(Problem &problem,
               Scalar tStart,
@@ -129,7 +127,6 @@ public:
                 problem_->writeOutput();
             time_ += timeStepSize_;
         }
-
     }
 
     /*!
@@ -413,16 +410,9 @@ public:
             // set the time step size for the next step
             setTimeStepSize(nextDt);
         }
-
-        if (verbose_) {
-            int numProcesses = Dune::MPIHelper::getCollectiveCommunication().size();
-            std::cout << "Simulation took " << timer_.elapsed() <<" seconds on "
-                      << numProcesses << " processes.\n"
-                      << "The cumulative CPU time was " << timer_.elapsed()*numProcesses << " seconds.\n"
-                      << "We hope that you enjoyed simulating with us\n"
-                      << "and that you will choose us next time, too.\n";
-        }
-    }
+        
+        problem_->finalize();
+    }    
 
     /*!
      * \name Saving/restoring the object state
