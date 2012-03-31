@@ -47,8 +47,10 @@ NEW_TYPE_TAG(OnePTestProblem, INHERITS_FROM(BoxOneP));
 
 NEW_PROP_TAG(LensLowerLeftX);
 NEW_PROP_TAG(LensLowerLeftY);
+NEW_PROP_TAG(LensLowerLeftZ);
 NEW_PROP_TAG(LensUpperRightX);
 NEW_PROP_TAG(LensUpperRightY);
+NEW_PROP_TAG(LensUpperRightZ);
 NEW_PROP_TAG(Permeability);
 NEW_PROP_TAG(PermeabilityLens);
 
@@ -68,8 +70,10 @@ SET_TYPE_PROP(OnePTestProblem, Problem, Dumux::OnePTestProblem<TypeTag>);
 
 SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftX, 0.25);
 SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftY, 0.25);
+SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftZ, 0.25);
 SET_SCALAR_PROP(OnePTestProblem, LensUpperRightX, 0.75);
 SET_SCALAR_PROP(OnePTestProblem, LensUpperRightY, 0.75);
+SET_SCALAR_PROP(OnePTestProblem, LensUpperRightZ, 0.75);
 SET_SCALAR_PROP(OnePTestProblem, Permeability, 1e-10);
 SET_SCALAR_PROP(OnePTestProblem, PermeabilityLens, 1e-12);
 // Linear solver settings
@@ -132,10 +136,16 @@ public:
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         lensLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
-        lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
+        if (dim > 1)
+            lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
+        if (dim > 2)
+            lensLowerLeft_[2] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
 
         lensUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensUpperRightX);
-        lensUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
+        if (dim > 1)
+            lensUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
+        if (dim > 2)
+            lensUpperRight_[2] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
 
         intrinsicPerm_ = GET_PARAM(TypeTag, Scalar, Permeability);
         intrinsicPermLens_ = GET_PARAM(TypeTag, Scalar, PermeabilityLens);
