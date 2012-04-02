@@ -150,7 +150,7 @@ public:
 
         // handle the heat capacity of the solid
         storage[energyEqIdx] +=
-            volVars.fluidState().temperature()
+            volVars.fluidState().temperature(/*phaseIdx=*/0)
             * volVars.heatCapacitySolid()
             * (1.0 - volVars.porosity());
     }

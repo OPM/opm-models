@@ -103,7 +103,7 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             tmp = fvElemGeom.subContVolFace[scvfIdx].grad[scvIdx];
-            tmp *= elemCtx.volVars(scvIdx, timeIdx).fluidState().temperature();
+            tmp *= elemCtx.volVars(scvIdx, timeIdx).fluidState().temperature(/*phaseIdx=*/0);
             temperatureGrad += tmp;
         }
 
