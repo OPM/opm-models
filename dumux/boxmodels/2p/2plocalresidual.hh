@@ -46,7 +46,7 @@ namespace Dumux
  * that it uses static polymorphism.
  */
 template<class TypeTag>
-class TwoPLocalResidual : public BoxLocalResidual<TypeTag>
+class TwoPLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;

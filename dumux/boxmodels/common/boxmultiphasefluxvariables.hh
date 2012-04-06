@@ -181,13 +181,14 @@ private:
                              int scvfIdx,
                              int timeIdx)
     {
-        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
         
         if (useTwoPointGradients) {
             const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
-            const auto &scvI = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
-            const auto &scvJ = elemCtx.fvElemGeom(timeIdx).subContVol[outsideScvIdx_];
+            const auto &scvI = fvElemGeom.subContVol[insideScvIdx_];
+            const auto &scvJ = fvElemGeom.subContVol[outsideScvIdx_];
             
             // distance between the centers of the two SCVs
             Scalar dist = 0;
@@ -220,11 +221,12 @@ private:
             }
 
             // calculate gradients
-            for (int scvIdx = 0;
-                 scvIdx < elemCtx.numScv();
-                 scvIdx ++) // loop over adjacent vertices
+            for (int fapIdx = 0;
+                 fapIdx < fvElemGeom.numFAP; // num flux approximation points
+                 fapIdx ++)
             {
                 // FE gradient at vertex idx
+                int scvIdx = scvf.fapIndices[fapIdx]; // flux appoximation to SCV index
                 const Vector &feGrad = scvf.grad[scvIdx];
                 const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
