@@ -72,7 +72,7 @@ public:
      * If chemical equilibrium is assumed, we use the fluid state
      * which saves some memory.
      */
-    typedef CompositionalFluidState<Scalar, FluidSystem> FluidState;
+    typedef CompositionalFluidState<Scalar, FluidSystem, /*enableEnthalpy=*/GET_PROP_VALUE(TypeTag, EnableEnergy)> FluidState;
 
     /*!
      * \brief Update composition of all phases in the mutable

@@ -63,12 +63,12 @@ class MPNCVolumeVariablesEnergy
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
-    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
 public:
     /*!
      * \brief Update the temperature of the sub-control volume.
      */
+    template <class FluidState>
     void updateTemperatures(FluidState &fs,
                             ParameterCache &paramCache,
                             const ElementContext &elemCtx,
@@ -85,6 +85,7 @@ public:
      *
      * Since we are isothermal, we don't need to do anything!
      */
+    template <class FluidState>
     void update(FluidState &fs,
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,
@@ -183,12 +184,12 @@ class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyT
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
-    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
 public:
     /*!
      * \brief Update the temperature of the sub-control volume.
      */
+    template <class FluidState>
     void updateTemperatures(FluidState &fs,
                             ParameterCache &paramCache,
                             const ElementContext &elemCtx,
@@ -204,6 +205,7 @@ public:
      * \brief Update the enthalpy and the internal energy for a given
      *        control volume.
      */
+    template <class FluidState>
     void update(FluidState &fs,
                 ParameterCache &paramCache,
                 const ElementContext &elemCtx,

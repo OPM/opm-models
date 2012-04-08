@@ -37,7 +37,7 @@
 
 //Dumux-includes
 #include <dumux/decoupled/common/decoupledproperties.hh>
-#include <dumux/material/fluidstates/isothermalimmisciblefluidstate.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include "2pindices.hh"
 
 namespace Dumux
@@ -181,7 +181,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef IsothermalImmiscibleFluidState<Scalar, FluidSystem> type;
+    typedef ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> type;
 };
 
 /*!
