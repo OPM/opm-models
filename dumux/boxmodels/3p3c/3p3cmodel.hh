@@ -100,7 +100,7 @@ namespace Dumux
  * </ul>
  */
 template<class TypeTag>
-class ThreePThreeCModel: public BoxModel<TypeTag>
+class ThreePThreeCModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 

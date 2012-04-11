@@ -53,7 +53,7 @@ namespace Dumux
  * model supports compressible as well as incompressible fluids.
  */
 template<class TypeTag >
-class OnePBoxModel : public BoxModel<TypeTag>
+class OnePBoxModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 

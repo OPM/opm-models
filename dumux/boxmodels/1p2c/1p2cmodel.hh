@@ -81,7 +81,7 @@ namespace Dumux
  * The primary variables are the pressure \f$p\f$ and the mole fraction of dissolved component \f$x\f$.
  */
 template<class TypeTag >
-class OnePTwoCBoxModel : public BoxModel<TypeTag>
+class OnePTwoCBoxModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;

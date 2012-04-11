@@ -119,7 +119,7 @@ namespace Dumux
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
 template<class TypeTag>
-class MPNCModel : public BoxModel<TypeTag>
+class MPNCModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 

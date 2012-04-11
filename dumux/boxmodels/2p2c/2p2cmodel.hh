@@ -91,7 +91,7 @@ namespace Dumux
  * </ul>
  */
 template<class TypeTag>
-class TwoPTwoCModel: public BoxModel<TypeTag>
+class TwoPTwoCModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 

@@ -93,7 +93,7 @@ namespace Dumux {
  * Richards model!
  */
 template<class TypeTag >
-class RichardsModel : public BoxModel<TypeTag>
+class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 
