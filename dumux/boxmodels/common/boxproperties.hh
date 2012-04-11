@@ -69,7 +69,8 @@ NEW_PROP_TAG(FVElementGeometry); //! The type of the finite-volume geometry in t
 
 NEW_PROP_TAG(Problem); //!< The type of the problem
 NEW_PROP_TAG(BaseProblem);   //!< The type of the base class for all problems which use this model
-NEW_PROP_TAG(Model); //!< The type of the discretization
+NEW_PROP_TAG(BaseModel); //!< The type of the base class of the model
+NEW_PROP_TAG(Model); //!< The type of the model
 NEW_PROP_TAG(NumEq); //!< Number of equations in the system of PDEs
 NEW_PROP_TAG(BaseLocalResidual); //!< The type of the base class of the local residual
 NEW_PROP_TAG(LocalResidual); //!< The type of the local residual function

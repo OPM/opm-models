@@ -73,7 +73,7 @@ namespace Dumux {
  * default, the model uses \f$p_w\f$ and \f$S_n\f$.
  */
 template<class TypeTag >
-class TwoPModel : public BoxModel<TypeTag>
+class TwoPModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 

@@ -33,6 +33,7 @@
 
 #include "boxproperties.hh"
 #include "boxassembler.hh"
+#include "boxmodel.hh"
 #include "boxfvelementgeometry.hh"
 #include "boxlocalresidual.hh"
 #include "boxlocaljacobian.hh"
@@ -50,6 +51,10 @@
 #include <limits>
 
 namespace Dumux {
+
+// forward declaration
+template<class TypeTag>
+class BoxModel;
 
 namespace Properties {
 //////////////////////////////////////////////////////////////////
@@ -94,6 +99,9 @@ SET_TYPE_PROP(BoxModel, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper)
 
 //! Set the BaseLocalResidual to BoxLocalResidual
 SET_TYPE_PROP(BoxModel, BaseLocalResidual, Dumux::BoxLocalResidual<TypeTag>);
+
+//! Set the BaseModel to BoxModel
+SET_TYPE_PROP(BoxModel, BaseModel, Dumux::BoxModel<TypeTag>);
 
 //! The local jacobian operator for the box scheme
 SET_TYPE_PROP(BoxModel, LocalJacobian, Dumux::BoxLocalJacobian<TypeTag>);
