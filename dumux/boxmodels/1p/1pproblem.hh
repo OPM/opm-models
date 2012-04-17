@@ -108,6 +108,16 @@ public:
     }
 
     /*!
+     * \brief Return the parameters for the material law.
+     */
+    template <class Context>
+    const MaterialLawParams &materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        static MaterialLawParams matParams;
+        return matParams;
+    }
+
+    /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *
      * \param context Container for the volume variables, element,
