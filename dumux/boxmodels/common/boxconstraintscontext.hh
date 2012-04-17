@@ -22,10 +22,10 @@
 /*!
  * \file
  *
- * \brief Represents all quantities which available on boundary segments
+ * \brief Represents all quantities which available for calculating constraints
  */
-#ifndef DUMUX_BOX_BOUNDARY_CONTEXT_HH
-#define DUMUX_BOX_BOUNDARY_CONTEXT_HH
+#ifndef DUMUX_BOX_CONSTRAINTS_CONTEXT_HH
+#define DUMUX_BOX_CONSTRAINTS_CONTEXT_HH
 
 #include "boxproperties.hh"
 
@@ -37,37 +37,30 @@ namespace Dumux
 /*!
  * \ingroup BoxModel
  *
- * \brief Represents all quantities which available on boundary segments
+ * \brief Represents all quantities which available for calculating constraints
  */
 template<class TypeTag>
-class BoxBoundaryContext
+class BoxConstraintsContext
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::IntersectionIterator IntersectionIterator;
-    typedef typename GridView::Intersection Intersection;
 
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
      * \brief The constructor.
      */
-    explicit BoxBoundaryContext(const ElementContext &elemCtx)
+    explicit BoxConstraintsContext(const ElementContext &elemCtx)
         : elemCtx_(elemCtx)
-        , intersectionIt_(gridView().ibegin(element()))
-    {
-    }
+    { }
 
     /*!
      * \brief Return a reference to the problem.
@@ -94,12 +87,6 @@ public:
     { return elemCtx_.element(); }
 
     /*!
-     * \brief Returns a reference to the element variables.
-     */
-    const ElementContext &elemContext() const
-    { return elemCtx_; }
-
-    /*!
      * \brief Return the number of sub-control volumes of the current element.
      */
     int numScv() const
@@ -112,65 +99,13 @@ public:
     { return elemCtx_.numScvf(); }
 
     /*!
-     * \brief Return the current finite element geometry.
-     */
-    const FVElementGeometry &fvElemGeom(int timeIdx) const
-    { return elemCtx_.fvElemGeom(timeIdx); };
-
-    /*!
      * \brief Return the position of a local entities in global coordinates
      */
-    const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
-    { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
-
-
-    /*!
-     * \brief Return the local sub-control volume index of the
-     *        interior of a boundary segment
-     */
-    short insideScvIndex(int boundaryFaceIdx, int timeIdx) const
-    { return fvElemGeom(timeIdx).subContVolIndex(boundaryFaceIdx); }
-
-    /*!
-     * \brief Return the volume variables for the finite volume in the
-     *        interiour of a boundary segment
-     */
-    const VolumeVariables &volVars(int boundaryFaceIdx, int timeIdx) const
-    {
-        short insideScvIdx = this->insideScvIndex(boundaryFaceIdx, timeIdx);
-        return elemCtx_.volVars(insideScvIdx, timeIdx);
-    }
-
-    /*!
-     * \brief Return the flux variables for a given boundary face.
-     */
-    const FluxVariables &fluxVars(int boundaryFaceIdx, int timeIdx) const
-    { return elemCtx_.boundaryFluxVars(boundaryFaceIdx, timeIdx); }
-
-    /*!
-     * \brief Return the intersection for the neumann segment
-     *
-     * TODO/HACK: The intersection should take a local index as an
-     * argument. since that's not supported efficiently by the DUNE
-     * grid interface, we just ignore the index argument here!
-     */
-    const Intersection &intersection(int boundaryFaceIdx) const
-    { return *intersectionIt_; }
-
-    /*!
-     * \brief Return the intersection for the neumann segment
-     *
-     * TODO/HACK: the intersection iterator can basically be
-     * considered as an index which is manipulated externally, but
-     * context classes should not store any indices. it is done this
-     * way for performance reasons
-     */
-    IntersectionIterator &intersectionIt()
-    { return intersectionIt_; }
+    const GlobalPosition pos(int scvIdx, int timeIdx) const
+    { return elemCtx_.pos(scvIdx, timeIdx); }
 
 protected:
     const ElementContext &elemCtx_;
-    IntersectionIterator intersectionIt_;
 };
 
 } // namespace Dumux

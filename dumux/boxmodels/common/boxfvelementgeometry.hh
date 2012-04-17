@@ -580,7 +580,6 @@ public:
         Dune::FieldVector<Vector, maxNC> grad; //! derivative of shape function associated with the sub control volume
         Dune::FieldVector<Vector, maxNC> gradCenter; //! derivative of shape function at the center of the sub control volume
         Dune::FieldVector<Scalar, maxNC> shapeValue; //! value of shape function associated with the sub control volume
-        bool inner;
     };
 
     struct SubControlVolumeFace //! interior face of a sub control volume
@@ -648,7 +647,6 @@ public:
         for (int vert = 0; vert < numVertices; vert++) {
             subContVol[vert].local = referenceElement.position(vert, dim);
             subContVol[vert].global = geometry.global(subContVol[vert].local);
-            subContVol[vert].inner = true;
         }
 
         // edges:
@@ -755,7 +753,6 @@ public:
                 {
                     int vertInElement = referenceElement.subEntity(face, 1, vertInFace, dim);
                     int bfIdx = boundaryFaceIndex(face, vertInFace);
-                    subContVol[vertInElement].inner = false;
                     switch ((short) dim) {
                     case 1:
                         boundaryFace[bfIdx].ipLocal = referenceElement.position(vertInElement, dim);

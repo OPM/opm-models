@@ -170,7 +170,6 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        Vector tmpVec;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
             // data attached to upstream and the downstream vertices

@@ -39,10 +39,11 @@
 #include "boxlocaljacobian.hh"
 #include "boxelementcontext.hh"
 #include "boxvolumevariables.hh"
+#include "boxconstraints.hh"
+#include "boxconstraintscontext.hh"
 #include "boxnewtoncontroller.hh"
 
 #include <dumux/nonlinear/newtonmethod.hh>
-#include <dumux/common/boundarytypes.hh>
 #include <dumux/common/timemanager.hh>
 
 #include <dune/common/fvector.hh>
@@ -124,6 +125,18 @@ SET_TYPE_PROP(BoxModel,
               typename GET_PROP_TYPE(TypeTag, EqVector));
 
 /*!
+ * \brief Type of object for specifying boundary conditions.
+ */
+SET_TYPE_PROP(BoxModel,
+              BoundaryRateVector,
+              typename GET_PROP_TYPE(TypeTag, RateVector));
+
+/*!
+ * \brief The class which represents constraints.
+ */
+SET_TYPE_PROP(BoxModel, Constraints, Dumux::BoxConstraints<TypeTag>);
+
+/*!
  * \brief The type for storing a residual for an element.
  */
 SET_TYPE_PROP(BoxModel,
@@ -136,7 +149,6 @@ SET_TYPE_PROP(BoxModel,
 SET_TYPE_PROP(BoxModel,
               GlobalEqVector,
               Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
-
 
 /*!
  * \brief An object representing a local set of primary variables.
@@ -166,13 +178,6 @@ SET_TYPE_PROP(BoxModel, VolumeVariables, Dumux::BoxVolumeVariables<TypeTag>);
 SET_TYPE_PROP(BoxModel, ElementContext, Dumux::BoxElementContext<TypeTag>);
 
 /*!
- * \brief Boundary types at a single degree of freedom.
- */
-SET_TYPE_PROP(BoxModel,
-              BoundaryTypes,
-              Dumux::BoundaryTypes<GET_PROP_VALUE(TypeTag, NumEq)>);
-
-/*!
  * \brief Assembler for the global jacobian matrix.
  */
 SET_TYPE_PROP(BoxModel, JacobianAssembler, Dumux::BoxAssembler<TypeTag>);
@@ -200,6 +205,9 @@ SET_BOOL_PROP(BoxModel, EnableJacobianRecycling, false);
 
 // disable partial reassembling by default
 SET_BOOL_PROP(BoxModel, EnablePartialReassemble, false);
+
+// disable constraints by default
+SET_BOOL_PROP(BoxModel, EnableConstraints, false);
 
 //! Set the type of a global jacobian matrix from the solution types
 SET_PROP(BoxModel, JacobianMatrix)

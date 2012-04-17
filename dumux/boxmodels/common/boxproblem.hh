@@ -68,8 +68,9 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
 
     enum {
         dim = GridView::dimension,
@@ -161,7 +162,7 @@ public:
             int numCores = this->gridView().comm().size();
             std::cout.precision(5);
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
-                      << "Timing receipt [s] (total/assemble/solve/update): "
+                      << "Timing receipt [s] (solve total/assemble/linear solve/update): "
                       << totalTime  << " (" << totalTime*numCores << " cummulative, " << numCores <<" processes) / "
                       << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
                       << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
@@ -185,43 +186,36 @@ public:
     { return updateTime_; }
 
     /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
+     * \brief Evaluate the boundary conditions for a boundary segment.
      *
      * \param values The dirichlet values for the primary variables
      * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
      * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param timeIdx The index used for the time discretization
      *
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values,
-                       const Context &context,
-                       int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a boundaryTypes() method"); }
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a boundary() method"); }
 
     /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
+     * \brief Evaluate the constraints for a control volume.
      *
      * \param values The dirichlet values for the primary variables
      * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
      * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param timeIdx The index used for the time discretization
      *
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values,
-                   const Context &context,
-                   int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a dirichlet() method"); }
-
-    template <class Context>
-    void neumann(RateVector &rate,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a neumann() method"); }
-
+    void constraints(Constraints &constraints,
+                     const Context &context,
+                     int spaceIdx, int timeIdx) const
+    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a constraints() method"); }
 
     /*!
      * \brief Evaluate the source term for all phases within a given

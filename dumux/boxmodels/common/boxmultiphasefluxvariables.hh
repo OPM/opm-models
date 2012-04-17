@@ -58,7 +58,9 @@ class BoxMultiPhaseFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
 
     enum {
         dimWorld = GridView::dimensionworld,
@@ -82,6 +84,24 @@ public:
         // update the base module (i.e. advection)
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
         calculateVelocities_(elemCtx, scvfIdx, timeIdx);
+    }
+
+
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int spaceIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {
+        int scvIdx = context.insideScvIndex(spaceIdx, timeIdx);
+        insideScvIdx_ = scvIdx;
+        outsideScvIdx_ = scvIdx;
+
+        extrusionFactor_ = context.volVars(insideScvIdx_, timeIdx).extrusionFactor();
+
+        calculateBoundaryGradients_(context, spaceIdx, timeIdx, fs, paramCache);
+        calculateBoundaryVelocities_(context, spaceIdx, timeIdx, fs, paramCache);
     }
 
     /*!
@@ -189,6 +209,11 @@ private:
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
             const auto &scvI = fvElemGeom.subContVol[insideScvIdx_];
             const auto &scvJ = fvElemGeom.subContVol[outsideScvIdx_];
+
+            // the "normalized normal" of the scvf divided by the
+            // distance of the centers of the two adjacent SCVs
+            Vector n = scvf.normal;
+            n /= scvf.normal.two_norm();
             
             // distance between the centers of the two SCVs
             Scalar dist = 0;
@@ -198,10 +223,6 @@ private:
             }
             dist = std::sqrt(dist);
             
-            // the "normalized normal" of the scvf divided by the
-            // distance of the centers of the two adjacent SCVs
-            Vector n = scvf.normal;
-            n /= scvf.normal.two_norm()*dist;
             
             // calculate the pressure gradient
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -211,7 +232,7 @@ private:
                 }
 
                 potentialGrad_[phaseIdx] = n;
-                potentialGrad_[phaseIdx] *= (fsJ.pressure(phaseIdx) - fsI.pressure(phaseIdx));
+                potentialGrad_[phaseIdx] *= (fsJ.pressure(phaseIdx) - fsI.pressure(phaseIdx))/dist;
             }
         }
         else {
@@ -268,6 +289,83 @@ private:
                 Scalar SJ = fsOut.saturation(phaseIdx);
                 Scalar rhoI = fsIn.density(phaseIdx);
                 Scalar rhoJ = fsOut.density(phaseIdx);
+                Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
+                Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
+                if (fI + fJ == 0)
+                    // doesn't matter because no wetting phase is present in
+                    // both cells!
+                    fI = fJ = 0.5;
+                Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
+
+                // make gravity acceleration a force
+                Vector f(g);
+                f *= density;
+
+                // calculate the final potential gradient
+                potentialGrad_[phaseIdx] -= f;
+            }
+        }
+    }
+    
+    template <class Context, class FluidState>
+    void calculateBoundaryGradients_(const Context &context,
+                                     int bfIdx,
+                                     int timeIdx,
+                                     const FluidState &fs,
+                                     const typename FluidSystem::ParameterCache &paramCache)
+    {
+        const auto &fvElemGeom = context.fvElemGeom(timeIdx);
+        const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
+        
+        const auto &elemCtx = context.elemContext();
+        const auto &insideScv = context.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
+
+        const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+        const auto &fsJ = fs;
+
+        // the "normalized normal" of the scvf divided by the
+        // distance of the centers of the two adjacent SCVs
+        Vector n = scvf.normal;
+        n /= scvf.normal.two_norm();
+            
+        // distance between the center of the SCV and center of the boundary face
+        Vector distVec = context.element().geometry().global(insideScv.localCenter);
+        distVec -= scvf.ipGlobal;
+
+        Scalar dist = distVec.two_norm();
+        
+        // calculate the pressure gradient using two-point gradient
+        // appoximation
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!asImp_().usePhase(phaseIdx)) {
+                potentialGrad_[phaseIdx] = 0;
+                continue;
+            }
+            
+            potentialGrad_[phaseIdx] = n;
+            potentialGrad_[phaseIdx] *= (fsJ.pressure(phaseIdx) - fsI.pressure(phaseIdx))/dist;
+        }
+        
+        ///////////////
+        // correct the pressure gradients by the gravitational acceleration
+        ///////////////
+        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        {
+            // estimate the gravitational acceleration at a given SCV face
+            // using the arithmetic mean
+            Vector g(context.problem().gravity(context.elemContext(), insideScvIdx_, timeIdx));
+
+            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
+            {
+                if (!asImp_().usePhase(phaseIdx))
+                    continue;
+
+                // calculate the phase density at the integration point. we
+                // only do this if the wetting phase is present in both cells
+                Scalar SI = fsI.saturation(phaseIdx);
+                Scalar SJ = fsJ.saturation(phaseIdx);
+                Scalar rhoI = fsI.density(phaseIdx);
+                Scalar rhoJ = FluidSystem::density(fs, paramCache, phaseIdx);
                 Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
                 Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
                 if (fI + fJ == 0)
@@ -350,6 +448,67 @@ private:
                 handleSmoothUpwinding_(elemCtx, scvfIdx, timeIdx, phaseIdx, normal);
                 filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx]*normal)*scvfArea;
             }
+        }
+    }
+
+    template <class Context, class FluidState>
+    void calculateBoundaryVelocities_(const Context &context,
+                                      int bfIdx,
+                                      int timeIdx,
+                                      const FluidState &fluidState,
+                                      const typename FluidSystem::ParameterCache &paramCache)
+    {
+        const auto &elemCtx = context.elemContext();
+        const auto &problem = elemCtx.problem();
+        const auto &fsInside = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+
+        // calculate the intrinsic permeability
+        const Tensor &K = problem.intrinsicPermeability(elemCtx,
+                                      insideScvIdx_,
+                                      timeIdx);
+        
+        Vector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
+        Scalar scvfArea = normal.two_norm();
+        normal /= scvfArea;
+        
+        const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx_, timeIdx);
+        
+        Scalar kr[numPhases];
+        MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
+
+        ///////////////
+        // calculate the weights of the upstream and the downstream
+        // control volumes
+        ///////////////
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
+        {
+            if (!asImp_().usePhase(phaseIdx)) {
+                filterVelocity_[phaseIdx] = 0;
+                filterVelocityNormal_[phaseIdx] = 0;
+                continue;
+            }
+
+            // calculate the "prelimanary" filter velocity not
+            // taking the mobility into account
+            K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
+            filterVelocity_[phaseIdx] *= -1;
+            filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+
+            // calculate the actual darcy velocities by multiplying
+            // the current "filter velocity" with the upstream mobility
+            Scalar mobility;
+            if (fsInside.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
+                // the outside of the domain has higher pressure. we
+                // need to calculate the mobility
+                mobility = kr[phaseIdx]/FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+
+            }
+            else {
+                mobility = elemCtx.volVars(insideScvIdx_, timeIdx).mobility(phaseIdx);
+            }
+
+            filterVelocity_[phaseIdx] *= mobility;
+            filterVelocityNormal_[phaseIdx] *= mobility;
         }
     }
 

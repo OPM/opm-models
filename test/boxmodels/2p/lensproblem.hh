@@ -38,6 +38,7 @@
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/simplednapl.hh>
 
@@ -205,12 +206,11 @@ class LensProblem
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     enum {
-        // primary variable indices
-
+        // number of phases
+        numPhases = FluidSystem::numPhases,
 
         // phase indices
         wPhaseIdx = Indices::wPhaseIdx,
@@ -224,11 +224,15 @@ class LensProblem
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     /*!
@@ -257,9 +261,14 @@ public:
         outerMaterialParams_.setVgAlpha(0.0037);
         outerMaterialParams_.setVgN(4.7);
 
-        lensK_ = 9.05e-12;
-        outerK_ = 4.6e-10;
+        setK_(lensK_, 9.05e-12);
+        setK_(outerK_, 4.6e-10);
     }
+
+    /*!
+     * \name Soil parameters
+     */
+    // \{
 
     /*!
      * \brief Intrinsic permability
@@ -270,7 +279,7 @@ public:
      * \return Intrinsic permeability
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
@@ -308,19 +317,18 @@ public:
         return outerMaterialParams_;
     }
 
+    /*!
+     * \brief Returns the temperature within the domain.
+     */
+    template <class Context>
+    Scalar temperature(const Context &context,
+                       int spaceIdx, int timeIdx) const
+    { return temperature_; }
 
-    //! Set the bounding box of the fine-sand lens
-    void setLensCoords(const GlobalPosition& lensLowerLeft,
-                       const GlobalPosition& lensUpperRight)
-    {
-        lensLowerLeft_ = lensLowerLeft;
-        lensUpperRight_ = lensUpperRight;
-            return lensMaterialParams_;
-        return outerMaterialParams_;
-    }
+    // \}
 
     /*!
-     * \name Problem parameters
+     * \name Auxiliary methods
      */
     // \{
 
@@ -346,51 +354,12 @@ public:
             std::cout<<"Storage: " << storage << std::endl;
         }
     }
-
-    /*!
-     * \brief Returns the temperature within the domain.
-     *
-     * This problem assumes a uniform temperature of 10 degrees Celsius.
-     */
-    template <class Context>
-    Scalar temperature(const Context &context,
-                       int spaceIdx, int timeIdx) const
-    { return temperature_; }
-
-
-    template <class Context>
-    void source(RateVector &values,
-                const Context &context,
-                int spaceIdx, int timeIdx) const
-    { values = 0; }
-
     // \}
 
     /*!
      * \name Boundary conditions
      */
     // \{
-
-    /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary control volume.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param globalPos The position of the center of the finite volume
-     */
-    template <class Context>
-    void boundaryTypes(BoundaryTypes &values,
-                       const Context &context,
-                       int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        if (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)) {
-            values.setAllDirichlet();
-        }
-        else {
-            values.setAllNeumann();
-        }
-    }
 
     /*!
      * \brief Evaluate the boundary conditions for a dirichlet
@@ -402,84 +371,80 @@ public:
      * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
-    void dirichlet(PrimaryVariables &values,
-                   const Context &context,
-                   int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        ImmiscibleFluidState<Scalar, FluidSystem> fs;
-        fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
-        fs.setTemperature(temperature_);
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updatePhase(fs, wPhaseIdx);
-        Scalar densityW = FluidSystem::density(fs, paramCache, wPhaseIdx);
+        if (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)) {
+            // free flow boundary
+            Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
 
-        // set the fluid state's temperature
-        Scalar T = temperature(context, spaceIdx, timeIdx);
-        Scalar pw, Sw;
+            Scalar T = temperature(context, spaceIdx, timeIdx);
+            Scalar pw, Sw;
         
-        // set wetting phase pressure and saturation
-        if (onLeftBoundary_(globalPos))
-        {
-            Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
-            Scalar depth = this->bboxMax()[1] - globalPos[1];
-            Scalar alpha = (1 + 1.5/height);
+            // set wetting phase pressure and saturation
+            if (onLeftBoundary_(globalPos))
+            {
+                Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
+                Scalar depth = this->bboxMax()[1] - globalPos[1];
+                Scalar alpha = (1 + 1.5/height);
 
-            // hydrostatic pressure scaled by alpha
-            pw = 1e5 - alpha*densityW*this->gravity()[1]*depth;
-            Sw = 1.0;
-        }
-        else
-        {
-            // if this triggers, something went wrong in boundaryTypes()!
-            assert(onRightBoundary_(globalPos));
+                // hydrostatic pressure scaled by alpha
+                pw = 1e5 - alpha*densityW*this->gravity()[1]*depth;
+                Sw = 1.0;
+            }
+            else
+            {
+                // if this triggers, something went wrong in boundaryTypes()!
+                assert(onRightBoundary_(globalPos));
 
-            Scalar depth = this->bboxMax()[1] - globalPos[1];
+                Scalar depth = this->bboxMax()[1] - globalPos[1];
 
-            // hydrostatic pressure
-            pw = 1e5 - densityW*this->gravity()[1]*depth;
-            Sw = 1.0;
-        }
+                // hydrostatic pressure
+                pw = 1e5 - densityW*this->gravity()[1]*depth;
+                Sw = 1.0;
+            }
         
-        // assign primary variables
-        const MaterialLawParams &matParams =
-            this->materialLawParams(context, spaceIdx, timeIdx);
-        values.assignImmiscibleFromWetting(T, pw, Sw, matParams);
-    }
+            // specify a full fluid state using pw and Sw
+            const MaterialLawParams &matParams =
+                this->materialLawParams(context, spaceIdx, timeIdx);
+            
+            Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            fs.setSaturation(wPhaseIdx, Sw);
+            fs.setSaturation(nPhaseIdx, 1 - Sw);
+            fs.setTemperature(T);
 
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * \param values The neumann values for the conservation equations [kg / (m^2 *s )]
-     * \param globalPos The position of the integration point of the boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+            Scalar pC[numPhases];
+            MaterialLaw::capillaryPressures(pC, matParams, fs);
+            fs.setPressure(wPhaseIdx, pw);
+            fs.setPressure(nPhaseIdx, pw +  pC[nPhaseIdx] - pC[wPhaseIdx]);
 
-        RateVector massRate(0.0);
-        massRate = 0.0;
-        if (onInlet_(globalPos)) {
+            // impose an freeflow boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else if (onInlet_(globalPos)) {
+            RateVector massRate(0.0);
+            massRate = 0.0;
             massRate[contiNEqIdx] = -0.04; // kg / (m^2 * s)
-        }
 
-        values.setMassRate(massRate);
+            // impose a forced flow boundary
+            values.setMassRate(massRate);
+        }
+        else {
+            // no flow boundary
+            values.setNoFlow();
+        }
+            
     }
+
     // \}
 
     /*!
      * \name Volume terms
      */
     // \{
-
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -517,9 +482,23 @@ public:
             this->materialLawParams(context, spaceIdx, timeIdx);
         values.assignImmiscibleFromWetting(T, pw, Sw, matParams);
     }
+
+
+    template <class Context>
+    void source(RateVector &values,
+                const Context &context,
+                int spaceIdx, int timeIdx) const
+    { values = 0; }
     // \}
 
 private:
+    static void setK_(Tensor &K, Scalar value)
+    {
+        K = 0.0;
+        for (int i = 0; i < dimWorld; ++i)
+            K[i][i] = value;
+    };
+    
     bool isInLens_(const GlobalPosition &pos) const
     {
         for (int i = 0; i < dim; ++i) {
@@ -559,8 +538,8 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
 
-    Scalar lensK_;
-    Scalar outerK_;
+    Tensor lensK_;
+    Tensor outerK_;
     MaterialLawParams lensMaterialParams_;
     MaterialLawParams outerMaterialParams_;
 

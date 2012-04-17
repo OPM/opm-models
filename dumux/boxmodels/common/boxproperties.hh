@@ -78,14 +78,14 @@ NEW_PROP_TAG(LocalJacobian); //!< The type of the local jacobian operator
 
 NEW_PROP_TAG(JacobianAssembler); //!< Assembles the global jacobian matrix
 NEW_PROP_TAG(JacobianMatrix); //!< Type of the global jacobian matrix
-NEW_PROP_TAG(BoundaryTypes); //!< Stores the boundary types of a single degree of freedom
-NEW_PROP_TAG(ElementBoundaryTypes); //!< Stores the boundary types on an element
 
 NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation (usually at a given spatial location)
 NEW_PROP_TAG(ElementEqVector); //!< Vector containing a quantity of for equation on a single element
 NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation on the whole grid
 
 NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of quantities
+NEW_PROP_TAG(BoundaryRateVector); //!< Type of object for specifying boundary conditions
+NEW_PROP_TAG(Constraints); //!< The class which represents a constraint degree of freedom
 
 NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variables of the grid
 
@@ -108,6 +108,9 @@ NEW_PROP_TAG(EnableJacobianRecycling);
 //! elements where at least one vertex is above the specified
 //! tolerance
 NEW_PROP_TAG(EnablePartialReassemble);
+
+//! Specify whether the some degrees of fredom can be constraint
+NEW_PROP_TAG(EnableConstraints);
 
 /*!
  * \brief Specify the maximum size of a time integration [s].

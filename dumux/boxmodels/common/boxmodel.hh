@@ -79,7 +79,6 @@ class BoxModel
         dim = GridView::dimension
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
@@ -129,7 +128,7 @@ public:
     {
         problemPtr_ = &prob;
 
-        updateBoundaryTypes_();
+        updateBoundary_();
 
         int nDofs = asImp_().numDofs();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
@@ -421,7 +420,7 @@ public:
      */
     void updateBegin()
     {
-        updateBoundaryTypes_();
+        updateBoundary_();
     }
 
 
@@ -577,17 +576,11 @@ public:
     }
 
     /*!
-     * \brief Return a pointer to the BoundaryTypes for a given global
-     *        vertex index or 0 if the vertex is not on the boundary.
+     * \brief Return whether a degree of freedom is located on the
+     *        domain boundary.
      */
-    const BoundaryTypes *boundaryTypes(int globalIdx) const
-    {
-        static BoundaryTypes dummy;
-        int bvertIdx = boundaryVertexIndex_[globalIdx];
-        if (bvertIdx < 0)
-            return &dummy;
-        return &boundaryTypes_[bvertIdx];
-    }
+    bool onBoundary(int globalIdx) const
+    { return onBoundary_[globalIdx]; }
 
     /*!
      * \brief Returns a string with the model's human-readable name
@@ -787,16 +780,10 @@ protected:
      * \brief Updates the stuff which determines a vertex' or
      *        element's boundary type
      */
-    void updateBoundaryTypes_()
+    void updateBoundary_()
     {
         // resize the vectors
-        boundaryVertexIndex_.resize(numDofs());
-        std::fill(boundaryVertexIndex_.begin(),
-                  boundaryVertexIndex_.end(),
-                  -1);
-
-        int numBoundaryVertices = 0;
-        BoxBoundaryContext<TypeTag> boundaryCtx(problem_());
+        onBoundary_.resize(numDofs());
 
         // loop over all elements of the grid
         ElementIterator elemIt = gridView_().template begin<0>();
@@ -810,8 +797,6 @@ protected:
             const Element &elem = *elemIt;
             Dune::GeometryType geoType = elem.geometry().type();
             const ReferenceElement &refElem = ReferenceElements::general(geoType);
-
-            boundaryCtx.update(*elemIt);
 
             // loop over all intersections of the element
             IntersectionIterator isIt = gridView_().ibegin(elem);
@@ -836,17 +821,8 @@ protected:
                                                    /*subEntityIdx=*/faceVertIdx,
                                                    /*subEntityCodim=*/dim);
                     int globalIdx = vertexMapper().map(*elemIt, scvIdx, /*codim=*/dim);
-                    if (boundaryVertexIndex_[globalIdx] >= 0)
-                        continue; // vertex has already been visited
 
-                    // add a BoundaryTypes object
-                    if (boundaryTypes_.size() <= numBoundaryVertices)
-                        boundaryTypes_.resize(numBoundaryVertices + 1);
-                    BoundaryTypes &bTypes = boundaryTypes_[numBoundaryVertices];
-                    boundaryVertexIndex_[globalIdx] = numBoundaryVertices;
-                    ++numBoundaryVertices;
-
-                    problem_().boundaryTypes(bTypes, boundaryCtx, scvIdx, /*timeIdx=*/0);
+                    onBoundary_[globalIdx] = true;
                 } // loop over intersection's vertices
             } // loop over intersections
         } // loop over elements
@@ -939,8 +915,7 @@ protected:
     mutable SolutionVector solution_[historySize];
 
     // all the index of the BoundaryTypes object for a vertex
-    std::vector<int> boundaryVertexIndex_;
-    std::vector<BoundaryTypes> boundaryTypes_;
+    std::vector<bool> onBoundary_;
 
     std::list<BoxVtkOutputModule<TypeTag>*> vtkOutputModules_;
 

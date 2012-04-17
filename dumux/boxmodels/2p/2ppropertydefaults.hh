@@ -39,20 +39,18 @@
 #include "2pprimaryvariables.hh"
 #include "2pvolumevariables.hh"
 #include "2pratevector.hh"
+#include "2pboundaryratevector.hh"
 #include "2pproperties.hh"
 
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
-
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
+
 //////////////////////////////////////////////////////////////////
 // Property defaults
 //////////////////////////////////////////////////////////////////
@@ -78,6 +76,9 @@ SET_TYPE_PROP(BoxTwoP, BaseProblem, TwoPProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxTwoP, RateVector, TwoPRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxTwoP, BoundaryRateVector, TwoPBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxTwoP, PrimaryVariables, TwoPPrimaryVariables<TypeTag>);

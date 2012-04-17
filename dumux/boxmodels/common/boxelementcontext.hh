@@ -65,7 +65,6 @@ class BoxElementContext
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -97,7 +96,6 @@ public:
     void updateAll(const Element &elem)
     {
         updateFVElemGeom(elem);
-        updateBoundaryTypes();
         updateAllScvVars();
         updateAllScvfVars();
     }
@@ -113,31 +111,14 @@ public:
         // resize the SCV and the SCVF arrays
         if (fvElemGeom_.numVertices > scvVars_.size()) {
             scvVars_.resize(fvElemGeom_.numVertices);
-            boundaryTypes_.resize(fvElemGeom_.numVertices);
         }
         if (fvElemGeom_.numEdges > scvfVars_.size())
             scvfVars_.resize(fvElemGeom_.numEdges);
     }
 
-    void updateBoundaryTypes()
-    {
-        // fill the boundary types stuff
-        hasNeumann_ = false;
-        hasDirichlet_ = false;
-        for (int scvIdx = 0; scvIdx < numScv(); ++scvIdx) {
-            int globalIdx = globalSpaceIndex(scvIdx, /*timeIdx=*/0);
-            boundaryTypes_[scvIdx] = model().boundaryTypes(globalIdx);
-            hasDirichlet_ = hasDirichlet_ || boundaryTypes_[scvIdx]->hasDirichlet();
-            hasNeumann_ = hasNeumann_ || boundaryTypes_[scvIdx]->hasNeumann();
-        }
-
-        // set the default evaluation points
-        scvIdxSaved_ = -1;
-        scvfVarsEval_ = &scvfVars_;
-    }
-
     void updateAllScvVars()
     {
+       
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateScvVars(timeIdx);
     };
@@ -166,43 +147,12 @@ public:
 
     void updateAllScvfVars()
     {
+        scvfVarsEval_ = &scvfVars_;
+
         for (int scvfIdx = 0; scvfIdx < numScvf(); scvfIdx++) {
             scvfVars_[scvfIdx].update(/*context=*/ *this,
                                       /*localIndex=*/scvfIdx,
                                       /*timeIdx=*/0);
-        }
-    }
-
-    /*!
-     * \brief Construct the volume variables for all of vertices of an
-     *        element given a solution vector computed by PDELab.
-     *
-     * \tparam ElemSolVectorType The container type which stores the
-     *                           primary variables of the element
-     *                           using _local_ indices
-     *
-     * \param problem The problem which needs to be simulated.
-     * \param element The DUNE Codim<0> entity for which the volume variables ought to be calculated
-     * \param fvElemGeom The finite volume geometry of the element
-     * \param elementSolVector The local solution for the element using PDELab ordering
-     */
-    template<typename ElemSolVectorType>
-    void updatePDELab(const Element &element,
-                      const ElemSolVectorType &elementSolVector)
-    {
-        updateFVElemGeom(element);
-        updateBoundaryTypes(element);
-
-        // update the current time step's volume variables
-        PrimaryVariables scvSol;
-        for (int scvIdx = 0; scvIdx < numScv(); scvIdx++)
-        {
-            // reorder the solution
-            for (int eqnIdx = 0; eqnIdx < numEq; eqnIdx++)
-                scvSol[eqnIdx] = elementSolVector[scvIdx + eqnIdx*numScv()];
-
-            // update the volume variables for the newest history index
-            updateScvVars_(scvSol, /*timeIdx=*/0, scvIdx);
         }
     }
 
@@ -265,25 +215,7 @@ public:
      *        boundary.
      */
     bool onBoundary() const
-    { return hasNeumann_ || hasDirichlet_; };
-
-    /*!
-     * \brief Returns whether the current element has a Neumann boundary segment.
-     */
-    bool hasNeumann() const
-    { return hasNeumann_; };
-
-    /*!
-     * \brief Returns whether the current element has a Dirichlet vertex
-     */
-    bool hasDirichlet() const
-    { return hasDirichlet_; };
-
-    /*!
-     * \brief Returns the boundary types for a given vertex
-     */
-    const BoundaryTypes &boundaryTypes(int scvIdx, int timeIdx) const
-    { return *boundaryTypes_[scvIdx]; }
+    { return element().hasBoundaryIntersections(); };
 
     /*!
      * \brief Save the current flux variables and use them as the
@@ -369,19 +301,6 @@ public:
     { return scvfVars_[scvIdx]; }
 
     /*!
-     * \brief Return the flux variables for a given boundary face.
-     */
-    const FluxVariables &boundaryFluxVars(int boundaryFaceIdx, int timeIdx) const
-    {
-        // HACK
-        boundaryFluxVars_.update(*this,
-                                 boundaryFaceIdx, 
-                                 timeIdx,
-                                 /*onBoundary=*/true);
-        return boundaryFluxVars_;
-    }
-
-    /*!
      * \brief Return a reference to the flux variables of a
      *        sub-control volume face for the evaluation point.
      *
@@ -425,11 +344,6 @@ protected:
     const Element *elemPtr_;
     const GridView gridView_;
     FVElementGeometry fvElemGeom_;
-    bool hasNeumann_;
-    bool hasDirichlet_;
-    std::vector<const BoundaryTypes*> boundaryTypes_;
-
-    mutable FluxVariables boundaryFluxVars_;
 };
 
 } // namespace Dumux

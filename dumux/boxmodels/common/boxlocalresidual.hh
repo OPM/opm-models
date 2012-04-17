@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2007-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -36,7 +36,7 @@
 
 #include "boxproperties.hh"
 #include "boxboundarycontext.hh"
-#include "boxneumanncontext.hh"
+#include "boxconstraintscontext.hh"
 
 namespace Dumux
 {
@@ -68,13 +68,15 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
-    typedef Dumux::BoxNeumannContext<TypeTag> NeumannContext;
+    typedef Dumux::BoxConstraintsContext<TypeTag> ConstraintsContext;
+    typedef Dumux::BoxBoundaryContext<TypeTag> BoundaryContext;
 
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
@@ -183,6 +185,9 @@ public:
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, storageTerm, elemCtx, /*timeIdx=*/0);
 
+        // evaluate the constraint DOFs
+        asImp_().evalConstraints_(residual, storageTerm, elemCtx, /*timeIdx=*/0);
+
 #if !defined NDEBUG && HAVE_VALGRIND
         for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++) {
             Valgrind::CheckDefined(residual[i]);
@@ -285,68 +290,16 @@ protected:
                        const ElementContext &elemCtx,
                        int timeIdx) const
     {
-        if (!elemCtx.onBoundary()) {
+        if (!elemCtx.onBoundary())
             return;
-        }
 
-        if (elemCtx.hasNeumann())
-            asImp_().evalNeumann_(residual, elemCtx, timeIdx);
-
-        if (elemCtx.hasDirichlet())
-            asImp_().evalDirichlet_(residual, storageTerm, elemCtx, timeIdx);
-    }
-
-    /*!
-     * \brief Set the values of the Dirichlet boundary control volumes
-     *        of the current element.
-     */
-    void evalDirichlet_(LocalBlockVector &residual,
-                        LocalBlockVector &storageTerm,
-                        const ElementContext &elemCtx,
-                        int timeIdx) const
-    {
-        PrimaryVariables tmp(0);
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const BoundaryTypes &bcTypes = elemCtx.boundaryTypes(scvIdx, timeIdx);
-            if (!bcTypes.hasDirichlet())
-                continue;
-
-            // ask the problem for the dirichlet values
-            Valgrind::SetUndefined(tmp);
-            asImp_().computeDirichlet_(tmp, elemCtx, scvIdx, timeIdx);
-            const PrimaryVariables &priVars =
-                elemCtx.primaryVars(scvIdx, timeIdx);
-
-            // set the dirichlet conditions
-            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if (!bcTypes.isDirichlet(eqIdx))
-                    continue;
-                int pvIdx = bcTypes.eqToDirichletIndex(eqIdx);
-
-                assert(0 <= pvIdx && pvIdx < numEq);
-                Valgrind::CheckDefined(tmp[pvIdx]);
-
-                residual[scvIdx][eqIdx] = priVars[pvIdx] - tmp[pvIdx];
-                storageTerm[scvIdx][eqIdx] = 0.0;
-            };
-        };
-    }
-
-    /*!
-     * \brief Add all Neumann boundary conditions to the local
-     *        residual.
-     */
-    void evalNeumann_(LocalBlockVector &residual,
-                      const ElementContext &elemCtx,
-                      int timeIdx) const
-    {
         const Element &elem = elemCtx.element();
         Dune::GeometryType geoType = elem.geometry().type();
         const ReferenceElement &refElem = ReferenceElements::general(geoType);
 
-        NeumannContext neumannCtx(elemCtx);
+        BoundaryContext boundaryCtx(elemCtx);
         const GridView &gridView = elemCtx.gridView();
-        IntersectionIterator &isIt = neumannCtx.intersectionIt();
+        IntersectionIterator &isIt = boundaryCtx.intersectionIt();
         const IntersectionIterator &endIt = gridView.iend(elem);
         for (; isIt != endIt; ++isIt)
         {
@@ -362,65 +315,93 @@ protected:
                  faceVertIdx < numFaceVerts;
                  ++faceVertIdx)
             {
-                int scvIdx = refElem.subEntity(/*entityIdx=*/faceIdx,
-                                               /*entityCodim=*/1,
-                                               /*subEntityIdx=*/faceVertIdx,
-                                               /*subEntityCodim=*/dim);
-
                 int boundaryFaceIdx =
                     elemCtx.fvElemGeom(timeIdx).boundaryFaceIndex(faceIdx, faceVertIdx);
 
                 // add the residual of all vertices of the boundary
                 // segment
-                evalNeumannSegment_(residual,
-                                    neumannCtx,
-                                    scvIdx,
-                                    boundaryFaceIdx,
-                                    timeIdx);
+                evalBoundarySegment_(residual,
+                                     boundaryCtx,
+                                     boundaryFaceIdx,
+                                     timeIdx);
             }
         }
     }
-
-    void computeDirichlet_(PrimaryVariables &values,
-                           const ElementContext &elemCtx,
-                           int scvIdx,
-                           int timeIdx) const
-    { elemCtx.problem().dirichlet(values, elemCtx, scvIdx, timeIdx); }
-
 
     /*!
-     * \brief Add Neumann boundary conditions for a single sub-control
-     *        volume face to the local residual.
+     * \brief Evaluate all boundary conditions for a single
+     *        sub-control volume face to the local residual.
      */
-    void evalNeumannSegment_(LocalBlockVector &residual,
-                             const NeumannContext &neumannCtx,
-                             int scvIdx,
-                             int boundaryFaceIdx,
-                             int timeIdx) const
+    void evalBoundarySegment_(LocalBlockVector &residual,
+                              const BoundaryContext &boundaryCtx,
+                              int boundaryFaceIdx,
+                              int timeIdx) const
     {
-        // temporary vector to store the neumann boundary fluxes
-        const BoundaryTypes &bcTypes = neumannCtx.elemContext().boundaryTypes(scvIdx, timeIdx);
-        RateVector values;
+        BoundaryRateVector values;
 
-        // deal with neumann boundaries
-        if (bcTypes.hasNeumann()) {
-            Valgrind::SetUndefined(values);
-            neumannCtx.problem().neumann(values,
-                                         neumannCtx,
-                                         boundaryFaceIdx,
-                                         timeIdx);
-            Valgrind::CheckDefined(values);
+        Valgrind::SetUndefined(values);
+        boundaryCtx.problem().boundary(values,
+                                       boundaryCtx,
+                                       boundaryFaceIdx,
+                                       timeIdx);
+        Valgrind::CheckDefined(values);
 
-            values *=
-                neumannCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
-                * neumannCtx.elemContext().volVars(scvIdx, timeIdx).extrusionFactor();
-
-            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if (bcTypes.isNeumann(eqIdx))
-                    residual[scvIdx][eqIdx] += values[eqIdx];
-            }
+        int scvIdx = boundaryCtx.insideScvIndex(boundaryFaceIdx, timeIdx);
+        values *=
+            boundaryCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
+            * boundaryCtx.elemContext().volVars(scvIdx, timeIdx).extrusionFactor();
+        
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            residual[scvIdx][eqIdx] += values[eqIdx];
         }
     }
+
+    /*!
+     * \brief Set the values of the constraint volumes of the current element.
+     */
+    void evalConstraints_(LocalBlockVector &residual,
+                          LocalBlockVector &storageTerm,
+                          const ElementContext &elemCtx,
+                          int timeIdx) const
+    {
+        if (!GET_PROP_VALUE(TypeTag, EnableConstraints))
+            return;
+
+        Constraints constraints;
+        ConstraintsContext constraintsCtx(elemCtx);
+        for (int scvIdx = 0; scvIdx < constraintsCtx.numScv(); ++scvIdx) {
+            // ask the problem for the constraint values
+            Valgrind::SetUndefined(constraints);
+            asImp_().computeConstraints_(constraints, constraintsCtx, scvIdx, timeIdx);
+
+            if (!constraints.isConstraint())
+                continue;
+
+            // enforce the constraints
+            const PrimaryVariables &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                if (!constraints.isConstraint(eqIdx))
+                    continue;
+
+                int pvIdx = constraints.eqToPvIndex(eqIdx);
+
+                assert(0 <= pvIdx && pvIdx < numEq);
+                Valgrind::CheckDefined(constraints[pvIdx]);
+
+                residual[scvIdx][eqIdx] = priVars[pvIdx] - constraints[pvIdx];
+                storageTerm[scvIdx][eqIdx] = 0.0;
+            };
+        };
+    }
+
+    void computeConstraints_(Constraints &values,
+                             const ConstraintsContext &context,
+                             int scvIdx,
+                             int timeIdx) const
+    { 
+        context.problem().constraints(values, context, scvIdx, timeIdx);
+    }
+
 
     /*!
      * \brief Add the change in the storage terms and the source term

@@ -41,14 +41,8 @@ NEW_TYPE_TAG(VtkPrimaryVars);
 
 // create the property tags needed for the primary variables module
 NEW_PROP_TAG(VtkWritePrimaryVars);
-NEW_PROP_TAG(VtkWriteBoundaryTypes);
-NEW_PROP_TAG(VtkWriteNeumann);
-NEW_PROP_TAG(VtkWriteDirichlet);
 
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
-SET_BOOL_PROP(VtkPrimaryVars, VtkWriteBoundaryTypes, false);
-SET_BOOL_PROP(VtkPrimaryVars, VtkWriteNeumann, false);
-SET_BOOL_PROP(VtkPrimaryVars, VtkWriteDirichlet, false);
 }
 
 /*!
@@ -89,9 +83,6 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (boundaryTypesOutput_()) this->resizeScalarBuffer_(boundaryTypes_);
-        if (neumannOutput_()) this->resizeEqBuffer_(neumann_);
-        if (dirichletOutput_()) this->resizeEqBuffer_(dirichlet_);
         if (primaryVarsOutput_()) this->resizeEqBuffer_(primaryVars_);
     }
 
@@ -110,28 +101,6 @@ public:
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (primaryVarsOutput_()) primaryVars_[eqIdx][I] = priVars[eqIdx];
-
-                if (boundaryTypesOutput_()) {
-                    // calculate a single value for the boundary type: use one
-                    // bit for each equation and set it to 1 if the equation
-                    // is used for a dirichlet condition
-                    int tmp = 0;
-                    for (int j = 0; j < numEq; ++j) {
-                        if (elemCtx.boundaryTypes(i, /*timeIdx=*/0).isDirichlet(j))
-                            tmp += (1 << j);
-                    }
-                    boundaryTypes_[I] = tmp;
-                }
-
-                if (neumannOutput_()) {
-                    DUNE_THROW(Dune::NotImplemented,
-                               "VTK output Neumann fluxes is not implemented yet");
-                };
-
-                if (dirichletOutput_()) {
-                    DUNE_THROW(Dune::NotImplemented,
-                               "VTK output Dirichlet conditions is not implemented yet");
-                };
             }
         }
     }
@@ -142,28 +111,13 @@ public:
     void commitBuffers(VtkMultiWriter &writer)
     {
         if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
-        if (boundaryTypesOutput_()) this->commitScalarBuffer_(writer, "BC_%s", boundaryTypes_);
-        if (neumannOutput_()) this->commitEqBuffer_(writer, "neumann_%s", neumann_);
-        if (dirichletOutput_()) this->commitEqBuffer_(writer, "dirichlet_%s", dirichlet_);
     }
 
 private:
     static bool primaryVarsOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePrimaryVars); };
 
-    static bool boundaryTypesOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteBoundaryTypes); };
-
-    static bool neumannOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteNeumann); };
-
-    static bool dirichletOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteDirichlet); };
-
     EqBuffer primaryVars_;
-    ScalarBuffer boundaryTypes_;
-    EqBuffer neumann_;
-    EqBuffer dirichlet_;
 };
 
 }
