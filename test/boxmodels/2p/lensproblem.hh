@@ -261,8 +261,8 @@ public:
         outerMaterialParams_.setVgAlpha(0.0037);
         outerMaterialParams_.setVgN(4.7);
 
-        setK_(lensK_, 9.05e-12);
-        setK_(outerK_, 4.6e-10);
+        lensK_ = this->toTensor_(9.05e-12);
+        outerK_ = this->toTensor_(4.6e-10);
     }
 
     /*!
@@ -362,13 +362,7 @@ public:
     // \{
 
     /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param globalPos The center of the finite volume which ought to be set.
-     *
-     * For this method, the \a values parameter stores primary variables.
+     * \brief Evaluate the boundary conditions for a boundary segment.
      */
     template <class Context>
     void boundary(BoundaryRateVector &values,
@@ -491,14 +485,7 @@ public:
     { values = 0; }
     // \}
 
-private:
-    static void setK_(Tensor &K, Scalar value)
-    {
-        K = 0.0;
-        for (int i = 0; i < dimWorld; ++i)
-            K[i][i] = value;
-    };
-    
+private:   
     bool isInLens_(const GlobalPosition &pos) const
     {
         for (int i = 0; i < dim; ++i) {

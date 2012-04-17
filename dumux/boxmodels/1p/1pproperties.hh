@@ -59,6 +59,8 @@ NEW_PROP_TAG(OnePIndices); //!< Enumerations for the 1p models
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(FluidSystem); //!< The type of the fluid system to use
 NEW_PROP_TAG(Fluid); //!< The fluid used for the default fluid system
+NEW_PROP_TAG(MaterialLaw); //!< The capillary pressure/relative permeability law to be used
+NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the capillary pressure/relative permeability law to be used
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem

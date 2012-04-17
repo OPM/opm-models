@@ -124,17 +124,23 @@ class OnePTestProblem
         pressureIdx = Indices::pressureIdx
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     OnePTestProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
+        eps_ = 1.0e-3;
+
         lensLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
         if (dim > 1)
             lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
@@ -147,8 +153,8 @@ public:
         if (dim > 2)
             lensUpperRight_[2] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
 
-        intrinsicPerm_ = GET_PARAM(TypeTag, Scalar, Permeability);
-        intrinsicPermLens_ = GET_PARAM(TypeTag, Scalar, PermeabilityLens);
+        intrinsicPerm_ = this->toTensor_(GET_PARAM(TypeTag, Scalar, Permeability));
+        intrinsicPermLens_ = this->toTensor_(GET_PARAM(TypeTag, Scalar, PermeabilityLens));
     }
 
     /*! \brief Define the porosity.
@@ -171,7 +177,7 @@ public:
      *                      intrinsic velocity ought to be calculated.
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     { return isInLens_(context.pos(spaceIdx, timeIdx))?intrinsicPermLens_:intrinsicPerm_; }
 
     /*!
@@ -211,57 +217,36 @@ public:
     // \{
 
     /*!
-     * \brief Specify which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
+     * \brief Evaluate the boundary conditions for a boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        double eps = 1.0e-3;
-        if (globalPos[dim-1] < eps || globalPos[dim-1] > this->bboxMax()[dim-1] - eps)
-            values.setAllDirichlet();
-        else
-            values.setAllNeumann();
-    }
+        if (onLowerBoundary_(globalPos) || onUpperBoundary_(globalPos)) {
+            Scalar pressure;
+            Scalar T = temperature(context, spaceIdx, timeIdx);
+            if (onLowerBoundary_(globalPos))
+                pressure = 2e5;
+            else // on upper boundary
+                pressure = 1e5;
 
-    /*!
-     * \brief Evaluate the boundary conditions for a Dirichlet
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        double eps = 1.0e-3;
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+            Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            fs.setSaturation(/*phaseIdx=*/0, 1.0);
+            fs.setPressure(/*phaseIdx=*/0, pressure);
+            fs.setTemperature(T);
 
-        if (globalPos[dim-1] < eps) {
-            values[pressureIdx] = 2.0e+5;
+            // impose an freeflow boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
-        else if (globalPos[dim-1] > this->bboxMax()[dim-1] - eps) {
-            values[pressureIdx] = 1.0e+5;
+        else {
+            // no flow boundary
+            values.setNoFlow();
         }
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each component. Negative values mean
-     * influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        //  const GlobalPosition &globalPos = context.pos(boundaryIdx);
-
-        values[pressureIdx] = 0;
+            
     }
 
     // \}
@@ -287,6 +272,12 @@ public:
     // \}
 
 private:
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[dim-1] < eps_; }
+
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[dim-1] > this->bboxMax()[dim-1] - eps_; }
+
     bool isInLens_(const GlobalPosition &pos) const
     {
         return 
@@ -297,8 +288,10 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
     
-    Scalar intrinsicPerm_;
-    Scalar intrinsicPermLens_;
+    Tensor intrinsicPerm_;
+    Tensor intrinsicPermLens_;
+
+    Scalar eps_;
 };
 } //end namespace
 

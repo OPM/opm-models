@@ -38,16 +38,16 @@
 #include "1pindices.hh"
 #include "1pprimaryvariables.hh"
 #include "1pratevector.hh"
+#include "1pboundaryratevector.hh"
 #include "1pvolumevariables.hh"
 #include "1pfluxvariables.hh"
 
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
-
 #include <dumux/material/fluidsystems/1pfluidsystem.hh>
+#include <dumux/material/fluidmatrixinteractions/dummymateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
-
 
 namespace Dumux
 {
@@ -65,6 +65,17 @@ SET_INT_PROP(BoxOneP, NumComponents, 1); //!< The number of (pseudo) components 
 SET_TYPE_PROP(BoxOneP,
               LocalResidual,
               OnePLocalResidual<TypeTag>);
+
+//! set the material law to the dummy law
+SET_TYPE_PROP(BoxOneP,
+              MaterialLaw,
+              Dumux::DummyMaterialLaw</*numPhases=*/1, typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the material law
+//! from the law itself
+SET_TYPE_PROP(BoxOneP,
+              MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to the dummy law
 SET_TYPE_PROP(BoxOneP,
@@ -85,6 +96,9 @@ SET_TYPE_PROP(BoxOneP, BaseProblem, OnePBoxProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxOneP, RateVector, OnePRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxOneP, BoundaryRateVector, OnePBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxOneP, PrimaryVariables, OnePPrimaryVariables<TypeTag>);

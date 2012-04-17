@@ -464,8 +464,8 @@ private:
 
         // calculate the intrinsic permeability
         const Tensor &K = problem.intrinsicPermeability(elemCtx,
-                                      insideScvIdx_,
-                                      timeIdx);
+                                                        insideScvIdx_,
+                                                        timeIdx);
         
         Vector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
         Scalar scvfArea = normal.two_norm();

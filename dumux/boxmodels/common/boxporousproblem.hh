@@ -174,8 +174,7 @@ public:
                    "Problem::dispersivity()");
     }
 
-
-private:
+protected:
     const Tensor &toTensor_(const Tensor &val) const
     { return val; };
 
