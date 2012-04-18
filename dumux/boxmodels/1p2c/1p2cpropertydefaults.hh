@@ -39,11 +39,13 @@
 #include "1p2cmodel.hh"
 #include "1p2clocalresidual.hh"
 #include "1p2cratevector.hh"
+#include "1p2cboundaryratevector.hh"
 #include "1p2cprimaryvariables.hh"
 #include "1p2cvolumevariables.hh"
 #include "1p2cfluxvariables.hh"
 #include "1p2cindices.hh"
 
+#include <dumux/material/fluidmatrixinteractions/dummymateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Dumux
@@ -60,6 +62,18 @@ SET_INT_PROP(BoxOnePTwoC, NumComponents, 2); //!< The number of components in th
 
 //! Use the 1p2c local residual function for the 1p2c model
 SET_TYPE_PROP(BoxOnePTwoC, LocalResidual, OnePTwoCLocalResidual<TypeTag>);
+
+
+//! set the material law to the dummy law
+SET_TYPE_PROP(BoxOnePTwoC,
+              MaterialLaw,
+              Dumux::DummyMaterialLaw</*numPhases=*/1, typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the material law
+//! from the law itself
+SET_TYPE_PROP(BoxOnePTwoC,
+              MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to the dummy law
 SET_TYPE_PROP(BoxOnePTwoC,
@@ -81,6 +95,9 @@ SET_TYPE_PROP(BoxOnePTwoC, BaseProblem, OnePTwoCBoxProblem<TypeTag>);
 //! the RateVector property
 SET_TYPE_PROP(BoxOnePTwoC, RateVector, OnePTwoCRateVector<TypeTag>);
 
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxOnePTwoC, BoundaryRateVector, OnePTwoCBoundaryRateVector<TypeTag>);
+
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxOnePTwoC, PrimaryVariables, OnePTwoCPrimaryVariables<TypeTag>);
 
@@ -96,6 +113,19 @@ SET_SCALAR_PROP(BoxOnePTwoC, UpwindWeight, 1.0);
 //! Set the indices used by the 1p2c model
 SET_TYPE_PROP(BoxOnePTwoC, OnePTwoCIndices, Dumux::OnePTwoCIndices<0>);
 SET_TYPE_PROP(BoxOnePTwoC, Indices, Dumux::OnePTwoCIndices<0>);
+
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxOnePTwoC, EnableSmoothUpwinding, false);
+
+// disable output of a few quantities which make sense in a
+// multip-hase but not in a single-phase context
+SET_BOOL_PROP(BoxOnePTwoC, VtkWriteSaturations, false);
+SET_BOOL_PROP(BoxOnePTwoC, VtkWriteMobilities, false);
+SET_BOOL_PROP(BoxOnePTwoC, VtkWriteRelativePermeabilities, false);
+
+// enable filter velocity output by default
+SET_BOOL_PROP(BoxOnePTwoC, VtkWriteFilterVelocities, true);
+
 }
 // \}
 }

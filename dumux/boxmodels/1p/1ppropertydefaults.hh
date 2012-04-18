@@ -126,10 +126,6 @@ public:
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxOneP, EnableSmoothUpwinding, false);
 
-// use the stabilized bi-conjugated gradient solver preconditioned by
-// ILU-0.
-SET_TYPE_PROP(BoxOneP, LinearSolver, Dumux::BoxBiCGStabILU0Solver<TypeTag> );
-
 // disable output of a few quantities which make sense in a
 // multip-hase but not in a single-phase context
 SET_BOOL_PROP(BoxOneP, VtkWriteSaturations, false);

@@ -108,18 +108,22 @@ class OnePTwoCOutflowProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
+
+        // component indices
+        H2OIdx = FluidSystem::H2OIdx,
+        N2Idx = FluidSystem::N2Idx,
 
         // indices of the primary variables
         pressureIdx = Indices::pressureIdx,
@@ -133,31 +137,24 @@ class OnePTwoCOutflowProblem
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     OnePTwoCOutflowProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {
+        temperature_ = 273.15 + 20;
+        FluidSystem::init(/*minT=*/temperature_ - 1, /*maxT=*/temperature_ + 2, /*numT=*/3,
+                          /*minp=*/0.8e5, /*maxp=*/2.5e5, /*nump=*/500);
+        
         // set parameters of porous medium
-        perm_ = 2.142e-11;
-        porosity_ = 0.13;
-        tortuosity_ = 0.706;
-
-        // calculate the injection volume
-        totalInjectionVolume_ = 0;
-        FVElementGeometry fvGeom;
-        ElementIterator elemIt = this->gridView().template begin<0>();
-        const ElementIterator endIt = this->gridView().template end<0>();
-        for (; elemIt != endIt; ++ elemIt) {
-            fvGeom.update(this->gridView(), *elemIt);
-            for (int i = 0; i < fvGeom.numVertices; ++i) {
-                const GlobalPosition &pos = fvGeom.subContVol[i].global;
-                if (inInjectionVolume_(pos))
-                    totalInjectionVolume_ += fvGeom.subContVol[i].volume;
-            };
-        }
+        perm_ = this->toTensor_(1e-10);
+        porosity_ = 0.4;
+        tortuosity_ = 0.28;
     }
 
     /*!
@@ -180,7 +177,7 @@ public:
      */
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
-    { return 273.15 + 36; } // in [K]
+    { return temperature_; } // in [K]
 
     // \}
 
@@ -190,43 +187,36 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
+     * \brief Evaluate the boundary conditions for a boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        values.setAllDirichlet();
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        
+        if (onLeftBoundary_(globalPos)) {
+            Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+            fs.setPressure(/*phaseIdx=*/0, fs.pressure(/*phaseIdx=*/0) + 1e5);
 
-        initial_(values, globalPos);
-    }
+            fs.setMoleFraction(/*phaseIdx=*/0, N2Idx, 2e-5);
+            fs.setMoleFraction(/*phaseIdx=*/0, H2OIdx, 1 - 2e-5);
 
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each component. Negative values mean
-     * influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        values = 0;
+            // impose an freeflow boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else if (onRightBoundary_(globalPos)) {
+            Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+
+            // impose an outflow boundary condition
+            values.setOutFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else
+            // no flow on top and bottom
+            values.setNoFlow();
     }
 
     // \}
@@ -249,31 +239,7 @@ public:
     void source(RateVector &values,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        values = Scalar(0.0);
-
-        if (inInjectionVolume_(globalPos)) {
-            // total volumetric injection rate in ml/h
-            Scalar injRateVol = 0.1;
-            // convert to m^3/s
-            injRateVol *= 1e-6/3600;
-            // total mass injection rate. assume a density of 1030kg/m^3
-            Scalar injRateMass = injRateVol*1030.0;
-
-            // trail concentration in injected fluid in [mol/ml]
-            Scalar trailInjRate = 1e-5;
-            // convert to mol/m^3
-            trailInjRate *= 1e6;
-            // convert to mol/s
-            trailInjRate *= injRateVol;
-
-            // source term of the total mass
-            values[contiEqIdx] = injRateMass / totalInjectionVolume_; // [kg/(s*m^3)]
-            values[transEqIdx] = trailInjRate / totalInjectionVolume_; // [mol/(s*m^3)]
-        }
-    }
+    { values = Scalar(0.0); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -284,10 +250,11 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos
-            = context.pos(spaceIdx, timeIdx);
+        Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+        initialFluidState_(fs, context, spaceIdx, timeIdx);
 
-        initial_(values, globalPos);
+        values[pressureIdx] = fs.pressure(/*phaseIdx=*/0);
+        values[x1Idx] = fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
     }
 
     // \}
@@ -300,11 +267,8 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        //context.pos(spaceIdx, timeIdx);
-        return perm_;
-    }
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    { return perm_; }
 
     /*!
      * \brief Define the porosity \f$[-]\f$.
@@ -315,10 +279,7 @@ public:
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        //const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
-        return porosity_;
-    }
+    { return porosity_; }
 
     /*!
      * \brief Define the tortuosity \f$[?]\f$.
@@ -329,10 +290,7 @@ public:
      */
     template <class Context>
     Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        //const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
-        return tortuosity_;
-    }
+    { return tortuosity_; }
 
     /*!
      * \brief Define the dispersivity \f$[?]\f$.
@@ -347,29 +305,35 @@ public:
     { return 0; }
 
 private:
-    bool inInjectionVolume_(const GlobalPosition &globalPos) const
-    {
-        return
-            10e-3 < globalPos[0] && globalPos[0] < 12e-3 &&
-            10e-3 < globalPos[1] && globalPos[1] < 12e-3;
-    };
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < eps_; }
 
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
 
-    // the internal method for the initial condition
-    void initial_(PrimaryVariables &values, const GlobalPosition &globalPos) const
+    template <class FluidState, class Context>
+    void initialFluidState_(FluidState &fs, 
+                            const Context &context,
+                            int spaceIdx, int timeIdx) const
     {
-        values[pressureIdx] = 0.0; //initial condition for the pressure
-        values[x1Idx] = 0.0; //initial condition for the trail molefraction
-//        if(globalPos[0] > 0.4 && globalPos[0] < 0.6 && globalPos[1] > 0.4 && globalPos[1] < 0.6)
-//            values[x1Idx] = 0.6;
+        Scalar T = temperature(context, spaceIdx, timeIdx);
+        //Scalar rho = FluidSystem::H2O::liquidDensity(T, /*pressure=*/1.5e5);
+        //Scalar z = context.pos(spaceIdx, timeIdx)[dim - 1] - this->bboxMax()[dim - 1];
+        //Scalar z = context.pos(spaceIdx, timeIdx)[dim - 1] - this->bboxMax()[dim - 1];
+
+        fs.setSaturation(/*phaseIdx=*/0, 1.0);
+        fs.setPressure(/*phaseIdx=*/0, 1e5 /* + rho*z */);
+        fs.setMoleFraction(/*phaseIdx=*/0, H2OIdx, 1.0);
+        fs.setMoleFraction(/*phaseIdx=*/0, N2Idx, 0);
+        fs.setTemperature(T);
     }
 
     const Scalar eps_;
 
-    Scalar perm_;
+    Tensor perm_;
+    Scalar temperature_;
     Scalar porosity_;
     Scalar tortuosity_;
-    Scalar totalInjectionVolume_;
 }; 
 } //end namespace
 

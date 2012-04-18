@@ -50,6 +50,7 @@ class OnePTwoCBoxProblem : public BoxPorousProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -99,6 +100,15 @@ public:
     Scalar temperature() const
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
+    /*!
+     * \brief Return the parameters for the material law.
+     */
+    template <class Context>
+    const MaterialLawParams &materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        static MaterialLawParams matParams;
+        return matParams;
+    }
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.

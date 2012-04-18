@@ -22,27 +22,26 @@
 /*!
  * \file
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \brief Implements a boundary vector for the fully implicit single-phase model.
  */
-#ifndef DUMUX_BOX_2P_BOUNDARY_RATE_VECTOR_HH
-#define DUMUX_BOX_2P_BOUNDARY_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_1P2C_BOUNDARY_RATE_VECTOR_HH
+#define DUMUX_BOX_1P2C_BOUNDARY_RATE_VECTOR_HH
 
-#include <dune/common/fvector.hh>
+#include "1p2cproperties.hh"
 
 #include <dumux/common/valgrind.hh>
-#include <dumux/material/constraintsolvers/ncpflash.hh>
 
-#include "2pvolumevariables.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {
 /*!
  * \ingroup 2PModel
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \brief Implements a boundary vector for the fully implicit single-phase model.
  */
 template <class TypeTag>
-class TwoPBoundaryRateVector
+class OnePTwoCBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
@@ -53,27 +52,28 @@ class TwoPBoundaryRateVector
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { transEqIdx = Indices::transEqIdx };
 
 public:
     /*!
      * \brief Default constructor
      */
-    TwoPBoundaryRateVector()
+    OnePTwoCBoundaryRateVector()
         : ParentType()
     { };
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    TwoPBoundaryRateVector(Scalar value)
+    OnePTwoCBoundaryRateVector(Scalar value)
         : ParentType(value)
     { };
 
     /*!
      * \brief Copy constructor
      */
-    TwoPBoundaryRateVector(const TwoPBoundaryRateVector &value)
+    OnePTwoCBoundaryRateVector(const OnePTwoCBoundaryRateVector &value)
         : ParentType(value)
     { };
 
@@ -99,19 +99,32 @@ public:
         (*this) = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
-            Scalar density;
-            if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
-                density = FluidSystem::density(fs, paramCache, phaseIdx);
-            else 
-                density = insideVolVars.fluidState().density(phaseIdx);
+            Scalar molarDensity, x1;
+            if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx)) {
+                x1 = fs.moleFraction(phaseIdx, /*compIdx=*/1);
+                Scalar meanM =
+                    (1 - x1) * FluidSystem::molarMass(0) 
+                    + x1 * FluidSystem::molarMass(1);
+
+                molarDensity = FluidSystem::density(fs, paramCache, phaseIdx)/meanM;
+            }
+            else  {
+                molarDensity = insideVolVars.fluidState().molarDensity(phaseIdx);
+                x1 = insideVolVars.fluidState().moleFraction(phaseIdx, /*compIdx=*/1);
+            }
 
             // add advective flux of current component in current
             // phase
-            (*this)[conti0EqIdx + phaseIdx] +=
+            (*this)[contiEqIdx] +=
                 fluxVars.filterVelocityNormal(phaseIdx)
-                * density;
-        }
+                * molarDensity;
 
+            (*this)[transEqIdx] +=
+                fluxVars.filterVelocityNormal(phaseIdx)
+                * molarDensity
+                * x1;
+        }
+        
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {
             Valgrind::CheckDefined((*this)[i]);

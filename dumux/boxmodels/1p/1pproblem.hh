@@ -97,7 +97,6 @@ public:
     Scalar temperature() const
     { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
 
-
     /*!
      * \brief Return the parameters for the material law.
      */

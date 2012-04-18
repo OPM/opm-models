@@ -122,7 +122,7 @@ public:
      * \brief Specify an inflow boundary
      */
     template <class Context, class FluidState>
-    void setInflow(const Context &context, 
+    void setInFlow(const Context &context, 
                    int bfIdx, 
                    int timeIdx,
                    const FluidState &fs)
@@ -141,7 +141,7 @@ public:
      * \brief Specify an outflow boundary
      */
     template <class Context, class FluidState>
-    void setOutflow(const Context &context, 
+    void setOutFlow(const Context &context, 
                     int bfIdx, 
                     int timeIdx,
                     const FluidState &fs)
