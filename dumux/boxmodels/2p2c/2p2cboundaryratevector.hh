@@ -44,8 +44,10 @@ template <class TypeTag>
 class TwoPTwoCBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -104,7 +106,6 @@ public:
                 meanMBoundary += fs.moleFraction(phaseIdx, compIdx)*FluidSystem::molarMass(compIdx);
 
             Scalar density;
-            Scalar molarity;
             if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fs, paramCache, phaseIdx);
             else
@@ -122,14 +123,17 @@ public:
                     molarity = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
                 }
 
+
                 // add advective flux of current component in current
                 // phase
                 (*this)[conti0EqIdx + compIdx] +=
                     fluxVars.filterVelocityNormal(phaseIdx)
                     * molarity;
             }
+            
+            asImp_().enthalpyFlux_(fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);
         }
-        
+
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {
             Valgrind::CheckDefined((*this)[i]);
@@ -180,6 +184,20 @@ public:
      */
     void setNoFlow()
     { (*this) = 0.0; };
+
+protected:
+    Implementation &asImp_() 
+    { return *static_cast<Implementation *>(this); }
+
+    template <class FluidState>
+    void enthalpyFlux_(const FluxVariables &fluxVars,
+                       const VolumeVariables &insideVolVars,
+                       const FluidState &fs,
+                       const typename FluidSystem::ParameterCache &paramCache,
+                       int phaseIdx,
+                       Scalar density)
+    { }
+
 };
 
 } // end namepace

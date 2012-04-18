@@ -371,7 +371,7 @@ protected:
         ConstraintsContext constraintsCtx(elemCtx);
         for (int scvIdx = 0; scvIdx < constraintsCtx.numScv(); ++scvIdx) {
             // ask the problem for the constraint values
-            Valgrind::SetUndefined(constraints);
+            constraints.reset();
             asImp_().computeConstraints_(constraints, constraintsCtx, scvIdx, timeIdx);
 
             if (!constraints.isConstraint())

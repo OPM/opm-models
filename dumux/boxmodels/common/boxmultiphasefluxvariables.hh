@@ -203,7 +203,7 @@ private:
     {
         const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
-        
+
         if (useTwoPointGradients) {
             const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
             const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
@@ -222,7 +222,6 @@ private:
                 dist += tmp*tmp;
             }
             dist = std::sqrt(dist);
-            
             
             // calculate the pressure gradient
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -318,7 +317,7 @@ private:
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
         
         const auto &elemCtx = context.elemContext();
-        const auto &insideScv = context.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
+        const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
 
         const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
         const auto &fsJ = fs;
@@ -331,7 +330,6 @@ private:
         // distance between the center of the SCV and center of the boundary face
         Vector distVec = context.element().geometry().global(insideScv.localCenter);
         distVec -= scvf.ipGlobal;
-
         Scalar dist = distVec.two_norm();
         
         // calculate the pressure gradient using two-point gradient

@@ -39,6 +39,7 @@
 #include "2p2cnimodel.hh"
 #include "2p2cniproblem.hh"
 #include "2p2cniindices.hh"
+#include "2p2cniboundaryratevector.hh"
 #include "2p2cnilocalresidual.hh"
 #include "2p2cnivolumevariables.hh"
 #include "2p2cnifluxvariables.hh"
@@ -70,6 +71,9 @@ SET_TYPE_PROP(BoxTwoPTwoCNI, VolumeVariables, TwoPTwoCNIVolumeVariables<TypeTag>
 
 //! the FluxVariables property
 SET_TYPE_PROP(BoxTwoPTwoCNI, FluxVariables, TwoPTwoCNIFluxVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(BoxTwoPTwoCNI, BoundaryRateVector, Dumux::TwoPTwoCNIBoundaryRateVector<TypeTag>);
 
 //! The indices required by the non-isothermal 2p2c model
 SET_TYPE_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices, TwoPTwoCNIIndices<TypeTag, 0>);

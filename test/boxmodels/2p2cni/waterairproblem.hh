@@ -43,8 +43,6 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-#define ISOTHERMAL 0
-
 namespace Dumux
 {
 template <class TypeTag>
@@ -52,11 +50,7 @@ class WaterAirProblem;
 
 namespace Properties
 {
-#if !ISOTHERMAL
 NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoCNI));
-#else
-NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoC));
-#endif
 
 // Set the grid type
 SET_PROP(WaterAirProblem, Grid)
@@ -110,11 +104,26 @@ SET_TYPE_PROP(WaterAirProblem, FluidSystem,
 // Enable gravity
 SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
 
+// Enable constraints
+SET_BOOL_PROP(WaterAirProblem, EnableConstraints, true);
+
 // Use forward differences instead of central differences
 SET_INT_PROP(WaterAirProblem, NumericDifferenceMethod, +1);
 
 // Write newton convergence
 SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
+
+#if ! HAVE_ISTL_FIXPOINT_CRITERION
+// no fixpoint convergence criterion in ISTL -> either use SuperLU or
+// print a warning.
+#if HAVE_SUPERLU
+#warning "ISTL has not been patched to support fixpoint convergence criteria using SuperLU backend" 
+SET_TYPE_PROP(WaterAirProblem, LinearSolver, SuperLUBackend<TypeTag>);
+#else
+#warning "ISTL has not been patched to support fixpoint convergence criteria"
+#warning "and SuperLU backend is not available. The linear solver probably won't converge!"
+#endif
+#endif 
 }
 
 
@@ -169,19 +178,20 @@ class WaterAirProblem
 
         pressure0Idx = Indices::pressure0Idx,
         switch0Idx = Indices::switch0Idx,
-#if !ISOTHERMAL
+
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
-#endif
-       
+
         // component indices
+        H2OIdx = FluidSystem::H2OIdx,
         N2Idx = FluidSystem::N2Idx,
 
         // phase indices
         lPhaseIdx = FluidSystem::lPhaseIdx,
+        gPhaseIdx = FluidSystem::gPhaseIdx,
 
         // equation indices
-        contiN2EqIdx = Indices::conti0EqIdx + N2Idx,
+        conti0EqIdx = Indices::conti0EqIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,
@@ -189,8 +199,9 @@ class WaterAirProblem
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -199,7 +210,10 @@ class WaterAirProblem
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     /*!
@@ -214,13 +228,14 @@ public:
         maxDepth_ = 1000.0; // [m]
         eps_ = 1e-6;
 
-        FluidSystem::init();
+        FluidSystem::init(/*Tmin=*/275, /*Tmax=*/600, /*nT=*/100,
+                          /*pmin=*/9.5e6, /*pmax=*/10.5e6, /*np=*/200);
 
         layerBottom_ = 22.0;
 
         // intrinsic permeabilities
-        fineK_ = 1e-13;
-        coarseK_ = 1e-12;
+        fineK_ = this->toTensor_(1e-13);
+        coarseK_ = this->toTensor_(1e-12);
 
         // porosities
         finePorosity_ = 0.3;
@@ -256,25 +271,6 @@ public:
     const char *name() const
     { return "waterair"; }
 
-#if ISOTHERMAL
-    /*!
-     * \brief Returns the temperature within the domain.
-     *
-     * \param element The element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index (SCV index)
-     *
-     * This problem assumes a temperature of 10 degrees Celsius.
-     */
-    template <class Context>
-    Scalar temperature(const Element &element,
-                       const FVElementGeometry &fvElemGeom,
-                       int scvIdx) const
-    {
-        return 273.15 + 10; // -> 10°C
-    };
-#endif
-
     /*!
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
@@ -284,7 +280,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -364,9 +360,7 @@ public:
     template <class Context>
     void source(RateVector &values,
                 const Context &context, int spaceIdx, int timeIdx) const
-    {
-        values = 0;
-    }
+    { values = 0; }
 
     // \}
 
@@ -376,71 +370,63 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
+     * \brief Evaluate the boundary conditions for a boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &pos = context.cvCenter(spaceIdx, timeIdx);
+        assert(onLeftBoundary_(pos) || 
+               onLowerBoundary_(pos) || 
+               onRightBoundary_(pos) || 
+               onUpperBoundary_(pos));
 
-        if(globalPos[0] > 40 - eps_ || globalPos[0] < eps_)
-            values.setAllDirichlet();
+        if (onInlet_(pos)) {
+            RateVector massRate(0.0);
+            massRate[conti0EqIdx + N2Idx] = -1e-3; // [kg/(m^2 s)]
+            //massRate[conti0EqIdx + H2OIdx] = -1e-2; // [kg/(m^2 s)]
+
+            // impose an forced inflow boundary condition on the inlet
+            values.setMassRate(massRate);
+        }
+        else if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {                 
+            //int globalIdx = context.elemContext().globalSpaceIndex(context.insideScvIndex(spaceIdx,timeIdx), timeIdx);
+
+            Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+
+            // impose an freeflow boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        } 
         else
-            values.setAllNeumann();
-
-#if !ISOTHERMAL
-        values.setDirichlet(temperatureIdx, energyEqIdx);
-#endif
+            // no flow on top and bottom
+            values.setNoFlow();
     }
 
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex for which the boundary type is set
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        initial_(values, globalPos);
-    }
+    // \}
 
     /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
+     * \name Constraints
+     */
+    // \{
+
+    /*!
+     * \brief Set the constraints of this problem.
      *
-     * \param values The neumann values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
+     * This method sets temperature constraints for the finite volumes
+     * adacent to the inlet.
      */
     template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
+    void constraints(Constraints &values,
+                     const Context &context,
+                     int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        values = 0;
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        // negative values for injection
-        if (globalPos[0] > 15 && globalPos[0] < 25 &&
-            globalPos[1] < eps_)
-        {
-            values[contiN2EqIdx] = -1e-3; // [kg/(s m^2)]
+        if (onInlet_(pos)) {
+            values.setConstraint(temperatureIdx, energyEqIdx, 380);;
         }
     }
 
@@ -465,37 +451,62 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        //int globalIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
 
-        initial_(values, globalPos);
-
-#if !ISOTHERMAL
-        if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] < 30)
-               values[temperatureIdx] = 380;
-#endif
+        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+        initialFluidState_(fs, context, spaceIdx, timeIdx);
+        
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
     }
 
 private:
-    // internal method for the initial condition (reused for the
-    // dirichlet conditions!)
-    void initial_(PrimaryVariables &values,
-                  const GlobalPosition &globalPos) const
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < eps_; }
+
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
+
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < eps_; }
+
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
+
+    bool onInlet_(const GlobalPosition &pos) const
+    { return onLowerBoundary_(pos) && (15.0 < pos[0]) && (pos[0] < 25.0); }
+
+    bool inHighTemperatureRegion_(const GlobalPosition &pos) const
+    { return (20 < pos[0]) && (pos[0] < 30) && (pos[1] < 30); }
+
+    template <class Context, class FluidState>
+    void initialFluidState_(FluidState &fs, const Context &context, int spaceIdx, int timeIdx) const
     {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+
         Scalar densityW = 1000.0;
+        fs.setPressure(lPhaseIdx, 1e5 + (maxDepth_ - pos[1])*densityW*9.81);
+        fs.setSaturation(lPhaseIdx, 1.0);
+        fs.setMoleFraction(lPhaseIdx, H2OIdx, 1.0);
+        fs.setMoleFraction(lPhaseIdx, N2Idx, 0.0);
+       
+        if (inHighTemperatureRegion_(pos))
+            fs.setTemperature(380);
+        else
+            fs.setTemperature(283.0 + (maxDepth_ - pos[1])*0.03);
 
-        values.setPhasePresent(lPhaseIdx);
+        // set the gas saturation and pressure
+        fs.setSaturation(gPhaseIdx, 0);
+        Scalar pc[numPhases];
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        MaterialLaw::capillaryPressures(pc, matParams, fs);
+        fs.setPressure(gPhaseIdx, fs.pressure(lPhaseIdx) + (pc[gPhaseIdx] - pc[lPhaseIdx]));
 
-        values[pressure0Idx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
-        values[switch0Idx] = 0.0;
-#if !ISOTHERMAL
-        values[temperatureIdx] = 283.0 + (maxDepth_ - globalPos[1])*0.03;
-#endif
-        Valgrind::CheckDefined(values.phasePresence());
-        Valgrind::CheckDefined(values.wasSwitched());
-        Valgrind::CheckDefined(values);
+        typename FluidSystem::ParameterCache paramCache;
+        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/false,  /*setEnthalpy=*/true);
     }
 
-private:
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
     {            
         Scalar lambdaGranite = 2.8; // [W / (K m)]
@@ -533,8 +544,8 @@ private:
     bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
-    Scalar fineK_;
-    Scalar coarseK_;
+    Tensor fineK_;
+    Tensor coarseK_;
     Scalar layerBottom_;
 
     Scalar finePorosity_;

@@ -93,10 +93,10 @@ public:
         {
             // add the internal energy of the phase
             storage[energyEqIdx] +=
-                volVars.porosity() * (
-                    fs.density(phaseIdx)
-                    * fs.internalEnergy(phaseIdx)
-                    * fs.saturation(phaseIdx));
+                volVars.porosity()
+                * fs.saturation(phaseIdx)
+                * fs.internalEnergy(phaseIdx)
+                * fs.density(phaseIdx);
         };
 
         // handle the heat capacity of the solid
@@ -161,7 +161,6 @@ public:
     {
         // diffusive mass flux
         ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux

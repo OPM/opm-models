@@ -118,11 +118,16 @@ public:
     { return elemCtx_.fvElemGeom(timeIdx); };
 
     /*!
-     * \brief Return the position of a local entities in global coordinates
+     * \brief Return the position of a local entity in global coordinates
      */
     const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
     { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
 
+    /*!
+     * \brief Return the position of a control volume's center in global coordinates.
+     */
+    const GlobalPosition &cvCenter(int boundaryFaceIdx, int timeIdx) const
+    { return fvElemGeom(timeIdx).subContVol[insideScvIndex(boundaryFaceIdx, timeIdx)].global; }
 
     /*!
      * \brief Return the local sub-control volume index of the

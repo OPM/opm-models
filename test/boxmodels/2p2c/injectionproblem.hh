@@ -397,6 +397,9 @@ public:
      */
     // \{
 
+    // \{
+
+
     /*!
      * \brief Evaluate the boundary conditions for a boundary segment.
      */
@@ -418,7 +421,7 @@ public:
             RateVector massRate(0.0);
             massRate[contiN2EqIdx] = -1e-3; // [kg/(m^3 s)]
 
-            // impose an outflow boundary condition
+            // impose an forced inflow boundary condition
             values.setMassRate(massRate);
         }
         else
@@ -448,7 +451,6 @@ public:
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
-
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         //////
