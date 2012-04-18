@@ -143,17 +143,15 @@ SET_STRING_PROP(InjectionProblem, SimulationName, "injection");
  * \ingroup BoxTestProblems
  * \brief Problem where air is injected under a low permeable layer in a depth of 2700m.
  *
- * The domain is sized 60m times 40m and consists of two layers, a moderately
- * permeable spatial parameters (\f$ K=10e-12\f$) for \f$ y>22m\f$ and one with a lower permeablility (\f$ K=10e-13\f$)
- * in the rest of the domain.
+ * The domain is sized 60m times 40m and consists of two layers, a
+ * moderately permeable spatial parameters (\f$K = 10^{-12}\;m^2\f$)
+ * for \f$ y > 22\; m\f$ and one with a lower intrinsic permeablility
+ * (\f$ K=10^{-13}\;m^2\f$) in the rest of the domain.
  *
- * Air enters a water-filled aquifer, which is situated 2700m below sea level, at the right boundary
- * (\f$ 5m<y<15m\f$) and migrates upwards due to buoyancy. It accumulates and
- * partially enters the lower permeable aquitard.
- * This problem uses the \ref TwoPTwoCModel.
- *
- * To run the simulation execute the following line in shell:
- * <tt>./test_2p2c -parameterFile ./test_2p2c.input</tt>
+ * Air enters a water-filled aquifer, which is situated 2700m below
+ * sea level, at the right boundary (\f$ 5m<y<15m\f$) and migrates
+ * upwards due to buoyancy. It accumulates and partially enters the
+ * lower permeable aquitard. This problem uses the \ref TwoPTwoCModel.
  */
 template <class TypeTag>
 class InjectionProblem 
@@ -188,17 +186,17 @@ class InjectionProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename HeatConductionLaw::Params HeatConductionLawParams;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
@@ -239,8 +237,8 @@ public:
         layerBottom_ = 22.0;
 
         // intrinsic permeabilities
-        fineK_ = 1e-13;
-        coarseK_ = 1e-12;
+        fineK_ = this->toTensor_(1e-13);
+        coarseK_ = this->toTensor_(1e-12);
 
         // porosities
         finePorosity_ = 0.3;
@@ -289,7 +287,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -400,59 +398,34 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
+     * \brief Evaluate the boundary conditions for a boundary segment.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values,
+                  const Context &context,
+                  int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (globalPos[0] < eps_)
-            values.setAllDirichlet();
-        else
-            values.setAllNeumann();
-    }
+        if (onLeftBoundary_(pos)) {
+            Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
 
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex for which the boundary type is set
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    { initial(values, context, spaceIdx, timeIdx); }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        RateVector massRate(0.0);
-        if (globalPos[1] < 15 && globalPos[1] > 5) {
-            massRate[contiN2EqIdx] = -1e-3; // kg/(s*m^2)
+            // impose an freeflow boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
+        else if (onInlet_(pos)) {
+            RateVector massRate(0.0);
+            massRate[contiN2EqIdx] = -1e-3; // [kg/(m^3 s)]
 
-        values = massRate;
-        //values.setMassRate(massRate);
+            // impose an outflow boundary condition
+            values.setMassRate(massRate);
+        }
+        else
+            // no flow on top and bottom
+            values.setNoFlow();
     }
-
+    
     // \}
 
     /*!
@@ -474,10 +447,23 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
+        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+
+        initialFluidState_(fs, context, spaceIdx, timeIdx);
+
+        //////
+        // set the primary variables
+        //////
+        const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
+        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
+    }
+
+private:
+    template <class Context, class FluidState>
+    void initialFluidState_(FluidState &fs, const Context &context, int spaceIdx, int timeIdx) const
+    {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
-        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
-        
         //////
         // set temperatures
         //////
@@ -493,7 +479,8 @@ public:
         // set pressures
         //////
         Scalar densityL = FluidSystem::H2O::liquidDensity(temperature_, 1e5);
-        Scalar pl = 1e5 - densityL*this->gravity()[1]*(maxDepth_ - globalPos[1]);
+        Scalar depth = maxDepth_ - globalPos[dim -1];
+        Scalar pl = 1e5 - densityL*this->gravity()[dim - 1]*depth;
 
         PhaseVector pC;
         const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
@@ -523,13 +510,16 @@ public:
                            fs.moleFraction(lPhaseIdx, H2OIdx) 
                            * FluidSystem::H2O::vaporPressure(temperature_)
                            / pg);
-
-        //////
-        // set the primary variables
-        //////
-        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
     }
 
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < eps_; }
+
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
+
+    bool onInlet_(const GlobalPosition &pos) const
+    { return onRightBoundary_(pos) && (5 < pos[1]) && (pos[1] < 15); }
 
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
     {
@@ -546,8 +536,8 @@ public:
     bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
-    Scalar fineK_;
-    Scalar coarseK_;
+    Tensor fineK_;
+    Tensor coarseK_;
     Scalar layerBottom_;
 
     Scalar finePorosity_;

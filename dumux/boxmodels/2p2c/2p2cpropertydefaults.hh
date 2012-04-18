@@ -36,6 +36,7 @@
 #include "2p2cnewtoncontroller.hh"
 #include "2p2cprimaryvariables.hh"
 #include "2p2cratevector.hh"
+#include "2p2cboundaryratevector.hh"
 #include "2p2cvolumevariables.hh"
 #include "2p2cfluxvariables.hh"
 #include "2p2cindices.hh"
@@ -127,8 +128,11 @@ SET_TYPE_PROP(BoxTwoPTwoC, BaseProblem, TwoPTwoCProblem<TypeTag>);
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, PrimaryVariables, TwoPTwoCPrimaryVariables<TypeTag>);
 
-//! the PrimaryVariables property
+//! the RateVector property
 SET_TYPE_PROP(BoxTwoPTwoC, RateVector, TwoPTwoCRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxTwoPTwoC, BoundaryRateVector, TwoPTwoCBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, VolumeVariables, TwoPTwoCVolumeVariables<TypeTag>);
@@ -138,7 +142,7 @@ SET_TYPE_PROP(BoxTwoPTwoC, FluxVariables, TwoPTwoCFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal 2p2c model
 SET_TYPE_PROP(BoxTwoPTwoC, TwoPTwoCIndices, TwoPTwoCIndices<TypeTag, /*PVIdx=*/0>);
-SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP(TypeTag, TwoPTwoCIndices));
+SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices));
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxTwoPTwoC, EnableSmoothUpwinding, false);

@@ -61,11 +61,11 @@ class TwoPTwoCPrimaryVariables
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
     typedef TwoPTwoCPrimaryVariables<TypeTag> ThisType;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-
     typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
 
     // primary variable indices
@@ -268,7 +268,7 @@ public:
     /*!
      * \brief Assignment operator
      */
-    ThisType &operator=(const ThisType &value)
+    ThisType &operator=(const PrimaryVariables &value)
     { 
         ParentType::operator=(value);
         phasePresence_ = value.phasePresence_;
@@ -330,32 +330,19 @@ public:
         phasePresence_ = 0;
         lowestPresentPhaseIdx_ = -1;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            // determine wether the phase is be present or not. There
-            // are three cases where a phase is present:
-            // 
-            // a) the current saturation is larger than 0
-            // b) the phase appeared in the current iteration and the
-            //    current saturation is smaller than the switch tolerance           
-            // c) the phase was not present in the previous iteration
-            //    but the sum of the mole fractions in the phase is
-            //    above the switch tolerance
-            if (fluidState.saturation(phaseIdx) > 0) {
+            // NCP-like condition
+            Scalar a = 1;
+            for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
+                a -= fluidState.moleFraction(phaseIdx, compIdx);
+            Scalar b = fluidState.saturation(phaseIdx);
+            
+            if (b > a) {
                 // case a)
                 phasePresence_ |= (1 << phaseIdx);
-            }
-            else {
-                // case c)
-                Scalar sumMoleFrac = 0;
-                for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
-                    sumMoleFrac += fluidState.moleFraction(phaseIdx, compIdx);
 
-                if (sumMoleFrac > 1.0) {
-                    phasePresence_ |= (1 << phaseIdx);
-                }
+                if (lowestPresentPhaseIdx_ < 0)
+                    lowestPresentPhaseIdx_ = phaseIdx;
             }
-            
-            if (lowestPresentPhaseIdx_ < 0 && phaseIsPresent(phaseIdx))
-                lowestPresentPhaseIdx_ = phaseIdx;
         }
         
         // assert that some phase is present

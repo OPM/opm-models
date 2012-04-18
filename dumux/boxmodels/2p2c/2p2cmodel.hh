@@ -200,6 +200,10 @@ public:
     void updateFailed()
     {
         ParentType::updateFailed();
+
+        auto &sol = this->solution(/*timeIdx=*/0);
+        for (int i = 0; i < sol.size(); ++i)
+            sol[i].setSwitched(false);
         numSwitched_ = 0;
     };
 
