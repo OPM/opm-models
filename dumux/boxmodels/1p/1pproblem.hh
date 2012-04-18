@@ -106,7 +106,6 @@ public:
         static MaterialLawParams matParams;
         return matParams;
     }
-
     /*!
      * \brief Return the parameters for the material law.
      */
