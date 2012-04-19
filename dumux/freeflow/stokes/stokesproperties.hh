@@ -64,6 +64,7 @@ NEW_PROP_TAG(FluidState);
 NEW_PROP_TAG(StokesPhaseIndex); //!< The index of the considered fluid phase
 NEW_PROP_TAG(StabilizationAlpha); //!< The parameter for the stabilization
 NEW_PROP_TAG(StabilizationBeta); //!< The parameter for the stabilization at boundaries
+NEW_PROP_TAG(EnableNavierStokes); //!< Returns whether Navier-Stokes should be solved instead of plain Stokes
 
 NEW_PROP_TAG(Scaling); //! Defines scaling of the model
 NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using the stokes model
