@@ -16,16 +16,21 @@ AC_DEFUN([EWOMS_CHECKS],
      DUNE_ADD_SUMMARY_ENTRY([Valgrind client requests],["no"])
   fi
 
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$ac_save_CPPFLAGS $DUNE_CPPFLAGS"
+  # switch tests to c++
+  AC_LANG_PUSH([C++])
   AC_CHECK_HEADER([dune/istl/convergencecriteria.hh], 
                   [HAVE_ISTL_FIXPOINT_CRITERION="1"],
                   AC_MSG_WARN([dune/istl/convergencecriteria.hh not found]))
+  CPPFLAGS="$ac_save_CPPFLAGS"
   AS_IF([test "$HAVE_ISTL_FIXPOINT_CRITERION" = "1"],[
     AC_DEFINE(HAVE_ISTL_FIXPOINT_CRITERION, 1, [Define whether ISTL provides pluggable convergence criteria.])
     ])
   if test "$HAVE_ISTL_FIXPOINT_CRITERION" == "1"; then
-     DUNE_ADD_SUMMARY_ENTRY([ISTL patch for pluggable convergence criteria],["yes"])
+     DUNE_ADD_SUMMARY_ENTRY([ISTL pluggable convergence criteria],["yes"])
   else
-     DUNE_ADD_SUMMARY_ENTRY([ISTL patch for pluggable convergence criteria],["no"])
+     DUNE_ADD_SUMMARY_ENTRY([ISTL pluggable convergence criteria],["no"])
   fi
 
   # whether the compiler supports the auto keyword
