@@ -58,11 +58,6 @@ SET_INT_PROP(BoxTwoP, NumEq, 2); //!< set the number of equations to 2
 SET_INT_PROP(BoxTwoP, NumPhases, 2); //!< The number of phases in the 2p model is 2
 SET_INT_PROP(BoxTwoP, NumComponents, 2);   //!< Number of chemical species in the system
 
-//! Set the default formulation to pWsN
-SET_INT_PROP(BoxTwoP,
-             Formulation,
-             TwoPCommonIndices::pwSn);
-
 //! Use the 2p local jacobian operator for the 2p model
 SET_TYPE_PROP(BoxTwoP,
               LocalResidual,
@@ -93,8 +88,8 @@ SET_TYPE_PROP(BoxTwoP, FluxVariables, TwoPFluxVariables<TypeTag>);
 SET_SCALAR_PROP(BoxTwoP, MassUpwindWeight, 1.0);
 
 //! The indices required by the isothermal 2p model
-SET_TYPE_PROP(BoxTwoP, TwoPIndices, TwoPIndices<GET_PROP_VALUE(TypeTag, Formulation), 0>);
-SET_TYPE_PROP(BoxTwoP, Indices, TwoPIndices<GET_PROP_VALUE(TypeTag, Formulation), 0>);
+SET_TYPE_PROP(BoxTwoP, TwoPIndices, TwoPIndices</*PVOffset=*/0>);
+SET_TYPE_PROP(BoxTwoP, Indices, TwoPIndices</*PVOffset=*/0>);
 
 /*!
  * \brief Set the property for the material parameters by extracting

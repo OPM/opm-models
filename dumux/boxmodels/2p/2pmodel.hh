@@ -81,7 +81,6 @@ class TwoPModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    enum { formulation = GET_PROP_VALUE(TypeTag, Formulation) };
     enum { numComponents = FluidSystem::numComponents };
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -107,16 +106,10 @@ public:
         std::ostringstream oss;
         
         if (pvIdx == Indices::pressureIdx) {
-            if (formulation==Indices::pwSn)
-                oss << "pressure_w";
-            else
-                oss << "pressure_n";
+            oss << "pressure_w";
         }
         else if (pvIdx == Indices::saturationIdx) {
-            if (formulation==Indices::pwSn)
-                oss << "saturation_n";
-            else
-                oss << "saturation_w";
+            oss << "saturation_n";
         }
         else
             assert(false);

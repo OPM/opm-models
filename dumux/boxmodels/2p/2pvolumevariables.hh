@@ -61,8 +61,7 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum {
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        formulation = GET_PROP_VALUE(TypeTag, Formulation)
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
@@ -90,33 +89,17 @@ public:
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
-        int formulation = GET_PROP_VALUE(TypeTag, Formulation);
-        if (formulation == Indices::pwSn) {
-            Scalar Sn = priVars[Indices::saturationIdx];
-            fluidState_.setSaturation(nPhaseIdx, Sn);
-            fluidState_.setSaturation(wPhaseIdx, 1 - Sn);
-
-            PhaseVector pC;
-            MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-
-            Scalar pW = priVars[Indices::pressureIdx];
-            fluidState_.setPressure(wPhaseIdx, pW);
-            fluidState_.setPressure(nPhaseIdx,
-                                   pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
-        }
-        else if (formulation == Indices::pnSw) {
-            Scalar Sw = priVars[Indices::saturationIdx];
-            fluidState_.setSaturation(wPhaseIdx, Sw);
-            fluidState_.setSaturation(nPhaseIdx, 1 - Sw);
-
-            PhaseVector pC;
-            MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-
-            Scalar pN = priVars[Indices::pressureIdx];
-            fluidState_.setPressure(nPhaseIdx, pN);
-            fluidState_.setPressure(wPhaseIdx,
-                                   pN + (pC[wPhaseIdx] - pC[nPhaseIdx]));
-        }
+        Scalar Sn = priVars[Indices::saturationIdx];
+        fluidState_.setSaturation(nPhaseIdx, Sn);
+        fluidState_.setSaturation(wPhaseIdx, 1 - Sn);
+        
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
+        
+        Scalar pW = priVars[Indices::pressureIdx];
+        fluidState_.setPressure(wPhaseIdx, pW);
+        fluidState_.setPressure(nPhaseIdx,
+                                pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;

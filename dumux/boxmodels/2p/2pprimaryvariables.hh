@@ -68,11 +68,6 @@ class TwoPPrimaryVariables
     enum { saturationIdx = Indices::saturationIdx };
 
     enum {
-        formulation = GET_PROP_VALUE(TypeTag, Formulation),
-        
-        pwSn = Indices::pwSn,
-        pnSw = Indices::pnSw,
-
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx
     };
@@ -220,18 +215,8 @@ public:
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
         
-        if (formulation == pwSn) {
-            (*this)[pressureIdx] = fluidState.pressure(wPhaseIdx);
-            (*this)[saturationIdx] = fluidState.saturation(nPhaseIdx);
-        }
-        else if (formulation == pnSw) {
-            (*this)[pressureIdx] = fluidState.pressure(nPhaseIdx);
-            (*this)[saturationIdx] = fluidState.saturation(wPhaseIdx);
-        }
-        else {
-            // invalid formulation
-            assert(false);
-        }
+        (*this)[pressureIdx] = fluidState.pressure(wPhaseIdx);
+        (*this)[saturationIdx] = fluidState.saturation(nPhaseIdx);
     }
 };
 
