@@ -76,8 +76,8 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename SpatialParameters::MaterialLaw MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
+    typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
@@ -120,7 +120,7 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
 
     // convenience shortcuts for Vectors/Matrices
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
+    typedef Dune::FieldMatrix<Scalar, dim, dim> DimMatrix;
     typedef Dune::FieldVector<Scalar, 2> PhaseVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
@@ -418,7 +418,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
 //    int globalIdxI = problem().variables().index(*elementPointerI);
 
     // get absolute permeability
-    FieldMatrix permeabilityI(problem().spatialParameters().intrinsicPermeability(*elementPointerI));
+    DimMatrix permeabilityI(problem().spatialParams().intrinsicPermeability(*elementPointerI));
 
     // get normal vector
     const GlobalPosition& unitOuterNormal = intersection.centerUnitOuterNormal();
@@ -443,11 +443,11 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
         GlobalPosition unitDistVec(distVec);
         unitDistVec /= dist;
 
-        FieldMatrix permeabilityJ
-            = problem().spatialParameters().intrinsicPermeability(*neighborPointer);
+        DimMatrix permeabilityJ
+            = problem().spatialParams().intrinsicPermeability(*neighborPointer);
 
         // compute vectorized permeabilities
-        FieldMatrix meanPermeability(0);
+        DimMatrix meanPermeability(0);
         Dumux::harmonicMeanMatrix(meanPermeability, permeabilityI, permeabilityJ);
 
         Dune::FieldVector<Scalar, dim> permeability(0);
@@ -522,7 +522,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFluxOnBoundary(Dune::FieldVector<
                 if (bcType.isDirichlet(Indices::pressureEqIdx))
                 {
                     // get absolute permeability
-                    FieldMatrix permeabilityI(problem().spatialParameters().intrinsicPermeability(*elementPointerI));
+                    DimMatrix permeabilityI(problem().spatialParams().intrinsicPermeability(*elementPointerI));
                     // get mobilities and fractional flow factors
                     Scalar lambdaI = cellDataI.mobility(phaseIdx);
 
@@ -566,11 +566,11 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFluxOnBoundary(Dune::FieldVector<
                             {
                             if (phaseIdx == wPhaseIdx)
                                 lambdaBound = MaterialLaw::krw(
-                                    problem().spatialParameters().materialLawParams(*elementPointerI), BCfluidState.saturation(wPhaseIdx))
+                                    problem().spatialParams().materialLawParams(*elementPointerI), BCfluidState.saturation(wPhaseIdx))
                                     / viscosityBound;
                             else
                                 lambdaBound = MaterialLaw::krn(
-                                    problem().spatialParameters().materialLawParams(*elementPointerI), BCfluidState.saturation(wPhaseIdx))
+                                    problem().spatialParams().materialLawParams(*elementPointerI), BCfluidState.saturation(wPhaseIdx))
                                     / viscosityBound;
                             break;
                             }
@@ -739,11 +739,11 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
             // initialize mobilities
             if(presentPhaseIdx == wPhaseIdx)
                 cellData.setMobility(wPhaseIdx,
-                    MaterialLaw::krw(problem().spatialParameters().materialLawParams(*eIt), pseudoFluidState.saturation(wPhaseIdx))
+                    MaterialLaw::krw(problem().spatialParams().materialLawParams(*eIt), pseudoFluidState.saturation(wPhaseIdx))
                         / cellData.viscosity(wPhaseIdx));
             else
                 cellData.setMobility(nPhaseIdx,
-                    MaterialLaw::krn(problem().spatialParameters().materialLawParams(*eIt), pseudoFluidState.saturation(wPhaseIdx))
+                    MaterialLaw::krn(problem().spatialParams().materialLawParams(*eIt), pseudoFluidState.saturation(wPhaseIdx))
                         / cellData.viscosity(nPhaseIdx));
 
             // error term handling
@@ -751,7 +751,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
             vol = sumConc / pseudoFluidState.density(presentPhaseIdx);
 
             if (dt != 0)
-                cellData.volumeError() = (vol - problem().spatialParameters().porosity(*eIt));
+                cellData.volumeError() = (vol - problem().spatialParams().porosity(*eIt));
 
 
         }

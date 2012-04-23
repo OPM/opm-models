@@ -451,7 +451,7 @@ public:
     /*!
      * \brief Sets the current time step size [seconds].
      */
-    void setTimeStepSize(Scalar dt)
+    void setTimeStepSize(const Scalar dt)
     { timeManager().setTimeStepSize(dt); }
 
     /*!
@@ -459,7 +459,7 @@ public:
      *        timestep has been computed and the simulation time has
      *        been updated.
      */
-    Scalar nextTimeStepSize(Scalar dt)
+    Scalar nextTimeStepSize(const Scalar dt)
     { return timeManager().timeStepSize();}
 
     /*!
@@ -490,7 +490,7 @@ public:
      *
      * The default is 0.0 -> Output determined by output number interval (<tt>setOutputInterval(int)</tt>)
      */
-    void setOutputTimeInterval(Scalar timeInterval)
+    void setOutputTimeInterval(const Scalar timeInterval)
     {
         outputTimeInterval_ = timeInterval;
         timeManager().startNextEpisode(outputTimeInterval_);
@@ -501,7 +501,7 @@ public:
      *
      * The default is 1 -> Output every time step
      */
-    void setOutputInterval(int interval)
+    void setOutputInterval(const int interval)
     {
         outputInterval_ = std::max(interval, 0);
     }
@@ -752,7 +752,7 @@ public:
      * It is the inverse of the serialize() method.
      * @param tRestart Restart time
      */
-    void restart(double tRestart)
+    void restart(const double tRestart)
     {
         typedef Dumux::Restart Restarter;
 
