@@ -227,6 +227,10 @@ public:
     void updateFailed()
     {
         ParentType::updateFailed();
+
+        auto &sol = this->solution(/*timeIdx=*/0);
+        for (int i = 0; i < sol.size(); ++i)
+            sol[i].setSwitched(false);
         numSwitched_ = 0;
     };
 
@@ -363,8 +367,7 @@ public:
         // make sure that if there was a variable switch in an
         // other partition we will also set the switch flag
         // for our partition.
-        if (this->gridView_().comm().size() > 1)
-            numSwitched_ = this->gridView_().comm().sum(numSwitched_);
+        numSwitched_ = this->gridView_().comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
             this->problem_().newtonController().endIterMsg() << ", num switched=" << numSwitched_;
@@ -530,10 +533,7 @@ protected:
             Scalar xww = fs.moleFraction(wPhaseIdx, wCompIdx);
             Scalar xwa = fs.moleFraction(wPhaseIdx, aCompIdx);
             Scalar xwc = fs.moleFraction(wPhaseIdx, cCompIdx);
-            /*
-              take care:, xww, if no water is present, then take xww=xwg*pg/pwsat .
-              If this is larger than 1, then water appears
-            */
+
             Scalar xwMax = 1.0;
             if (priVars.wasSwitched())
                 xwMax *= 1.02;

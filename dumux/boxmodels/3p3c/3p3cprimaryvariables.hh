@@ -55,6 +55,7 @@ class ThreePThreeCPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
@@ -195,7 +196,7 @@ public:
         // run the flash calculation
         //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);       
         NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
-        
+       
         // use the result to assign the primary variables
         assignNaive(fsFlash);
     }
@@ -251,7 +252,7 @@ public:
     /*!
      * \brief Assignment operator
      */
-    ThisType &operator=(const ThisType &value)
+    ThisType &operator=(const Implementation &value)
     { 
         Valgrind::SetDefined(*this);
 
@@ -284,11 +285,6 @@ public:
     template <class FluidState> 
     void assignNaive(const FluidState &fluidState)
     {
-        Scalar switchTol = 0.0;
-        if (wasSwitched()) {
-            switchTol = 0.02;
-        }
-
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
@@ -297,45 +293,53 @@ public:
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
         Valgrind::CheckDefined((*this)[pressure0Idx]);
 
-        updatePhasePresence_(fluidState);
+        determinePhasePresence_(fluidState);
 
         // set the pressure
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
 
-        if (phasePresence == Indices::threePhases) {
+        if (phasePresence_ == Indices::threePhases) {
             (*this)[switch1Idx] = fluidState.saturation(wPhaseIdx);
             (*this)[switch2Idx] = fluidState.saturation(nPhaseIdx);
         }
-        else if (phasePresence == Indices::wPhaseOnly) {
+        else if (phasePresence_ == Indices::wPhaseOnly) {
             (*this)[switch1Idx] = fluidState.moleFraction(wPhaseIdx, aCompIdx);
             (*this)[switch2Idx] = fluidState.moleFraction(wPhaseIdx, cCompIdx);
         }
-        else if (phasePresence == Indices::gnPhaseOnly) {
+        else if (phasePresence_ == Indices::gnPhaseOnly) {
             (*this)[switch1Idx] = fluidState.moleFraction(gPhaseIdx, wCompIdx);
             (*this)[switch2Idx] = fluidState.saturation(nPhaseIdx);
         }
-        else if (phasePresence == Indices::wnPhaseOnly) {
+        else if (phasePresence_ == Indices::wnPhaseOnly) {
             (*this)[switch1Idx] = fluidState.moleFraction(wPhaseIdx, aCompIdx);
             (*this)[switch2Idx] = fluidState.saturation(nPhaseIdx);
         }
-        else if (phasePresence == Indices::gPhaseOnly) {
+        else if (phasePresence_ == Indices::gPhaseOnly) {
             (*this)[switch1Idx] = fluidState.moleFraction(gPhaseIdx, wCompIdx);
             (*this)[switch2Idx] = fluidState.moleFraction(gPhaseIdx, cCompIdx);
         }
-        else if (phasePresence == Indices::wgPhaseOnly) {
+        else if (phasePresence_ == Indices::wgPhaseOnly) {
             (*this)[switch1Idx] = fluidState.saturation(wPhaseIdx);
             (*this)[switch2Idx] = fluidState.moleFraction(gPhaseIdx, cCompIdx);
         }
+        else
+            assert(false);
     }
            
 protected:
     template <class FluidState> 
-    void updatePhasePresence_(const FluidState &fluidState)
+    void determinePhasePresence_(const FluidState &fluidState)
     {
         // determine the phase presence.
         phasePresence_ = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            if (fluidState.saturation(phaseIdx) > 0) {
+            // NCP-like condition
+            Scalar a = 1;
+            for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
+                a -= fluidState.moleFraction(phaseIdx, compIdx);
+            Scalar b = fluidState.saturation(phaseIdx);
+            
+            if (b > a) {
                 phasePresence_ |= (1 << phaseIdx);
             }
         }

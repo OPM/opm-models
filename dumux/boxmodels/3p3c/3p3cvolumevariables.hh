@@ -2,8 +2,8 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2011-2012 by Holger Class                                 *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -59,6 +59,8 @@ class ThreePThreeCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     // constraint solvers
@@ -67,7 +69,6 @@ class ThreePThreeCVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
     enum {
-
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
@@ -429,6 +430,30 @@ public:
      */
     Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
     { return diffusionCoefficient_[phaseIdx][compIdx]; }
+
+    /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {}                                    
+    
+    /*!
+     * \brief Set the enthalpy rate per second of a rate vector, .
+     */
+    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    { }
+
+    /*!
+     * \brief Given a fluid state, set the enthalpy rate which emerges
+     *        from a volumetric rate.
+     */
+    template <class FluidState>
+    static void setEnthalpyRate(RateVector &v,
+                                const FluidState &fluidState, 
+                                int phaseIdx, 
+                                Scalar volume)
+    { }
 
 protected:
     static void updateTemperature_(FluidState &fs, const ElementContext &elemCtx, int spaceIdx, int timeIdx)

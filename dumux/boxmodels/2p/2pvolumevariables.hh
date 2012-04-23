@@ -172,8 +172,7 @@ public:
      * \brief Set the enthalpy rate per second of a rate vector, .
      */
     static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    {
-    }
+    { }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges

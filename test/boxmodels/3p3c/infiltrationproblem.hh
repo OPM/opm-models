@@ -69,7 +69,7 @@ SET_BOOL_PROP(InfiltrationProblem, NewtonWriteConvergence, false);
 SET_SCALAR_PROP(InfiltrationProblem, NewtonRelTolerance, 1e-8);
 
 // -1 backward differences, 0: central differences, +1: forward differences
-SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, 0);
+SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, 1);
 
 // Set the material Law
 SET_PROP(InfiltrationProblem, MaterialLaw)
@@ -146,25 +146,42 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
     enum {
+        // primary variable indices
         pressure0Idx = Indices::pressure0Idx,
         switch1Idx = Indices::switch1Idx,
         switch2Idx = Indices::switch2Idx,
 
-        // Phase State
+        // equation indices
+        conti0EqIdx = Indices::conti0EqIdx,
+        
+        // number of phases/components
+        numPhases = FluidSystem::numPhases,
+
+        // component indices
+        cCompIdx = FluidSystem::cCompIdx,
+        wCompIdx = FluidSystem::wCompIdx,
+        aCompIdx = FluidSystem::aCompIdx,
+
+        // phase indices
+        wPhaseIdx = FluidSystem::wPhaseIdx,
+        gPhaseIdx = FluidSystem::gPhaseIdx,
+        nPhaseIdx = FluidSystem::nPhaseIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
-
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     /*!
@@ -187,8 +204,8 @@ public:
                           /*nPress=*/200);
 
         // intrinsic permeabilities
-        fineK_ = 1.e-11;
-        coarseK_ = 1.e-11;
+        fineK_ = this->toTensor_(1e-11);
+        coarseK_ = this->toTensor_(1e-11);
 
         // porosities
         porosity_ = 0.40;
@@ -236,7 +253,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -306,10 +323,6 @@ public:
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return temperature_; }
 
-    template <class Context>
-    void source(RateVector &values, const Context &context, int spaceIdx, int timeIdx) const
-    { values = 0; }
-
     // \}
 
     /*!
@@ -318,99 +331,29 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
+     * \brief Evaluate the boundary conditions.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, 
-                       const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if(globalPos[0] > 500. - eps_)
-            values.setAllDirichlet();
-        else if(globalPos[0] < eps_)
-            values.setAllDirichlet();
+        if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
+            CompositionalFluidState<Scalar, FluidSystem> fs;
+
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+            
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else if (onInlet_(pos)) {
+            RateVector molarRate(0.0);
+            molarRate[conti0EqIdx + cCompIdx] = -0.001;
+            
+            values.setMolarRate(molarRate);
+            Valgrind::CheckDefined(values);
+        }
         else
-            values.setAllNeumann();
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex for which the boundary type is set
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
-
-        Scalar y = globalPos[1];
-        Scalar x = globalPos[0];
-        Scalar Sw;
-        Scalar Swr=0.12;
-        Scalar Sgr=0.03;
-
-        values = 0.0;
-        if (y >(-1.E-3*x+5)) {
-            Scalar pc = 9.81 * 1000.0 * (y - (5 - 5e-4*x));
-            if (pc < 0.0) pc = 0.0;
-
-            Sw = invertPCGW_(pc, materialLawParams(context, spaceIdx, timeIdx));
-            if (Sw < Swr) Sw = Swr;
-            if (Sw > 1.-Sgr) Sw = 1.-Sgr;
-
-            values[pressure0Idx] = 1e5 ;
-            values[switch1Idx] = Sw;
-            values[switch2Idx] = 1.e-6;
-
-            values.setPhasePresent(FluidSystem::gPhaseIdx);
-            values.setPhasePresent(FluidSystem::wPhaseIdx);
-
-            Valgrind::CheckDefined(values);
-        } 
-        else {
-            values[pressure0Idx] = 1e5 + 9.81 * 1000.0 * ((-5E-4*x+5) - y);
-            values[switch1Idx] = 1.-Sgr;
-            values[switch2Idx] = 1.e-6;
-
-            values.setPhasePresent(FluidSystem::gPhaseIdx);
-            values.setPhasePresent(FluidSystem::wPhaseIdx);
-
-            Valgrind::CheckDefined(values);
-        }
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        values = 0;
-
-        // negative values for injection
-        if ((globalPos[0] <= 75.+eps_) && (globalPos[0] >= 50.+eps_) && (globalPos[1] >= 10.-eps_))
-        {
-            values[Indices::contiWEqIdx] = -0.0;
-            values[Indices::contiCEqIdx] = -0.001;
-            values[Indices::contiAEqIdx] = -0.0;
-            Valgrind::CheckDefined(values);
-        }
+            values.setNoFlow();
     }
 
     // \}
@@ -434,47 +377,90 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        Scalar y = globalPos[1];
-        Scalar x = globalPos[0];
-        Scalar Sw;
-        Scalar Swr=0.12;
-        Scalar Sgr=0.03;
-
-        values = 0.0;
-        if (y > -eps_*x + 5)
-        {
-            Scalar pc = 9.81 * 1000.0 * (y - (-5E-4*x+5));
-            if (pc < 0.0) pc = 0.0;
-
-            Sw = invertPCGW_(pc,
-                             materialLawParams(context, spaceIdx, timeIdx));
-            Valgrind::CheckDefined(Sw);
-            if (Sw < Swr) Sw = Swr;
-            if (Sw > 1.-Sgr) Sw = 1.-Sgr;
-
-            values[pressure0Idx] = 1e5 ;
-            values[switch1Idx] = Sw;
-            values[switch2Idx] = 1.e-6;
-
-            values.setPhasePresent(FluidSystem::gPhaseIdx);
-            values.setPhasePresent(FluidSystem::wPhaseIdx);
-            Valgrind::CheckDefined(values);
-        } else {
-            values[pressure0Idx] = 1e5 + 9.81 * 1000.0 * ((5 - x*5e-4) - y);
-            Valgrind::CheckDefined(values[pressure0Idx]);
-            Valgrind::CheckDefined(Sgr);
-            values[switch1Idx] = 1.0 - Sgr;
-            values[switch2Idx] = 1.0e-6;
-
-            values.setPhasePresent(FluidSystem::gPhaseIdx);
-            values.setPhasePresent(FluidSystem::wPhaseIdx);
-            Valgrind::CheckDefined(values);
-        }
+        CompositionalFluidState<Scalar, FluidSystem> fs;
+        
+        initialFluidState_(fs, context, spaceIdx, timeIdx);
+        
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
+        Valgrind::CheckDefined(values);
     }
 
+    template <class Context>
+    void source(RateVector &values, const Context &context, int spaceIdx, int timeIdx) const
+    { values = 0; }
+
+    // \}
+
 private:
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < eps_; }
+
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
+
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < eps_; }
+
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
+
+    bool onInlet_(const GlobalPosition &pos) const
+    { return onUpperBoundary_(pos) && 50 < pos[0] && pos[0] < 75; }
+    
+    template <class FluidState, class Context>
+    void initialFluidState_(FluidState &fs, const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition pos = context.pos(spaceIdx, timeIdx);
+        Scalar y = pos[1];
+        Scalar x = pos[0];
+
+        Scalar densityW = 1000.0;
+        Scalar pc = 9.81 * densityW * (y - (5 - 5e-4*x));
+        if (pc < 0.0) pc = 0.0;
+
+        // set pressures
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        Scalar Sw = invertPCGW_(pc, matParams);
+        Scalar Swr = matParams.satResidual(wPhaseIdx);
+        Scalar Sgr = matParams.satResidual(gPhaseIdx);
+        if (Sw < Swr)
+            Sw = Swr;
+        if (Sw > 1 - Sgr)
+            Sw = 1 - Sgr;
+        Scalar Sg = 1 - Sw;
+
+        Valgrind::CheckDefined(Sw);
+        Valgrind::CheckDefined(Sg);
+
+        fs.setSaturation(wPhaseIdx, Sw);
+        fs.setSaturation(gPhaseIdx, Sg);
+        fs.setSaturation(nPhaseIdx, 0);
+
+        // set temperature of all phases
+        fs.setTemperature(temperature_);
+
+        // compute pressures
+        Scalar pcAll[numPhases];
+        Scalar pg = 1e5;
+        MaterialLaw::capillaryPressures(pcAll, matParams, fs);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+            fs.setPressure(phaseIdx, pg + (pcAll[phaseIdx] - pcAll[gPhaseIdx]));
+
+        // set composition of gas phase
+        fs.setMoleFraction(gPhaseIdx, wCompIdx, 1e-6);
+        fs.setMoleFraction(gPhaseIdx, aCompIdx, 1 - fs.moleFraction(gPhaseIdx, wCompIdx));
+        fs.setMoleFraction(gPhaseIdx, cCompIdx, 0);
+
+        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typename FluidSystem::ParameterCache paramCache;
+        CFRP::solve(fs, 
+                    paramCache,
+                    gPhaseIdx,
+                    /*setViscosity=*/false,
+                    /*setEnthalpy=*/false);
+    }
+
     static Scalar invertPCGW_(Scalar pcIn, const MaterialLawParams &pcParams)
     {
         Scalar lower,upper;
@@ -509,8 +495,8 @@ private:
             7.0 <= pos[1] && pos[1] <= 7.50;
     };
 
-    Scalar fineK_;
-    Scalar coarseK_;
+    Tensor fineK_;
+    Tensor coarseK_;
 
     Scalar porosity_;
 

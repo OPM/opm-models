@@ -39,6 +39,7 @@
 #include "3p3cnewtoncontroller.hh"
 #include "3p3cprimaryvariables.hh"
 #include "3p3cratevector.hh"
+#include "3p3cboundaryratevector.hh"
 #include "3p3cfluxvariables.hh"
 #include "3p3cvolumevariables.hh"
 #include "3p3cindices.hh"
@@ -128,8 +129,11 @@ SET_TYPE_PROP(BoxThreePThreeC, BaseProblem, ThreePThreeCProblem<TypeTag>);
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxThreePThreeC, PrimaryVariables, ThreePThreeCPrimaryVariables<TypeTag>);
 
-//! the PrimaryVariables property
+//! the RateVector property
 SET_TYPE_PROP(BoxThreePThreeC, RateVector, ThreePThreeCRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxThreePThreeC, BoundaryRateVector, ThreePThreeCBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxThreePThreeC, VolumeVariables, ThreePThreeCVolumeVariables<TypeTag>);
@@ -139,7 +143,7 @@ SET_TYPE_PROP(BoxThreePThreeC, FluxVariables, ThreePThreeCFluxVariables<TypeTag>
 
 //! The indices required by the isothermal 3p3c model
 SET_TYPE_PROP(BoxThreePThreeC, ThreePThreeCIndices, ThreePThreeCIndices<TypeTag, /*PVOffset=*/0>);
-SET_TYPE_PROP(BoxThreePThreeC, Indices, typename GET_PROP(TypeTag, ThreePThreeCIndices));
+SET_TYPE_PROP(BoxThreePThreeC, Indices, typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices));
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxThreePThreeC, EnableSmoothUpwinding, false);

@@ -73,6 +73,7 @@ public:
 
     // equation indices
     static const int conti0EqIdx = PVOffset; //!< Index of the mass conservation equation for the first component
+
     static const int contiWEqIdx = conti0EqIdx + wCompIdx; //!< Index of the mass conservation equation for the water component
     static const int contiCEqIdx = conti0EqIdx + cCompIdx; //!< Index of the mass conservation equation for the contaminant component
     static const int contiAEqIdx = conti0EqIdx + aCompIdx; //!< Index of the mass conservation equation for the air component

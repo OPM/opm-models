@@ -51,9 +51,10 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum
-    {
+    enum {
         dim = GridView::dimension,
 
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
@@ -61,9 +62,6 @@ protected:
 
         conti0EqIdx = Indices::conti0EqIdx
     };
-
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     /*!
@@ -87,8 +85,8 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] +=
-                    fs.density(phaseIdx)
-                    * fs.massFraction(phaseIdx, compIdx)
+                    fs.molarDensity(phaseIdx)
+                    * fs.moleFraction(phaseIdx, compIdx)
                     * fs.saturation(phaseIdx)
                     * volVars.porosity()
                     * volVars.extrusionFactor()
@@ -124,9 +122,9 @@ public:
             {
                 int eqIdx = conti0EqIdx + compIdx;
                 storage[eqIdx] +=
-                    fs.density(phaseIdx)
+                    fs.molarDensity(phaseIdx)
                     * fs.saturation(phaseIdx)
-                    * fs.massFraction(phaseIdx, compIdx);
+                    * fs.moleFraction(phaseIdx, compIdx);
             }
         }
         storage *= volVars.porosity();
@@ -181,12 +179,12 @@ public:
                 flux[eqIdx] +=
                     fluxVars.filterVelocityNormal(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.fluidState().density(phaseIdx)
-                      * up.fluidState().massFraction(phaseIdx, compIdx)
+                      * up.fluidState().molarDensity(phaseIdx)
+                      * up.fluidState().moleFraction(phaseIdx, compIdx)
                       +
                       fluxVars.downstreamWeight(phaseIdx)
-                      * dn.fluidState().density(phaseIdx)
-                      * dn.fluidState().massFraction(phaseIdx, compIdx));
+                      * dn.fluidState().molarDensity(phaseIdx)
+                      * dn.fluidState().moleFraction(phaseIdx, compIdx));
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
@@ -206,6 +204,9 @@ public:
                               int scvfIdx,
                               int timeIdx) const
     {
+#warning "TODO: molecular diffusion"
+        return;
+
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
 
