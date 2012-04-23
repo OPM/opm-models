@@ -22,8 +22,8 @@
 /*!
  * \file
  *
- * \brief Provides a linear solver for the stabilized BiCG method with
- *        an ILU-0 preconditioner.
+ * \brief Provides the linear solvers for the vertex-centered finite
+ *        volume ("box") method.
  */
 #ifndef DUMUX_BOXLINEARSOLVER_HH
 #define DUMUX_BOXLINEARSOLVER_HH
@@ -55,8 +55,8 @@ NEW_PROP_TAG(GridView);
 
 /*!
  * \ingroup Linear
- * \brief Provides a linear solver for the stabilized BiCG method with
- *        an ILU-0 preconditioner.
+ * \brief The base class of the linear solvers for the vertex-centered
+ *        finite volume ("box") method.
  *
  * This solver's intention is to be used in conjunction with the box
  * method, so it assumes that the vertices are the only DOFs.
@@ -454,7 +454,13 @@ class BoxCGILU0Solver : public BoxLinearSolver<TypeTag>
     typedef Dumux::OverlappingBlockVector<typename Vector::block_type, Overlap> OverlappingVector;
     typedef Dune::SeqILU0<OverlappingMatrix, OverlappingVector, OverlappingVector> SeqPreconditioner;
     typedef PrecNoIterBackend<TypeTag, SeqPreconditioner> PrecBackend;
+#if HAVE_ISTL_FIXPOINT_CRITERION
+    //typedef Dune::ResidReductionCriterion<OverlappingVector> ConvergenceCrit;
+    typedef Dune::FixPointCriterion<OverlappingVector> ConvergenceCrit;
+    typedef Dune::CGSolver<OverlappingVector, ConvergenceCrit> Solver;
+#else
     typedef Dune::CGSolver<OverlappingVector> Solver;
+#endif
     typedef StandardSolverBackend<TypeTag, Solver> SolverBackend;
 
 public:

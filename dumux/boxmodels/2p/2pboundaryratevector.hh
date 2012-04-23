@@ -45,8 +45,10 @@ template <class TypeTag>
 class TwoPBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -110,12 +112,15 @@ public:
             (*this)[conti0EqIdx + phaseIdx] +=
                 fluxVars.filterVelocityNormal(phaseIdx)
                 * density;
+            
+            asImp_().enthalpyFlux_(fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);
         }
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {
             Valgrind::CheckDefined((*this)[i]);
         };
+        Valgrind::CheckDefined(*this);
 #endif
     }
 
@@ -162,6 +167,20 @@ public:
      */
     void setNoFlow()
     { (*this) = 0.0; };
+
+protected:
+    Implementation &asImp_() 
+    { return *static_cast<Implementation *>(this); }
+
+    template <class FluidState>
+    void enthalpyFlux_(const FluxVariables &fluxVars,
+                       const VolumeVariables &insideVolVars,
+                       const FluidState &fs,
+                       const typename FluidSystem::ParameterCache &paramCache,
+                       int phaseIdx,
+                       Scalar density)
+    { }
+
 };
 
 } // end namepace

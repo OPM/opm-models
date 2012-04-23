@@ -40,6 +40,7 @@
 #include "2pnilocalresidual.hh"
 #include "2pnivolumevariables.hh"
 #include "2pnifluxvariables.hh"
+#include "2pniboundaryratevector.hh"
 #include "2pniindices.hh"
 
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
@@ -80,6 +81,9 @@ SET_TYPE_PROP(BoxTwoPNI,
 //! The indices required by the non-isothermal two-phase model
 SET_TYPE_PROP(BoxTwoPNI, TwoPNIIndices, TwoPNIIndices<0>);
 SET_TYPE_PROP(BoxTwoPNI, Indices, TwoPNIIndices<0>);
+
+//! The boundary rate vector for the 2pni model.
+SET_TYPE_PROP(BoxTwoPNI, BoundaryRateVector, TwoPNIBoundaryRateVector<TypeTag>);
 
 }
 }

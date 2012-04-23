@@ -41,8 +41,6 @@
 
 #include <dune/common/fvector.hh>
 
-#define ISOTHERMAL 0
-
 namespace Dumux {
 
 template <class TypeTag>
@@ -50,11 +48,7 @@ class InjectionProblem2PNI;
 
 namespace Properties
 {
-#if !ISOTHERMAL
 NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoPNI));
-#else
-NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoP));
-#endif
 
 // declare the properties specific for the non-isothermal immiscible
 // injection problem
@@ -68,23 +62,25 @@ NEW_PROP_TAG(FluidSystemPressureLow);
 NEW_PROP_TAG(FluidSystemPressureHigh);
 
 // Set the grid type
-SET_PROP(InjectionProblem2PNI, Grid)
-{
-    typedef Dune::YaspGrid<2> type;
-};
+SET_TYPE_PROP(InjectionProblem2PNI, 
+              Grid,
+              Dune::YaspGrid<2>);
 
 // set the GridCreator property
-SET_TYPE_PROP(InjectionProblem2PNI, GridCreator, CubeGridCreator<TypeTag>);
+SET_TYPE_PROP(InjectionProblem2PNI,
+              GridCreator,
+              CubeGridCreator<TypeTag>);
 
 // Set the problem property
-SET_PROP(InjectionProblem2PNI, Problem)
-{
-    typedef Dumux::InjectionProblem2PNI<TypeTag> type;
-};
+SET_TYPE_PROP(InjectionProblem2PNI,
+              Problem,
+              Dumux::InjectionProblem2PNI<TypeTag>);
 
 #if 1
 // Use the same fluid system as the 2p2c injection problem
-SET_TYPE_PROP(InjectionProblem2PNI, FluidSystem, FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar), false>);
+SET_TYPE_PROP(InjectionProblem2PNI,
+              FluidSystem,
+              FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar), false>);
 #else
 // Set the wetting phase
 SET_PROP(InjectionProblem2PNI, WettingPhase)
@@ -141,6 +137,8 @@ SET_BOOL_PROP(InjectionProblem2PNI, EnableGravity, true);
 // write convergence behaviour to disk?
 SET_BOOL_PROP(InjectionProblem2PNI, NewtonWriteConvergence, false);
 
+//SET_TYPE_PROP(InjectionProblem2PNI, LinearSolver, SuperLUBackend<TypeTag>);
+
 // define the properties specific for the non-isothermal immiscible
 // injection problem
 SET_SCALAR_PROP(InjectionProblem2PNI, GridSizeX, 60.0);
@@ -153,11 +151,11 @@ SET_INT_PROP(InjectionProblem2PNI, GridCellsZ, 0);
 SET_SCALAR_PROP(InjectionProblem2PNI, MaxDepth, 2700);
 
 SET_INT_PROP(InjectionProblem2PNI, FluidSystemNumTemperature, 100);
-SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureLow, 300.0);
-SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureHigh, 400.0);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureLow, 290.0);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemTemperatureHigh, 500.0);
 SET_INT_PROP(InjectionProblem2PNI, FluidSystemNumPressure, 200);
-SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureLow, 1e5);
-SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureHigh, 1e7);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureLow, 2e7);
+SET_SCALAR_PROP(InjectionProblem2PNI, FluidSystemPressureHigh, 3e7);
 }
 
 /*!
@@ -196,18 +194,24 @@ class InjectionProblem2PNI
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename HeatConductionLaw::Params HeatConductionLawParams;
 
-#if ISOTHERMAL
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
-#else
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPNIIndices) Indices;
-#endif
     enum {
-        pressureIdx = Indices::pressureIdx,
-        saturationIdx = Indices::saturationIdx,
+        numPhases = FluidSystem::numPhases,
+
+        SnIdx = Indices::SnIdx,
+        pwIdx = Indices::pwIdx,
         conti0EqIdx = Indices::conti0EqIdx,
 
         wPhaseIdx = Indices::wPhaseIdx,
@@ -215,28 +219,17 @@ class InjectionProblem2PNI
 
         contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
-#if !ISOTHERMAL
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
-#endif
 
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
-    typedef typename HeatConductionLaw::Params HeatConductionLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+
 
 public:
     /*!
@@ -264,8 +257,8 @@ public:
         layerBottom_ = 22.0;
 
         // intrinsic permeabilities
-        fineK_ = 1e-13;
-        coarseK_ = 1e-12;
+        fineK_ = this->toTensor_(1e-13);
+        coarseK_ = this->toTensor_(1e-12);
 
         // porosities
         finePorosity_ = 0.3;
@@ -297,7 +290,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -385,29 +378,10 @@ public:
     const char *name() const
     { return "injection2pni"; }
 
-#if ISOTHERMAL
-    /*!
-     * \brief Returns the temperature within the domain.
-     *
-     * \param element The element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index (SCV index)
-     *
-     * This problem assumes a temperature of 10 degrees Celsius.
-     */
-    template <class Context>
-    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        return 273.15 + 40; // [K]
-    };
-#endif
-
     template <class Context>
     void source(RateVector &values,
                 const Context &context, int spaceIdx, int timeIdx) const
-    {
-        values = 0;
-    }
+    { values = 0; }
 
     // \}
 
@@ -417,77 +391,37 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex for which the boundary type is set
+     * \brief Evaluate the boundary conditions.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
-        if (globalPos[0] < eps_)
-            values.setAllDirichlet();
-        else
-            values.setAllNeumann();
-
-#if !ISOTHERMAL
-        // set a dirichlet value for the temperature, use the energy
-        // equation to set the value
-        values.setDirichlet(temperatureIdx, energyEqIdx);
-#endif
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex for which the boundary type is set
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        Scalar densityW = 1000.0;
-        values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
-        values[saturationIdx] = 0.0;
-#if !ISOTHERMAL
-        values[temperatureIdx] = 283.0 + (maxDepth_ - globalPos[1])*0.03;
-#endif
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * \param values The neumann values for the conservation equations
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param is The intersection between element and boundary
-     * \param scvIdx The local vertex index
-     * \param boundaryFaceIdx The index of the boundary face
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        values = 0;
-        if (globalPos[1] < 15 && globalPos[1] > 5) {
+        if (onInlet_(pos)) {
+            RateVector massRate(0.0);
+            
             // inject air. negative values mean injection
-            values[contiNEqIdx] = -1e-3; // kg/(s*m^2)
+            massRate[contiNEqIdx] = -1e-3; // kg/(s m^2)
+                       
+            // calculate the rate of enthalpy inflow
+            Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;          
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+
+            values.setMassRate(massRate);
+            values.setEnthalpyRate(massRate[contiNEqIdx]
+                                   * fs.enthalpy(nPhaseIdx));
+           
         }
+        else if (onLeftBoundary_(pos)) {
+            Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+            initialFluidState_(fs, context, spaceIdx, timeIdx);
+
+            // impose a free flow (Dirichlet) boundary condition
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else
+            values.setNoFlow();
     }
 
     // \}
@@ -512,21 +446,34 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        Scalar densityW = 1000.0;
-        values[pressureIdx] = 1e5 + (maxDepth_ - globalPos[1])*densityW*9.81;
-        values[saturationIdx] = 0.0;
-
-#if !ISOTHERMAL
-        values[temperatureIdx] = 283.0 + (maxDepth_ - globalPos[1])*0.03;
-        if (globalPos[0] > 20 && globalPos[0] < 30 && globalPos[1] > 5 && globalPos[1] < 35)
-            values[temperatureIdx] = 380;
-#endif // !ISOTHERMAL
+        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        
+        initialFluidState_(fs, context, spaceIdx, timeIdx);
+        values[pwIdx] = fs.pressure(wPhaseIdx);
+        values[SnIdx] = fs.saturation(nPhaseIdx);
+        values[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
     }
     // \}
 
 private:
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < eps_; }
+
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
+
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < eps_; }
+
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
+
+    bool onInlet_(const GlobalPosition &pos) const
+    { return onRightBoundary_(pos) && 5 < pos[1] && pos[1] < 15; }
+
+    bool inHighTemperatureRegion_(const GlobalPosition &pos) const
+    { return (pos[0] > 20) && (pos[0] < 30) && (pos[1] > 5) && (pos[1] < 35); }
+
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
     {
         Scalar lambdaWater = 0.6;
@@ -540,11 +487,47 @@ private:
         params.setVacuumLambda(lambdaDry);
     }
 
+    template <class FluidState, class Context>
+    void initialFluidState_(FluidState &fs, 
+                            const Context &context,
+                            int spaceIdx,
+                            int timeIdx) const
+    {
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+        
+        Scalar densityW = 1000.0;
+        
+        // set temperature for _all_ phases
+        fs.setTemperature(283.0 + (maxDepth_ - pos[1])*0.03);
+        if (inHighTemperatureRegion_(pos))
+            fs.setTemperature(380);
+                    
+        // set the wetting phase saturation and pressure
+        fs.setPressure(wPhaseIdx, 1e5 + (maxDepth_ - pos[1])*densityW*9.81);
+        fs.setSaturation(wPhaseIdx, 1.0);
+        
+        // set the non-wetting phase saturation
+        fs.setSaturation(nPhaseIdx, 0.0);
+        
+        // set the non-wetting phase saturation
+        Scalar pC[numPhases];
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
+        fs.setPressure(nPhaseIdx, fs.pressure(wPhaseIdx) + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fs);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            fs.setDensity(phaseIdx, FluidSystem::density(fs, paramCache, phaseIdx));
+            fs.setEnthalpy(phaseIdx, FluidSystem::enthalpy(fs, paramCache, phaseIdx));
+        }
+    }
+        
     bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
-    Scalar fineK_;
-    Scalar coarseK_;
+    Tensor fineK_;
+    Tensor coarseK_;
     Scalar layerBottom_;
 
     Scalar finePorosity_;
