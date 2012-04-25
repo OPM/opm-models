@@ -59,8 +59,8 @@ private:
       typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
       typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-      typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-      typedef typename SpatialParameters::MaterialLaw MaterialLaw;
+      typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
+      typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
       typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
       typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
@@ -80,9 +80,9 @@ private:
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::Intersection Intersection;
-    typedef Dune::FieldVector<Scalar, dim> FieldVector;
+    typedef Dune::FieldVector<Scalar, dim> DimVector;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar,dim,dim> FieldMatrix;
+    typedef Dune::FieldMatrix<Scalar,dim,dim> DimMatrix;
 
 public:
     //! Returns capillary diffusion term
@@ -93,7 +93,7 @@ public:
      *  \param satJ           saturation of neighbor element
      *  \param pcGradient     gradient of capillary pressure between element I and J
      */
-    void getFlux (FieldVector& flux, const Intersection& intersection, Scalar satI, Scalar satJ, const FieldVector& pcGradient) const
+    void getFlux (DimVector& flux, const Intersection& intersection, Scalar satI, Scalar satJ, const DimVector& pcGradient) const
     {
         ElementPointer element = intersection.inside();
         // get global coordinate of cell center
@@ -124,13 +124,13 @@ public:
             fluidState.setPressure(wPhaseIdx, referencePressure);
             fluidState.setPressure(nPhaseIdx, referencePressure);
             fluidState.setTemperature(temperature);
-            mobilityWI = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*element), satI);
+            mobilityWI = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*element), satI);
             mobilityWI /= FluidSystem::viscosity(fluidState, wPhaseIdx);
-            mobilityNWI = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*element), satI);
+            mobilityNWI = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*element), satI);
             mobilityNWI /= FluidSystem::viscosity(fluidState, nPhaseIdx);
         }
 
-        FieldMatrix meanPermeability(0);
+        DimMatrix meanPermeability(0);
 
         if (intersection.neighbor())
         {
@@ -144,18 +144,18 @@ public:
             const GlobalPosition& globalPosNeighbor = neighborPointer->geometry().center();
 
             // distance vector between barycenters
-            FieldVector distVec = globalPosNeighbor - globalPos;
+            DimVector distVec = globalPosNeighbor - globalPos;
 
             // compute distance between cell centers
             Scalar dist = distVec.two_norm();
 
-            FieldVector unitDistVec(distVec);
+            DimVector unitDistVec(distVec);
             unitDistVec /= dist;
 
             // get permeability
-            problem_.spatialParameters().meanK(meanPermeability,
-                    problem_.spatialParameters().intrinsicPermeability(*element),
-                    problem_.spatialParameters().intrinsicPermeability(*neighborPointer));
+            problem_.spatialParams().meanK(meanPermeability,
+                    problem_.spatialParams().intrinsicPermeability(*element),
+                    problem_.spatialParams().intrinsicPermeability(*neighborPointer));
 
 
             Scalar mobilityWJ = 0;
@@ -173,9 +173,9 @@ public:
                 fluidState.setPressure(nPhaseIdx, referencePressure);
                 fluidState.setTemperature(temperature);
 
-                mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*neighborPointer), satJ);
+                mobilityWJ = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*neighborPointer), satJ);
                 mobilityWJ /= FluidSystem::viscosity(fluidState, wPhaseIdx);
-                mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*neighborPointer), satJ);
+                mobilityNWJ = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*neighborPointer), satJ);
                 mobilityNWJ /= FluidSystem::viscosity(fluidState, nPhaseIdx);
             }
             Scalar mobilityWMean = 0.5*(mobilityWI + mobilityWJ);
@@ -185,8 +185,8 @@ public:
         else
         {
             // get permeability
-            problem_.spatialParameters().meanK(meanPermeability,
-                    problem_.spatialParameters().intrinsicPermeability(*element));
+            problem_.spatialParams().meanK(meanPermeability,
+                    problem_.spatialParams().intrinsicPermeability(*element));
 
             Scalar mobilityWJ = 0;
             Scalar mobilityNWJ = 0;
@@ -196,9 +196,9 @@ public:
             fluidState.setPressure(wPhaseIdx, referencePressure);
             fluidState.setPressure(nPhaseIdx, referencePressure);
             fluidState.setTemperature(temperature);
-            mobilityWJ = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*element), satJ);
+            mobilityWJ = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*element), satJ);
             mobilityWJ /= FluidSystem::viscosity(fluidState, wPhaseIdx);
-            mobilityNWJ = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*element), satJ);
+            mobilityNWJ = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*element), satJ);
             mobilityNWJ /= FluidSystem::viscosity(fluidState, nPhaseIdx);
 
             Scalar mobWMean = 0.5 * (mobilityWI + mobilityWJ);

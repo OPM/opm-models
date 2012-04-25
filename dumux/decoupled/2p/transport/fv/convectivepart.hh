@@ -51,7 +51,7 @@ private:
     enum{dim = GridView::dimension, dimWorld = GridView::dimensionworld};
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Intersection Intersection;
-    typedef Dune::FieldVector<Scalar, dimWorld> FieldVector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*! \brief Returns convective term for current element face
@@ -71,7 +71,7 @@ public:
      *  \param satI           Saturation of current element
      *  \param satJ           Saturation of neighbor element
      */
-    void getFlux(FieldVector& flux, const Intersection& intersection, const Scalar satI, const Scalar satJ) const
+    void getFlux(DimVector& flux, const Intersection& intersection, const Scalar satI, const Scalar satJ) const
     {}
 
     //! Constructs a ConvectivePart object

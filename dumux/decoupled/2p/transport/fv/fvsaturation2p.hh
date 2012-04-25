@@ -86,8 +86,8 @@ class FVSaturation2P: public FVTransport<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, CapillaryFlux) CapillaryFlux;
     typedef typename GET_PROP_TYPE(TypeTag, GravityFlux) GravityFlux;
 
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) SpatialParameters;
-    typedef typename SpatialParameters::MaterialLaw MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
+    typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -133,7 +133,7 @@ class FVSaturation2P: public FVTransport<TypeTag>
     typedef typename GridView::Intersection Intersection;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dim> FieldVector;
+    typedef Dune::FieldVector<Scalar, dim> DimVector;
 
     Velocity& velocity()
     {
@@ -441,7 +441,7 @@ void FVSaturation2P<TypeTag>::getFlux(Scalar& update, const Intersection& inters
 
     // cell volume, assume linear map here
     Scalar volume = elementI->geometry().volume();
-    Scalar porosity = problem_.spatialParameters().porosity(*elementI);
+    Scalar porosity = problem_.spatialParams().porosity(*elementI);
 
     if (compressibility_)
     {
@@ -537,7 +537,7 @@ void FVSaturation2P<TypeTag>::getFlux(Scalar& update, const Intersection& inters
         pcGradient *= (pcI - pcJ) / dist;
 
         // get the diffusive part
-        FieldVector flux(0.);
+        DimVector flux(0.);
         capillaryFlux().getFlux(flux, intersection, satWI, satWJ, pcGradient);
         Scalar capillaryFlux = (flux * unitOuterNormal * faceArea);
 
@@ -626,7 +626,7 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
 
     // cell volume, assume linear map here
     Scalar volume = elementI->geometry().volume();
-    Scalar porosity = problem_.spatialParameters().porosity(*elementI);
+    Scalar porosity = problem_.spatialParams().porosity(*elementI);
 
     if (compressibility_)
     {
@@ -685,7 +685,7 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
         }
         }
 
-        Scalar pcBound = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(*elementI), satWBound);
+        Scalar pcBound = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*elementI), satWBound);
 
         Scalar lambdaW = 0;
         Scalar lambdaNW = 0;
@@ -705,12 +705,12 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
             {
                 typename FluidSystem::ParameterCache paramCache;
                 paramCache.updateAll(cellDataI.fluidState());
-                lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*elementI), satWBound)
+                lambdaW = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*elementI), satWBound)
                         / FluidSystem::viscosity(cellDataI.fluidState(), paramCache, wPhaseIdx);
             }
             else
             {
-                lambdaW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*elementI), satWBound)
+                lambdaW = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*elementI), satWBound)
                         / viscosity_[wPhaseIdx];
             }
         }
@@ -729,12 +729,12 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
             {
                 typename FluidSystem::ParameterCache paramCache;
                 paramCache.updateAll(cellDataI.fluidState());
-                lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*elementI), satWBound)
+                lambdaNW = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*elementI), satWBound)
                          / FluidSystem::viscosity(cellDataI.fluidState(), paramCache, nPhaseIdx);
             }
             else
             {
-                lambdaNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*elementI), satWBound)
+                lambdaNW = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*elementI), satWBound)
                         / viscosity_[nPhaseIdx];
             }
         }
@@ -752,7 +752,7 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
             pcGradient *= (pcI - pcBound) / dist;
 
             // get the diffusive part -> give 1-sat because sat = S_n and lambda = lambda(S_w) and pc = pc(S_w)
-            FieldVector flux(0.);
+            DimVector flux(0.);
             capillaryFlux().getFlux(flux, intersection, satWI, satWBound, pcGradient);
             Scalar capillaryFlux = flux * unitOuterNormal * faceArea;
 
@@ -918,7 +918,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
     // cell volume, assume linear map here
     Scalar volume = element.geometry().volume();
 
-    Scalar porosity = problem_.spatialParameters().porosity(element);
+    Scalar porosity = problem_.spatialParams().porosity(element);
 
     if (compressibility_)
     {
@@ -1047,7 +1047,7 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws()
         Scalar satW = cellData.saturation(wPhaseIdx);
         Scalar satNW = cellData.saturation(nPhaseIdx);
 
-        Scalar pc = MaterialLaw::pC(problem_.spatialParameters().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
         cellData.setSaturation(wPhaseIdx, satW);
         cellData.setSaturation(nPhaseIdx, satNW);
@@ -1055,8 +1055,8 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws()
         cellData.setCapillaryPressure(pc);
 
         // initialize mobilities
-        Scalar mobilityW = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*eIt), satW) / viscosity_[wPhaseIdx];
-        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*eIt), satW) / viscosity_[nPhaseIdx];
+        Scalar mobilityW = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*eIt), satW) / viscosity_[wPhaseIdx];
+        Scalar mobilityNW = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*eIt), satW) / viscosity_[nPhaseIdx];
 
         // initialize mobilities
         cellData.setMobility(wPhaseIdx, mobilityW);

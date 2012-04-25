@@ -98,7 +98,7 @@ public:
      *
      * \param timeManager The time manager
      * \param gridView The grid view
-     * \param spatialParameters SpatialParameters instantiation
+     * \param spatialParams SpatialParams instantiation
      */
     IMPESProblem2P(TimeManager &timeManager, const GridView &gridView, SpatialParameters &spatialParameters)
         : ParentType(timeManager, gridView),

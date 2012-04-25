@@ -65,7 +65,7 @@ NEW_TYPE_TAG(DecoupledTwoP, INHERITS_FROM(DecoupledModel))
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG( SpatialParameters )
+NEW_PROP_TAG( SpatialParams )
 ; //!< The type of the spatial parameters object
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
 NEW_PROP_TAG(MaterialLawParams); //!< The material law parameters (extracted from the spatial parameters)
@@ -133,7 +133,7 @@ typedef DecoupledTwoPIndices<GET_PROP_VALUE(TypeTag, Formulation), 0> type;
 };
 
 //! \cond \private
-// keep only for compatibility with box models
+//! DEPRECATED TwoPIndices property
 SET_TYPE_PROP(DecoupledTwoP, TwoPIndices, typename GET_PROP_TYPE(TypeTag, Indices));
 //! \endcond
 
