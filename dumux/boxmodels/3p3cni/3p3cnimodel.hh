@@ -80,11 +80,9 @@ namespace Dumux {
  - q^h = 0 \qquad \alpha \in \{w, n, g\}
  \f}
  *
-
- *
- * The equations are discretized using a fully-coupled vertex
- * centered finite volume (BOX) scheme as spatial scheme and
- * the implicit Euler method as temporal discretization.
+ * The equations are discretized using a fully-coupled vertex centered
+ * finite volume as spatial scheme and the implicit Euler method as
+ * temporal discretization.
  *
  * The model uses commonly applied auxiliary conditions like
  * \f$S_w + S_n + S_g = 1\f$ for the saturations and
@@ -110,6 +108,7 @@ class ThreePThreeCNIModel : public ThreePThreeCModel<TypeTag>
 {
     typedef ThreePThreeCModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
     /*!
@@ -138,6 +137,20 @@ public:
            return "energy";
        
         return ParentType::eqName(eqIdx);
+    }
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     *
+     * \param globalVertexIdx The global vertex index
+     * \param pvIdx The primary variable index
+     */
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    {
+        if (Indices::temperatureIdx == pvIdx)
+            return std::min(1.0/this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx], 1.0);
+        return ParentType::primaryVarWeight(globalVertexIdx, pvIdx);
     }
 
 protected:

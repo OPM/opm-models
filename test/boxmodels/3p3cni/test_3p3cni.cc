@@ -29,13 +29,13 @@
  * \brief test for the 3p3cni box model
  */
 #include "config.h"
-#include "kuevetteproblem.hh"
+#include "cuvetteproblem.hh"
 //#include "columnxylolproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(KuevetteProblem) ProblemTypeTag;
+    typedef TTAG(CuvetteProblem) ProblemTypeTag;
 //    typedef TTAG(ColumnProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

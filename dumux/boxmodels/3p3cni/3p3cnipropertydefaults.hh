@@ -40,6 +40,7 @@
 #include "3p3cniproblem.hh"
 #include "3p3cniindices.hh"
 #include "3p3cnilocalresidual.hh"
+#include "3p3cniboundaryratevector.hh"
 #include "3p3cnivolumevariables.hh"
 #include "3p3cnifluxvariables.hh"
 
@@ -70,6 +71,9 @@ SET_TYPE_PROP(BoxThreePThreeCNI, VolumeVariables, ThreePThreeCNIVolumeVariables<
 
 //! the FluxVariables property
 SET_TYPE_PROP(BoxThreePThreeCNI, FluxVariables, ThreePThreeCNIFluxVariables<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxThreePThreeCNI, BoundaryRateVector, ThreePThreeCNIBoundaryRateVector<TypeTag>);
 
 //! The indices required by the non-isothermal 3p3c model
 SET_TYPE_PROP(BoxThreePThreeCNI, ThreePThreeCNIIndices, ThreePThreeCNIIndices<TypeTag, 0>);

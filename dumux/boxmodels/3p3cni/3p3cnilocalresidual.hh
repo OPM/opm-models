@@ -24,6 +24,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the non-isothermal three-phase, three-component box model.
@@ -93,10 +94,10 @@ public:
         {
             // add the internal energy of the phase
             storage[energyEqIdx] +=
-                volVars.porosity() * (
-                    fs.density(phaseIdx)
-                    * fs.internalEnergy(phaseIdx)
-                    * fs.saturation(phaseIdx));
+                volVars.porosity()  
+                * fs.saturation(phaseIdx)
+                * fs.density(phaseIdx)
+                * fs.internalEnergy(phaseIdx);
         };
 
         // handle the heat capacity of the solid
