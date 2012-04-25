@@ -197,7 +197,7 @@ public:
             sumf += volume*(problem.source(global, element, local)[0]);
 
             // get the absolute permeability
-            Dune::FieldMatrix<double,dim,dim> K = problem.spatialParameters().K(global, element, local);
+            Dune::FieldMatrix<double,dim,dim> K = problem.spatialParams().K(global, element, local);
 
             numerator += volume*(exactValue - approximateValue)*(exactValue - approximateValue);
             denominator += volume*exactValue*exactValue;
@@ -444,7 +444,7 @@ public:
             sumf += volume*sourceVec[0];
 
             // get the absolute permeability
-            Dune::FieldMatrix<double,dim,dim> K = problem.spatialParameters().intrinsicPermeability(element);
+            Dune::FieldMatrix<double,dim,dim> K = problem.spatialParams().intrinsicPermeability(element);
 
             int isIdx = -1;
             Dune::FieldVector<Scalar,2*dim> fluxVector;
@@ -621,7 +621,7 @@ public:
             sumf += volume*problem.source(global, element, local)[0];
 
             // get the absolute permeability
-            Dune::FieldMatrix<Scalar,dim,dim> K = problem.spatialParameters().K(global, element, local);
+            Dune::FieldMatrix<Scalar,dim,dim> K = problem.spatialParams().K(global, element, local);
 
             int i = -1;
             Dune::FieldVector<Scalar,dim> exactGradient;
