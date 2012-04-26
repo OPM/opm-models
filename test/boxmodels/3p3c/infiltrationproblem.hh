@@ -30,7 +30,7 @@
 
 #include <dumux/boxmodels/3p3c/3p3cmodel.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <dumux/material/fluidmatrixinteractions/3p/parkerVanGen3p.hh>
+#include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
 #include <dumux/material/heatconduction/somerton.hh>
 
@@ -83,7 +83,7 @@ private:
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
     // define the three-phase material law
-    typedef Dumux::ParkerVanGen3P<Scalar> ThreePLaw;
+    typedef Dumux::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
     
 public:
     // wrap the three-phase law in an adaptor to make use the generic
