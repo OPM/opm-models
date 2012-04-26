@@ -27,6 +27,7 @@
 #include "mpnclocalresidual.hh"
 #include "mpncfluxvariables.hh"
 #include "mpncprimaryvariables.hh"
+#include "mpncboundaryratevector.hh"
 #include "mpncratevector.hh"
 #include "mpncvolumevariables.hh"
 #include "mpncnewtoncontroller.hh"
@@ -135,6 +136,9 @@ SET_BOOL_PROP(BoxMPNC, EnableSmoothUpwinding, true);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxMPNC, RateVector, MPNCRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxMPNC, BoundaryRateVector, MPNCBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxMPNC, PrimaryVariables, MPNCPrimaryVariables<TypeTag>);

@@ -196,9 +196,8 @@ public:
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             {
-                if (!elemCtx.boundaryTypes(scvIdx, /*timeIdx=*/0).isDirichlet(phase0NcpIdx + phaseIdx))
-                    residual[scvIdx][phase0NcpIdx + phaseIdx] =
-                        phaseNcp_(elemCtx, scvIdx, /*timeIdx=*/0, phaseIdx);
+                residual[scvIdx][phase0NcpIdx + phaseIdx] =
+                    phaseNcp_(elemCtx, scvIdx, /*timeIdx=*/0, phaseIdx);
             }
         }
     }

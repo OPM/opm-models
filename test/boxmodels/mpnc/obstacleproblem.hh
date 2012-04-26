@@ -190,7 +190,7 @@ class ObstacleProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -213,6 +213,7 @@ class ObstacleProblem
 
     typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
 public:
@@ -225,7 +226,7 @@ public:
 
         // initialize the tables of the fluid system
         Scalar Tmin = temperature_ - 10.0;
-        Scalar Tmax = temperature_ + 10.0;
+        Scalar Tmax = temperature_ + 40.0;
         int nT = 3;
 
         Scalar pmin = 1.0e5 * 0.75;
@@ -235,8 +236,8 @@ public:
         FluidSystem::init(Tmin, Tmax, nT, pmin, pmax, np);
 
         // intrinsic permeabilities
-        coarseK_ = 1e-12;
-        fineK_ = 1e-15;
+        coarseK_ = this->toTensor_(1e-12);
+        fineK_ = this->toTensor_(1e-15);
 
         // the porosity
         finePorosity_ = 0.3;
@@ -268,6 +269,8 @@ public:
         // parameters for the somerton law of heat conduction
         computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
         computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
+
+        initFluidStates_();
     }
 
     /*!
@@ -327,7 +330,7 @@ public:
      * \brief Returns the intrinsic permeability tensor.
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         if (isFineMaterial_(context.pos(spaceIdx, timeIdx)))
             return fineK_;
@@ -397,40 +400,20 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
+     * \brief Evaluate the boundary conditions.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, const Context &context, int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onInlet_(globalPos) || onOutlet_(globalPos))
-            values.setAllDirichlet();
+        if (onInlet_(pos))
+            values.setFreeFlow(context, spaceIdx, timeIdx, inletFluidState_);
+        else if (onOutlet_(pos))
+            values.setFreeFlow(context, spaceIdx, timeIdx, outletFluidState_);
         else
-            values.setAllNeumann();
+            values.setNoFlow();
     }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
-    { initial(values, context, spaceIdx, timeIdx); }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * Negative components of the \a values argument mean influx of
-     * the corrosponding conservation quantity.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    { values = 0; }
 
     // \}
 
@@ -463,18 +446,57 @@ public:
     template <class Context>
     void initial(PrimaryVariables &priVars, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
+        priVars.assignMassConservative(outletFluidState_,
+                                       matParams,
+                                       /*inThermodynamicEquilibrium=*/false);
+    }
 
-        typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> CompositionalFluidState;
-        CompositionalFluidState fs;
+    // \}
 
+protected:
+    /*!
+     * \brief Returns whether a given global position is in the
+     *        fine-permeability region or not.
+     */
+    bool isFineMaterial_(const GlobalPosition &pos) const
+    {
+        return
+            10 <= pos[0] && pos[0] <= 20 &&
+            0 <= pos[1] && pos[1] <= 35;
+    };
+
+    bool onInlet_(const GlobalPosition &globalPos) const
+    {
+        Scalar x = globalPos[0];
+        Scalar y = globalPos[1];
+        return x >= 60 - eps_ && y <= 10;
+    };
+
+    bool onOutlet_(const GlobalPosition &globalPos) const
+    {
+        Scalar x = globalPos[0];
+        Scalar y = globalPos[1];
+        return x < eps_ && y <= 10;
+    };
+
+    
+    void initFluidStates_()
+    {
+        initFluidState_(inletFluidState_, coarseMaterialParams_, /*isInlet=*/true);
+        initFluidState_(outletFluidState_, coarseMaterialParams_, /*isInlet=*/false);
+    }
+    
+    template <class FluidState>
+    void initFluidState_(FluidState &fs, const MaterialLawParams &matParams, bool isInlet)
+    {
         int refPhaseIdx;
         int otherPhaseIdx;
 
         // set the fluid temperatures
-        fs.setTemperature(this->temperature(context, spaceIdx, timeIdx));
+        fs.setTemperature(temperature_);
 
-        if (onInlet_(globalPos)) {
+        if (isInlet) {
             // only liquid on inlet
             refPhaseIdx = lPhaseIdx;
             otherPhaseIdx = gPhaseIdx;
@@ -509,8 +531,6 @@ public:
         fs.setSaturation(otherPhaseIdx, 1.0 - fs.saturation(refPhaseIdx));
 
         // calulate the capillary pressure
-        const MaterialLawParams &matParams =
-            this->materialLawParams(context, spaceIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
         fs.setPressure(otherPhaseIdx,
@@ -527,40 +547,7 @@ public:
                                          refPhaseIdx,
                                          /*setViscosity=*/false,
                                          /*setEnthalpy=*/false);
-
-        ///////////
-        // assign the primary variables
-        ///////////          
-        priVars.assignMassConservative(fs,
-                                       matParams,
-                                       /*inThermodynamicEquilibrium=*/true);
     }
-
-protected:
-    /*!
-     * \brief Returns whether a given global position is in the
-     *        fine-permeability region or not.
-     */
-    bool isFineMaterial_(const GlobalPosition &pos) const
-    {
-        return
-            10 <= pos[0] && pos[0] <= 20 &&
-            0 <= pos[1] && pos[1] <= 35;
-    };
-
-    bool onInlet_(const GlobalPosition &globalPos) const
-    {
-        Scalar x = globalPos[0];
-        Scalar y = globalPos[1];
-        return x >= 60 - eps_ && y <= 10;
-    };
-
-    bool onOutlet_(const GlobalPosition &globalPos) const
-    {
-        Scalar x = globalPos[0];
-        Scalar y = globalPos[1];
-        return x < eps_ && y <= 10;
-    };
 
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
     {
@@ -575,8 +562,8 @@ protected:
         params.setVacuumLambda(lambdaDry);
     }
 
-    Scalar coarseK_;
-    Scalar fineK_;
+    Tensor coarseK_;
+    Tensor fineK_;
 
     Scalar coarsePorosity_;
     Scalar finePorosity_;
@@ -587,6 +574,9 @@ protected:
     HeatConductionLawParams fineHeatCondParams_;
     HeatConductionLawParams coarseHeatCondParams_;
 
+    CompositionalFluidState<Scalar, FluidSystem> inletFluidState_;
+    CompositionalFluidState<Scalar, FluidSystem> outletFluidState_;
+    
     Scalar temperature_;
     Scalar eps_;
 };

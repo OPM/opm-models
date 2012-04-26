@@ -58,6 +58,9 @@ class MPNCVolumeVariablesEnergy
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     //typedef typename GET_PROP_TYPE(TypeTag, MPNCEnergyIndices) EnergyIndices;
 
@@ -124,6 +127,19 @@ public:
 
 
     /*!
+     * \brief Set the enthalpy rate on a boundary rate vector
+     */
+    template <class FluidState>
+    static void enthalpyBoundaryFlux(BoundaryRateVector &rate,
+                                     const FluxVariables &fluxVars,
+                                     const VolumeVariables &insideVolVars,
+                                     const FluidState &fs,
+                                     const typename FluidSystem::ParameterCache &paramCache,
+                                     int phaseIdx,
+                                     Scalar density)
+    { }
+
+    /*!
      * \brief Given an primary variable index, return a human readable name.
      */
     static std::string primaryVarName(int pvIdx)
@@ -166,20 +182,18 @@ class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyT
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
-
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-
     enum { temperatureIdx = Indices::temperatureIdx };
     enum { energyEqIdx = Indices::energyEqIdx };
-
     enum { numEnergyEqs = Indices::NumPrimaryEnergyVars};
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -263,6 +277,29 @@ public:
             volume
             * fluidState.density(phaseIdx)
             * fluidState.enthalpy(phaseIdx);
+    }
+
+    /*!
+     * \brief Set the enthalpy rate on a boundary rate vector
+     */
+    template <class FluidState>
+    static void enthalpyBoundaryFlux(BoundaryRateVector &rate,
+                                     const FluxVariables &fluxVars,
+                                     const VolumeVariables &insideVolVars,
+                                     const FluidState &fs,
+                                     const typename FluidSystem::ParameterCache &paramCache,
+                                     int phaseIdx,
+                                     Scalar density)
+    {
+        Scalar enthalpy =
+            (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+            ? FluidSystem::enthalpy(fs, paramCache, phaseIdx)
+            : insideVolVars.fluidState().enthalpy(phaseIdx);
+        
+        rate[energyEqIdx] += 
+            fluxVars.filterVelocityNormal(phaseIdx)
+            * enthalpy
+            * density;
     }
 
     /*!
