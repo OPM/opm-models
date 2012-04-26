@@ -543,7 +543,18 @@ public:
     Dune::SuperLU<ISTLMatrix> solver(A, verbosity > 0);
 
     solver.apply(x, bTmp, result_);
-
+    
+    if (result_.converged) {
+        // make sure that the result only contains finite values.
+        Scalar tmp = 0;
+        for (int i = 0; i < x.size(); ++i) {
+            const auto &xi = x[i];
+            for (int j = 0; j < Vector::block_type::dimension; ++j) 
+                tmp += xi[j];
+        }
+        result_.converged = std::isfinite(tmp);
+    }    
+    
     return result_.converged;
   }
 
