@@ -48,14 +48,12 @@ class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
     enum {
         contiEqIdx = Indices::contiEqIdx,
         wPhaseIdx = Indices::wPhaseIdx
     };
-
-
 
 public:
     /*!

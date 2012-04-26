@@ -152,8 +152,8 @@ class RichardsLensProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -170,7 +170,7 @@ class RichardsLensProblem
         numPhases = FluidSystem::numPhases,
 
         // Grid and world dimension
-        dim = GridView::dimensionworld
+        dimWorld = GridView::dimensionworld
     };
 
     //get the material law from the property system
@@ -178,8 +178,10 @@ class RichardsLensProblem
     //! The parameters of the material law to be used
     typedef typename MaterialLaw::Params MaterialLawParams;
 
-    typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
+    typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
     /*!
@@ -216,8 +218,8 @@ public:
 //        lensMaterialParams_.setMaxPC(0);
 //        outerMaterialParams_.setMaxPC(0);
 
-        lensK_ = 1e-12;
-        outerK_ = 5e-12;
+        lensK_ = this->toTensor_(1e-12);
+        outerK_ = this->toTensor_(5e-12);
     }
 
     /*!
@@ -251,10 +253,10 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    Scalar intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        if (isInLens_(globalPos))
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(pos))
             return lensK_;
         return outerK_;
     }
@@ -280,8 +282,8 @@ public:
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        const auto &globalPos = context.pos(spaceIdx, timeIdx);
-        if (isInLens_(globalPos))
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+        if (isInLens_(pos))
             return lensMaterialParams_;
         return outerMaterialParams_;
     }
@@ -314,69 +316,44 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param globalPos The position for which the boundary type is set
+     * \brief Evaluate the boundary conditions.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values,
-                       const Context &context,
-                       int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const auto &globalPos = context.pos(spaceIdx, timeIdx);
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onLeftBoundary_(globalPos) ||
-            onRightBoundary_(globalPos))
+        if (onLeftBoundary_(pos) ||
+            onRightBoundary_(pos))
         {
-            values.setAllDirichlet();
+            const auto &materialParams = this->materialLawParams(context, spaceIdx, timeIdx);
+            
+            Scalar Sw = 0.0;
+            ImmiscibleFluidState<Scalar, FluidSystem> fs;
+            fs.setSaturation(wPhaseIdx, Sw);
+            fs.setSaturation(nPhaseIdx, 1.0 - Sw);
+            
+            PhaseVector pC;
+            MaterialLaw::capillaryPressures(pC, materialParams, fs);
+            fs.setPressure(wPhaseIdx, pnRef_ + pC[wPhaseIdx] - pC[nPhaseIdx]);
+            fs.setPressure(nPhaseIdx, pnRef_);
+
+            values.setFreeFlow(context, spaceIdx, timeIdx, fs);
+        }
+        else if (onInlet_(pos)) {
+            RateVector massRate(0.0);
+
+            // inflow of water
+            massRate[contiEqIdx] = -0.04; // kg / (m * s)
+            
+            values.setMassRate(massRate);
         }
         else
-            values.setAllNeumann();
+            values.setNoFlow();
     }
 
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        boundary segment.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param globalPos The position for which the Dirichlet value is set
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values,
-                   const Context &context,
-                   int spaceIdx, int timeIdx) const
-    {
-        // use initial values as boundary conditions
-        initial(values, context, spaceIdx, timeIdx);
-    }
 
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     *
-     * \param values The neumann values for the conservation equations
-     * \param globalPos The position for which the Neumann value is set
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-
-        values = 0.0;
-        if (onInlet_(globalPos)) {
-            // inflow of water
-            values[contiEqIdx] = -0.04; // kg / (m * s)
-        }
-    }
+    // \}
 
     /*!
      * \name Volume terms
@@ -412,36 +389,28 @@ public:
     // \}
 
 private:
-    bool onLeftBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[0] < this->bboxMin()[0] + eps_;
-    }
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < this->bboxMin()[0] + eps_; }
 
-    bool onRightBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[0] > this->bboxMax()[0] - eps_;
-    }
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
 
-    bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[1] < this->bboxMin()[1] + eps_;
-    }
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < this->bboxMin()[1] + eps_; }
 
-    bool onUpperBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[1] > this->bboxMax()[1] - eps_;
-    }
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
 
-    bool onInlet_(const GlobalPosition &globalPos) const
+    bool onInlet_(const GlobalPosition &pos) const
     {
         Scalar width = this->bboxMax()[0] - this->bboxMin()[0];
-        Scalar lambda = (this->bboxMax()[0] - globalPos[0])/width;
-        return onUpperBoundary_(globalPos) && 0.5 < lambda && lambda < 2.0/3.0;
+        Scalar lambda = (this->bboxMax()[0] - pos[0])/width;
+        return onUpperBoundary_(pos) && 0.5 < lambda && lambda < 2.0/3.0;
     }
 
     bool isInLens_(const GlobalPosition &pos) const
     {
-        for (int i = 0; i < dim; ++i) {
+        for (int i = 0; i < dimWorld; ++i) {
             if (pos[i] < lensLowerLeft_[i] || pos[i] > lensUpperRight_[i])
                 return false;
         }
@@ -451,8 +420,8 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
 
-    Scalar lensK_;
-    Scalar outerK_;
+    Tensor lensK_;
+    Tensor outerK_;
     MaterialLawParams lensMaterialParams_;
     MaterialLawParams outerMaterialParams_;
 

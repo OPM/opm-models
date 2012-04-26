@@ -36,6 +36,7 @@
 #include "richardsindices.hh"
 #include "richardsfluxvariables.hh"
 #include "richardsratevector.hh"
+#include "richardsboundaryratevector.hh"
 #include "richardsprimaryvariables.hh"
 #include "richardsvolumevariables.hh"
 #include "richardsproperties.hh"
@@ -73,6 +74,9 @@ SET_TYPE_PROP(BoxRichards, BaseProblem, RichardsBoxProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxRichards, RateVector, RichardsRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxRichards, BoundaryRateVector, RichardsBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxRichards, PrimaryVariables, RichardsPrimaryVariables<TypeTag>);
