@@ -21,6 +21,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Represents all quantities which available on boundary segments
  */

@@ -22,6 +22,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Base class for models using box discretization
  */

@@ -23,6 +23,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief This class calculates the pressure potential gradients and
  *        the filter velocities for multi-phase flow in porous media
@@ -47,7 +48,9 @@ NEW_PROP_TAG(EnableGravity);
 }
 
 /*!
+ * \ingroup BoxModel
  * \ingroup BoxFluxVariables
+ *
  * \brief This class calculates the pressure potential gradients and
  *        the filter velocities for multi-phase flow in porous media
  */

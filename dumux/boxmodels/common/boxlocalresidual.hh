@@ -22,6 +22,8 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
+ *
  * \brief Calculates the residual of models based on the box scheme element-wise.
  */
 #ifndef DUMUX_BOX_LOCAL_RESIDUAL_HH
@@ -43,6 +45,7 @@ namespace Dumux
 /*!
  * \ingroup BoxModel
  * \ingroup BoxLocalResidual
+ *
  * \brief Element-wise caculation of the residual matrix for models
  *        based on the box scheme .
  *

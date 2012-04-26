@@ -22,6 +22,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief An assembler for the global Jacobian matrix for models using the box discretization.
  */
@@ -43,6 +44,8 @@
 namespace Dumux {
 
 /*!
+ * \ingroup BoxModel
+ *
  * \brief An assembler for the global Jacobian matrix for models using the box discretization.
  */
 template<class TypeTag>

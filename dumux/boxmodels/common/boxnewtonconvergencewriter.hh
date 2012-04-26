@@ -21,6 +21,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Writes the intermediate solutions during the Newton scheme
  *        for models using the box scheme
@@ -41,7 +42,9 @@ NEW_PROP_TAG(GlobalEqVector);
 }
 
 /*!
+ * \ingroup BoxModel
  * \ingroup Newton
+ *
  * \brief Writes the intermediate solutions during the Newton scheme
  *        for models using the box scheme
  */

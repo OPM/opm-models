@@ -21,6 +21,8 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
+ *
  * \brief Base class for all problems which use the box scheme
  */
 #ifndef DUMUX_BOX_PROBLEM_HH
@@ -40,7 +42,7 @@ namespace Dumux
 {
 /*!
  * \ingroup BoxModel
- * \ingroup BoxBaseProblems
+ *
  * \brief Base class for all problems which use the box scheme.
  *
  * \note All quantities are specified assuming a threedimensional

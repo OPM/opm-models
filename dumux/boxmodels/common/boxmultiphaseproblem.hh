@@ -21,8 +21,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \ingroup BoxModels
+ * \ingroup BoxModel
  *
  * \brief The base class for the problems of box models which deal
  *        with a multi-phase flow through a porous medium.
@@ -40,10 +39,8 @@ NEW_PROP_TAG(MaterialLawParams);
 }
 
 /*!
- * \ingroup BoxModels
- */
-
-/*!
+ * \ingroup BoxModel
+ *
  * \brief The base class for the problems of box models which deal
  *        with a multi-phase flow through a porous medium.
  */

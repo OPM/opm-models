@@ -21,8 +21,8 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
- * \ingroup BoxModels
  * \brief The base class for the problems of box models which assume a
  *        porous medium.
  */
@@ -42,10 +42,8 @@ NEW_PROP_TAG(HeatConductionLawParams);
 }
 
 /*!
- * \ingroup BoxModels
- */
-
-/*!
+ * \ingroup BoxModel
+ *
  * \brief The base class for the problems of box models which assume a
  *        porous medium.
  */

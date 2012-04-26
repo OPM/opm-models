@@ -22,6 +22,8 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
+ *
  * \brief A Newton controller for models using the box scheme.
  *
  * Usually, this controller should be sufficient for models using the
@@ -91,7 +93,9 @@ SET_BOOL_PROP(NewtonMethod, NewtonUseLineSearch, false);
 }
 
 /*!
+ * \ingroup BoxModel
  * \ingroup Newton
+ *
  * \brief A Newton controller for models using the box scheme.
  *
  * If you want to specialize only some methods but are happy with the

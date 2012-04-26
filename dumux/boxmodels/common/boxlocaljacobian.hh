@@ -22,6 +22,8 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
+ *
  * \brief Caculates the Jacobian of the local residual for box models
  */
 #ifndef DUMUX_BOX_LOCAL_JACOBIAN_HH
@@ -44,6 +46,7 @@ namespace Dumux
 /*!
  * \ingroup BoxModel
  * \ingroup BoxLocalJacobian
+ *
  * \brief Calculates the Jacobian of the local residual for box models
  *
  * The default behavior is to use numeric differentiation, i.e.

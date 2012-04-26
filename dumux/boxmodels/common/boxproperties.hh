@@ -20,6 +20,15 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \ingroup Properties
+ * \ingroup BoxProperties
+ * \ingroup BoxModel
+ *
+ * \brief Specify the shape functions, operator assemblers, etc
+ *        used for the BoxModel.
+ */
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH
 
@@ -30,19 +39,9 @@
 #include <dumux/common/basicproperties.hh>
 #include <dumux/common/propertysystem.hh>
 
-/*!
- * \ingroup Properties
- * \ingroup BoxProperties
- * \ingroup BoxModel
- * \file
- * \brief Specify the shape functions, operator assemblers, etc
- *        used for the BoxModel.
- */
-namespace Dumux
-{
+namespace Dumux {
 
-namespace Properties
-{
+namespace Properties {
 /*!
  * \ingroup BoxModel
  */
