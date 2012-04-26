@@ -394,25 +394,38 @@ public:
         for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i)
             Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
 #endif // HAVE_VALGRIND
-
+        
         asImp_().updateBegin();
-
+            
         bool converged = solver.execute(controller);
-        if (converged) {
-            asImp_().updateSuccessful();
-        }
-        else
-            asImp_().updateFailed();
 
+        int succeeded;
+        try {
+            if (converged)
+                asImp_().updateSuccessful();
+            else
+                asImp_().updateFailed();
+
+            succeeded = 1;
+            succeeded = gridView_().comm().min(succeeded);
+            
 #if HAVE_VALGRIND
-        for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
-            Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
-        }
+            for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
+                Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
+            }
 #endif // HAVE_VALGRIND
+        }
+        catch (const Dune::Exception &e)
+        {
+            std::cout << "rank " << problem_().gridView().comm().rank()
+                      << " caught an exception while assembling:" << e.what()
+                      << "\n";
+            succeeded = 0;
+            succeeded = gridView_().comm().min(succeeded);
+        }
 
-        return converged;
+        return converged && succeeded;
     }
-
 
     /*!
      * \brief Called by the update() method before it tries to
@@ -420,9 +433,7 @@ public:
      *        which the actual model can overload.
      */
     void updateBegin()
-    {
-        updateBoundary_();
-    }
+    { updateBoundary_(); }
 
 
     /*!

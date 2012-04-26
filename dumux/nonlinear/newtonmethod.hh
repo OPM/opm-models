@@ -122,9 +122,7 @@ public:
      *        step.
      */
     Scalar assembleTime() const
-    {
-        return assembleTimer_.elapsed();
-    }
+    { return assembleTimer_.elapsed(); }
 
     /*!
      * \brief Returns the wall time spend so far for solving the
@@ -132,9 +130,7 @@ public:
      *        step.
      */
     Scalar solveTime() const
-    {
-        return solveTimer_.elapsed();
-    }
+    { return solveTimer_.elapsed(); }
 
     /*!
      * \brief Returns the wall time spend so far for updating the
@@ -142,9 +138,7 @@ public:
      *        iterations of the current time step.
      */
     Scalar updateTime() const
-    {
-        return updateTimer_.elapsed();
-    }
+    { return updateTimer_.elapsed();}
 
 protected:
     bool execute_(NewtonController &ctl)
@@ -229,8 +223,15 @@ protected:
             ctl.newtonUpdateErrors(uCurrentIter, uLastIter, deltaU);
             updateTimer_.stop();
 
-            // tell the controller that we're done with this iteration
-            ctl.newtonEndStep(uCurrentIter, uLastIter);
+            try {
+                // tell the controller that we're done with this iteration
+                ctl.newtonEndStep(uCurrentIter, uLastIter);
+            }
+            catch (const Dune::Exception &e) {
+                Dumux::NumericalProblem p;
+                p.message(e.what());
+                throw p;
+            }
         }
 
         // tell the controller that we're done

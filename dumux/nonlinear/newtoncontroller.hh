@@ -317,9 +317,7 @@ public:
      * \brief Assemble the global linear system of equations.
      */
     void newtonAssemble()
-    {
-        problem().model().jacobianAssembler().assemble();
-    }
+    { problem().model().jacobianAssembler().assemble(); }
 
     /*!
      * \brief Indicates the beginning of a Newton iteration.
@@ -496,9 +494,7 @@ public:
      * This method is called _after_ newtonEnd()
      */
     void newtonFail()
-    {
-        numSteps_ = targetSteps_*2;
-    }
+    { numSteps_ = targetSteps_*2; }
 
     /*!
      * \brief Called when the Newton method was successful.
@@ -506,8 +502,7 @@ public:
      * This method is called _after_ newtonEnd()
      */
     void newtonSucceed()
-    {
-    }
+    { }
 
     /*!
      * \brief Suggest a new time-step size based on the old time-step
