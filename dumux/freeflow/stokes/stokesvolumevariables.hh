@@ -51,24 +51,18 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef BoxVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, StokesIndices) Indices;
-
-    enum {
-        dim = GridView::dimension,
-
-        momentum0Idx = Indices::momentum0Idx,
-        pressureIdx = Indices::pressureIdx
-    };
-
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
-
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef Dune::FieldVector<Scalar, dim> VelocityVector;
+    enum { dimWorld = GridView::dimensionworld };
+    enum { momentum0EqIdx = Indices::momentum0EqIdx };
+    enum { pressureIdx = Indices::pressureIdx };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     /*!
@@ -95,13 +89,34 @@ public:
                                  FluidSystem::viscosity(fluidState_,
                                                         paramCache,
                                                         phaseIdx));
-
+        
         // compute and set the energy related quantities
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
-        // momentum conservation
-        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
+        // the effective velocity of the control volume
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             velocity_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
+
+        // the gravitational acceleration applying to the material
+        // inside the volume
+        gravity_ = elemCtx.problem().gravity();
+    }
+
+    /*!
+     * \brief Update the gradients for the sub-control volumes.
+     */
+    void updateScvGradients(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    {
+        // calculate the pressure gradient at the SCV using finite
+        // element gradients
+        pressureGrad_ = 0.0;
+        for (int i = 0; i < elemCtx.numScv(); ++i) {
+            const auto &feGrad = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
+            Vector tmp(feGrad);
+            tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
+            
+            pressureGrad_ += tmp;
+        }            
     }
 
 
@@ -112,8 +127,8 @@ public:
     { return fluidState_; }
     
     /*!
-     * \brief Returns the molar density \f$\mathrm{[mol/m^3]}\f$ of the fluid within the
-     *        sub-control volume.
+     * \brief Returns the molar density \f$\mathrm{[mol/m^3]}\f$ of
+     *        the fluid within the sub-control volume.
      */
     Scalar molarDensity() const
     { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
@@ -121,8 +136,21 @@ public:
     /*!
      * \brief Returns the velocity vector in the sub-control volume.
      */
-    const VelocityVector &velocity() const
+    const Vector &velocity() const
     { return velocity_; }
+
+    /*!
+     * \brief Returns the pressure gradient in the sub-control volume.
+     */
+    const Vector &pressureGradient() const
+    { return pressureGrad_; }
+
+    /*!
+     * \brief Returns the gravitational acceleration vector in the
+     *        sub-control volume.
+     */
+    const Vector &gravity() const
+    { return gravity_; } 
 
 protected:
     template<class ParameterCache>
@@ -138,7 +166,9 @@ protected:
         this->fluidState_.setTemperature(T);
     }
 
-    VelocityVector velocity_;
+    Vector velocity_;
+    Vector gravity_;
+    Vector pressureGrad_;
     FluidState fluidState_;
 
 private:

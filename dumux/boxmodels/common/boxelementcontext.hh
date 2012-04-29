@@ -119,7 +119,6 @@ public:
 
     void updateAllScvVars()
     {
-       
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateScvVars(timeIdx);
     };
@@ -130,20 +129,31 @@ public:
         const VertexMapper &vertexMapper = problem().vertexMapper();
         const SolutionVector &globalSol = model().solution(timeIdx);
 
+        // update the non-gradient quantities
         int nScv = numScv();
         for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
             int globalIdx = vertexMapper.map(element(), scvIdx, dim);
             const PrimaryVariables &scvSol = globalSol[globalIdx];
 
             scvVars_[scvIdx].hint[timeIdx] = model().hint(globalIdx, timeIdx);
-            updateScvVars(scvSol, scvIdx, timeIdx);
+            updateSingleScvVars_(scvSol, scvIdx, timeIdx);
+        }
+        
+        // update gradients
+        for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
+            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, scvIdx, timeIdx);
         }
     }
 
     void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
     {
-        scvVars_[scvIdx].priVars[timeIdx] = priVars;
-        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this, scvIdx, timeIdx);
+        updateSingleScvVars_(priVars, scvIdx, timeIdx);
+
+        // update SCV gradients
+        int nScv = numScv();
+        for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
+            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, scvIdx, timeIdx);
+        }
     }
 
     void updateAllScvfVars()
@@ -329,6 +339,12 @@ public:
     }
 
 protected:
+    void updateSingleScvVars_(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
+    {
+        scvVars_[scvIdx].priVars[timeIdx] = priVars;
+        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this, scvIdx, timeIdx);
+    }
+
     ScvVarsVector scvVars_;
 
     int scvIdxSaved_;

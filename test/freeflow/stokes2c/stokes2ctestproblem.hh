@@ -74,13 +74,7 @@ SET_INT_PROP(Stokes2cTestProblem,
              GET_PROP_TYPE(TypeTag, FluidSystem)::H2OIdx);
 
 //! Scalar is set to type long double for higher accuracy
-//SET_TYPE_PROP(BoxStokes, Scalar, long double);
-
-//! a stabilization factor. Set to zero for no stabilization
-SET_SCALAR_PROP(Stokes2cTestProblem, StabilizationAlpha, -1.0);
-
-//! stabilization at the boundaries
-SET_SCALAR_PROP(Stokes2cTestProblem, StabilizationBeta, 0.0);
+SET_TYPE_PROP(BoxStokes, Scalar, double);
 
 // Enable gravity
 SET_BOOL_PROP(Stokes2cTestProblem, EnableGravity, false);
@@ -99,12 +93,6 @@ SET_BOOL_PROP(Stokes2cTestProblem, EnableGravity, false);
  * one vertex receives Dirichlet bcs, to set the pressure level.
  *
  * This problem uses the \ref BoxStokes2cModel.
- *
- * This problem is non-stationary and can be simulated until \f$t_{\text{end}} =
- * 1e5\;s\f$ is reached. A good choice for the initial time step size
- * is \f$t_{\text{inital}} = 1\;s\f$.
- * To run the simulation execute the following line in shell:
- * <tt>./test_stokes2c -parameterFile ./test_stokes2c.input</tt>
  */
 template <class TypeTag>
 class Stokes2cTestProblem
@@ -167,9 +155,7 @@ public:
     template <class Context>   
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
-    {
-        return 273.15 + 10; // -> 10
-    }
+    { return 273.15 + 10; /* -> 10 deg C */ }
 
     // \}
 
@@ -177,6 +163,28 @@ public:
      * \name Boundary conditions
      */
     // \{
+
+    /*!
+     * \brief Evaluate the boundary conditions.
+     */
+    template <class Context>
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
+    {
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
+
+        if (onLowerBoundary_(pos))
+            values.setOutFlow(context, spaceIdx, timeIdx);
+        else if(onUpperBoundary_(pos)) {
+            // upper boundary is constraint!
+            values = 0.0;
+        }
+        else {
+            // left and right
+            values.setNoFlow(context, spaceIdx, timeIdx);
+        }
+    }
+
+    // \}
 
     /*!
      * \brief Specifies which kind of boundary condition should be
@@ -246,6 +254,38 @@ public:
     {
         values = 0.0;
     }
+    // \}
+
+    /*!
+     * \name Constraints
+     */
+    // \{
+
+    /*!
+     * \brief Set the constraints of this problem.
+     *
+     * This method sets temperature constraints for the finite volumes
+     * adacent to the inlet.
+     */
+    template <class Context>
+    void constraints(Constraints &values,
+                     const Context &context,
+                     int spaceIdx, int timeIdx) const
+    {
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+
+        if (onLeftBoundary_(pos)) {
+            PrimaryVariables initCond;
+            initial(initCond, context, spaceIdx, timeIdx);
+
+            values.setConstraint(pressureIdx, conti0EqIdx, initCond[pressureIdx]);;
+            for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+                values.setConstraint(velocity0Idx + axisIdx,
+                                     momentum0EqIdx + axisIdx,
+                                     initCond[velocity0Idx + axisIdx]);
+        }
+    }
+
     // \}
 
     /*!

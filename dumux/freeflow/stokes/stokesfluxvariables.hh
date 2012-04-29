@@ -57,16 +57,12 @@ class StokesFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
-    typedef Dune::FieldVector<Scalar, dim> FieldVector;
-    typedef Dune::FieldVector<Scalar, dim> VelocityVector;
-    typedef Dune::FieldVector<Scalar, dim> ScalarGradient;
-    typedef Dune::FieldMatrix<Scalar, dim, dim> VectorGradient;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
@@ -79,9 +75,10 @@ public:
 
         onBoundary_ = isBoundaryFace;
         normal_ = scvf.normal;
+        Valgrind::CheckDefined(normal_);
 
         // calculate gradients and secondary variables at IPs
-        FieldVector tmp(0.0);
+        Vector tmp(0.0);
         densityAtIP_ = Scalar(0);
         molarDensityAtIP_ = Scalar(0);
         viscosityAtIP_ = Scalar(0);
@@ -89,7 +86,9 @@ public:
         normalVelocityAtIP_ = Scalar(0);
         velocityAtIP_ = Scalar(0);
         pressureGradAtIP_ = Scalar(0);
-        velocityGradAtIP_ = Scalar(0);
+        
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            velocityGradAtIP_[dimIdx] = 0.0;
 
         for (int idx = 0; idx < elemCtx.numScv(); idx++)
         {
@@ -111,8 +110,9 @@ public:
                 * scvf.shapeValue[idx];
 
             // velocity at the IP (fluxes)
-            VelocityVector velocityTimesShapeValue = volVars.velocity();
+            Vector velocityTimesShapeValue = volVars.velocity();
             velocityTimesShapeValue *= scvf.shapeValue[idx];
+            Valgrind::CheckDefined(scvf.shapeValue[idx]);
             velocityAtIP_ += velocityTimesShapeValue;
 
             // the pressure gradient
@@ -126,15 +126,17 @@ public:
             pressureGradAtIP_ -= tmp;
 
             // the velocity gradients and divergence
-            for (int dimIdx = 0; dimIdx<dim; ++dimIdx)
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             {
                 tmp = scvf.grad[idx];
                 tmp *= volVars.velocity()[dimIdx];
                 velocityGradAtIP_[dimIdx] += tmp;
             }
         }
+        Valgrind::CheckDefined(velocityAtIP_);
 
         normalVelocityAtIP_ = velocityAtIP_ * normal_;
+        Valgrind::CheckDefined(normalVelocityAtIP_);
 
         // set the upstream and downstream vertices
         upstreamIdx_ = scvf.i;
@@ -144,8 +146,6 @@ public:
 
         Valgrind::CheckDefined(densityAtIP_);
         Valgrind::CheckDefined(viscosityAtIP_);
-        Valgrind::CheckDefined(normal_);
-        Valgrind::CheckDefined(normalVelocityAtIP_);
         Valgrind::CheckDefined(velocityAtIP_);
         Valgrind::CheckDefined(pressureGradAtIP_);
         Valgrind::CheckDefined(velocityGradAtIP_);
@@ -189,21 +189,21 @@ public:
     /*!
      * \brief Return the pressure gradient at the integration point.
      */
-    const ScalarGradient &pressureGradAtIP() const
+    const Vector &pressureGradAtIP() const
     { return pressureGradAtIP_; }
 
     /*!
      * \brief Return the velocity vector at the integration point.
      */
-    const VelocityVector &velocityAtIP() const
+    const Vector &velocityAtIP() const
     { return velocityAtIP_; }
 
     /*!
      * \brief Return the velocity gradient at the integration
      *        point of a face.
      */
-    const VectorGradient &velocityGradAtIP() const
-    { return velocityGradAtIP_; }
+    const Vector &velocityGradAtIP(int axisIdx) const
+    { return velocityGradAtIP_[axisIdx]; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.
@@ -233,7 +233,7 @@ public:
     /*!
      * \brief Returns normal vector of the face of the flux variables.
      */
-    const FieldVector &normal() const
+    const Vector &normal() const
     { return normal_; }
 
 protected:
@@ -245,12 +245,12 @@ protected:
     Scalar viscosityAtIP_;
     Scalar pressureAtIP_;
     Scalar normalVelocityAtIP_;
-    VelocityVector velocityAtIP_;
-    FieldVector normal_;
+    Vector velocityAtIP_;
+    Vector normal_;
 
     // gradients at the IPs
-    ScalarGradient pressureGradAtIP_;
-    VectorGradient velocityGradAtIP_;
+    Vector pressureGradAtIP_;
+    Vector velocityGradAtIP_[dimWorld];
 
     // local index of the upwind vertex
     int upstreamIdx_;

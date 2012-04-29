@@ -51,8 +51,8 @@ class StokesCommonIndices
 
 public:
     // Primary variable indices
-    static const int momentum0Idx = PVOffset + 0; //!< Index of the first component of the momentum equation
-    static const int massBalanceIdx = PVOffset + dim; //!< Index of the mass balance equation
+    static const int momentum0EqIdx = PVOffset + 0; //!< Index of the first component of the momentum equation
+    static const int conti0EqIdx = PVOffset + dim; //!< Index of the mass balance equation
 
     static const int velocity0Idx = PVOffset + 0; //!< Index of the first component of the velocity
     static const int pressureIdx = PVOffset + dim; //!< Index of the pressure in a solution vector

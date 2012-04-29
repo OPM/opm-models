@@ -34,12 +34,7 @@
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 
-#if HAVE_UG
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#endif
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
 #include <dune/common/fvector.hh>
 
 namespace Dumux
@@ -56,7 +51,7 @@ namespace Properties
 NEW_TYPE_TAG(StokesTestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
-SET_TYPE_PROP(StokesTestProblem, Grid, Dune::SGrid<2, 2>);
+SET_TYPE_PROP(StokesTestProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
 SET_TYPE_PROP(StokesTestProblem, Problem, Dumux::StokesTestProblem<TypeTag>);
@@ -68,17 +63,12 @@ private:
 public:
     typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
 };
-//! Scalar is set to type long double for higher accuracy
-SET_TYPE_PROP(StokesTestProblem, Scalar, double);
-
-//! A stabilization factor. Set negative for stabilization and to zero for no stabilization
-SET_SCALAR_PROP(StokesTestProblem, StabilizationAlpha, -1.0);
-
-//! Stabilization factor for the boundaries
-SET_SCALAR_PROP(StokesTestProblem, StabilizationBeta, 0.0);
 
 // Enable gravity
 SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
+
+// Enable constraints
+SET_BOOL_PROP(StokesTestProblem, EnableConstraints, true);
 }
 
 /*!
@@ -94,9 +84,6 @@ SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
  * one vertex receives Dirichlet bcs to set the pressure level.
  *
  * This problem uses the \ref BoxStokesModel.
- *
- * To run the simulation execute the following line in shell:
- * <tt>./test_stokes -parameterFile ./test_stokes.input</tt>
  */
 template <class TypeTag>
 class StokesTestProblem 
@@ -107,29 +94,33 @@ class StokesTestProblem
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, StokesIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
 
     enum {
         // Number of equations and grid dimension
-        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld,
 
-        // copy some indices for convenience
-        massBalanceIdx = Indices::massBalanceIdx,
-        momentum0Idx = Indices::momentum0Idx //!< Index of the x-component of the momentum balance
+        // equation indices
+        conti0EqIdx = Indices::conti0EqIdx,
+        momentum0EqIdx = Indices::momentum0EqIdx,
+
+        // primary variable indices
+        velocity0Idx = Indices::velocity0Idx,
+        pressureIdx = Indices::pressureIdx
     };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     StokesTestProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
-    {
-        eps_ = 1e-6;
-    }
+    { eps_ = 1e-6; }
 
     /*!
      * \name Problem parameters
@@ -152,10 +143,8 @@ public:
     template <class Context>   
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
-    {
-        return 273.15 + 10; // -> 10C
-    }
-
+    { return 273.15 + 10; } // -> 10 deg C
+    
     // \}
 
     /*!
@@ -164,79 +153,72 @@ public:
     // \{
 
     /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex on the boundary for which the
-     *               conditions needs to be specified
+     * \brief Evaluate the boundary conditions.
      */
     template <class Context>
-    void boundaryTypes(BoundaryTypes &values, 
-                       const Context &context,
-                       int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
 
-        values.setAllDirichlet();
+        Scalar y = pos[1] - this->bboxMin()[1];
+        Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
 
-        // the mass balance has to be of type outflow
-        values.setOutflow(massBalanceIdx);
-
-        if(onRightBoundary_(globalPos) &&
-                globalPos[1] < this->bboxMax()[1]-eps_ && globalPos[1] > this->bboxMin()[1]+eps_)
-            values.setAllOutflow();
-
-        // set pressure at one point
-        const Scalar middle = (this->bboxMax()[1] - this->bboxMin()[1])/2;
-        if (onRightBoundary_(globalPos) &&
-                globalPos[1] > middle - eps_ && globalPos[1] < middle + eps_)
-            values.setDirichlet(massBalanceIdx);
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex representing the "half volume on the boundary"
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values,
-                   const Context &context,
-                   int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
-        
-        initial(values, context, spaceIdx, timeIdx);
-
-        const Scalar v0 = 1.0;
         // parabolic velocity profile
-        values[momentum0Idx] =  v0*(globalPos[1] - this->bboxMin()[1])*(this->bboxMax()[1] - globalPos[1])
-                               / (0.25*(this->bboxMax()[1] - this->bboxMin()[1])*(this->bboxMax()[1] - this->bboxMin()[1]));
+        const Scalar maxVelocity = 1.0;
+
+        Scalar a = - 4*maxVelocity/(height*height);
+        Scalar b = - a*height;
+        Scalar c = 0;
+        
+        Vector velocity(0.0);
+        velocity[0] = a * y*y + b * y + c;
+
+        if (onRightBoundary_(pos))
+            values.setOutFlow(context, spaceIdx, timeIdx);
+        else if(onLeftBoundary_(pos)) {
+            // left boundary is constraint!
+            values = 0.0;
+        }
+        else {
+            // top and bottom
+            values.setNoFlow(context, spaceIdx, timeIdx);
+        }
     }
 
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     *
-     * A NEUMANN condition for the Stokes equation corresponds to:
-     * \f[ -\mu \nabla {\bf v} \cdot {\bf n} + p \cdot {\bf n} = q_N \f]
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        values = 0.0;
-    }
     // \}
 
+    /*!
+     * \name Constraints
+     */
+    // \{
+
+    /*!
+     * \brief Set the constraints of this problem.
+     *
+     * This method sets temperature constraints for the finite volumes
+     * adacent to the inlet.
+     */
+    template <class Context>
+    void constraints(Constraints &values,
+                     const Context &context,
+                     int spaceIdx, int timeIdx) const
+    {
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+
+        if (onLeftBoundary_(pos)) {
+            PrimaryVariables initCond;
+            initial(initCond, context, spaceIdx, timeIdx);
+
+            values.setConstraint(pressureIdx, conti0EqIdx, initCond[pressureIdx]);;
+            for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+                values.setConstraint(velocity0Idx + axisIdx,
+                                     momentum0EqIdx + axisIdx,
+                                     initCond[velocity0Idx + axisIdx]);
+        }
+    }
+
+    // \}
+    
     /*!
      * \name Volume terms
      */
@@ -244,7 +226,7 @@ public:
 
     /*!
      * \brief Evaluate the source term for all phases within a given
-     *        sub-control-volume.
+    *        sub-control-volume.
      *
      * For this method, the \a values parameter stores the rate mass
      * generated or annihilate per volume unit. Positive values mean
@@ -254,11 +236,7 @@ public:
     void source(RateVector &values,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
-    {
-        // ATTENTION: The source term of the mass balance has to be chosen as
-        // div (q_momentum) in the problem file
-        values = Scalar(0.0);
-    }
+    { values = Scalar(0.0); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -271,22 +249,42 @@ public:
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        values = 0.0;
-        values[massBalanceIdx] = 1e5;
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+
+        Scalar y = pos[1] - this->bboxMin()[1];
+        Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
+
+        // parabolic velocity profile
+        const Scalar maxVelocity = 1.0;
+
+        Scalar a = - 4*maxVelocity/(height*height);
+        Scalar b = - a*height;
+        Scalar c = 0;
+        
+        Vector velocity(0.0);
+        if(onLeftBoundary_(pos) || onRightBoundary_(pos) || onUpperBoundary_(pos) || onLowerBoundary_(pos))
+            velocity[0] = a * y*y + b * y + c;
+
+        for (int i = 0; i < dimWorld; ++i)
+            values[velocity0Idx + i] = velocity[i];
+
+        values[pressureIdx] = 1e5;
     }
+    
+    // \}
 
 private:
-    bool onLeftBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] < this->bboxMin()[0] + eps_; }
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < this->bboxMin()[0] + eps_; }
 
-    bool onRightBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] > this->bboxMax()[0] - eps_; }
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
 
-    bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] < this->bboxMin()[1] + eps_; }
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < this->bboxMin()[1] + eps_; }
 
-    bool onUpperBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] > this->bboxMax()[1] - eps_; }
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
 
     Scalar eps_;
 };

@@ -42,7 +42,7 @@
 #include "stokesmodel.hh"
 #include "stokesvolumevariables.hh"
 #include "stokesfluxvariables.hh"
-#include "stokesnewtoncontroller.hh"
+#include "stokesboundaryratevector.hh"
 
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
@@ -74,8 +74,6 @@ SET_INT_PROP(BoxStokes, NumPhases, 1);
 //! the number of components
 SET_INT_PROP(BoxStokes, NumComponents, 1);
 
-SET_SCALAR_PROP(BoxStokes, Scaling, 1); //!< set scaling to 1 by default
-
 //! Use the Stokes local residual function for the Stokes model
 SET_TYPE_PROP(BoxStokes,
               LocalResidual,
@@ -86,11 +84,8 @@ SET_TYPE_PROP(BoxStokes,
               BaseProblem,
               StokesProblem<TypeTag>);
 
-//! Use the Stokes specific newton controller for the Stokes model
-SET_PROP(BoxStokes, NewtonController)
-{public:
-    typedef StokesNewtonController<TypeTag> type;
-};
+//! Increase the relative tolerance of the newton method to 10^-6
+SET_SCALAR_PROP(BoxStokes, NewtonRelTolerance, 1e-6);
 
 #if HAVE_SUPERLU
 SET_TYPE_PROP(BoxStokes, LinearSolver, SuperLUBackend<TypeTag>);
@@ -106,6 +101,9 @@ SET_TYPE_PROP(BoxStokes, VolumeVariables, StokesVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
 SET_TYPE_PROP(BoxStokes, FluxVariables, StokesFluxVariables<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxStokes, BoundaryRateVector, StokesBoundaryRateVector<TypeTag>);
 
 //! the upwind factor.
 SET_SCALAR_PROP(BoxStokes, MassUpwindWeight, 1.0);
@@ -137,14 +135,10 @@ SET_PROP(BoxStokes, FluidState)
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
     typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem> type;
-
 };
 
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
 SET_INT_PROP(BoxStokes, StokesPhaseIndex, 0);
-
-//! Set calculation to Stokes, not Navier-Stokes
-SET_BOOL_PROP(BoxStokes, EnableNavierStokes, false);
 }
 
 }

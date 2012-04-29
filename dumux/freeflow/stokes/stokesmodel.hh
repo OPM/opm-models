@@ -29,7 +29,6 @@
 #define DUMUX_STOKES_MODEL_HH
 
 #include "stokeslocalresidual.hh"
-#include "stokesnewtoncontroller.hh"
 #include "stokesproblem.hh"
 #include "stokesproperties.hh"
 
@@ -106,11 +105,11 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (eqIdx == Indices::massBalanceIdx) {
+        if (eqIdx == Indices::conti0EqIdx) {
             oss << "continuity";
         }
-        else if (Indices::momentum0Idx <= eqIdx && eqIdx < Indices::momentum0Idx + dim)
-            oss << "momentum_" << eqIdx - Indices::momentum0Idx;
+        else if (Indices::momentum0EqIdx <= eqIdx && eqIdx < Indices::momentum0EqIdx + dim)
+            oss << "momentum_" << eqIdx - Indices::momentum0EqIdx;
         else
             assert(false);
 
@@ -126,8 +125,12 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
+        // for stokes flow the pressure gradients are often quite
+        // small, so we need higher precision for pressure. TODO: find
+        // a good weight for the pressure.
         if (Indices::pressureIdx == pvIdx)
-            return 1.0/1e5;
+            return 1.0/this->solution(/*timeIdx=*/0)[globalVertexIdx][Indices::pressureIdx];
+
         return 1;
     }
 
@@ -136,8 +139,8 @@ public:
     void addOutputVtkFields(const SolutionVector &sol,
                             MultiWriter &writer) const
     {
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, dim> > VelocityField;
+        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VelocityField;
 
         // create the required scalar fields
         unsigned numVertices = this->gridView_().size(dim);
@@ -145,7 +148,7 @@ public:
         ScalarField &delP = *writer.allocateManagedBuffer(numVertices);
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity = *writer.template allocateManagedBuffer<Scalar, dim> (numVertices);
+        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
 
         // iterate over grid
         ElementContext elemCtx(this->problem_());

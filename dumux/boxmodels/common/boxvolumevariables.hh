@@ -105,6 +105,14 @@ public:
     }
 
     /*!
+     * \brief Update all gradients for a given control volume.
+     */
+    void updateScvGradients(const ElementContext &elemCtx,
+                            int scvIdx,
+                            int timeIdx)
+    { }
+
+    /*!
      * \brief Return how much the sub-control volume is extruded.
      *
      * This means the factor by which a lower-dimensional (1D or 2D)
