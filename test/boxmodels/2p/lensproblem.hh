@@ -62,24 +62,24 @@ NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxTwoP));
 // declare the properties specific for the lens problem
 NEW_PROP_TAG(LensLowerLeftX);
 NEW_PROP_TAG(LensLowerLeftY);
+NEW_PROP_TAG(LensLowerLeftZ);
 NEW_PROP_TAG(LensUpperRightX);
 NEW_PROP_TAG(LensUpperRightY);
+NEW_PROP_TAG(LensUpperRightZ);
 
 NEW_PROP_TAG(GridSizeX);
 NEW_PROP_TAG(GridSizeY);
+NEW_PROP_TAG(GridSizeZ);
 
 NEW_PROP_TAG(CellsX);
 NEW_PROP_TAG(CellsY);
-
-// Set the grid type
-#if HAVE_UG
-SET_TYPE_PROP(LensProblem, Grid, Dune::UGGrid<2>);
-#else
-SET_TYPE_PROP(LensProblem, Grid, Dune::YaspGrid<2>);
-#endif
+NEW_PROP_TAG(CellsZ);
 
 // set the GridCreator property
 SET_TYPE_PROP(LensProblem, GridCreator, LensGridCreator<TypeTag>);
+
+// Retrieve the grid type from the grid creator
+SET_TYPE_PROP(LensProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
 
 // Set the problem property
 SET_TYPE_PROP(LensProblem, Problem, Dumux::LensProblem<TypeTag>);
@@ -149,14 +149,18 @@ SET_BOOL_PROP(LensProblem, EnableGravity, true);
 // define the properties specific for the lens problem
 SET_SCALAR_PROP(LensProblem, LensLowerLeftX, 1.0);
 SET_SCALAR_PROP(LensProblem, LensLowerLeftY, 2.0);
+SET_SCALAR_PROP(LensProblem, LensLowerLeftZ, 0.0);
 SET_SCALAR_PROP(LensProblem, LensUpperRightX, 4.0);
 SET_SCALAR_PROP(LensProblem, LensUpperRightY, 3.0);
+SET_SCALAR_PROP(LensProblem, LensUpperRightZ, 1.0);
 
 SET_SCALAR_PROP(LensProblem, GridSizeX, 6.0);
 SET_SCALAR_PROP(LensProblem, GridSizeY, 4.0);
+SET_SCALAR_PROP(LensProblem, GridSizeZ, 1.0);
 
 SET_INT_PROP(LensProblem, CellsX, 48);
 SET_INT_PROP(LensProblem, CellsY, 32);
+SET_INT_PROP(LensProblem, CellsZ, 16);
 }
 
 /*!
@@ -231,6 +235,7 @@ class LensProblem
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
@@ -254,6 +259,11 @@ public:
         lensUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensUpperRightX);
         lensUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
         
+        if (dimWorld == 3) {
+            lensLowerLeft_[2] = GET_PARAM(TypeTag, Scalar, LensLowerLeftZ);
+            lensUpperRight_[2] = GET_PARAM(TypeTag, Scalar, LensUpperRightZ);
+        }
+
         // parameters for the Van Genuchten law
         // alpha and n
         lensMaterialParams_.setVgAlpha(0.00045);
@@ -263,6 +273,9 @@ public:
 
         lensK_ = this->toTensor_(9.05e-12);
         outerK_ = this->toTensor_(4.6e-10);
+        
+        this->gravity_ = 0;
+        this->gravity_[1] = -9.81; // [m/s^2]
     }
 
     /*!

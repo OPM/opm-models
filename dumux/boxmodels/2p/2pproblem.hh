@@ -125,6 +125,9 @@ public:
 
     // \}
 
+protected:
+    Vector gravity_;
+
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
@@ -132,8 +135,6 @@ private:
     //! \copydoc asImp_()
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
-
-    Vector gravity_;
 };
 
 }

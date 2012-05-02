@@ -80,7 +80,6 @@ void usage(const char *progName, const std::string &errorMsg)
         << "\n";
 }
 
-#define CUBES 1
 ////////////////////////
 // the main function
 ////////////////////////
