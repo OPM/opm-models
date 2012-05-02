@@ -92,19 +92,19 @@ public:
 
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
-                        int spaceIdx, 
+                        int bfIdx, 
                         int timeIdx, 
                         const FluidState &fs, 
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        int scvIdx = context.insideScvIndex(spaceIdx, timeIdx);
+        int scvIdx = context.insideScvIndex(bfIdx, timeIdx);
         insideScvIdx_ = scvIdx;
         outsideScvIdx_ = scvIdx;
 
-        extrusionFactor_ = context.volVars(insideScvIdx_, timeIdx).extrusionFactor();
+        extrusionFactor_ = context.volVars(bfIdx, timeIdx).extrusionFactor();
 
-        calculateBoundaryGradients_(context, spaceIdx, timeIdx, fs, paramCache);
-        calculateBoundaryVelocities_(context, spaceIdx, timeIdx, fs, paramCache);
+        calculateBoundaryGradients_(context, bfIdx, timeIdx, fs, paramCache);
+        calculateBoundaryVelocities_(context, bfIdx, timeIdx, fs, paramCache);
     }
 
     /*!
@@ -244,14 +244,14 @@ private:
             }
 
             // calculate gradients
-            for (int fapIdx = 0;
-                 fapIdx < fvElemGeom.numFAP; // num flux approximation points
-                 fapIdx ++)
+            for (int scvIdx = 0;
+                 scvIdx < elemCtx.numScv();
+                 scvIdx ++)
             {
-                // FE gradient at vertex idx
-                int scvIdx = scvf.fapIndices[fapIdx]; // flux appoximation to SCV index
+                // FE gradient at vertex
                 const Vector &feGrad = scvf.grad[scvIdx];
                 const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
+                Valgrind::CheckDefined(feGrad);
 
                 // compute sum of pressure gradients for each phase
                 for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
@@ -262,6 +262,7 @@ private:
                     // the pressure gradient
                     Vector tmp(feGrad);
                     tmp *= fluidState.pressure(phaseIdx);
+                    Valgrind::CheckDefined(tmp);
                     potentialGrad_[phaseIdx] += tmp;
                 }
             }
@@ -401,6 +402,7 @@ private:
                                                     outsideScvIdx_,
                                                     timeIdx));
         
+        Valgrind::CheckDefined(elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal);
         Vector normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Scalar scvfArea = normal.two_norm();
         normal /= scvfArea;
@@ -418,6 +420,9 @@ private:
                 downstreamScvIdx_[phaseIdx] = outsideScvIdx_;
                 continue;
             }
+
+            Valgrind::CheckDefined(K);
+            Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
 
             // calculate the "prelimanary" filter velocity not
             // taking the mobility into account
