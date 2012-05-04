@@ -79,6 +79,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { dim = GridView::dimension };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { numComponents = FluidSystem::numComponents };
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
@@ -149,6 +150,9 @@ public:
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
         VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
+        ScalarField *moleFrac[numComponents];
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            moleFrac[compIdx] = writer.allocateManagedBuffer(numVertices);
 
         // iterate over grid
         ElementContext elemCtx(this->problem_());
@@ -171,6 +175,9 @@ public:
                 rho[globalIdx] = fs.density(phaseIdx);
                 mu[globalIdx] = fs.viscosity(phaseIdx);
                 velocity[globalIdx] = volVars.velocity();
+
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                    (*moleFrac[compIdx])[globalIdx] = fs.moleFraction(phaseIdx, compIdx);
             };
         }
 
@@ -184,6 +191,11 @@ public:
 
         tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(rho, tmp.str());
+
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            tmp.str(""); tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^" << FluidSystem::componentName(compIdx);
+            writer.attachVertexData(*moleFrac[compIdx], tmp.str());
+        }
 
         tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(mu, tmp.str());

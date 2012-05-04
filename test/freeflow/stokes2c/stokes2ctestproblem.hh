@@ -22,20 +22,15 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /**
- * @file
- * @brief  Definition of a simple Stokes problem
- * @author Klaus Mosthaf, Andreas Lauser, Bernd Flemisch
+ * \file
+ * \brief A simple problem using the isothermal Stokes model and two components.
  */
-#ifndef DUMUX_STOKES2CTESTPROBLEM_HH
-#define DUMUX_STOKES2CTESTPROBLEM_HH
+#ifndef DUMUX_STOKES_2C_TEST_PROBLEM_HH
+#define DUMUX_STOKES_2C_TEST_PROBLEM_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cmodel.hh>
+#include <dumux/freeflow/stokes/stokesmodel.hh>
 #include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 
-#if HAVE_UG
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#endif
-#include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
@@ -50,10 +45,10 @@ class Stokes2cTestProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(Stokes2cTestProblem, INHERITS_FROM(BoxStokes2c));
+NEW_TYPE_TAG(Stokes2cTestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
-SET_TYPE_PROP(Stokes2cTestProblem, Grid, Dune::SGrid<2,2>);
+SET_TYPE_PROP(Stokes2cTestProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
 SET_TYPE_PROP(Stokes2cTestProblem, Problem, Dumux::Stokes2cTestProblem<TypeTag>);
@@ -68,16 +63,11 @@ SET_INT_PROP(Stokes2cTestProblem,
              StokesPhaseIndex,
              GET_PROP_TYPE(TypeTag, FluidSystem)::gPhaseIdx);
 
-//! Select the phase to be considered by the transport equation
-SET_INT_PROP(Stokes2cTestProblem, 
-             StokesComponentIndex,
-             GET_PROP_TYPE(TypeTag, FluidSystem)::H2OIdx);
-
-//! Scalar is set to type long double for higher accuracy
-SET_TYPE_PROP(BoxStokes, Scalar, double);
-
-// Enable gravity
+// Disable gravity
 SET_BOOL_PROP(Stokes2cTestProblem, EnableGravity, false);
+
+// Enable constraints
+SET_BOOL_PROP(Stokes2cTestProblem, EnableConstraints, true);
 }
 
 /*!
@@ -101,28 +91,31 @@ class Stokes2cTestProblem
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-    // Number of equations and grid dimension
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
+    enum { numComponents = FluidSystem::numComponents };
     enum {
         // copy some indices for convenience
-        massBalanceIdx = Indices::massBalanceIdx,
-        momentum0Idx = Indices::momentum0Idx,
-        transportIdx = Indices::transportIdx,
+        conti0EqIdx = Indices::conti0EqIdx,
+        momentum0EqIdx = Indices::momentum0EqIdx,
 
         velocity0Idx = Indices::velocity0Idx,
-        massFracIdx = Indices::massFracIdx,
-        pressureIdx = Indices::pressureIdx
+        moleFrac1Idx = Indices::moleFrac1Idx,
+        pressureIdx = Indices::pressureIdx,
+
+        H2OIdx = FluidSystem::H2OIdx,
+        AirIdx = FluidSystem::AirIdx
     };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     Stokes2cTestProblem(TimeManager &timeManager)
@@ -179,81 +172,11 @@ public:
             values = 0.0;
         }
         else {
-            // left and right
+            // left and right boundaries
             values.setNoFlow(context, spaceIdx, timeIdx);
         }
     }
 
-    // \}
-
-    /*!
-     * \brief Specifies which kind of boundary condition should be
-     *        used for which equation on a given boundary segment.
-     *
-     * \param values The boundary types for the conservation equations
-     * \param vertex The vertex on the boundary for which the
-     *               conditions needs to be specified
-     */
-    template <class Context>
-    void boundaryTypes(BoundaryTypes &values, 
-                       const Context &context,
-                       int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
-
-        values.setAllDirichlet();
-
-        if (onLowerBoundary_(globalPos)
-                && !onLeftBoundary_(globalPos) && !onRightBoundary_(globalPos))
-            values.setAllOutflow();
-
-        // the mass balance has to be of type outflow
-        values.setOutflow(massBalanceIdx);
-
-        // set pressure at one point
-        const Scalar middle = (this->bboxMax()[0] - this->bboxMin()[0])/2;
-        if (onLowerBoundary_(globalPos) &&
-                globalPos[0] > middle - eps_ && globalPos[1] < middle + eps_)
-            values.setDirichlet(massBalanceIdx);
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a dirichlet
-     *        control volume.
-     *
-     * \param values The dirichlet values for the primary variables
-     * \param vertex The vertex representing the "half volume on the boundary"
-     *
-     * For this method, the \a values parameter stores primary variables.
-     */
-    template <class Context>
-    void dirichlet(PrimaryVariables &values,
-                   const Context &context,
-                   int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition globalPos = context.pos(spaceIdx, timeIdx);
-
-        initial(values, context, spaceIdx, timeIdx);
-
-        if (onUpperBoundary_(globalPos)) {
-            values[massFracIdx] = 0.005;
-        }
-    }
-
-    /*!
-     * \brief Evaluate the boundary conditions for a neumann
-     *        boundary segment.
-     *
-     * For this method, the \a values parameter stores the mass flux
-     * in normal direction of each phase. Negative values mean influx.
-     */
-    template <class Context>
-    void neumann(RateVector &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    {
-        values = 0.0;
-    }
     // \}
 
     /*!
@@ -274,11 +197,12 @@ public:
     {
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onLeftBoundary_(pos)) {
+        if (onUpperBoundary_(pos)) {
             PrimaryVariables initCond;
             initial(initCond, context, spaceIdx, timeIdx);
 
             values.setConstraint(pressureIdx, conti0EqIdx, initCond[pressureIdx]);;
+            values.setConstraint(moleFrac1Idx, conti0EqIdx + 1, initCond[moleFrac1Idx]);
             for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
                 values.setConstraint(velocity0Idx + axisIdx,
                                      momentum0EqIdx + axisIdx,
@@ -325,19 +249,22 @@ public:
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         values = 0.0;
 
-        values[pressureIdx] = 1e5;
-        values[velocity0Idx + 0] = 0.0;
-
         //parabolic profile
         const Scalar v1 = 1.0;
         values[velocity0Idx + 1] =
             - v1*(globalPos[0] - this->bboxMin()[0])*(this->bboxMax()[0] - globalPos[0])
             / (0.25*(this->bboxMax()[0] - this->bboxMin()[0])*(this->bboxMax()[0] - this->bboxMin()[0]));
 
+        Scalar moleFrac[numComponents];
         if (onUpperBoundary_(globalPos))
-            values[transportIdx] = 0.005;
+            moleFrac[H2OIdx] = 0.005;
         else
-            values[transportIdx] = 0.007;
+            moleFrac[H2OIdx] = 0.007;
+        moleFrac[AirIdx] = 1.0 - moleFrac[H2OIdx];
+
+        values[pressureIdx] = 1e5;
+        values[velocity0Idx + 0] = 0.0;
+        values[moleFrac1Idx] = moleFrac[1];
     }
 
 private:

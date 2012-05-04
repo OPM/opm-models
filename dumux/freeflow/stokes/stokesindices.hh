@@ -33,8 +33,6 @@
 
 namespace Dumux
 {
-// \{
-
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxIndices
@@ -43,19 +41,21 @@ namespace Dumux
  * \tparam PVOffset The first index in a primary variable vector.
  */
 template <class TypeTag, int PVOffset = 0>
-class StokesCommonIndices
+class StokesIndices
 {
-    // number of dimensions
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     static const int dim = Grid::dimension;
+    static const int numComponents = FluidSystem::numComponents;
 
 public:
     // Primary variable indices
-    static const int momentum0EqIdx = PVOffset + 0; //!< Index of the first component of the momentum equation
-    static const int conti0EqIdx = PVOffset + dim; //!< Index of the mass balance equation
+    static const int conti0EqIdx = PVOffset + 0; //!< Index of the mass balance equation
+    static const int momentum0EqIdx = PVOffset + numComponents; //!< Index of the first component of the momentum equation
 
-    static const int velocity0Idx = PVOffset + 0; //!< Index of the first component of the velocity
-    static const int pressureIdx = PVOffset + dim; //!< Index of the pressure in a solution vector
+    static const int pressureIdx = PVOffset + 0; //!< Index of the pressure in a solution vector
+    static const int moleFrac1Idx = PVOffset + 1; //!< Index of the mole fraction of the _SECOND_ component
+    static const int velocity0Idx = PVOffset + numComponents; //!< Index of the first component of the velocity
 };
 } // end namespace
 

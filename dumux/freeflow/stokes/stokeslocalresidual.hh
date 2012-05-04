@@ -63,11 +63,13 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum {
         dimWorld = GridView::dimensionworld,
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex)
+        phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex),
+        numComponents = FluidSystem::numComponents
     };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
@@ -95,8 +97,10 @@ protected:
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
-        // mass balance
-        result[conti0EqIdx] = fs.density(phaseIdx);
+        // mass storage
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            result[conti0EqIdx + compIdx] = 
+                fs.molarity(phaseIdx, compIdx);
 
         // momentum balance
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
@@ -141,12 +145,15 @@ protected:
         // data attached to upstream vertex
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
 
-        // mass flux with upwinded density
-        flux[conti0EqIdx] = 
-            up.fluidState().density(phaseIdx) 
-            * (fluxVars.velocityAtIP()
-               * fluxVars.normal());
-
+        // mass fluxes
+        Scalar vTimesN = 
+            fluxVars.velocityAtIP()
+            * fluxVars.normal();
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            flux[conti0EqIdx + compIdx] = 
+                up.fluidState().molarity(phaseIdx, compIdx)
+                * vTimesN;
+        
         // momentum flux
         Scalar mu = up.fluidState().viscosity(phaseIdx);
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)

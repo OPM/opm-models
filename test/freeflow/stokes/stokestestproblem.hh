@@ -64,7 +64,7 @@ public:
     typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
 };
 
-// Enable gravity
+// Disable gravity
 SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
 
 // Enable constraints
@@ -254,7 +254,7 @@ public:
         Scalar y = pos[1] - this->bboxMin()[1];
         Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
 
-        // parabolic velocity profile
+        // parabolic velocity profile on boundaries
         const Scalar maxVelocity = 1.0;
 
         Scalar a = - 4*maxVelocity/(height*height);
@@ -265,8 +265,8 @@ public:
         if(onLeftBoundary_(pos) || onRightBoundary_(pos) || onUpperBoundary_(pos) || onLowerBoundary_(pos))
             velocity[0] = a * y*y + b * y + c;
 
-        for (int i = 0; i < dimWorld; ++i)
-            values[velocity0Idx + i] = velocity[i];
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            values[velocity0Idx + axisIdx] = velocity[axisIdx];
 
         values[pressureIdx] = 1e5;
     }

@@ -57,9 +57,11 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    enum { numComponents = FluidSystem::numComponents };
     enum { dimWorld = GridView::dimensionworld };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { pressureIdx = Indices::pressureIdx };
+    enum { moleFrac1Idx = Indices::moleFrac1Idx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
@@ -77,6 +79,14 @@ public:
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
 
+        // set the phase composition
+        Scalar sumx = 0;
+        for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
+            fluidState_.setMoleFraction(phaseIdx, compIdx, priVars[moleFrac1Idx + compIdx - 1]);
+            sumx += priVars[moleFrac1Idx + compIdx - 1];
+        }
+        fluidState_.setMoleFraction(phaseIdx, 0, 1 - sumx);
+                
         // create NullParameterCache and do dummy update
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);

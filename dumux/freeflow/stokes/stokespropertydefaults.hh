@@ -49,7 +49,7 @@
 #include <dumux/material/components/nullcomponent.hh>
 
 #include <dumux/material/fluidsystems/1pfluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
 namespace Dumux
 {
@@ -62,10 +62,11 @@ namespace Properties
 
 SET_PROP(BoxStokes, NumEq) //!< set the number of equations
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    static const int dim = Grid::dimension;
- public:
-    static constexpr int value = 1 + dim;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    static constexpr int value = GridView::dimensionworld + FluidSystem::numComponents;
 };
 
 //! the number of phases
@@ -125,7 +126,7 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-SET_TYPE_PROP(BoxStokes, StokesIndices, StokesCommonIndices<TypeTag>);
+SET_TYPE_PROP(BoxStokes, StokesIndices, StokesIndices<TypeTag>);
 SET_TYPE_PROP(BoxStokes, Indices, typename GET_PROP_TYPE(TypeTag, StokesIndices));
 
 //! Choose the type of the employed fluid state.
@@ -134,7 +135,7 @@ SET_PROP(BoxStokes, FluidState)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem> type;
+    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> type;
 };
 
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
