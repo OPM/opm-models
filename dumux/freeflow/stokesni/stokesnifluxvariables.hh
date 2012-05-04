@@ -41,7 +41,7 @@ namespace Dumux
 {
 
 /*!
- * \ingroup BoxStokes2cniModel
+ * \ingroup BoxStokesNIModel
  * \ingroup BoxFluxVariables
  * \brief This template class contains data which is required to
  *        calculate the energy fluxes over a face of a finite
@@ -51,7 +51,7 @@ namespace Dumux
  * at the integration point of a SCV face or boundary face.
  */
 template <class TypeTag>
-class Stokes2cniFluxVariables : public Stokes2cFluxVariables<TypeTag>
+class StokesNIFluxVariables : public Stokes2cFluxVariables<TypeTag>
 {
     typedef Stokes2cFluxVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

@@ -38,7 +38,7 @@
 namespace Dumux
 {
 /*!
- * \ingroup BoxStokes2cniModel
+ * \ingroup BoxStokesNIModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the non-isothermal compositional Stokes box model. This class is derived
@@ -49,13 +49,13 @@ namespace Dumux
      *  \param usePrevSol Evaluate function with solution of current or previous time step
  */
 template<class TypeTag>
-class Stokes2cniLocalResidual : public Stokes2cLocalResidual<TypeTag>
+class StokesNILocalResidual : public Stokes2cLocalResidual<TypeTag>
 {
     typedef Stokes2cLocalResidual<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;

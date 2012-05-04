@@ -151,6 +151,8 @@ public:
                 insideVolVars.fluidState().viscosity(phaseIdx) 
                 * (tmp * normal);
         }
+
+        asImp_().enthalpyFlux_(velocity, insideVolVars, fs, paramCache);
     }
 
     /*!
@@ -220,18 +222,19 @@ public:
     }
 
 protected:
-    Implementation &asImp_() 
-    { return *static_cast<Implementation *>(this); }
-/*
     template <class FluidState>
-    void enthalpyFlux_(const FluxVariables &fluxVars,
+    void enthalpyFlux_(const Vector &velocity,
                        const VolumeVariables &insideVolVars,
                        const FluidState &fs,
-                       const typename FluidSystem::ParameterCache &paramCache,
-                       int phaseIdx,
-                       Scalar density)
+                       const typename FluidSystem::ParameterCache &paramCache)
     { }
-*/
+
+private:
+    Implementation &asImp_()
+    { return *static_cast<Implementation *>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation *>(this); }
+
 };
 
 } // end namepace

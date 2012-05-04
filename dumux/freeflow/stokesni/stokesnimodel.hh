@@ -40,7 +40,7 @@
 
 namespace Dumux {
 /*!
- * \ingroup BoxStokes2cniModel
+ * \ingroup BoxStokesNIModel
  * \brief Adaption of the BOX scheme to the non-isothermal compositional Stokes model.
  *
  * This model implements a non-isothermal two-component Stokes flow of a fluid
@@ -82,11 +82,11 @@ namespace Dumux {
  *
  */
 template<class TypeTag>
-class Stokes2cniModel : public Stokes2cModel<TypeTag>
+class StokesNIModel : public Stokes2cModel<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

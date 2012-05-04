@@ -50,7 +50,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/decoupled/common/mimetic/Makefile
     dumux/freeflow/Makefile
     dumux/freeflow/stokes/Makefile
-    dumux/freeflow/stokes2cni/Makefile
+    dumux/freeflow/stokesni/Makefile
     dumux/io/Makefile
     dumux/linear/Makefile
     dumux/material/Makefile 
@@ -94,7 +94,7 @@ AC_CONFIG_FILES([ewoms.pc
     test/freeflow/Makefile
     test/freeflow/stokes/Makefile
     test/freeflow/stokes2c/Makefile
-    test/freeflow/stokes2cni/Makefile
+    test/freeflow/stokesni/Makefile
     test/material/Makefile
     test/material/fluidsystems/Makefile
     test/material/immiscibleflash/Makefile

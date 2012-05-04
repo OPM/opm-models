@@ -35,21 +35,21 @@ namespace Dumux
 {
 
 /*!
- * \ingroup BoxStokes2cniModel
+ * \ingroup BoxStokesNIModel
  * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the non-isothermal two-component Stokes
  *        box model.
  */
 template <class TypeTag>
-class Stokes2cniVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
+class StokesNIVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
 {
     typedef Stokes2cVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
 
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { temperatureIdx = Indices::temperatureIdx };

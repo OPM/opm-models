@@ -122,9 +122,9 @@ protected:
                      int timeIdx) const
     {
         flux = 0.0;
-        asImp_()->computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
+        asImp_().computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
         Valgrind::CheckDefined(flux);
-        asImp_()->computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx);
+        asImp_().computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
@@ -213,11 +213,11 @@ protected:
             q[momentum0EqIdx + axisIdx] -= gradp[axisIdx] + density*gravity[axisIdx];
     }
 
-protected:
-    Implementation *asImp_()
-    { return static_cast<Implementation *>(this); }
-    const Implementation *asImp_() const
-    { return static_cast<const Implementation *>(this); }
+private:
+    Implementation &asImp_()
+    { return *static_cast<Implementation *>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation *>(this); }
 };
 
 }

@@ -22,62 +22,36 @@
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
- * \ingroup BoxStokes2cniModel
+ * \ingroup BoxStokesNIModel
  *
  * \file
  *
- * \brief Sets default properties for the non-isothermal compositional
- *        Stokes box model.
+ * \brief Defines the additional properties required for the non-isothermal compositional
+ * Stokes box model.
  */
-#ifndef DUMUX_STOKES2CNI_PROPERTY_DEFAULTS_HH
-#define DUMUX_STOKES2CNI_PROPERTY_DEFAULTS_HH
+#ifndef DUMUX_STOKES2CNI_PROPERTIES_HH
+#define DUMUX_STOKES2CNI_PROPERTIES_HH
 
-
-#include "stokes2cnifluxvariables.hh"
-#include "stokes2cniindices.hh"
-#include "stokes2cnilocalresidual.hh"
-#include "stokes2cnimodel.hh"
-#include "stokes2cnivolumevariables.hh"
+#include <dumux/freeflow/stokes2c/stokes2cproperties.hh>
 
 namespace Dumux
 {
-
 namespace Properties
 {
 //////////////////////////////////////////////////////////////////
-// Properties
+// Type tags
 //////////////////////////////////////////////////////////////////
 
-SET_PROP(BoxStokes2cni, NumEq) //!< set the number of equations
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    static const int dim = Grid::dimension;
- public:
-    static constexpr int value = 3 + dim;
-};
+//! The type tag for the non-isothermal compositional Stokes problems
+NEW_TYPE_TAG(BoxStokesNI, INHERITS_FROM(BoxStokes2c));
 
-//! Use the stokes2cni local jacobian operator for the compositional stokes model
-SET_TYPE_PROP(BoxStokes2cni,
-              LocalResidual,
-              Stokes2cniLocalResidual<TypeTag>);
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
 
-//! the Model property
-SET_TYPE_PROP(BoxStokes2cni, Model, Stokes2cniModel<TypeTag>);
-
-//! the VolumeVariables property
-SET_TYPE_PROP(BoxStokes2cni, VolumeVariables, Stokes2cniVolumeVariables<TypeTag>);
-
-//! the FluxVariables property
-SET_TYPE_PROP(BoxStokes2cni, FluxVariables, Stokes2cniFluxVariables<TypeTag>);
-
-// the indices for the Stokes2cni model
-SET_TYPE_PROP(BoxStokes2cni,
-              Stokes2cniIndices,
-              Stokes2cniCommonIndices<TypeTag>);
-SET_TYPE_PROP(BoxStokes2cni,
-              Indices,
-              typename GET_PROP_TYPE(TypeTag, Stokes2cniIndices));
-
+NEW_PROP_TAG(StokesNIIndices); //!< Enumerations for the compositional Stokes models
+NEW_PROP_TAG(NumComponents); //!< Number of components
 }
+
 }
 #endif
