@@ -44,7 +44,7 @@ namespace Dumux
 {
 // some hacky defines for the grid creator
 #define LENS_DIM 2
-#define LENS_CUBES 0
+#define LENS_CUBES 1
 
 template <class TypeTag>
 class LensProblem;
@@ -122,7 +122,7 @@ public:
         }
         else {
             assert(dim == 2);
-
+            std::cout << "HALLO\n";
             Dune::FieldVector<double,dim> pos;
             for (int j = 0; j <= cellRes[1]; j++) {
                 pos[1] = upperRight[1]*double(j)/cellRes[1];
@@ -211,10 +211,11 @@ public:
                 else {
                     assert(dim == 2);
                     
-                    int i0 = i*(cellRes[1]+1) + j;
-                    int i1 = i*(cellRes[1]+1) + j+1;
-                    int i2 = (i+1)*(cellRes[1]+1) + j;
-                    int i3 = (i+1)*(cellRes[1]+1) + j+1;
+                    int m = cellRes[0] + 1;
+                    int i0 = j*m + i;
+                    int i1 = j*m + (i+1);
+                    int i2 = (j+1)*m + i;
+                    int i3 = (j+1)*m + (i+1);
 #if LENS_CUBES
                     v[0] = i0;
                     v[1] = i1;
