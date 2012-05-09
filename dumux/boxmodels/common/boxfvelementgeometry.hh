@@ -31,6 +31,7 @@
 #define DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 
 #include <dumux/common/propertysystem.hh>
+#include <dumux/common/quadraturegeometries.hh>
 
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/common/fvector.hh>
@@ -39,9 +40,11 @@
 #if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2, 2, 0)
 // dune 2.2
 #include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/geometrytype.hh>
 #else
 // dune 2.1
 #include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/common/geometrytype.hh>
 #endif
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
 
@@ -54,6 +57,392 @@ namespace Properties
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Scalar);
 }
+
+template <class Scalar, int dim, int basicGeomType>
+class BoxScvGeometries;
+
+////////////////////
+// local geometries for 1D elements
+////////////////////
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
+{
+    enum { dim = 1 };
+    enum { numScv = 2};
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static int init()
+    {
+        // 1D LINE SEGMENTS
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        {
+            { // corners of the first sub control volume
+                { 0.0 },
+                { 0.5 }
+            },
+            { // corners of the second sub control volume
+                { 0.5 },
+                { 1.0 }
+            }
+        };
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+        
+        return 0;
+    };
+
+    static const ScvGeometry &get(int scvIdx)
+    { return scvGeoms_[scvIdx]; };
+
+private:
+    static ScvGeometry scvGeoms_[numScv];
+};
+
+template <class Scalar>
+typename BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::ScvGeometry
+BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::scvGeoms_[
+    BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::numScv];
+
+////////////////////
+// local geometries for 2D elements
+////////////////////
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
+{
+    enum { dim = 2 };
+    enum { numScv = 3};
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static const ScvGeometry &get(int scvIdx)
+    { return scvGeoms_[scvIdx]; };
+
+    static int init()
+    {
+        // 2D SIMPLEX
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        {
+            { // SCV 0 corners
+                { 0.0,   0.0 },
+                { 1.0/2, 0.0 },
+                { 1.0/3, 1.0/3 },
+                { 0.0,   1.0/2 },
+            },
+
+            { // SCV 1 corners
+                { 1.0/2, 0.0 },
+                { 1.0,   0.0 },
+                { 1.0/2, 1.0/2 },
+                { 1.0/3, 1.0/3 },
+            },
+
+            { // SCV 2 corners
+                { 0.0,   1.0/2 },
+                { 1.0/3, 1.0/3 },
+                { 1.0/2, 1.0/2 },
+                { 0.0,   1.0 },
+            }
+        };
+
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+
+        return 0;
+    };
+
+private:
+    static ScvGeometry scvGeoms_[numScv];
+};
+
+template <class Scalar>
+typename BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::ScvGeometry
+BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::scvGeoms_[
+    BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::numScv];
+
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
+{
+    enum { dim = 2 };
+    enum { numScv = 4 };
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static const ScvGeometry &get(int scvIdx)
+    { return scvGeoms_[scvIdx]; };
+
+
+    static int init()
+    {
+        // 2D CUBE
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        {
+            { // SCV 0 corners
+                { 0.0,   0.0 },
+                { 1.0/2, 0.0 },
+                { 1.0/3, 1.0/3 },
+                { 0, 1.0/2 }
+            },
+
+            { // SCV 1 corners
+                { 1.0/2, 0.0 },
+                { 1.0,   0.0 },
+                { 1.0/2, 1.0/2 },
+                { 1.0/3, 1.0/3 }
+            },
+
+            { // SCV 2 corners
+                { 0.0,   1.0/2 },
+                { 1.0/3, 1.0/3 },
+                { 1.0/2, 1.0/2 },
+                { 0.0,   1.0 }
+            },
+        };
+
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+
+        return 0;
+    };
+
+    static ScvGeometry scvGeoms_[numScv];
+};
+
+template <class Scalar>
+typename BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::ScvGeometry
+BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::scvGeoms_[
+    BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::numScv];
+
+////////////////////
+// local geometries for 3D elements
+////////////////////
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
+{
+    enum { dim = 3 };
+    enum { numScv = 4 };
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static const ScvGeometry &get(int scvIdx)
+    { return scvGeoms_[scvIdx]; };
+
+    static int init()
+    {
+        // 3D SIMPLEX
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        {
+            { // SCV 0 corners
+                { 0.0,   0.0,   0.0 },
+                { 1.0/2, 0.0,   0.0 },
+                { 1.0/3, 1.0/3, 0.0 },
+                { 0.0,   1.0/2, 0.0 },
+
+                { 0.0,   0.0,   0.5 },
+                { 1.0/3, 0.0,   1.0/3 },
+                { 1.0/4, 1.0/4, 1.0/4 },
+                { 0.0,   1.0/3, 1.0/3 },
+            },
+
+            { // SCV 1 corners
+                { 1.0/2, 0.0,   0.0 },
+                { 1.0,   0.0,   0.0 },
+                { 1.0/2, 1.0/2, 0.0 },
+                { 1.0/3, 1.0/3, 0.0 },
+
+                { 1.0/3, 0.0,   1.0/3 },
+                { 1.0/2, 0.0,   1.0/2 },
+                { 1.0/3, 1.0/3, 1.0/3 },
+                { 1.0/4, 1.0/4, 1.0/4 },
+            },
+
+            { // SCV 2 corners
+                { 0.0,   1.0/2, 0.0 },
+                { 1.0/3, 1.0/3, 0.0 },
+                { 1.0/2, 1.0/2, 0.0 },
+                { 0.0,   1.0,   0.0 },
+
+                { 0.0,   1.0/3, 1.0/3 },
+                { 1.0/4, 1.0/4, 1.0/4 },
+                { 1.0/3, 1.0/3, 1.0/3 },
+                { 0.0,   1.0/2, 1.0/2 },
+            },
+
+            { // SCV 3 corners
+                { 0.0,   0.0,   1.0/2 },
+                { 1.0/3, 0.0,   1.0/3 },
+                { 1.0/4, 1.0/4, 1.0/4 },
+                { 0.0,   1.0/3, 1.0/3 },
+
+                { 0.0,   0.0,   1.0   },
+                { 1.0/2, 0.0,   1.0/2 },
+                { 1.0/3, 1.0/3, 1.0/3 },
+                { 0.0,   1.0/2, 1.0/2 },
+            }          
+        };
+
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+
+        return 0;
+    };
+
+private:
+    static ScvGeometry scvGeoms_[numScv];
+};
+
+template <class Scalar>
+typename BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::ScvGeometry
+BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::scvGeoms_[
+    BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::numScv];
+
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
+{
+    enum { dim = 3 };
+    enum { numScv = 8 };
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static const ScvGeometry &get(int scvIdx)
+    { return scvGeoms_[scvIdx]; };
+
+    static int init()
+    {
+        // 3D CUBE
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        {
+            { // SCV 0 corners
+                { 0.0,   0.0,   0.0 },
+                { 1.0/2, 0.0,   0.0 },
+                { 0.0,   1.0/2, 0.0 },
+                { 1.0/2, 1.0/2, 0.0 },
+
+                { 0.0,   0.0,   1.0/2 },
+                { 1.0/2, 0.0,   1.0/2 },
+                { 0.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+            },
+
+            { // SCV 1 corners
+                { 1.0/2, 0.0,   0.0 },
+                { 1.0,   0.0,   0.0 },
+                { 1.0/2, 1.0/2, 0.0 },
+                { 1.0,   1.0/2, 0.0 },
+
+                { 1.0/2, 0.0,   1.0/2 },
+                { 1.0,   0.0,   1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 1.0,   1.0/2, 1.0/2 },
+            },
+
+            { // SCV 2 corners
+                { 0.0,   1.0/2, 0.0 },
+                { 1.0/2, 1.0/2, 0.0 },
+                { 0.0,   1.0,   0.0 },
+                { 1.0/2, 1.0,   0.0 },
+
+                { 0.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 0.0,   1.0,   1.0/2 },
+                { 1.0/2, 1.0,   1.0/2 },
+            },
+
+            { // SCV 3 corners
+                { 1.0/2, 1.0/2, 0.0 },
+                { 1.0,   1.0/2, 0.0 },
+                { 1.0/2, 1.0,   0.0 },
+                { 1.0,   1.0,   0.0 },
+
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 1.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0,   1.0/2 },
+                { 1.0,   1.0,   1.0/2 },
+            },
+
+            { // SCV 4 corners
+                { 0.0,   0.0,   1.0/2 },
+                { 1.0/2, 0.0,   1.0/2 },
+                { 0.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+
+                { 0.0,   0.0,   1.0 },
+                { 1.0/2, 0.0,   1.0 },
+                { 0.0,   1.0/2, 1.0 },
+                { 1.0/2, 1.0/2, 1.0 },
+            },
+
+            { // SCV 5 corners
+                { 1.0/2, 0.0,   1.0/2 },
+                { 1.0,   0.0,   1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 1.0,   1.0/2, 1.0/2 },
+
+                { 1.0/2, 0.0,   1.0 },
+                { 1.0,   0.0,   1.0 },
+                { 1.0/2, 1.0/2, 1.0 },
+                { 1.0,   1.0/2, 1.0 },
+            },
+
+            { // SCV 6 corners
+                { 0.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 0.0,   1.0,   1.0/2 },
+                { 1.0/2, 1.0,   1.0/2 },
+
+                { 0.0,   1.0/2, 1.0 },
+                { 1.0/2, 1.0/2, 1.0 },
+                { 0.0,   1.0,   1.0 },
+                { 1.0/2, 1.0,   1.0 },
+            },
+
+            { // SCV 7 corners
+                { 1.0/2, 1.0/2, 1.0/2 },
+                { 1.0,   1.0/2, 1.0/2 },
+                { 1.0/2, 1.0,   1.0/2 },
+                { 1.0,   1.0,   1.0/2 },
+
+                { 1.0/2, 1.0/2, 1.0 },
+                { 1.0,   1.0/2, 1.0 },
+                { 1.0/2, 1.0,   1.0 },
+                { 1.0,   1.0,   1.0 },
+            },
+        };
+
+        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+
+        return 0;
+    };
+private:
+    static ScvGeometry scvGeoms_[numScv];
+};
+
+template <class Scalar>
+typename BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::ScvGeometry
+BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::scvGeoms_[
+    BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::numScv];
+
+static int foo1DCube_ 
+= BoxScvGeometries<double, /*dim=*/1, Dune::GeometryType::cube>::init();
+static int foo2DCube_ 
+= BoxScvGeometries<double, /*dim=*/2, Dune::GeometryType::cube>::init();
+static int foo2DSimplex_ 
+= BoxScvGeometries<double, /*dim=*/2, Dune::GeometryType::simplex>::init();
+static int foo3DCube_ 
+= BoxScvGeometries<double, /*dim=*/3, Dune::GeometryType::cube>::init();
+static int foo3DSimplex_ 
+= BoxScvGeometries<double, /*dim=*/3, Dune::GeometryType::simplex>::init();
 
 /*!
  * \ingroup BoxModel
@@ -100,6 +489,8 @@ class BoxFVElementGeometry
     typedef typename LocalFiniteElementCache::FiniteElementType LocalFiniteElement;
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
+
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     Scalar quadrilateralArea(const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
     {
@@ -329,8 +720,8 @@ public:
     {
         LocalPosition local; //!< local vert position
         GlobalPosition global; //!< global vert position
-        LocalPosition localCenter; //!< local position of scv center
         Scalar volume; //!< volume of scv
+        const ScvGeometry *localGeometry; //!< The geometry of the sub-control volume in local coordinates.
         Dune::FieldVector<Vector, maxNC> grad; //! derivative of shape function associated with the sub control volume
         Dune::FieldVector<Vector, maxNC> gradCenter; //! derivative of shape function at the center of the sub control volume
         Dune::FieldVector<Scalar, maxNC> shapeValue; //! value of shape function associated with the sub control volume
@@ -530,111 +921,28 @@ public:
             
         }
 
-        updateScvCenters(e);
-
+        updateScvLocalGeometry(e);
         updateScvfGradients(e, localFiniteElement);
         updateScvGradients(e, localFiniteElement);
         updateScvCenterGradients(e, localFiniteElement);
     }
 
-    void updateScvCenters(const Element &element)
+    void updateScvLocalGeometry(const Element &element)
     {
-        // calculate the center of gravity of all SCVs in local coordinates
-        if (dim == 1) {
-            // 1D element -> line segment
-            subContVol[0].localCenter[0] = 0.25;
-            subContVol[1].localCenter[0] = 0.75;
+        auto geomType = element.geometry().type();
+      
+        // get the local geometries of the sub control volumes
+        if (geomType.isTriangle() || geomType.isTetrahedron()) {
+            for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx)
+                subContVol[vertIdx].localGeometry = &BoxScvGeometries<Scalar, dim, Dune::GeometryType::simplex>::get(vertIdx);
         }
-        else if (dim == 2) {
-            // 2D element
-            if (numVertices == 4) {
-                // rectangle
-                subContVol[0].localCenter[0] = 0.25;
-                subContVol[0].localCenter[1] = 0.25;
-
-                subContVol[1].localCenter[0] = 0.75;
-                subContVol[1].localCenter[1] = 0.25;
-
-                subContVol[2].localCenter[0] = 0.25;
-                subContVol[2].localCenter[1] = 0.75;
-
-                subContVol[3].localCenter[0] = 0.75;
-                subContVol[3].localCenter[1] = 0.75;
-            }
-            else {
-                assert(numVertices == 3);
-
-                // triangle
-                subContVol[0].localCenter[0] = 1.0/6.0;
-                subContVol[0].localCenter[1] = 1.0/6.0;
-
-                subContVol[1].localCenter[0] = 4.0/6.0;
-                subContVol[1].localCenter[1] = 1.0/6.0;
-
-                subContVol[2].localCenter[0] = 4.0/6.0;
-                subContVol[2].localCenter[1] = 1.0/6.0;
-            }
-        }
-        else if (dim == 3) {
-            // 3D element
-            if (numVertices == 8) {
-                // hexahedron
-                subContVol[0].localCenter[0] = 0.25;
-                subContVol[0].localCenter[1] = 0.25;
-                subContVol[0].localCenter[2] = 0.25;
-
-                subContVol[1].localCenter[0] = 0.75;
-                subContVol[1].localCenter[1] = 0.25;
-                subContVol[1].localCenter[2] = 0.25;
-
-                subContVol[2].localCenter[0] = 0.25;
-                subContVol[2].localCenter[1] = 0.75;
-                subContVol[2].localCenter[2] = 0.25;
-
-                subContVol[3].localCenter[0] = 0.75;
-                subContVol[3].localCenter[1] = 0.75;
-                subContVol[3].localCenter[2] = 0.25;
-
-                subContVol[4].localCenter[0] = 0.25;
-                subContVol[4].localCenter[1] = 0.25;
-                subContVol[4].localCenter[2] = 0.75;
-
-                subContVol[5].localCenter[0] = 0.75;
-                subContVol[5].localCenter[1] = 0.25;
-                subContVol[5].localCenter[2] = 0.75;
-
-                subContVol[6].localCenter[0] = 0.25;
-                subContVol[6].localCenter[1] = 0.75;
-                subContVol[6].localCenter[2] = 0.75;
-
-                subContVol[7].localCenter[0] = 0.75;
-                subContVol[7].localCenter[1] = 0.75;
-                subContVol[7].localCenter[2] = 0.75;
-            }
-            else if (numVertices == 4) {
-                // tetrahedron
-                subContVol[0].localCenter[0] = 11.0/(12*8);
-                subContVol[0].localCenter[1] = 11.0/(12*8);
-                subContVol[0].localCenter[2] = 11.0/(12*8);
-
-                subContVol[1].localCenter[0] = 41.0/(12*8);
-                subContVol[1].localCenter[1] = 17.0/(12*8);
-                subContVol[1].localCenter[2] = 17.0/(12*8);
-
-                subContVol[2].localCenter[0] = 17.0/(12*8);
-                subContVol[2].localCenter[1] = 41.0/(12*8);
-                subContVol[2].localCenter[2] = 17.0/(12*8);
-
-                subContVol[3].localCenter[0] = 17.0/(12*8);
-                subContVol[3].localCenter[1] = 17.0/(12*8);
-                subContVol[3].localCenter[2] = 41.0/(12*8);
-            }
-            else
-                DUNE_THROW(Dune::NotImplemented, 
-                           "Local centers of 3D element");
+        else if (geomType.isLine() || geomType.isQuadrilateral() || geomType.isHexahedron()) {
+            for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx)
+                subContVol[vertIdx].localGeometry = &BoxScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
         }
         else 
-            assert(false); // only 1D, 2D and 3D are supported
+            DUNE_THROW(Dune::NotImplemented, 
+                       "SCV geometries for non hexahedron elements");
     }
 
     /*!
@@ -687,10 +995,11 @@ public:
         std::vector<ShapeJacobian> localJac;
 
         for (int scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
-            localFiniteElement.localBasis().evaluateJacobian(subContVol[scvIdx].localCenter, localJac);
+            const auto &localCenter = subContVol[scvIdx].localGeometry->center();
+            localFiniteElement.localBasis().evaluateJacobian(localCenter, localJac);
             
             const auto jacInvT =
-                geom.jacobianInverseTransposed(subContVol[scvIdx].localCenter);
+                geom.jacobianInverseTransposed(localCenter);
             for (int vert = 0; vert < numVertices; vert++) {
                 jacInvT.mv(localJac[vert][0], subContVol[scvIdx].gradCenter[vert]);
             }

@@ -37,9 +37,9 @@ namespace Dumux {
 template <class Scalar, int dim>
 class QuadrialteralQuadratureGeometry
 {
+public:
     enum { numCorners = (1 << dim) }; 
 
-public:
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
@@ -64,6 +64,12 @@ public:
             center_ += corners_[cornerIdx];
         center_ /= numCorners;
     }
+
+    /*!
+     * \brief Returns the center of weight of the polyhedron.
+     */
+    const GlobalPosition &center() const
+    { return center_; }
     
     /*!
      * \brief Convert a local coordinate into a global one.

@@ -332,7 +332,7 @@ private:
         n /= scvf.normal.two_norm();
             
         // distance between the center of the SCV and center of the boundary face
-        Vector distVec = context.element().geometry().global(insideScv.localCenter);
+        Vector distVec = context.element().geometry().global(insideScv.localGeometry->center());
         distVec -= scvf.ipGlobal;
         Scalar dist = distVec.two_norm();
         
