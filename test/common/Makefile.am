@@ -1,5 +1,5 @@
-SUBDIRS = generalproblem propertysystem spline .
-	  
+SUBDIRS = propertysystem quadrature spline .
+
 EXTRA_DIST = CMakeLists.txt
 
 include $(top_srcdir)/am/global-rules
