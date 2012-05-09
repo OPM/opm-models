@@ -30,7 +30,6 @@
 #ifndef DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 #define DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 
-#include <dumux/common/propertysystem.hh>
 #include <dumux/common/quadraturegeometries.hh>
 
 #include <dune/grid/common/intersectioniterator.hh>
@@ -52,12 +51,6 @@
 
 namespace Dumux
 {
-namespace Properties
-{
-NEW_PROP_TAG(GridView);
-NEW_PROP_TAG(Scalar);
-}
-
 template <class Scalar, int dim, int basicGeomType>
 class BoxScvGeometries;
 
@@ -462,21 +455,18 @@ static int foo3DSimplex_
  * For the box methods the sub-control volumes are constructed by
  * connecting the element's center with each edge of the element.
  */
-template<class TypeTag>
+template <class Scalar, class GridView>
 class BoxFVElementGeometry
 {
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef BoxFVElementGeometry<Scalar, GridView> ThisType;
+
     enum{dim = GridView::dimension};
     enum{dimWorld = GridView::dimensionworld};
-
-    typedef BoxFVElementGeometry<TypeTag>   ThisType;
-
     enum{maxNC = (dim < 3 ? 4 : 8)};
     enum{maxNE = (dim < 3 ? 4 : 12)};
     enum{maxNF = (dim < 3 ? 1 : 6)};
     enum{maxCOS = (dim < 3 ? 2 : 4)};
     enum{maxBF = (dim < 3 ? 8 : 24)};
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename Element::Geometry Geometry;

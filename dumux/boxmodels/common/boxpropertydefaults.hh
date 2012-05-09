@@ -75,7 +75,15 @@ SET_TYPE_PROP(BoxModel,
               typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
 
 //! Set the default for the FVElementGeometry
-SET_TYPE_PROP(BoxModel, FVElementGeometry, Dumux::BoxFVElementGeometry<TypeTag>);
+SET_PROP(BoxModel, FVElementGeometry)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
+public:
+    typedef Dumux::BoxFVElementGeometry<Scalar, GridView> type;
+};
 
 //! use the plain newton method for the box scheme by default
 SET_TYPE_PROP(BoxModel, NewtonMethod, Dumux::NewtonMethod<TypeTag>);

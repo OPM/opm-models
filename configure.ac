@@ -81,10 +81,10 @@ AC_CONFIG_FILES([ewoms.pc
     test/boxmodels/3p3c/Makefile
     test/boxmodels/3p3cni/Makefile
     test/boxmodels/mpnc/Makefile
+    test/boxmodels/quadrature/Makefile
     test/boxmodels/richards/Makefile  
     test/common/Makefile
     test/common/propertysystem/Makefile
-    test/common/quadrature/Makefile
     test/common/spline/Makefile
     test/decoupled/Makefile
     test/decoupled/1p/Makefile

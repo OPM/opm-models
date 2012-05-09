@@ -23,26 +23,26 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/quadraturerules.hh>
+#include<dune/grid/yaspgrid.hh>
 
-#include <dumux/common/quadraturegeometries.hh>
+#include <dumux/boxmodels/common/boxfvelementgeometry.hh>
 
-template <class GlobalCoord>
-typename GlobalCoord::field_type f(const GlobalCoord &pos)
+const int dim = 3;
+typedef double Scalar;
+typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
+typedef QuadratureGeom::LocalPosition LocalPosition;
+typedef QuadratureGeom::GlobalPosition GlobalPosition;
+
+typename GlobalPosition::field_type f(const GlobalPosition &pos)
 {
-    typename GlobalCoord::field_type result = 1;
-    for (int i = 0; i < GlobalCoord::dimension; ++i)
+    typename GlobalPosition::field_type result = 1;
+    for (int i = 0; i < GlobalPosition::dimension; ++i)
         result *= pos[i];
     return result;
 }
 
-int main(int argc, char** argv)
+void testIdenityMapping()
 {
-    const int dim = 3;
-    typedef double Scalar;
-    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
-    typedef QuadratureGeom::LocalPosition LocalPosition;
-    typedef QuadratureGeom::GlobalPosition GlobalPosition;
-
     QuadratureGeom foo;
     
     Scalar corners[][3] = {
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     };
     foo.setCorners(corners);
 
-    std::cout << "testing local to global mapping...\n";
+    std::cout << "testing identity mapping...\n";
     int n = 100;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
@@ -76,21 +76,69 @@ int main(int argc, char** argv)
             }
         }
     }
-
-    std::cout << "testing quadrature rule...\n";
-    Dune::GeometryType geomType = foo.type();
-    static const int quadratureOrder = 2;
-    const auto &rule = Dune::QuadratureRules<Scalar,dim>::rule(geomType, quadratureOrder);
+}
     
+int main(int argc, char** argv)
+{
+    // initialize MPI, finalize is done automatically on exit
+    Dune::MPIHelper::instance(argc, argv);
+
+    testIdenityMapping();
+
+    std::cout << "testing SCV quadrature...\n";
+
+    GlobalPosition upperRight(1.0);
+    Dune::FieldVector<int, dim> cellRes(10);
+
+    typedef Dune::YaspGrid<dim> Grid;
+    typedef Grid::LeafGridView GridView;
+    Grid grid(
+#ifdef HAVE_MPI
+        Dune::MPIHelper::getCommunicator(),
+#endif
+        upperRight, // upper right
+        cellRes, // number of cells
+        Dune::FieldVector<bool, dim>(false), // periodic
+        0); // overlap
+
+    // instanciate a FVElementGeometry
+    typedef Dumux::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
+    FVElementGeometry fvElemGeom;
+
     // compute approximate integral
+    const auto &gridView = grid.leafView();
+    auto eIt = gridView.begin<0>();
+    const auto &eEndIt = gridView.end<0>();
     Scalar result=0;
-    for (auto it = rule.begin(); it != rule.end(); ++ it)
-    {
-          Scalar fval = f(foo.global(it->position()));
-          Scalar weight = it->weight();
-          Scalar detjac = foo.integrationElement(it->position());
-          assert(std::abs(1 - detjac) < 1e-10);
-          result += fval * weight * detjac;
+    for (; eIt != eEndIt; ++eIt) {
+        const auto &elemGeom = eIt->geometry();
+
+        fvElemGeom.update(gridView, *eIt);
+
+        // loop over all sub-control volumes
+        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
+            const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
+
+            Dune::GeometryType geomType = scvLocalGeom.type();
+            static const int quadratureOrder = 2;
+            const auto &rule = Dune::QuadratureRules<Scalar,dim>::rule(geomType, quadratureOrder);
+            
+            // integrate f over the sub-control volume
+            for (auto it = rule.begin(); it != rule.end(); ++ it)
+            {
+                auto posScvLocal = it->position();
+                auto posElemLocal = scvLocalGeom.global(posScvLocal);
+                auto posGlobal = elemGeom.global(posScvLocal);
+            
+                Scalar fval = f(posGlobal);
+                Scalar weight = it->weight();
+                Scalar detjac = 
+                    scvLocalGeom.integrationElement(posScvLocal) * 
+                    elemGeom.integrationElement(posElemLocal);
+                
+                result += fval * weight * detjac;
+            }
+        }
     }
     
     std::cout << "result: " << result << " (expected value: " << 1.0/(1 << dim) << ")\n";

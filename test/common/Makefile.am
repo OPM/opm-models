@@ -1,4 +1,4 @@
-SUBDIRS = propertysystem quadrature spline .
+SUBDIRS = propertysystem spline .
 
 EXTRA_DIST = CMakeLists.txt
 
