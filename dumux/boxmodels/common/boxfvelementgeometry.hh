@@ -1,7 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Bernd Flemisch, Andreas Lauser               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -54,245 +55,6 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Scalar);
 }
 
-/////////////////////
-// HACK: Functions to initialize the subcontrol volume data
-// structures of BoxFVElementGeomerty.
-//
-// this is a work around to be able to to use specialization for
-// doing this.  it is required since it is not possible to
-// specialize member functions of template classes because of some
-// weird reason I didn't really get...
-
-//! \cond INTERNAL
-
-template <typename BoxFVElementGeometry, int dim>
-class _BoxFVElemGeomHelper
-{
-public:
-    static void fillSubContVolData(BoxFVElementGeometry &eg, int numVertices)
-    {
-        DUNE_THROW(Dune::NotImplemented, "_BoxFVElemGeomHelper::fillSubContVolData dim = " << dim);
-    };
-};
-
-template <typename BoxFVElementGeometry>
-class _BoxFVElemGeomHelper<BoxFVElementGeometry, 1>
-{
-public:
-    enum { dim = 1 };
-    static void fillSubContVolData(BoxFVElementGeometry &eg, int numVertices)
-    {
-        // 1D
-        eg.subContVol[0].volume = 0.5*eg.elementVolume;
-        eg.subContVol[1].volume = 0.5*eg.elementVolume;
-    }
-};
-
-template <typename BoxFVElementGeometry>
-class _BoxFVElemGeomHelper<BoxFVElementGeometry, 2>
-{
-public:
-    enum { dim = 2 };
-
-    static void fillSubContVolData(BoxFVElementGeometry &eg, int numVertices)
-    {
-        switch (numVertices) {
-        case 3: // 2D, triangle
-            eg.subContVol[0].volume = eg.elementVolume/3;
-            eg.subContVol[1].volume = eg.elementVolume/3;
-            eg.subContVol[2].volume = eg.elementVolume/3;
-            break;
-        case 4: // 2D, quadrilinear
-            eg.subContVol[0].volume = eg.quadrilateralArea(eg.subContVol[0].global, eg.edgeCoord[2], eg.elementGlobal, eg.edgeCoord[0]);
-            eg.subContVol[1].volume = eg.quadrilateralArea(eg.subContVol[1].global, eg.edgeCoord[1], eg.elementGlobal, eg.edgeCoord[2]);
-            eg.subContVol[2].volume = eg.quadrilateralArea(eg.subContVol[2].global, eg.edgeCoord[0], eg.elementGlobal, eg.edgeCoord[3]);
-            eg.subContVol[3].volume = eg.quadrilateralArea(eg.subContVol[3].global, eg.edgeCoord[3], eg.elementGlobal, eg.edgeCoord[1]);
-            break;
-        default:
-            DUNE_THROW(Dune::NotImplemented, "_BoxFVElemGeomHelper::fillSubContVolData dim = " << dim << ", numVertices = " << numVertices);
-        }
-    }
-};
-
-template <typename BoxFVElementGeometry>
-class _BoxFVElemGeomHelper<BoxFVElementGeometry, 3>
-{
-public:
-    enum { dim = 3 };
-
-    static void fillSubContVolData(BoxFVElementGeometry &eg, int numVertices)
-    {
-        switch (numVertices) {
-        case 4: // 3D, tetrahedron
-            for (int k = 0; k < eg.numVertices; k++)
-                eg.subContVol[k].volume = eg.elementVolume / 4.0;
-            break;
-        case 5: // 3D, pyramid
-            eg.subContVol[0].volume = eg.hexahedronVolume(eg.subContVol[0].global,
-                                                          eg.edgeCoord[2],
-                                                          eg.faceCoord[0],
-                                                          eg.edgeCoord[0],
-                                                          eg.edgeCoord[4],
-                                                          eg.faceCoord[3],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[1]);
-            eg.subContVol[1].volume = eg.hexahedronVolume(eg.subContVol[1].global,
-                                                          eg.edgeCoord[1],
-                                                          eg.faceCoord[0],
-                                                          eg.edgeCoord[2],
-                                                          eg.edgeCoord[5],
-                                                          eg.faceCoord[2],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[3]);
-            eg.subContVol[2].volume = eg.hexahedronVolume(eg.subContVol[2].global,
-                                                          eg.edgeCoord[0],
-                                                          eg.faceCoord[0],
-                                                          eg.edgeCoord[3],
-                                                          eg.edgeCoord[6],
-                                                          eg.faceCoord[1],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[4]);
-            eg.subContVol[3].volume = eg.hexahedronVolume(eg.subContVol[3].global,
-                                                          eg.edgeCoord[3],
-                                                          eg.faceCoord[0],
-                                                          eg.edgeCoord[1],
-                                                          eg.edgeCoord[7],
-                                                          eg.faceCoord[4],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[2]);
-            eg.subContVol[4].volume = eg.elementVolume -
-                eg.subContVol[0].volume -
-                eg.subContVol[1].volume -
-                eg.subContVol[2].volume -
-                eg.subContVol[3].volume;
-            break;
-        case 6: // 3D, prism
-            eg.subContVol[0].volume = eg.hexahedronVolume(eg.subContVol[0].global,
-                                                          eg.edgeCoord[3],
-                                                          eg.faceCoord[3],
-                                                          eg.edgeCoord[4],
-                                                          eg.edgeCoord[0],
-                                                          eg.faceCoord[0],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[1]);
-            eg.subContVol[1].volume = eg.hexahedronVolume(eg.subContVol[1].global,
-                                                          eg.edgeCoord[5],
-                                                          eg.faceCoord[3],
-                                                          eg.edgeCoord[3],
-                                                          eg.edgeCoord[1],
-                                                          eg.faceCoord[2],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[0]);
-            eg.subContVol[2].volume = eg.hexahedronVolume(eg.subContVol[2].global,
-                                                          eg.edgeCoord[4],
-                                                          eg.faceCoord[3],
-                                                          eg.edgeCoord[5],
-                                                          eg.edgeCoord[2],
-                                                          eg.faceCoord[1],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[2]);
-            eg.subContVol[3].volume = eg.hexahedronVolume(eg.edgeCoord[0],
-                                                          eg.faceCoord[0],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[1],
-                                                          eg.subContVol[3].global,
-                                                          eg.edgeCoord[6],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[7]);
-            eg.subContVol[4].volume = eg.hexahedronVolume(eg.edgeCoord[1],
-                                                          eg.faceCoord[2],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[0],
-                                                          eg.subContVol[4].global,
-                                                          eg.edgeCoord[8],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[6]);
-            eg.subContVol[5].volume = eg.hexahedronVolume(eg.edgeCoord[2],
-                                                          eg.faceCoord[1],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[2],
-                                                          eg.subContVol[5].global,
-                                                          eg.edgeCoord[7],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[8]);
-            break;
-        case 8: // 3D, hexahedron
-            eg.subContVol[0].volume = eg.hexahedronVolume(eg.subContVol[0].global,
-                                                          eg.edgeCoord[6],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[4],
-                                                          eg.edgeCoord[0],
-                                                          eg.faceCoord[2],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[0]);
-            eg.subContVol[1].volume = eg.hexahedronVolume(eg.subContVol[1].global,
-                                                          eg.edgeCoord[5],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[6],
-                                                          eg.edgeCoord[1],
-                                                          eg.faceCoord[1],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[2]);
-            eg.subContVol[2].volume = eg.hexahedronVolume(eg.subContVol[2].global,
-                                                          eg.edgeCoord[4],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[7],
-                                                          eg.edgeCoord[2],
-                                                          eg.faceCoord[0],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[3]);
-            eg.subContVol[3].volume = eg.hexahedronVolume(eg.subContVol[3].global,
-                                                          eg.edgeCoord[7],
-                                                          eg.faceCoord[4],
-                                                          eg.edgeCoord[5],
-                                                          eg.edgeCoord[3],
-                                                          eg.faceCoord[3],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[1]);
-            eg.subContVol[4].volume = eg.hexahedronVolume(eg.edgeCoord[0],
-                                                          eg.faceCoord[2],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[0],
-                                                          eg.subContVol[4].global,
-                                                          eg.edgeCoord[10],
-                                                          eg.faceCoord[5],
-                                                          eg.edgeCoord[8]);
-            eg.subContVol[5].volume = eg.hexahedronVolume(eg.edgeCoord[1],
-                                                          eg.faceCoord[1],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[2],
-                                                          eg.subContVol[5].global,
-                                                          eg.edgeCoord[9],
-                                                          eg.faceCoord[5],
-                                                          eg.edgeCoord[10]);
-            eg.subContVol[6].volume = eg.hexahedronVolume(eg.edgeCoord[2],
-                                                          eg.faceCoord[0],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[3],
-                                                          eg.subContVol[6].global,
-                                                          eg.edgeCoord[8],
-                                                          eg.faceCoord[5],
-                                                          eg.edgeCoord[11]);
-            eg.subContVol[7].volume = eg.hexahedronVolume(eg.edgeCoord[3],
-                                                          eg.faceCoord[3],
-                                                          eg.elementGlobal,
-                                                          eg.faceCoord[1],
-                                                          eg.subContVol[7].global,
-                                                          eg.edgeCoord[11],
-                                                          eg.faceCoord[5],
-                                                          eg.edgeCoord[9]);
-            break;
-        default:
-            DUNE_THROW(Dune::NotImplemented, "_BoxFVElemGeomHelper::fillSubContVolData dim = " << dim << ", numVertices = " << numVertices);
-        }
-    }
-};
-
-//! \endcond
-
-// END HACK
-/////////////////////
-
 /*!
  * \ingroup BoxModel
  *
@@ -319,11 +81,6 @@ class BoxFVElementGeometry
     enum{dimWorld = GridView::dimensionworld};
 
     typedef BoxFVElementGeometry<TypeTag>   ThisType;
-
-    /** \todo Please doc me! */
-    friend class _BoxFVElemGeomHelper<ThisType, dim>;
-
-    typedef _BoxFVElemGeomHelper<ThisType, dim> BoxFVElemGeomHelper;
 
     enum{maxNC = (dim < 3 ? 4 : 8)};
     enum{maxNE = (dim < 3 ? 4 : 12)};
@@ -650,7 +407,7 @@ public:
         // which is dependend of the grid's dimension to
         // _BoxFVElemGeomHelper in order to benefit from more aggressive
         // compiler optimizations...
-        BoxFVElemGeomHelper::fillSubContVolData(*this, numVertices);
+        fillSubContVolData_();
 
         // fill sub control volume face data:
         for (int k = 0; k < numEdges; k++) { // begin loop over edges / sub control volume faces
@@ -934,11 +691,206 @@ public:
             
             const auto jacInvT =
                 geom.jacobianInverseTransposed(subContVol[scvIdx].localCenter);
-            for (int vert = 0; vert < numVertices; vert++)
+            for (int vert = 0; vert < numVertices; vert++) {
                 jacInvT.mv(localJac[vert][0], subContVol[scvIdx].gradCenter[vert]);
+            }
         }
-
     }
+
+private:
+    void fillSubContVolData_()
+    {
+        if (dim == 1) {
+            // 1D
+            subContVol[0].volume = 0.5*elementVolume;
+            subContVol[1].volume = 0.5*elementVolume;
+        }
+        else if (dim == 2) {
+            switch (numVertices) {
+            case 3: // 2D, triangle
+                subContVol[0].volume = elementVolume/3;
+                subContVol[1].volume = elementVolume/3;
+                subContVol[2].volume = elementVolume/3;
+                break;
+            case 4: // 2D, quadrilinear
+                subContVol[0].volume = quadrilateralArea(subContVol[0].global, edgeCoord[2], elementGlobal, edgeCoord[0]);
+                subContVol[1].volume = quadrilateralArea(subContVol[1].global, edgeCoord[1], elementGlobal, edgeCoord[2]);
+                subContVol[2].volume = quadrilateralArea(subContVol[2].global, edgeCoord[0], elementGlobal, edgeCoord[3]);
+                subContVol[3].volume = quadrilateralArea(subContVol[3].global, edgeCoord[3], elementGlobal, edgeCoord[1]);
+                break;
+            default:
+                DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry dim = " << dim << ", numVertices = " << numVertices);
+            }
+        }
+        else if (dim == 3) {
+            switch (numVertices) {
+            case 4: // 3D, tetrahedron
+                for (int k = 0; k < numVertices; k++)
+                    subContVol[k].volume = elementVolume / 4.0;
+                break;
+            case 5: // 3D, pyramid
+                subContVol[0].volume = hexahedronVolume(subContVol[0].global,
+                                                        edgeCoord[2],
+                                                        faceCoord[0],
+                                                        edgeCoord[0],
+                                                        edgeCoord[4],
+                                                        faceCoord[3],
+                                                        elementGlobal,
+                                                        faceCoord[1]);
+                subContVol[1].volume = hexahedronVolume(subContVol[1].global,
+                                                        edgeCoord[1],
+                                                        faceCoord[0],
+                                                        edgeCoord[2],
+                                                        edgeCoord[5],
+                                                        faceCoord[2],
+                                                        elementGlobal,
+                                                        faceCoord[3]);
+                subContVol[2].volume = hexahedronVolume(subContVol[2].global,
+                                                        edgeCoord[0],
+                                                        faceCoord[0],
+                                                        edgeCoord[3],
+                                                        edgeCoord[6],
+                                                        faceCoord[1],
+                                                        elementGlobal,
+                                                        faceCoord[4]);
+                subContVol[3].volume = hexahedronVolume(subContVol[3].global,
+                                                        edgeCoord[3],
+                                                        faceCoord[0],
+                                                        edgeCoord[1],
+                                                        edgeCoord[7],
+                                                        faceCoord[4],
+                                                        elementGlobal,
+                                                        faceCoord[2]);
+                subContVol[4].volume = elementVolume -
+                    subContVol[0].volume -
+                    subContVol[1].volume -
+                    subContVol[2].volume -
+                    subContVol[3].volume;
+                break;
+            case 6: // 3D, prism
+                subContVol[0].volume = hexahedronVolume(subContVol[0].global,
+                                                        edgeCoord[3],
+                                                        faceCoord[3],
+                                                        edgeCoord[4],
+                                                        edgeCoord[0],
+                                                        faceCoord[0],
+                                                        elementGlobal,
+                                                        faceCoord[1]);
+                subContVol[1].volume = hexahedronVolume(subContVol[1].global,
+                                                        edgeCoord[5],
+                                                        faceCoord[3],
+                                                        edgeCoord[3],
+                                                        edgeCoord[1],
+                                                        faceCoord[2],
+                                                        elementGlobal,
+                                                        faceCoord[0]);
+                subContVol[2].volume = hexahedronVolume(subContVol[2].global,
+                                                        edgeCoord[4],
+                                                        faceCoord[3],
+                                                        edgeCoord[5],
+                                                        edgeCoord[2],
+                                                        faceCoord[1],
+                                                        elementGlobal,
+                                                        faceCoord[2]);
+                subContVol[3].volume = hexahedronVolume(edgeCoord[0],
+                                                        faceCoord[0],
+                                                        elementGlobal,
+                                                        faceCoord[1],
+                                                        subContVol[3].global,
+                                                        edgeCoord[6],
+                                                        faceCoord[4],
+                                                        edgeCoord[7]);
+                subContVol[4].volume = hexahedronVolume(edgeCoord[1],
+                                                        faceCoord[2],
+                                                        elementGlobal,
+                                                        faceCoord[0],
+                                                        subContVol[4].global,
+                                                        edgeCoord[8],
+                                                        faceCoord[4],
+                                                        edgeCoord[6]);
+                subContVol[5].volume = hexahedronVolume(edgeCoord[2],
+                                                        faceCoord[1],
+                                                        elementGlobal,
+                                                        faceCoord[2],
+                                                        subContVol[5].global,
+                                                        edgeCoord[7],
+                                                        faceCoord[4],
+                                                        edgeCoord[8]);
+                break;
+            case 8: // 3D, hexahedron
+                subContVol[0].volume = hexahedronVolume(subContVol[0].global,
+                                                        edgeCoord[6],
+                                                        faceCoord[4],
+                                                        edgeCoord[4],
+                                                        edgeCoord[0],
+                                                        faceCoord[2],
+                                                        elementGlobal,
+                                                        faceCoord[0]);
+                subContVol[1].volume = hexahedronVolume(subContVol[1].global,
+                                                        edgeCoord[5],
+                                                        faceCoord[4],
+                                                        edgeCoord[6],
+                                                        edgeCoord[1],
+                                                        faceCoord[1],
+                                                        elementGlobal,
+                                                        faceCoord[2]);
+                subContVol[2].volume = hexahedronVolume(subContVol[2].global,
+                                                        edgeCoord[4],
+                                                        faceCoord[4],
+                                                        edgeCoord[7],
+                                                        edgeCoord[2],
+                                                        faceCoord[0],
+                                                        elementGlobal,
+                                                        faceCoord[3]);
+                subContVol[3].volume = hexahedronVolume(subContVol[3].global,
+                                                        edgeCoord[7],
+                                                        faceCoord[4],
+                                                        edgeCoord[5],
+                                                        edgeCoord[3],
+                                                        faceCoord[3],
+                                                        elementGlobal,
+                                                        faceCoord[1]);
+                subContVol[4].volume = hexahedronVolume(edgeCoord[0],
+                                                        faceCoord[2],
+                                                        elementGlobal,
+                                                        faceCoord[0],
+                                                        subContVol[4].global,
+                                                        edgeCoord[10],
+                                                        faceCoord[5],
+                                                        edgeCoord[8]);
+                subContVol[5].volume = hexahedronVolume(edgeCoord[1],
+                                                        faceCoord[1],
+                                                        elementGlobal,
+                                                        faceCoord[2],
+                                                        subContVol[5].global,
+                                                        edgeCoord[9],
+                                                        faceCoord[5],
+                                                        edgeCoord[10]);
+                subContVol[6].volume = hexahedronVolume(edgeCoord[2],
+                                                        faceCoord[0],
+                                                        elementGlobal,
+                                                        faceCoord[3],
+                                                        subContVol[6].global,
+                                                        edgeCoord[8],
+                                                        faceCoord[5],
+                                                        edgeCoord[11]);
+                subContVol[7].volume = hexahedronVolume(edgeCoord[3],
+                                                        faceCoord[3],
+                                                        elementGlobal,
+                                                        faceCoord[1],
+                                                        subContVol[7].global,
+                                                        edgeCoord[11],
+                                                        faceCoord[5],
+                                                        edgeCoord[9]);
+                break;
+            default:
+                DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry for dim = " << dim << ", numVertices = " << numVertices);
+            }
+        }
+        else 
+            DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry for dim = " << dim);
+    }
+
 };
 
 }
