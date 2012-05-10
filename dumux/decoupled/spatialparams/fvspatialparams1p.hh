@@ -22,12 +22,12 @@
 /*!
  * \file
  *
- * \ingroup SpatialParameters
+ * \ingroup SpatialParams
  * \brief The base class for spatial parameters of problems using the
  *        fv method.
  */
-#ifndef DUMUX_FV_SPATIAL_PARAMETERS_ONE_P_HH
-#define DUMUX_FV_SPATIAL_PARAMETERS_ONE_P_HH
+#ifndef DUMUX_FV_SPATIAL_PARAMS_ONE_P_HH
+#define DUMUX_FV_SPATIAL_PARAMS_ONE_P_HH
 
 #include <dumux/decoupled/common/decoupledproperties.hh>
 
@@ -42,12 +42,12 @@ namespace Dumux
 // forward declation of property tags
 namespace Properties
 {
-NEW_PROP_TAG( SpatialParameters);
+NEW_PROP_TAG( SpatialParams);
 }
 
 
 /*!
- * \ingroup SpatialParameters
+ * \ingroup SpatialParams
  */
 
 /**
@@ -55,11 +55,11 @@ NEW_PROP_TAG( SpatialParameters);
  *        fv method.
  */
 template<class TypeTag>
-class FVSpatialParametersOneP
+class FVSpatialParamsOneP
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) Implementation;
 
     enum
     {
@@ -71,11 +71,11 @@ class FVSpatialParametersOneP
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
 public:
-    FVSpatialParametersOneP(const GridView &gv)
+    FVSpatialParamsOneP(const GridView &gv)
     {
     }
 
-    ~FVSpatialParametersOneP()
+    ~FVSpatialParamsOneP()
     {
     }
 

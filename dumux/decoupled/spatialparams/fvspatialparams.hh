@@ -22,14 +22,14 @@
 /*!
  * \file
  *
- * \ingroup SpatialParameters
+ * \ingroup SpatialParams
  * \brief The base class for spatial parameters of problems using the
  *        fv method.
  */
-#ifndef DUMUX_FV_SPATIAL_PARAMETERS_HH
-#define DUMUX_FV_SPATIAL_PARAMETERS_HH
+#ifndef DUMUX_FV_SPATIAL_PARAMS_HH
+#define DUMUX_FV_SPATIAL_PARAMS_HH
 
-#include "fvspatialparameters1p.hh"
+#include "fvspatialparams1p.hh"
 
 #include <dune/common/fvector.hh>
 
@@ -41,7 +41,7 @@ NEW_PROP_TAG(MaterialLaw);
 }
 
 /*!
- * \ingroup SpatialParameters
+ * \ingroup SpatialParams
  */
 
 /**
@@ -49,11 +49,11 @@ NEW_PROP_TAG(MaterialLaw);
  *        fv method.
  */
 template<class TypeTag>
-class FVSpatialParameters: public FVSpatialParametersOneP<TypeTag>
+class FVSpatialParams: public FVSpatialParamsOneP<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParameters) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) Implementation;
 
     enum
     {
@@ -67,8 +67,8 @@ class FVSpatialParameters: public FVSpatialParametersOneP<TypeTag>
     /// @endcond
 
 public:
-    FVSpatialParameters(const GridView &gv)
-    :FVSpatialParametersOneP<TypeTag>(gv)
+    FVSpatialParams(const GridView &gv)
+    :FVSpatialParamsOneP<TypeTag>(gv)
     {
     }
 

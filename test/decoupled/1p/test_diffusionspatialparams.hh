@@ -24,10 +24,10 @@
  *
  * \brief spatial parameters for the test problem for diffusion models.
  */
-#ifndef TEST_DIFFUSION_SPATIALPARAMETERS_HH
-#define TEST_DIFFUSION_SPATIALPARAMETERS_HH
+#ifndef TEST_DIFFUSION_SPATIAL_PARAMS_HH
+#define TEST_DIFFUSION_SPATIAL_PARAMS_HH
 
-#include <dumux/material/spatialparameters/fvspatialparameters.hh>
+#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
@@ -67,9 +67,9 @@ public:
  * \brief spatial parameters for the test problem for diffusion models.
  */
 template<class TypeTag>
-class TestDiffusionSpatialParams: public FVSpatialParameters<TypeTag>
+class TestDiffusionSpatialParams: public FVSpatialParams<TypeTag>
 {
-    typedef FVSpatialParameters<TypeTag> ParentType;
+    typedef FVSpatialParams<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::IndexSet IndexSet;

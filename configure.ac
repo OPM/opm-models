@@ -48,6 +48,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/decoupled/common/fv/Makefile
     dumux/decoupled/common/fv/mpfa/Makefile
     dumux/decoupled/common/mimetic/Makefile
+    dumux/decoupled/spatialparams/Makefile 
     dumux/freeflow/Makefile
     dumux/freeflow/stokes/Makefile
     dumux/freeflow/stokesni/Makefile
@@ -63,7 +64,6 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/material/fluidmatrixinteractions/2p/Makefile 
     dumux/material/fluidmatrixinteractions/3p/Makefile 
     dumux/material/fluidmatrixinteractions/mp/Makefile 
-    dumux/material/spatialparameters/Makefile 
     dumux/material/fluidstates/Makefile 
     dumux/material/fluidsystems/Makefile 
     dumux/material/heatconduction/Makefile 

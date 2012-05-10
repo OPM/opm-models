@@ -341,8 +341,8 @@ public:
             paramCache.updateAll(fluidState);
             Scalar viscosityWBound = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
             Scalar viscosityNWBound = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
-            lambdaWBound = MaterialLaw::krw(problem_.spatialParameters().materialLawParams(*element), satWBound) / viscosityWBound;
-            lambdaNWBound = MaterialLaw::krn(problem_.spatialParameters().materialLawParams(*element), satWBound) / viscosityNWBound;
+            lambdaWBound = MaterialLaw::krw(problem_.spatialParams().materialLawParams(*element), satWBound) / viscosityWBound;
+            lambdaNWBound = MaterialLaw::krn(problem_.spatialParams().materialLawParams(*element), satWBound) / viscosityNWBound;
 
             Scalar transmissibility = (unitOuterNormal * permeability) * intersection.geometry().volume() / dist;
 
