@@ -26,13 +26,13 @@
  * \brief Adaption of the BOX scheme to the non-isothermal
  *        compositional stokes model (with two components).
  */
-#ifndef DUMUX_STOKES2CNI_MODEL_HH
-#define DUMUX_STOKES2CNI_MODEL_HH
+#ifndef DUMUX_STOKES_NI_MODEL_HH
+#define DUMUX_STOKES_NI_MODEL_HH
 
-#include "stokes2cnilocalresidual.hh"
-#include "stokes2cniproperties.hh"
+#include "stokesnilocalresidual.hh"
+#include "stokesniproperties.hh"
 
-#include <dumux/freeflow/stokes2c/stokes2cmodel.hh>
+#include <dumux/freeflow/stokes/stokesmodel.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -82,98 +82,43 @@ namespace Dumux {
  *
  */
 template<class TypeTag>
-class StokesNIModel : public Stokes2cModel<TypeTag>
+class StokesNIModel : public StokesModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-    enum { dim = GridView::dimension };
-    enum { compIdx = GET_PROP_VALUE(TypeTag, StokesComponentIndex) };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
-
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-
+    typedef StokesModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    
 public:
-    //! \copydoc BoxModel::addOutputVtkFields
-    template <class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer) const
-    {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VelocityField;
-
-        // create the required scalar fields
-        unsigned numVertices = this->gridView_().size(dim);
-        ScalarField &pN = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &delP = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &Xw = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &T = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &h = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
-
-        // iterate over grid
-        ElementContext elemCtx(this->problem_());
-
-        ElementIterator elemIt = this->gridView().template begin<0>();
-        ElementIterator elemEndIt = this->gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
-            elemCtx.updateAll(*elemIt);
-
-            int numLocalVerts = elemIt->template count<dim>();
-            for (int i = 0; i < numLocalVerts; ++i)
-            {
-                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
-                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0);
-                const auto &fs = volVars.fluidState();
-                
-                pN[globalIdx] = fs.pressure(phaseIdx);
-                delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
-                Xw[globalIdx] = fs.massFraction(phaseIdx, compIdx);
-                T[globalIdx] = fs.temperature(phaseIdx);
-                rho[globalIdx] = fs.density(phaseIdx);
-                mu[globalIdx] = fs.viscosity(phaseIdx);
-                h[globalIdx] = fs.enthalpy(phaseIdx);
-                velocity[globalIdx] = volVars.velocity();
-            };
+    /*!
+     * \brief Given an primary variable index, return a human readable name.
+     */
+    std::string primaryVarName(int pvIdx) const
+    { 
+        std::ostringstream oss;
+        if (pvIdx == Indices::temperatureIdx) {
+            oss << "temperature";
+            return oss.str();
         }
 
-        std::ostringstream tmp;
+        return ParentType::primaryVarName(pvIdx);
+    }
 
-        tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(pN, tmp.str());
+    /*!
+     * \brief Given an equation index, return a human readable name.
+     */
+    std::string eqName(int eqIdx) const
+    {
+        std::ostringstream oss;
+        if (eqIdx == Indices::energyEqIdx) {
+            oss << "energy";
+            return oss.str();
+        }
 
-        tmp.str(""); tmp << "delta pressure_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(delP, tmp.str());
-
-        tmp.str(""); tmp << "mass fraction_" << FluidSystem::phaseName(phaseIdx)
-                         << "^" << FluidSystem::componentName(compIdx);
-        writer.attachVertexData(Xw, tmp.str());
-
-        writer.attachVertexData(T, "temperature");
-
-        tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(rho, tmp.str());
-
-        tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(mu, tmp.str());
-
-        tmp.str(""); tmp << "enthalpy_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(h, tmp.str());
-
-        tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(velocity, tmp.str(), dim);
+        return ParentType::eqName(eqIdx);
     }
 };
 
 }
 
-#include "stokes2cnipropertydefaults.hh"
+#include "stokesnipropertydefaults.hh"
 
 #endif

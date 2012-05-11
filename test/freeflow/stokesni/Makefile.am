@@ -1,6 +1,6 @@
-check_PROGRAMS = test_stokes2cni
+check_PROGRAMS = test_stokesni
 
-test_stokes2cni_SOURCES = test_stokes2cni.cc
+test_stokesni_SOURCES = test_stokesni.cc
 
 EXTRA_DIST=*reference.vtu *.input grids/*.dgf CMakeLists.txt
 noinst_HEADERS=*.hh

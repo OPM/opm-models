@@ -34,6 +34,7 @@
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
+#include<dune/grid/common/quadraturerules.hh>
 #include <dune/common/fvector.hh>
 
 namespace Dumux
@@ -58,13 +59,16 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { numComponents = FluidSystem::numComponents };
+    enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { pressureIdx = Indices::pressureIdx };
     enum { moleFrac1Idx = Indices::moleFrac1Idx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
+    typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
 
 public:
     /*!
@@ -105,7 +109,7 @@ public:
 
         // the effective velocity of the control volume
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            velocity_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
+            velocityCenter_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
 
         // the gravitational acceleration applying to the material
         // inside the volume
@@ -127,6 +131,34 @@ public:
             
             pressureGrad_ += tmp;
         }            
+
+        // integrate the velocity over the sub-control volume
+        //const auto &elemGeom = elemCtx.element().geometry();
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
+        
+        Dune::GeometryType geomType = scvLocalGeom.type();
+        static const int quadratureOrder = 2;
+        const auto &rule = Dune::QuadratureRules<Scalar,dimWorld>::rule(geomType, quadratureOrder);
+        
+        // integrate the veloc over the sub-control volume
+        velocity_ = 0.0;
+        for (auto it = rule.begin(); it != rule.end(); ++ it)
+        {
+            const auto &posScvLocal = it->position();
+            const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
+            
+            Vector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
+            Scalar weight = it->weight();
+            Scalar detjac = 1.0;
+            //scvLocalGeom.integrationElement(posScvLocal) *
+            //elemGeom.integrationElement(posElemLocal);
+            velocity_.axpy(weight * detjac,  velocityAtPos);
+        }
+
+        // since we want the average velocity, we have to divide the
+        // integrated value by the volume of the SCV
+        //velocity_ /= fvElemGeom.subContVol[scvIdx].volume;
     }
 
 
@@ -144,10 +176,16 @@ public:
     { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
 
     /*!
-     * \brief Returns the velocity vector in the sub-control volume.
+     * \brief Returns the average velocity in the sub-control volume.
      */
     const Vector &velocity() const
     { return velocity_; }
+
+    /*!
+     * \brief Returns the velocity at the center in the sub-control volume.
+     */
+    const Vector &velocityCenter() const
+    { return velocityCenter_; }
 
     /*!
      * \brief Returns the pressure gradient in the sub-control volume.
@@ -163,6 +201,26 @@ public:
     { return gravity_; } 
 
 protected:
+    Vector velocityAtPos_(const ElementContext elemCtx,
+                          int timeIdx,
+                          const LocalPosition &localPos) const
+    {
+        const auto &localFiniteElement = 
+            elemCtx.fvElemGeom(timeIdx).localFiniteElement();
+
+        typedef Dune::FieldVector<Scalar, 1> ShapeValue;
+        std::vector<ShapeValue> shapeValue;
+        
+        localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
+
+        Vector result(0.0);
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
+            result.axpy(shapeValue[scvIdx][0], elemCtx.volVars(scvIdx, timeIdx).velocityCenter());
+        }
+
+        return result;
+    }
+
     template<class ParameterCache>
     void updateEnergy_(const ParameterCache &paramCache,
                        const ElementContext &elemCtx,
@@ -177,6 +235,7 @@ protected:
     }
 
     Vector velocity_;
+    Vector velocityCenter_;
     Vector gravity_;
     Vector pressureGrad_;
     FluidState fluidState_;

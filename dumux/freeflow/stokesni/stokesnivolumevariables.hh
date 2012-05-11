@@ -25,11 +25,11 @@
  * \brief Contains the supplemental quantities, which are constant within a
  *        finite volume in the non-isothermal compositional Stokes box model.
  */
-#ifndef DUMUX_STOKES2CNI_VOLUME_VARIABLES_HH
-#define DUMUX_STOKES2CNI_VOLUME_VARIABLES_HH
+#ifndef DUMUX_STOKES_NI_VOLUME_VARIABLES_HH
+#define DUMUX_STOKES_NI_VOLUME_VARIABLES_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cvolumevariables.hh>
-#include "stokes2cniproperties.hh"
+#include <dumux/freeflow/stokes/stokesvolumevariables.hh>
+#include "stokesniproperties.hh"
 
 namespace Dumux
 {
@@ -42,9 +42,9 @@ namespace Dumux
  *        box model.
  */
 template <class TypeTag>
-class StokesNIVolumeVariables : public Stokes2cVolumeVariables<TypeTag>
+class StokesNIVolumeVariables : public StokesVolumeVariables<TypeTag>
 {
-    typedef Stokes2cVolumeVariables<TypeTag> ParentType;
+    typedef StokesVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

@@ -46,17 +46,13 @@ class StokesProblem : public BoxProblem<TypeTag>
 {
     typedef BoxProblem<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GridView::Grid Grid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-
-
     enum {
-        dim = Grid::dimension,
-        dimWorld = Grid::dimensionworld
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;

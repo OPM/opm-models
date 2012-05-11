@@ -2,7 +2,8 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2011 by Klaus Mosthaf                                     *
- *   Copyright (C) 2008-2009 by Bernd Flemisch, Andreas Lauser               *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -24,31 +25,35 @@
 /*!
  * \file
  *
- * \brief Defines the indices required for the non-isothermal compositional Stokes box model.
+ * \brief Defines the indices required for the non-isothermal
+ *        compositional Stokes box model.
  */
-#ifndef DUMUX_STOKES2CNI_INDICES_HH
-#define DUMUX_STOKES2CNI_INDICES_HH
+#ifndef DUMUX_STOKES_NI_INDICES_HH
+#define DUMUX_STOKES_NI_INDICES_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cindices.hh>
+#include <dumux/freeflow/stokes/stokesindices.hh>
 
 namespace Dumux
 {
-// \{
-
 /*!
  * \ingroup BoxStokesNIModel
  * \ingroup BoxIndices
  * \brief Enumerations for the non-isothermal compositional Stokes model
  */
 template <class TypeTag, int PVOffset=0>
-struct StokesNIIndices : public Stokes2cCommonIndices<TypeTag, PVOffset>
+struct StokesNIIndices : public StokesIndices<TypeTag, PVOffset>
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    static const int dim = GridView::dimensionworld;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+    static const int dimWorld = GridView::dimensionworld;
+    static const int numComponents = FluidSystem::numComponents;
 
 public:
-    static const int energyIdx = PVOffset + dim + 2; //! The index for the energy balance equation.
-    static const int temperatureIdx = PVOffset + dim + 2; //! The index for temperature in primary variable vectors.
+    //! The index for the energy balance equation.
+    static const int energyEqIdx = PVOffset + dimWorld + numComponents;
+    //! The index for temperature in primary variable vectors.
+    static const int temperatureIdx = PVOffset + dimWorld + numComponents;
 };
 } // end namespace
 

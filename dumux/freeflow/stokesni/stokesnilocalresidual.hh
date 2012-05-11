@@ -27,13 +27,13 @@
  *        using the non-isothermal compositional Stokes box model.
  *
  */
-#ifndef DUMUX_STOKES2CNI_LOCAL_RESIDUAL_HH
-#define DUMUX_STOKES2CNI_LOCAL_RESIDUAL_HH
+#ifndef DUMUX_STOKES_NI_LOCAL_RESIDUAL_HH
+#define DUMUX_STOKES_NI_LOCAL_RESIDUAL_HH
 
-#include <dumux/freeflow/stokes2c/stokes2clocalresidual.hh>
+#include <dumux/freeflow/stokes/stokeslocalresidual.hh>
 
-#include "stokes2cnivolumevariables.hh"
-#include "stokes2cnifluxvariables.hh"
+#include "stokesnivolumevariables.hh"
+#include "stokesnifluxvariables.hh"
 
 namespace Dumux
 {
@@ -42,16 +42,16 @@ namespace Dumux
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the non-isothermal compositional Stokes box model. This class is derived
- *        from the stokes2c box local residual and adds the energy balance equation.
+ *        from the stokes box local residual and adds the energy balance equation.
      *
      *  \param result The mass of the component within the sub-control volume
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
  */
 template<class TypeTag>
-class StokesNILocalResidual : public Stokes2cLocalResidual<TypeTag>
+class StokesNILocalResidual : public StokesLocalResidual<TypeTag>
 {
-    typedef Stokes2cLocalResidual<TypeTag> ParentType;
+    typedef StokesLocalResidual<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -62,12 +62,12 @@ class StokesNILocalResidual : public Stokes2cLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
-    enum { energyIdx = Indices::energyIdx };
+    enum { energyEqIdx = Indices::energyEqIdx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
 public:
     /*!
-     * \brief Evaluate the amount the additional quantities to the stokes2c model
+     * \brief Evaluate the amount the additional quantities to the stokes model
      *        (energy equation).
      *
      * The result should be averaged over the volume (e.g. phase mass
@@ -83,7 +83,7 @@ public:
 
         // compute the storage of energy
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        result[energyIdx] =
+        result[energyEqIdx] =
             volVars.fluidState().density(phaseIdx) *
             volVars.fluidState().internalEnergy(phaseIdx);
     }
@@ -99,38 +99,26 @@ public:
     void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int faceIdx,
-                              int timeIdx,
-                              bool onBoundary) const
+                              int timeIdx) const
     {
         // call computation of the advective fluxes of the stokes model
         // (momentum and mass fluxes)
-        ParentType::computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+        ParentType::computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
 
-        const auto &fluxVars = 
-            onBoundary
-            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
-            : elemCtx.fluxVars(faceIdx, timeIdx);
+        const auto &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
 
-        // vertex data of the upstream and the downstream vertices
+        // secondary variables of the upstream vertex
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
-        const VolumeVariables &dn = elemCtx.volVars(fluxVars.downstreamIdx(), timeIdx);
-
         const auto &fsUp = up.fluidState();
-        const auto &fsDn = dn.fluidState();
-        
-        Scalar tmp = fluxVars.normalVelocityAtIP();
+
+        Scalar tmp = fluxVars.normal() * fluxVars.velocityAtIP();
 
         tmp *=  
-            this->massUpwindWeight_
-            * fsUp.density(phaseIdx)
-            * fsUp.enthalpy(phaseIdx) 
-            +
-            (1.0 - this->massUpwindWeight_)
-            * fsDn.density(phaseIdx)
-            * fsDn.enthalpy(phaseIdx);
+            fsUp.density(phaseIdx)
+            * fsUp.enthalpy(phaseIdx);
 
-        flux[energyIdx] += tmp;
-        Valgrind::CheckDefined(flux[energyIdx]);
+        flux[energyEqIdx] += tmp;
+        Valgrind::CheckDefined(flux[energyEqIdx]);
     }
 
     /*!
@@ -143,24 +131,18 @@ public:
     void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
                               int faceIdx,
-                              int timeIdx,
-                              bool onBoundary) const
+                              int timeIdx) const
     {
         // diffusive mass flux
-        ParentType::computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx, onBoundary);
+        ParentType::computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx);
         
-        const auto &fluxVars = 
-            onBoundary
-            ? elemCtx.boundaryFluxVars(faceIdx, timeIdx)
-            : elemCtx.fluxVars(faceIdx, timeIdx);
+        const auto &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
         
-
         // diffusive heat flux
-        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
-            flux[energyIdx] -=
-                fluxVars.temperatureGradAtIP()[dimIdx] *
-                fluxVars.normal()[dimIdx] *
-                fluxVars.heatConductivityAtIP();
+        flux[energyEqIdx] -=
+            (fluxVars.temperatureGradAtIP()
+             * fluxVars.normal())
+            * fluxVars.heatConductivityAtIP();
     }
 };
 

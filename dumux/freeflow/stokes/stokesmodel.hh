@@ -46,10 +46,11 @@ namespace Dumux
  *
  * This model implements laminar Stokes flow of a single fluid, solving a momentum balance:
  * \f[
-\frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t}
-+ \boldsymbol{\nabla} \boldsymbol{\cdot} \left(p_g {\bf {I}}
-- \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g
-+ \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)\right)
+%\frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} +
+boldsymbol{\nabla} p_g
+- \boldsymbol{\nabla} \boldsymbol{\cdot} \left( 
+  \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g + \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)
+ \right)
 - \varrho_g {\bf g} = 0,
  * \f]
  *
@@ -77,7 +78,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { numComponents = FluidSystem::numComponents };
 
@@ -92,7 +93,9 @@ public:
         std::ostringstream oss;
         if (pvIdx == Indices::pressureIdx)
             oss << "pressure";
-        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx + dim)
+        else if (Indices::moleFrac1Idx <= pvIdx && pvIdx < Indices::moleFrac1Idx + numComponents - 1)
+            oss << "moleFraction^" << FluidSystem::componentName(pvIdx - Indices::moleFrac1Idx + 1);
+        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx + dimWorld)
             oss << "velocity_" << pvIdx - Indices::velocity0Idx;
         else
             assert(false);
@@ -106,10 +109,9 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (eqIdx == Indices::conti0EqIdx) {
-            oss << "continuity";
-        }
-        else if (Indices::momentum0EqIdx <= eqIdx && eqIdx < Indices::momentum0EqIdx + dim)
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "continuity^" << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
+        else if (Indices::momentum0EqIdx <= eqIdx && eqIdx < Indices::momentum0EqIdx + dimWorld)
             oss << "momentum_" << eqIdx - Indices::momentum0EqIdx;
         else
             assert(false);
@@ -141,15 +143,16 @@ public:
                             MultiWriter &writer) const
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<double, dim> > VelocityField;
+        typedef Dune::BlockVector<Dune::FieldVector<double, dimWorld> > VelocityField;
 
         // create the required scalar fields
-        unsigned numVertices = this->gridView_().size(dim);
+        unsigned numVertices = this->gridView_().size(dimWorld);
         ScalarField &pN = *writer.allocateManagedBuffer(numVertices);
         ScalarField &delP = *writer.allocateManagedBuffer(numVertices);
         ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
+        ScalarField &temperature = *writer.allocateManagedBuffer(numVertices);
         ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dim> (numVertices);
+        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dimWorld> (numVertices);
         ScalarField *moleFrac[numComponents];
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             moleFrac[compIdx] = writer.allocateManagedBuffer(numVertices);
@@ -163,7 +166,7 @@ public:
         {
             elemCtx.updateAll(*elemIt);
 
-            int numLocalVerts = elemIt->template count<dim>();
+            int numLocalVerts = elemIt->template count<dimWorld>();
             for (int i = 0; i < numLocalVerts; ++i)
             {
                 int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
@@ -173,8 +176,9 @@ public:
                 pN[globalIdx] = fs.pressure(phaseIdx);
                 delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
                 rho[globalIdx] = fs.density(phaseIdx);
+                temperature[globalIdx] = fs.temperature(phaseIdx);
                 mu[globalIdx] = fs.viscosity(phaseIdx);
-                velocity[globalIdx] = volVars.velocity();
+                velocity[globalIdx] = volVars.velocityCenter();
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                     (*moleFrac[compIdx])[globalIdx] = fs.moleFraction(phaseIdx, compIdx);
@@ -197,11 +201,14 @@ public:
             writer.attachVertexData(*moleFrac[compIdx], tmp.str());
         }
 
+        tmp.str(""); tmp << "temperature_" << FluidSystem::phaseName(phaseIdx);
+        writer.attachVertexData(temperature, tmp.str());
+
         tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(mu, tmp.str());
 
         tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(velocity, tmp.str(), dim);
+        writer.attachVertexData(velocity, tmp.str(), dimWorld);
     }
 };
 }

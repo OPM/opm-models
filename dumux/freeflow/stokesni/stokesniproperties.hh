@@ -29,10 +29,10 @@
  * \brief Defines the additional properties required for the non-isothermal compositional
  * Stokes box model.
  */
-#ifndef DUMUX_STOKES2CNI_PROPERTIES_HH
-#define DUMUX_STOKES2CNI_PROPERTIES_HH
+#ifndef DUMUX_STOKES_NI_PROPERTIES_HH
+#define DUMUX_STOKES_NI_PROPERTIES_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cproperties.hh>
+#include <dumux/freeflow/stokes/stokesproperties.hh>
 
 namespace Dumux
 {
@@ -43,7 +43,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the non-isothermal compositional Stokes problems
-NEW_TYPE_TAG(BoxStokesNI, INHERITS_FROM(BoxStokes2c));
+NEW_TYPE_TAG(BoxStokesNI, INHERITS_FROM(BoxStokes));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

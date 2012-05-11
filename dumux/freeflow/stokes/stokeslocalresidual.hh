@@ -106,7 +106,8 @@ protected:
 
         // momentum balance
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            result[momentum0EqIdx + axisIdx] = 0.0;
+            result[momentum0EqIdx + axisIdx] =
+                fs.density(phaseIdx) * volVars.velocity()[axisIdx];
     }
 
     /*!
@@ -147,10 +148,12 @@ protected:
         // data attached to upstream vertex
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
 
+        auto normal = fluxVars.normal();
+        Scalar faceArea = normal.two_norm();
+        normal /= faceArea;
+
         // mass fluxes
-        Scalar vTimesN = 
-            fluxVars.velocityAtIP()
-            * fluxVars.normal();
+        Scalar vTimesN = fluxVars.velocityAtIP() * normal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             flux[conti0EqIdx + compIdx] = 
                 up.fluidState().molarity(phaseIdx, compIdx)
@@ -160,16 +163,17 @@ protected:
         Scalar mu = up.fluidState().viscosity(phaseIdx);
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
         {
-            Vector tmp(0);
+            Vector tmp;
             for (int j = 0; j < dimWorld; ++j) {
-                tmp[j] += fluxVars.velocityGradAtIP(/*velocityComp=*/axisIdx)[j];
+                tmp[j] = fluxVars.velocityGradAtIP(/*velocityComp=*/axisIdx)[j];
                 tmp[j] += fluxVars.velocityGradAtIP(/*velocityComp=*/j)[axisIdx];
             }
             
-            flux[momentum0EqIdx + axisIdx] = mu * (tmp * fluxVars.normal());
-        }           
+            flux[momentum0EqIdx + axisIdx] = - mu * (tmp * normal);
+        }
+        
+        flux *= faceArea;
     }
-
 
     /*!
      * \brief Adds the diffusive flux to the flux vector over
@@ -201,6 +205,7 @@ protected:
                        int scvIdx,
                        int timeIdx) const
     {
+        assert(timeIdx == 0);
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
@@ -210,9 +215,13 @@ protected:
         const auto &gradp = volVars.pressureGradient();
         Scalar density = volVars.fluidState().density(phaseIdx);
 
+        Valgrind::CheckDefined(gravity);
+        Valgrind::CheckDefined(gradp);
+        Valgrind::CheckDefined(density);
+
         // deal with the pressure and volume terms
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            q[momentum0EqIdx + axisIdx] -= gradp[axisIdx] + density*gravity[axisIdx];
+            q[momentum0EqIdx + axisIdx] += gradp[axisIdx] - density*gravity[axisIdx];
     }
 
 private:

@@ -110,7 +110,7 @@ public:
                 * scvf.shapeValue[idx];
 
             // velocity at the IP (fluxes)
-            Vector velocityTimesShapeValue = volVars.velocity();
+            Vector velocityTimesShapeValue = volVars.velocityCenter();
             velocityTimesShapeValue *= scvf.shapeValue[idx];
             Valgrind::CheckDefined(scvf.shapeValue[idx]);
             velocityAtIP_ += velocityTimesShapeValue;
@@ -125,11 +125,11 @@ public:
             // pressure gradient including influence of gravity
             pressureGradAtIP_ -= tmp;
 
-            // the velocity gradients and divergence
+            // the velocity gradients
             for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             {
                 tmp = scvf.grad[idx];
-                tmp *= volVars.velocity()[dimIdx];
+                tmp *= volVars.velocityCenter()[dimIdx];
                 velocityGradAtIP_[dimIdx] += tmp;
             }
         }

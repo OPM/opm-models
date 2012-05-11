@@ -29,10 +29,10 @@
  * This means concentration temperature gradients and heat conductivity at
  * the integration point.
  */
-#ifndef DUMUX_STOKES2CNI_FLUX_VARIABLES_HH
-#define DUMUX_STOKES2CNI_FLUX_VARIABLES_HH
+#ifndef DUMUX_STOKES_NI_FLUX_VARIABLES_HH
+#define DUMUX_STOKES_NI_FLUX_VARIABLES_HH
 
-#include <dumux/freeflow/stokes2c/stokes2cfluxvariables.hh>
+#include <dumux/freeflow/stokes/stokesfluxvariables.hh>
 #include <dumux/common/math.hh>
 
 #include <dune/common/fvector.hh>
@@ -51,9 +51,9 @@ namespace Dumux
  * at the integration point of a SCV face or boundary face.
  */
 template <class TypeTag>
-class StokesNIFluxVariables : public Stokes2cFluxVariables<TypeTag>
+class StokesNIFluxVariables : public StokesFluxVariables<TypeTag>
 {
-    typedef Stokes2cFluxVariables<TypeTag> ParentType;
+    typedef StokesFluxVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

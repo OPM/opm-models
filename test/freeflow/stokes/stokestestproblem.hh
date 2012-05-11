@@ -1,10 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2009-2010 by Klaus Mosthaf                                *
  *   Copyright (C) 2010 by Katherina Baber                                   *
  *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -23,9 +23,8 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /**
- * @file
- * @brief  Definition of a simple Stokes problem
- * @author Klaus Mosthaf, Andreas Lauser, Bernd Flemisch
+ * \file
+ * \brief  Definition of a simple Stokes problem
  */
 #ifndef DUMUX_STOKESTESTPROBLEM_HH
 #define DUMUX_STOKESTESTPROBLEM_HH
@@ -205,7 +204,7 @@ public:
     {
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onLeftBoundary_(pos)) {
+        if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             PrimaryVariables initCond;
             initial(initCond, context, spaceIdx, timeIdx);
 
@@ -262,12 +261,10 @@ public:
         Scalar c = 0;
         
         Vector velocity(0.0);
-        if(onLeftBoundary_(pos) || onRightBoundary_(pos) || onUpperBoundary_(pos) || onLowerBoundary_(pos))
-            velocity[0] = a * y*y + b * y + c;
-
+        velocity[0] = a * y*y + b * y + c;
+        
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
             values[velocity0Idx + axisIdx] = velocity[axisIdx];
-
         values[pressureIdx] = 1e5;
     }
     
@@ -285,6 +282,13 @@ private:
 
     bool onUpperBoundary_(const GlobalPosition &pos) const
     { return pos[1] > this->bboxMax()[1] - eps_; }
+
+    bool onBoundary_(const GlobalPosition &pos) const
+    {
+        return 
+            onLeftBoundary_(pos) || onRightBoundary_(pos) ||
+            onLowerBoundary_(pos) || onUpperBoundary_(pos);
+    }
 
     Scalar eps_;
 };

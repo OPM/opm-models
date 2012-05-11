@@ -917,6 +917,9 @@ public:
         updateScvCenterGradients(e, localFiniteElement);
     }
 
+    const LocalFiniteElement &localFiniteElement() const
+    { return feCache_.get(geometryType_); }
+
     void updateScvLocalGeometry(const Element &element)
     {
         auto geomType = element.geometry().type();

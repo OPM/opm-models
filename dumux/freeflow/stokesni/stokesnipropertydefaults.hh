@@ -1,7 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
+ *   Copyright (C) 2008 by Klaus Mosthaf                                     *
+ *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -29,15 +31,16 @@
  * \brief Sets default properties for the non-isothermal compositional
  *        Stokes box model.
  */
-#ifndef DUMUX_STOKES2CNI_PROPERTY_DEFAULTS_HH
-#define DUMUX_STOKES2CNI_PROPERTY_DEFAULTS_HH
+#ifndef DUMUX_STOKES_NI_PROPERTY_DEFAULTS_HH
+#define DUMUX_STOKES_NI_PROPERTY_DEFAULTS_HH
 
 
-#include "stokes2cnifluxvariables.hh"
-#include "stokes2cniindices.hh"
-#include "stokes2cnilocalresidual.hh"
-#include "stokes2cnimodel.hh"
-#include "stokes2cnivolumevariables.hh"
+#include "stokesnifluxvariables.hh"
+#include "stokesniindices.hh"
+#include "stokesnilocalresidual.hh"
+#include "stokesnimodel.hh"
+#include "stokesnivolumevariables.hh"
+#include "stokesniboundaryratevector.hh"
 
 namespace Dumux
 {
@@ -50,19 +53,23 @@ namespace Properties
 
 SET_PROP(BoxStokesNI, NumEq) //!< set the number of equations
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    static const int dim = Grid::dimension;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
  public:
-    static constexpr int value = 3 + dim;
+    static constexpr int value = GridView::dimensionworld + FluidSystem::numComponents + 1;
 };
 
-//! Use the stokes2cni local jacobian operator for the compositional stokes model
+//! Use the stokesni local jacobian operator for the compositional stokes model
 SET_TYPE_PROP(BoxStokesNI,
               LocalResidual,
               StokesNILocalResidual<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxStokesNI, Model, StokesNIModel<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BoxStokesNI, BoundaryRateVector, StokesNIBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxStokesNI, VolumeVariables, StokesNIVolumeVariables<TypeTag>);
@@ -77,7 +84,6 @@ SET_TYPE_PROP(BoxStokesNI,
 SET_TYPE_PROP(BoxStokesNI,
               Indices,
               typename GET_PROP_TYPE(TypeTag, StokesNIIndices));
-
 }
 }
 #endif
