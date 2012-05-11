@@ -29,7 +29,7 @@
 
 #include "2pniproperties.hh"
 
-#include <dumux/boxmodels/2p2c/2p2cboundaryratevector.hh>
+#include <dumux/boxmodels/2p/2pboundaryratevector.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>

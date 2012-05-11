@@ -28,6 +28,7 @@
 #define DUMUX_BOX_MPNC_BOUNDARY_RATE_VECTOR_HH
 
 #include "mpncproperties.hh"
+#include "energy/mpncvolumevariablesenergy.hh"
 
 #include <dumux/common/valgrind.hh>
 

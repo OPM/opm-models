@@ -31,6 +31,13 @@
 
 namespace Dumux
 {
+namespace Properties
+{
+NEW_PROP_TAG(PrimaryVariables);
+NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(NumEq);
+}
+
 /*!
  * \brief Class to specify constraints in a box model.
  */

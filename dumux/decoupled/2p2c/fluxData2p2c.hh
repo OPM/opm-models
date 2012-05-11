@@ -19,17 +19,26 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/**
+ * \file
+ * \brief  Class including the variables and data of discretized data of the constitutive relations
+ */
 #ifndef DUMUX_FLUXDATA2P2C_HH
 #define DUMUX_FLUXDATA2P2C_HH
 
-/**
- * @file
- * @brief  Class including the variables and data of discretized data of the constitutive relations
- * @author Markus Wolff
- */
+#include <dumux/common/propertysystem.hh>
 
-namespace Dumux
-{
+#include <dune/istl/bvector.hh>
+#include <dune/common/fvector.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(Indices);
+NEW_PROP_TAG(NumEq);
+}
+
 /*!
  * \ingroup IMPES
  */
@@ -38,8 +47,8 @@ namespace Dumux
  * Additionally, a velocity needed in the transport part of the decoupled two-phase flow is stored, as well as discretized data of constitutive relationships like
  * mobilities, fractional flow functions and capillary pressure. Thus, they have to be callculated just once in every time step or every iteration step.
  *
- * @tparam TypeTag The Type Tag
- 1*/
+ * \tparam TypeTag The Type Tag
+ */
 template<class TypeTag>
 class FluxData2P2C
 {
@@ -66,7 +75,7 @@ private:
         numEquations = GET_PROP_VALUE(TypeTag, PTAG(NumEq))
     };
 
-    typename Dune::BlockVector<typename Dune::FieldVector<bool, numEquations>> isUpwindCell_;
+    typename Dune::BlockVector<typename Dune::FieldVector<bool, numEquations> > isUpwindCell_;
 
 public:
 

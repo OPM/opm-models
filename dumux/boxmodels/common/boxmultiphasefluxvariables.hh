@@ -44,6 +44,7 @@ namespace Dumux {
 
 namespace Properties {
 NEW_PROP_TAG(EnableSmoothUpwinding);
+NEW_PROP_TAG(MaterialLaw);
 NEW_PROP_TAG(EnableGravity);
 }
 
