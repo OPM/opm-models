@@ -42,11 +42,13 @@ NEW_TYPE_TAG(VtkEnergy);
 
 // create the property tags needed for the energy module
 NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
+NEW_PROP_TAG(VtkWriteHeatConductivity);
 NEW_PROP_TAG(VtkWriteInternalEnergies);
 NEW_PROP_TAG(VtkWriteEnthalpies);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkEnergy, VtkWriteSolidHeatCapacity, false);
+SET_BOOL_PROP(VtkEnergy, VtkWriteHeatConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 }
@@ -61,6 +63,7 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
  * - Specific enthalpy of all fluid phases
  * - Specific internal energy of all fluid phases
  * - Specific heat capacity of the solid phase
+ * - Lumped heat conductivity (solid phase plus all fluid phases)
  */
 template<class TypeTag>
 class BoxVtkEnergyModule : public BoxVtkOutputModule<TypeTag>
@@ -96,6 +99,7 @@ public:
         if (internalEnergyOutput_()) this->resizePhaseBuffer_(internalEnergy_);
 
         if (solidHeatCapacityOutput_()) this->resizeScalarBuffer_(solidHeatCapacity_);
+        if (heatConductivityOutput_()) this->resizeScalarBuffer_(heatConductivity_);
     }
 
     /*!
@@ -113,6 +117,7 @@ public:
             const auto &fs = volVars.fluidState();
 
             if (solidHeatCapacityOutput_()) solidHeatCapacity_[I] = volVars.heatCapacitySolid();
+            if (heatConductivityOutput_()) heatConductivity_[I] = volVars.heatConductivity();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (enthalpyOutput_()) enthalpy_[phaseIdx][I] = fs.enthalpy(phaseIdx);
@@ -127,6 +132,7 @@ public:
     void commitBuffers(VtkMultiWriter &writer)
     {
         if (solidHeatCapacityOutput_()) this->commitScalarBuffer_(writer, "heatCapacitySolid", solidHeatCapacity_);
+        if (heatConductivityOutput_()) this->commitScalarBuffer_(writer, "heatConductivity", heatConductivity_);
 
         if (enthalpyOutput_()) this->commitPhaseBuffer_(writer, "enthalpy_%s", enthalpy_);
         if (internalEnergyOutput_()) this->commitPhaseBuffer_(writer, "internalEnergy_%s", internalEnergy_);
@@ -135,6 +141,9 @@ public:
 private:
     static bool solidHeatCapacityOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSolidHeatCapacity); };
+
+    static bool heatConductivityOutput_()
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteHeatConductivity); };
 
     static bool enthalpyOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteEnthalpies); };
@@ -145,6 +154,7 @@ private:
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;
 
+    ScalarBuffer heatConductivity_;
     ScalarBuffer solidHeatCapacity_;
 };
 
