@@ -62,7 +62,7 @@ class BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
 {
     enum { dim = 1 };
     enum { numScv = 2};
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -98,6 +98,20 @@ template <class Scalar>
 typename BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::ScvGeometry
 BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::scvGeoms_[
     BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::numScv];
+
+template <class Scalar>
+class BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
+{
+    enum { dim = 1 };
+    enum { numScv = 2};
+    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+
+public:
+    typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
+
+    static const ScvGeometry &get(int scvIdx)
+    { DUNE_THROW(Dune::NotImplemented, "BoxScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); };
+};
 
 ////////////////////
 // local geometries for 2D elements
@@ -907,8 +921,6 @@ public:
                     boundaryFace[bfIdx].shapeValue[i] = shapeVal[i];
                 }
             }
-
-            
         }
 
         updateScvLocalGeometry(e);
