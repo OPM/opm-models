@@ -479,7 +479,7 @@ private:
         Scalar lambdaWater = 0.6;
         Scalar lambdaGranite = 2.8;
 
-        Scalar lambdaWet = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaWater, poro);
+        Scalar lambdaWet = std::pow(lambdaGranite, (1-poro)) + std::pow(lambdaWater, poro);
         Scalar lambdaDry = std::pow(lambdaGranite, (1-poro));
 
         params.setFullySaturatedLambda(nPhaseIdx, lambdaDry);

@@ -556,7 +556,7 @@ private:
             if (FluidSystem::isLiquid(phaseIdx)) {
                 Scalar lambdaFluid =
                     FluidSystem::thermalConductivity(fs, paramCache, phaseIdx);
-                lambdaSaturated = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaFluid, poro);
+                lambdaSaturated = std::pow(lambdaGranite, (1-poro)) + std::pow(lambdaFluid, poro);
             }
             else
                 lambdaSaturated = std::pow(lambdaGranite, (1-poro));
