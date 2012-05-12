@@ -1,8 +1,9 @@
 # build target for the twophase-twocomponent test problem
 add_executable("test_mpnc" test_mpnc.cc)
+target_link_libraries("test_mpnc" ${DumuxLinkLibraries})
 
-add_executable("obstacle_2p2c" test_mpnc.cc)
-set_target_properties("obstacle_2p2c" PROPERTIES COMPILE_FLAGS "-DUSE_2P2C=1")
+add_executable("obstacle_2p2c" obstacle_2p2c.cc)
+target_link_libraries("obstacle_2p2c" ${DumuxLinkLibraries})
 
 # add required libraries and includes to the build flags 
 link_directories(${DumuxLinkDirectories})

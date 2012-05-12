@@ -5,6 +5,8 @@ if(UG_FOUND)
     PROPERTIES
     COMPILE_FLAGS ${UG_CPPFLAGS})
   target_link_libraries("test_impesadaptive" ${DumuxLinkLibraries} ${UG_LIBS})
+else(UG_FOUND)
+   target_link_libraries("test_impesadaptive" ${DumuxLinkLibraries})
 endif(UG_FOUND)
 
 # add required libraries and includes to the build flags 

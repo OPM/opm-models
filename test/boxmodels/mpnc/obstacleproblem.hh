@@ -31,7 +31,7 @@
 #ifndef DUMUX_OBSTACLEPROBLEM_HH
 #define DUMUX_OBSTACLEPROBLEM_HH
 
-#if USE_2P2C
+#if OBSTACLE_USE_2P2C
 #include <dumux/boxmodels/2p2c/2p2cmodel.hh>
 #else
 #include <dumux/boxmodels/mpnc/mpncmodel.hh>
@@ -62,7 +62,7 @@ class ObstacleProblem;
 
 namespace Properties
 {
-#if USE_2P2C
+#if OBSTACLE_USE_2P2C
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxTwoPTwoC));
 #else
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxMPNC));
@@ -133,7 +133,7 @@ SET_BOOL_PROP(ObstacleProblem, EnablePartialReassemble, false);
 // use forward diffferences to approximate the partial derivatives
 SET_INT_PROP(ObstacleProblem, NumericDifferenceMethod, +1);
 
-#if USE_2P2C
+#if OBSTACLE_USE_2P2C
 /////////
 // 2p-2c specific properties
 /////////
