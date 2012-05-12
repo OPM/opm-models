@@ -177,8 +177,7 @@ public:
             this->localResidual().addPhaseStorage(dest, elemCtx, phaseIdx);
         };
 
-        if (this->gridView_().comm().size() > 1)
-            dest = this->gridView_().comm().sum(dest);
+        dest = this->gridView_().comm().sum(dest);
     }
 
     /*!

@@ -128,11 +128,10 @@ public:
         }
 
         // communicate to get the bounding box of the whole domain
-        if (gridView.comm().size() > 1)
-            for (int i = 0; i < dim; ++i) {
-                bboxMin_[i] = gridView.comm().min(bboxMin_[i]);
-                bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
-            }
+        for (int i = 0; i < dim; ++i) {
+            bboxMin_[i] = gridView.comm().min(bboxMin_[i]);
+            bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
+        }
 
         pressModel_ = new PressureModel(asImp_());
 

@@ -372,8 +372,7 @@ void FVPressureCompositional<TypeTag>::initialize(bool solveTwice)
         problem_.transportModel().update(0., dt_estimate, updateEstimate_, false);
         dt_estimate = std::min ( problem_.timeManager().timeStepSize(), dt_estimate);
         //make sure the right time-step is used by all processes in the parallel case
-        if (problem_.gridView().comm().size() > 1)
-            dt_estimate = problem_.gridView().comm().min(dt_estimate);
+        dt_estimate = problem_.gridView().comm().min(dt_estimate);
 
         updateEstimate_ *= dt_estimate;
         //communicate in parallel case

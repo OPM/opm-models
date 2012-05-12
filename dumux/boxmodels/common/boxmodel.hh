@@ -239,14 +239,12 @@ public:
         result2 = gridView().comm().sum(result2);
 
         // add up the residuals on the process borders
-        if (gridView().comm().size() > 1) {
-            VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
-                sumHandle(dest, vertexMapper());
-            gridView().communicate(sumHandle,
-                                   Dune::InteriorBorder_InteriorBorder_Interface,
-                                   Dune::ForwardCommunication);
-        }
-
+        VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
+            sumHandle(dest, vertexMapper());
+        gridView().communicate(sumHandle,
+                               Dune::InteriorBorder_InteriorBorder_Interface,
+                               Dune::ForwardCommunication);
+    
         return std::sqrt(result2);
     }
 
@@ -886,14 +884,12 @@ protected:
 
         // add up the primary variables and the volumes of the boxes
         // which cross process borders
-        if (gridView().comm().size() > 1) {
-            VertexHandleSum<Dune::FieldVector<Scalar, 1>,
-                Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
-                VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
-            gridView().communicate(sumVolumeHandle,
-                                   Dune::InteriorBorder_InteriorBorder_Interface,
-                                   Dune::ForwardCommunication);
-        }
+        VertexHandleSum<Dune::FieldVector<Scalar, 1>,
+                        Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
+                        VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
+        gridView().communicate(sumVolumeHandle,
+                               Dune::InteriorBorder_InteriorBorder_Interface,
+                               Dune::ForwardCommunication);
     }
 
     // the hint cache for the previous and the current volume

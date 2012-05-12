@@ -347,8 +347,7 @@ public:
         // make sure that if there was a variable switch in an
         // other partition we will also set the switch flag
         // for our partition.
-        if (this->gridView_().comm().size() > 1)
-            numSwitched_ = this->gridView_().comm().sum(numSwitched_);
+        numSwitched_ = this->gridView_().comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
             this->problem_().newtonController().endIterMsg() << ", num switched=" << numSwitched_;
