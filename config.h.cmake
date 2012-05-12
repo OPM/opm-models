@@ -29,6 +29,21 @@
 /* Define to the revision of dune-common */
 #define DUNE_COMMON_VERSION_REVISION ${DUNE_COMMON_VERSION_REVISION}
 
+/* Define to the version of eWoms */
+#cmakedefine EWOMS_VERSION "${EWOMS_VERSION}"
+
+/* Define to the major version of eWoms */
+#cmakedefine EWOMS_VERSION_MAJOR ${EWOMS_VERSION_MAJOR}
+
+/* Define to the minor version of eWoms */
+#cmakedefine EWOMS_VERSION_MINOR ${EWOMS_VERSION_MINOR}
+
+/* Define to the revision of eWoms */
+#cmakedefine EWOMS_VERSION_REVISION ${EWOMS_VERSION_REVISION}
+
+/* Define to the code name of eWoms */
+#cmakedefine EWOMS_CODENAME "${EWOMS_CODENAME}"
+
 #cmakedefine HAVE_MPI 1
 
 #define HAVE_UG ${HAVE_UG}

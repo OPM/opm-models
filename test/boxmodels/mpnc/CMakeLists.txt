@@ -2,7 +2,7 @@
 add_executable("test_mpnc" test_mpnc.cc)
 
 add_executable("obstacle_2p2c" test_mpnc.cc)
-target_add_definitions("obstacle_2p2c" "-DUSE_2P2C=1")
+set_target_properties("obstacle_2p2c" PROPERTIES COMPILE_FLAGS "-DUSE_2P2C=1")
 
 # add required libraries and includes to the build flags 
 link_directories(${DumuxLinkDirectories})

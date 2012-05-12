@@ -311,6 +311,32 @@ endif(NON_NUMBER_CHARACTER)
 ##############
 
 ##############
+# add eWoms version from dune.module to config.h
+file(READ "${CMAKE_SOURCE_DIR}/dune.module" EWOMS_MODULE)
+
+# find version string
+string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" EWOMS_VERSION "${EWOMS_MODULE}")
+string(REGEX REPLACE "([0-9]).*" "\\1" EWOMS_VERSION_MAJOR "${EWOMS_VERSION}")
+string(REGEX REPLACE "[0-9]*\\.([0-9]).*" "\\1" EWOMS_VERSION_MINOR "${EWOMS_VERSION}")
+string(REGEX REPLACE "[0-9]*\\.[0-9]*\\.([0-9]).*" "\\1" EWOMS_VERSION_REVISION "${EWOMS_VERSION}")
+
+# remove false matches
+string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${EWOMS_VERSION_MINOR}")
+if(NON_NUMBER_CHARACTER)
+  set(EWOMS_VERSION_MINOR "0")
+endif(NON_NUMBER_CHARACTER)
+string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${EWOMS_VERSION_REVISION}")
+if(NON_NUMBER_CHARACTER)
+  set(EWOMS_VERSION_REVISION "0")
+endif(NON_NUMBER_CHARACTER)
+
+# find codename string
+string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" EWOMS_CODENAME "${EWOMS_MODULE}")
+set(EWOMS_CODENAME "${EWOMS_CODENAME}")
+
+##############
+
+##############
 # adapt build system to detected packages
 
 # deal with UG
@@ -368,9 +394,12 @@ add_subdirectory("tutorial")
 make_directory(bin)
 make_directory(references)
 make_directory(parameters)
-file(COPY bin/runTest.sh DESTINATION bin)
+file(COPY bin/runtest.sh DESTINATION bin)
 file(COPY bin/fuzzycomparevtu.py DESTINATION bin)
-file(COPY test/referencesolutions/*.vtu DESTINATION references)
+file(GLOB vtus "test/referencesolutions/*.vtu")
+foreach(file ${vtus})
+    file(COPY ${file} DESTINATION references)
+endforeach(file)
 file(COPY test/boxmodels/1p/test_1p.input DESTINATION parameters)
 file(COPY test/boxmodels/1p2c/test_1p2c.input DESTINATION parameters)
 file(COPY test/boxmodels/2p/test_2p.input DESTINATION parameters)
@@ -391,15 +420,15 @@ file(COPY tutorial/tutorial_decoupled.input DESTINATION parameters)
 if(SUPERLU_FOUND)
   file(COPY test/freeflow/stokes/test_stokes.input DESTINATION parameters)
   file(COPY test/freeflow/stokes2c/test_stokes2c.input DESTINATION parameters)
-  file(COPY test/freeflow/stokes2cni/test_stokes2cni.input DESTINATION parameters)
+  file(COPY test/freeflow/stokesni/test_stokesni.input DESTINATION parameters)
 endif(SUPERLU_FOUND)
 
 # set up CTest 
 enable_testing()
 include(CTest)
 add_test(test_propertysystem test/common/propertysystem/test_propertysystem)
-add_test(test_general_box bin/runTest.sh references/generallens_box-reference.vtu generallens_box-00003.vtu test/common/generalproblem/test_generalproblem_2p --box 1e2 2e1)
-add_test(test_general_dec bin/runTest.sh references/generallens_decoupled-reference.vtu generallens_decoupled-00003.vtu test/common/generalproblem/test_generalproblem_2p --decoupled 1e2 2e1)
+add_test(test_general_box bin/runtest.sh references/generallens_box-reference.vtu generallens_box-00003.vtu test/common/generalproblem/test_generalproblem_2p --box 1e2 2e1)
+add_test(test_general_dec bin/runtest.sh references/generallens_decoupled-reference.vtu generallens_decoupled-00003.vtu test/common/generalproblem/test_generalproblem_2p --decoupled 1e2 2e1)
 add_test(test_spline test/common/spline/test_spline)
 
 add_test(test_fluidsystems test/material/fluidsystems/test_fluidsystems)
@@ -408,32 +437,30 @@ add_test(test_ncpflash test/material/ncpflash/test_ncpflash)
 add_test(test_pengrobinson test/material/pengrobinson/test_pengrobinson)
 add_test(test_tabulation test/material/tabulation/test_tabulation)
 
-add_test(test_1p bin/runTest.sh references/1ptest-reference.vtu 1ptest-00002.vtu test/boxmodels/1p/test_1p --parameter-file=parameters/test_1p.input -gridFile test/boxmodels/1p/grids/test_1p_2d.dgf -tEnd 1 -dtInitial 1)
-add_test(test_1p2c bin/runTest.sh references/outflow-reference.vtu outflow-00010.vtu test/boxmodels/1p2c/test_1p2c --parameter-file=parameters/test_1p2c.input -gridFile test/boxmodels/1p2c/grids/test_1p2c.dgf -tEnd 100 -dtInitial 1)
-add_test(test_2p bin/runTest.sh references/lens-reference.vtu lens-00009.vtu test/boxmodels/2p/test_2p --parameter-file=parameters/test_2p.input -gridFile test/boxmodels/2p/grids/test_2p.dgf -tEnd 3000 -dtInitial 250)
-add_test(test_2pni bin/runTest.sh references/injection2pni-reference.vtu injection2pni-00011.vtu test/boxmodels/2pni/test_2pni --parameter-file=parameters/test_2pni.input -tEnd 1e4 -dtInitial 250)
-add_test(test_2p2c bin/runTest.sh references/injection-reference.vtu injection-00009.vtu test/boxmodels/2p2c/test_2p2c --parameter-file=parameters/test_2p2c.input -gridFile test/boxmodels/2p2c/grids/test_2p2c.dgf -tEnd 1e4 -dtInitial 250)
-add_test(test_2p2cni bin/runTest.sh references/waterair-reference.vtu waterair-00010.vtu test/boxmodels/2p2cni/test_2p2cni --parameter-file=parameters/test_2p2cni.input -gridFile test/boxmodels/2p2cni/grids/test_2p2cni.dgf -tEnd 1e4 -dtInitial 250)
-add_test(test_3p3c bin/runTest.sh references/infiltration-reference.vtu infiltration-00040.vtu test/boxmodels/3p3c/test_3p3c --parameter-file=parameters/test_3p3c.input -gridFile test/boxmodels/3p3c/grids/test_3p3c.dgf)
-set_tests_properties(test_3p3c PROPERTIES TIMEOUT 3600)
-#add_test(test_3p3cni bin/runTest.sh references/kuevette3p3cni-reference.vtu kuevette3p3cni-00039.vtu test/boxmodels/3p3cni/test_3p3cni --parameter-file=parameters/test_3p3cni.input -gridFile test/boxmodels/3p3cni/grids/kuev_2p2cni.dgf)
-set_tests_properties(test_3p3cni PROPERTIES TIMEOUT 3600)
-add_test(test_mpnc bin/runTest.sh references/obstacle-reference.vtu obstacle-00010.vtu test/boxmodels/mpnc/test_mpnc --parameter-file=parameters/test_mpnc.input -gridFile test/boxmodels/mpnc/grids/obstacle_24x16.dgf -tEnd 1e4 -dtInitial 250)
-add_test(test_richards bin/runTest.sh references/richardslens-reference.vtu richardslens-00008.vtu test/boxmodels/richards/test_richards --parameter-file=parameters/test_richards.input -gridFile test/boxmodels/richards/grids/richardslens-24x16.dgf -tEnd 3000 -dtInitial 100)
+add_test(test_1p bin/runtest.sh references/1ptest-reference.vtu 1ptest-00002.vtu test/boxmodels/1p/test_1p --parameter-file=parameters/test_1p.input -gridFile test/boxmodels/1p/grids/test_1p_2d.dgf)
+add_test(test_1p2c bin/runtest.sh references/outflow-reference.vtu outflow-00010.vtu test/boxmodels/1p2c/test_1p2c --parameter-file=parameters/test_1p2c.input -gridFile test/boxmodels/1p2c/grids/test_1p2c.dgf)
+add_test(test_2p bin/runtest.sh references/lens-reference.vtu lens-00009.vtu test/boxmodels/2p/test_2p --parameter-file=parameters/test_2p.input -gridFile test/boxmodels/2p/grids/test_2p.dgf)
+add_test(test_2pni bin/runtest.sh references/injection2pni-reference.vtu injection2pni-00011.vtu test/boxmodels/2pni/test_2pni --parameter-file=parameters/test_2pni.input)
+add_test(test_2p2c bin/runtest.sh references/injection-reference.vtu injection-00009.vtu test/boxmodels/2p2c/test_2p2c --parameter-file=parameters/test_2p2c.input -gridFile test/boxmodels/2p2c/grids/test_2p2c.dgf)
+add_test(test_2p2cni bin/runtest.sh references/waterair-reference.vtu waterair-00010.vtu test/boxmodels/2p2cni/test_2p2cni --parameter-file=parameters/test_2p2cni.input -gridFile test/boxmodels/2p2cni/grids/test_2p2cni.dgf)
+add_test(test_3p3c bin/runtest.sh references/infiltration-reference.vtu infiltration-00040.vtu test/boxmodels/3p3c/test_3p3c --parameter-file=parameters/test_3p3c.input -gridFile test/boxmodels/3p3c/grids/test_3p3c.dgf)
+add_test(test_3p3cni bin/runtest.sh references/cuvette3p3cni-reference.vtu cuvette3p3cni-00039.vtu test/boxmodels/3p3cni/test_3p3cni --parameter-file=parameters/test_3p3cni.input -gridFile test/boxmodels/3p3cni/grids/cuvette.dgf)
+add_test(test_mpnc bin/runtest.sh references/obstacle-reference.vtu obstacle-00010.vtu test/boxmodels/mpnc/test_mpnc --parameter-file=parameters/test_mpnc.input -gridFile test/boxmodels/mpnc/grids/obstacle_24x16.dgf)
+add_test(test_richards bin/runtest.sh references/richardslens-reference.vtu richardslens-00008.vtu test/boxmodels/richards/test_richards --parameter-file=parameters/test_richards.input -gridFile test/boxmodels/richards/grids/richardslens-24x16.dgf)
 
-add_test(test_diffusion bin/runTest.sh references/diffusion-reference.vtu mimeticdiffusion-00001.vtu test/decoupled/1p/test_diffusion 3)
-add_test(test_dec1p bin/runTest.sh references/test_1p-reference.vtu test_1p-00001.vtu test/decoupled/1p/test_dec1p --parameter-file=test/decoupled/1p/test_1p.input)
-add_test(test_transport bin/runTest.sh references/test_transport-reference.vtu test_transport-00006.vtu test/decoupled/2p/test_transport --parameter-file=parameters/test_transport.input -gridFile test/decoupled/2p/grids/test_transport.dgf)
-add_test(test_impes bin/runTest.sh references/test_impes-reference.vtu test_impes-00013.vtu test/decoupled/2p/test_impes --parameter-file=parameters/test_impes.input)
-add_test(test_impesadaptive bin/runTest.sh references/test_2padaptive-reference.vtu test_2padaptive-00007.vtu test/decoupled/2padaptive/test_impesadaptive --parameter-file=parameters/test_impesadaptive.input)
-add_test(test_dec2p2c bin/runTest.sh references/test_dec2p2c-reference.vtu test_dec2p2c-00021.vtu test/decoupled/2p2c/test_dec2p2c --parameter-file=parameters/test_dec2p2c.input)
-add_test(test_multiphysics2p2c bin/runTest.sh references/test_multiphysics2p2c-reference.vtu test_multiphysics2p2c-00021.vtu test/decoupled/2p2c/test_multiphysics2p2c)
+add_test(test_diffusion bin/runtest.sh references/diffusion-reference.vtu mimeticdiffusion-00001.vtu test/decoupled/1p/test_diffusion 3)
+add_test(test_dec1p bin/runtest.sh references/test_1p-reference.vtu test_1p-00001.vtu test/decoupled/1p/test_dec1p --parameter-file=test/decoupled/1p/test_1p.input)
+add_test(test_transport bin/runtest.sh references/test_transport-reference.vtu test_transport-00006.vtu test/decoupled/2p/test_transport --parameter-file=parameters/test_transport.input -gridFile test/decoupled/2p/grids/test_transport.dgf)
+add_test(test_impes bin/runtest.sh references/test_impes-reference.vtu test_impes-00013.vtu test/decoupled/2p/test_impes --parameter-file=parameters/test_impes.input)
+add_test(test_impesadaptive bin/runtest.sh references/test_2padaptive-reference.vtu test_2padaptive-00007.vtu test/decoupled/2padaptive/test_impesadaptive --parameter-file=parameters/test_impesadaptive.input)
+add_test(test_dec2p2c bin/runtest.sh references/test_dec2p2c-reference.vtu test_dec2p2c-00021.vtu test/decoupled/2p2c/test_dec2p2c --parameter-file=parameters/test_dec2p2c.input)
+add_test(test_multiphysics2p2c bin/runtest.sh references/test_multiphysics2p2c-reference.vtu test_multiphysics2p2c-00021.vtu test/decoupled/2p2c/test_multiphysics2p2c)
 
 add_test(tutorial_coupled tutorial/tutorial_coupled --parameter-file=parameters/tutorial_coupled.input)
 add_test(tutorial_decoupled tutorial/tutorial_decoupled --parameter-file=parameters/tutorial_decoupled.input)
 
 if(SUPERLU_FOUND)
- add_test(test_stokes bin/runTest.sh references/stokes-reference.vtu stokes-00014.vtu test/freeflow/stokes/test_stokes --parameter-file=parameters/test_stokes.input -gridFile test/freeflow/stokes/grids/test_stokes.dgf)
- add_test(test_stokes2c bin/runTest.sh references/stokes2c-reference.vtu stokes2c-00007.vtu test/freeflow/stokes2c/test_stokes2c --parameter-file=parameters/test_stokes2c.input -gridFile test/freeflow/stokes2c/grids/test_stokes2c.dgf)
- add_test(test_stokes2cni bin/runTest.sh references/stokes2cni-reference.vtu stokes2cni-00008.vtu test/freeflow/stokes2cni/test_stokes2cni --parameter-file=parameters/test_stokes2cni.input -gridFile test/freeflow/stokes2cni/grids/test_stokes2cni.dgf)
+ add_test(test_stokes bin/runtest.sh references/stokes-reference.vtu stokes-00014.vtu test/freeflow/stokes/test_stokes --parameter-file=parameters/test_stokes.input -gridFile test/freeflow/stokes/grids/test_stokes.dgf)
+ add_test(test_stokes2c bin/runtest.sh references/stokes2c-reference.vtu stokes2c-00007.vtu test/freeflow/stokes2c/test_stokes2c --parameter-file=parameters/test_stokes2c.input -gridFile test/freeflow/stokes2c/grids/test_stokes2c.dgf)
+ add_test(test_stokesni bin/runtest.sh references/stokesni-reference.vtu stokesni-00008.vtu test/freeflow/stokes2cni/test_stokes2cni --parameter-file=parameters/test_stokesni.input -gridFile test/freeflow/stokes2cni/grids/test_stokesni.dgf)
 endif(SUPERLU_FOUND)
