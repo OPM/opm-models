@@ -382,9 +382,9 @@ public:
                   const Context &context,
                   int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onLeftBoundary_(globalPos) || onRightBoundary_(globalPos)) {
+        if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             // free flow boundary
             Scalar densityW = WettingPhase::density(temperature_, /*pressure=*/1e5);
 
@@ -392,10 +392,10 @@ public:
             Scalar pw, Sw;
         
             // set wetting phase pressure and saturation
-            if (onLeftBoundary_(globalPos))
+            if (onLeftBoundary_(pos))
             {
                 Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
-                Scalar depth = this->bboxMax()[1] - globalPos[1];
+                Scalar depth = this->bboxMax()[1] - pos[1];
                 Scalar alpha = (1 + 1.5/height);
 
                 // hydrostatic pressure scaled by alpha
@@ -405,9 +405,9 @@ public:
             else
             {
                 // if this triggers, something went wrong in boundaryTypes()!
-                assert(onRightBoundary_(globalPos));
+                assert(onRightBoundary_(pos));
 
-                Scalar depth = this->bboxMax()[1] - globalPos[1];
+                Scalar depth = this->bboxMax()[1] - pos[1];
 
                 // hydrostatic pressure
                 pw = 1e5 - densityW*this->gravity()[1]*depth;
@@ -431,7 +431,7 @@ public:
             // impose an freeflow boundary condition
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
-        else if (onInlet_(globalPos)) {
+        else if (onInlet_(pos)) {
             RateVector massRate(0.0);
             massRate = 0.0;
             massRate[contiNEqIdx] = -0.04; // kg / (m^2 * s)
@@ -457,7 +457,7 @@ public:
      * \brief Evaluate the initial value for a control volume.
      *
      * \param values The initial values for the primary variables
-     * \param globalPos The center of the finite volume which ought to be set.
+     * \param pos The center of the finite volume which ought to be set.
      *
      * For this method, the \a values parameter stores primary
      * variables.
@@ -467,8 +467,8 @@ public:
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        Scalar depth = this->bboxMax()[1] - globalPos[1];
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        Scalar depth = this->bboxMax()[1] - pos[1];
         
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
@@ -508,31 +508,23 @@ private:
         return true;
     }
 
-    bool onLeftBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[0] < this->bboxMin()[0] + eps_;
-    }
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < this->bboxMin()[0] + eps_; }
 
-    bool onRightBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[0] > this->bboxMax()[0] - eps_;
-    }
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
 
-    bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[1] < this->bboxMin()[1] + eps_;
-    }
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < this->bboxMin()[1] + eps_; }
 
-    bool onUpperBoundary_(const GlobalPosition &globalPos) const
-    {
-        return globalPos[1] > this->bboxMax()[1] - eps_;
-    }
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
 
-    bool onInlet_(const GlobalPosition &globalPos) const
+    bool onInlet_(const GlobalPosition &pos) const
     {
         Scalar width = this->bboxMax()[0] - this->bboxMin()[0];
-        Scalar lambda = (this->bboxMax()[0] - globalPos[0])/width;
-        return onUpperBoundary_(globalPos) && 0.5 < lambda && lambda < 2.0/3.0;
+        Scalar lambda = (this->bboxMax()[0] - pos[0])/width;
+        return onUpperBoundary_(pos) && 0.5 < lambda && lambda < 2.0/3.0;
     }
 
     GlobalPosition lensLowerLeft_;
