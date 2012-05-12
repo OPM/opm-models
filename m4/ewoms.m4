@@ -59,7 +59,8 @@ AC_DEFUN([EWOMS_CHECKS],
       AC_DEFINE(constexpr, const, ['set 'constexpr' to 'const' if constexpr is not supported])
   fi
 
-  AC_DEFINE(EWOMS_CODENAME, "Captain Koons", ['set 'constexpr' to 'const' if constexpr is not supported])
+  EWOMS_CN="`grep 'Codename:' dune.module | sed -e 's/^Codename: *//'`" 2>/dev/null
+  AC_DEFINE_UNQUOTED(EWOMS_CODENAME, ["$EWOMS_CN"], [The codename of the eWoms revision])
 ])
 
 # checks only relevant for the eWoms module itself but not for modules
