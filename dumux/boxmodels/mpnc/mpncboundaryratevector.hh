@@ -59,7 +59,7 @@ class MPNCBoundaryRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, /*enableKineticEnergy=*/false> EnergyModule;
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

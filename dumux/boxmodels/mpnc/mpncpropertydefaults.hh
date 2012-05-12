@@ -125,15 +125,6 @@ SET_BOOL_PROP(BoxMPNC, EnableEnergy, false);
 //! disable diffusion by default
 SET_BOOL_PROP(BoxMPNC, EnableDiffusion, false);
 
-//! disable kinetic mass transfer by default
-SET_BOOL_PROP(BoxMPNC, EnableKinetic, false);
-
-//! disable kinetic energy transfer by default
-SET_BOOL_PROP(BoxMPNC, EnableKineticEnergy, false);
-
-//! enable smooth upwinding by default
-SET_BOOL_PROP(BoxMPNC, EnableSmoothUpwinding, true);
-
 //! the RateVector property
 SET_TYPE_PROP(BoxMPNC, RateVector, MPNCRateVector<TypeTag>);
 

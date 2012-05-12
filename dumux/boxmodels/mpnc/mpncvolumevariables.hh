@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008-2009 by Klaus Mosthaf,                               *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
@@ -34,7 +34,6 @@
 #include "diffusion/volumevariables.hh"
 #include "energy/mpncvolumevariablesenergy.hh"
 #include "mass/mpncvolumevariablesmass.hh"
-#include "mpncvolumevariablesia.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
@@ -50,10 +49,9 @@ namespace Dumux
 template <class TypeTag>
 class MPNCVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public MPNCVolumeVariablesIA<TypeTag, GET_PROP_VALUE(TypeTag, EnableKinetic), GET_PROP_VALUE(TypeTag, EnableKineticEnergy)>
-    , public MPNCVolumeVariablesMass<TypeTag, GET_PROP_VALUE(TypeTag, EnableKinetic)>
-    , public MPNCVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) || GET_PROP_VALUE(TypeTag, EnableKinetic)>
-    , public MPNCVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy), GET_PROP_VALUE(TypeTag, EnableKineticEnergy)>
+    , public MPNCVolumeVariablesMass<TypeTag>
+    , public MPNCVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+    , public MPNCVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -67,21 +65,15 @@ class MPNCVolumeVariables
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),
-        enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy),
-        enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) || enableKinetic,
-
+        enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
 
         S0Idx = Indices::S0Idx,
         p0Idx = Indices::p0Idx
     };
 
-
-    typedef MPNCVolumeVariablesMass<TypeTag, enableKinetic> MassVolumeVariables;
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyVolumeVariables;
-    typedef MPNCVolumeVariablesIA<TypeTag, enableKinetic, enableKineticEnergy> IAVolumeVariables;
+    typedef MPNCVolumeVariablesMass<TypeTag> MassVolumeVariables;
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef MPNCVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-
 
 public:
     //! The return type of the fluidState() method
@@ -201,13 +193,6 @@ public:
                                       timeIdx);
         EnergyVolumeVariables::checkDefined();
 
-        // specific interfacial area, well also all the dimensionless numbers :-)
-        IAVolumeVariables::update(fluidState_,
-				  paramCache,
-                                  elemCtx,
-                                  scvIdx,
-                                  timeIdx);
-        IAVolumeVariables::checkDefined();
         fluidState_.checkDefined();
         checkDefined();
     }

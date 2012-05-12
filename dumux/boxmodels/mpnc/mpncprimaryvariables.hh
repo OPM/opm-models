@@ -70,8 +70,7 @@ class MPNCPrimaryVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyModule;
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dumux::NcpFlash<Scalar, FluidSystem> NcpFlash;
 

@@ -51,20 +51,17 @@ class MPNCRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+
     enum { conti0EqIdx = Indices::conti0EqIdx };
-
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyModule;
+
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

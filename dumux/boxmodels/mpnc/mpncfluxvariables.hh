@@ -66,14 +66,12 @@ class MPNCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
 
         enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),
-        enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy)
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
     typedef MPNCFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
-    typedef MPNCFluxVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> FluxVariablesEnergy;
+    typedef MPNCFluxVariablesEnergy<TypeTag, enableEnergy> FluxVariablesEnergy;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)

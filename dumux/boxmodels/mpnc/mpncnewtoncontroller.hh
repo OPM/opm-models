@@ -39,7 +39,7 @@
 
 namespace Dumux {
 
-template <class TypeTag, bool enableKinetic /* = false */>
+template <class TypeTag>
 class MpNcNewtonChop
 {
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
@@ -133,13 +133,12 @@ class MPNCNewtonController : public BoxNewtonController<TypeTag>
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-        enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),
 
         p0Idx = Indices::p0Idx,
         S0Idx = Indices::S0Idx
     };
 
-    typedef MpNcNewtonChop<TypeTag, enableKinetic> NewtonChop;
+    typedef MpNcNewtonChop<TypeTag> NewtonChop;
 
 public:
     MPNCNewtonController(Problem &problem)

@@ -38,14 +38,9 @@ namespace Dumux
  * transfer (i.e. assuming chemical equilibrium)
  */
 template <int PVOffset,
-          class TypeTag,
-          bool enableKinetic /*=false*/>
+          class TypeTag>
 class MPNCMassIndices
 {
-    static_assert(!enableKinetic,
-                  "No kinetic mass transfer module included, "
-                  "but kinetic mass transfer enabled.");
-
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:

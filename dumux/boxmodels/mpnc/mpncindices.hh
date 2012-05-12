@@ -38,20 +38,16 @@ namespace Dumux
 template <class TypeTag, int BasePVOffset = 0>
 struct MPNCIndices :
         public MPNCMassIndices<BasePVOffset,
-                               TypeTag,
-                               GET_PROP_VALUE(TypeTag, EnableKinetic) >,
+                               TypeTag>,
         public MPNCEnergyIndices<BasePVOffset +
-                                 MPNCMassIndices<0, TypeTag, GET_PROP_VALUE(TypeTag, EnableKinetic) >::NumPrimaryVars,
-                                 GET_PROP_VALUE(TypeTag, EnableEnergy),
-                                 GET_PROP_VALUE(TypeTag, EnableKineticEnergy)>
+                                 MPNCMassIndices<0, TypeTag>::NumPrimaryVars,
+                                 GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
-    enum { enableEnergy         = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKinetic        = GET_PROP_VALUE(TypeTag, EnableKinetic) }; //mass transfer
-    enum { enableKineticEnergy  = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) }; // energy transfer
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef MPNCMassIndices<BasePVOffset, TypeTag, enableKinetic> MassIndices;
-    typedef MPNCEnergyIndices<BasePVOffset + MassIndices::NumPrimaryVars, enableEnergy, enableKineticEnergy> EnergyIndices;
+    typedef MPNCMassIndices<BasePVOffset, TypeTag> MassIndices;
+    typedef MPNCEnergyIndices<BasePVOffset + MassIndices::NumPrimaryVars, enableEnergy> EnergyIndices;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { numPhases = FluidSystem::numPhases };

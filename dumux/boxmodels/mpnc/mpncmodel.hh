@@ -140,11 +140,9 @@ class MPNCModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyModule;
+    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
-    enum { enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic) };
-    typedef MPNCVolumeVariablesMass<TypeTag, enableKinetic> MassModule;
+    typedef MPNCVolumeVariablesMass<TypeTag> MassModule;
 
 public:
     /*!

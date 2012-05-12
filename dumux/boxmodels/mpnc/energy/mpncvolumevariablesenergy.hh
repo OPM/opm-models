@@ -44,16 +44,9 @@ namespace Dumux {
  * only isothermal in the sense that the temperature at a location and
  * a time is specified outside of the model!
  */
-template <class TypeTag, bool enableEnergy/*=false*/, bool kineticEnergyTransfer /*=don't care*/>
+template <class TypeTag, bool enableEnergy/*=false*/>
 class MPNCVolumeVariablesEnergy
 {
-    static_assert(!(kineticEnergyTransfer && !enableEnergy),
-                  "No kinetic energy transfer may only be enabled "
-                  "if energy is enabled in general.");
-    static_assert(!kineticEnergyTransfer,
-                  "No kinetic energy transfer module included, "
-                  "but kinetic energy transfer enabled.");
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -178,7 +171,7 @@ public:
  *        finite volume in the two-phase, N-component model.
  */
 template <class TypeTag>
-class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true, /*kineticEnergyTransfer=*/false>
+class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

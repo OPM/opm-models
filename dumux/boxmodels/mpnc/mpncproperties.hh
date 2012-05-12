@@ -76,12 +76,6 @@ NEW_PROP_TAG(EnableEnergy);
 //! Enable diffusive fluxes?
 NEW_PROP_TAG(EnableDiffusion);
 
-//! Enable kinetic resolution of mass transfer processes?
-NEW_PROP_TAG(EnableKinetic);
-
-//! Enable kinetic resolution of energy transfer processes?
-NEW_PROP_TAG(EnableKineticEnergy);
-
 //! Enable gravity?
 NEW_PROP_TAG(EnableGravity);
 

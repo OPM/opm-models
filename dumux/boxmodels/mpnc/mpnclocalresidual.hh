@@ -58,9 +58,6 @@ protected:
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy),
-
-        enableKinetic = GET_PROP_VALUE(TypeTag, EnableKinetic),
 
         phase0NcpIdx = Indices::phase0NcpIdx
     };
@@ -73,8 +70,8 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyResid;
-    typedef MPNCLocalResidualMass<TypeTag, enableKinetic> MassResid;
+    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
+    typedef MPNCLocalResidualMass<TypeTag> MassResid;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 

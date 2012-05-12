@@ -39,20 +39,11 @@
 namespace Dumux
 {
 
-template <class TypeTag, bool enableEnergy/*=false*/, bool kineticEnergyTransfer/*=false*/>
+template <class TypeTag, bool enableEnergy/*=false*/>
 class MPNCFluxVariablesEnergy
 {
-    static_assert(!(kineticEnergyTransfer && !enableEnergy),
-                  "No kinetic energy transfer may only be enabled "
-                  "if energy is enabled in general.");
-    static_assert(!kineticEnergyTransfer,
-                  "No kinetic energy transfer module included, "
-                  "but kinetic energy transfer enabled.");
-
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
@@ -65,7 +56,7 @@ public:
 };
 
 template <class TypeTag>
-class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true,  /*kineticEnergyTransfer=*/false>
+class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -76,7 +67,6 @@ class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true,  /*kineticEnergyTr
     typedef typename GridView::ctype CoordScalar;
 
     enum {
-        dim = GridView::dimension,
         dimWorld = GridView::dimensionworld,
         gPhaseIdx = FluidSystem::gPhaseIdx,
         lPhaseIdx = FluidSystem::lPhaseIdx,
@@ -109,14 +99,14 @@ public:
 
         // scalar product of temperature gradient and scvf normal
         temperatureGradNormal_ = 0.0;
-        for (int i = 0; i < dim; ++ i)
+        for (int i = 0; i < dimWorld; ++ i)
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
         const auto &volVarsInside = elemCtx.volVars(scvf.i, timeIdx);
         const auto &volVarsOutside = elemCtx.volVars(scvf.j, timeIdx);
 
         // arithmetic mean
-        heatConductivity_ =
+        heatConductivity_ = 
             0.5 * (volVarsInside.heatConductivity()
                    +
                    volVarsOutside.heatConductivity());

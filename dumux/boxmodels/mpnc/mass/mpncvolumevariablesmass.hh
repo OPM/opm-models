@@ -39,31 +39,24 @@ namespace Dumux
 {
 /*!
  * \brief The compositional part of the volume variables if chemical
- *        equilibrium _is_ assumed
+ *        equilibrium is assumed
  */
-template <class TypeTag, bool enableKinetic /* = false */>
+template <class TypeTag>
 class MPNCVolumeVariablesMass
 {
-    static_assert(!enableKinetic,
-                  "No kinetic mass transfer module included, "
-                  "but kinetic mass transfer enabled.");
-
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
     typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver) CompositionFromFugacitiesSolver;
-
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { fug0Idx = Indices::fug0Idx };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-
     typedef typename FluidSystem::ParameterCache ParameterCache;
+
 public:
     /*!
      * \brief The fluid state which is used by the volume variables to

@@ -55,12 +55,11 @@ protected:
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
 
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef MPNCDiffusion<TypeTag, enableDiffusion> Diffusion;
 
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyResid;
+    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
 
 public:
     /*!
@@ -147,15 +146,11 @@ public:
  * \brief The mass conservation part of the Mp-Nc model.
  *
  * This is the specialization for the case where kinetic mass transfer
- * is _not_ considered.
+ * is not considered.
  */
-template<class TypeTag, bool enableKinetic /*=false*/>
+template<class TypeTag>
 class MPNCLocalResidualMass
 {
-    static_assert(!enableKinetic,
-                  "No kinetic mass transfer module included, "
-                  "but kinetic mass transfer enabled.");
-
     typedef MPNCLocalResidualMassCommon<TypeTag> MassCommon;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -165,15 +160,14 @@ class MPNCLocalResidualMass
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
-    enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents    = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { conti0EqIdx      = Indices::conti0EqIdx };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
 
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
-    enum { enableEnergy     = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { enableKineticEnergy     = GET_PROP_VALUE(TypeTag, EnableKineticEnergy) };
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy, enableKineticEnergy> EnergyResid;
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
 
 public:
     /*!

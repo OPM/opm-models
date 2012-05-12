@@ -33,15 +33,9 @@ namespace Dumux
  *
  * This is a dummy class for the isothermal case.
  */
-template <int PVOffset, bool enableEnergy/*=false*/, bool kineticEnergyTransfer/*=false*/>
+template <int PVOffset, bool enableEnergy/*=false*/>
 struct MPNCEnergyIndices
 {
-    static_assert(!(kineticEnergyTransfer && !enableEnergy),
-                  "No kinetic energy transfer may only be enabled "
-                  "if energy is enabled in general.");
-    static_assert(!kineticEnergyTransfer,
-                  "No kinetic energy transfer module included, "
-                  "but kinetic energy transfer enabled.");
 public:
     /*!
      * \brief This module does not define any primary variables in the
@@ -54,7 +48,7 @@ public:
  * \brief The indices required for the energy equation.
  */
 template <int PVOffset>
-struct MPNCEnergyIndices<PVOffset, /*isNonIsothermal=*/true, /*kineticEnergyTransfer*/false>
+struct MPNCEnergyIndices<PVOffset, /*enableEnergy=*/true>
 {
 public:
     /*!

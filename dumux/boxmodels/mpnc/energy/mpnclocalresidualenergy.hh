@@ -40,15 +40,9 @@ namespace Dumux {
  *
  * This class just does nothing.
  */
-template <class TypeTag, bool enableEnergy/*=false*/, bool kineticEnergyTransfer /*=false*/>
+template <class TypeTag, bool enableEnergy/*=false*/>
 class MPNCLocalResidualEnergy
 {
-    static_assert(!(kineticEnergyTransfer && !enableEnergy),
-                  "No kinetic energy transfer may only be enabled "
-                  "if energy is enabled in general.");
-    static_assert(!kineticEnergyTransfer,
-                  "No kinetic energy transfer module included, "
-                  "but kinetic energy transfer enabled.");
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -114,7 +108,7 @@ public:
 
 
 template <class TypeTag>
-class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true, /*kineticenergyTransfer=*/false>
+class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -134,8 +128,6 @@ class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true, /*kineticenergyTra
     enum { energyEqIdx = Indices::energyEqIdx };
 
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
-
-
 
 public:
     static void computeStorage(EqVector &storage,
@@ -164,10 +156,10 @@ public:
 
         // add the internal energy of the phase
         storage[energyEqIdx] +=
-            volVars.porosity() * (
-                fs.density(phaseIdx)
-                * fs.internalEnergy(phaseIdx)
-                * fs.saturation(phaseIdx));
+            volVars.porosity()
+            * fs.density(phaseIdx)
+            * fs.internalEnergy(phaseIdx)
+            * fs.saturation(phaseIdx);
     }
 
     static void computeFlux(EqVector &flux,
@@ -201,12 +193,6 @@ public:
                                          const int phaseIdx,
                                          const ComponentVector &molarPhaseFlux)
     {
-        Scalar massFlux = 0;
-
-        // calculate the mass flux in the phase i.e. make mass flux out of mole flux and add up the fluxes of a phase
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            massFlux += molarPhaseFlux[compIdx] * FluidSystem::molarMass(compIdx);
-
         // use the phase enthalpy of the upstream vertex to calculate
         // the enthalpy transport
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
@@ -216,6 +202,11 @@ public:
 
         const VolumeVariables &up = elemCtx.volVars(upIdx, timeIdx);
         const VolumeVariables &dn = elemCtx.volVars(dnIdx, timeIdx);
+
+        Scalar massFlux = 
+            fluxVars.filterVelocityNormal(phaseIdx)
+            * (up.fluidState().density(phaseIdx) * fluxVars.upstreamWeight(phaseIdx)
+               + dn.fluidState().density(phaseIdx) * fluxVars.downstreamWeight(phaseIdx));
 
         result[energyEqIdx] +=
             massFlux
@@ -235,7 +226,7 @@ public:
 
         // diffusive heat flux
         result[energyEqIdx] +=
-            -fluxVars.energyVars().temperatureGradNormal()
+            - fluxVars.energyVars().temperatureGradNormal()
             * fluxVars.energyVars().heatConductivity();
     }
 
