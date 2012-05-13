@@ -100,7 +100,13 @@ public:
     { return elemCtx_.numScvf(); }
 
     /*!
-     * \brief Return the position of a local entities in global coordinates
+     * \brief Return the global index of a degree of freedom.
+     */
+    int globalSpaceIndex(int scvIdx, int timeIdx) const
+    { return elemCtx_.globalSpaceIndex(scvIdx, timeIdx); }
+
+    /*!
+     * \brief Return the position of a degree of freedom in global coordinates.
      */
     const GlobalPosition pos(int scvIdx, int timeIdx) const
     { return elemCtx_.pos(scvIdx, timeIdx); }

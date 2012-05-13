@@ -131,7 +131,7 @@ public:
         // for the equilibrium case, we don't need complicated
         // computations.
         if (isInEquilibrium) {
-            assignNaive_(fluidState);
+            assignNaive(fluidState);
             return;
         }
 
@@ -158,12 +158,11 @@ public:
         NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
         
         // use the result to assign the primary variables
-        assignNaive_(fsFlash);
+        assignNaive(fsFlash);
     }
 
-protected:
     template <class FluidState>
-    void assignNaive_(const FluidState &fluidState)
+    void assignNaive(const FluidState &fluidState)
     {
         // assign the phase temperatures. this is out-sourced to
         // the energy module
