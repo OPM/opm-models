@@ -58,9 +58,6 @@ AC_DEFUN([EWOMS_CHECKS],
   if test "x$HAVE_CONSTEXPR" != "xyes"; then
       AC_DEFINE(constexpr, const, ['set 'constexpr' to 'const' if constexpr is not supported])
   fi
-
-  EWOMS_CN="`grep 'Codename:' dune.module | sed -e 's/^Codename: *//'`" 2>/dev/null
-  AC_DEFINE_UNQUOTED(EWOMS_CODENAME, ["$EWOMS_CN"], [The codename of the eWoms revision])
 ])
 
 # checks only relevant for the eWoms module itself but not for modules
@@ -204,6 +201,17 @@ AC_DEFUN([EWOMS_CHECKS_PRIVATE],
   else
      DUNE_ADD_SUMMARY_ENTRY([Build eWoms handbook],[$build_handbook ($summary_message)])
   fi
+
+  EWOMS_GET_CODENAME(ewoms, .)
+])
+
+AC_DEFUN([EWOMS_GET_CODENAME],[
+  MODULE_ROOT="$2"
+
+  # retrieve the module codename
+  m4_pushdef([__EWOMS_MODULE_NAME], [m4_toupper( m4_translit($1, [-], [_]))])
+  __EWOMS_MODULE_NAME[]_CODENAME=["$(grep 'Codename:' $MODULE_ROOT/dune.module | sed -e 's/^Codename: *//;s/ *$//')"] 2>/dev/null
+  AC_DEFINE_UNQUOTED(__EWOMS_MODULE_NAME[]_CODENAME, ["$__EWOMS_MODULE_NAME[]_CODENAME"], [The codename of ${MODULE_NAME}])
 ])
 
 # EWOMS_CHECK_MODULES(NAME, HEADER, SYMBOL)
@@ -306,7 +314,7 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
   ##
   ## Where is the module $1?
   ##
-
+  
   AC_MSG_CHECKING([for $1 installation or source tree])
 
   # is a directory set?
@@ -494,6 +502,10 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
   m4_popdef([_dune_lib])
   m4_popdef([_dune_symbol])
   m4_popdef([_DUNE_MODULE])
+
+  # get the codename from the dune.module file. this is an eWoms
+  # extension
+  EWOMS_GET_CODENAME(_DUNE_MODULE[], $_DUNE_MODULE[]_ROOT)
 
   # restore previous language settings (leave C++)
   AC_LANG_POP([C++])
