@@ -68,7 +68,6 @@ class OnePTwoCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 

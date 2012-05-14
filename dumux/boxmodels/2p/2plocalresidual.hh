@@ -63,13 +63,10 @@ protected:
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!

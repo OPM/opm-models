@@ -109,19 +109,15 @@ template <class TypeTag>
 class BoxNewtonController : public NewtonController<TypeTag>
 {
     typedef Dumux::NewtonController<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonController) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 

@@ -153,11 +153,6 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
     enum {
-        // primary variable indices
-        pressure0Idx = Indices::pressure0Idx,
-        switch1Idx = Indices::switch1Idx,
-        switch2Idx = Indices::switch2Idx,
-
         // equation indices
         conti0EqIdx = Indices::conti0EqIdx,
         

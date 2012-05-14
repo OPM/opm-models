@@ -176,9 +176,7 @@ class WaterAirProblem
     enum {
         numPhases = FluidSystem::numPhases,
 
-        pressure0Idx = Indices::pressure0Idx,
-        switch0Idx = Indices::switch0Idx,
-
+        // energy related indices
         temperatureIdx = Indices::temperatureIdx,
         energyEqIdx = Indices::energyEqIdx,
 

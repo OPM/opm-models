@@ -220,7 +220,6 @@ class InjectionProblem2PNI
         contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
         temperatureIdx = Indices::temperatureIdx,
-        energyEqIdx = Indices::energyEqIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,

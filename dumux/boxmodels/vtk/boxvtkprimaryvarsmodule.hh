@@ -56,7 +56,6 @@ class BoxVtkPrimaryVarsModule : public BoxVtkOutputModule<TypeTag>
     typedef BoxVtkOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -67,7 +66,6 @@ class BoxVtkPrimaryVarsModule : public BoxVtkOutputModule<TypeTag>
 
     typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::EqBuffer EqBuffer;
 
 public:

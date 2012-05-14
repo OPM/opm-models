@@ -61,7 +61,6 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum { numComponents = FluidSystem::numComponents };
     enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };
-    enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { pressureIdx = Indices::pressureIdx };
     enum { moleFrac1Idx = Indices::moleFrac1Idx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };

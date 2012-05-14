@@ -47,14 +47,12 @@ class StokesBoundaryRateVector
 {
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numComponents = FluidSystem::numComponents };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { dimWorld = GridView::dimensionworld };

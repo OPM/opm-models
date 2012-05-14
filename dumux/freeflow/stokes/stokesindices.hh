@@ -43,9 +43,7 @@ namespace Dumux
 template <class TypeTag, int PVOffset = 0>
 class StokesIndices
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    static const int dim = Grid::dimension;
     static const int numComponents = FluidSystem::numComponents;
 
 public:

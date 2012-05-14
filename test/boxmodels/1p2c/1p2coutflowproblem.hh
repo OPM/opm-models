@@ -127,15 +127,9 @@ class OnePTwoCOutflowProblem
 
         // indices of the primary variables
         pressureIdx = Indices::pressureIdx,
-        x1Idx = Indices::x1Idx,
-
-        // indices of the equations
-        contiEqIdx = Indices::contiEqIdx,
-        transEqIdx = Indices::transEqIdx
+        x1Idx = Indices::x1Idx
     };
 
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;

@@ -48,13 +48,11 @@ class RichardsBoundaryRateVector
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { contiEqIdx = Indices::contiEqIdx };
     enum { wPhaseIdx = Indices::wPhaseIdx };
 

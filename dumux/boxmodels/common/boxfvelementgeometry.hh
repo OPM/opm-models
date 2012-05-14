@@ -472,7 +472,6 @@ static int foo3DSimplex_
 template <class Scalar, class GridView>
 class BoxFVElementGeometry
 {
-    typedef BoxFVElementGeometry<Scalar, GridView> ThisType;
 
     enum{dim = GridView::dimension};
     enum{dimWorld = GridView::dimensionworld};

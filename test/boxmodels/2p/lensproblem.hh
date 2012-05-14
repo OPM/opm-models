@@ -235,7 +235,6 @@ class LensProblem
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 

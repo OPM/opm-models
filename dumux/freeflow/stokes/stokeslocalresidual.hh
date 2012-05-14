@@ -54,14 +54,12 @@ template<class TypeTag>
 class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
-    typedef typename GET_PROP_TYPE(TypeTag, BaseLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -69,13 +67,11 @@ protected:
 
     enum {
         dimWorld = GridView::dimensionworld,
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
         phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex),
         numComponents = FluidSystem::numComponents
     };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
-    enum { pressureIdx = Indices::pressureIdx }; //!< Index of the pressure in a solution vector
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 

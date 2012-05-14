@@ -53,7 +53,6 @@ class StokesNILocalResidual : public StokesLocalResidual<TypeTag>
 {
     typedef StokesLocalResidual<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -61,7 +60,6 @@ class StokesNILocalResidual : public StokesLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum { dim = GridView::dimension };
     enum { energyEqIdx = Indices::energyEqIdx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
