@@ -133,12 +133,15 @@ public:
                            int phaseIdx, 
                            Scalar volume)
     {
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        *this = 0.0;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] = 
                 fluidState.molarity(phaseIdx, compIdx)
                 * volume;
+        }
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
+        Valgrind::CheckDefined(*this);
     }
 };
 
