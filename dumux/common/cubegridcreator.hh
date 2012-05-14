@@ -67,7 +67,9 @@ class CubeGridCreator
     typedef typename GET_PROP_TYPE(TypeTag, Grid)  Grid;
     typedef Dune::shared_ptr<Grid> GridPointer;
 
-    enum { dim = Grid::dimension };
+    typedef typename Grid::ctype CoordScalar;
+    enum { dimWorld = Grid::dimensionworld };
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
@@ -75,18 +77,18 @@ public:
      */
     static void makeGrid()
     {
-        Dune::array< unsigned int, dim > cellRes;
-        Dune::FieldVector<Scalar, dim> upperRight;
-        Dune::FieldVector<Scalar, dim> lowerLeft(0.0);
+        Dune::array< unsigned int, dimWorld > cellRes;
+        GlobalPosition upperRight;
+        GlobalPosition lowerLeft;
 
         upperRight[0] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeX);
         cellRes[0] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsX);
-        if (dim > 1)
+        if (dimWorld > 1)
         {
             upperRight[1] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeY);
             cellRes[1] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsY);
         }
-        if (dim > 2)
+        if (dimWorld > 2)
         {
             upperRight[2] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeZ);
             cellRes[2] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsZ);

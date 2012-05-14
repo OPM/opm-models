@@ -41,6 +41,14 @@ namespace Properties
 {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
+
+NEW_PROP_TAG(GridSizeX);
+NEW_PROP_TAG(GridSizeY);
+NEW_PROP_TAG(GridSizeZ);
+
+NEW_PROP_TAG(GridCellsX);
+NEW_PROP_TAG(GridCellsY);
+NEW_PROP_TAG(GridCellsZ);
 }
 
 /*!
@@ -54,32 +62,34 @@ class SimplexGridCreator
     typedef typename GET_PROP_TYPE(TypeTag, Grid)  Grid;
     typedef Dune::shared_ptr<Grid> GridPointer;
 
-    enum { dim = Grid::dimension };
-
+    typedef typename Grid::ctype CoordScalar;
+    enum { dimWorld = Grid::dimensionworld };
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    
 public:
     /*!
      * \brief Create the Grid
      */
     static void makeGrid()
     {
-        Dune::array< unsigned int, dim > cellRes;
-        Dune::FieldVector<Scalar, dim> upperRight;
-        Dune::FieldVector<Scalar, dim> lowerLeft;
+        Dune::array<unsigned, dimWorld > cellRes;
+        GlobalPosition upperRight;
+        GlobalPosition lowerLeft;
 
         lowerLeft[0] = 0.0;
-        upperRight[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, UpperRightX);
-        cellRes[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, int, Grid, NumberOfCellsX);
-        if (dim > 1)
+        upperRight[0] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeX);
+        cellRes[0] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsX);
+        if (dimWorld > 1)
         {
             lowerLeft[1] = 0.0;
-            upperRight[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, UpperRightY);
-            cellRes[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, int, Grid, NumberOfCellsY);
+            upperRight[1] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeY);
+            cellRes[1] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsY);
         }
-        if (dim > 2)
+        if (dimWorld > 2)
         {
             lowerLeft[2] = 0.0;
-            upperRight[2] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, UpperRightZ);
-            cellRes[2] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, int, Grid, NumberOfCellsZ);
+            upperRight[2] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeZ);
+            cellRes[2] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsZ);
         }
 
         simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft, upperRight, cellRes);
