@@ -125,6 +125,9 @@ SET_BOOL_PROP(BoxMPNC, EnableEnergy, false);
 //! disable diffusion by default
 SET_BOOL_PROP(BoxMPNC, EnableDiffusion, false);
 
+//! do not use smooth upwinding by default
+SET_BOOL_PROP(BoxMPNC, EnableSmoothUpwinding, false);
+
 //! the RateVector property
 SET_TYPE_PROP(BoxMPNC, RateVector, MPNCRateVector<TypeTag>);
 

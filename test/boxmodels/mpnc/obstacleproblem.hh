@@ -111,10 +111,7 @@ public:
     // define the material law parameterized by absolute saturations
     typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
-    
 
-// Enable smooth upwinding?
-SET_BOOL_PROP(ObstacleProblem, EnableSmoothUpwinding, false);
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
 

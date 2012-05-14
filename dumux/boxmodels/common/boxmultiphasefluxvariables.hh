@@ -474,8 +474,8 @@ private:
 
         // calculate the intrinsic permeability
         const DimMatrix &K = problem.intrinsicPermeability(elemCtx,
-                                                        insideScvIdx_,
-                                                        timeIdx);
+                                                           insideScvIdx_,
+                                                           timeIdx);
         
         DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
         Scalar scvfArea = normal.two_norm();
