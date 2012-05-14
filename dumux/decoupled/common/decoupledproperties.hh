@@ -82,7 +82,7 @@ NEW_PROP_TAG( MaxIntersections ); //!< Gives maximum number of intersections of 
 #include <dune/istl/bvector.hh>
 
 #include <dumux/common/timemanager.hh>
-#include <dumux/common/boundarytypes.hh>
+#include <dumux/decoupled/common/boundarytypes.hh>
 #include<dumux/common/boundaryconditions.hh>
 
 namespace Dumux
