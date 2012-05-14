@@ -120,7 +120,7 @@ class StokesNITestProblem
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     StokesNITestProblem(TimeManager &timeManager)
@@ -269,7 +269,7 @@ public:
         Scalar b = - a*width;
         Scalar c = 0;
         
-        Vector velocity(0.0);
+        DimVector velocity(0.0);
         velocity[1] = a * x*x + b * x + c;
 
         // hydrostatic pressure

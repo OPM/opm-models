@@ -69,7 +69,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!

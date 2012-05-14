@@ -59,7 +59,7 @@ class StokesNIBoundaryRateVector
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!
@@ -86,9 +86,9 @@ public:
 
 protected:
     template <class FluidState>
-    void enthalpyFlux_(const Vector &velocity,
+    void enthalpyFlux_(const DimVector &velocity,
                        Scalar density,
-                       const Vector &normal,
+                       const DimVector &normal,
                        const VolumeVariables &insideVolVars,
                        const FluidState &fs,
                        const typename FluidSystem::ParameterCache &paramCache)

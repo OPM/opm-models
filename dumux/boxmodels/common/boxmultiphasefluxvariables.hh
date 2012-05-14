@@ -73,7 +73,7 @@ class BoxMultiPhaseFluxVariables
         useTwoPointGradients = GET_PROP_VALUE(TypeTag, UseTwoPointGradients)
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -126,7 +126,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    const Vector &potentialGrad(int phaseIdx) const
+    const DimVector &potentialGrad(int phaseIdx) const
     { return potentialGrad_[phaseIdx]; }
 
     /*!
@@ -135,7 +135,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    const Vector &filterVelocity(int phaseIdx) const
+    const DimVector &filterVelocity(int phaseIdx) const
     { return filterVelocity_[phaseIdx]; }
 
     /*!
@@ -216,7 +216,7 @@ private:
 
             // the "normalized normal" of the scvf divided by the
             // distance of the centers of the two adjacent SCVs
-            Vector n = scvf.normal;
+            DimVector n = scvf.normal;
             n /= scvf.normal.two_norm();
             
             // distance between the centers of the two SCVs
@@ -250,7 +250,7 @@ private:
                  scvIdx ++)
             {
                 // FE gradient at vertex
-                const Vector &feGrad = scvf.grad[scvIdx];
+                const DimVector &feGrad = scvf.grad[scvIdx];
                 const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
                 Valgrind::CheckDefined(feGrad);
 
@@ -261,7 +261,7 @@ private:
                         continue;
 
                     // the pressure gradient
-                    Vector tmp(feGrad);
+                    DimVector tmp(feGrad);
                     tmp *= fluidState.pressure(phaseIdx);
                     Valgrind::CheckDefined(tmp);
                     potentialGrad_[phaseIdx] += tmp;
@@ -276,7 +276,7 @@ private:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
+            DimVector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_, timeIdx);
             g /= 2;
 
@@ -302,7 +302,7 @@ private:
                 Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
 
                 // make gravity acceleration a force
-                Vector f(g);
+                DimVector f(g);
                 f *= density;
 
                 // calculate the final potential gradient
@@ -329,11 +329,11 @@ private:
 
         // the "normalized normal" of the scvf divided by the
         // distance of the centers of the two adjacent SCVs
-        Vector n = scvf.normal;
+        DimVector n = scvf.normal;
         n /= scvf.normal.two_norm();
             
         // distance between the center of the SCV and center of the boundary face
-        Vector distVec = context.element().geometry().global(insideScv.localGeometry->center());
+        DimVector distVec = context.element().geometry().global(insideScv.localGeometry->center());
         distVec -= scvf.ipGlobal;
         Scalar dist = distVec.two_norm();
         
@@ -359,7 +359,7 @@ private:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            Vector g(context.problem().gravity(context.elemContext(), insideScvIdx_, timeIdx));
+            DimVector g(context.problem().gravity(context.elemContext(), insideScvIdx_, timeIdx));
 
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
@@ -381,7 +381,7 @@ private:
                 Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
 
                 // make gravity acceleration a force
-                Vector f(g);
+                DimVector f(g);
                 f *= density;
 
                 // calculate the final potential gradient
@@ -407,7 +407,7 @@ private:
                                                     timeIdx));
         
         Valgrind::CheckDefined(elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal);
-        Vector normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
+        DimVector normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Scalar scvfArea = normal.two_norm();
         normal /= scvfArea;
 
@@ -477,7 +477,7 @@ private:
                                                         insideScvIdx_,
                                                         timeIdx);
         
-        Vector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
+        DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
         Scalar scvfArea = normal.two_norm();
         normal /= scvfArea;
         
@@ -526,7 +526,7 @@ private:
                                 int scvfIdx,
                                 int timeIdx,
                                 int phaseIdx,
-                                const Vector &normal)
+                                const DimVector &normal)
     {
         const VolumeVariables &up = elemCtx.volVars(upstreamIdx(phaseIdx), timeIdx);
         const VolumeVariables &dn = elemCtx.volVars(downstreamIdx(phaseIdx), timeIdx);
@@ -534,7 +534,7 @@ private:
         // first, calculate the component of the "prelimary velocity"
         // which is parallel to the normal of the sub-control volume
         // face
-        Vector parV(normal);
+        DimVector parV(normal);
         parV *= normal * filterVelocity_[phaseIdx];
         Scalar x = parV.two_norm();
         assert(x >= 0);
@@ -587,7 +587,7 @@ private:
             // set the length of the velocity component which is
             // parallel to the face normal to the one from the spline,
             // and do not modify the perpendicular part
-            Vector perpV = filterVelocity_[phaseIdx];
+            DimVector perpV = filterVelocity_[phaseIdx];
             perpV -= parV;
             perpV *= mUp;
 
@@ -612,10 +612,10 @@ private:
     short downstreamScvIdx_[numPhases];
 
     // pressure potential gradients of all phases
-    Vector potentialGrad_[numPhases];
+    DimVector potentialGrad_[numPhases];
 
     // filter velocities of all phases
-    Vector filterVelocity_[numPhases];
+    DimVector filterVelocity_[numPhases];
 
     // normal velocities, i.e. filter velocity times face normal times
     // face area

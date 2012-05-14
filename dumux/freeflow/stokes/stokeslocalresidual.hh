@@ -77,7 +77,7 @@ protected:
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { pressureIdx = Indices::pressureIdx }; //!< Index of the pressure in a solution vector
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
  public:
     /*!
@@ -163,7 +163,7 @@ protected:
         Scalar mu = up.fluidState().viscosity(phaseIdx);
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
         {
-            Vector tmp;
+            DimVector tmp;
             for (int j = 0; j < dimWorld; ++j) {
                 tmp[j] = fluxVars.velocityGradAtIP(/*velocityComp=*/axisIdx)[j];
                 tmp[j] += fluxVars.velocityGradAtIP(/*velocityComp=*/j)[axisIdx];

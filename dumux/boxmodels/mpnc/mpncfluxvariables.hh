@@ -65,10 +65,10 @@ class MPNCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
         dimWorld = GridView::dimensionworld,
 
         enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
+        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy)
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     typedef MPNCFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
     typedef MPNCFluxVariablesEnergy<TypeTag, enableEnergy> FluxVariablesEnergy;
@@ -98,7 +98,7 @@ public:
     const Scalar moleFraction(int phaseIdx, int compIdx) const
     { return diffusionVars_.moleFraction(phaseIdx, compIdx); };
 
-    const Vector &moleFracGrad(int phaseIdx,
+    const DimVector &moleFracGrad(int phaseIdx,
                                int compIdx) const
     { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); };
     // end of forward calls to the diffusion module

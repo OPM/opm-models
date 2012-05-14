@@ -62,7 +62,7 @@ class StokesBoundaryRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!
@@ -93,33 +93,34 @@ public:
     void setFreeFlow(const Context &context,
                      int spaceIdx,
                      int timeIdx,
-                     const Vector &velocity, 
+                     const DimVector &velocity, 
                      const FluidState &fs) 
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[spaceIdx];
 
         int insideScvIdx = context.insideScvIndex(spaceIdx, timeIdx);
-        const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
+        //const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
         const auto &insideVolVars = context.volVars(spaceIdx, timeIdx);
 
         // the outer unit normal
-        auto normal = context.fvElemGeom(timeIdx).boundaryFace[spaceIdx].normal;
+        auto normal = scvf.normal;
         normal /= normal.two_norm();
       
         // distance between the center of the SCV and center of the boundary face
-        Vector distVec = scvf.ipGlobal;
-        const auto &scvCenter = context.element().geometry().global(insideScv.localCenter);
-        for (int i = 0; i < dimWorld; ++ i)
-            distVec[i] -= scvCenter[i];
-        Scalar dist = distVec.two_norm();
+        DimVector distVec
+            = context.element().geometry().global(fvElemGeom.subContVol[insideScvIdx].localGeometry->center());
+        const auto &scvPos = context.element().geometry().corner(insideScvIdx);
+        distVec.axpy(-1, scvPos);
+        Scalar dist = std::abs(distVec * normal);
 
-        Vector gradv[dimWorld];
+        DimVector gradv[dimWorld];
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // Approximation of the pressure gradient at the boundary
             // segment's integration point.
             gradv[axisIdx] = normal;
             gradv[axisIdx] *= (velocity[axisIdx] - insideVolVars.velocity()[axisIdx])/dist;
+            Valgrind::CheckDefined(gradv[axisIdx]);
         }
 
         // specify the mass fluxes over the boundary
@@ -127,9 +128,8 @@ public:
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fs, phaseIdx);
-        Scalar molarDensity = 
-            FluidSystem::density(fs, paramCache, phaseIdx)
-            / fs.averageMolarMass(phaseIdx);
+        Scalar density = FluidSystem::density(fs, paramCache, phaseIdx);
+        Scalar molarDensity = density / fs.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] = 
                 vTimesN
@@ -140,19 +140,19 @@ public:
         // calculate the momentum flux over the boundary
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // calculate a row of grad v + (grad v)^T
-            Vector tmp(0.0);
+            DimVector tmp(0.0);
             for (int j = 0; j < dimWorld; ++j) {
-                tmp[j] += gradv[axisIdx][j];
-                tmp[j] += gradv[j][axisIdx];
+                tmp[j] = gradv[axisIdx][j] + gradv[j][axisIdx];
             }
 
+
             // the momentum flux due to viscous forces
-            (*this)[momentum0EqIdx + axisIdx] = 
-                insideVolVars.fluidState().viscosity(phaseIdx) 
+            (*this)[momentum0EqIdx + axisIdx] =
+                - insideVolVars.fluidState().viscosity(phaseIdx)
                 * (tmp * normal);
         }
 
-        asImp_().enthalpyFlux_(velocity, insideVolVars, fs, paramCache);
+        asImp_().enthalpyFlux_(velocity, density, normal, insideVolVars, fs, paramCache);
     }
 
     /*!
@@ -162,7 +162,7 @@ public:
     void setInFlow(const Context &context,
                    int spaceIdx,
                    int timeIdx,
-                   const Vector &velocity, 
+                   const DimVector &velocity, 
                    const FluidState &fs) 
     {
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
@@ -188,7 +188,7 @@ public:
     {
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
 
-        Vector velocity = volVars.velocity();
+        DimVector velocity = volVars.velocity();
         const auto &fs = volVars.fluidState();
 
         setFreeFlow(context, spaceIdx, timeIdx, velocity, fs);
@@ -210,7 +210,7 @@ public:
                    int spaceIdx,
                    int timeIdx)
     { 
-        static Vector v0(0.0);
+        static DimVector v0(0.0);
 
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
         const auto &fs = volVars.fluidState(); // don't care
@@ -223,7 +223,9 @@ public:
 
 protected:
     template <class FluidState>
-    void enthalpyFlux_(const Vector &velocity,
+    void enthalpyFlux_(const DimVector &velocity,
+                       Scalar density,
+                       const DimVector &normal,
                        const VolumeVariables &insideVolVars,
                        const FluidState &fs,
                        const typename FluidSystem::ParameterCache &paramCache)

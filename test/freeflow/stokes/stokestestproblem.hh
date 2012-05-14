@@ -114,7 +114,7 @@ class StokesTestProblem
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     StokesTestProblem(TimeManager &timeManager)
@@ -169,7 +169,7 @@ public:
         Scalar b = - a*height;
         Scalar c = 0;
         
-        Vector velocity(0.0);
+        DimVector velocity(0.0);
         velocity[0] = a * y*y + b * y + c;
 
         if (onRightBoundary_(pos))
@@ -260,7 +260,7 @@ public:
         Scalar b = - a*height;
         Scalar c = 0;
         
-        Vector velocity(0.0);
+        DimVector velocity(0.0);
         velocity[0] = a * y*y + b * y + c;
         
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)

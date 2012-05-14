@@ -67,7 +67,7 @@ class OnePTwoCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -109,7 +109,7 @@ public:
      *
      * \param compIdx The index of the considered component
      */
-    const Vector &moleFracGrad(int phaseIdx = 0, int compIdx = 1) const
+    const DimVector &moleFracGrad(int phaseIdx = 0, int compIdx = 1) const
     {
         // The 1p2c model is supposed to query only the mole fraction
         // gradient of the second component of the first phase!
@@ -139,10 +139,10 @@ private:
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx)
             {
                 // FE gradient at vertex idx
-                const Vector &feGrad = scvf.grad[scvIdx];
+                const DimVector &feGrad = scvf.grad[scvIdx];
                 const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
-                Vector tmp;
+                DimVector tmp;
 
                 // the mole fraction gradient of the 2nd component [1/m]
                 tmp = feGrad;
@@ -160,8 +160,8 @@ private:
             const GlobalPosition &posJ = elemCtx.element().geometry().corner(this->outsideIdx());
 
             // tmp = pos_i - pos_j
-            Vector tmp;
-            for (int i=0; i < Vector::dimension; ++i)
+            DimVector tmp;
+            for (int i=0; i < DimVector::dimension; ++i)
                 tmp[i] = posI[i] - posJ[i];
 
             Scalar dist = tmp.two_norm();
@@ -204,7 +204,7 @@ private:
     }
 
     //! mole fraction gradient
-    Vector moleFracGrad_;
+    DimVector moleFracGrad_;
 
     //! the effective diffusion coefficent in the porous medium
     Scalar diffCoeffPM_;

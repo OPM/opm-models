@@ -484,7 +484,7 @@ class BoxFVElementGeometry
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename Element::Geometry Geometry;
-    typedef Dune::FieldVector<Scalar,dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar,dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
     typedef Dune::FieldVector<CoordScalar,dim> LocalPosition;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
@@ -501,7 +501,7 @@ class BoxFVElementGeometry
         return 0.5*std::abs((p3[0] - p1[0])*(p2[1] - p0[1]) - (p3[1] - p1[1])*(p2[0] - p0[0]));
     }
 
-    void crossProduct(Vector& c, const Vector& a, const Vector& b)
+    void crossProduct(DimVector& c, const DimVector& a, const DimVector& b)
     {
         c[0] = a[1]*b[2] - a[2]*b[1];
         c[1] = a[2]*b[0] - a[0]*b[2];
@@ -510,10 +510,10 @@ class BoxFVElementGeometry
 
     Scalar pyramidVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3, const GlobalPosition& p4)
     {
-        Vector a(p2); a -= p0;
-        Vector b(p3); b -= p1;
+        DimVector a(p2); a -= p0;
+        DimVector b(p3); b -= p1;
 
-        Vector n;
+        DimVector n;
         crossProduct(n, a, b);
 
         a = p4; a -= p0;
@@ -523,13 +523,13 @@ class BoxFVElementGeometry
 
     Scalar prismVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3, const GlobalPosition& p4, const GlobalPosition& p5)
     {
-        Vector a(p4);
+        DimVector a(p4);
         for (int k = 0; k < dimWorld; ++k)
             a[k] -= p0[k];
-        Vector b(p1);
+        DimVector b(p1);
         for (int k = 0; k < dimWorld; ++k)
             b[k] -= p3[k];
-        Vector m;
+        DimVector m;
         crossProduct(m, a, b);
 
         a = p1;
@@ -538,7 +538,7 @@ class BoxFVElementGeometry
         b = p2;
         for (int k = 0; k < dimWorld; ++k)
             b[k] -= p0[k];
-        Vector n;
+        DimVector n;
         crossProduct(n, a, b);
         n += m;
 
@@ -557,12 +557,12 @@ class BoxFVElementGeometry
             + prismVolume(p0,p2,p3,p4,p6,p7);
     }
 
-    void normalOfQuadrilateral3D(Vector &normal, const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
+    void normalOfQuadrilateral3D(DimVector &normal, const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
     {
-        Vector a(p2);
+        DimVector a(p2);
         for (int k = 0; k < dimWorld; ++k)
             a[k] -= p0[k];
-        Vector b(p3);
+        DimVector b(p3);
         for (int k = 0; k < dimWorld; ++k)
             b[k] -= p1[k];
 
@@ -572,7 +572,7 @@ class BoxFVElementGeometry
 
     Scalar quadrilateralArea3D(const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
     {
-        Vector normal;
+        DimVector normal;
         normalOfQuadrilateral3D(normal, p0, p1, p2, p3);
         return normal.two_norm();
     }
@@ -726,8 +726,8 @@ public:
         GlobalPosition global; //!< global vert position
         Scalar volume; //!< volume of scv
         const ScvGeometry *localGeometry; //!< The geometry of the sub-control volume in local coordinates.
-        Dune::FieldVector<Vector, maxNC> grad; //! derivative of shape function associated with the sub control volume
-        Dune::FieldVector<Vector, maxNC> gradCenter; //! derivative of shape function at the center of the sub control volume
+        Dune::FieldVector<DimVector, maxNC> grad; //! derivative of shape function associated with the sub control volume
+        Dune::FieldVector<DimVector, maxNC> gradCenter; //! derivative of shape function at the center of the sub control volume
         Dune::FieldVector<Scalar, maxNC> shapeValue; //! value of shape function associated with the sub control volume
     };
 
@@ -736,9 +736,9 @@ public:
         int i,j; //!< scvf seperates corner i and j of elem
         LocalPosition ipLocal; //!< integration point in local coords
         GlobalPosition ipGlobal; //!< integration point in global coords
-        Vector normal; //!< normal on face pointing to CV j or outward of the domain with length equal to |scvf|
+        DimVector normal; //!< normal on face pointing to CV j or outward of the domain with length equal to |scvf|
         Scalar area; //!< area of face
-        Dune::FieldVector<Vector, maxNC> grad; //!< derivatives of shape functions at ip
+        Dune::FieldVector<DimVector, maxNC> grad; //!< derivatives of shape functions at ip
         Dune::FieldVector<Scalar, maxNC> shapeValue; //!< value of shape functions at ip
     };
 
@@ -819,7 +819,7 @@ public:
             // the compiler can optimize away all if
             // cases which don't apply.
             LocalPosition ipLocal;
-            Vector diffVec;
+            DimVector diffVec;
             if (dim==1) {
                 subContVolFace[k].ipLocal = 0.5;
                 subContVolFace[k].normal = 1.0;

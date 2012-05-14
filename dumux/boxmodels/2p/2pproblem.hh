@@ -49,7 +49,7 @@ class TwoPProblem : public BoxMultiPhaseProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     enum { dimWorld = GridView::dimensionworld };
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!
@@ -107,7 +107,7 @@ public:
      *                 the element
      */
     template <class Context>
-    const Vector &gravity(const Context &context,
+    const DimVector &gravity(const Context &context,
                           int spaceIdx, int timeIdx) const
     { return asImp_().gravity(); }
 
@@ -120,13 +120,13 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const Vector &gravity() const
+    const DimVector &gravity() const
     { return gravity_; }
 
     // \}
 
 protected:
-    Vector gravity_;
+    DimVector gravity_;
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)

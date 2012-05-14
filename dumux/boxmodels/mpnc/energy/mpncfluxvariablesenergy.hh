@@ -73,7 +73,7 @@ class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
-    typedef Dune::FieldVector<CoordScalar, dimWorld>  Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
@@ -88,8 +88,8 @@ public:
 
         // calculate temperature gradient using finite element
         // gradients
-        Vector tmp(0.0);
-        Vector temperatureGrad(0.);
+        DimVector tmp(0.0);
+        DimVector temperatureGrad(0.);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             tmp = fvElemGeom.subContVolFace[scvfIdx].grad[scvIdx];

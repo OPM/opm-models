@@ -530,36 +530,6 @@ private:
             if (FluidSystem::isLiquid(phaseIdx)) {
                 Scalar lambdaFluid =
                     FluidSystem::thermalConductivity(fs, paramCache, phaseIdx);
-                lambdaSaturated = std::pow(lambdaGranite, (1-poro)) * std::pow(lambdaFluid, poro);
-            }
-            else
-                lambdaSaturated = std::pow(lambdaGranite, (1-poro));
-            
-            params.setFullySaturatedLambda(phaseIdx, lambdaSaturated);
-            if (!FluidSystem::isLiquid(phaseIdx))
-                params.setVacuumLambda(lambdaSaturated);
-        }
-        Scalar lambdaGranite = 2.8; // [W / (K m)]
-
-        // create a Fluid state which has all phases present
-        Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
-        fs.setTemperature(293.15);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fs.setPressure(phaseIdx, 1.0135e5);
-        }
-
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fs);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar rho = FluidSystem::density(fs, paramCache, phaseIdx);
-            fs.setDensity(phaseIdx, rho);
-        }
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar lambdaSaturated;
-            if (FluidSystem::isLiquid(phaseIdx)) {
-                Scalar lambdaFluid =
-                    FluidSystem::thermalConductivity(fs, paramCache, phaseIdx);
                 lambdaSaturated = std::pow(lambdaGranite, (1-poro)) + std::pow(lambdaFluid, poro);
             }
             else

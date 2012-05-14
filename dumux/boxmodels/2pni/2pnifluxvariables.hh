@@ -64,7 +64,7 @@ class TwoPNIFluxVariables : public TwoPFluxVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -74,8 +74,8 @@ public:
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        Vector temperatureGrad(0.0);
-        Vector tmp;
+        DimVector temperatureGrad(0.0);
+        DimVector tmp;
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             const auto &feGrad = scvf.grad[scvIdx];

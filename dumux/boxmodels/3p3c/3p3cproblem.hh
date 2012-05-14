@@ -50,10 +50,10 @@ class ThreePThreeCProblem : public BoxMultiPhaseProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimension };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, dim> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     /*!
@@ -67,7 +67,7 @@ public:
         , gravity_(0)
     {
         if (GET_PARAM(TypeTag, bool, EnableGravity))
-            gravity_[dim-1]  = -9.81;
+            gravity_[dimWorld-1]  = -9.81;
     }
 
     /*!
@@ -108,7 +108,7 @@ public:
      *                 the element
      */
     template <class Context>
-    const Vector &gravity(const Context &context,
+    const DimVector &gravity(const Context &context,
                           int spaceIdx, int timeIdx) const
     { return asImp_().gravity(); }
 
@@ -121,7 +121,7 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const Vector &gravity() const
+    const DimVector &gravity() const
     { return gravity_; }
 
     // \}
@@ -134,7 +134,7 @@ private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    Vector gravity_;
+    DimVector gravity_;
 };
 
 }

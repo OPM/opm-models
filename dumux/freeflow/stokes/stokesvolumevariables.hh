@@ -67,7 +67,7 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
 
 public:
@@ -126,7 +126,7 @@ public:
         pressureGrad_ = 0.0;
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             const auto &feGrad = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
-            Vector tmp(feGrad);
+            DimVector tmp(feGrad);
             tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
             
             pressureGrad_ += tmp;
@@ -148,7 +148,7 @@ public:
             const auto &posScvLocal = it->position();
             const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
             
-            Vector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
+            DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
             Scalar detjac = 1.0;
             //scvLocalGeom.integrationElement(posScvLocal) *
@@ -178,30 +178,30 @@ public:
     /*!
      * \brief Returns the average velocity in the sub-control volume.
      */
-    const Vector &velocity() const
+    const DimVector &velocity() const
     { return velocity_; }
 
     /*!
      * \brief Returns the velocity at the center in the sub-control volume.
      */
-    const Vector &velocityCenter() const
+    const DimVector &velocityCenter() const
     { return velocityCenter_; }
 
     /*!
      * \brief Returns the pressure gradient in the sub-control volume.
      */
-    const Vector &pressureGradient() const
+    const DimVector &pressureGradient() const
     { return pressureGrad_; }
 
     /*!
      * \brief Returns the gravitational acceleration vector in the
      *        sub-control volume.
      */
-    const Vector &gravity() const
+    const DimVector &gravity() const
     { return gravity_; } 
 
 protected:
-    Vector velocityAtPos_(const ElementContext elemCtx,
+    DimVector velocityAtPos_(const ElementContext elemCtx,
                           int timeIdx,
                           const LocalPosition &localPos) const
     {
@@ -213,7 +213,7 @@ protected:
         
         localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
 
-        Vector result(0.0);
+        DimVector result(0.0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
             result.axpy(shapeValue[scvIdx][0], elemCtx.volVars(scvIdx, timeIdx).velocityCenter());
         }
@@ -234,10 +234,10 @@ protected:
         this->fluidState_.setTemperature(T);
     }
 
-    Vector velocity_;
-    Vector velocityCenter_;
-    Vector gravity_;
-    Vector pressureGrad_;
+    DimVector velocity_;
+    DimVector velocityCenter_;
+    DimVector gravity_;
+    DimVector pressureGrad_;
     FluidState fluidState_;
 
 private:

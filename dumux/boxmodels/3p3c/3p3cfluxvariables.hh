@@ -72,7 +72,7 @@ class ThreePThreeCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -93,7 +93,7 @@ public:
     /*!
      * \brief Returns the gradient of the mole fraction of a component in a phase.
      */
-    const Vector &moleFracGrad(int phaseIdx, int compIdx) const
+    const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
     { return moleFracGrad_[phaseIdx][compIdx]; };
 
     /*!
@@ -118,14 +118,14 @@ private:
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         
         // calculate gradients
-        Vector tmp;
+        DimVector tmp;
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             // the fluid state at the current vertex
             const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
             // FE gradient at vertex scvIdx
-            const Vector &feGrad = scvf.grad[scvIdx];
+            const DimVector &feGrad = scvf.grad[scvIdx];
 
             // the concentration gradient of the components
             // component in the phases
@@ -187,7 +187,7 @@ private:
     Scalar molarDensity_[numPhases];
 
     // gradients
-    Vector moleFracGrad_[numPhases][numComponents];
+    DimVector moleFracGrad_[numPhases][numComponents];
 
     // the diffusivity matrix for the porous medium
     Scalar porousDiffCoeff_[numPhases][numComponents];

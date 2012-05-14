@@ -59,9 +59,9 @@ class TwoPTwoCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
 
-    typedef Dune::FieldVector<Scalar, dim> Vector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
@@ -100,12 +100,12 @@ public:
         return moleFrac_[phaseIdx][compIdx];
     };
 
-    const Vector &moleFracGrad(int phaseIdx, int compIdx) const
+    const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
     {
         return moleFracGrad_[phaseIdx][compIdx];
     };
 
-    const Vector &temperatureGrad() const
+    const DimVector &temperatureGrad() const
     { return temperatureGrad_; };
 
 private:
@@ -130,11 +130,11 @@ private:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
         {
             // FE gradient at vertex
-            const Vector &feGrad = scvf.grad[scvIdx];
+            const DimVector &feGrad = scvf.grad[scvIdx];
             Scalar shapeValue = scvf.shapeValue[scvIdx];
             const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
             const auto &fluidState = volVars.fluidState();
-            Vector tmp;
+            DimVector tmp;
 
             // compute sum of pressure gradients for each phase
             for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
@@ -193,8 +193,8 @@ private:
     Scalar porousDiffCoeff_[numPhases];
     Scalar molarDensity_[numPhases];
     Scalar moleFrac_[numPhases][numComponents];
-    Vector moleFracGrad_[numPhases][numComponents];
-    Vector temperatureGrad_;
+    DimVector moleFracGrad_[numPhases][numComponents];
+    DimVector temperatureGrad_;
 };
 
 } // end namepace
