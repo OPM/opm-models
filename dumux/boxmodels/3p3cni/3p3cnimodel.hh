@@ -107,7 +107,7 @@ template<class TypeTag>
 class ThreePThreeCNIModel : public ThreePThreeCModel<TypeTag>
 {
     typedef ThreePThreeCModel<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:

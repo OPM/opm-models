@@ -122,10 +122,10 @@ public:
             //
             // TODO (?): move this calculation to the soil (possibly
             // that's a bad idea, though)
-            Scalar red_i =
+            Scalar redI =
                 volVarsI.fluidState().saturation(phaseIdx)/volVarsI.porosity() *
                 std::pow(volVarsI.porosity() * volVarsI.fluidState().saturation(phaseIdx), 7.0/3);
-            Scalar red_j =
+            Scalar redJ =
                 volVarsJ.fluidState().saturation(phaseIdx)/volVarsJ.porosity() *
                 std::pow(volVarsJ.porosity() * volVarsJ.fluidState().saturation(phaseIdx), 7.0/3);
 
@@ -134,8 +134,8 @@ public:
                 for (int compIIdx = 0; compIIdx < numComponents; ++compIIdx) {
                     // -> arithmetic mean
                     porousDiffCoeffL_[compIIdx]
-                        = 1./2*(red_i * volVarsI.diffCoeff(lPhaseIdx, 0, compIIdx) +
-                                red_j * volVarsJ.diffCoeff(lPhaseIdx, 0, compIIdx));
+                        = 1./2*(redI * volVarsI.diffCoeff(lPhaseIdx, 0, compIIdx) +
+                                redJ * volVarsJ.diffCoeff(lPhaseIdx, 0, compIIdx));
                 }
             }
             else {
@@ -144,8 +144,8 @@ public:
                     for (int compJIdx = 0; compJIdx < numComponents; ++compJIdx) {
                         // -> arithmetic mean
                         porousDiffCoeffG_[compIIdx][compJIdx]
-                            = 1./2*(red_i * volVarsI.diffCoeff(gPhaseIdx, compIIdx, compJIdx) +
-                                    red_j * volVarsJ.diffCoeff(gPhaseIdx, compIIdx, compJIdx));
+                            = 1./2*(redI * volVarsI.diffCoeff(gPhaseIdx, compIIdx, compJIdx) +
+                                    redJ * volVarsJ.diffCoeff(gPhaseIdx, compIIdx, compJIdx));
                     }
                 }
             }

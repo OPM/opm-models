@@ -79,16 +79,16 @@ public:
 
         // calculate gradients and secondary variables at IPs
         DimVector tmp(0.0);
-        densityAtIP_ = Scalar(0);
-        molarDensityAtIP_ = Scalar(0);
-        viscosityAtIP_ = Scalar(0);
-        pressureAtIP_ = Scalar(0);
-        normalVelocityAtIP_ = Scalar(0);
-        velocityAtIP_ = Scalar(0);
-        pressureGradAtIP_ = Scalar(0);
+        density_ = Scalar(0);
+        molarDensity_ = Scalar(0);
+        viscosity_ = Scalar(0);
+        pressure_ = Scalar(0);
+        normalVelocity_ = Scalar(0);
+        velocity_ = Scalar(0);
+        pressureGrad_ = Scalar(0);
         
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            velocityGradAtIP_[dimIdx] = 0.0;
+            velocityGrad_[dimIdx] = 0.0;
 
         for (int idx = 0; idx < elemCtx.numScv(); idx++)
         {
@@ -96,16 +96,16 @@ public:
             const auto &fs = volVars.fluidState();
 
             // phase density and viscosity at IP
-            densityAtIP_ += 
+            density_ += 
                 fs.density(phaseIdx)
                 * scvf.shapeValue[idx];
-            molarDensityAtIP_ += 
+            molarDensity_ += 
                 fs.molarDensity(phaseIdx)
                 * scvf.shapeValue[idx];
-            viscosityAtIP_ +=
+            viscosity_ +=
                 fs.viscosity(phaseIdx) 
                 * scvf.shapeValue[idx];
-            pressureAtIP_ +=
+            pressure_ +=
                 fs.pressure(phaseIdx)
                 * scvf.shapeValue[idx];
 
@@ -113,42 +113,42 @@ public:
             DimVector velocityTimesShapeValue = volVars.velocityCenter();
             velocityTimesShapeValue *= scvf.shapeValue[idx];
             Valgrind::CheckDefined(scvf.shapeValue[idx]);
-            velocityAtIP_ += velocityTimesShapeValue;
+            velocity_ += velocityTimesShapeValue;
 
             // the pressure gradient
             tmp = scvf.grad[idx];
             tmp *= fs.pressure(phaseIdx);
-            pressureGradAtIP_ += tmp;
+            pressureGrad_ += tmp;
             // take gravity into account
             tmp = elemCtx.problem().gravity(elemCtx, idx, timeIdx);
-            tmp *= densityAtIP_;
+            tmp *= density_;
             // pressure gradient including influence of gravity
-            pressureGradAtIP_ -= tmp;
+            pressureGrad_ -= tmp;
 
             // the velocity gradients
             for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             {
                 tmp = scvf.grad[idx];
                 tmp *= volVars.velocityCenter()[dimIdx];
-                velocityGradAtIP_[dimIdx] += tmp;
+                velocityGrad_[dimIdx] += tmp;
             }
         }
-        Valgrind::CheckDefined(velocityAtIP_);
+        Valgrind::CheckDefined(velocity_);
 
-        normalVelocityAtIP_ = velocityAtIP_ * normal_;
-        Valgrind::CheckDefined(normalVelocityAtIP_);
+        normalVelocity_ = velocity_ * normal_;
+        Valgrind::CheckDefined(normalVelocity_);
 
         // set the upstream and downstream vertices
         upstreamIdx_ = scvf.i;
         downstreamIdx_ = scvf.j;
-        if (normalVelocityAtIP_ < 0)
+        if (normalVelocity_ < 0)
             std::swap(upstreamIdx_, downstreamIdx_);
 
-        Valgrind::CheckDefined(densityAtIP_);
-        Valgrind::CheckDefined(viscosityAtIP_);
-        Valgrind::CheckDefined(velocityAtIP_);
-        Valgrind::CheckDefined(pressureGradAtIP_);
-        Valgrind::CheckDefined(velocityGradAtIP_);
+        Valgrind::CheckDefined(density_);
+        Valgrind::CheckDefined(viscosity_);
+        Valgrind::CheckDefined(velocity_);
+        Valgrind::CheckDefined(pressureGrad_);
+        Valgrind::CheckDefined(velocityGrad_);
     };
 
 public:
@@ -156,54 +156,54 @@ public:
      * \brief Return the pressure \f$\mathrm{[Pa]}\f$ at the integration
      *        point.
      */
-    Scalar pressureAtIP() const
-    { return pressureAtIP_; }
+    Scalar pressure() const
+    { return pressure_; }
 
     /*!
      * \brief Return the mass density \f$ \mathrm{[kg/m^3]} \f$ at the integration
      *        point.
      */
-    Scalar densityAtIP() const
-    { return densityAtIP_; }
+    Scalar density() const
+    { return density_; }
 
     /*!
      * \brief Return the molar density \f$ \mathrm{[mol/m^3]} \f$ at the integration point.
      */
-    const Scalar molarDensityAtIP() const
-    { return molarDensityAtIP_; }
+    const Scalar molarDensity() const
+    { return molarDensity_; }
 
     /*!
      * \brief Return the viscosity \f$ \mathrm{[m^2/s]} \f$ at the integration
      *        point.
      */
-    Scalar viscosityAtIP() const
-    { return viscosityAtIP_; }
+    Scalar viscosity() const
+    { return viscosity_; }
 
     /*!
      * \brief Return the velocity \f$ \mathrm{[m/s]} \f$ at the integration
      *        point multiplied by the normal and the area.
      */
-    Scalar normalVelocityAtIP() const
-    { return normalVelocityAtIP_; }
+    Scalar normalVelocity() const
+    { return normalVelocity_; }
 
     /*!
      * \brief Return the pressure gradient at the integration point.
      */
-    const DimVector &pressureGradAtIP() const
-    { return pressureGradAtIP_; }
+    const DimVector &pressureGrad() const
+    { return pressureGrad_; }
 
     /*!
      * \brief Return the velocity vector at the integration point.
      */
-    const DimVector &velocityAtIP() const
-    { return velocityAtIP_; }
+    const DimVector &velocity() const
+    { return velocity_; }
 
     /*!
      * \brief Return the velocity gradient at the integration
      *        point of a face.
      */
-    const DimVector &velocityGradAtIP(int axisIdx) const
-    { return velocityGradAtIP_[axisIdx]; }
+    const DimVector &velocityGrad(int axisIdx) const
+    { return velocityGrad_[axisIdx]; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.
@@ -240,17 +240,17 @@ protected:
     bool onBoundary_;
 
     // values at the integration point
-    Scalar densityAtIP_;
-    Scalar molarDensityAtIP_;
-    Scalar viscosityAtIP_;
-    Scalar pressureAtIP_;
-    Scalar normalVelocityAtIP_;
-    DimVector velocityAtIP_;
+    Scalar density_;
+    Scalar molarDensity_;
+    Scalar viscosity_;
+    Scalar pressure_;
+    Scalar normalVelocity_;
+    DimVector velocity_;
     DimVector normal_;
 
     // gradients at the IPs
-    DimVector pressureGradAtIP_;
-    DimVector velocityGradAtIP_[dimWorld];
+    DimVector pressureGrad_;
+    DimVector velocityGrad_[dimWorld];
 
     // local index of the upwind vertex
     int upstreamIdx_;

@@ -114,7 +114,7 @@ class OnePTestProblem
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // Grid and world dimension
         dim = GridView::dimension,
@@ -133,7 +133,7 @@ class OnePTestProblem
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     OnePTestProblem(TimeManager &timeManager)
@@ -153,8 +153,8 @@ public:
         if (dim > 2)
             lensUpperRight_[2] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
 
-        intrinsicPerm_ = this->toTensor_(GET_PARAM(TypeTag, Scalar, Permeability));
-        intrinsicPermLens_ = this->toTensor_(GET_PARAM(TypeTag, Scalar, PermeabilityLens));
+        intrinsicPerm_ = this->toDimMatrix_(GET_PARAM(TypeTag, Scalar, Permeability));
+        intrinsicPermLens_ = this->toDimMatrix_(GET_PARAM(TypeTag, Scalar, PermeabilityLens));
     }
 
     /*! \brief Define the porosity.
@@ -177,7 +177,7 @@ public:
      *                      intrinsic velocity ought to be calculated.
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     { return isInLens_(context.pos(spaceIdx, timeIdx))?intrinsicPermLens_:intrinsicPerm_; }
 
     /*!
@@ -288,8 +288,8 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
     
-    Tensor intrinsicPerm_;
-    Tensor intrinsicPermLens_;
+    DimMatrix intrinsicPerm_;
+    DimMatrix intrinsicPermLens_;
 
     Scalar eps_;
 };

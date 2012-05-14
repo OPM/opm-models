@@ -54,7 +54,7 @@ class OnePLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 
-    typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { contiEqIdx = Indices::contiEqIdx };
 
 public:
@@ -65,11 +65,11 @@ public:
      *        model.
      *
      * This function should not include the source and sink terms.
-     *  \param result The phase mass within the sub-control volume
+     *  \param storage The phase mass within the sub-control volume
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -82,7 +82,7 @@ public:
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
-        result[contiEqIdx] =
+        storage[contiEqIdx] =
             volVars.fluidState().density(/*phaseIdx=*/0)
             * volVars.porosity();
     }
@@ -121,12 +121,12 @@ public:
      * \param localVertexIdx The index of the SCV
      *
      */
-    void computeSource(RateVector &values,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const
     {
-        elemCtx.problem().source(values, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
     }
 
 private:

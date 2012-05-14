@@ -172,7 +172,7 @@ class CuvetteProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     /*!
@@ -190,8 +190,8 @@ public:
                           /*minp=*/0.8e5, /*maxp=*/2e5, /*np=*/100);
 
         // intrinsic permeabilities
-        fineK_ = this->toTensor_(6.28e-12);
-        coarseK_ = this->toTensor_(9.14e-10);
+        fineK_ = this->toDimMatrix_(6.28e-12);
+        coarseK_ = this->toDimMatrix_(9.14e-10);
 
         // porosities
         finePorosity_ = 0.42;
@@ -279,7 +279,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -592,8 +592,8 @@ private:
         injectFluidState_.setEnthalpy(gPhaseIdx, h);
     }
 
-    Tensor fineK_;
-    Tensor coarseK_;
+    DimMatrix fineK_;
+    DimMatrix coarseK_;
 
     Scalar finePorosity_;
     Scalar coarsePorosity_;

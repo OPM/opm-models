@@ -213,7 +213,7 @@ class ObstacleProblem
 
     typedef Dune::FieldVector<typename GridView::Grid::ctype, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
 public:
@@ -236,8 +236,8 @@ public:
         FluidSystem::init(Tmin, Tmax, nT, pmin, pmax, np);
 
         // intrinsic permeabilities
-        coarseK_ = this->toTensor_(1e-12);
-        fineK_ = this->toTensor_(1e-15);
+        coarseK_ = this->toDimMatrix_(1e-12);
+        fineK_ = this->toDimMatrix_(1e-15);
 
         // the porosity
         finePorosity_ = 0.3;
@@ -330,7 +330,7 @@ public:
      * \brief Returns the intrinsic permeability tensor.
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         if (isFineMaterial_(context.pos(spaceIdx, timeIdx)))
             return fineK_;
@@ -562,8 +562,8 @@ protected:
         params.setVacuumLambda(lambdaDry);
     }
 
-    Tensor coarseK_;
-    Tensor fineK_;
+    DimMatrix coarseK_;
+    DimMatrix fineK_;
 
     Scalar coarsePorosity_;
     Scalar finePorosity_;

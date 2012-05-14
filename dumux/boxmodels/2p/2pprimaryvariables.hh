@@ -61,7 +61,7 @@ class TwoPPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
     enum { pressureIdx = Indices::pressureIdx };

@@ -62,11 +62,11 @@ class BoxPorousProblem : public BoxProblem<TypeTag>
         dimWorld = GridView::dimensionworld
     };
 
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
-    BoxPorousProblem(TimeManager &timeManager, const GridView &gv)
-        : ParentType(timeManager, gv)
+    BoxPorousProblem(TimeManager &timeManager, const GridView &gridView)
+        : ParentType(timeManager, gridView)
     { }
 
     /*!
@@ -75,7 +75,7 @@ public:
      * \param K1 intrinsic permeability of the first node
      * \param K2 intrinsic permeability of the second node
      */
-    void meanK(Tensor &result,
+    void meanK(DimMatrix &result,
                Scalar K1,
                Scalar K2) const
     {
@@ -88,14 +88,14 @@ public:
     }
 
     /*!
-     * \brief Averages the intrinsic permeability (Tensor).
+     * \brief Averages the intrinsic permeability (DimMatrix).
      * \param result averaged intrinsic permeability
      * \param K1 intrinsic permeability of the first node
      * \param K2 intrinsic permeability of the second node
      */
-    void meanK(Tensor &result,
-               const Tensor &K1,
-               const Tensor &K2) const
+    void meanK(DimMatrix &result,
+               const DimMatrix &K1,
+               const DimMatrix &K2) const
     {
         // entry-wise harmonic mean. this is almost certainly wrong if
         // you have off-main diagonal entries in your permeabilities!
@@ -105,7 +105,7 @@ public:
     }
 
     template <class Context>
-    const Tensor intrinsicPermeability(const Context &context,
+    const DimMatrix intrinsicPermeability(const Context &context,
                                        int spaceIdx, int timeIdx) const
     {
         DUNE_THROW(Dune::NotImplemented,
@@ -173,13 +173,13 @@ public:
     }
 
 protected:
-    const Tensor &toTensor_(const Tensor &val) const
+    const DimMatrix &toDimMatrix_(const DimMatrix &val) const
     { return val; };
 
-    Tensor toTensor_(Scalar val) const
+    DimMatrix toDimMatrix_(Scalar val) const
     {
-        Tensor ret(0.0);
-        for (int i = 0; i < Tensor::rows; ++i)
+        DimMatrix ret(0.0);
+        for (int i = 0; i < DimMatrix::rows; ++i)
             ret[i][i] = val;
         return ret;
     };

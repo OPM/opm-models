@@ -54,7 +54,7 @@ class ThreePThreeCRateVector
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };

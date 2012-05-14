@@ -53,7 +53,6 @@ NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, Vtk
 //////////////////////////////////////////////////////////////////
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
-NEW_PROP_TAG(MPNCIndices); //!< Enumerations for the 2pNc model
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(MPNCEnergyIndices); //!< Enumerations for the 2pNc model
 

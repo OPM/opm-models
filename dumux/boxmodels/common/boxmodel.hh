@@ -806,7 +806,7 @@ protected:
             // retrieve the reference element for the current element
             const Element &elem = *elemIt;
             Dune::GeometryType geoType = elem.geometry().type();
-            const ReferenceElement &refElem = ReferenceElements::general(geoType);
+            const ReferenceElement &refElement = ReferenceElements::general(geoType);
 
             // loop over all intersections of the element
             IntersectionIterator isIt = gridView_().ibegin(elem);
@@ -819,14 +819,14 @@ protected:
 
                 // loop over all vertices of the intersection
                 int faceIdx = isIt->indexInInside();
-                int numFaceVerts = refElem.size(faceIdx, 1, dim);
+                int numFaceVerts = refElement.size(faceIdx, 1, dim);
                 for (int faceVertIdx = 0;
                      faceVertIdx < numFaceVerts;
                      ++faceVertIdx)
                 {
                     // find the local element index of the face's
                     // vertex
-                    int scvIdx = refElem.subEntity(/*entityIdx=*/faceIdx,
+                    int scvIdx = refElement.subEntity(/*entityIdx=*/faceIdx,
                                                    /*entityCodim=*/1,
                                                    /*subEntityIdx=*/faceVertIdx,
                                                    /*subEntityCodim=*/dim);

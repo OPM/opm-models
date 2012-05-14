@@ -67,8 +67,8 @@ public:
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx, isBoundaryFace);
 
-        heatConductivityAtIP_ = Scalar(0);
-        temperatureGradAtIP_ = Scalar(0);
+        heatConductivity_ = Scalar(0);
+        temperatureGrad_ = Scalar(0);
 
         const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
@@ -81,35 +81,35 @@ public:
         {
             const auto &volVars = elemCtx.volVars(idx, timeIdx);
 
-            heatConductivityAtIP_ += 
+            heatConductivity_ += 
                 volVars.heatConductivity()
                 * scvf.shapeValue[idx];
 
             // the gradient of the temperature at the IP
             for (int dimIdx=0; dimIdx<dim; ++dimIdx)
-                temperatureGradAtIP_ +=
+                temperatureGrad_ +=
                     scvf.grad[idx][dimIdx]
                     * volVars.fluidState().temperature(phaseIdx);
         }
-        Valgrind::CheckDefined(heatConductivityAtIP_);
-        Valgrind::CheckDefined(temperatureGradAtIP_);
+        Valgrind::CheckDefined(heatConductivity_);
+        Valgrind::CheckDefined(temperatureGrad_);
     }
 
     /*!
      * \brief Returns the heat conductivity at the integration point.
      */
-    Scalar heatConductivityAtIP() const
-    { return heatConductivityAtIP_; }
+    Scalar heatConductivity() const
+    { return heatConductivity_; }
 
     /*!
      * \brief Returns the temperature gradient at the integration point.
      */
-    const ScalarGradient &temperatureGradAtIP() const
-    { return temperatureGradAtIP_; }
+    const ScalarGradient &temperatureGrad() const
+    { return temperatureGrad_; }
 
 protected:
-    Scalar heatConductivityAtIP_;
-    ScalarGradient temperatureGradAtIP_;
+    Scalar heatConductivity_;
+    ScalarGradient temperatureGrad_;
 };
 
 } // end namespace

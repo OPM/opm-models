@@ -56,7 +56,7 @@ class TwoPTwoCNIVolumeVariables : public TwoPTwoCVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { temperatureIdx = Indices::temperatureIdx };
     enum { energyEqIdx = Indices::energyEqIdx };

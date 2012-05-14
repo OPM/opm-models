@@ -60,7 +60,7 @@ class MPNCVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 

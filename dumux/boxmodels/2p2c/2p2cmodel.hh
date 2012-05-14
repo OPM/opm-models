@@ -104,7 +104,7 @@ class TwoPTwoCModel: public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
         dim = GridView::dimension,

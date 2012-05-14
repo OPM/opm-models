@@ -60,7 +60,7 @@ class RichardsNewtonController : public BoxNewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         dim = GridView::dimension,
         pwIdx = Indices::pwIdx,

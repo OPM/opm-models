@@ -54,7 +54,7 @@ class StokesNILocalResidual : public StokesLocalResidual<TypeTag>
     typedef StokesLocalResidual<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -68,20 +68,20 @@ public:
      * \brief Evaluate the amount the additional quantities to the stokes model
      *        (energy equation).
      *
-     * The result should be averaged over the volume (e.g. phase mass
+     * The storage should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
     {
         // compute the storage term for the transport equation
-        ParentType::computeStorage(result, elemCtx, scvIdx, timeIdx);
+        ParentType::computeStorage(storage, elemCtx, scvIdx, timeIdx);
 
         // compute the storage of energy
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        result[energyEqIdx] =
+        storage[energyEqIdx] =
             volVars.fluidState().density(phaseIdx) *
             volVars.fluidState().internalEnergy(phaseIdx);
     }
@@ -109,7 +109,7 @@ public:
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
         const auto &fsUp = up.fluidState();
 
-        Scalar tmp = fluxVars.normal() * fluxVars.velocityAtIP();
+        Scalar tmp = fluxVars.normal() * fluxVars.velocity();
 
         tmp *=  
             fsUp.density(phaseIdx)
@@ -138,9 +138,9 @@ public:
         
         // diffusive heat flux
         flux[energyEqIdx] -=
-            (fluxVars.temperatureGradAtIP()
+            (fluxVars.temperatureGrad()
              * fluxVars.normal())
-            * fluxVars.heatConductivityAtIP();
+            * fluxVars.heatConductivity();
     }
 };
 

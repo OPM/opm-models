@@ -66,7 +66,7 @@ class TwoPTwoCPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
     enum { pressure0Idx = Indices::pressure0Idx };

@@ -60,7 +60,7 @@ class MPNCPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { p0Idx = Indices::p0Idx };
     enum { S0Idx = Indices::S0Idx };
     enum { fug0Idx = Indices::fug0Idx };

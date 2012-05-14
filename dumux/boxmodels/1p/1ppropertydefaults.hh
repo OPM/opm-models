@@ -110,7 +110,6 @@ SET_TYPE_PROP(BoxOneP, VolumeVariables, OnePVolumeVariables<TypeTag>);
 SET_TYPE_PROP(BoxOneP, FluxVariables, OnePFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal single-phase model
-SET_TYPE_PROP(BoxOneP, OnePIndices, OnePIndices);
 SET_TYPE_PROP(BoxOneP, Indices, OnePIndices);
 
 //! The fluid system to use by default

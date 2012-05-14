@@ -55,7 +55,7 @@ class MPNCVolumeVariablesEnergy
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    //typedef typename GET_PROP_TYPE(TypeTag, MPNCEnergyIndices) EnergyIndices;
+    //typedef typename GET_PROP_TYPE(TypeTag, Indices) EnergyIndices;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;

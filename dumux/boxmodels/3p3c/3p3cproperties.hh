@@ -58,7 +58,6 @@ NEW_TYPE_TAG(BoxThreePThreeC, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMulti
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
-NEW_PROP_TAG(ThreePThreeCIndices); //!< Enumerations for the 3p3c models
 NEW_PROP_TAG(ThreePThreeCVerbosity); //!< Verbosity of the model (0.. complete silence, 1.. some statistical information after each iteration, 2.. grandma at a very good day)
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(FluidSystem); //!< Type of the multi-component relations

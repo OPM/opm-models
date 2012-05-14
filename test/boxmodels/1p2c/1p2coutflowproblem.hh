@@ -134,7 +134,7 @@ class OnePTwoCOutflowProblem
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     OnePTwoCOutflowProblem(TimeManager &timeManager)
@@ -146,7 +146,7 @@ public:
                           /*minp=*/0.8e5, /*maxp=*/2.5e5, /*nump=*/500);
         
         // set parameters of porous medium
-        perm_ = this->toTensor_(1e-10);
+        perm_ = this->toDimMatrix_(1e-10);
         porosity_ = 0.4;
         tortuosity_ = 0.28;
     }
@@ -261,7 +261,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     { return perm_; }
 
     /*!
@@ -324,7 +324,7 @@ private:
 
     const Scalar eps_;
 
-    Tensor perm_;
+    DimMatrix perm_;
     Scalar temperature_;
     Scalar porosity_;
     Scalar tortuosity_;

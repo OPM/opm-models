@@ -205,7 +205,7 @@ class LensProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
@@ -236,7 +236,7 @@ class LensProblem
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     /*!
@@ -270,8 +270,8 @@ public:
         outerMaterialParams_.setVgAlpha(0.0037);
         outerMaterialParams_.setVgN(4.7);
 
-        lensK_ = this->toTensor_(9.05e-12);
-        outerK_ = this->toTensor_(4.6e-10);
+        lensK_ = this->toDimMatrix_(9.05e-12);
+        outerK_ = this->toDimMatrix_(4.6e-10);
         
         this->gravity_ = 0;
         this->gravity_[1] = -9.81; // [m/s^2]
@@ -291,7 +291,7 @@ public:
      * \return Intrinsic permeability
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(globalPos))
@@ -529,8 +529,8 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
 
-    Tensor lensK_;
-    Tensor outerK_;
+    DimMatrix lensK_;
+    DimMatrix outerK_;
     MaterialLawParams lensMaterialParams_;
     MaterialLawParams outerMaterialParams_;
 

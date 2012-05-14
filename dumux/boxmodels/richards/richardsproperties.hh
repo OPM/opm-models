@@ -56,7 +56,6 @@ NEW_TYPE_TAG(BoxRichards, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature)
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of components in the system
-NEW_PROP_TAG(RichardsIndices); //!< Enumerations used by the Richards models
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
 NEW_PROP_TAG(MaterialLawParams); //!< The type of the parameter object for the material law

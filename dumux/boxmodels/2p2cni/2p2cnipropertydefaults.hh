@@ -76,8 +76,7 @@ SET_TYPE_PROP(BoxTwoPTwoCNI, FluxVariables, TwoPTwoCNIFluxVariables<TypeTag>);
 SET_TYPE_PROP(BoxTwoPTwoCNI, BoundaryRateVector, Dumux::TwoPTwoCNIBoundaryRateVector<TypeTag>);
 
 //! The indices required by the non-isothermal 2p2c model
-SET_TYPE_PROP(BoxTwoPTwoCNI, TwoPTwoCNIIndices, TwoPTwoCNIIndices<TypeTag, 0>);
-SET_TYPE_PROP(BoxTwoPTwoCNI, Indices, typename GET_PROP_TYPE(TypeTag, TwoPTwoCNIIndices));
+SET_TYPE_PROP(BoxTwoPTwoCNI, Indices, TwoPTwoCNIIndices<TypeTag, 0>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself

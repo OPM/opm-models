@@ -45,30 +45,25 @@ namespace Dumux
 template<class TypeTag>
 class MPNCLocalResidual : public BoxLocalResidual<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef BoxLocalResidual<TypeTag> ParentType;
-
-
-
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-
-        phase0NcpIdx = Indices::phase0NcpIdx
-    };
-
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
+    enum {
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
+
+        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
+        phase0NcpIdx = Indices::phase0NcpIdx
+    };
 
     typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
     typedef MPNCLocalResidualMass<TypeTag> MassResid;

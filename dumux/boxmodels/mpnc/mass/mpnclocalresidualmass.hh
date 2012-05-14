@@ -68,19 +68,19 @@ public:
      *
      * The result should be averaged over the volume.
      */
-    static void computePhaseStorage(ComponentVector &result,
+    static void computePhaseStorage(ComponentVector &compStorage,
                                     const VolumeVariables &volVars,
                                     int phaseIdx)
     {
         // compute storage term of all components within all phases
-        result = 0;
+        compStorage = 0;
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            result[compIdx] +=
+            compStorage[compIdx] +=
                 volVars.fluidState().saturation(phaseIdx)*
                 volVars.fluidState().molarity(phaseIdx, compIdx);
         }
 
-        result *= volVars.porosity();
+        compStorage *= volVars.porosity();
     }
 
     /*!
@@ -133,12 +133,12 @@ public:
         // approximate the total concentration of the phase at the
         // integration point by the arithmetic mean of the
         // concentration of the sub-control volumes
-        Scalar molarDensityAtIP;
-        molarDensityAtIP = volVarsI.fluidState().molarDensity(phaseIdx);
-        molarDensityAtIP += volVarsJ.fluidState().molarDensity(phaseIdx);
-        molarDensityAtIP /= 2;
+        Scalar molarDensity;
+        molarDensity = volVarsI.fluidState().molarDensity(phaseIdx);
+        molarDensity += volVarsJ.fluidState().molarDensity(phaseIdx);
+        molarDensity /= 2;
 
-        Diffusion::flux(flux, elemCtx, scvfIdx, timeIdx, phaseIdx, molarDensityAtIP);
+        Diffusion::flux(flux, elemCtx, scvfIdx, timeIdx, phaseIdx, molarDensity);
     }
 };
 
@@ -154,7 +154,7 @@ class MPNCLocalResidualMass
     typedef MPNCLocalResidualMassCommon<TypeTag> MassCommon;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

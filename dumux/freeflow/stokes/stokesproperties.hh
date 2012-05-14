@@ -50,12 +50,8 @@ NEW_TYPE_TAG(BoxStokes, INHERITS_FROM(BoxModel));
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 
-//NEW_PROP_TAG(Soil); //!< The type of the soil properties object
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(MassUpwindWeight); //!< The value of the upwind parameter for the mobility
-NEW_PROP_TAG(StokesIndices); //!< Enumerations for the Stokes models
 NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using a generic name
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);

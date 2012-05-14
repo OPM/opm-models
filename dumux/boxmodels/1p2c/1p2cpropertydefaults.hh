@@ -107,11 +107,7 @@ SET_TYPE_PROP(BoxOnePTwoC, VolumeVariables, OnePTwoCVolumeVariables<TypeTag>);
 //! define the FluxVariables
 SET_TYPE_PROP(BoxOnePTwoC, FluxVariables, OnePTwoCFluxVariables<TypeTag>);
 
-//! set default upwind weight to 1.0, i.e. fully upwind
-SET_SCALAR_PROP(BoxOnePTwoC, UpwindWeight, 1.0);
-
 //! Set the indices used by the 1p2c model
-SET_TYPE_PROP(BoxOnePTwoC, OnePTwoCIndices, Dumux::OnePTwoCIndices<0>);
 SET_TYPE_PROP(BoxOnePTwoC, Indices, Dumux::OnePTwoCIndices<0>);
 
 // disable the smooth upwinding method by default

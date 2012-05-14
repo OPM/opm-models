@@ -55,7 +55,7 @@ class MPNCRateVector
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };

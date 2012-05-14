@@ -211,7 +211,7 @@ class WaterAirProblem
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     /*!
@@ -232,8 +232,8 @@ public:
         layerBottom_ = 22.0;
 
         // intrinsic permeabilities
-        fineK_ = this->toTensor_(1e-13);
-        coarseK_ = this->toTensor_(1e-12);
+        fineK_ = this->toDimMatrix_(1e-13);
+        coarseK_ = this->toDimMatrix_(1e-12);
 
         // porosities
         finePorosity_ = 0.3;
@@ -278,7 +278,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -542,8 +542,8 @@ private:
     bool isFineMaterial_(const GlobalPosition &pos) const
     { return pos[dim-1] > layerBottom_; };
 
-    Tensor fineK_;
-    Tensor coarseK_;
+    DimMatrix fineK_;
+    DimMatrix coarseK_;
     Scalar layerBottom_;
 
     Scalar finePorosity_;

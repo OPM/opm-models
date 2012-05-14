@@ -49,7 +49,7 @@ class StokesNIVolumeVariables : public StokesVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, StokesNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { temperatureIdx = Indices::temperatureIdx };

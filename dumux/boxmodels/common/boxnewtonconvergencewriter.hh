@@ -63,7 +63,7 @@ public:
     BoxNewtonConvergenceWriter(NewtonController &ctl)
         : ctl_(ctl)
     {
-        timeStepIndex_ = 0;
+        timeStepIdx_ = 0;
         iteration_ = 0;
         vtkMultiWriter_ = 0;
     }
@@ -73,7 +73,7 @@ public:
 
     void beginTimestep()
     {
-        ++timeStepIndex_;
+        ++timeStepIdx_;
         iteration_ = 0;
     };
 
@@ -82,7 +82,7 @@ public:
         ++ iteration_;
         if (!vtkMultiWriter_)
             vtkMultiWriter_ = new VtkMultiWriter(ctl_.problem().gridView(), "convergence");
-        vtkMultiWriter_->beginWrite(timeStepIndex_ + iteration_ / 100.0);
+        vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
     };
 
     void writeFields(const SolutionVector &uLastIter,
@@ -100,7 +100,7 @@ public:
     };
 
 private:
-    int timeStepIndex_;
+    int timeStepIdx_;
     int iteration_;
     VtkMultiWriter *vtkMultiWriter_;
     NewtonController &ctl_;

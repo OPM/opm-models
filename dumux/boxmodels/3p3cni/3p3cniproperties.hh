@@ -49,7 +49,6 @@ NEW_TYPE_TAG(BoxThreePThreeCNI, INHERITS_FROM(BoxThreePThreeC, VtkEnergy));
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
-NEW_PROP_TAG(ThreePThreeCNIIndices); //!< Enumerations for the 3p3cni models
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 
 NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used

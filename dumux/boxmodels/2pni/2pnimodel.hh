@@ -101,7 +101,7 @@ template<class TypeTag>
 class TwoPNIModel : public TwoPModel<TypeTag>
 {
     typedef TwoPModel<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPNIIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
 public:
     /*!

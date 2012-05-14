@@ -78,7 +78,7 @@ class TwoPModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef BoxModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { numComponents = FluidSystem::numComponents };

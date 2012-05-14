@@ -106,9 +106,6 @@ SET_TYPE_PROP(BoxStokes, FluxVariables, StokesFluxVariables<TypeTag>);
 //! the BoundaryRateVector property
 SET_TYPE_PROP(BoxStokes, BoundaryRateVector, StokesBoundaryRateVector<TypeTag>);
 
-//! the upwind factor.
-SET_SCALAR_PROP(BoxStokes, MassUpwindWeight, 1.0);
-
 //! The fluid system to use by default
 SET_PROP(BoxStokes, FluidSystem)
 { private:
@@ -126,8 +123,7 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-SET_TYPE_PROP(BoxStokes, StokesIndices, StokesIndices<TypeTag>);
-SET_TYPE_PROP(BoxStokes, Indices, typename GET_PROP_TYPE(TypeTag, StokesIndices));
+SET_TYPE_PROP(BoxStokes, Indices, StokesIndices<TypeTag>);
 
 //! Choose the type of the employed fluid state.
 SET_PROP(BoxStokes, FluidState)

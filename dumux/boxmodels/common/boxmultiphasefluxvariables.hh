@@ -74,7 +74,7 @@ class BoxMultiPhaseFluxVariables
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
@@ -397,7 +397,7 @@ private:
         const auto &problem = elemCtx.problem();
 
         // calculate the intrinsic permeability
-        Tensor K;
+        DimMatrix K;
         problem.meanK(K,
                       problem.intrinsicPermeability(elemCtx,
                                                     insideScvIdx_,
@@ -473,7 +473,7 @@ private:
         const auto &fsInside = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
 
         // calculate the intrinsic permeability
-        const Tensor &K = problem.intrinsicPermeability(elemCtx,
+        const DimMatrix &K = problem.intrinsicPermeability(elemCtx,
                                                         insideScvIdx_,
                                                         timeIdx);
         

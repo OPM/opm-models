@@ -55,31 +55,17 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
     enum
     {
         conti0EqIdx = Indices::conti0EqIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
-
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-
-
 public:
-    /*!
-     * \brief Constructor. Sets the upwind weight.
-     */
-    TwoPLocalResidual()
-    {
-        // retrieve the upwind weight for the mass conservation equations. Use the value
-        // specified via the property system as default, and overwrite
-        // it by the run-time parameter from the Dune::ParameterTree
-        massUpwindWeight_ = GET_PARAM(TypeTag, Scalar, MassUpwindWeight);
-    };
-
     /*!
      * \brief Adds the amount all conservation quantities (e.g. phase
      *        mass) within a single fluid phase
@@ -88,7 +74,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void addPhaseStorage(EqVector &result,
+    void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
                          int scvIdx,
                          int timeIdx,
@@ -98,7 +84,7 @@ public:
         // point in time
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
-        result[conti0EqIdx + phaseIdx] +=
+        storage[conti0EqIdx + phaseIdx] +=
             volVars.porosity()
             * volVars.fluidState().saturation(phaseIdx)
             * volVars.fluidState().density(phaseIdx);
@@ -112,7 +98,7 @@ public:
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -122,7 +108,7 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            result[conti0EqIdx + phaseIdx] =
+            storage[conti0EqIdx + phaseIdx] =
                 volVars.porosity()
                 * volVars.fluidState().saturation(phaseIdx)
                 * volVars.fluidState().density(phaseIdx);
@@ -218,13 +204,13 @@ public:
      * \param localVertexIdx The index of the SCV
      *
      */
-    void computeSource(RateVector &values,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const
     {
         // retrieve the source term intrinsic to the problem
-        elemCtx.problem().source(values, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
     }
 
 
@@ -237,10 +223,6 @@ protected:
     {
         return static_cast<const Implementation *> (this);
     }
-
-private:
-    Scalar massUpwindWeight_;
-
 };
 
 }

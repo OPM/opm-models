@@ -76,8 +76,7 @@ SET_TYPE_PROP(BoxThreePThreeCNI, FluxVariables, ThreePThreeCNIFluxVariables<Type
 SET_TYPE_PROP(BoxThreePThreeCNI, BoundaryRateVector, ThreePThreeCNIBoundaryRateVector<TypeTag>);
 
 //! The indices required by the non-isothermal 3p3c model
-SET_TYPE_PROP(BoxThreePThreeCNI, ThreePThreeCNIIndices, ThreePThreeCNIIndices<TypeTag, 0>);
-SET_TYPE_PROP(BoxThreePThreeCNI, Indices, typename GET_PROP_TYPE(TypeTag, ThreePThreeCNIIndices));
+SET_TYPE_PROP(BoxThreePThreeCNI, Indices, ThreePThreeCNIIndices<TypeTag, 0>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself

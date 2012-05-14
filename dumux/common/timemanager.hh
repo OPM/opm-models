@@ -74,7 +74,7 @@ public:
             verbose &&
             Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
-        episodeIndex_ = 0;
+        episodeIdx_ = 0;
         episodeStartTime_ = 0;
 
         time_ = 0.0;
@@ -269,7 +269,7 @@ public:
                           Scalar len,
                           const std::string &description = "")
     {
-        ++ episodeIndex_;
+        ++ episodeIdx_;
         episodeStartTime_ = tStart;
         episodeLength_ = len;
         episodeDescription_ = description;
@@ -283,7 +283,7 @@ public:
      */
     void startNextEpisode(Scalar len = 1e100)
     {
-        ++ episodeIndex_;
+        ++ episodeIdx_;
         episodeStartTime_ = time_;
         episodeLength_ = len;
     }
@@ -294,7 +294,7 @@ public:
      * The first episode has the index 0.
      */
     int episodeIndex() const
-    { return episodeIndex_; }
+    { return episodeIdx_; }
 
     /*!
      * \brief Returns the absolute time when the current episode
@@ -429,7 +429,7 @@ public:
     void serialize(Restarter &res)
     {
         res.serializeSectionBegin("TimeManager");
-        res.serializeStream() << episodeIndex_ << " "
+        res.serializeStream() << episodeIdx_ << " "
                               << episodeStartTime_ << " "
                               << episodeLength_ << " "
                               << time_ << " "
@@ -448,7 +448,7 @@ public:
     void deserialize(Restarter &res)
     {
         res.deserializeSectionBegin("TimeManager");
-        res.deserializeStream() >> episodeIndex_
+        res.deserializeStream() >> episodeIdx_
                                 >> episodeStartTime_
                                 >> episodeLength_
                                 >> time_
@@ -462,7 +462,7 @@ public:
 
 private:
     Problem *problem_;
-    int episodeIndex_;
+    int episodeIdx_;
     Scalar episodeStartTime_;
     Scalar episodeLength_;
     std::string episodeDescription_;

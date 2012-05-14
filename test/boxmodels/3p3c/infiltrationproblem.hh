@@ -151,7 +151,7 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // equation indices
         conti0EqIdx = Indices::conti0EqIdx,
@@ -176,7 +176,7 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     /*!
@@ -199,8 +199,8 @@ public:
                           /*nPress=*/200);
 
         // intrinsic permeabilities
-        fineK_ = this->toTensor_(1e-11);
-        coarseK_ = this->toTensor_(1e-11);
+        fineK_ = this->toDimMatrix_(1e-11);
+        coarseK_ = this->toDimMatrix_(1e-11);
 
         // porosities
         porosity_ = 0.40;
@@ -248,7 +248,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isFineMaterial_(pos))
@@ -490,8 +490,8 @@ private:
             7.0 <= pos[1] && pos[1] <= 7.50;
     };
 
-    Tensor fineK_;
-    Tensor coarseK_;
+    DimMatrix fineK_;
+    DimMatrix coarseK_;
 
     Scalar porosity_;
 

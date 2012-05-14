@@ -79,7 +79,6 @@ SET_TYPE_PROP(BoxTwoPNI,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! The indices required by the non-isothermal two-phase model
-SET_TYPE_PROP(BoxTwoPNI, TwoPNIIndices, TwoPNIIndices<0>);
 SET_TYPE_PROP(BoxTwoPNI, Indices, TwoPNIIndices<0>);
 
 //! The boundary rate vector for the 2pni model.

@@ -71,7 +71,7 @@ SET_INT_PROP(BoxMPNC, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases)
 /*!
  * \brief Set the property for the number of equations and primary variables.
  */
-SET_INT_PROP(BoxMPNC, NumEq, GET_PROP_TYPE(TypeTag, MPNCIndices)::NumPrimaryVars);
+SET_INT_PROP(BoxMPNC, NumEq,GET_PROP_TYPE(TypeTag, Indices)::NumPrimaryVars);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -144,7 +144,6 @@ SET_TYPE_PROP(BoxMPNC, FluxVariables, MPNCFluxVariables<TypeTag>);
 SET_INT_PROP(BoxMPNC, NewtonChoppedIterations, 2);
 
 //! The indices required by the compositional twophase model
-SET_TYPE_PROP(BoxMPNC, MPNCIndices, MPNCIndices<TypeTag, 0>);
 SET_TYPE_PROP(BoxMPNC, Indices, MPNCIndices<TypeTag, 0>);
 }
 }

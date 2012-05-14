@@ -83,11 +83,11 @@ protected:
      * The result should be averaged over the volume (e.g. phase mass
      * inside a sub control volume divided by the volume)
      *
-     *  \param result The mass of the component within the sub-control volume
+     *  \param storage The mass of the component within the sub-control volume
      *  \param scvIdx The SCV (sub-control-volume) index
      *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -97,12 +97,12 @@ protected:
 
         // mass storage
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            result[conti0EqIdx + compIdx] = 
+            storage[conti0EqIdx + compIdx] = 
                 fs.molarity(phaseIdx, compIdx);
 
         // momentum balance
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            result[momentum0EqIdx + axisIdx] =
+            storage[momentum0EqIdx + axisIdx] =
                 fs.density(phaseIdx) * volVars.velocity()[axisIdx];
     }
 
@@ -149,7 +149,7 @@ protected:
         normal /= faceArea;
 
         // mass fluxes
-        Scalar vTimesN = fluxVars.velocityAtIP() * normal;
+        Scalar vTimesN = fluxVars.velocity() * normal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             flux[conti0EqIdx + compIdx] = 
                 up.fluidState().molarity(phaseIdx, compIdx)
@@ -161,8 +161,8 @@ protected:
         {
             DimVector tmp;
             for (int j = 0; j < dimWorld; ++j) {
-                tmp[j] = fluxVars.velocityGradAtIP(/*velocityComp=*/axisIdx)[j];
-                tmp[j] += fluxVars.velocityGradAtIP(/*velocityComp=*/j)[axisIdx];
+                tmp[j] = fluxVars.velocityGrad(/*velocityComp=*/axisIdx)[j];
+                tmp[j] += fluxVars.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
             
             flux[momentum0EqIdx + axisIdx] = - mu * (tmp * normal);
@@ -196,7 +196,7 @@ protected:
      * \param q The source/sink in the sub control volume for each component
      * \param localVertexIdx The local index of the sub-control volume
      */
-    void computeSource(RateVector &q,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const
@@ -205,7 +205,7 @@ protected:
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
-        elemCtx.problem().source(q, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
 
         const auto &gravity = volVars.gravity();
         const auto &gradp = volVars.pressureGradient();
@@ -217,7 +217,7 @@ protected:
 
         // deal with the pressure and volume terms
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            q[momentum0EqIdx + axisIdx] += gradp[axisIdx] - density*gravity[axisIdx];
+            source[momentum0EqIdx + axisIdx] += gradp[axisIdx] - density*gravity[axisIdx];
     }
 
 private:

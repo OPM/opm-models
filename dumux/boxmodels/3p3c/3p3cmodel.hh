@@ -110,7 +110,7 @@ class ThreePThreeCModel: public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum {

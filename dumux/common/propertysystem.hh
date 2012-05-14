@@ -843,7 +843,7 @@ public:
 template <class EffectiveTypeTag,
           class PropertyTag,
           class RealTypeTag=EffectiveTypeTag,
-          int tagIndex = propertyTagIndex<RealTypeTag, EffectiveTypeTag, PropertyTag>::value >
+          int tagIdx = propertyTagIndex<RealTypeTag, EffectiveTypeTag, PropertyTag>::value >
 struct GetProperty
 {
 };

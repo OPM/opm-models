@@ -79,11 +79,8 @@ SET_TYPE_PROP(BoxStokesNI, FluxVariables, StokesNIFluxVariables<TypeTag>);
 
 // the indices for the StokesNI model
 SET_TYPE_PROP(BoxStokesNI,
-              StokesNIIndices,
-              StokesNIIndices<TypeTag>);
-SET_TYPE_PROP(BoxStokesNI,
               Indices,
-              typename GET_PROP_TYPE(TypeTag, StokesNIIndices));
+              StokesNIIndices<TypeTag>);
 }
 }
 #endif

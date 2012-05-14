@@ -100,7 +100,7 @@ class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         wPhaseIdx = Indices::wPhaseIdx
     };

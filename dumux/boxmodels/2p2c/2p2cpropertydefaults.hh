@@ -141,8 +141,7 @@ SET_TYPE_PROP(BoxTwoPTwoC, VolumeVariables, TwoPTwoCVolumeVariables<TypeTag>);
 SET_TYPE_PROP(BoxTwoPTwoC, FluxVariables, TwoPTwoCFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal 2p2c model
-SET_TYPE_PROP(BoxTwoPTwoC, TwoPTwoCIndices, TwoPTwoCIndices<TypeTag, /*PVIdx=*/0>);
-SET_TYPE_PROP(BoxTwoPTwoC, Indices, typename GET_PROP_TYPE(TypeTag, TwoPTwoCIndices));
+SET_TYPE_PROP(BoxTwoPTwoC, Indices, TwoPTwoCIndices<TypeTag, /*PVIdx=*/0>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxTwoPTwoC, EnableSmoothUpwinding, false);

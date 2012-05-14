@@ -55,7 +55,7 @@ class MPNCLocalResidualEnergy
     typedef typename Dune::FieldVector<Scalar, numComponents>  ComponentVector;
 
 public:
-    static void computeStorage(EqVector &result,
+    static void computeStorage(EqVector &storage,
                                const VolumeVariables &volVars)
     {
         // do nothing, we're isothermal!
@@ -69,7 +69,7 @@ public:
         // do nothing, we're isothermal!
     }
 
-    static void phaseEnthalpyFlux(EqVector &result,
+    static void phaseEnthalpyFlux(EqVector &flux,
                                   const EqVector &compMolFlux,
                                   const ElementContext &elemCtx,
                                   int scvfIdx,
@@ -119,7 +119,7 @@ class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { dim = GridView::dimension };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -186,7 +186,7 @@ public:
                               timeIdx);
     }
 
-    static void computePhaseEnthalpyFlux(EqVector &result,
+    static void computePhaseEnthalpyFlux(EqVector &flux,
                                          const ElementContext &elemCtx,
                                          int scvfIdx,
                                          int timeIdx,
@@ -208,7 +208,7 @@ public:
             * (up.fluidState().density(phaseIdx) * fluxVars.upstreamWeight(phaseIdx)
                + dn.fluidState().density(phaseIdx) * fluxVars.downstreamWeight(phaseIdx));
 
-        result[energyEqIdx] +=
+        flux[energyEqIdx] +=
             massFlux
             * (fluxVars.upstreamWeight(phaseIdx)*
                up.fluidState().enthalpy(phaseIdx)
@@ -217,7 +217,7 @@ public:
                dn.fluidState().enthalpy(phaseIdx));
     }
 
-    static void computeHeatConduction(EqVector &result,
+    static void computeHeatConduction(EqVector &flux,
                                       const ElementContext &elemCtx,
                                       int scvfIdx,
                                       int timeIdx)
@@ -225,19 +225,19 @@ public:
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux
-        result[energyEqIdx] +=
+        flux[energyEqIdx] +=
             - fluxVars.energyVars().temperatureGradNormal()
             * fluxVars.energyVars().heatConductivity();
     }
 
 
 
-    static void computeSource(EqVector &result,
+    static void computeSource(EqVector &source,
                               const ElementContext &elemCtx,
                               int scvIdx,
                               int timeIdx)
     {
-        result[energyEqIdx] = 0.0;
+        source[energyEqIdx] = 0.0;
     }
 };
 } // namespace Dumux

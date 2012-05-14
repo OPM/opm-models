@@ -94,7 +94,6 @@ SET_TYPE_PROP(BoxRichards, NewtonController, RichardsNewtonController<TypeTag>);
 SET_BOOL_PROP(BoxRichards, EnableSmoothUpwinding, false);
 
 //! The class with all index definitions for the model
-SET_TYPE_PROP(BoxRichards, RichardsIndices, Dumux::RichardsIndices);
 SET_TYPE_PROP(BoxRichards, Indices, Dumux::RichardsIndices);
 
 /*!

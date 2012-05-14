@@ -42,7 +42,7 @@ namespace Dumux {
 template <class TypeTag>
 class MpNcNewtonChop
 {
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
@@ -126,7 +126,7 @@ class MPNCNewtonController : public BoxNewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     enum {

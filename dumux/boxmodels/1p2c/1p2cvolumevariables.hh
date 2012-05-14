@@ -54,7 +54,7 @@ class OnePTwoCVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         pressureIdx = Indices::pressureIdx,
         x1Idx = Indices::x1Idx

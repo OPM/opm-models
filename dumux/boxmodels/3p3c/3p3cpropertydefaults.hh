@@ -142,8 +142,7 @@ SET_TYPE_PROP(BoxThreePThreeC, VolumeVariables, ThreePThreeCVolumeVariables<Type
 SET_TYPE_PROP(BoxThreePThreeC, FluxVariables, ThreePThreeCFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal 3p3c model
-SET_TYPE_PROP(BoxThreePThreeC, ThreePThreeCIndices, ThreePThreeCIndices<TypeTag, /*PVOffset=*/0>);
-SET_TYPE_PROP(BoxThreePThreeC, Indices, typename GET_PROP_TYPE(TypeTag, ThreePThreeCIndices));
+SET_TYPE_PROP(BoxThreePThreeC, Indices, ThreePThreeCIndices<TypeTag, /*PVOffset=*/0>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxThreePThreeC, EnableSmoothUpwinding, false);

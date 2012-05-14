@@ -57,7 +57,7 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,

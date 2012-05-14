@@ -58,7 +58,7 @@ class RichardsRateVector
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { contiEqIdx = Indices::contiEqIdx };
 
     enum { wPhaseIdx = Indices::wPhaseIdx };

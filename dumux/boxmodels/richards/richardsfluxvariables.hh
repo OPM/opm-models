@@ -45,7 +45,7 @@ namespace Dumux
 template <class TypeTag>
 class RichardsFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 public:
     /*!
      * \brief Return true iff a fluid phase ought is used by the model

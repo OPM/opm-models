@@ -69,7 +69,7 @@ public:
      * \param usePrevSol Calculate the storage term of the previous solution
      *                   instead of the model's current solution.
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -77,7 +77,7 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
-        result[contiEqIdx] =
+        storage[contiEqIdx] =
             volVars.fluidState().density(wPhaseIdx)
             * volVars.fluidState().saturation(wPhaseIdx)
             * volVars.porosity();
@@ -122,15 +122,15 @@ public:
      * \param scvIdx The sub control volume index inside the current
      *               element
      */
-    void computeSource(RateVector &q,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx) const
     {
-        elemCtx.problem().source(q,
-                                  elemCtx,
-                                  scvIdx,
-                                  timeIdx);
+        elemCtx.problem().source(source,
+                                 elemCtx,
+                                 scvIdx,
+                                 timeIdx);
     }
 };
 

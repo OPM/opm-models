@@ -158,7 +158,7 @@ private:
             const GlobalPosition &posI = elemCtx.element().geometry().corner(this->insideIdx());
             const GlobalPosition &posJ = elemCtx.element().geometry().corner(this->outsideIdx());
 
-            // tmp = pos_i - pos_j
+            // tmp = posI - posJ
             DimVector tmp;
             for (int i=0; i < DimVector::dimension; ++i)
                 tmp[i] = posI[i] - posJ[i];

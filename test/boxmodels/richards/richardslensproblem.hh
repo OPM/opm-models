@@ -158,7 +158,7 @@ class RichardsLensProblem
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RichardsIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // copy some indices for convenience
         pwIdx = Indices::pwIdx,
@@ -181,7 +181,7 @@ class RichardsLensProblem
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> Tensor;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     /*!
@@ -218,8 +218,8 @@ public:
 //        lensMaterialParams_.setMaxPC(0);
 //        outerMaterialParams_.setMaxPC(0);
 
-        lensK_ = this->toTensor_(1e-12);
-        outerK_ = this->toTensor_(5e-12);
+        lensK_ = this->toDimMatrix_(1e-12);
+        outerK_ = this->toDimMatrix_(5e-12);
     }
 
     /*!
@@ -253,7 +253,7 @@ public:
      * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
-    const Tensor &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         if (isInLens_(pos))
@@ -420,8 +420,8 @@ private:
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
 
-    Tensor lensK_;
-    Tensor outerK_;
+    DimMatrix lensK_;
+    DimMatrix outerK_;
     MaterialLawParams lensMaterialParams_;
     MaterialLawParams outerMaterialParams_;
 

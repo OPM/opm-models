@@ -63,7 +63,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
         // indices of the equations
@@ -80,7 +80,7 @@ public:
      *        \param scvIdx The index of the considered face of the sub control volume
      *        \param usePrevSol Evaluate function with solution of current or previous time step
      */
-    void computeStorage(EqVector &result,
+    void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
                         int scvIdx,
                         int timeIdx) const
@@ -90,15 +90,15 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
-        result = 0;
+        storage = 0;
 
         // storage term of continuity equation- molefractions
         //careful: molarDensity changes with moleFrac!
-        result[contiEqIdx] +=
+        storage[contiEqIdx] +=
             fs.molarDensity(/*phaseIdx=*/0)
             * volVars.porosity();
         // storage term of the transport equation - molefractions
-        result[transEqIdx] +=
+        storage[transEqIdx] +=
             fs.molarDensity(/*phaseIdx=*/0)
             * fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1)
             * volVars.porosity();
@@ -197,8 +197,8 @@ public:
 #if 0
         // dispersive flux of second component - molefraction
         Vector normalDisp;
-        fluxVars.dispersionTensor().mv(normal, normalDisp);
-        tmp -= fluxVars.molarDensityAtIP()*
+        fluxVars.dispersionDimMatrix().mv(normal, normalDisp);
+        tmp -= fluxVars.molarDensity()*
             (normalDisp * fluxVars.moleFracGrad());
 #endif
         
@@ -211,15 +211,15 @@ public:
      *        \param localVertexIdx The index of the vertex of the sub control volume
      *
      */
-    void computeSource(RateVector &q,
+    void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
                        int scvIdx, 
                        int timeIdx) const
     {
-        elemCtx.problem().source(q,
-                                  elemCtx,
-                                  scvIdx,
-                                  timeIdx);
+        elemCtx.problem().source(source,
+                                 elemCtx,
+                                 scvIdx,
+                                 timeIdx);
     }
 
 protected:

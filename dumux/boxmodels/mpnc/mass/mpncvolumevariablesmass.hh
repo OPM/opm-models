@@ -46,7 +46,7 @@ class MPNCVolumeVariablesMass
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, MPNCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver) CompositionFromFugacitiesSolver;
 
@@ -89,15 +89,15 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar x_ij = 1.0/numComponents;
+                Scalar xIJ = 1.0/numComponents;
                 if (hint)
                     // use the hint for the initial mole fraction!
-                    x_ij = hint->fluidState().moleFraction(phaseIdx, compIdx);
+                    xIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
                 // set initial guess of the component's mole fraction
                 fs.setMoleFraction(phaseIdx,
                                       compIdx,
-                                      x_ij);
+                                      xIJ);
 
             }
 

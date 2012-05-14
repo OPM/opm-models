@@ -84,7 +84,7 @@ template<class TypeTag >
 class OnePTwoCBoxModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, OnePTwoCIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:

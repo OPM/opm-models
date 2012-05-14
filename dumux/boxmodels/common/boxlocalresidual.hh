@@ -298,7 +298,7 @@ protected:
 
         const Element &elem = elemCtx.element();
         Dune::GeometryType geoType = elem.geometry().type();
-        const ReferenceElement &refElem = ReferenceElements::general(geoType);
+        const ReferenceElement &refElement = ReferenceElements::general(geoType);
 
         BoundaryContext boundaryCtx(elemCtx);
         const GridView &gridView = elemCtx.gridView();
@@ -313,7 +313,7 @@ protected:
             // Assemble the boundary for all vertices of the current
             // face
             int faceIdx = isIt->indexInInside();
-            int numFaceVerts = refElem.size(faceIdx, 1, dim);
+            int numFaceVerts = refElement.size(faceIdx, 1, dim);
             for (int faceVertIdx = 0;
                  faceVertIdx < numFaceVerts;
                  ++faceVertIdx)

@@ -55,7 +55,7 @@ class OnePPrimaryVariables
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
 
-    typedef typename GET_PROP_TYPE(TypeTag, OnePIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
     enum { pressureIdx = Indices::pressureIdx };

@@ -55,8 +55,8 @@ class BoxMultiPhaseProblem : public BoxPorousProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     
 public:
-    BoxMultiPhaseProblem(TimeManager &timeManager, const GridView &gv)
-        : ParentType(timeManager, gv)
+    BoxMultiPhaseProblem(TimeManager &timeManager, const GridView &gridView)
+        : ParentType(timeManager, gridView)
     { }
 
     template <class Context>

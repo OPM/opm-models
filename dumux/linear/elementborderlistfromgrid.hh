@@ -56,17 +56,17 @@ class ElementBorderListFromGrid : public Dune::CommDataHandleIF<ElementBorderLis
     typedef std::list<BorderIndex> BorderList;
 
 public:
-    ElementBorderListFromGrid(const GridView &gv,
+    ElementBorderListFromGrid(const GridView &gridView,
                              const ElementMapper &map)
-        : gv_(gv), map_(map)
+        : gridView_(gridView_), map_(map)
     {
         forwardComm_ = true;
-        gv.communicate(*this,
+        gridView.communicate(*this,
                        Dune::InteriorBorder_All_Interface,
                        Dune::ForwardCommunication);
 
         forwardComm_ = false;
-        gv.communicate(*this,
+        gridView.communicate(*this,
                        Dune::InteriorBorder_All_Interface,
                        Dune::BackwardCommunication);
     }
@@ -85,7 +85,7 @@ public:
     template<class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
-        buff.write(gv_.comm().rank());
+        buff.write(gridView_.comm().rank());
         buff.write(map_.map(e));
     }
 
@@ -125,7 +125,7 @@ public:
     { return domesticBorderList_; }
 
 private:
-    const GridView gv_;
+    const GridView gridView_;
     const ElementMapper &map_;
     bool forwardComm_;
     BorderList foreignBorderList_;
