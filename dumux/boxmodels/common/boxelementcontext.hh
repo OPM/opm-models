@@ -121,6 +121,7 @@ public:
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateScvVars(timeIdx);
+        scvIdxSaved_ = -1;
     };
 
     void updateScvVars(int timeIdx)
