@@ -159,6 +159,9 @@ protected:
         Scalar mu = up.fluidState().viscosity(phaseIdx);
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
         {
+            // deal with the surface forces, i.e. the $\div[ \mu
+            // (\grad[v] + \grad[v^T])]$ term on the right hand side
+            // of the equation
             DimVector tmp;
             for (int j = 0; j < dimWorld; ++j) {
                 tmp[j] = fluxVars.velocityGrad(/*velocityComp=*/axisIdx)[j];
@@ -166,6 +169,15 @@ protected:
             }
             
             flux[momentum0EqIdx + axisIdx] = - mu * (tmp * normal);
+            
+            // this adds the convective momentum flux term $rho v
+            // div[v]$ to the Stokes equation, transforming it to
+            // Navier-Stokes.
+            if (enableNavierTerm_()) {
+                flux[momentum0EqIdx + axisIdx] +=
+                    up.velocity()[axisIdx]
+                    * (up.velocity() * normal);
+            }
         }
         
         flux *= faceArea;
@@ -225,6 +237,9 @@ private:
     { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
+
+    static bool enableNavierTerm_()
+    { return GET_PARAM(TypeTag, bool, EnableNavierTerm); }
 };
 
 }

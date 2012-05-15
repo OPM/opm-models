@@ -136,6 +136,9 @@ public:
 
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
 SET_INT_PROP(BoxStokes, StokesPhaseIndex, 0);
+
+//!< Disable the inertial term by default
+SET_BOOL_PROP(BoxStokes, EnableNavierTerm, false);
 }
 
 }

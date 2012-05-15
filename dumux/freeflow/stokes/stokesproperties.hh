@@ -56,10 +56,9 @@ NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using 
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);
 NEW_PROP_TAG(FluidState);
-
 NEW_PROP_TAG(StokesPhaseIndex); //!< The index of the considered fluid phase
-
 NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using the stokes model
+NEW_PROP_TAG(EnableNavierTerm); //!< Specify whether the model should feature an inertial term or not (default: false)
 }
 }
 
