@@ -63,7 +63,7 @@ How do I get changes in?
 ========================
 
 If you want to only occasionally contribute a patch, you may create a
-merge request [2, 4] on gitorious. After you've acquired a track
+merge request [3, 4] on gitorious. After you've acquired a track
 record, we will offer you full push rights.
 
 What is the eWoms release model?
@@ -100,5 +100,6 @@ Links
 
 [0] http://www.dumux.org
 [1] http://git-scm.com
-[2] http://blog.gitorious.org/2009/07/15/new-merge-request-functionality/
-[3] https://gitorious.org/dumux-ewoms/dumux-ewoms/merge_requests
+[2] http://subversion.apache.org
+[3] http://blog.gitorious.org/2009/07/15/new-merge-request-functionality/
+[4] https://gitorious.org/dumux-ewoms/dumux-ewoms/merge_requests

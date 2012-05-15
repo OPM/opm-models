@@ -29,15 +29,18 @@ LICENSE
 
 eWoms is licensed under the terms and conditions of the GNU General
 Public License (GPL) version 2 or - at your option - any later
-version. The GPL can be read online [2], or in the LICENSE file
-provided in the topmost directory of the eWoms source code tree.
+version. At this we would like explicitly state the fact that this
+license also includes version three [3] of the GPL. The GPL can be
+read online [2, 3], or in the LICENSE file provided in the topmost
+directory of the eWoms source code tree.
 
 Please note that eWoms' license, unlike DUNE's, does _NOT_ feature a
 template exception from the GNU General Public License. This means
 that you must publish any source code under a compatible license which
 uses any of the eWoms header files if you want to redistribute your
-program to third parties. If this is unacceptable to you, please
-contact us [3, 4] for a commercial license.
+program to third parties. (Note that the GPL only applies to code
+which you redistribute. If you don't pass the modified code, the
+modifications don't need to be covered by the GPL.)
 
 Links
 =====
@@ -45,5 +48,4 @@ Links
 [0] https://gitorious.org/ewoms
 [1] http://dumux.org
 [2] http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-[3] Bernd Flemisch <bernd@iws.uni-stuttgart.de>
-[4] http://www.hydrosys.uni-stuttgart.de/index.en.php
+[3] http://www.gnu.org/licenses/gpl-3.0.html

@@ -211,7 +211,7 @@ AC_DEFUN([EWOMS_GET_CODENAME],[
   # retrieve the module codename
   m4_pushdef([__EWOMS_MODULE_NAME], [m4_toupper( m4_translit($1, [-], [_]))])
   __EWOMS_MODULE_NAME[]_CODENAME=["$(grep 'Codename:' $MODULE_ROOT/dune.module | sed -e 's/^Codename: *//;s/ *$//')"] 2>/dev/null
-  AC_DEFINE_UNQUOTED(__EWOMS_MODULE_NAME[]_CODENAME, ["$__EWOMS_MODULE_NAME[]_CODENAME"], [The codename of ${MODULE_NAME}])
+  AC_DEFINE_UNQUOTED(__EWOMS_MODULE_NAME[]_CODENAME, ["$__EWOMS_MODULE_NAME[]_CODENAME"], [The codename of $1])
 ])
 
 # EWOMS_CHECK_MODULES(NAME, HEADER, SYMBOL)

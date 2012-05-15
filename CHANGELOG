@@ -45,6 +45,23 @@ shared infrastructure that got altered:
   makes them more readable and improves test coverage. Since problems
   can be specified independent of the formulation, supporting multiple
   formulations does not really make sense anymore.
+- The boundary conditions are now weakly imposed for all fully
+  implicit models. For this reason the problem's methods
+  boundaryTypes(), dirichlet(), and neumann() are superseded by the
+  method boundary(). This method gets an object of the new
+  BoundaryRateVector class, which can be used to specify fluxes for a
+  given boundary segment. It also provides methods to specify in-flow,
+  out-flow and free-flow boundary conditions called setInFlow(),
+  setOutFlow() and setFreeFlow() given a fluid state for the boundary
+  segment.
+- As a consequence of the previous item, Dirichlet boundary conditions
+  are now not implemented as constraint degrees of freedom anymore. If
+  the problem requires constraints, the "EnableConstraints" property
+  needs to be set to "true" and the problem needs to overload the
+  constraints() method. In contrast to the previous implementation,
+  eWoms now also supports constraint degrees of freedom in the
+  interior of the domain. ("Dirichlet" conditions previously where
+  only possible at finite volumes at the grid boundary.)
 
 Notable Differences Between DuMuX 2.0 and DuMuX 2.1
 ===================================================
