@@ -39,7 +39,7 @@
 #if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2, 2, 0)
 // dune 2.2
 #include <dune/geometry/referenceelements.hh>
-#include <dune/geometry/geometrytype.hh>
+#include <dune/geometry/type.hh>
 #else
 // dune 2.1
 #include <dune/grid/common/genericreferenceelements.hh>

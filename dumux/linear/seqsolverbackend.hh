@@ -417,7 +417,7 @@ public:
     Vector bTmp(b);
 
     const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
-    const int precondIter = GET_PARAM(TypeTag, int, PreconditionerIterations);
+    //const int precondIter = GET_PARAM(TypeTag, int, PreconditionerIterations);
 
     Preconditioner precond(A, relaxation);
 
