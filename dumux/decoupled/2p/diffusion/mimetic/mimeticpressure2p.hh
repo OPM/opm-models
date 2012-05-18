@@ -391,8 +391,8 @@ void MimeticPressure2P<TypeTag>::storeVelocity()
 
         CellData& cellData = problem_.variables().cellData(globalIdx);
 
-        IntersectionIterator isIt = problem_.gridView().template ibegin(*eIt);
-        const IntersectionIterator &isItEnd = problem_.gridView().template iend(*eIt);
+        IntersectionIterator isIt = problem_.gridView().ibegin(*eIt);
+        const IntersectionIterator &isItEnd = problem_.gridView().iend(*eIt);
         for (; isIt != isItEnd; ++isIt)
         {
             int idxInInside = isIt->indexInInside();

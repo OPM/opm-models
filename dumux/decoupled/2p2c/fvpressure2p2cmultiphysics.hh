@@ -234,8 +234,8 @@ void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
 
         /*****  flux term ***********/
         // iterate over all faces of the cell
-        IntersectionIterator isItEnd = problem().gridView().template iend(*eIt);
-        for (IntersectionIterator isIt = problem().gridView().template ibegin(*eIt); isIt != isItEnd; ++isIt)
+        IntersectionIterator isItEnd = problem().gridView().iend(*eIt);
+        for (IntersectionIterator isIt = problem().gridView().ibegin(*eIt); isIt != isItEnd; ++isIt)
         {
             /************* handle interior face *****************/
             if (isIt->neighbor())

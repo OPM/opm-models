@@ -94,7 +94,7 @@ protected:
 public:
 
     // Calculate the update vector.
-    void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet);
+    void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet=false);
 
     /*! \brief Function which calculates the flux update
      *
@@ -218,7 +218,7 @@ private:
  *  employing a CFL condition.
  */
 template<class TypeTag>
-void FVTransport<TypeTag>::update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet = false)
+void FVTransport<TypeTag>::update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet)
 {
     if (!impet)
     {

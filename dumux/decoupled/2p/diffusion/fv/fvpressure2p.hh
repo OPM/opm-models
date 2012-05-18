@@ -669,9 +669,7 @@ void FVPressure2P<TypeTag>::getFlux(EntryType& entry, const Intersection& inters
     //calculate right hand side
     entry[rhs] = (lambdaW * density_[wPhaseIdx] + lambdaNW * density_[nPhaseIdx]) * (permeability * gravity_) * faceArea;
 
-    switch (pressureType_)
-    {
-    case pw:
+    if (pressureType_ == pw)
     {
         // calculate capillary pressure gradient
         Dune::FieldVector<Scalar, dim> pCGradient = unitOuterNormal;
@@ -679,9 +677,8 @@ void FVPressure2P<TypeTag>::getFlux(EntryType& entry, const Intersection& inters
 
         //add capillary pressure term to right hand side
         entry[rhs] += 0.5 * (lambdaNWI + lambdaNWJ) * (permeability * pCGradient) * faceArea;
-        break;
     }
-    case pn:
+    else if (pressureType_ == pn)
     {
         // calculate capillary pressure gradient
         Dune::FieldVector<Scalar, dim> pCGradient = unitOuterNormal;
@@ -689,8 +686,6 @@ void FVPressure2P<TypeTag>::getFlux(EntryType& entry, const Intersection& inters
 
         //add capillary pressure term to right hand side
         entry[rhs] -= 0.5 * (lambdaWI + lambdaWJ) * (permeability * pCGradient) * faceArea;
-        break;
-    }
     }
 
     return;
@@ -794,20 +789,15 @@ const Intersection& intersection, const CellData& cellData, const bool first)
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
         Scalar pressNW = 0;
-        switch (pressureType_)
-        {
-        case pw:
+        if (pressureType_ == pw)
         {
             pressW = pressBound;
             pressNW = pressBound + pcBound;
-            break;
         }
-        case pn:
+        else if (pressureType_ == pn)
         {
             pressW = pressBound - pcBound;
             pressNW = pressBound;
-            break;
-        }
         }
 
         Scalar densityWBound = density_[wPhaseIdx];
@@ -914,9 +904,7 @@ const Intersection& intersection, const CellData& cellData, const bool first)
         entry[rhs] -= (lambdaW * density_[wPhaseIdx] + lambdaNW * density_[nPhaseIdx]) * (permeability * gravity_)
                 * faceArea;
 
-        switch (pressureType_)
-        {
-        case pw:
+        if (pressureType_ == pw)
         {
             // calculate capillary pressure gradient
             Dune::FieldVector<Scalar, dim> pCGradient = unitOuterNormal;
@@ -924,9 +912,8 @@ const Intersection& intersection, const CellData& cellData, const bool first)
 
             //add capillary pressure term to right hand side
             entry[rhs] -= 0.5 * (lambdaNWI + lambdaNWBound) * (permeability * pCGradient) * faceArea;
-            break;
         }
-        case pn:
+        else if (pressureType_ == pn)
         {
             // calculate capillary pressure gradient
             Dune::FieldVector<Scalar, dim> pCGradient = unitOuterNormal;
@@ -934,8 +921,6 @@ const Intersection& intersection, const CellData& cellData, const bool first)
 
             //add capillary pressure term to right hand side
             entry[rhs] += 0.5 * (lambdaWI + lambdaWBound) * (permeability * pCGradient) * faceArea;
-            break;
-        }
         }
     }
     //set neumann boundary condition
@@ -994,20 +979,17 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
         Scalar pressNW = 0;
-        switch (pressureType_)
-        {
-        case pw:
+        if (pressureType_ == pw)
         {
             pressW = cellData.pressure(wPhaseIdx);
             pressNW = pressW + pc;
             break;
         }
-        case pn:
+        else if (pressureType_ == pn)
         {
             pressNW = cellData.pressure(nPhaseIdx);
             pressW = pressNW - pc;
             break;
-        }
         }
 
         if (compressibility_)

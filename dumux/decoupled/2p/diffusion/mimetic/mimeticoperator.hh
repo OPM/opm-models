@@ -31,9 +31,16 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 #include<dune/common/exceptions.hh>
-#include<dune/common/geometrytype.hh>
 #include<dune/grid/common/grid.hh>
 #include<dune/grid/common/mcmgmapper.hh>
+#include<dune/common/version.hh>
+#if DUNE_VERSION_NEWER_REV(DUNE_COMMON,2,2,0)
+// dune 2.2
+#include<dune/geometry/type.hh>
+#else
+// dune 2.1
+#include<dune/common/geometrytype.hh>
+#endif
 
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
