@@ -26,24 +26,6 @@
 #ifndef DUMUX_VALGRIND_HH
 #define DUMUX_VALGRIND_HH
 
-#if __GNUC__ < 4 || (__GNUC__ == 4  && __GNUC_MINOR__ < 5)
-// do not do static_asserts for gcc < 4.5 (semantics changed, so old
-// GCCs will complain when using static_assert)
-#  define static_assert(a, b)
-
-// do not do valgrind client requests for gcc < 4.5 (old GCCs do not
-// support anonymous template arguments which results in errors for
-// BoundaryTypes)
-#  ifdef HAVE_VALGRIND
-#    undef HAVE_VALGRIND
-#  endif
-#endif // GCC < 4.5
-
-#ifndef HAVE_VALGRIND
-// make sure that the HAVE_VALGRIND macro is always defined
-#  define HAVE_VALGRIND 0
-#endif
-
 #if ! HAVE_VALGRIND && ! defined(DOXYGEN)
 namespace Valgrind
 {
@@ -56,6 +38,7 @@ void voidBlubb() { }
 #define SetNoAccess(t) voidBlubb()
 #define Running() boolBlubb(false)
 }
+
 #else
 
 #include <valgrind/memcheck.h>
@@ -168,7 +151,7 @@ template <class T>
 inline void SetUndefined(const T &value)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(&value, sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_UNDEFINED(&value, sizeof(T));
 #endif
 }
 
@@ -194,7 +177,7 @@ template <class T>
 inline void SetUndefined(const T *value, int size)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_UNDEFINED(value, size*sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_UNDEFINED(value, size*sizeof(T));
 #endif
 }
 
@@ -218,7 +201,7 @@ template <class T>
 inline void SetDefined(const T &value)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(&value, sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_DEFINED(&value, sizeof(T));
 #endif
 }
 
@@ -244,7 +227,7 @@ template <class T>
 inline void SetDefined(const T *value, int n)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(value, n*sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_DEFINED(value, n*sizeof(T));
 #endif
 }
 
@@ -268,7 +251,7 @@ template <class T>
 inline void SetNoAccess(const T &value)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_NOACCESS(&value, sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_NOACCESS(&value, sizeof(T));
 #endif
 }
 
@@ -294,7 +277,7 @@ template <class T>
 inline void SetNoAccess(const T *value, int size)
 {
 #if !defined NDEBUG && HAVE_VALGRIND
-    VALGRIND_MAKE_MEM_NOACCESS(value, size*sizeof(T));
+    auto DUMUX_UNUSED result = VALGRIND_MAKE_MEM_NOACCESS(value, size*sizeof(T));
 #endif
 }
 
