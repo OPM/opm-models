@@ -36,6 +36,15 @@
 #include <dune/common/fmatrix.hh>
 
 namespace Dumux {
+namespace Properties {
+// forward declaration of the required property tags
+NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(GlobalEqVector);
+NEW_PROP_TAG(VertexMapper);
+NEW_PROP_TAG(GridView);
+}
+
 /*!
  * \ingroup Linear
  * \brief A general solver backend allowing arbitrary preconditioners and solvers.
