@@ -62,6 +62,7 @@ NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
+NEW_PROP_TAG(TwoPFluidState); //!< The fluid state used by the model
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
 NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction

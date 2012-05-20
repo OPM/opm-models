@@ -66,6 +66,17 @@ SET_TYPE_PROP(BoxTwoPNI, Model, TwoPNIModel<TypeTag>);
 //! The type of the base base class for actual problems
 SET_TYPE_PROP(BoxTwoPNI, BaseProblem, TwoPNIProblem<TypeTag>);
 
+//! the TwoPFluidState property
+SET_PROP(BoxTwoP, TwoPFluidState)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+public:
+    typedef Dumux::ImmiscibleFluidState<Scalar,
+                                        FluidSystem,
+                                        /*enableEnthalpy=*/true> type;
+};
+
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPNI, VolumeVariables, TwoPNIVolumeVariables<TypeTag>);
 

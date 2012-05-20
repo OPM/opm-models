@@ -56,6 +56,7 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, TwoPFluidState) FluidState;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
@@ -67,8 +68,6 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
-
     /*!
      * \brief Update all quantities for a given control volume.
      */

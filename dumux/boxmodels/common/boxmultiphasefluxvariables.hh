@@ -350,7 +350,6 @@ private:
         }
         
         fsI.checkDefined();
-        fsJ.checkDefined();
         
         ///////////////
         // correct the pressure gradients by the gravitational acceleration

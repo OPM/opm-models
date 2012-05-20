@@ -69,6 +69,17 @@ SET_TYPE_PROP(BoxTwoP, Model, TwoPModel<TypeTag>);
 //! The type of the base base class for actual problems
 SET_TYPE_PROP(BoxTwoP, BaseProblem, TwoPProblem<TypeTag>);
 
+//! the TwoPFluidState property
+SET_PROP(BoxTwoP, TwoPFluidState)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+public:
+    typedef Dumux::ImmiscibleFluidState<Scalar,
+                                        FluidSystem,
+                                        /*enableEnthalpy=*/false> type;
+};
+
 //! the RateVector property
 SET_TYPE_PROP(BoxTwoP, RateVector, TwoPRateVector<TypeTag>);
 
@@ -136,7 +147,6 @@ public:
 SET_BOOL_PROP(BoxTwoP, EnableSmoothUpwinding, false);
 
 }
-//
 
 }
 
