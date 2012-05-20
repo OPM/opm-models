@@ -122,7 +122,6 @@ public:
         }
         else {
             assert(dim == 2);
-            std::cout << "HALLO\n";
             Dune::FieldVector<double,dim> pos;
             for (int j = 0; j <= cellRes[1]; j++) {
                 pos[1] = upperRight[1]*double(j)/cellRes[1];
@@ -165,10 +164,6 @@ public:
                         v[7] = i7;
                         factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,3), v);
 
-                        std::cout << "insert element:";
-                        for (int l = 0; l < v.size(); ++l)
-                            std::cout << " " << v[l];
-                        std::cout << "\n";
 #else
                         v[0] = i0;
                         v[1] = i1;
