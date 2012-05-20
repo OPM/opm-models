@@ -47,9 +47,7 @@
 #include <string>
 #include <vector>
 
-namespace Dumux
-{
-
+namespace Dumux {
 /*!
  * \ingroup BoxModel
  *
@@ -734,7 +732,8 @@ public:
         ElementIterator elemEndIt = this->gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt)
         {
-            elemCtx.updateAll(*elemIt);
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
 
             modIt = vtkOutputModules_.begin();
             for (; modIt != modEndIt; ++modIt)

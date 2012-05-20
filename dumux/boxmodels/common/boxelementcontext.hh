@@ -110,11 +110,8 @@ public:
         fvElemGeom_.update(gridView_, elem);
 
         // resize the SCV and the SCVF arrays
-        if (fvElemGeom_.numVertices > scvVars_.size()) {
-            scvVars_.resize(fvElemGeom_.numVertices);
-        }
-        if (fvElemGeom_.numEdges > scvfVars_.size())
-            scvfVars_.resize(fvElemGeom_.numEdges);
+        scvVars_.resize(fvElemGeom_.numVertices);
+        scvfVars_.resize(fvElemGeom_.numEdges);
     }
 
     void updateAllScvVars()
@@ -139,7 +136,7 @@ public:
             scvVars_[scvIdx].hint[timeIdx] = model().hint(globalIdx, timeIdx);
             updateSingleScvVars_(scvSol, scvIdx, timeIdx);
         }
-        
+
         // update gradients
         for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
             scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, scvIdx, timeIdx);

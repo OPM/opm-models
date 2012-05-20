@@ -178,7 +178,6 @@ public:
                 //intrinsicPermeability_[phaseIdx][I] = ;
             }
 
-
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (pressureOutput_()) pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
                 if (densityOutput_()) density_[phaseIdx][I] = fs.density(phaseIdx);
