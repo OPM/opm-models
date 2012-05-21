@@ -23,12 +23,14 @@ AC_DEFUN([EWOMS_CHECK_QUAD],
     AC_LANG_PUSH(C++)
     AC_SEARCH_LIBS([sqrtq], [quadmath],
     [
-      HAVE_QUAD="1"
+      HAVE_LIBQUAD="1"
       QUAD_LIBS="$QUAD_LIBS"
     ],[
-      HAVE_QUAD="0"
-      AC_MSG_ERROR([libquadmath not found!])
+      HAVE_LIBQUAD="0"
     ])
+    AC_CHECK_HEADER([quadmath.h], 
+                    [HAVE_QUADMATH_H="1"],
+                    [HAVE_QUADMATH_H="0"])
     AC_LANG_POP([C++])
 
     AC_SUBST(QUAD_LIBS, $QUAD_LIBS)
@@ -40,15 +42,19 @@ AC_DEFUN([EWOMS_CHECK_QUAD],
     DUNE_PKG_LDFLAGS="$DUNE_PKG_LDFLAGS $QUAD_LDFLAGS"
     DUNE_PKG_CPPFLAGS="$DUNE_PKG_CPPFLAGS $QUAD_CPPFLAGS"
 
-    AC_DEFINE([HAVE_QUAD],1,[Are quad-precision floating point values usable?])
-    AH_BOTTOM([#include <dumux/common/quad.hh>])
-    with_quad="yes"
+    if test "$HAVE_LIBQUAD" == "1" && test "$HAVE_QUADMATH_H" == "1"; then
+       AC_DEFINE([HAVE_QUAD],1,[Are quad-precision floating point values usable?])
+       AH_BOTTOM([#include <dumux/common/quad.hh>])
+       with_quad="yes"
+    else
+       with_quad="no"
+    fi      
   else
     with_quad="no"
   fi
 
   # tell automake
-  AM_CONDITIONAL(QUAD, test "$HAVE_QUAD" = "1")
+  AM_CONDITIONAL(QUAD, test "$HAVE_LIBQUAD" = "1" && test "$HAVE_QUADMATH_H" = "1")
 
   # restore variables
   LDFLAGS="$ac_save_LDFLAGS"
