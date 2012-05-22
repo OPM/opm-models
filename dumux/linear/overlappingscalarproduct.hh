@@ -34,6 +34,7 @@
 #include <dune/istl/scalarproducts.hh>
 
 namespace Dumux {
+namespace Linear {
 
 template <class OverlappingBlockVector, class Overlap>
 class OverlappingScalarProduct : public Dune::ScalarProduct<OverlappingBlockVector>
@@ -68,20 +69,18 @@ public:
 #else
         sumGlobal = sum;
 #endif // HAVE_MPI
-
+        
         return sumGlobal;
     }
 
     double norm(const OverlappingBlockVector &x)
-    {
-        field_type tmp = std::sqrt(dot(x, x));
-        return tmp;
-    }
+    { return std::sqrt(dot(x, x)); }
 
 private:
     const Overlap &overlap_;
 };
 
+} // namespace Linear
 } // namespace Dumux
 
 #endif

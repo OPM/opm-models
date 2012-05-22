@@ -29,6 +29,7 @@
 #define DUMUX_ELEMENT_BORDER_LIST_FROM_GRID_HH
 
 #include "borderindex.hh"
+#include "indextuples.hh"
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>

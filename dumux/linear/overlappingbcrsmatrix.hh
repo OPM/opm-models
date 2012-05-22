@@ -40,9 +40,10 @@
 #include <map>
 #include <iostream>
 #include <vector>
-#include <tr1/memory>
+#include <memory>
 
 namespace Dumux {
+namespace Linear {
 
 template <class BCRSMatrix>
 class OverlappingBCRSMatrix : public BCRSMatrix
@@ -50,23 +51,15 @@ class OverlappingBCRSMatrix : public BCRSMatrix
     typedef BCRSMatrix ParentType;
 
 public:
-    typedef Dumux::DomesticOverlapFromBCRSMatrix<BCRSMatrix> Overlap;
+    typedef Dumux::Linear::DomesticOverlapFromBCRSMatrix<BCRSMatrix> Overlap;
 
 private:
-    typedef typename Overlap::Index Index;
-    typedef typename Overlap::Index ColIndex;
-    typedef typename Overlap::PeerSet PeerSet;
-    typedef typename Overlap::BorderList BorderList;
-    typedef typename Overlap::ProcessRank ProcessRank;
-    typedef typename Overlap::ForeignOverlapWithPeer ForeignOverlapWithPeer;
-
-    typedef std::vector<std::set<ColIndex> > Entries;
+    typedef std::vector<std::set<Index> > Entries;
 
 public:
     typedef typename ParentType::ColIterator ColIterator;
     typedef typename ParentType::ConstColIterator ConstColIterator;
     typedef typename ParentType::block_type block_type;
-
 
     // no real copying done at the moment
     OverlappingBCRSMatrix(const OverlappingBCRSMatrix &M)
@@ -75,11 +68,10 @@ public:
     }
 
     OverlappingBCRSMatrix(const BCRSMatrix &M,
-                          const BorderList &foreignBorderList,
-                          const BorderList &domesticBorderList,
+                          const BorderList &borderList,
                           int overlapSize)
     {
-        overlap_ = std::tr1::shared_ptr<Overlap>(new Overlap(M, foreignBorderList, domesticBorderList, overlapSize));
+        overlap_ = std::shared_ptr<Overlap>(new Overlap(M, borderList, overlapSize));
         myRank_ = 0;
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
@@ -130,7 +122,7 @@ public:
         // first, set everything to 0
         BCRSMatrix::operator=(0.0);
 
-        // assign the local rows
+        // then copy the local entries of M
         for (int rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
             ConstColIterator colIt = M[rowIdx].begin();
             ConstColIterator colEndIt = M[rowIdx].end();
@@ -185,6 +177,27 @@ public:
         syncCopy_();
     }
 
+    /*!
+     * \brief Set the identity matrix on the main diagonal of front indices.
+     */
+    void resetFront()
+    {
+        // create an identity matrix
+        block_type idMatrix(0.0);
+        for (int i = 0; i < idMatrix.size(); ++i)
+            idMatrix[i][i] = 1.0;
+
+        int numLocal = overlap_->numLocal();
+        int numDomestic = overlap_->numDomestic();
+        for (int domRowIdx = numLocal; domRowIdx < numDomestic; ++ domRowIdx) {
+            if (overlap_->isFront(domRowIdx)) {
+                // set the front rows to a diagonal 1 
+                (*this)[domRowIdx] = 0.0;
+                (*this)[domRowIdx][domRowIdx] = idMatrix;
+            }
+        }
+    }
+
     void print() const
     {
         overlap_->print();
@@ -214,7 +227,7 @@ public:
             }
             std::cout << "\n";
         };
-        Dune::printmatrix(std::cout, *static_cast<const BCRSMatrix*>(this), "M", "row");
+        Dune::printSparseMatrix(std::cout, *static_cast<const BCRSMatrix*>(this), "M", "row");
     }
 
 private:
@@ -269,14 +282,14 @@ private:
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
-            sendRowIndices_(M, peerRank);
+            sendIndices_(M, peerRank);
         }
 
         // then recieve all indices from the peers
         peerIt = peerSet.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
-            receiveRowIndices_(peerRank);
+            receiveIndices_(peerRank);
         }
 
         // wait until all send operations are completed
@@ -308,10 +321,10 @@ private:
 
         // set the indices
         for (int rowIdx = 0; rowIdx < numDomestic; ++rowIdx) {
-            const std::set<ColIndex> &colIndices = entries_[rowIdx];
+            const auto &colIndices = entries_[rowIdx];
 
-            typename std::set<ColIndex>::const_iterator colIdxIt = colIndices.begin();
-            typename std::set<ColIndex>::const_iterator colIdxEndIt = colIndices.end();
+            auto colIdxIt = colIndices.begin();
+            const auto &colIdxEndIt = colIndices.end();
             for (; colIdxIt != colIdxEndIt; ++colIdxIt)
                 this->addindex(rowIdx, *colIdxIt);
         }
@@ -322,11 +335,11 @@ private:
     }
 
     // send the overlap indices to a peer
-    void sendRowIndices_(const BCRSMatrix &M, int peerRank)
+    void sendIndices_(const BCRSMatrix &M, int peerRank)
     {
 #if HAVE_MPI
-        // send the number of non-border entries in the matrix
-        const ForeignOverlapWithPeer &peerOverlap = overlap_->foreignOverlapWithPeer(peerRank);
+        // send sparsity pattern of the overlap
+        const auto &peerOverlap = overlap_->foreignOverlapWithPeer(peerRank);
 
         // send size of foreign overlap to peer
         int numOverlapRows = peerOverlap.size();
@@ -339,21 +352,21 @@ private:
 
         // create the row size MPI buffer
         int numEntries = 0;
-        typename ForeignOverlapWithPeer::const_iterator it = peerOverlap.begin();
-        typename ForeignOverlapWithPeer::const_iterator endIt = peerOverlap.end();
+        auto it = peerOverlap.begin();
+        const auto &endIt = peerOverlap.end();
         int i = 0;
         for (; it != endIt; ++it, ++i) {
-            int rowIdx = std::tr1::get<0>(*it);
-            assert(overlap_->isDomesticIndexFor(peerRank, rowIdx));
+            int rowIdx = it->index;
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
             ColIt colIt = M[rowIdx].begin();
             ColIt colEndIt = M[rowIdx].end();
             int j = 0;
             for (; colIt != colEndIt; ++colIt) {
-                if (overlap_->isDomesticIndexFor(peerRank, colIt.index())) {
-                    ++ j;
+                if (!overlap_->peerHasIndex(peerRank, colIt.index())) {
+                    continue;
                 }
+                ++ j;
             }
 
             (*rowSizesSendBuff_[peerRank])[i] = j;
@@ -371,19 +384,19 @@ private:
         i = 0;
         it = peerOverlap.begin();
         for (; it != endIt; ++it) {
-            int rowIdx = std::tr1::get<0>(*it);
-            assert(overlap_->isDomesticIndexFor(peerRank, rowIdx));
+            int rowIdx = it->index;
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
             ColIt colIt = M[rowIdx].begin();
             ColIt colEndIt = M[rowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                if (overlap_->isDomesticIndexFor(peerRank, colIt.index())) {
-                    (*entryIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(colIt.index());
-                    ++i;
-                }
+                if (!overlap_->peerHasIndex(peerRank, colIt.index()))
+                    continue;
+                (*entryIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(colIt.index());
+                ++i;
             }
         }
+        assert(i == numEntries);
         entryIndicesSendBuff_[peerRank]->send(peerRank);
 
         // create the send buffers for the values of the matrix
@@ -393,7 +406,7 @@ private:
     }
 
     // receive the overlap indices to a peer
-    void receiveRowIndices_(int peerRank)
+    void receiveIndices_(int peerRank)
     {
 #if HAVE_MPI
         // receive size of foreign overlap to peer
@@ -597,7 +610,7 @@ private:
 
     int myRank_;
     Entries entries_;
-    std::tr1::shared_ptr<Overlap> overlap_;
+    std::shared_ptr<Overlap> overlap_;
 
     std::map<ProcessRank, MpiBuffer<int>* > rowSizesRecvBuff_;
     std::map<ProcessRank, MpiBuffer<int>* > rowIndicesRecvBuff_;
@@ -611,6 +624,7 @@ private:
     std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesSendBuff_;
 };
 
+} // namespace Linear
 } // namespace Dumux
 
 #endif

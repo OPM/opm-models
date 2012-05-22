@@ -57,28 +57,22 @@ public:
     {
         seqPreCond_.pre(x, y);
 
-/*
         // communicate the results on the overlap
-        x.syncAverage();
-        y.syncAverage();
-*/
+        x.sync();
+        y.sync();
     }
 
     void apply(domain_type &x, const range_type &d)
     {
 #if HAVE_MPI
         if (overlap_->peerSet().size() > 0) {
-            // set the residual and right hand side on the front to zero
-            range_type dd(d);
-            dd.resetFront();
-
             // make sure that all processes react the same if the
             // sequential preconditioner on one process throws an
             // exception
             short success;
             try {
                 // execute the sequential preconditioner
-                seqPreCond_.apply(x, dd);
+                seqPreCond_.apply(x, d);
                 short localSuccess = 1;
                 MPI_Allreduce(&localSuccess, // source buffer
                               &success, // destination buffer
@@ -87,9 +81,7 @@ public:
                               MPI_MIN, // operation
                               MPI_COMM_WORLD); // communicator
             }
-            catch (const Dune::Exception &e) {
-                std::cout << "Process " << overlap_->myRank()
-                          << " threw exception in sequential preconditioner: " << e.what() << "\n";
+            catch (...) {
                 short localSuccess = 0;
                 MPI_Allreduce(&localSuccess, // source buffer
                               &success, // destination buffer
@@ -100,7 +92,7 @@ public:
             }
 
             if (success)
-                x.syncAverage();
+                x.sync();
             else
                 DUNE_THROW(NumericalProblem,
                            "Preconditioner threw an exception on some process.");

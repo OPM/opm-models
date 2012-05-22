@@ -30,6 +30,7 @@
 #include <dune/istl/operators.hh>
 
 namespace Dumux {
+namespace Linear {
 
 // operator that resets result to zero at constrained DOFS
 template<class OverlappingMatrix, class DomainVector, class RangeVector>
@@ -48,30 +49,31 @@ public:
 
     OverlappingOperator (const OverlappingMatrix& A)
         : A_(A)
-    {}
+    { }
 
     //! apply operator to x:  \f$ y = A(x) \f$
     virtual void apply (const DomainVector& x, RangeVector& y) const
-    {
+    { 
         A_.mv(x,y);
+        y.sync();
     }
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
     virtual void applyscaleadd(field_type alpha, const DomainVector& x, RangeVector& y) const
-    {
+    { 
         A_.usmv(alpha, x, y);
+        y.sync();
     }
 
     //! returns the matrix
     virtual const OverlappingMatrix& getmat() const
-    {
-        return A_;
-    }
+    { return A_; }
 
 private:
     const OverlappingMatrix &A_;
 };
 
+} // namespace Linear
 } // namespace Dumux
 
 #endif

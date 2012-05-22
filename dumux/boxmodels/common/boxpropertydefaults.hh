@@ -248,6 +248,9 @@ SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);
 //! set number of equations of the mathematical model as default
 SET_INT_PROP(BoxModel, LinearSolverBlockSize, GET_PROP_VALUE(TypeTag, NumEq));
 
+//! set the size of the overlap region of the linear solver
+SET_INT_PROP(BoxModel, LinearSolverOverlapSize, 2);
+
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
 } // namespace Properties

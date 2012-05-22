@@ -28,7 +28,7 @@
 #ifndef DUMUX_VERTEX_BORDER_LIST_FROM_GRID_HH
 #define DUMUX_VERTEX_BORDER_LIST_FROM_GRID_HH
 
-#include "borderindex.hh"
+#include "overlaptypes.hh"
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -40,6 +40,7 @@
 #include <list>
 
 namespace Dumux {
+namespace Linear {
 /*!
  * \brief Uses communication on the grid to find the initial seed list
  *        of indices.
@@ -53,8 +54,6 @@ template <class GridView, class VertexMapper>
 class VertexBorderListFromGrid : public Dune::CommDataHandleIF<VertexBorderListFromGrid<GridView, VertexMapper>,
                                                                int >
 {
-    typedef std::list<BorderIndex> BorderList;
-
 public:
     VertexBorderListFromGrid(const GridView &gridView,
                              const VertexMapper &map)
@@ -92,20 +91,12 @@ public:
         buff.read(bIdx.peerRank);
         buff.read(bIdx.peerIdx);
         bIdx.borderDistance = 0;
-        // vertices on the border are always in the interior of more
-        // than one process which means that they are shared.
-        bIdx.isShared = true;
 
         borderList_.push_back(bIdx);
     }
 
-    // Access to the foreign border list.
-    const BorderList &foreignBorderList() const
-    { return borderList_; }
-
-    // Access to the domestic border list (same as foreign border list
-    // because all vertices are shared entities)
-    const BorderList &domesticBorderList() const
+    // Access to the border list.
+    const BorderList &borderList() const
     { return borderList_; }
 
 private:
@@ -114,6 +105,7 @@ private:
     BorderList borderList_;
 };
 
+} // namespace Linear
 } // namespace Dumux
 
 #endif
