@@ -95,7 +95,7 @@ public:
      * no energy equation is used.
      */
     Scalar temperature() const
-    { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); };
+    { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); }
 
 
     /*!

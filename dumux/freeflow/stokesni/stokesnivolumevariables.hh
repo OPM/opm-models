@@ -68,14 +68,14 @@ public:
         heatConductivity_ = FluidSystem::thermalConductivity(this->fluidState_,
                                                              paramCache,
                                                              phaseIdx);
-    };
+    }
 
     /*!
      * \brief Returns the heat conductivity of the fluid phase in
      *        the sub-control volume.
      */
     Scalar heatConductivity() const
-    { return heatConductivity_; };
+    { return heatConductivity_; }
 
 
 protected:

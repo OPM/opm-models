@@ -97,7 +97,7 @@ class FVTransport2P2CMultiPhysics : public FVTransport2P2C<TypeTag>
 
     //! Acess function for the current problem
     Problem& problem()
-    {return this->problem_;};
+    {return this->problem_;}
 public:
     virtual void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet = false);
 

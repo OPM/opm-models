@@ -63,7 +63,7 @@ public:
         gridView.communicate(*this,
                              Dune::InteriorBorder_InteriorBorder_Interface,
                              Dune::ForwardCommunication);
-    };
+    }
 
     // data handle methods
     bool contains (int dim, int codim) const

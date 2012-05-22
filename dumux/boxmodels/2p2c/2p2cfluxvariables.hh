@@ -83,14 +83,14 @@ public:
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return porousDiffCoeff_[phaseIdx];
-    };
+    }
 
     Scalar molarDensity(int phaseIdx) const
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return molarDensity_[phaseIdx];
-    };
+    }
 
     Scalar moleFraction(int phaseIdx, int compIdx) const
     {
@@ -98,15 +98,15 @@ public:
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         return moleFrac_[phaseIdx][compIdx];
-    };
+    }
 
     const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
     {
         return moleFracGrad_[phaseIdx][compIdx];
-    };
+    }
 
     const DimVector &temperatureGrad() const
-    { return temperatureGrad_; };
+    { return temperatureGrad_; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,

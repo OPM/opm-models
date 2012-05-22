@@ -132,7 +132,7 @@ public:
             return Sw_;
         else
             return Scalar(1.0) - Sw_;
-    };
+    }
 
     int presentPhaseIdx() const
     {
@@ -214,7 +214,7 @@ public:
      * and the rock matrix exhibit the same temperature.
      */
     Scalar temperature(int phaseIdx) const
-    { return temperature_; };
+    { return temperature_; }
 
     /*!
      * \brief Returns the total mass concentration of a component \f$\mathrm{[kg/m^3]}\f$.
@@ -227,14 +227,14 @@ public:
     Scalar massConcentration(int compIdx) const
     {
         return massConcentration_[compIdx];
-    };
+    }
     /*!
      * \brief Sets the total mass concentration of a component \f$\mathrm{[kg/m^3]}\f$.
      */
     void setMassConcentration(int compIdx, Scalar value)
     {
         massConcentration_[compIdx] = value;
-    };
+    }
     //@}
 
 public:

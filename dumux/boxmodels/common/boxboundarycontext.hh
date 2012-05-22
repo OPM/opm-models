@@ -116,7 +116,7 @@ public:
      * \brief Return the current finite element geometry.
      */
     const FVElementGeometry &fvElemGeom(int timeIdx) const
-    { return elemCtx_.fvElemGeom(timeIdx); };
+    { return elemCtx_.fvElemGeom(timeIdx); }
 
     /*!
      * \brief Return the position of a local entity in global coordinates

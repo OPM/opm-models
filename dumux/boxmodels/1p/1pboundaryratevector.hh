@@ -60,21 +60,21 @@ public:
      */
     OnePBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     OnePBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     OnePBoundaryRateVector(const OnePBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Specify a free-flow boundary
@@ -160,7 +160,7 @@ public:
      * \brief Specify a no-flow boundary.
      */
     void setNoFlow()
-    { (*this) = 0.0; };
+    { (*this) = 0.0; }
 };
 
 } // end namepace

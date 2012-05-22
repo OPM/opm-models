@@ -60,17 +60,17 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, TwoPFluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
-    typedef typename ParentType::FluidState FluidState;
 
     /*!
      * \brief Returns the total heat capacity \f$\mathrm{[J/K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */
     Scalar heatCapacitySolid() const
-    { return heatCapacitySolid_; };
+    { return heatCapacitySolid_; }
 
     /*!
      * \brief Returns the total conductivity capacity
@@ -78,7 +78,7 @@ public:
      *        sub-control volume.
      */
     Scalar heatConductivity() const
-    { return heatConductivity_; };
+    { return heatConductivity_; }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables

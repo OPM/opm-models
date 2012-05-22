@@ -174,7 +174,7 @@ public:
 
 protected:
     const DimMatrix &toDimMatrix_(const DimMatrix &val) const
-    { return val; };
+    { return val; }
 
     DimMatrix toDimMatrix_(Scalar val) const
     {
@@ -182,7 +182,7 @@ protected:
         for (int i = 0; i < DimMatrix::rows; ++i)
             ret[i][i] = val;
         return ret;
-    };
+    }
 };
 
 } // namespace Dumux

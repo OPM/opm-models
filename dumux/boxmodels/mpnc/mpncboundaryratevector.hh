@@ -66,21 +66,21 @@ public:
      */
     MPNCBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     MPNCBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     MPNCBoundaryRateVector(const MPNCBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Specify a free-flow boundary
@@ -186,7 +186,7 @@ public:
      * \brief Specify a no-flow boundary.
      */
     void setNoFlow()
-    { (*this) = 0.0; };
+    { (*this) = 0.0; }
 
 protected:
     Implementation &asImp_() 

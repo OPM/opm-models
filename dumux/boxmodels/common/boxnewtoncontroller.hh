@@ -129,7 +129,7 @@ public:
         enableJacobianRecycling_ = GET_PARAM(TypeTag, bool, EnableJacobianRecycling);
 
         useLineSearch_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, UseLineSearch);
-    };
+    }
         
     /*!
      * \brief Update the relative error of the solution compared to

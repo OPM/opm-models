@@ -68,21 +68,21 @@ public:
      */
     StokesBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     StokesBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     StokesBoundaryRateVector(const StokesBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Specify a free-flow boundary

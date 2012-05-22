@@ -73,7 +73,7 @@ public:
      *        the sub-control volume.
      */
     Scalar heatCapacitySolid() const
-    { return heatCapacitySolid_; };
+    { return heatCapacitySolid_; }
 
     /*!
      * \brief Returns the total conductivity capacity
@@ -81,7 +81,7 @@ public:
      *        sub-control volume.
      */
     Scalar heatConductivity() const
-    { return heatConductivity_; };
+    { return heatConductivity_; }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables

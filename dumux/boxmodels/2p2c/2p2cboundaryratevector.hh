@@ -63,21 +63,21 @@ public:
      */
     TwoPTwoCBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     TwoPTwoCBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     TwoPTwoCBoundaryRateVector(const TwoPTwoCBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Specify a free-flow boundary
@@ -183,7 +183,7 @@ public:
      * \brief Specify a no-flow boundary.
      */
     void setNoFlow()
-    { (*this) = 0.0; };
+    { (*this) = 0.0; }
 
 protected:
     Implementation &asImp_() 

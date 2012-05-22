@@ -231,7 +231,7 @@ public:
                                   int timeIdx)
     {
         fs.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    };
+    }
 
 protected:
     void updateTemperature_(const ElementContext &elemCtx,
@@ -239,7 +239,7 @@ protected:
                             int timeIdx)
     {
         fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    };
+    }
 
     template<class ParameterCache>
     void updateEnergy_(const ParameterCache &paramCache,

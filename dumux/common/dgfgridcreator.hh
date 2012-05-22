@@ -59,7 +59,7 @@ public:
         const std::string dgfFileName = GET_RUNTIME_PARAM(TypeTag, std::string, GridFile);
 
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
-    };
+    }
 
     /*!
      * \brief Returns a reference to the grid.
@@ -67,7 +67,7 @@ public:
     static Grid &grid()
     {
         return *gridPtr_;
-    };
+    }
 
     /*!
      * \brief Returns a reference to the grid pointer.
@@ -77,7 +77,7 @@ public:
     static GridPointer &gridPtr()
     {
         return gridPtr_;
-    };
+    }
 
     /*!
      * \brief Distribute the grid (and attached data) over all
@@ -86,7 +86,7 @@ public:
     static void loadBalance()
     {
         gridPtr_.loadBalance();
-    };
+    }
 
 private:
     static GridPointer gridPtr_;

@@ -43,7 +43,7 @@
 #define DUMUX_PROPERTIES_HH
 
 // For is_base_of
-#include <tr1/type_traits>
+#include <type_traits>
 
 // Integral Constant Expressions
 
@@ -85,7 +85,7 @@ namespace Properties
             /*line=*/__LINE__);                                         \
         PropertyRegistry::addKey(key);                                  \
         return 0;                                                       \
-    };                                                                  \
+    }                                                                  \
     static int foo;                                                     \
     };                                                                  \
     int PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::foo =   \
@@ -99,7 +99,7 @@ namespace Properties
         static int init() {                                             \
             TypeTagRegistry::addChildren<__VA_ARGS__>();                \
             return 0;                                                   \
-        };                                                              \
+        }                                                              \
         static int foo;                                                 \
     };                                                                  \
     int TypeTagInfo<DUMUX_GET_HEAD_(__VA_ARGS__)>::foo =           \
@@ -444,7 +444,7 @@ class PropertyRegistryKey
 {
 public:
     PropertyRegistryKey()
-    {};
+    {}
 
     PropertyRegistryKey(const std::string &effTypeTagName,
                         const std::string &propertyKind,
@@ -459,7 +459,7 @@ public:
         , fileDefined_(fileDefined)
         , lineDefined_(lineDefined)
     {
-    };
+    }
 
     // copy constructor
     PropertyRegistryKey(const PropertyRegistryKey &v)
@@ -469,7 +469,7 @@ public:
         , propertyValue_(v.propertyValue_)
         , fileDefined_(v.fileDefined_)
         , lineDefined_(v.lineDefined_)
-    {};
+    {}
 
     const std::string &effTypeTagName() const
     { return effTypeTagName_; }
@@ -508,12 +508,12 @@ public:
                                              const std::string &propertyName)
     {
         return keys_[effTypeTagName][propertyName];
-    };
+    }
 
     static const KeyList &getKeys(const std::string &effTypeTagName)
     {
         return keys_[effTypeTagName];
-    };
+    }
 
 private:
     static KeyListMap keys_;
@@ -565,7 +565,7 @@ public:
     static const ChildrenList &children(const std::string &typeTagName)
     {
         return keys_[typeTagName];
-    };
+    }
 
 private:
     static ChildrenListMap keys_;
@@ -575,8 +575,8 @@ TypeTagRegistry::ChildrenListMap TypeTagRegistry::keys_;
 
 #endif // !defined NO_PROPERTY_INTROSPECTION
 
-using std::tr1::is_void;
-using std::tr1::is_base_of;
+using std::is_void;
+using std::is_base_of;
 
 // logical AND, OR and NOT operations to be used for template meta programming
 template <bool b1, bool b2, bool b3 = true, bool b4 = true, bool b5 = true, bool b6 = true, bool b7 = true>
@@ -682,7 +682,7 @@ public:
 template <class PropertyTag>
 struct propertyExplicitlyUnsetOnTree<void, PropertyTag>
 {
-    const static bool value = std::tr1::true_type::value;
+    const static bool value = std::true_type::value;
 };
 
 //! \internal
@@ -723,7 +723,7 @@ template <class RealTypeTag, class PropertyTag>
 class propertyDefinedOnTree<RealTypeTag, void, PropertyTag>
 {
 public:
-    static const bool value = std::tr1::false_type::value;
+    static const bool value = std::false_type::value;
 };
 
 //! \internal
@@ -767,7 +767,7 @@ public:
 template <class RealTypeTag, class PropertyTag>
 struct defaultPropertyDefinedOnTree<RealTypeTag,void, PropertyTag>
 {
-    static const bool value = std::tr1::false_type::value;
+    static const bool value = std::false_type::value;
 };
 
 //! \internal

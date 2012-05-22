@@ -81,26 +81,26 @@ public:
 
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
         calculateDiffCoeffPM_(elemCtx, scvfIdx, timeIdx);
-    };
+    }
 
     /*!
      * \brief The effective diffusion coefficient in the porous
      *        medium.
      */
     Scalar porousDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { return porousDiffCoeff_[phaseIdx][compIdx]; };
+    { return porousDiffCoeff_[phaseIdx][compIdx]; }
 
     /*!
      * \brief Returns the gradient of the mole fraction of a component in a phase.
      */
     const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
-    { return moleFracGrad_[phaseIdx][compIdx]; };
+    { return moleFracGrad_[phaseIdx][compIdx]; }
 
     /*!
      * \brief Returns the molar density of a phase at the integration point
      */
     Scalar molarDensity(int phaseIdx) const
-    { return molarDensity_[phaseIdx]; };
+    { return molarDensity_[phaseIdx]; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,

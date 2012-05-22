@@ -154,7 +154,7 @@ public:
     {
         assert(phaseIdx == 0);
         return 1.0;
-    };
+    }
 
     /*!
      * \brief Returns the mobility of the fluid [1 / (Pa s)]
@@ -163,7 +163,7 @@ public:
     {
         assert(phaseIdx == 0);
         return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
-    };
+    }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables

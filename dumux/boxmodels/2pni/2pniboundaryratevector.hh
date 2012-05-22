@@ -62,21 +62,21 @@ public:
      */
     TwoPNIBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     TwoPNIBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     TwoPNIBoundaryRateVector(const TwoPNIBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
 
 protected:

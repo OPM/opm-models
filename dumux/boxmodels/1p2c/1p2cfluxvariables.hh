@@ -82,7 +82,7 @@ public:
 
         calculateDiffusiveGradients_(elemCtx, scvfIdx, timeIdx);
         calculateDiffCoeffPM_(elemCtx, scvfIdx, timeIdx);
-    };
+    }
 
     /*!
     * \brief The binary diffusion coefficient for each fluid phase in the porous medium.
@@ -91,7 +91,7 @@ public:
     {
         // TODO: tensorial diffusion coefficients
         return diffCoeffPM_;
-    };
+    }
 
     /*!
      * \brief Return molar density \f$\mathrm{[mol/m^3]}\f$ of a phase at the integration
@@ -115,7 +115,7 @@ public:
         assert(phaseIdx == 0 && compIdx == 1);
 
         return moleFracGrad_;
-    };
+    }
 
 private:
     void calculateDiffusiveGradients_(const ElementContext &elemCtx,

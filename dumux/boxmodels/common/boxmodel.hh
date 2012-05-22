@@ -179,13 +179,13 @@ public:
 
         hints_[timeIdx][globalIdx] = hint;
         hintsUsable_[timeIdx][globalIdx] = true;
-    };
+    }
 
     void shiftHints(int numSlots = 1)
     {
         for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx)
             hints_[timeIdx + numSlots] = hints_[timeIdx];
-    };
+    }
 
     /*!
      * \brief Compute the global residual for an arbitrary solution
@@ -438,7 +438,7 @@ public:
      *        model can overload.
      */
     void updateSuccessful()
-    { };
+    { }
 
     /*!
      * \brief Called by the update() method if it was
@@ -454,7 +454,7 @@ public:
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
         jacAsm_->reassembleAll();
-    };
+    }
 
     /*!
      * \brief Called by the problem if a time integration was
@@ -521,7 +521,7 @@ public:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             outstream << solution_[/*timeIdx=*/0][vertIdx][eqIdx] << " ";
         }
-    };
+    }
 
     /*!
      * \brief Reads the current solution variables for a vertex from a
@@ -543,7 +543,7 @@ public:
                            << vertIdx);
             instream >> solution_[/*timeIdx=*/0][vertIdx][eqIdx];
         }
-    };
+    }
 
     /*!
      * \brief Returns the number of global degrees of freedoms (DOFs)
@@ -558,19 +558,19 @@ public:
      * This usually means a mapper for vertices.
      */
     const DofMapper &dofMapper() const
-    { return problem_().vertexMapper(); };
+    { return problem_().vertexMapper(); }
 
     /*!
      * \brief Mapper for vertices to indices.
      */
     const VertexMapper &vertexMapper() const
-    { return problem_().vertexMapper(); };
+    { return problem_().vertexMapper(); }
 
     /*!
      * \brief Mapper for elements to indices.
      */
     const ElementMapper &elementMapper() const
-    { return problem_().elementMapper(); };
+    { return problem_().elementMapper(); }
 
     /*!
      * \brief Resets the Jacobian matrix assembler, so that the
@@ -624,7 +624,7 @@ public:
      * \param volVars All volume variables for the element
      */
     void updatePVWeights(const ElementContext &elemCtx) const
-    { };
+    { }
 
     /*!
      * \brief Add the vector fields for analysing the convergence of
@@ -760,7 +760,7 @@ protected:
         // add the VTK output modules available on all model
         auto *vtkMod = new Dumux::BoxVtkPrimaryVarsModule<TypeTag>(this->problem_());
         this->vtkOutputModules_.push_back(vtkMod);
-    };
+    }
 
     /*!
      * \brief A reference to the problem on which the model is applied.
@@ -835,7 +835,7 @@ protected:
                 } // loop over intersection's vertices
             } // loop over intersections
         } // loop over elements
-    };
+    }
 
     /*!
      * \brief Applies the initial solution for all vertices of the grid.
@@ -900,7 +900,7 @@ protected:
      * \brief Returns whether messages should be printed
      */
     bool verbose_() const
-    { return gridView_().comm().rank() == 0; };
+    { return gridView_().comm().rank() == 0; }
 
     Implementation &asImp_()
     { return *static_cast<Implementation*>(this); }

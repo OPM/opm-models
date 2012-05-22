@@ -31,16 +31,10 @@
 
 #include <dune/common/exceptions.hh>
 
-#include <tr1/tuple>
+#include <tuple>
 #include <algorithm>
 #include <iostream>
 #include <assert.h>
-
-#if __GNUC__ <= 4 &&  __GNUC_MINOR__ < 5
-namespace std {
-using tr1::get;
-}
-#endif
 
 namespace Dumux
 {
@@ -65,19 +59,19 @@ public:
     bool applies(Scalar x) const
     {
         return x_(0) <= x && x <= x_(numSamples_() - 1);
-    };
+    }
 
     /*!
      * \brief Return the x value of the leftmost sampling point.
      */
     Scalar xMin() const
-    { return x_(0); };
+    { return x_(0); }
 
     /*!
      * \brief Return the x value of the rightmost sampling point.
      */
     Scalar xMax() const
-    { return x_(numSamples_() - 1); };
+    { return x_(numSamples_() - 1); }
 
     /*!
      * \brief Prints k tuples of the format (x, y, dx/dy, isMonotonic)
@@ -200,7 +194,7 @@ public:
     Scalar intersect(Scalar a, Scalar b, Scalar c, Scalar d) const
     {
         return intersectIntervall(xMin(), xMax(), a, b, c, d);
-    };
+    }
 
     /*!
      * \brief Find the intersections of the spline with a cubic
@@ -232,7 +226,7 @@ public:
                        "Spline has no intersection"); //<<a<"x^3 + " <<b<"x^2 + "<<c<"x + "<<d<<"!");
 
         return tmpSol[0];
-    };
+    }
 
     /*!
      * \brief Returns 1 if the spline is monotonically increasing, -1
@@ -297,7 +291,7 @@ public:
 protected:
     // this is an internal class, so everything is protected!
     SplineCommon_()
-    { Valgrind::SetUndefined(asImp_()); };
+    { Valgrind::SetUndefined(asImp_()); }
 
     /*!
      * \brief Set the sampling point vectors.
@@ -375,7 +369,7 @@ protected:
         ListIterator it = srcBegin;
         ++it;
         bool reverse = false;
-        if (std::tr1::get<0>(*srcBegin) > std::tr1::get<0>(*it))
+        if (std::get<0>(*srcBegin) > std::get<0>(*it))
             reverse = true;
         --it;
 
@@ -384,8 +378,8 @@ protected:
             int idx = i;
             if (reverse)
                 idx = numSamples - i - 1;
-            destX[i] = std::tr1::get<0>(*it);
-            destY[i] = std::tr1::get<1>(*it);
+            destX[i] = std::get<0>(*it);
+            destY[i] = std::get<1>(*it);
         }
     }
 

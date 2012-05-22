@@ -182,7 +182,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             addPhaseStorage(storage, volVars, phaseIdx);
         }
-    };
+    }
 
     /*!
      * \brief Calculate the storage for all mass balance equations
@@ -201,7 +201,7 @@ public:
         // copy to the primary variables
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             storage[conti0EqIdx + compIdx] += phaseComponentValues[compIdx];
-    };
+    }
 
     /*!
      * \brief Calculate the storage for all mass balance equations
@@ -276,7 +276,7 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             source[conti0EqIdx + compIdx] = 0.0;
         Valgrind::CheckDefined(source);
-    };
+    }
 };
 
 } // end namepace

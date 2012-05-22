@@ -79,7 +79,7 @@ public:
             if (boundaryInfo_[eqIdx].isConstraint)
                 return true;
         return false;
-    };
+    }
 
     /*!
      * \brief Returns true if constraints for given equation have been
@@ -88,7 +88,7 @@ public:
      * \param eqIdx The index of the equation
      */
     bool isConstraint(int eqIdx) const
-    { return boundaryInfo_[eqIdx].isConstraint; };
+    { return boundaryInfo_[eqIdx].isConstraint; }
 
     /*!
      * \brief Set all to be constraint 
@@ -150,7 +150,7 @@ public:
      *              by the constraint.
      */
     unsigned pvToEqIndex(unsigned pvIdx) const
-    { return pv2eqIdx_[pvIdx]; };
+    { return pv2eqIdx_[pvIdx]; }
 
     /*!
      * \brief Returns the index of the primary variable for which a
@@ -160,7 +160,7 @@ public:
      *              constraint.
      */
     unsigned eqToPvIndex(unsigned eqIdx) const
-    { return eq2pvIdx_[eqIdx]; };
+    { return eq2pvIdx_[eqIdx]; }
 
 private:
     // this is a bitfield structure!

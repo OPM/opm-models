@@ -45,7 +45,7 @@ public:
 
     OverlappingScalarProduct(const Overlap &overlap)
         : overlap_(overlap)
-    {};
+    {}
 
     field_type dot(const OverlappingBlockVector &x, const OverlappingBlockVector &y)
     {
@@ -70,13 +70,13 @@ public:
 #endif // HAVE_MPI
 
         return sumGlobal;
-    };
+    }
 
     double norm(const OverlappingBlockVector &x)
     {
         field_type tmp = std::sqrt(dot(x, x));
         return tmp;
-    };
+    }
 
 private:
     const Overlap &overlap_;

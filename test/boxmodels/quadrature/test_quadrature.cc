@@ -22,8 +22,16 @@
 #include "config.h"
 
 #include<dune/common/exceptions.hh>
-#include<dune/grid/common/quadraturerules.hh>
 #include<dune/grid/yaspgrid.hh>
+
+#include<dune/common/version.hh>
+#if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2,2,0)
+// dune 2.2
+#include<dune/geometry/quadraturerules.hh>
+#else
+// dune 2.1
+#include<dune/grid/common/quadraturerules.hh>
+#endif
 
 #include <dumux/boxmodels/common/boxfvelementgeometry.hh>
 

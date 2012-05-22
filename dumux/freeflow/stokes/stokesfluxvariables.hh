@@ -149,7 +149,7 @@ public:
         Valgrind::CheckDefined(velocity_);
         Valgrind::CheckDefined(pressureGrad_);
         Valgrind::CheckDefined(velocityGrad_);
-    };
+    }
 
 public:
     /*!

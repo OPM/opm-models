@@ -205,7 +205,7 @@ public:
         for (int i = 0; i < sol.size(); ++i)
             sol[i].setSwitched(false);
         numSwitched_ = 0;
-    };
+    }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -400,7 +400,7 @@ protected:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
-    };
+    }
 
 protected:
     // number of switches of the phase state in the last Newton

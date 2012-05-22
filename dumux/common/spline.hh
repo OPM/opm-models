@@ -65,7 +65,7 @@ public:
      * To specfiy the acutal curve, use one of the set() methods.
      */
     Spline()
-    { };
+    { }
 
     /*!
      * \brief Convenience constructor for a full spline
@@ -259,7 +259,7 @@ public:
 template<class Scalar>
 class Spline<Scalar, /*numSamples=*/0>
 // Splines with zero sampling points do not make sense!
-{ private: Spline() { }; };
+{ private: Spline() { } };
 
 /*!
  * \brief Do not allow splines with one sampling point
@@ -267,7 +267,7 @@ class Spline<Scalar, /*numSamples=*/0>
 template<class Scalar>
 class Spline<Scalar, /*numSamples=*/1>
 // Splines with one sampling point do not make sense!
-{ private: Spline() { }; };
+{ private: Spline() { } };
 
 /*!
  * \brief Spline for two sampling points.
@@ -283,7 +283,7 @@ class Spline<Scalar, 2> : public SplineCommon_<Scalar, Spline<Scalar, 2> >
 
 public:
     Spline()
-    {};
+    {}
 
     /*!
      * \brief Convenience constructor for a full spline
@@ -329,7 +329,7 @@ public:
         set(x0, x1,
             y0, y1,
             m0, m1);
-    };
+    }
 
     /*!
      * \brief Returns the number of sampling points.
@@ -481,10 +481,10 @@ public:
         typename TupleContainer::const_iterator it1 = it0;
         ++it1;
 
-        set(std::tr1::get<0>(*it0),
-            std::tr1::get<1>(*it0),
-            std::tr1::get<0>(*it1),
-            std::tr1::get<1>(*it1),
+        set(std::get<0>(*it0),
+            std::get<1>(*it0),
+            std::get<0>(*it1),
+            std::get<1>(*it1),
             m0, m1);
     }
 
@@ -504,7 +504,7 @@ protected:
             yPos_[0] = y0;
             yPos_[1] = y1;
         }
-    };
+    }
 
     /*!
      * \brief Returns the x coordinate of the i-th sampling point.

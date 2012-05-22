@@ -55,7 +55,7 @@ class ThreePThreeCNewtonController : public BoxNewtonController<TypeTag>
 public:
     ThreePThreeCNewtonController(Problem &problem)
         : ParentType(problem)
-    {};
+    {}
 
 
     /*!
@@ -83,7 +83,7 @@ public:
             return false;
 
         return ParentType::newtonConverged();
-    };
+    }
 };
 }
 

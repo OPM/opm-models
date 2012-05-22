@@ -72,7 +72,7 @@ public:
     OverlappingBCRSMatrix(const OverlappingBCRSMatrix &M)
         : ParentType(M)
     {
-    };
+    }
 
     OverlappingBCRSMatrix(const BCRSMatrix &M,
                           const BorderList &foreignBorderList,
@@ -88,7 +88,7 @@ public:
         // build the overlapping matrix from the non-overlapping
         // matrix and the overlap
         build_(M);
-    };
+    }
 
     ~OverlappingBCRSMatrix()
     {
@@ -215,7 +215,7 @@ public:
             std::cout << "\n";
         };
         Dune::printmatrix(std::cout, *static_cast<const BCRSMatrix*>(this), "M", "row");
-    };
+    }
 
 private:
     void build_(const BCRSMatrix &M)
@@ -390,7 +390,7 @@ private:
         // entries
         entryValuesSendBuff_[peerRank] = new MpiBuffer<block_type>(numEntries);
 #endif // HAVE_MPI
-    };
+    }
 
     // receive the overlap indices to a peer
     void receiveRowIndices_(int peerRank)
@@ -439,7 +439,7 @@ private:
             }
         }
 #endif // HAVE_MPI
-    };
+    }
 
     // communicates and adds up the contents of overlapping rows
     void syncAdd_()

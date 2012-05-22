@@ -295,20 +295,20 @@ public:
             cellRes, // number of cells
             Dune::FieldVector<bool,LENS_DIM>(false), // periodic
             0); // overlap
-    };
+    }
 
     /*!
      * \brief Returns a reference to the grid.
      */
     static Grid &grid()
-    { return *grid_; };
+    { return *grid_; }
 
     /*!
      * \brief Distribute the grid (and attached data) over all
      *        processes.
      */
     static void loadBalance()
-    { grid_->loadBalance(); };
+    { grid_->loadBalance(); }
 
 private:
     static Grid *grid_;

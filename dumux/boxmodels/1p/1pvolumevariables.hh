@@ -106,7 +106,7 @@ public:
 
         // energy related quantities not contained in the fluid state
         asImp_().updateEnergy_(elemCtx, scvIdx, timeIdx);
-    };
+    }
 
     /*!
      * \brief Returns the thermodynamic state of the fluid.
@@ -129,7 +129,7 @@ public:
     {
         assert(phaseIdx == 0);
         return 1.0;
-    };
+    }
 
     /*!
      * \brief Returns the mobility of the fluid [1 / (Pa s)]
@@ -138,7 +138,7 @@ public:
     {
         assert(phaseIdx == 0);
         return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx);
-    };
+    }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables

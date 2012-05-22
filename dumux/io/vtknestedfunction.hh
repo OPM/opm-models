@@ -69,10 +69,10 @@ public:
         , numComp_(numComp)
     {
         assert(buf_.size() == mapper_.size());
-    };
+    }
 
     virtual std::string name () const
-    { return name_; };
+    { return name_; }
 
     virtual int ncomps() const
     { return numComp_; }
@@ -119,7 +119,7 @@ public:
             val = 0;
 
         return val;
-    };
+    }
 
 private:
     const std::string name_;

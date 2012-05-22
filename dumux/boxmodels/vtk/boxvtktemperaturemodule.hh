@@ -114,7 +114,7 @@ public:
 
 private:
     static bool temperatureOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTemperature); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTemperature); }
 
     ScalarBuffer temperature_;
 };

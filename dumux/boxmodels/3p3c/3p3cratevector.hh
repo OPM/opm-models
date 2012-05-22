@@ -70,21 +70,21 @@ public:
      */
     ThreePThreeCRateVector()
         : ParentType()
-    { Valgrind::SetUndefined(*this); };
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     explicit ThreePThreeCRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     ThreePThreeCRateVector(const ThreePThreeCRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set a mass rate of the conservation quantities.
@@ -101,7 +101,7 @@ public:
             molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
         
         setMolarRate(molarRate);
-    };
+    }
 
     /*!
      * \brief Set a molar rate of the conservation quantities.
@@ -111,7 +111,7 @@ public:
      * parameter.
      */
     void setMolarRate(const ParentType &value)
-    { ParentType::operator=(value); };
+    { ParentType::operator=(value); }
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
@@ -142,13 +142,13 @@ public:
      * \brief Assign the rate vector from another rate vector
      */
     ThisType &operator=(const ParentType &value)
-    { ParentType::operator=(value); return *this; };
+    { ParentType::operator=(value); return *this; }
 
     /*!
      * \brief Set all entries of the rate vector to a scalar value.
      */
     ThisType &operator=(Scalar value)
-    { ParentType::operator=(value); return *this; };
+    { ParentType::operator=(value); return *this; }
 };
 
 } // end namepace

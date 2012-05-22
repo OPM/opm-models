@@ -103,7 +103,7 @@ public:
     static Grid &grid()
     {
         return *cubeGrid_;
-    };
+    }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
@@ -112,7 +112,7 @@ public:
     static void loadBalance()
     {
         cubeGrid_->loadBalance();
-    };
+    }
 
 protected:
     static GridPointer cubeGrid_;

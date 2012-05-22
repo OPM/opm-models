@@ -66,21 +66,21 @@ public:
      */
     StokesNIBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     StokesNIBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     StokesNIBoundaryRateVector(const StokesNIBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
 
 protected:

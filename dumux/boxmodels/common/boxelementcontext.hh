@@ -119,7 +119,7 @@ public:
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateScvVars(timeIdx);
         scvIdxSaved_ = -1;
-    };
+    }
 
     void updateScvVars(int timeIdx)
     {
@@ -224,7 +224,7 @@ public:
      *        boundary.
      */
     bool onBoundary() const
-    { return element().hasBoundaryIntersections(); };
+    { return element().hasBoundaryIntersections(); }
 
     /*!
      * \brief Save the current flux variables and use them as the

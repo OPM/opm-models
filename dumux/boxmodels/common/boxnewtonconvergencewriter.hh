@@ -69,13 +69,13 @@ public:
     }
 
     ~BoxNewtonConvergenceWriter()
-    { delete vtkMultiWriter_; };
+    { delete vtkMultiWriter_; }
 
     void beginTimestep()
     {
         ++timeStepIdx_;
         iteration_ = 0;
-    };
+    }
 
     void beginIteration()
     {
@@ -83,21 +83,21 @@ public:
         if (!vtkMultiWriter_)
             vtkMultiWriter_ = new VtkMultiWriter(ctl_.problem().gridView(), "convergence");
         vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
-    };
+    }
 
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
     {
         ctl_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
-    };
+    }
 
     void endIteration()
-    { vtkMultiWriter_->endWrite(); };
+    { vtkMultiWriter_->endWrite(); }
 
     void endTimestep()
     {
         iteration_ = 0;
-    };
+    }
 
 private:
     int timeStepIdx_;

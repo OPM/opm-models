@@ -454,7 +454,7 @@ private:
         return 
             (0.20 <= pos[0]) && (pos[0] <= 0.80)
             && (0.4 <= pos[1]) && (pos[1] <= 0.65);
-    };
+    }
 
     bool isFineMaterial_(const GlobalPosition &pos) const
     {
@@ -463,7 +463,7 @@ private:
         else if (pos[1] <= 0.15 && 1.20 <= pos[0])
             return true;
         else return false;
-    };
+    }
 
     template <class FluidState, class Context>
     void initialFluidState_(FluidState &fs,

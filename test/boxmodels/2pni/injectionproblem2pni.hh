@@ -523,7 +523,7 @@ private:
     }
         
     bool isFineMaterial_(const GlobalPosition &pos) const
-    { return pos[dim-1] > layerBottom_; };
+    { return pos[dim-1] > layerBottom_; }
 
     DimMatrix fineK_;
     DimMatrix coarseK_;

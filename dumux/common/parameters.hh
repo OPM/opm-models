@@ -40,7 +40,7 @@
 #include <list>
 #include <sstream>
 #include <string>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 /*!
  * \ingroup Parameter
@@ -256,7 +256,7 @@ private:
             paramTypeName = b.paramTypeName;
             groupName = b.groupName;
             return *this;
-        };
+        }
     };
 
     static void check_(const std::string &paramTypeName,
@@ -264,7 +264,7 @@ private:
                        const char *groupName,
                        const char *paramName)
     {
-        typedef std::tr1::unordered_map<std::string, Blubb> StaticData;
+        typedef std::unordered_map<std::string, Blubb> StaticData;
         static StaticData staticData;
 
         typename StaticData::iterator it = staticData.find(paramName);
@@ -417,7 +417,7 @@ private:
         canonicalName.append(paramName);
 
         // cache parameters using a hash_map (Dune::Parameter tree is slow!)
-        typedef std::tr1::unordered_map<std::string, ParamType> ParamCache;
+        typedef std::unordered_map<std::string, ParamType> ParamCache;
         static ParamCache paramCache;
         const typename ParamCache::iterator &it = paramCache.find(canonicalName);
         if (it != paramCache.end())

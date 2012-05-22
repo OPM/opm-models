@@ -85,7 +85,7 @@ public:
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { DUNE_THROW(Dune::NotImplemented, "Problem does not provide a temperature() method"); };
+    { DUNE_THROW(Dune::NotImplemented, "Problem does not provide a temperature() method"); }
 
     /*!
      * \brief Returns the acceleration due to gravity.

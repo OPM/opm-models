@@ -108,7 +108,7 @@ class FVTransport2P2C
 
     //! Acess function for the current problem
     Problem& problem()
-    {return problem_;};
+    {return problem_;}
 
 public:
     virtual void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet = false);
@@ -133,7 +133,7 @@ public:
     {
         totalConcentration_[wCompIdx].resize(problem_.gridView().size(0));
         totalConcentration_[nCompIdx].resize(problem_.gridView().size(0));
-    };
+    }
 
     //! \brief Write data files
      /*  \param writer applied VTK-writer */

@@ -92,7 +92,7 @@ public:
         wasSwitched_ = false;
         phasePresence_ = 0;
         lowestPresentPhaseIdx_ = -1;
-    };
+    }
 
     /*!
      * \brief Constructor with assignment from scalar
@@ -106,7 +106,7 @@ public:
         phasePresence_ = 0;
         lowestPresentPhaseIdx_ = -1;
         wasSwitched_ = false;
-    };
+    }
 
     /*!
      * \brief Copy constructor
@@ -119,7 +119,7 @@ public:
         phasePresence_ = value.phasePresence_;
         lowestPresentPhaseIdx_ = value.lowestPresentPhaseIdx_;
         wasSwitched_ = false;
-    };
+    }
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state
@@ -200,7 +200,7 @@ public:
      *        control volume.
      */
     short phasePresence() const
-    { return phasePresence_; };
+    { return phasePresence_; }
 
     /*!
      * \brief Set which fluid phases are present in a given control
@@ -217,7 +217,7 @@ public:
                 break;
             }
         }
-    };
+    }
 
     /*!
      * \brief Set whether a given indivividual phase should be present
@@ -307,7 +307,7 @@ public:
             return 0.0;
 
         return (*this)[switch0Idx + phaseIdx - 1];
-    };
+    }
 
     /*!
      * \brief Assign the primary variables "naively" from a fluid state.
@@ -486,7 +486,7 @@ public:
         };
         os << ")";
         os << ", phase presence: " << static_cast<int>(phasePresence_);
-    };
+    }
     
 protected:
     unsigned char phasePresence_;

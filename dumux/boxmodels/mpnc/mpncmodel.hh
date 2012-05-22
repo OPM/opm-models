@@ -33,7 +33,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <tr1/array>
+#include <array>
 
 namespace Dumux
 {
@@ -250,7 +250,7 @@ public:
                 };
             };
         };
-    };
+    }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -278,7 +278,7 @@ public:
     Scalar minActivityCoeff(int vertIdx, int compIdx) const
     {
         return minActivityCoeff_[vertIdx][compIdx];
-    };
+    }
 
 protected:
     friend class BoxModel<TypeTag>;
@@ -292,7 +292,7 @@ protected:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
         if (enableEnergy)
             this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
-    };
+    }
 
     mutable std::vector<ComponentVector> minActivityCoeff_;
 };

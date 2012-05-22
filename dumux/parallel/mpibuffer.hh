@@ -31,7 +31,7 @@
 #include <mpi.h>
 #endif
 
-#include <tr1/type_traits>
+#include <type_traits>
 #include <assert.h>
 
 namespace Dumux
@@ -52,28 +52,28 @@ public:
         mpiDataSize_ = size;
 
         // set the MPI data type
-        if (std::tr1::is_same<DataType, char>::value)
+        if (std::is_same<DataType, char>::value)
             mpiDataType_ = MPI_CHAR;
-        else if (std::tr1::is_same<DataType, unsigned char>::value)
+        else if (std::is_same<DataType, unsigned char>::value)
             mpiDataType_ = MPI_UNSIGNED_CHAR;
-        else if (std::tr1::is_same<DataType, short>::value  || std::tr1::is_same<DataType, unsigned short>::value)
+        else if (std::is_same<DataType, short>::value  || std::is_same<DataType, unsigned short>::value)
             mpiDataType_ = MPI_SHORT;
-        else if (std::tr1::is_same<DataType, int>::value || std::tr1::is_same<DataType, unsigned>::value)
+        else if (std::is_same<DataType, int>::value || std::is_same<DataType, unsigned>::value)
             mpiDataType_ = MPI_INT;
-        else if (std::tr1::is_same<DataType, long>::value || std::tr1::is_same<DataType, unsigned long>::value)
+        else if (std::is_same<DataType, long>::value || std::is_same<DataType, unsigned long>::value)
             mpiDataType_ = MPI_LONG;
-        else if (std::tr1::is_same<DataType, float>::value)
+        else if (std::is_same<DataType, float>::value)
             mpiDataType_ = MPI_FLOAT;
-        else if (std::tr1::is_same<DataType, double>::value)
+        else if (std::is_same<DataType, double>::value)
             mpiDataType_ = MPI_DOUBLE;
-        else if (std::tr1::is_same<DataType, long double>::value)
+        else if (std::is_same<DataType, long double>::value)
             mpiDataType_ = MPI_LONG_DOUBLE;
         else {
             mpiDataType_ = MPI_BYTE;
             mpiDataSize_ *= sizeof(DataType);
         }
 #endif // HAVE_MPI
-    };
+    }
 
     ~MpiBuffer()
     {
@@ -94,7 +94,7 @@ public:
                   MPI_COMM_WORLD,
                   &mpiRequest_);
 #endif
-    };
+    }
 
     /*!
      * \brief Wait until the buffer was send to the peer completely.
@@ -104,7 +104,7 @@ public:
 #if HAVE_MPI
         MPI_Wait(&mpiRequest_, &mpiStatus_);
 #endif // HAVE_MPI
-    };
+    }
 
     /*!
      * \brief Receive the buffer syncronously from a peer rank
@@ -121,7 +121,7 @@ public:
                  &mpiStatus_);
         assert(! mpiStatus_.MPI_ERROR);
 #endif // HAVE_MPI
-    };
+    }
 
 #if HAVE_MPI
     /*!

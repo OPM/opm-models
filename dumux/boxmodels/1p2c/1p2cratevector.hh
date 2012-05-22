@@ -69,21 +69,21 @@ public:
      */
     OnePTwoCRateVector()
         : ParentType()
-    { Valgrind::SetUndefined(*this); };
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     OnePTwoCRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     OnePTwoCRateVector(const OnePTwoCRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set a mass rate of the conservation quantities.
@@ -100,7 +100,7 @@ public:
             molarRate[contiEqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
         
         setMolarRate(molarRate);
-    };
+    }
 
     /*!
      * \brief Set a molar rate of the conservation quantities.
@@ -113,7 +113,7 @@ public:
     {
         ParentType::operator=(value);
         (*this)[contiEqIdx] = value[contiEqIdx + /*compIdx=*/0] + value[contiEqIdx + /*compIdx=*/1];
-    };
+    }
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$

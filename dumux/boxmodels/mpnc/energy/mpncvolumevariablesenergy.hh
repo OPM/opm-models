@@ -146,7 +146,7 @@ public:
     static std::string eqName(int eqIdx)
     {
         return "";
-    };
+    }
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
@@ -156,7 +156,7 @@ public:
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "heatCapacitySolid() called with the energy equation being disabled");
-    };
+    }
 
     /*!
      * \brief Returns the lumped heat conducitvity [W/(K m)] of
@@ -166,7 +166,7 @@ public:
     {
         DUNE_THROW(Dune::InvalidStateException,
                    "heatCapacitySolid() called with the energy equation being disabled");
-    };
+    }
 
     /*!
      * \brief If running under valgrind this produces an error message
@@ -323,21 +323,21 @@ public:
         if (eqIdx == Indices::energyEqIdx)
             return "energy";
         return "";
-    };
+    }
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
      *        with no pores in the sub-control volume.
      */
     Scalar heatCapacitySolid() const
-    { return heatCapacitySolid_; };
+    { return heatCapacitySolid_; }
 
     /*!
      * \brief Returns the lumped thermal conductivity [W/(K m)] of the
      *        medium.
      */
     Scalar heatConductivity() const
-    { return heatConductivity_; };
+    { return heatConductivity_; }
 
     /*!
      * \brief If running under valgrind this produces an error message
@@ -347,7 +347,7 @@ public:
     {
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);
-    };
+    }
 
 protected:
     Scalar heatCapacitySolid_;

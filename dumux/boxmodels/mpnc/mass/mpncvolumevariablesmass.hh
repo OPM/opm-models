@@ -151,7 +151,7 @@ public:
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
             oss << "continuity^" << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
         return oss.str();
-    };
+    }
 };
 
 } // end namepace

@@ -72,7 +72,7 @@ public:
      * problem.
      */
     Scalar temperature() const
-    { DUNE_THROW(Dune::Exception, "temperature() method called for a 3p3cni problem"); };
+    { DUNE_THROW(Dune::Exception, "temperature() method called for a 3p3cni problem"); }
 
     // \}
 };

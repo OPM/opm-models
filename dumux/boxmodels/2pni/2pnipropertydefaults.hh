@@ -67,7 +67,7 @@ SET_TYPE_PROP(BoxTwoPNI, Model, TwoPNIModel<TypeTag>);
 SET_TYPE_PROP(BoxTwoPNI, BaseProblem, TwoPNIProblem<TypeTag>);
 
 //! the TwoPFluidState property
-SET_PROP(BoxTwoP, TwoPFluidState)
+SET_PROP(BoxTwoPNI, TwoPFluidState)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

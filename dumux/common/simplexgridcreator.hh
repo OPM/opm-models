@@ -110,7 +110,7 @@ public:
     static void loadBalance()
     {
         simplexGrid_->loadBalance();
-    };
+    }
 
 private:
     static GridPointer simplexGrid_;

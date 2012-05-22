@@ -461,21 +461,21 @@ protected:
         return
             10 <= pos[0] && pos[0] <= 20 &&
             0 <= pos[1] && pos[1] <= 35;
-    };
+    }
 
     bool onInlet_(const GlobalPosition &globalPos) const
     {
         Scalar x = globalPos[0];
         Scalar y = globalPos[1];
         return x >= 60 - eps_ && y <= 10;
-    };
+    }
 
     bool onOutlet_(const GlobalPosition &globalPos) const
     {
         Scalar x = globalPos[0];
         Scalar y = globalPos[1];
         return x < eps_ && y <= 10;
-    };
+    }
 
     
     void initFluidStates_()

@@ -80,21 +80,21 @@ public:
      */
     MPNCPrimaryVariables()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     MPNCPrimaryVariables(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     MPNCPrimaryVariables(const MPNCPrimaryVariables &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state

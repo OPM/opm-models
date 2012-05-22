@@ -192,7 +192,7 @@ public:
 
         verbose_ = true;
         numSteps_ = 0;
-    };
+    }
 
     /*!
      * \brief Returns a reference to the object which describes the
@@ -593,7 +593,7 @@ private:
             convergenceWriter_.writeFields(uLastIter, deltaU);
             convergenceWriter_.endIteration();
         }
-    };
+    }
 
     // returns the actual implementation for the controller we do
     // it this way in order to allow "poor man's virtual methods",

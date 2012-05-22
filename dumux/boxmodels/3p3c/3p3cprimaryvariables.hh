@@ -100,7 +100,7 @@ public:
 
         wasSwitched_ = false;
         phasePresence_ = 0;
-    };
+    }
 
     /*!
      * \brief Constructor with assignment from scalar
@@ -113,7 +113,7 @@ public:
 
         phasePresence_ = 0;
         wasSwitched_ = false;
-    };
+    }
 
     /*!
      * \brief Copy constructor
@@ -125,7 +125,7 @@ public:
 
         phasePresence_ = value.phasePresence_;
         wasSwitched_ = false;
-    };
+    }
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state
@@ -206,14 +206,14 @@ public:
      *        control volume.
      */
     short phasePresence() const
-    { return phasePresence_; };
+    { return phasePresence_; }
 
     /*!
      * \brief Set which fluid phases are present in a given control
      *        volume.
      */
     void setPhasePresence(short value)
-    { phasePresence_ = value; };
+    { phasePresence_ = value; }
 
     /*!
      * \brief Set whether a given indivividual phase should be present

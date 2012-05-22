@@ -32,7 +32,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
-#include <tr1/array>
+#include <array>
 
 #include <stdio.h>
 
@@ -78,10 +78,10 @@ class BoxVtkOutputModule
 
 public:
     typedef std::vector<Dune::FieldVector<Scalar, 1> > ScalarBuffer;
-    typedef std::tr1::array<ScalarBuffer, numEq> EqBuffer;
-    typedef std::tr1::array<ScalarBuffer, numPhases> PhaseBuffer;
-    typedef std::tr1::array<ScalarBuffer, numComponents> ComponentBuffer;
-    typedef std::tr1::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
+    typedef std::array<ScalarBuffer, numEq> EqBuffer;
+    typedef std::array<ScalarBuffer, numPhases> PhaseBuffer;
+    typedef std::array<ScalarBuffer, numComponents> ComponentBuffer;
+    typedef std::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
 
     BoxVtkOutputModule(const Problem &problem)
         : problem_(problem)
@@ -89,7 +89,7 @@ public:
     }
 
     virtual ~BoxVtkOutputModule()
-    {};
+    {}
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to

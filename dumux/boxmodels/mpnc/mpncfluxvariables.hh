@@ -90,17 +90,17 @@ public:
     ////////////////////////////////////////////////
     // forward calls to the diffusion module
     Scalar porousDiffCoeffL(int compIdx) const
-    { return diffusionVars_.porousDiffCoeffL(compIdx); };
+    { return diffusionVars_.porousDiffCoeffL(compIdx); }
 
     Scalar porousDiffCoeffG(int compIIdx, int compJIdx) const
-    { return diffusionVars_.porousDiffCoeffG(compIIdx, compJIdx); };
+    { return diffusionVars_.porousDiffCoeffG(compIIdx, compJIdx); }
 
     const Scalar moleFraction(int phaseIdx, int compIdx) const
-    { return diffusionVars_.moleFraction(phaseIdx, compIdx); };
+    { return diffusionVars_.moleFraction(phaseIdx, compIdx); }
 
     const DimVector &moleFracGrad(int phaseIdx,
                                int compIdx) const
-    { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); };
+    { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); }
     // end of forward calls to the diffusion module
     ////////////////////////////////////////////////
 

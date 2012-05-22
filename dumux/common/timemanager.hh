@@ -246,7 +246,7 @@ public:
         return
             std::min(episodeMaxTimeStepSize(),
                      std::max<Scalar>(0.0, endTime() - time()));
-    };
+    }
 
     /*
      * @}
@@ -343,7 +343,7 @@ public:
         return
             std::max<Scalar>(0.0,
                              episodeLength() - (time() - episodeStartTime()));
-    };
+    }
 
     /*
      * @}

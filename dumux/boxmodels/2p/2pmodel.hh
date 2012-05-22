@@ -189,7 +189,7 @@ protected:
         // add the VTK output modules available on all model
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
-    };
+    }
 };
 }
 

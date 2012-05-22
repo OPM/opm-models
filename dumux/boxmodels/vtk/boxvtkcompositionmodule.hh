@@ -180,25 +180,25 @@ public:
 
 private:
     static bool massFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMassFractions); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMassFractions); }
 
     static bool moleFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMoleFractions); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMoleFractions); }
 
     static bool totalMassFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMassFractions); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMassFractions); }
 
     static bool totalMoleFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMoleFractions); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMoleFractions); }
 
     static bool molarityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMolarities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMolarities); }
 
     static bool fugacityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacities); }
 
     static bool fugacityCoeffOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacityCoeffs); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacityCoeffs); }
 
     PhaseComponentBuffer moleFrac_;
     PhaseComponentBuffer massFrac_;

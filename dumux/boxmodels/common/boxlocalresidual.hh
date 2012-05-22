@@ -86,7 +86,7 @@ private:
 
     // copying the local residual class is not a good idea
     BoxLocalResidual(const BoxLocalResidual &)
-    {};
+    {}
 
 public:
     BoxLocalResidual()
@@ -136,7 +136,7 @@ public:
         ElementContext elemCtx(problem);
         elemCtx.updateAll(elem);
         eval(elemCtx);
-    };
+    }
 
     /*!
      * \brief Compute the local residual, i.e. the deviation of the
@@ -152,7 +152,7 @@ public:
         internalResidual_.resize(numScv);
         internalStorageTerm_.resize(numScv);
         asImp_().eval(internalResidual_, internalStorageTerm_, elemCtx);
-    };
+    }
 
     /*!
      * \brief Compute the local residual, i.e. the deviation of the

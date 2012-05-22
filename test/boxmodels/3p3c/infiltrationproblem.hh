@@ -488,7 +488,7 @@ private:
         return
             70. <= pos[0] && pos[0] <= 85. &&
             7.0 <= pos[1] && pos[1] <= 7.50;
-    };
+    }
 
     DimMatrix fineK_;
     DimMatrix coarseK_;

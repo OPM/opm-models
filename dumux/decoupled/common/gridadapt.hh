@@ -142,7 +142,7 @@ public:
 //        Dune::VTKWriter<LeafGridView> vtkwriter(leafView);
 //        vtkwriter.write("latestgrid",Dune::VTKOptions::binaryappended);
         return;
-    };
+    }
 
     /*!
      * Mark Elements for grid refinement according to applied Indicator
@@ -281,7 +281,7 @@ private:
                 }
         }
         return true;
-    };
+    }
 
 
     /*!
@@ -362,14 +362,14 @@ class GridAdapt<TypeTag, false>
 
 public:
     void adaptGrid()
-    {};
+    {}
     void setLevels(int, int)
-    {};
+    {}
     void setTolerance(int, int)
-    {};
+    {}
     const void setIndicator(const ScalarSolutionType&,
             const Scalar&, const Scalar&)
-    {};
+    {}
     GridAdapt (Problem& problem)
     {}
 };

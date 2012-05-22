@@ -73,21 +73,21 @@ public:
      */
     RichardsRateVector()
         : ParentType()
-    { Valgrind::SetUndefined(*this); };
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     RichardsRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     RichardsRateVector(const RichardsRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set a mass rate of the conservation quantities.
@@ -99,7 +99,7 @@ public:
     void setMassRate(const ParentType &value)
     {
         ParentType::operator=(value);
-    };
+    }
 
     /*!
      * \brief Set a molar rate of the conservation quantities.
@@ -116,7 +116,7 @@ public:
         
         // set the mass rate
         setMassRate(massRate);
-    };
+    }
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$

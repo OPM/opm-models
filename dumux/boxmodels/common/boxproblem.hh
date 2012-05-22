@@ -131,7 +131,7 @@ public:
     ~BoxProblem()
     {
         delete resultWriter_;
-    };
+    }
 
 
     /*!
@@ -358,7 +358,7 @@ public:
     {
         return std::min(GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
                         newtonCtl_.suggestTimeStepSize(dt));
-    };
+    }
 
     /*!
      * \brief Returns true if a restart file should be written to
@@ -412,7 +412,7 @@ public:
         std::cerr << "The end of an episode is reached, but the problem "
                   << "does not override the episodeEnd() method. "
                   << "Doing nothing!\n";
-    };
+    }
     // \}
 
     /*!
@@ -654,7 +654,7 @@ protected:
 private:
     // makes sure that the result writer exists
     void createResultWriter_()
-    { if (!resultWriter_) resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name()); };
+    { if (!resultWriter_) resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name()); }
 
     std::string simName_;
     const GridView gridView_;

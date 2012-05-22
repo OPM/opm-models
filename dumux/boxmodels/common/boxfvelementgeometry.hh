@@ -49,6 +49,9 @@
 
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
 namespace Dumux
 {
 template <class Scalar, int dim, int basicGeomType>
@@ -85,10 +88,10 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
         
         return 0;
-    };
+    }
 
     static const ScvGeometry &get(int scvIdx)
-    { return scvGeoms_[scvIdx]; };
+    { return scvGeoms_[scvIdx]; }
 
 private:
     static ScvGeometry scvGeoms_[numScv];
@@ -110,7 +113,7 @@ public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { DUNE_THROW(Dune::NotImplemented, "BoxScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); };
+    { DUNE_THROW(Dune::NotImplemented, "BoxScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
 };
 
 ////////////////////
@@ -127,7 +130,7 @@ public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { return scvGeoms_[scvIdx]; };
+    { return scvGeoms_[scvIdx]; }
 
     static int init()
     {
@@ -160,7 +163,7 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
 
         return 0;
-    };
+    }
 
 private:
     static ScvGeometry scvGeoms_[numScv];
@@ -182,7 +185,7 @@ public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { return scvGeoms_[scvIdx]; };
+    { return scvGeoms_[scvIdx]; }
 
 
     static int init()
@@ -216,7 +219,7 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
 
         return 0;
-    };
+    }
 
     static ScvGeometry scvGeoms_[numScv];
 };
@@ -240,7 +243,7 @@ public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { return scvGeoms_[scvIdx]; };
+    { return scvGeoms_[scvIdx]; }
 
     static int init()
     {
@@ -300,7 +303,7 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
 
         return 0;
-    };
+    }
 
 private:
     static ScvGeometry scvGeoms_[numScv];
@@ -322,7 +325,7 @@ public:
     typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { return scvGeoms_[scvIdx]; };
+    { return scvGeoms_[scvIdx]; }
 
     static int init()
     {
@@ -430,7 +433,7 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
 
         return 0;
-    };
+    }
 private:
     static ScvGeometry scvGeoms_[numScv];
 };
@@ -1207,6 +1210,8 @@ private:
 };
 
 }
+
+#pragma GCC diagnostic pop
 
 #endif
 

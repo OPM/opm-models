@@ -69,21 +69,21 @@ public:
      */
     MPNCRateVector()
         : ParentType()
-    { Valgrind::SetUndefined(*this); };
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     MPNCRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     MPNCRateVector(const MPNCRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set a mass rate of the conservation quantities.
@@ -101,7 +101,7 @@ public:
         
         // set the molar rate
         setMolarRate(molarRate);
-    };
+    }
 
     /*!
      * \brief Set a molar rate of the conservation quantities.
@@ -113,7 +113,7 @@ public:
     void setMolarRate(const ParentType &value)
     {
         ParentType::operator=(value);
-    };
+    }
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$

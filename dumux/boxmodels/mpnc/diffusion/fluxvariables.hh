@@ -150,31 +150,31 @@ public:
                 }
             }
         }
-    };
+    }
 
     Scalar porousDiffCoeffL(int compIdx) const
     {
         // TODO: tensorial diffusion coefficients
         return porousDiffCoeffL_[compIdx];
-    };
+    }
 
     Scalar porousDiffCoeffG(int compIIdx, int compJIdx) const
     {
         // TODO: tensorial diffusion coefficients
         return porousDiffCoeffG_[compIIdx][compJIdx];
-    };
+    }
 
     Scalar moleFraction(int phaseIdx,
                     int compIdx) const
     {
         return moleFrac_[phaseIdx][compIdx];
-    };
+    }
 
     const GlobalPosition &moleFracGrad(int phaseIdx,
                                             int compIdx) const
     {
         return moleFracGrad_[phaseIdx][compIdx];
-    };
+    }
 
 protected:
     // the diffusion coefficients for the porous medium for the
@@ -205,7 +205,7 @@ public:
 
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-    };
+    }
 };
 
 }

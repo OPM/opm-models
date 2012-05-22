@@ -53,7 +53,7 @@ class FixedLengthSpline_
 protected:
     FixedLengthSpline_()
         : m_(nSamples)
-    {};
+    {}
 
 public:
     /*!

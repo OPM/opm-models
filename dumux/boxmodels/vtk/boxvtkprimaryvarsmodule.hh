@@ -113,7 +113,7 @@ public:
 
 private:
     static bool primaryVarsOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePrimaryVars); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePrimaryVars); }
 
     EqBuffer primaryVars_;
 };

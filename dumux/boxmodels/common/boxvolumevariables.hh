@@ -55,14 +55,14 @@ class BoxVolumeVariables
 public:
     // default constructor
     BoxVolumeVariables()
-    { evalPoint_ = 0; };
+    { evalPoint_ = 0; }
 
     // copy constructor
     BoxVolumeVariables(const BoxVolumeVariables &v)
     {
         evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
-    };
+    }
 
     /*!
      * \brief Assignment operator
@@ -73,7 +73,7 @@ public:
         extrusionFactor_ = v.extrusionFactor_;
 
         return *this;
-    };
+    }
 
     /*!
      * \brief Sets the evaluation point used by the local jacobian.
@@ -135,7 +135,7 @@ public:
         if (evalPoint_ && evalPoint_ != this)
             evalPoint_->checkDefined();
 #endif
-    };
+    }
 
 protected:
     const Implementation &asImp_() const

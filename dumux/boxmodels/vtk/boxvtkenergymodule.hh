@@ -140,16 +140,16 @@ public:
 
 private:
     static bool solidHeatCapacityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSolidHeatCapacity); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSolidHeatCapacity); }
 
     static bool heatConductivityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteHeatConductivity); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteHeatConductivity); }
 
     static bool enthalpyOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteEnthalpies); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteEnthalpies); }
 
     static bool internalEnergyOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteInternalEnergies); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteInternalEnergies); }
 
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;

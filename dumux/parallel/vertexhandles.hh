@@ -46,7 +46,7 @@ public:
                     const VertexMapper &mapper)
         : mapper_(mapper)
         , container_(container)
-    { };
+    { }
 
     bool contains(int dim, int codim) const
     {
@@ -104,7 +104,7 @@ public:
                     const VertexMapper &mapper)
         : mapper_(mapper)
         , container_(container)
-    { };
+    { }
 
     bool contains(int dim, int codim) const
     {
@@ -163,7 +163,7 @@ public:
                     const VertexMapper &mapper)
         : mapper_(mapper)
         , container_(container)
-    { };
+    { }
 
     bool contains(int dim, int codim) const
     {

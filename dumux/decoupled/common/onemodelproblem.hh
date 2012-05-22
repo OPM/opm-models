@@ -364,14 +364,14 @@ public:
      *        integration.
      */
     void preTimeStep()
-    { };
+    { }
 
     /*!
      * \brief Called by Dumux::TimeManager in order to do a time
      *        integration on the model.
      */
     void timeIntegration()
-    { };
+    { }
 
     /*!
      * \brief Called by Dumux::TimeManager whenever a solution for a
@@ -382,7 +382,7 @@ public:
      * current solution to disk.
      */
     void postTimeStep()
-    { };
+    { }
 
     /*!
      * \brief Called by the time manager after everything which can be
@@ -476,7 +476,7 @@ public:
         std::cerr << "The end of an episode is reached, but the problem "
                   << "does not override the episodeEnd() method. "
                   << "Doing nothing!\n";
-    };
+    }
 
     // \}
 
@@ -622,7 +622,7 @@ public:
         res.template deserializeEntities<0> (model(), gridView_);
 
         res.deserializeEnd();
-    };
+    }
 
     // \}
 

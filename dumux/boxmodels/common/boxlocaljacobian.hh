@@ -298,7 +298,7 @@ protected:
 
         derivResidual_.resize(n);
         derivStorage_.resize(n);
-    };
+    }
 
     /*!
      * \brief Reset the all relevant internal attributes to 0

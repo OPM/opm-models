@@ -72,21 +72,21 @@ public:
         : ParentType()
     {
         Valgrind::SetUndefined(*this);
-    };
+    }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     OnePPrimaryVariables(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     OnePPrimaryVariables(const OnePPrimaryVariables &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state

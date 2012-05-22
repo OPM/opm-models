@@ -431,7 +431,7 @@ public:
     void postTimeStep()
     {
         asImp_().pressureModel().updateMaterialLaws();
-    };
+    }
 
     /*!
      * \brief Called by the time manager after everything which can be
@@ -547,7 +547,7 @@ public:
                     << "does not override the episodeEnd() method. "
                     << "Doing nothing!\n";
         }
-    };
+    }
 
     // \}
 
@@ -768,7 +768,7 @@ public:
         pressureModel().updateMaterialLaws();
 
         res.deserializeEnd();
-    };
+    }
     // \}
 
     void addOutputVtkFields()

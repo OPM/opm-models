@@ -88,21 +88,21 @@ public:
         : ParentType()
     {
         Valgrind::SetUndefined(*this);
-    };
+    }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     RichardsPrimaryVariables(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     RichardsPrimaryVariables(const RichardsPrimaryVariables &value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Set the primary variables with the wetting phase
@@ -132,7 +132,7 @@ public:
         fs.setPressure(nPhaseIdx, pw + (pC[nPhaseIdx] - pC[wPhaseIdx]));
         
         assignNaive(fs);
-    };
+    }
 
     /*!
      * \brief Set the primary variables with the non-wetting phase
@@ -162,7 +162,7 @@ public:
         fs.setPressure(nPhaseIdx, pn + (pC[wPhaseIdx] - pC[nPhaseIdx]));
         
         assignNaive(fs);
-    };
+    }
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state

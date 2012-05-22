@@ -88,7 +88,7 @@ public:
             volVars.porosity()
             * volVars.fluidState().saturation(phaseIdx)
             * volVars.fluidState().density(phaseIdx);
-    };
+    }
 
     /*!
      * \brief Evaluate the amount all conservation quantities

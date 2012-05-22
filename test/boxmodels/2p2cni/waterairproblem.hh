@@ -117,7 +117,7 @@ SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
 // no fixpoint convergence criterion in ISTL -> either use SuperLU or
 // print a warning.
 #if HAVE_SUPERLU
-#warning "ISTL has not been patched to support fixpoint convergence criteria using SuperLU backend" 
+#warning "ISTL has not been patched to support fixpoint convergence criteria. using SuperLU backend" 
 SET_TYPE_PROP(WaterAirProblem, LinearSolver, SuperLUBackend<TypeTag>);
 #else
 #warning "ISTL has not been patched to support fixpoint convergence criteria"
@@ -540,7 +540,7 @@ private:
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const
-    { return pos[dim-1] > layerBottom_; };
+    { return pos[dim-1] > layerBottom_; }
 
     DimMatrix fineK_;
     DimMatrix coarseK_;

@@ -112,7 +112,7 @@ class BoxVtkMultiPhaseModule : public BoxVtkOutputModule<TypeTag>
 
     typedef Dune::FieldVector<Scalar, dim> VelocityVector;
     typedef Dune::BlockVector<VelocityVector> VelocityField;
-    typedef std::tr1::array<VelocityField, numPhases> PhaseVectorField;
+    typedef std::array<VelocityField, numPhases> PhaseVectorField;
 
 public:
     BoxVtkMultiPhaseModule(const Problem &problem)
@@ -300,37 +300,37 @@ public:
 
 private:
     static bool pressureOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePressures); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePressures); }
 
     static bool densityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteDensities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteDensities); }
 
     static bool saturationOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSaturations); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSaturations); }
 
     static bool mobilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMobilities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMobilities); }
 
     static bool relativePermeabilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteRelativePermeabilities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteRelativePermeabilities); }
 
     static bool viscosityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteViscosities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteViscosities); }
 
     static bool averageMolarMassOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteAverageMolarMasses); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteAverageMolarMasses); }
 
     static bool porosityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePorosity); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePorosity); }
 
     static bool intrinsicPermeabilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteIntrinsicPermeabilities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteIntrinsicPermeabilities); }
 
     static bool velocityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFilterVelocities); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFilterVelocities); }
 
     static bool potentialGradientOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePotentialGradients); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePotentialGradients); }
 
     PhaseBuffer pressure_;
     PhaseBuffer density_;

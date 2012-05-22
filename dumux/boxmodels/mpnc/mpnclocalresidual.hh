@@ -149,7 +149,7 @@ public:
         source += tmp;
         //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
         Valgrind::CheckDefined(source);
-    };
+    }
 
     /*!
      * \brief Evaluates the total flux of all conservation quantities
@@ -216,7 +216,7 @@ protected:
         if (aEval > bEval)
             return phasePresentIneq_(fs, phaseIdx);
         return phaseNotPresentIneq_(fs, phaseIdx);
-    };
+    }
 
     /*!
      * \brief Returns the value of the inequality where a phase is

@@ -104,7 +104,7 @@ public:
         assert(globalToDomestic_.find(globalIdx) != globalToDomestic_.end());
 
         return globalToDomestic_.find(globalIdx)->second;
-    };
+    }
 
     /*!
      * \brief Returns the number of indices which are in the interior or
@@ -134,7 +134,7 @@ public:
         numDomestic_ = domesticToGlobal_.size();
 
         assert(domesticToGlobal_.size() == globalToDomestic_.size());
-    };
+    }
 
     /*!
      * \brief Send a border index to a remote process.
@@ -152,7 +152,7 @@ public:
                   0, // tag
                   MPI_COMM_WORLD); // communicator
 #endif // HAVE_MPI
-    };
+    }
 
     /*!
      * \brief Receive an index on the border from a remote
@@ -174,13 +174,13 @@ public:
         int globalIdx = recvBuff[1];
         addIndex(domesticIdx, globalIdx);
 #endif // HAVE_MPI
-    };
+    }
 
     /*!
      * \brief Return true iff a given global index already exists
      */
     bool hasGlobalIndex(int globalIdx) const
-    { return globalToDomestic_.find(globalIdx) != globalToDomestic_.end(); };
+    { return globalToDomestic_.find(globalIdx) != globalToDomestic_.end(); }
 
     /*!
      * \brief Prints the global indices of all domestic indices
@@ -198,7 +198,7 @@ public:
                       << ") ";
         };
         std::cout << "\n";
-    };
+    }
 
 protected:
     // retrieve the offset for the indices where we are master in the
@@ -323,7 +323,7 @@ protected:
             }
         }
 #endif // HAVE_MPI
-    };
+    }
 
     const PeerSet &peerSet_() const
     { return foreignOverlap_.peerSet(); }

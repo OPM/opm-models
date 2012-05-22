@@ -108,7 +108,7 @@ public:
 
 private:
     static bool phasePresenceOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePhasePresence); };
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePhasePresence); }
 
     ScalarBuffer phasePresence_;
 };

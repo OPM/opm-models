@@ -80,7 +80,7 @@ public:
     typedef typename MassVolumeVariables::FluidState FluidState;
 
     MPNCVolumeVariables()
-    { };
+    { }
 
     /*!
      * \brief Update all quantities for a given control volume.

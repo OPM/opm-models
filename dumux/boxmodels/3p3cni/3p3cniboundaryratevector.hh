@@ -62,21 +62,21 @@ public:
      */
     ThreePThreeCNIBoundaryRateVector()
         : ParentType()
-    { };
+    { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
     ThreePThreeCNIBoundaryRateVector(Scalar value)
         : ParentType(value)
-    { };
+    { }
 
     /*!
      * \brief Copy constructor
      */
     ThreePThreeCNIBoundaryRateVector(const ThreePThreeCNIBoundaryRateVector &value)
         : ParentType(value)
-    { };
+    { }
 
 
 protected:

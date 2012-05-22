@@ -52,7 +52,7 @@ public:
     }
 
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
-    {};
+    {}
 };
 
 template <class TypeTag>

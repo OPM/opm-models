@@ -87,13 +87,13 @@ public:
 
             }
         }
-    };
+    }
 
 private:
     static void clampValue_(Scalar &val, Scalar minVal, Scalar maxVal)
     {
         val = std::max(minVal, std::min(val, maxVal));
-    };
+    }
 
     static void pressureChop_(Scalar &val, Scalar oldVal, const Model &model)
     {
@@ -146,7 +146,7 @@ public:
     {
         choppedIterations_ = GET_PARAM_FROM_GROUP(TypeTag, int, Newton, ChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-    };
+    }
 
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,

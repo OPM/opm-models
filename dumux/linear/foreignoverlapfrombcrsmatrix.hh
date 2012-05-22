@@ -127,13 +127,13 @@ public:
      * \brief Returns true iff a local index is a border index.
      */
     bool isBorder(int localIdx) const
-    { return borderIndices_.count(localIdx) > 0; };
+    { return borderIndices_.count(localIdx) > 0; }
 
     /*!
      * \brief Return the rank of the master process for a local index.
      */
     int masterOf(int localIdx) const
-    { return masterRank_[localIdx]; };
+    { return masterRank_[localIdx]; }
 
     /*!
      * \brief Return true if the current rank is the "master" of an
@@ -146,7 +146,7 @@ public:
      * rank.
      */
     bool iAmMasterOf(int localIdx) const
-    { return masterRank_[localIdx] == myRank_; };
+    { return masterRank_[localIdx] == myRank_; }
 
     /*!
      * \brief Returns the list of indices which intersect the process
@@ -180,7 +180,7 @@ public:
 
         // the index is seen by the peer
         return true;
-    };
+    }
 
     /*!
      * \brief Return the list of (local indices, border distance,
@@ -213,7 +213,7 @@ public:
      * \brief Returns the number local indices
      */
     int numLocal() const
-    { return numLocal_; };
+    { return numLocal_; }
 
     /*!
      * \brief Returns true iff a domestic index is local
@@ -221,7 +221,7 @@ public:
     bool isLocal(int domesticIdx) const
     {
         return domesticIdx < numLocal();
-    };
+    }
 
     /*!
      * \brief Returns true iff a local index is shared with an other process.
@@ -234,13 +234,13 @@ public:
      *        index is visible.
      */
     int numPeers(int localIdx) const
-    { return foreignOverlapByIndex_[localIdx].size(); };
+    { return foreignOverlapByIndex_[localIdx].size(); }
 
     /*!
      * \brief Returns the size of the overlap region
      */
     int overlapSize() const
-    { return overlapSize_; };
+    { return overlapSize_; }
 
     /*!
      * \brief Print the foreign overlap for debugging purposes.
@@ -259,7 +259,7 @@ public:
             };
             std::cout << "\n";
         }
-    };
+    }
 
 protected:
     // Calculate the set of peer processes from the initial seed list.
@@ -282,7 +282,7 @@ protected:
                                                     it->borderDistance));
             borderIndices_.insert(it->localIdx);
         };
-    };
+    }
 
     // given a list of border indices and provided that
     // borderListToSeedList_() was already called, calculate the
@@ -420,7 +420,7 @@ protected:
         extendForeignOverlap_(A,
                               nextSeedList,
                               overlapSize);
-    };
+    }
 
     // assuming that the foreign overlap has been created for each
     // local index, this method groups the foreign overlap by peer

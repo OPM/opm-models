@@ -62,7 +62,7 @@ public:
         x.syncAverage();
         y.syncAverage();
 */
-    };
+    }
 
     void apply(domain_type &x, const range_type &d)
     {
@@ -108,12 +108,12 @@ public:
         else
 #endif // HAVE_MPI
             seqPreCond_.apply(x, d);
-    };
+    }
 
     void post(domain_type &x)
     {
         seqPreCond_.post(x);
-    };
+    }
 
 private:
     SeqPreCond seqPreCond_;

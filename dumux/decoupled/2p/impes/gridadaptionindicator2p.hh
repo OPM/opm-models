@@ -183,7 +183,7 @@ public:
     {
         refineBound_ = 0.;
         coarsenBound_ = 0.;
-    };
+    }
 
     /*! @brief Constructs a GridAdaptionIndicator instance
      *
