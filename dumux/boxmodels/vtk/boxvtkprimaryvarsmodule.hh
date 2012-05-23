@@ -41,8 +41,10 @@ NEW_TYPE_TAG(VtkPrimaryVars);
 
 // create the property tags needed for the primary variables module
 NEW_PROP_TAG(VtkWritePrimaryVars);
+NEW_PROP_TAG(VtkWriteProcessRank);
 
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
+SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
 }
 
 /*!
@@ -57,23 +59,20 @@ class BoxVtkPrimaryVarsModule : public BoxVtkOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    enum { dim = GridView::dimension };
-
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
+    typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::EqBuffer EqBuffer;
+
+    enum { dim = GridView::dimension };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
     BoxVtkPrimaryVarsModule(const Problem &problem)
         : ParentType(problem)
-    {
-    }
-
+    { }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
@@ -82,6 +81,7 @@ public:
     void allocBuffers(VtkMultiWriter &writer)
     {
         if (primaryVarsOutput_()) this->resizeEqBuffer_(primaryVars_);
+        if (processRankOutput_()) this->resizeScalarBuffer_(processRank_, /*vertexCentered=*/false);
     }
 
     /*!
@@ -90,10 +90,14 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        const auto &elementMapper = elemCtx.problem().elementMapper();
         const auto &vertexMapper = elemCtx.problem().vertexMapper();
         const auto &elem = elemCtx.element();
-
+        
+        auto elemIdx = elementMapper.map(elemCtx.element());
+        if (processRankOutput_()) processRank_[elemIdx] = this->problem_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numScv(); ++i) {
+
             int I = vertexMapper.map(elem, i, dim);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 
@@ -109,13 +113,17 @@ public:
     void commitBuffers(VtkMultiWriter &writer)
     {
         if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
+        if (processRankOutput_()) this->commitScalarBuffer_(writer, "process rank", processRank_, /*vertexCentered=*/false);
     }
 
 private:
     static bool primaryVarsOutput_()
     { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePrimaryVars); }
+    static bool processRankOutput_()
+    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteProcessRank); }
 
     EqBuffer primaryVars_;
+    ScalarBuffer processRank_;
 };
 
 }
