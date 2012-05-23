@@ -42,15 +42,8 @@ AC_DEFUN([EWOMS_CHECKS],
   # math and enable it if requested.
   EWOMS_CHECK_QUAD
 
-  # Add the EWOMS_DEPRECATED* macros. TODO: remove after we depend on
-  # a DUNE version which provides the DUNE_DEPRECATED_MSG macro!
-  EWOMS_CHECK_DEPRECATED
-
   # Check whether the compiler supports __attribute__((always_inline))
   EWOMS_CHECK_ALWAYS_INLINE
-
-  # Check whether the compiler supports __attribute__((unused))
-  EWOMS_CHECK_UNUSED
 
   # check whether the constexpr keyword is present
   AC_REQUIRE([CONSTEXPR_CHECK])

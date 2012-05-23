@@ -28,12 +28,11 @@
 
 #include "vtknestedfunction.hh"
 
+#include <dumux/common/valgrind.hh>
+
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
-
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-
-#include <dumux/common/valgrind.hh>
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -362,8 +361,8 @@ private:
         if (commSize_ > 1) {
             std::ostringstream oss;
             oss << "s" << std::setw(4) << std::setfill('0') << commSize_
-                << ":p" << rank
-                << ":" << simName_ << "-"
+                << "-p" << std::setw(4) << std::setfill('0') << rank
+                << "-" << simName_ << "-"
                 << std::setw(5) << curWriterNum_;
             return oss.str();
 

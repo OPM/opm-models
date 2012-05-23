@@ -28,14 +28,7 @@
 #include<dune/istl/matrix.hh>
 #include<dumux/common/boundaryconditions.hh>
 #include<dumux/decoupled/common/decoupledproperties.hh>
-#include<dune/common/version.hh>
-#if DUNE_VERSION_NEWER_REV(DUNE_COMMON,2,2,0)
-// dune 2.2
 #include<dune/geometry/type.hh>
-#else
-// dune 2.1
-#include<dune/common/geometrytype.hh>
-#endif
 
 #include <iostream>
 #include <vector>

@@ -27,17 +27,9 @@
 #ifndef DUMUX_QUADRATURE_GEOMETRIES_HH
 #define DUMUX_QUADRATURE_GEOMETRIES_HH
 
-#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-
-#if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2, 2, 0)
-// dune 2.2
 #include <dune/geometry/type.hh>
-#else
-// dune 2.1
-#include <dune/common/geometrytype.hh>
-#endif
 
 namespace Dumux {
 /*!

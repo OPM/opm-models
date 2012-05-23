@@ -33,15 +33,7 @@
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
-
-#include<dune/common/version.hh>
-#if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2,2,0)
-// dune 2.2
-#include<dune/geometry/quadraturerules.hh>
-#else
-// dune 2.1
-#include<dune/grid/common/quadraturerules.hh>
-#endif
+#include <dune/geometry/quadraturerules.hh>
 
 #include <dune/common/fvector.hh>
 

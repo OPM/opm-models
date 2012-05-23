@@ -6,4 +6,4 @@ Module: ewoms
 Version: 2.2-git
 Codename: Captain Koons
 Maintainer: andreas.lauser@iws.uni-stuttgart.de
-Depends: dune-grid (>= 2.1) dune-localfunctions  (>= 2.1) dune-istl  (>= 2.1)
+Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2)

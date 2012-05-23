@@ -35,16 +35,8 @@
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER_REV(DUNE_COMMON, 2, 2, 0)
-// dune 2.2
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/type.hh>
-#else
-// dune 2.1
-#include <dune/grid/common/genericreferenceelements.hh>
-#include <dune/common/geometrytype.hh>
-#endif
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
 
 #include <vector>
