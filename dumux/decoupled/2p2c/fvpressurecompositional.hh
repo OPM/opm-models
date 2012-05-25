@@ -731,7 +731,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
             DUNE_THROW(Dune::MathError, "NAN/inf of dV_dm. If that happens in first timestep, try smaller firstDt!");
         }
     }
-    cellData.hasVolumeDerivatives(true);
+    cellData.volumeDerivativesAvailable(true);
 }
 
 }//end namespace Dumux

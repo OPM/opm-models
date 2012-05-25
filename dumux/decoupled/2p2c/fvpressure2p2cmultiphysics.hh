@@ -197,6 +197,17 @@ protected:
     const GlobalPosition& gravity_; //!< vector including the gravity constant
     static constexpr int pressureType = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w \f$, \f$ 1 = p_n \f$, \f$ 2 = p_{global} \f$)
     Dune::Timer timer_;
+
+    //! Indices of matrix and rhs entries
+    /**
+    * During the assembling of the global system of equations get-functions are called (getSource(), getFlux(), etc.), which return global matrix or right hand side entries in a vector. These can be accessed using following indices:
+    */
+    enum
+    {
+        rhs = 1,//!<index for the right hand side entry
+        matrix = 0//!<index for the global matrix entry
+
+    };
 };
 
 //! function which assembles the system of equations to be solved
@@ -211,7 +222,13 @@ protected:
  */
 template<class TypeTag>
 void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
-{    // initialization: set matrix this->A_ to zero
+{
+    if(first)
+    {
+        ParentType::assemble(true);
+        return;
+    }
+    // initialization: set matrix this->A_ to zero
     this->A_ = 0;
     this->f_ = 0;
 
@@ -230,12 +247,12 @@ void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
         else
             problem().pressureModel().getSource(entries,*eIt, cellDataI, first);
 
-        this->f_[globalIdxI] = entries[1];
+        this->f_[globalIdxI] = entries[rhs];
 
         /*****  flux term ***********/
         // iterate over all faces of the cell
-        IntersectionIterator isItEnd = problem().gridView().iend(*eIt);
-        for (IntersectionIterator isIt = problem().gridView().ibegin(*eIt); isIt != isItEnd; ++isIt)
+        IntersectionIterator isItEnd = problem().gridView().template iend(*eIt);
+        for (IntersectionIterator isIt = problem().gridView().template ibegin(*eIt); isIt != isItEnd; ++isIt)
         {
             /************* handle interior face *****************/
             if (isIt->neighbor())
@@ -249,11 +266,11 @@ void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
                     problem().pressureModel().getFlux(entries, *isIt, cellDataI, first);
 
                 //set right hand side
-                this->f_[globalIdxI] -= entries[1];
+                this->f_[globalIdxI] -= entries[rhs];
                 // set diagonal entry
-                this->A_[globalIdxI][globalIdxI] += entries[0];
+                this->A_[globalIdxI][globalIdxI] += entries[matrix];
                 // set off-diagonal entry
-                this->A_[globalIdxI][globalIdxJ] = -entries[0];
+                this->A_[globalIdxI][globalIdxJ] = -entries[matrix];
             }   // end neighbor
 
 
@@ -266,9 +283,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
                     problem().pressureModel().getFluxOnBoundary(entries, *isIt, cellDataI, first);
 
                 //set right hand side
-                this->f_[globalIdxI] += entries[1];
+                this->f_[globalIdxI] += entries[rhs];
                 // set diagonal entry
-                this->A_[globalIdxI][globalIdxI] += entries[0];
+                this->A_[globalIdxI][globalIdxI] += entries[matrix];
             }
         } //end interfaces loop
 //        printmatrix(std::cout, this->A_, "global stiffness matrix", "row", 11, 3);
@@ -328,7 +345,10 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
         Scalar incp = 1e-2;
 
         // numerical derivative of fluid volume with respect to pressure
-        Scalar p_ = cellDataI.pressure(pressureType) + incp;
+        PhaseVector p_(incp);
+        p_[nPhaseIdx] += cellDataI.pressure(nPhaseIdx);
+        p_[wPhaseIdx] += cellDataI.pressure(wPhaseIdx);
+
         Scalar sumC = (cellDataI.massConcentration(wCompIdx) + cellDataI.massConcentration(nCompIdx));
         Scalar Z1 = cellDataI.massConcentration(wCompIdx) / sumC;
         // initialize simple fluidstate object
@@ -361,8 +381,8 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
 
         Scalar compress_term = cellDataI.dv_dp() / timestep_;
 
-        storageEntry[0] -= compress_term*volume;
-        storageEntry[1] -= cellDataI.pressure(pressureType) * compress_term * volume;
+        storageEntry[rhs] -= compress_term*volume;
+        storageEntry[matrix] -= cellDataI.pressure(pressureType) * compress_term * volume;
 
         if (std::isnan(compress_term) || std::isinf(compress_term))
             DUNE_THROW(Dune::MathError, "Compressibility term leads to NAN matrix entry at index " << globalIdxI);
@@ -371,6 +391,14 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
             DUNE_THROW(Dune::NotImplemented, "Compressibility is switched off???");
     }
 
+    // Abort error damping if there will be a possibly tiny timestep compared with last one
+    // This might be the case if the episode or simulation comes to an end.
+    if( problem().timeManager().episodeWillBeOver()
+            || problem().timeManager().willBeFinished())
+    {
+        problem().variables().cellData(globalIdxI).errorCorrection() = 0.;
+        return;
+    }
 
     // error reduction routine: volumetric error is damped and inserted to right hand side
     // if damping is not done, the solution method gets unstable!
@@ -388,12 +416,12 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
     if ((erri*timestep_ > 5e-5) && (erri > x_lo * maxError) && (!problem().timeManager().willBeFinished()))
     {
         if (erri <= x_mi * maxError)
-            storageEntry[1] +=
+            storageEntry[rhs] +=
                     problem().variables().cellData(globalIdxI).errorCorrection() =
                             fac* (1-x_mi*(lofac-1)/(x_lo-x_mi) + (lofac-1)/(x_lo-x_mi)*erri/maxError)
                                 * cellDataI.volumeError() * volume;
         else
-            storageEntry[1] +=
+            storageEntry[rhs] +=
                     problem().variables().cellData(globalIdxI).errorCorrection() =
                             fac * (1 + x_mi - hifac*x_mi/(1-x_mi) + (hifac/(1-x_mi)-1)*erri/maxError)
                                 * cellDataI.volumeError() * volume;
@@ -459,8 +487,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
 
         Scalar rhoMean = 0.5 * (cellDataI.density(phaseIdx) + cellDataJ.density(phaseIdx));
 
-        // reset potential gradients, density
-        Scalar density = 0;
+        //Scalar density = 0;
 
         // 1p => no pC => only 1 pressure, potential
         Scalar potential = (cellDataI.pressure(phaseIdx) - cellDataJ.pressure(phaseIdx)) / dist;
@@ -470,19 +497,19 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
         Scalar lambda;
 
         if (potential >= 0.)
-            {
+        {
             lambda = cellDataI.mobility(phaseIdx);
-            density = cellDataI.density(phaseIdx);
-            }
+            //density = cellDataI.density(phaseIdx);
+        }
         else
-            {
+        {
             lambda = cellDataJ.mobility(phaseIdx);
-            density = cellDataJ.density(phaseIdx);
-            }
+            //density = cellDataJ.density(phaseIdx);
+        }
 
-        entries[0]  = lambda * faceArea * (permeability * unitOuterNormal) / (dist);
-        entries[1]  = density * lambda;
-        entries[1] *= faceArea * (permeability * gravity_) * (unitOuterNormal * unitDistVec);
+        entries[matrix]  = lambda * faceArea * (permeability * unitOuterNormal) / (dist);
+        entries[rhs]  = rhoMean * lambda;
+        entries[rhs] *= faceArea * (permeability * gravity_) * (unitOuterNormal * unitDistVec);
         return;
 }
 
@@ -713,7 +740,6 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
                     && nextSubdomain[globalIdx] == 2)
         {
             // assure correct PV if subdomain used to be simple
-            if(cellData.fluidStateType() != 0); // i.e. it was simple
             timer_.stop();
             this->updateMaterialLawsInElement(*eIt);
             timer_.start();
@@ -793,7 +819,10 @@ void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const El
     cellData.setSimpleFluidState(pseudoFluidState);
 
     // initialize viscosities
-    cellData.setViscosity(presentPhaseIdx, FluidSystem::viscosity(pseudoFluidState, presentPhaseIdx));
+    typename FluidSystem::ParameterCache paramCache;
+    paramCache.updatePhase(pseudoFluidState, presentPhaseIdx);
+    Scalar mu = FluidSystem::viscosity(pseudoFluidState, paramCache, presentPhaseIdx);
+    cellData.setViscosity(presentPhaseIdx, mu);
 
     // initialize mobilities
     if(presentPhaseIdx == wPhaseIdx)

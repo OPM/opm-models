@@ -142,7 +142,7 @@ public:
      */
     void setPressure(int phaseIdx, Scalar value)
     {
-        fluidState_->setPressure(phaseIdx, value);
+        manipulateFluidState().setPressure(phaseIdx, value);
     }
 
     /*!
@@ -155,7 +155,7 @@ public:
      */
     const Scalar totalConcentration(int compIdx) const
     {
-        return massConcentration(compIdx);
+        return massConcentration_[compIdx];
     }
     //! \copydoc Dumux::CellData2P2C::totalConcentration()
     const Scalar massConcentration(int compIdx) const
@@ -378,6 +378,10 @@ public:
     //! Specifies that volume derivatives are computed and available
     void confirmVolumeDerivatives()
     { volumeDerivativesAvailable_ = true;}
+    //! Specifies if volume derivatives are computed and available
+    void volumeDerivativesAvailable(bool value)
+    { volumeDerivativesAvailable_ = value;}
+
     //! Resets the cell data after a timestep was completed: No volume derivatives yet available
     void reset()
     {
