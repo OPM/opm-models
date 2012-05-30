@@ -23,6 +23,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/boxmodels/2pni/Makefile 
     dumux/boxmodels/3p3c/Makefile 
     dumux/boxmodels/3p3cni/Makefile 
+    dumux/boxmodels/blackoil/Makefile 
     dumux/boxmodels/common/Makefile 
     dumux/boxmodels/mpnc/Makefile 
     dumux/boxmodels/mpnc/diffusion/Makefile
@@ -80,6 +81,7 @@ AC_CONFIG_FILES([ewoms.pc
     test/boxmodels/2p2cni/Makefile
     test/boxmodels/3p3c/Makefile
     test/boxmodels/3p3cni/Makefile
+    test/boxmodels/blackoil/Makefile
     test/boxmodels/mpnc/Makefile
     test/boxmodels/quadrature/Makefile
     test/boxmodels/richards/Makefile  
