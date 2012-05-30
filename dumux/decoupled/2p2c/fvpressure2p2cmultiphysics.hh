@@ -159,7 +159,7 @@ public:
 
 
     //constitutive functions are initialized and stored in the variables object
-    void updateMaterialLaws(bool);
+    void updateMaterialLaws(bool postTimeStep=false);
     //updates singlephase secondary variables for one cell and stores in the variables object
     void update1pMaterialLawsInElement(const Element&, CellData&, bool);
 
@@ -667,7 +667,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFluxOnBoundary(Dune::FieldVector<
  * or in the two phase subdomain (value = 2).
  */
 template<class TypeTag>
-void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep = false)
+void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
 {
     //get timestep for error term
     Scalar maxError = 0.;

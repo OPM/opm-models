@@ -130,7 +130,7 @@ public:
     {
         ParentType::postTimeStep();
         asImp_().pressureModel().updateMaterialLaws(true);
-    };
+    }
     /*!
      * \name Problem parameters
      */
