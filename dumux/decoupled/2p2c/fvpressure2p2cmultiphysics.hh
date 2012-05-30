@@ -159,9 +159,9 @@ public:
 
 
     //constitutive functions are initialized and stored in the variables object
-    void updateMaterialLaws();
+    void updateMaterialLaws(bool);
     //updates singlephase secondary variables for one cell and stores in the variables object
-    void update1pMaterialLawsInElement(const Element&, CellData&);
+    void update1pMaterialLawsInElement(const Element&, CellData&, bool);
 
     //! \brief Write data files
      /*  \param name file name */
@@ -667,7 +667,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFluxOnBoundary(Dune::FieldVector<
  * or in the two phase subdomain (value = 2).
  */
 template<class TypeTag>
-void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
+void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep = false)
 {
     //get timestep for error term
     Scalar maxError = 0.;
@@ -688,7 +688,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
 
         if(cellData.subdomain() == 2)    // complex
         {
-            this->updateMaterialLawsInElement(*eIt);
+            this->updateMaterialLawsInElement(*eIt, postTimeStep);
 
             // check subdomain consistency
             timer_.start();
@@ -741,7 +741,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
         {
             // assure correct PV if subdomain used to be simple
             timer_.stop();
-            this->updateMaterialLawsInElement(*eIt);
+            this->updateMaterialLawsInElement(*eIt, postTimeStep);
             timer_.start();
         }
         else if(oldSubdomainI != 2
@@ -751,7 +751,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
 //            int presentPhaseIdx = cellData.subdomain(); // this is already =nextSubomainIdx
  
             // perform simple update
-            this->update1pMaterialLawsInElement(*eIt, cellData);
+            this->update1pMaterialLawsInElement(*eIt, cellData, postTimeStep);
             timer_.stop();
          }
         //else
@@ -770,7 +770,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws()
 }
 
 template<class TypeTag>
-void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const Element& elementI, CellData& cellData)
+void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const Element& elementI, CellData& cellData, bool postTimeStep)
 {
     // get global coordinate of cell center
     GlobalPosition globalPos = elementI.geometry().center();
@@ -778,6 +778,10 @@ void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const El
 
     // determine which phase should be present
     int presentPhaseIdx = cellData.subdomain(); // this is already =nextSubomainIdx
+
+    // reset to calculate new timeStep if we are at the end of a time step
+    if(postTimeStep)
+        cellData.reset();
 
     // acess the simple fluid state and prepare for manipulation
     PseudoOnePTwoCFluidState<TypeTag>& pseudoFluidState

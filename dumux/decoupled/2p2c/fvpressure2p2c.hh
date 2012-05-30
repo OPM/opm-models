@@ -162,9 +162,9 @@ public:
                             const Intersection&, const CellData&, const bool);
 
     //constitutive functions are initialized and stored in the variables object
-    void updateMaterialLaws();
+    void updateMaterialLaws(bool inPostTimeStep = false);
     //updates secondary variables for one cell and stores in the variables object
-    void updateMaterialLawsInElement(const Element&);
+    void updateMaterialLawsInElement(const Element&, bool);
 
     //! Constructs a FVPressure2P2C object
     /**
@@ -887,7 +887,7 @@ void FVPressure2P2C<TypeTag>::getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& en
  * by using the updated primary variables.
  */
 template<class TypeTag>
-void FVPressure2P2C<TypeTag>::updateMaterialLaws()
+void FVPressure2P2C<TypeTag>::updateMaterialLaws(bool postTimeStep)
 {
     Scalar maxError = 0.;
     // iterate through leaf grid an evaluate c0 at cell center
@@ -898,7 +898,7 @@ void FVPressure2P2C<TypeTag>::updateMaterialLaws()
 
         CellData& cellData = problem().variables().cellData(globalIdx);
 
-        problem().pressureModel().updateMaterialLawsInElement(*eIt);
+        problem().pressureModel().updateMaterialLawsInElement(*eIt, postTimeStep);
 
         maxError = std::max(maxError, std::abs(cellData.volumeError()));
     }
@@ -911,7 +911,7 @@ void FVPressure2P2C<TypeTag>::updateMaterialLaws()
  * \param elementI The element
  */
 template<class TypeTag>
-void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& elementI)
+void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& elementI, bool postTimeStep)
 {
     // get global coordinate of cell center
     GlobalPosition globalPos = elementI.geometry().center();
@@ -924,8 +924,10 @@ void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& element
     FluidState& fluidState = cellData.manipulateFluidState();
 
     Scalar temperature_ = problem().temperatureAtPos(globalPos);
-    // reset
-    cellData.reset();
+
+    // reset to calculate new timeStep if we are at the end of a time step
+    if(postTimeStep)
+        cellData.reset();
 
 //    // make shure total concentrations from solution vector are exact in fluidstate
 //    fluidState.setMassConcentration(wCompIdx,
@@ -1070,8 +1072,6 @@ void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& element
     }
     else
         cellData.volumeError()=0.;
-
-    cellData.reset();
 
     return;
 }
