@@ -61,6 +61,7 @@ class GridAdapt
     typedef typename Grid::template Codim<0>::EntityPointer         ElementPointer;
 
     typedef typename GET_PROP_TYPE(TypeTag, AdaptionIndicator) AdaptionIndicator;
+    typedef typename GET_PROP_TYPE(TypeTag, AdaptionInitializationIndicator) AdaptionInitializationIndicator;
 
 public:
     /*!
@@ -82,6 +83,17 @@ public:
     void init()
     {
         adaptionIndicator_.init();
+
+        if (!GET_PARAM(TypeTag, bool, EnableInitializationIndicator))
+            return;
+
+        AdaptionInitializationIndicator adaptionInitIndicator(problem_, adaptionIndicator_);
+
+        while (adaptionInitIndicator.maxLevel() < levelMax_)
+        {
+            adaptGrid(adaptionInitIndicator);
+            problem_.model().initialize();
+        }
     }
 
     /*!
@@ -99,6 +111,12 @@ public:
      */
     void adaptGrid()
     {
+        adaptGrid(adaptionIndicator_) ;
+    }
+
+    template<class Indicator>
+    void adaptGrid(Indicator& indicator)
+    {
         // reset internal counter for marked elements
         marked_ = coarsened_ = 0;
 
@@ -109,10 +127,10 @@ public:
         /**** 1) determine refining parameter if standard is used ***/
         // if not, the indicatorVector and refinement Bounds have to
         // specified by the problem through setIndicator()
-        adaptionIndicator_.calculateIndicator();
+        indicator.calculateIndicator();
 
         /**** 2) mark elements according to indicator     *********/
-        markElements();
+        markElements(indicator);
 
         // abort if nothing in grid is marked
         if (marked_==0 && coarsened_ == 0)
@@ -146,7 +164,7 @@ public:
         problem_.grid().postAdapt();
 
         // write out new grid
-//        Dune::VTKWriter<LeafGridView> vtkwriter(leafView);
+//        Dune::VTKWriter<LeafGridView> vtkwriter(problem_.gridView());
 //        vtkwriter.write("latestgrid",Dune::VTKOptions::binaryappended);
         return;
     }
@@ -155,7 +173,8 @@ public:
      * Mark Elements for grid refinement according to applied Indicator
      * @return Total ammount of marked cells
      */
-    int markElements()
+    template<class Indicator>
+    int markElements(Indicator& indicator)
     {
         std::map<int, int> coarsenMarker;
         const typename Grid::Traits::LocalIdSet& idSet(problem_.grid().localIdSet());
@@ -164,7 +183,7 @@ public:
                     eIt!=problem_.gridView().template end<0>(); ++eIt)
         {
             // Verfeinern?
-            if (adaptionIndicator_.refine(*eIt) && eIt->level() < levelMax_)
+            if (indicator.refine(*eIt) && eIt->level() < levelMax_)
             {
                 problem_.grid().mark( 1,  *eIt);
                 ++marked_;
@@ -172,7 +191,7 @@ public:
                 // this also refines the neighbor elements
                 checkNeighborsRefine_(*eIt);
             }
-            if (adaptionIndicator_.coarsen(*eIt) && eIt->hasFather())
+            if (indicator.coarsen(*eIt) && eIt->hasFather())
             {
                 int idx = idSet.id(*(eIt->father()));
                 std::map<int, int>::iterator it = coarsenMarker.find(idx);
@@ -190,7 +209,7 @@ public:
         for (LeafIterator eIt = problem_.gridView().template begin<0>();
                     eIt!=problem_.gridView().template end<0>(); ++eIt)
         {
-            if (adaptionIndicator_.coarsen(*eIt) && eIt->level() > levelMin_ && problem_.grid().getMark(*eIt) == 0)
+            if (indicator.coarsen(*eIt) && eIt->level() > levelMin_ && problem_.grid().getMark(*eIt) == 0)
             {
                 if (coarsenMarker[idSet.id(*(eIt->father()))] == eIt->geometry().corners())
                 {
