@@ -4,6 +4,26 @@ Notable Differences Between DuMuX 2.1 and DuMuX-eWoms 2.2
 All of the following is specific to the fully-implicit models. The
 sequentially coupled models have only been modified if they used
 shared infrastructure that got altered:
+- The minumim required version of the Dune core modules is now
+  2.2. This means that eWoms will no longer compile with Dune 2.1.
+- Support for using a fix-point convergence criterion for the linear
+  has been added and is enabled by default if it is
+  available. Currently, a patch for dune-istl is required to enable
+  this. The patch is available from the Dune bug tracking system:
+  http://www.dune-project.org/flyspray/index.php?do=details&task_id=1018
+- eWoms now compiles with the LLVM-CLang compiler. The minimum version
+  required is CLang 3.1.
+- Support for compilers that don't support the 'auto' keyword and
+  initializer lists has been dropped. As a consequence eWoms will not
+  compile with GCC prior to version 4.4.
+- A black-oil model and the fluid system associated with it has been
+  added. The black-oil model widely used in petrolium engineering. The
+  black-oil fluid system also allows to use full-fledged compositional
+  models (Mp-Nc, 3p3c) to be used with black-oil parameters.
+- Many bugs have been shaken out of the code for MPI
+  parallelization. As a result, the fully-implicit models should work
+  much better for parallel runs. As a consequence, the parallelization
+  code is no longer be considered experimental.
 - All models use the generic M-phase material laws which (in
   principle) allow capillary pressure and relative permeability
   relations which depend on absolute pressure, temperature and phase
