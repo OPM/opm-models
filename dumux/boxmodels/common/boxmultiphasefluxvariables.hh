@@ -259,7 +259,7 @@ private:
                 {
                     if (!asImp_().usePhase(phaseIdx))
                         continue;
-
+                    
                     // the pressure gradient
                     DimVector tmp(feGrad);
                     tmp *= fluidState.pressure(phaseIdx);
@@ -397,13 +397,13 @@ private:
 
         // calculate the intrinsic permeability
         DimMatrix K;
-        problem.meanK(K,
-                      problem.intrinsicPermeability(elemCtx,
-                                                    insideScvIdx_,
-                                                    timeIdx),
-                      problem.intrinsicPermeability(elemCtx,
-                                                    outsideScvIdx_,
-                                                    timeIdx));
+        const auto &Ki = problem.intrinsicPermeability(elemCtx,
+                                                       insideScvIdx_,
+                                                       timeIdx);
+        const auto &Kj = problem.intrinsicPermeability(elemCtx,
+                                                       outsideScvIdx_,
+                                                       timeIdx);
+        problem.meanK(K, Ki, Kj);
         
         Valgrind::CheckDefined(elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal);
         DimVector normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
@@ -430,6 +430,7 @@ private:
             // calculate the "prelimanary" filter velocity not
             // taking the mobility into account
             K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
+
             filterVelocity_[phaseIdx] *= -1;
             filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx] * normal)*scvfArea;
 
