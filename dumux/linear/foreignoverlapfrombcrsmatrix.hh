@@ -193,6 +193,39 @@ public:
     }
 
     /*!
+     * \brief Returns the number of front indices of a peer process in
+     *        the local partition.
+     */
+    int numFront(int peerRank) const
+    { 
+        const auto &peerOverlap = foreignOverlapByRank_.find(peerRank)->second;
+
+        int n = 0;
+        auto it = peerOverlap.begin();
+        const auto &endIt = peerOverlap.end();
+        for (; it != endIt; ++it) {
+            if (it->borderDistance == overlapSize_)
+                ++ n;
+        }
+        return n;
+    }
+
+    /*!
+     * \brief Returns whether a given local index is on the front of a
+     *        given peer rank.
+     */
+    bool isFrontFor(int peerRank, int localIdx) const
+    { 
+        const auto &idxOverlap = foreignOverlapByIndex_[localIdx];
+
+        auto it = idxOverlap.find(peerRank);
+        if (it == idxOverlap.end())
+            return false; // index is not in overlap
+
+        return it->second == overlapSize_;
+    }
+
+    /*!
      * \brief Return the set of process ranks which share an overlap
      *        with the current process.
      */

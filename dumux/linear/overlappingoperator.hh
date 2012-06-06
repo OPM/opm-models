@@ -55,14 +55,14 @@ public:
     virtual void apply (const DomainVector& x, RangeVector& y) const
     { 
         A_.mv(x,y);
-        y.sync();
+        y.syncFront();
     }
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
     virtual void applyscaleadd(field_type alpha, const DomainVector& x, RangeVector& y) const
     { 
         A_.usmv(alpha, x, y);
-        y.sync();
+        y.syncFront();
     }
 
     //! returns the matrix
