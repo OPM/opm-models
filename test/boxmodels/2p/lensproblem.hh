@@ -251,7 +251,6 @@ public:
         eps_ = 3e-6;
         FluidSystem::init();
 
-
         temperature_ = 273.15 + 20; // -> 20°C
         lensLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensLowerLeftX);
         lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
@@ -294,6 +293,7 @@ public:
     const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
+
         if (isInLens_(globalPos))
             return lensK_;
         return outerK_;
@@ -501,7 +501,7 @@ private:
     bool isInLens_(const GlobalPosition &pos) const
     {
         for (int i = 0; i < dim; ++i) {
-            if (pos[i] < lensLowerLeft_[i] || pos[i] > lensUpperRight_[i])
+            if (pos[i] < lensLowerLeft_[i] - eps_ || pos[i] > lensUpperRight_[i] + eps_)
                 return false;
         }
         return true;
@@ -537,6 +537,7 @@ private:
     Scalar temperature_;
     Scalar eps_;
 };
+
 } //end namespace
 
 #endif
