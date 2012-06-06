@@ -1,9 +1,10 @@
 Notable Differences Between DuMuX 2.1 and DuMuX-eWoms 2.2
 =========================================================
 
-All of the following is specific to the fully-implicit models. The
-sequentially coupled models have only been modified if they used
-shared infrastructure that got altered:
+Most of the following items are specific to the fully-implicit models. The
+sequentially coupled models are snapshots of the ones found in Dumux
+and have only been modified if they use shared infrastructure that
+got altered or to fix issues with newly supported compilers:
 - The minumim required version of the Dune core modules is now
   2.2. This means that eWoms will no longer compile with Dune 2.1.
 - Support for using a fix-point convergence criterion for the linear
@@ -16,55 +17,59 @@ shared infrastructure that got altered:
 - Support for compilers that don't support the 'auto' keyword and
   initializer lists has been dropped. As a consequence eWoms will not
   compile with GCC prior to version 4.4.
-- A black-oil model and the fluid system associated with it has been
-  added. The black-oil model widely used in petrolium engineering. The
-  black-oil fluid system also allows to use full-fledged compositional
-  models (Mp-Nc, 3p3c) to be used with black-oil parameters.
+- A black-oil model and the corresponding fluid system has been
+  added. The black-oil model is a three-phase three-component
+  paritially miscible model that is widely used in petrolium
+  engineering. The black-oil fluid system also allows to use
+  full-fledged compositional models (Mp-Nc, 3p3c) to be used with
+  black-oil parameters.
 - Many bugs have been shaken out of the code for MPI
   parallelization. As a result, the fully-implicit models should work
-  much better for parallel runs. As a consequence, the parallelization
-  code is no longer be considered experimental.
-- All models use the generic M-phase material laws which (in
-  principle) allow capillary pressure and relative permeability
-  relations which depend on absolute pressure, temperature and phase
-  composition. Also, these material law does not require the physical
-  model to know whether a fluid is wetting or non-wetting.
-- Heat conduction laws were introduced which work analogous to the
-  material laws.
+  much better for parallel computations. Also, the parallelization is
+  no longer considered experimental.
+- All fully-implicit models now use the generic M-phase material laws
+  which (in principle) allow to implement capillary pressure and
+  relative permeability relations depending on absolute pressure,
+  temperature and phase composition. Also, these material law does not
+  require the flow model to know the wettability of the fluids.
+- Heat conduction laws have been introduced. They work analogous to
+  the capillary pressure laws.
 - The primary variables are not "dumb" vectors anymore but can also
   store "pseudo primary variables" like the phase state.
-- Introduction of rate vectors which allow to specify fluxes and
-  source term independent of the formulation and allow to to use
-  volumetric rates
-- The API to the problems is not specific to any physical model or
-  spatial as well as temporal discretization. This is achived by
+- 'Rate vectors' have been introduced. They allow to specify fluxes
+  and source terms independent of the underlying flow model and also support
+  using volumetric rates
+- The API to the problems is not specific to any flow model or spatial
+  as well as temporal discretization anymore. This is achived by
   passing so called "context objects" and a space and time index to
-  all of the problem's methods. All execution contexts provide a
-  generic set of methods (e.g. pos() and globalSpaceIdx()), but also
-  discreization specific data. The problems and the physical models
-  are not supposed to know what a given space and a time index means.
-- The abstractions between problems, physical models, discretization
+  all of the problem's methods which are potentially dependent on
+  space or time. All context objects provide a generic set of methods
+  (e.g. pos() and globalSpaceIdx()), and some discreization specific
+  ones. The problems and the physical models are not supposed to know
+  what a given space and a time index means.
+- The abstractions between problems, flow models, discretization
   schemes and solvers have been overhauled:
   - Problems only specify the physics of a given set-up. This means
     that problems usually do not manipulate primary variables or
     fluxes directly.
-  - The "spatial parameters" classes have been removed. This was done
-    because all methods of the problems already specified spatially
-    dependent parameters.
+  - All "spatial parameters" classes have been merged with their
+    respecitve problems. This was done because all methods of the
+    problems already specified spatially dependent parameters.
 - Writing VTK output files has been centralized. This allows to
-  simplify the physical models, and allows much finer control over
+  simplify the flow models, and allows much finer granularity over
   what quantities get written to disk. Writing a quantity can be
   enabled by passing e.g. the "--vtk.write-temperature=1" parameter to
   the executable.
-- Physical models now specify names for the conservation equations and
+- Flow models now specify names for the conservation equations and
   primary variables which they use. This significantly improves the
-  comprehensibility of the output when the convergence behavioud of
+  comprehensibility of the VTK output when the convergence behaviour of
   the Newton method is written to disk.
 - Most physical models now only support a single formulation
   (i.e. choice of primary variables and conservation equations). This
-  makes them more readable and improves test coverage. Since problems
-  can be specified independent of the formulation, supporting multiple
-  formulations does not really make sense anymore.
+  makes them more readable and improves test coverage. This change was
+  motivated by the fact that, since problems can easily be specified
+  independent of the flow model, supporting multiple formulations does
+  not really make sense anymore.
 - The boundary conditions are now weakly imposed for all fully
   implicit models. For this reason the problem's methods
   boundaryTypes(), dirichlet(), and neumann() are superseded by the
