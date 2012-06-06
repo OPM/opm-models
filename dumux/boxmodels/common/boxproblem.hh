@@ -161,7 +161,6 @@ public:
         if (gridView().comm().rank() == 0) {
             Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_); 
             int numCores = this->gridView().comm().size();
-            std::cout.precision(5);
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "Timing receipt [s] (solve total/assemble/linear solve/update): "
                       << totalTime  << " (" << totalTime*numCores << " cummulative, " << numCores <<" processes) / "
