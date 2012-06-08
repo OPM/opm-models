@@ -29,7 +29,7 @@
 #ifndef DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 #define DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 
-#include <dumux/boxmodels/common/boxporousproblem.hh>
+#include <dumux/boxmodels/common/boxproblem.hh>
 #include <dumux/common/math.hh>
 
 namespace Dumux {
@@ -44,18 +44,20 @@ NEW_PROP_TAG(MaterialLawParams);
  *        with a multi-phase flow through a porous medium.
  */
 template<class TypeTag>
-class BoxMultiPhaseProblem : public BoxPorousProblem<TypeTag>
+class BoxMultiPhaseProblem : public BoxProblem<TypeTag>
 {
-    typedef Dumux::BoxPorousProblem<TypeTag> ParentType;
+    typedef Dumux::BoxProblem<TypeTag> ParentType;
     
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
 
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
     BoxMultiPhaseProblem(TimeManager &timeManager, const GridView &gridView)
@@ -66,9 +68,132 @@ public:
     }
 
     /*!
+     * \brief Averages the intrinsic permeability Tensor.
+     *
+     * \param result averaged intrinsic permeability
+     * \param K1 intrinsic permeability of the first node
+     * \param K2 intrinsic permeability of the second node
+     */
+    void meanK(DimMatrix &result,
+               const DimMatrix &K1,
+               const DimMatrix &K2) const
+    {
+        // entry-wise harmonic mean. this is almost certainly wrong if
+        // you have off-main diagonal entries in your permeabilities!
+        for (int i = 0; i < dimWorld; ++i)
+            for (int j = 0; j < dimWorld; ++j)
+                result[i][j] = harmonicMean(K1[i][j], K2[i][j]);
+    }
+
+    
+    /*!
      * \name Problem parameters
      */
     // \{
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor [m^2] at a given position
+     * 
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    const DimMatrix &intrinsicPermeability(const Context &context,
+                                           int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::intrinsicPermeability()");
+    }
+
+    /*!
+     * \brief Returns the porosity [] of the porous medium for a given
+     *        control volume.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    Scalar porosity(const Context &context,
+                    int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::porosity()");
+    }
+
+    /*!
+     * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
+     *        with no pores in the sub-control volume.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    Scalar heatCapacitySolid(const Context &context,
+                             int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::heatCapacitySolid()");
+    }
+
+    /*!
+     * \brief Returns the parameter object for the heat conductivity law in
+     *        a sub-control volume.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    const HeatConductionLawParams&
+    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::heatConductionParams()");
+    }
+
+    /*!
+     * \brief Define the tortuosity \f$[?]\f$.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::tortuosity()");
+    }
+
+    /*!
+     * \brief Define the dispersivity \f$[?]\f$.
+     *
+     * \param context Container for the volume variables, element,
+     *                fvElementGeometry, etc
+     * \param spaceIdx The local index of the sub control volume inside
+     *                 the element
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    Scalar dispersivity(const Context &context,
+                        int spaceIdx, int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented,
+                   "Problem::dispersivity()");
+    }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
@@ -141,6 +266,17 @@ public:
     // \}
 
 protected:
+    const DimMatrix &toDimMatrix_(const DimMatrix &val) const
+    { return val; }
+
+    DimMatrix toDimMatrix_(Scalar val) const
+    {
+        DimMatrix ret(0.0);
+        for (int i = 0; i < DimMatrix::rows; ++i)
+            ret[i][i] = val;
+        return ret;
+    }
+
     DimVector gravity_;
 
 private:
