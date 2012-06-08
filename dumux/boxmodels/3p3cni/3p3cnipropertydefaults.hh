@@ -37,7 +37,7 @@
 #include <dumux/boxmodels/3p3c/3p3cpropertydefaults.hh>
 
 #include "3p3cnimodel.hh"
-#include "3p3cniproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "3p3cniindices.hh"
 #include "3p3cnilocalresidual.hh"
 #include "3p3cniboundaryratevector.hh"
@@ -64,7 +64,7 @@ SET_TYPE_PROP(BoxThreePThreeCNI,
 SET_TYPE_PROP(BoxThreePThreeCNI, Model, ThreePThreeCNIModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxThreePThreeCNI, BaseProblem, ThreePThreeCNIProblem<TypeTag>);
+SET_TYPE_PROP(BoxThreePThreeCNI, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxThreePThreeCNI, VolumeVariables, ThreePThreeCNIVolumeVariables<TypeTag>);

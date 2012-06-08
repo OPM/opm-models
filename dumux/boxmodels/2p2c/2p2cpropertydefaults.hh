@@ -32,7 +32,7 @@
 #define DUMUX_2P2C_PROPERTY_DEFAULTS_HH
 
 #include "2p2cmodel.hh"
-#include "2p2cproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "2p2cnewtoncontroller.hh"
 #include "2p2cprimaryvariables.hh"
 #include "2p2cratevector.hh"
@@ -123,7 +123,7 @@ SET_TYPE_PROP(BoxTwoPTwoC, NewtonController, TwoPTwoCNewtonController<TypeTag>);
 SET_TYPE_PROP(BoxTwoPTwoC, Model, TwoPTwoCModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoPTwoC, BaseProblem, TwoPTwoCProblem<TypeTag>);
+SET_TYPE_PROP(BoxTwoPTwoC, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxTwoPTwoC, PrimaryVariables, TwoPTwoCPrimaryVariables<TypeTag>);

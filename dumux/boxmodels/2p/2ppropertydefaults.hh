@@ -33,7 +33,6 @@
 #define DUMUX_2P_PROPERTY_DEFAULTS_HH
 
 #include "2pmodel.hh"
-#include "2pproblem.hh"
 #include "2pindices.hh"
 #include "2pfluxvariables.hh"
 #include "2pprimaryvariables.hh"
@@ -42,6 +41,7 @@
 #include "2pboundaryratevector.hh"
 #include "2pproperties.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
@@ -67,7 +67,7 @@ SET_TYPE_PROP(BoxTwoP,
 SET_TYPE_PROP(BoxTwoP, Model, TwoPModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoP, BaseProblem, TwoPProblem<TypeTag>);
+SET_TYPE_PROP(BoxTwoP, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the TwoPFluidState property
 SET_PROP(BoxTwoP, TwoPFluidState)

@@ -29,7 +29,6 @@
 
 #include "blackoilproperties.hh"
 #include "blackoillocalresidual.hh"
-#include "blackoilproblem.hh"
 
 #include <sstream>
 #include <string>

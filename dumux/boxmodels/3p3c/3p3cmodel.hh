@@ -35,7 +35,6 @@
 
 #include "3p3cproperties.hh"
 #include "3p3clocalresidual.hh"
-#include "3p3cproblem.hh"
 
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 

@@ -30,7 +30,6 @@
 
 #include "2pproperties.hh"
 #include "2plocalresidual.hh"
-#include "2pproblem.hh"
 
 #include <sstream>
 #include <string>

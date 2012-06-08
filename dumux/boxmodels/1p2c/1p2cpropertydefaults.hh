@@ -45,6 +45,7 @@
 #include "1p2cfluxvariables.hh"
 #include "1p2cindices.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidmatrixinteractions/dummymateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -90,7 +91,7 @@ SET_TYPE_PROP(BoxOnePTwoC,
 SET_TYPE_PROP(BoxOnePTwoC, Model, OnePTwoCBoxModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxOnePTwoC, BaseProblem, OnePTwoCBoxProblem<TypeTag>);
+SET_TYPE_PROP(BoxOnePTwoC, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxOnePTwoC, RateVector, OnePTwoCRateVector<TypeTag>);

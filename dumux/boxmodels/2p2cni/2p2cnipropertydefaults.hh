@@ -37,7 +37,7 @@
 #include <dumux/boxmodels/2p2c/2p2cpropertydefaults.hh>
 
 #include "2p2cnimodel.hh"
-#include "2p2cniproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "2p2cniindices.hh"
 #include "2p2cniboundaryratevector.hh"
 #include "2p2cnilocalresidual.hh"
@@ -64,7 +64,7 @@ SET_TYPE_PROP(BoxTwoPTwoCNI,
 SET_TYPE_PROP(BoxTwoPTwoCNI, Model, TwoPTwoCNIModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoPTwoCNI, BaseProblem, TwoPTwoCNIProblem<TypeTag>);
+SET_TYPE_PROP(BoxTwoPTwoCNI, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(BoxTwoPTwoCNI, VolumeVariables, TwoPTwoCNIVolumeVariables<TypeTag>);

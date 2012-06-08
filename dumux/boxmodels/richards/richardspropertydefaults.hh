@@ -32,7 +32,7 @@
 #define DUMUX_RICHARDS_PROPERTY_DEFAULTS_HH
 
 #include "richardsmodel.hh"
-#include "richardsproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "richardsindices.hh"
 #include "richardsfluxvariables.hh"
 #include "richardsratevector.hh"
@@ -70,7 +70,7 @@ SET_TYPE_PROP(BoxRichards,
 SET_TYPE_PROP(BoxRichards, Model, RichardsModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxRichards, BaseProblem, RichardsBoxProblem<TypeTag>);
+SET_TYPE_PROP(BoxRichards, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxRichards, RateVector, RichardsRateVector<TypeTag>);

@@ -29,7 +29,6 @@
 #define DUMUX_RICHARDS_MODEL_HH
 
 #include "richardslocalresidual.hh"
-#include "richardsproblem.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 

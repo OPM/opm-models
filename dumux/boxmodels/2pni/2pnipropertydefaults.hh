@@ -36,7 +36,7 @@
 
 #include "2pniproperties.hh"
 #include "2pnimodel.hh"
-#include "2pniproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "2pnilocalresidual.hh"
 #include "2pnivolumevariables.hh"
 #include "2pnifluxvariables.hh"
@@ -64,7 +64,7 @@ SET_TYPE_PROP(BoxTwoPNI,
 SET_TYPE_PROP(BoxTwoPNI, Model, TwoPNIModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoPNI, BaseProblem, TwoPNIProblem<TypeTag>);
+SET_TYPE_PROP(BoxTwoPNI, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the TwoPFluidState property
 SET_PROP(BoxTwoPNI, TwoPFluidState)

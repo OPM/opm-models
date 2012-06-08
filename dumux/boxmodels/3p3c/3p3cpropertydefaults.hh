@@ -35,7 +35,7 @@
 #define DUMUX_3P3C_PROPERTY_DEFAULTS_HH
 
 #include "3p3cmodel.hh"
-#include "3p3cproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "3p3cnewtoncontroller.hh"
 #include "3p3cprimaryvariables.hh"
 #include "3p3cratevector.hh"
@@ -124,7 +124,7 @@ SET_TYPE_PROP(BoxThreePThreeC, NewtonController, ThreePThreeCNewtonController<Ty
 SET_TYPE_PROP(BoxThreePThreeC, Model, ThreePThreeCModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxThreePThreeC, BaseProblem, ThreePThreeCProblem<TypeTag>);
+SET_TYPE_PROP(BoxThreePThreeC, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxThreePThreeC, PrimaryVariables, ThreePThreeCPrimaryVariables<TypeTag>);

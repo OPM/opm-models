@@ -34,7 +34,7 @@
 #define DUMUX_BLACK_OIL_PROPERTY_DEFAULTS_HH
 
 #include "blackoilmodel.hh"
-#include "blackoilproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "blackoilindices.hh"
 #include "blackoilfluxvariables.hh"
 #include "blackoilprimaryvariables.hh"
@@ -65,7 +65,7 @@ SET_TYPE_PROP(BoxBlackOil,
 SET_TYPE_PROP(BoxBlackOil, Model, BlackOilModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxBlackOil, BaseProblem, BlackOilProblem<TypeTag>);
+SET_TYPE_PROP(BoxBlackOil, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! The BlackOilFluidState property
 SET_PROP(BoxBlackOil, BlackOilFluidState)

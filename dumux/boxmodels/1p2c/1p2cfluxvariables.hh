@@ -61,7 +61,9 @@ class OnePTwoCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum {
         dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
+        dimWorld = GridView::dimensionworld,
+
+        useTwoPointGradients = GET_PROP_VALUE(TypeTag, UseTwoPointGradients)
     };
 
     typedef typename GridView::ctype CoordScalar;
@@ -130,13 +132,10 @@ private:
 
         typedef typename FVElementGeometry::SubControlVolumeFace Scvf;
         const Scvf &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
-        const auto &problem = elemCtx.problem();
 
-        if (!problem.useTwoPointGradient(elemCtx, scvfIdx, timeIdx))
-        {
-            // calculate gradients
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx)
-            {
+        if (!useTwoPointGradients) {
+            // calculate gradients using finite-element gradients
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++ scvIdx) {
                 // FE gradient at vertex idx
                 const DimVector &feGrad = scvf.grad[scvIdx];
                 const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();

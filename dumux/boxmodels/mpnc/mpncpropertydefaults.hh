@@ -23,7 +23,7 @@
 #define DUMUX_MPNC_PROPERTY_DEFAULTS_HH
 
 #include "mpncmodel.hh"
-#include "mpncproblem.hh"
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "mpnclocalresidual.hh"
 #include "mpncfluxvariables.hh"
 #include "mpncprimaryvariables.hh"
@@ -117,7 +117,7 @@ SET_TYPE_PROP(BoxMPNC, NewtonController, MPNCNewtonController<TypeTag>);
 SET_TYPE_PROP(BoxMPNC, Model, MPNCModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxMPNC, BaseProblem, MPNCProblem<TypeTag>);
+SET_TYPE_PROP(BoxMPNC, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! use an isothermal model by default
 SET_BOOL_PROP(BoxMPNC, EnableEnergy, false);

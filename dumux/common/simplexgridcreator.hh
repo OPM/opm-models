@@ -101,7 +101,7 @@ public:
     static Grid &grid()
     {
         return *simplexGrid_;
-    };
+    }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel

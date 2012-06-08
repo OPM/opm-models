@@ -42,6 +42,7 @@
 #include "1pvolumevariables.hh"
 #include "1pfluxvariables.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
@@ -92,7 +93,7 @@ SET_TYPE_PROP(BoxOneP,
 SET_TYPE_PROP(BoxOneP, Model, OnePBoxModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxOneP, BaseProblem, OnePBoxProblem<TypeTag>);
+SET_TYPE_PROP(BoxOneP, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxOneP, RateVector, OnePRateVector<TypeTag>);
