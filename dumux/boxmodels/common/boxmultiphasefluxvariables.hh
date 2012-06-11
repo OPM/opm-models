@@ -84,9 +84,12 @@ public:
         extrusionFactor_ =
             (elemCtx.volVars(insideScvIdx_, timeIdx).extrusionFactor()
              + elemCtx.volVars(outsideScvIdx_, timeIdx).extrusionFactor()) / 2;
+        Valgrind::CheckDefined(extrusionFactor_);
+        assert(extrusionFactor_ > 0);
 
         // update the base module (i.e. advection)
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
+        Valgrind::CheckDefined(potentialGrad_);
         calculateVelocities_(elemCtx, scvfIdx, timeIdx);
     }
 
@@ -103,7 +106,9 @@ public:
         outsideScvIdx_ = scvIdx;
 
         extrusionFactor_ = context.volVars(bfIdx, timeIdx).extrusionFactor();
-
+        Valgrind::CheckDefined(extrusionFactor_);
+        assert(extrusionFactor_ > 0);
+        
         calculateBoundaryGradients_(context, bfIdx, timeIdx, fs, paramCache);
         calculateBoundaryVelocities_(context, bfIdx, timeIdx, fs, paramCache);
     }
@@ -243,6 +248,7 @@ private:
             for (int phase = 0; phase < numPhases; ++phase) {
                 potentialGrad_[phase] = Scalar(0);
             }
+            Valgrind::CheckDefined(potentialGrad_);
 
             // calculate gradients
             for (int scvIdx = 0;
@@ -265,6 +271,7 @@ private:
                     tmp *= fluidState.pressure(phaseIdx);
                     Valgrind::CheckDefined(tmp);
                     potentialGrad_[phaseIdx] += tmp;
+                    Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 }
             }
         }
@@ -279,6 +286,7 @@ private:
             DimVector g(elemCtx.problem().gravity(elemCtx, insideScvIdx_, timeIdx));
             g += elemCtx.problem().gravity(elemCtx, outsideScvIdx_, timeIdx);
             g /= 2;
+            Valgrind::CheckDefined(g);
 
             const auto &fsIn = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
             const auto &fsOut = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
@@ -300,6 +308,7 @@ private:
                     // both cells!
                     fI = fJ = 0.5;
                 Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
+                Valgrind::CheckDefined(density);
 
                 // make gravity acceleration a force
                 DimVector f(g);
@@ -307,6 +316,7 @@ private:
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] -= f;
+                assert(std::isfinite(potentialGrad_[phaseIdx].two_norm()));
             }
         }
     }
@@ -409,6 +419,8 @@ private:
         DimVector normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Scalar scvfArea = normal.two_norm();
         normal /= scvfArea;
+
+        Valgrind::CheckDefined(potentialGrad_);
 
         ///////////////
         // calculate the weights of the upstream and the downstream

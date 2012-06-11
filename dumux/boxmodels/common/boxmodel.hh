@@ -734,6 +734,7 @@ public:
         {
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
+            elemCtx.updateScvfVars(/*timeIdx=*/0);
 
             modIt = vtkOutputModules_.begin();
             for (; modIt != modEndIt; ++modIt)

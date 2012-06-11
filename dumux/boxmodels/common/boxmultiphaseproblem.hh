@@ -63,6 +63,7 @@ public:
     BoxMultiPhaseProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView)
     {
+        gravity_ = 0.0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dimWorld-1]  = -9.81;
     }

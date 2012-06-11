@@ -165,6 +165,18 @@ public:
         }
     }
 
+
+    void updateScvfVars(int timeIdx)
+    {
+        scvfVarsEval_ = &scvfVars_;
+
+        for (int scvfIdx = 0; scvfIdx < numScvf(); scvfIdx++) {
+            scvfVars_[scvfIdx].update(/*context=*/ *this,
+                                      /*localIndex=*/scvfIdx,
+                                      /*timeIdx=*/timeIdx);
+        }
+    }
+
     /*!
      * \brief Return a reference to the problem.
      */

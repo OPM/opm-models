@@ -230,6 +230,8 @@ public:
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max(1e-16, std::abs(fluxVars.filterVelocityNormal(phaseIdx)));
+                    Valgrind::CheckDefined(fluxVars.extrusionFactor());
+                    assert(fluxVars.extrusionFactor() > 0);
                     weight *= fluxVars.extrusionFactor();
 
                     Dune::FieldVector<Scalar, dim> v(fluxVars.filterVelocity(phaseIdx));
