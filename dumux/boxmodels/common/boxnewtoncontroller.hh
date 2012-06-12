@@ -208,8 +208,11 @@ public:
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_) {
             const Scalar minReasmTol = 1e-2*this->tolerance_;
-            const Scalar maxReasmTol = 1e1*this->tolerance_;
-            Scalar reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, this->error_/1e4));
+            const Scalar maxReasmTol = 1e4*this->tolerance_;
+
+            // rationale: the newton method has quadratic convergene1
+            Scalar reassembleTol = this->error_*this->error_;
+            reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
             //Scalar reassembleTol = minReasmTol;
 
             this->model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
