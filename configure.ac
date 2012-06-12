@@ -94,6 +94,7 @@ AC_CONFIG_FILES([ewoms.pc
     test/decoupled/2padaptive/Makefile
     test/decoupled/2p2c/Makefile
     test/freeflow/Makefile
+    test/freeflow/navierstokes/Makefile
     test/freeflow/stokes/Makefile
     test/freeflow/stokes2c/Makefile
     test/freeflow/stokesni/Makefile
