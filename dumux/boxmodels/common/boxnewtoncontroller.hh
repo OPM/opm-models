@@ -211,7 +211,7 @@ public:
             const Scalar maxReasmTol = 1e4*this->tolerance_;
 
             // rationale: the newton method has quadratic convergene1
-            Scalar reassembleTol = this->error_*this->error_;
+            Scalar reassembleTol = 1e-2 * this->error_*this->error_;
             reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
             //Scalar reassembleTol = minReasmTol;
 

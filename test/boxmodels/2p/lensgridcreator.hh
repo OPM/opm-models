@@ -248,6 +248,14 @@ public:
     static void loadBalance()
     { grid_->loadBalance(); }
 
+    /*!
+     * \brief Destroys the grid
+     *
+     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     */
+    static void deleteGrid()
+    { delete grid_; }
+
 private:
     static Grid *grid_;
 };
@@ -275,6 +283,8 @@ public:
         Dune::FieldVector<int, LENS_DIM> cellRes;
         Dune::FieldVector<Scalar, LENS_DIM> upperRight;
         Dune::FieldVector<Scalar, LENS_DIM> lowerLeft;
+
+        grid_ = nullptr;
 
         lowerLeft[1] = 0.0;
         upperRight[0] = GET_PARAM(TypeTag, Scalar, GridSizeX);
@@ -309,6 +319,14 @@ public:
      */
     static void loadBalance()
     { grid_->loadBalance(); }
+
+    /*!
+     * \brief Destroys the grid
+     *
+     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     */
+    static void deleteGrid()
+    { delete grid_; }
 
 private:
     static Grid *grid_;

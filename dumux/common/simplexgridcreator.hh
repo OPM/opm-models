@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2012 by Markus Wolff                                      *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -93,31 +94,40 @@ public:
         }
 
         simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft, upperRight, cellRes);
+        initialized_ = true;
     }
 
     /*!
      * \brief Returns a reference to the grid.
      */
     static Grid &grid()
-    {
-        return *simplexGrid_;
-    }
+    { return *simplexGrid_; }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
      *        computation.
      */
     static void loadBalance()
-    {
-        simplexGrid_->loadBalance();
-    }
+    { simplexGrid_->loadBalance(); }
+
+    /*!
+     * \brief Destroys the grid
+     *
+     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     */
+    static void deleteGrid()
+    { if (initialized_) delete simplexGrid_.release(); initialized_ = false; }
 
 private:
+    static bool initialized_;
     static GridPointer simplexGrid_;
 };
 
 template <class TypeTag>
 typename SimplexGridCreator<TypeTag>::GridPointer SimplexGridCreator<TypeTag>::simplexGrid_;
+
+template <class TypeTag>
+bool SimplexGridCreator<TypeTag>::initialized_ = false;
 
 }
 

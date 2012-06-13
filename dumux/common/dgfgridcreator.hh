@@ -59,15 +59,14 @@ public:
         const std::string dgfFileName = GET_RUNTIME_PARAM(TypeTag, std::string, GridFile);
 
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
+        initialized_ = true;
     }
 
     /*!
      * \brief Returns a reference to the grid.
      */
     static Grid &grid()
-    {
-        return *gridPtr_;
-    }
+    { return *gridPtr_; }
 
     /*!
      * \brief Returns a reference to the grid pointer.
@@ -75,25 +74,33 @@ public:
      * This method is specific to the DgfGridCreator!
      */
     static GridPointer &gridPtr()
-    {
-        return gridPtr_;
-    }
+    { return gridPtr_; }
 
     /*!
      * \brief Distribute the grid (and attached data) over all
      *        processes.
      */
     static void loadBalance()
-    {
-        gridPtr_.loadBalance();
-    }
+    { gridPtr_.loadBalance(); }
+
+    /*!
+     * \brief Destroys the grid
+     *
+     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     */
+    static void deleteGrid()
+    { if (initialized_) delete gridPtr_.release(); initialized_ = false; }
 
 private:
     static GridPointer gridPtr_;
+    static bool initialized_;
 };
 
 template <class TypeTag>
 typename DgfGridCreator<TypeTag>::GridPointer DgfGridCreator<TypeTag>::gridPtr_;
+
+template <class TypeTag>
+bool DgfGridCreator<TypeTag>::initialized_ = false;
 
 } // namespace Dumux
 

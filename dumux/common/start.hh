@@ -222,6 +222,8 @@ int start(int argc,
           char **argv,
           void (*usage)(const char *, const std::string &) = 0)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+
     // initialize MPI, finalize is done automatically on exit
     const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
     
@@ -234,7 +236,6 @@ int start(int argc,
     try {
         typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
         typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-        typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator; 
         typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
         typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
@@ -362,21 +363,25 @@ int start(int argc,
                 << "eWoms reached the destination. "
                 << "If it took a wrong corner, change your booking and try again.\n";
         }
+        GridCreator::deleteGrid();
         return 0;
     }
     catch (Dumux::ParameterException &e) {
         if (myRank == 0)
             std::cerr << e << ". Abort!\n";
+        GridCreator::deleteGrid();
         return 1;
     }
     catch (Dune::Exception &e) {
         if (myRank == 0)
             std::cerr << "Dune reported error: " << e << std::endl;
+        GridCreator::deleteGrid();
         return 2;
     }
     catch (...) {
         if (myRank == 0)
             std::cerr << "Unknown exception thrown!\n";
+        GridCreator::deleteGrid();
         return 3;
     }
 }

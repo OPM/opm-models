@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2012 by Markus Wolff                                      *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -95,31 +96,40 @@ public:
         }
 
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
+        initialized_ = true;
     }
 
     /*!
      * \brief Returns a reference to the grid.
      */
     static Grid &grid()
-    {
-        return *cubeGrid_;
-    }
+    { return *cubeGrid_; }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
      *        computation.
      */
     static void loadBalance()
-    {
-        cubeGrid_->loadBalance();
-    }
+    { cubeGrid_->loadBalance(); }
+    /*!
+     * \brief Destroys the grid
+     *
+     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     */
+    static void deleteGrid()
+    { if (initialized_) delete cubeGrid_.release(); initialized_ = false; }
+
 
 protected:
     static GridPointer cubeGrid_;
+    static bool initialized_;
 };
 
 template <class TypeTag>
 typename Dumux::CubeGridCreator<TypeTag>::GridPointer CubeGridCreator<TypeTag>::cubeGrid_;
+
+template <class TypeTag>
+bool CubeGridCreator<TypeTag>::initialized_ = false;
 
 }
 
