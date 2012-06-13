@@ -2,7 +2,7 @@
  *   Copyright (C) 2012 by Christoph Grueninger                              *
  *   Copyright (C) 2009-2012 by Klaus Mosthaf                                *
  *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -29,40 +29,8 @@
 #include "navierstokestestproblem.hh"
 #include <dumux/common/start.hh>
 
-/*!
- * \brief Provides an interface for customizing error messages associated with
- *        reading in parameters.
- *
- * \param progName  The name of the program, that was tried to be started.
- * \param errorMsg  The error message that was issued by the start function.
- *                  Comprises the thing that went wrong and a general help message.
- */
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-tEnd                          The end of the simulation. [s] \n"
-                                        "\t-dtInitial                     The initial timestep size. [s] \n"
-                                        "\t-gridFile                      The file name of the file containing the grid \n"
-                                        "\t                                   definition in DGF format\n";
-
-        std::cout << errorMessageOut
-                  << "\n";
-    }
-}
-
 int main(int argc, char** argv)
 {
-#if HAVE_SUPERLU
     typedef TTAG(NavierStokesTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv, usage);
-#else
-#warning "No SuperLU installed. Stokes currently only works with SuperLU."
-    std::cout << "No SuperLU installed. Stokes currently only works with SuperLU." << std::endl;
-    return 1;
-#endif
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }

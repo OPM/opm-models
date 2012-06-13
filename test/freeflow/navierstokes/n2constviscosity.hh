@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2012 by Christoph Grueninger                              *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -19,9 +20,6 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_TEST_FREEFLOW_NAVIERSTOKES_N2CONSTVISCOSITY_HH
-#define DUMUX_TEST_FREEFLOW_NAVIERSTOKES_N2CONSTVISCOSITY_HH
-
 /*!
  * \file
  * \ingroup Components
@@ -30,49 +28,47 @@
  * 
  * The constant viscosity is useful to get a desired Reynolds number.
  */
+#ifndef DUMUX_N2_CONST_VISCOSITY_HH
+#define DUMUX_N2_CONST_VISCOSITY_HH
 
 #include <dumux/material/components/n2.hh>
 
-namespace Dumux
+namespace Dumux {
+/*!
+ * \ingroup BoxStokesModel
+ * \ingroup BoxTestProblems
+ *
+ * \brief Properties of pure molecular nitrogen \f$N_2\f$ with constant
+ *        viscosity.
+ * 
+ * The constant viscosity is useful to get a desired Reynolds number.
+ *
+ * \tparam Scalar The type used for scalar values
+ */
+template <class Scalar>
+class N2ConstViscosity : public N2<Scalar>
 {
-  /**
-   * \ingroup BoxStokesModel
-   * \ingroup BoxTestProblems
-   *
-   * \brief Properties of pure molecular nitrogen \f$N_2\f$ with constant
-   *        viscosity.
-   * 
-   * The constant viscosity is useful to get a desired Reynolds number.
-   *
-   * \tparam Scalar The type used for scalar values
-   */
-  template <class Scalar>
-  class N2ConstViscosity : public N2<Scalar>
-  {
-    typedef Dumux::IdealGas<Scalar> IdealGas;
-
-  public:
-    /**
+public:
+    /*!
      * \brief A human readable name for nitrogen with fixed viscosity.
      */
     static const char *name()
-    {
-      return "N2constViscosity";
-    }
+    { return "N2 const viscosity"; }
 
-    /**
+    /*!
      * \brief The dynamic viscosity given by a fixed value to garantee
      *        a Reynolds number.
      */
     static Scalar gasViscosity(Scalar temperature, Scalar pressure)
     {
-      Scalar renoldsNumber = 100.0;
-      Scalar characteristicLength = 1.0;
-      // Density of N2 for pressure of 0.1 MPa,
-      // temperature of 283.15 degree Celsius (from NIST homepage)
-      Scalar characteristicDensity = 1.1903;
-      return characteristicLength / (renoldsNumber * characteristicDensity);
+        Scalar renoldsNumber = 100.0;
+        Scalar characteristicLength = 1.0;
+        // Density of N2 for pressure of 0.1 MPa,
+        // temperature of 283.15 degree Celsius (from NIST homepage)
+        Scalar characteristicDensity = 1.1903;
+        return characteristicLength / (renoldsNumber * characteristicDensity);
     }
-  };
-} // end namepace
-#endif // DUMUX_TEST_FREEFLOW_NAVIERSTOKES_N2CONSTVISCOSITY_HH
+};
+} 
+
+#endif

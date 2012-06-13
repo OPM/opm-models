@@ -225,7 +225,7 @@ public:
 
     /*!
      * \brief Evaluate the source term for all phases within a given
-    *        sub-control-volume.
+     *        sub-control-volume.
      *
      * For this method, the \a values parameter stores the rate mass
      * generated or annihilate per volume unit. Positive values mean
