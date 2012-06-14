@@ -583,7 +583,7 @@ void FVPressure2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& entries,
         entries[matrix] = faceArea * (lambdaW * dV_w + lambdaN * dV_n)* (unitOuterNormal * unitDistVec);
         if(enableVolumeIntegral)
             entries[matrix] -= volume * faceArea / perimeter * (lambdaW * gV_w + lambdaN * gV_n);     // = boundary integral - area integral
-        entries[matrix] *= fabs((permeability*unitDistVec)/(dist));
+        entries[matrix] *= std::abs((permeability*unitDistVec)/(dist));
 
         //calculate right hand side
         entries[rhs] = faceArea  * (unitOuterNormal * unitDistVec) * (densityW * lambdaW * dV_w + densityNW * lambdaN * dV_n);
