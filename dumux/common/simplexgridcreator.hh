@@ -116,7 +116,7 @@ public:
      * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { if (initialized_) delete simplexGrid_.release(); initialized_ = false; }
+    { if (initialized_) simplexGrid_.reset(); initialized_ = false; }
 
 private:
     static bool initialized_;

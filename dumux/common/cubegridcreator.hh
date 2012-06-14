@@ -117,7 +117,7 @@ public:
      * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { if (initialized_) delete cubeGrid_.release(); initialized_ = false; }
+    { if (initialized_) cubeGrid_.reset(); initialized_ = false; }
 
 
 protected:
