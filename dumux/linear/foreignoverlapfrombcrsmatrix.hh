@@ -33,6 +33,8 @@
 
 #include "overlaptypes.hh"
 
+#include <dumux/parallel/mpibuffer.hh>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/scalarproducts.hh>
@@ -94,7 +96,8 @@ public:
         // find the set of processes which have an overlap with the
         // local processes. (i.e. the set of processes which we will
         // have to communicate to.)
-        peerSet_.update(borderList);
+        neighborPeerSet_.update(borderList);
+        peerSet_ = neighborPeerSet_;
 
         // Create an initial seed list of indices which are in the
         // overlap.
@@ -104,7 +107,7 @@ public:
         // calculate the foreign overlap for the local partition,
         // i.e. find the distance of each row from the seed set.
         foreignOverlapByIndex_.resize(A.N());
-        extendForeignOverlap_(A, initialSeedList, overlapSize);
+        extendForeignOverlap_(A, initialSeedList, 0, overlapSize);
 
         computeMasterRanks_();
 
@@ -233,6 +236,13 @@ public:
     { return peerSet_; }
 
     /*!
+     * \brief Return the set of process ranks which share a border index
+     *        with the current process.
+     */
+    const PeerSet &neighborPeerSet() const
+    { return neighborPeerSet_; }
+
+    /*!
      * \brief Returns the number local indices
      */
     int numLocal() const
@@ -275,32 +285,27 @@ protected:
     // algorithm.
     void extendForeignOverlap_(const BCRSMatrix &A,
                                SeedList &seedList,
+                               int borderDistance,
                                int overlapSize)
     {
+        // communicate the non-neigbor overlap indices
+        addNonNeighborOverlapIndices_(A, seedList, borderDistance);
+
         // add all processes in the seed rows of the current overlap
         // level
-        int minOverlapDistance = overlapSize*2;
         auto it = seedList.begin();
         const auto &endIt = seedList.end();
         for (; it != endIt; ++it) {
             int localIdx = it->index;
             int peerRank = it->peerRank;
-            int distance = it->borderDistance;
-            if (foreignOverlapByIndex_[localIdx].count(peerRank) == 0) {
+            int distance = borderDistance;
+            if (foreignOverlapByIndex_[localIdx].count(peerRank) == 0)
                 foreignOverlapByIndex_[localIdx][peerRank] = distance;
-            }
-            else {
-                foreignOverlapByIndex_[localIdx][peerRank] =
-                    std::min(distance,
-                             foreignOverlapByIndex_[localIdx][peerRank]);
-            }
-
-            minOverlapDistance = std::min(minOverlapDistance, distance);
         }
 
         // if we have reached the maximum overlap distance, we're
         // finished and break the recursion
-        if (minOverlapDistance >= overlapSize)
+        if (borderDistance >= overlapSize)
             return;
 
         // find the seed list for the next overlap level using the
@@ -310,7 +315,6 @@ protected:
         for (; it != endIt; ++it) {
             int rowIdx = it->index;
             int peerRank = it->peerRank;
-            int borderDist = it->borderDistance;
 
             // find all column indies in the row. The indices of the
             // columns are the additional indices of the overlap which
@@ -336,7 +340,6 @@ protected:
                         sIt->peerRank == peerRank)
                     {
                         hasIndex = true;
-                        sIt->borderDistance = std::min(sIt->borderDistance, borderDist + 1);
                         break;
                     }
                 }
@@ -348,7 +351,7 @@ protected:
                 IndexRankDist newTuple;
                 newTuple.index = newIdx;
                 newTuple.peerRank = peerRank;
-                newTuple.borderDistance =  borderDist + 1;
+                newTuple.borderDistance =  borderDistance + 1;
                 nextSeedList.push_back(newTuple);
             }
         }
@@ -356,27 +359,170 @@ protected:
         // clear the old seed list to save some memory
         seedList.clear();
 
-        // communicate the non-neigbor overlap indices
-        addNonNeighborOverlapIndices_(A, nextSeedList, borderDist);
-
         // Perform the same excercise for the next overlap distance
         extendForeignOverlap_(A,
                               nextSeedList,
+                              borderDistance + 1,
                               overlapSize);
+    }
+
+    Index localToPeerIdx_(Index localIdx, ProcessRank peerRank) const
+    {
+        auto it = borderList_.begin();
+        const auto &endIt = borderList_.end();
+        for (; it != endIt; ++ it) {
+            if (it->localIdx == localIdx && it->peerRank == peerRank)
+                return it->peerIdx;
+        }
+
+        return -1;
     }
 
     void addNonNeighborOverlapIndices_(const BCRSMatrix &A,
                                        SeedList &seedList,
                                        int borderDist)
     {
+#if HAVE_MPI
+        // first, create the buffers which will contain the number of
+        // border indices relevant for a neighbor peer
+        std::map<ProcessRank, std::vector<BorderIndex> > borderIndices;
+            
         // get all indices in the border which have borderDist as
         // their distance to the closest border of their local process
+        BorderList tmp;
+        auto it = seedList.begin();
+        const auto &endIt = seedList.end();
+        for (; it != endIt; ++it) {
+            int idx = it->index;
+            if (!isBorder(idx))
+                continue;
+            BorderIndex borderHandle;
+            borderHandle.localIdx = idx;
+            borderHandle.peerIdx = localToPeerIdx_(idx, it->peerRank);
+            borderHandle.peerRank = it->peerRank;
+            borderHandle.borderDistance = it->borderDistance;
+            if (borderHandle.peerIdx < 0)
+                // the index is on the border, but is not on the border
+                // with the nighboring process. Ignore it!
+                continue; 
+            
+            tmp.push_back(borderHandle);
 
-        // communicate the (peerIdx, nonNeighborPeer, borderDist)
-        // triples
+            // add the border index to all the neighboring peers
+            auto tmpIt = foreignOverlapByIndex_[idx].begin();
+            const auto &tmpEndIt = foreignOverlapByIndex_[idx].end();
+            for (; tmpIt != tmpEndIt; ++tmpIt) {
+                if (tmpIt->second != 0)
+                    // not a border index for the peer
+                    continue;
 
-        // filter out all indices which are already in the overlap
-    };
+                borderHandle.peerIdx = localToPeerIdx_(idx, tmpIt->first);
+                borderIndices[tmpIt->first].push_back(borderHandle);
+            }
+
+        }
+
+        // now borderIndices contains the lists of indices which we
+        // would like to send to each neighbor. Let's create the MPI
+        // buffers.
+        std::map<ProcessRank, Dumux::MpiBuffer<int> > numIndicesSendBufs;
+        std::map<ProcessRank, Dumux::MpiBuffer<BorderIndex> > indicesSendBufs;
+        auto peerIt = neighborPeerSet().begin();
+        const auto &peerEndIt = neighborPeerSet().end();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+            int numIndices = borderIndices[peerRank].size();
+            numIndicesSendBufs[peerRank].resize(1);
+            numIndicesSendBufs[peerRank][0] = numIndices;
+
+            const auto &peerBorderIndices = borderIndices[peerRank];
+            indicesSendBufs[peerRank].resize(numIndices);
+
+            auto tmpIt = peerBorderIndices.begin();
+            const auto &tmpEndIt = peerBorderIndices.end();
+            int i = 0;
+            for (; tmpIt != tmpEndIt; ++tmpIt, ++i) {
+                indicesSendBufs[peerRank][i] = *tmpIt;
+            }
+        }
+
+        // now, send all these nice buffers to our neighbors
+        peerIt = neighborPeerSet().begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank neighborPeer = *peerIt;
+            numIndicesSendBufs[neighborPeer].send(neighborPeer);
+            indicesSendBufs[neighborPeer].send(neighborPeer);
+        }
+        
+        // next receive all data from the neighbors
+        std::map<ProcessRank, MpiBuffer<int>> numIndicesRcvBufs;
+        std::map<ProcessRank, MpiBuffer<BorderIndex>> indicesRcvBufs;
+        peerIt = neighborPeerSet().begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank neighborPeer = *peerIt;
+            auto &numIndicesRcvBuf = numIndicesRcvBufs[neighborPeer];
+            auto &indicesRcvBuf = indicesRcvBufs[neighborPeer];
+
+            numIndicesRcvBuf.resize(1);
+            numIndicesRcvBuf.receive(neighborPeer);
+            int numIndices = numIndicesRcvBufs[neighborPeer][0];
+            indicesRcvBuf.resize(numIndices);
+            indicesRcvBuf.receive(neighborPeer);
+
+            // filter out all indices which are already in the peer
+            // processes' overlap and add them to the seed list. also
+            // extend the set of peer processes.
+            for (int i = 0; i < numIndices; ++i) {
+                // swap the local and the peer indices, because they were
+                // created with the point view of the sender
+                std::swap(indicesRcvBuf[i].localIdx, indicesRcvBuf[i].peerIdx);
+
+                ProcessRank peerRank = indicesRcvBuf[i].peerRank;
+                //Index peerIdx = indicesRcvBuf[i].peerIdx;
+                Index localIdx = indicesRcvBuf[i].localIdx;
+                
+                // check if the index is already in the overlap for
+                // the peer
+                const auto &distIt = foreignOverlapByIndex_[localIdx].find(peerRank);
+                if (distIt != foreignOverlapByIndex_[localIdx].end())
+                    continue;
+                
+                // make sure the index is not already in the seed list
+                bool inSeedList = false;
+                auto seedIt = seedList.begin();
+                const auto &seedEndIt = seedList.end();
+                for (; seedIt != seedEndIt; ++seedIt) {
+                    if (seedIt->index == localIdx && 
+                        seedIt->peerRank == peerRank)
+                    {
+                        inSeedList = true;
+                        break;
+                    }
+                }
+                if (inSeedList)
+                    continue;
+
+                IndexRankDist seedEntry;
+                seedEntry.index = localIdx;
+                seedEntry.peerRank = peerRank;
+                seedEntry.borderDistance = borderDist;
+                seedList.push_back(seedEntry);
+
+                // update the peer set
+                peerSet_.insert(peerRank);
+            }
+        }
+        
+
+        // make sure all data was send      
+        peerIt = neighborPeerSet().begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank neighborPeer = *peerIt;
+            numIndicesSendBufs[neighborPeer].wait();
+            indicesSendBufs[neighborPeer].wait();
+        }
+#endif // HAVE_MPI
+    }
 
     // given a list of border indices and provided that
     // borderListToSeedList_() was already called, calculate the
@@ -430,6 +576,9 @@ protected:
 
     // set of processes with which we have to communicate
     PeerSet peerSet_;
+
+    // set of processes which are direct neighbors of us
+    PeerSet neighborPeerSet_;
 
     // the list of indices on the border
     const BorderList &borderList_;

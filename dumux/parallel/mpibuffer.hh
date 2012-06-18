@@ -43,41 +43,38 @@ template <class DataType>
 class MpiBuffer
 {
 public:
+    MpiBuffer()
+    {
+        data_ = nullptr;
+        dataSize_ = 0;
+        
+        setMpiDataType_();
+        updateMpiDataSize_();
+    }
+
     MpiBuffer(int size)
     {
         data_ = new DataType[size];
         dataSize_ = size;
 
-#if HAVE_MPI
-        mpiDataSize_ = size;
-
-        // set the MPI data type
-        if (std::is_same<DataType, char>::value)
-            mpiDataType_ = MPI_CHAR;
-        else if (std::is_same<DataType, unsigned char>::value)
-            mpiDataType_ = MPI_UNSIGNED_CHAR;
-        else if (std::is_same<DataType, short>::value  || std::is_same<DataType, unsigned short>::value)
-            mpiDataType_ = MPI_SHORT;
-        else if (std::is_same<DataType, int>::value || std::is_same<DataType, unsigned>::value)
-            mpiDataType_ = MPI_INT;
-        else if (std::is_same<DataType, long>::value || std::is_same<DataType, unsigned long>::value)
-            mpiDataType_ = MPI_LONG;
-        else if (std::is_same<DataType, float>::value)
-            mpiDataType_ = MPI_FLOAT;
-        else if (std::is_same<DataType, double>::value)
-            mpiDataType_ = MPI_DOUBLE;
-        else if (std::is_same<DataType, long double>::value)
-            mpiDataType_ = MPI_LONG_DOUBLE;
-        else {
-            mpiDataType_ = MPI_BYTE;
-            mpiDataSize_ *= sizeof(DataType);
-        }
-#endif // HAVE_MPI
+        setMpiDataType_();
+        updateMpiDataSize_();
     }
 
     ~MpiBuffer()
     {
         delete[] data_;
+    }
+
+    /*!
+     * \brief Set the size of the buffer
+     */
+    void resize(size_t newSize)
+    {
+        delete[] data_;
+        data_ = new DataType[newSize];
+        dataSize_ = newSize;
+        updateMpiDataSize_();
     }
 
     /*!
@@ -181,6 +178,41 @@ public:
     }
 
 private:
+    void setMpiDataType_()
+    {
+#if HAVE_MPI
+        // set the MPI data type
+        if (std::is_same<DataType, char>::value)
+            mpiDataType_ = MPI_CHAR;
+        else if (std::is_same<DataType, unsigned char>::value)
+            mpiDataType_ = MPI_UNSIGNED_CHAR;
+        else if (std::is_same<DataType, short>::value  || std::is_same<DataType, unsigned short>::value)
+            mpiDataType_ = MPI_SHORT;
+        else if (std::is_same<DataType, int>::value || std::is_same<DataType, unsigned>::value)
+            mpiDataType_ = MPI_INT;
+        else if (std::is_same<DataType, long>::value || std::is_same<DataType, unsigned long>::value)
+            mpiDataType_ = MPI_LONG;
+        else if (std::is_same<DataType, float>::value)
+            mpiDataType_ = MPI_FLOAT;
+        else if (std::is_same<DataType, double>::value)
+            mpiDataType_ = MPI_DOUBLE;
+        else if (std::is_same<DataType, long double>::value)
+            mpiDataType_ = MPI_LONG_DOUBLE;
+        else {
+            mpiDataType_ = MPI_BYTE;
+        }
+#endif // HAVE_MPI
+    }
+
+    void updateMpiDataSize_()
+    {
+#if HAVE_MPI
+        mpiDataSize_ = dataSize_;
+        if (mpiDataType_ == MPI_BYTE)
+            mpiDataSize_ *= sizeof(DataType);
+#endif // HAVE_MPI
+    }
+
     DataType *data_;
     int dataSize_;
 #if HAVE_MPI
