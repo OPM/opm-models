@@ -8,8 +8,8 @@
 ####################################################################
 # Mandatory arguments
 ####################################################################
-DtInitial = 10 # [s]
-TEnd = 9.3e6 # [s]
+InitialTimeStepSize = 10 # [s]
+EndTime = 9.3e6 # [s]
 
 SimulationName = reservoir # the name of the output files
 Temperature = 293.15 # [K] initial temperature in the reservoir 273.15 + 40

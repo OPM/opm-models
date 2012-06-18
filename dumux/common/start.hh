@@ -68,15 +68,11 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
         << 
         "Usage: " << progName << " [options]\n"
         "Mandatory options include:\n"
-        "\t--t-end=ENDTIME                  The time of the end of the simlation [s]\n"
-        "\t--dt-initial=STEPSIZE            The initial time step size [s]\n"
+        "\t--end-time=ENDTIME                The time of the end of the simlation [s]\n"
+        "\t--initial-time-step-size=STEPSIZE The initial time step size [s]\n"
         "\n"
-        "Alternative syntax:\n"
-        "\t-tEnd ENDTIME                    The time of the end of the simlation [s]\n"
-        "\t-dtInitial STEPSIZE              The initial time step size [s]\n"
-        "\n"
-        "If --parameter-file is specified parameters can also be defined there. In this case,\n"
-        "camel case is used for the parameters (e.g.: --t-end becomes tEnd). Parameters\n"
+        "If --parameter-file is specified, parameters can also be defined there. In this case,\n"
+        "camel case is used for the parameters (e.g.: --end-time becomes EndTime). Parameters\n"
         "specified on the command line have priority over those in the parameter file.\n"
         "Important optional options include:\n"
         "\t--help,-h                        Print this usage message and exit\n"
@@ -87,7 +83,7 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
         "\t--parameter-file=FILENAME        File with parameter definitions\n"
         "\t--restart=RESTARTTIME            Restart simulation from a restart file\n"
         "\n"
-        "If the --parameter-file option is not specified, the program tries to load the input\n"
+        "If the --parameter-file option is not specified, the program tries to load the\n"
         "parameter file '"<<progName <<".input'\n"
         "\n";
 }
@@ -306,11 +302,11 @@ int start(int argc,
         double tEnd;
         double dt;
 
-        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, TEnd); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--t-end' not specified!"); throw; }
+        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, EndTime); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--end-time' not specified!"); throw; }
 
-        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, DtInitial); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--dt-initial' not specified!"); throw; }
+        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, InitialTimeStepSize); }
+        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--initial-time-step-size' not specified!"); throw; }
 
         // deal with the restart stuff
         bool restart = false;

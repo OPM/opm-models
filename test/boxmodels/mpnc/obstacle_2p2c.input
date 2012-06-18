@@ -1,1 +1,13 @@
-test_mpnc.input
+############################################################
+# Parameter file for test_MpNc
+# Everything behind a '#' is a comment
+# Groups can be ordered e.g. : [BoundaryConditions],
+# see ../2p2c/ for a more detailed example
+############################################################
+
+############################################################
+# Mandatory arguments
+############################################################
+InitialTimeStepSize = 250 # seconds
+EndTime = 1e4 # seconds
+GridFile = ./grids/obstacle_24x16.dgf 

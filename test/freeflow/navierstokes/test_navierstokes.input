@@ -8,6 +8,6 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-DtInitial = 1 # seconds
-TEnd = 1 # seconds
+InitialTimeStepSize = 1 # seconds
+EndTime = 1 # seconds
 GridFile = ./grids/test_navierstokes.dgf

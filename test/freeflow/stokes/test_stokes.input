@@ -8,6 +8,6 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-DtInitial = 10 # seconds
-TEnd = 6e3 # seconds
+InitialTimeStepSize = 10 # seconds
+EndTime = 6e3 # seconds
 GridFile = ./grids/test_stokes.dgf

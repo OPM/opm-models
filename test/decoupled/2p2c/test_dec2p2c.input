@@ -8,8 +8,8 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-TEnd = 3e3 # [s]
-DtInitial = 200#[s]
+EndTime = 3e3 # [s]
+InitialTimeStepSize = 200#[s]
 
 [Grid]
 CellsX = 10 # [-] resolution in x-direction
@@ -19,14 +19,3 @@ CellsZ = 10 # [-] resolution in y-direction
 SizeX = 10 # [m] dimension of the grid
 SizeY = 10 # [m] dimension of the grid
 SizeZ = 10 # [m] dimension of the grid
-####################################################################
-# Simulation restart
-#
-# DuMux simulations can be restarted from *.drs files
-# Set restart to the value of a specific file, e.g.: 'restart = 27184.1'
-# for the restart file
-# name_time = 27184.1_rank = 0.drs
-# Please comment in the below value, if restart is desired.
-####################################################################
-# restart = ... 
-

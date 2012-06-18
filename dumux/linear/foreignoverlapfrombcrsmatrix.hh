@@ -356,11 +356,27 @@ protected:
         // clear the old seed list to save some memory
         seedList.clear();
 
+        // communicate the non-neigbor overlap indices
+        addNonNeighborOverlapIndices_(A, nextSeedList, borderDist);
+
         // Perform the same excercise for the next overlap distance
         extendForeignOverlap_(A,
                               nextSeedList,
                               overlapSize);
     }
+
+    void addNonNeighborOverlapIndices_(const BCRSMatrix &A,
+                                       SeedList &seedList,
+                                       int borderDist)
+    {
+        // get all indices in the border which have borderDist as
+        // their distance to the closest border of their local process
+
+        // communicate the (peerIdx, nonNeighborPeer, borderDist)
+        // triples
+
+        // filter out all indices which are already in the overlap
+    };
 
     // given a list of border indices and provided that
     // borderListToSeedList_() was already called, calculate the
