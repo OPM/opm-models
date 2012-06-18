@@ -112,18 +112,6 @@ SET_INT_PROP(WaterAirProblem, NumericDifferenceMethod, +1);
 
 // Write newton convergence
 SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
-
-#if ! HAVE_ISTL_FIXPOINT_CRITERION
-// no fixpoint convergence criterion in ISTL -> either use SuperLU or
-// print a warning.
-#if HAVE_SUPERLU
-#warning "ISTL has not been patched to support fixpoint convergence criteria. using SuperLU backend" 
-SET_TYPE_PROP(WaterAirProblem, LinearSolver, SuperLUBackend<TypeTag>);
-#else
-#warning "ISTL has not been patched to support fixpoint convergence criteria"
-#warning "and SuperLU backend is not available. The linear solver probably won't converge!"
-#endif
-#endif 
 }
 
 
