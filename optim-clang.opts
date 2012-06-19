@@ -15,6 +15,7 @@ CXX_OPTS=" \
 
 # configure flags 
 CONFIGURE_FLAGS=" \
+  CXX=\"clang++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   --disable-dunedevel \
   --enable-fieldvector-size-is-method \

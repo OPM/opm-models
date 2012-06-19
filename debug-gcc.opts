@@ -7,18 +7,13 @@ CXX_WARNING_OPTS=" \
 CXX_OPTS=" \
     -fno-strict-aliasing \
     -fstrict-overflow \
-    -ffast-math \
-    -fno-finite-math-only \
-    -O3 \
-    -march=native \
-    -DNDEBUG=1"
+    -g \
+    -DDEBUG=1"
 
-# configure flags 
-CONFIGURE_FLAGS=" \
+CONFIGURE_FLAGS="\
+  CXX=\"g++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
-  --disable-dunedevel \
-  --enable-fieldvector-size-is-method \
   --disable-documentation \
-  --enable-parallel \
+  --enable-fieldvector-size-is-method \
+  --disable-parallel \
   --disable-mpiruntest"
-
