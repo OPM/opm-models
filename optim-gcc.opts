@@ -17,7 +17,6 @@ CXX_OPTS=" \
 CONFIGURE_FLAGS=" \
   CXX=\"g++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
-  --disable-dunedevel \
   --enable-fieldvector-size-is-method \
   --disable-documentation \
   --enable-parallel \

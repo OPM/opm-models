@@ -16,7 +16,6 @@ CXX_OPTS=" \
 # configure flags 
 CONFIGURE_FLAGS=" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
-  --disable-dunedevel \
   --enable-fieldvector-size-is-method \
   --disable-documentation \
   --enable-parallel \
