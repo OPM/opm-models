@@ -69,9 +69,10 @@ public:
 
     OverlappingBCRSMatrix(const BCRSMatrix &M,
                           const BorderList &borderList,
+                          const std::set<Index> &blackList,
                           int overlapSize)
     {
-        overlap_ = std::shared_ptr<Overlap>(new Overlap(M, borderList, overlapSize));
+        overlap_ = std::shared_ptr<Overlap>(new Overlap(M, borderList, blackList, overlapSize));
         myRank_ = 0;
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);

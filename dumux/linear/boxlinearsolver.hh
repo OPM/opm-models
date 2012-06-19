@@ -79,6 +79,8 @@ class BoxLinearSolver
     typedef Dumux::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> OverlappingScalarProduct;
     typedef Dumux::Linear::OverlappingOperator<OverlappingMatrix, OverlappingVector, OverlappingVector> OverlappingOperator;
 
+    enum { dimWorld = GridView::dimensionworld };
+
 public:
     BoxLinearSolver(const Problem &problem)
         : problem_(problem)
@@ -192,10 +194,25 @@ private:
     {
         Linear::VertexBorderListFromGrid<GridView, VertexMapper>
             borderListCreator(problem_.gridView(), problem_.vertexMapper());
-              
+        
+        // blacklist all ghost and overlap entries
+        std::set<Dumux::Linear::Index> blackList;
+        auto vIt = problem_.gridView().template begin<dimWorld>();
+        const auto &vEndIt = problem_.gridView().template end<dimWorld>();
+        for (; vIt != vEndIt; ++vIt) {
+            if (vIt->partitionType() != Dune::InteriorEntity &&
+                vIt->partitionType() != Dune::BorderEntity)
+            {
+                // we blacklist everything except interior and border
+                // vertices
+                blackList.insert(problem_.vertexMapper().map(*vIt));
+            }
+        }
+
         // create the overlapping Jacobian matrix
         overlapMatrix_ = new OverlappingMatrix (M,
                                                 borderListCreator.borderList(),
+                                                blackList,
                                                 overlapSize_);
 
         // create the overlapping vectors for the residual and the

@@ -69,8 +69,9 @@ public:
      */
     DomesticOverlapFromBCRSMatrix(const BCRSMatrix &A,
                                   const BorderList &borderList,
+                                  const std::set<Index> &blackList,
                                   int overlapSize)
-        : foreignOverlap_(A, borderList, overlapSize)
+        : foreignOverlap_(A, borderList, blackList, overlapSize)
         , globalIndices_(foreignOverlap_)
     {
         myRank_ = 0;

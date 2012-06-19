@@ -75,8 +75,10 @@ public:
      */
     ForeignOverlapFromBCRSMatrix(const BCRSMatrix &A,
                                  const BorderList &borderList,
+                                 const std::set<Index> &blackList,
                                  int overlapSize)
         : borderList_(borderList)
+        , blackList_(blackList)
     {
         overlapSize_ = overlapSize;
 
@@ -329,7 +331,10 @@ protected:
                 // column index, ignore this column index!
                 if (foreignOverlapByIndex_[newIdx].count(peerRank) > 0)
                     continue;
-
+                else if (blackList_.count(newIdx)) {
+                    // also ignore the index if it is black-listed
+                    continue;
+                }
 
                 // check whether the new index is already in the overlap
                 bool hasIndex = false;
@@ -389,7 +394,6 @@ protected:
             
         // get all indices in the border which have borderDist as
         // their distance to the closest border of their local process
-        BorderList tmp;
         auto it = seedList.begin();
         const auto &endIt = seedList.end();
         for (; it != endIt; ++it) {
@@ -398,26 +402,27 @@ protected:
                 continue;
             BorderIndex borderHandle;
             borderHandle.localIdx = idx;
-            borderHandle.peerIdx = localToPeerIdx_(idx, it->peerRank);
             borderHandle.peerRank = it->peerRank;
             borderHandle.borderDistance = it->borderDistance;
-            if (borderHandle.peerIdx < 0)
-                // the index is on the border, but is not on the border
-                // with the nighboring process. Ignore it!
-                continue; 
             
-            tmp.push_back(borderHandle);
-
             // add the border index to all the neighboring peers
-            auto tmpIt = foreignOverlapByIndex_[idx].begin();
-            const auto &tmpEndIt = foreignOverlapByIndex_[idx].end();
-            for (; tmpIt != tmpEndIt; ++tmpIt) {
-                if (tmpIt->second != 0)
-                    // not a border index for the peer
+            auto neighborIt = foreignOverlapByIndex_[idx].begin();
+            const auto &neighborEndIt = foreignOverlapByIndex_[idx].end();
+            for (; neighborIt != neighborEndIt; ++neighborIt) {
+                if (neighborIt->second != 0)
+                    // not a border index for the neighbor
+                    continue;
+                else if (neighborIt->first == borderHandle.peerRank)
+                    // don't communicate the indices which are owned
+                    // by the peer to itself
                     continue;
 
-                borderHandle.peerIdx = localToPeerIdx_(idx, tmpIt->first);
-                borderIndices[tmpIt->first].push_back(borderHandle);
+                borderHandle.peerIdx = localToPeerIdx_(idx, neighborIt->first);
+                if (borderHandle.peerIdx < 0)
+                    // the index is on the border, but is not on the border
+                    // with the considered neighboring process. Ignore it!
+                    continue; 
+                borderIndices[neighborIt->first].push_back(borderHandle);
             }
 
         }
@@ -582,6 +587,9 @@ protected:
 
     // the list of indices on the border
     const BorderList &borderList_;
+
+    // the set of indices which should not be considered
+    const std::set<Index> &blackList_;
 
     // an array which contains the rank of the master process for each
     // index
