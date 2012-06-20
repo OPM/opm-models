@@ -77,6 +77,9 @@ NEW_PROP_TAG(ModelParameterGroup);
 //! Property which provides a GridCreator (manages grids)
 NEW_PROP_TAG(GridCreator);
 
+//! Property which tells the GridCreator how often the grid should be refined after creation.
+NEW_PROP_TAG(GridGlobalRefinements);
+
 ///////////////////////////////////
 // Default values for properties:
 //
@@ -116,6 +119,10 @@ SET_STRING_PROP(NumericModel, ModelParameterGroup, "");
 
 //! Use the DgfGridCreator by default
 SET_TYPE_PROP(NumericModel, GridCreator, Dumux::DgfGridCreator<TypeTag>);
+
+
+//! Set the number of refinement levels of the grid to 0. This does not belong here, strictly speaking.
+SET_INT_PROP(NumericModel, GridGlobalRefinements, 0);
 
 } // namespace Properties
 } // namespace Dumux

@@ -39,6 +39,8 @@ namespace Dumux
 namespace Properties
 {
 NEW_PROP_TAG(Grid);
+
+NEW_PROP_TAG(GridGlobalRefinements);
 }
 
 /*!
@@ -57,8 +59,11 @@ public:
     static void makeGrid()
     {
         const std::string dgfFileName = GET_RUNTIME_PARAM(TypeTag, std::string, GridFile);
+        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
+        if (numRefinments > 0)
+            gridPtr_->globalRefine(numRefinments);
         initialized_ = true;
     }
 

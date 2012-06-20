@@ -65,6 +65,8 @@ NEW_PROP_TAG(GridSizeZ);
 NEW_PROP_TAG(CellsX);
 NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
+
+NEW_PROP_TAG(GridGlobalRefinements);
 }
 
 /*!
@@ -102,6 +104,8 @@ public:
             upperRight[2] = GET_PARAM(TypeTag, Scalar, GridSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
+
+        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
         Dune::GridFactory<Dune::UGGrid<dim> > factory(grid_);
         
@@ -233,6 +237,7 @@ public:
         }
 
         grid_ = factory.createGrid();
+        grid_->globalRefine(numRefinments);
     }
 
     /*!
@@ -296,7 +301,9 @@ public:
             upperRight[2] = GET_PARAM(TypeTag, Scalar, GridSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
-        
+       
+        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+
         grid_ = new Dune::YaspGrid<LENS_DIM>(
 #ifdef HAVE_MPI
             Dune::MPIHelper::getCommunicator(),
@@ -305,6 +312,7 @@ public:
             cellRes, // number of cells
             Dune::FieldVector<bool,LENS_DIM>(false), // periodic
             0); // overlap
+        grid_->globalRefine(numRefinments);
     }
 
     /*!

@@ -50,6 +50,8 @@ NEW_PROP_TAG(GridSizeZ);
 NEW_PROP_TAG(GridCellsX);
 NEW_PROP_TAG(GridCellsY);
 NEW_PROP_TAG(GridCellsZ);
+
+NEW_PROP_TAG(GridGlobalRefinements);
 }
 
 /*!
@@ -92,8 +94,11 @@ public:
             upperRight[2] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeZ);
             cellRes[2] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsZ);
         }
+        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
         simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft, upperRight, cellRes);
+        simplexGrid_->globalRefine(numRefinments);
+
         initialized_ = true;
     }
 
