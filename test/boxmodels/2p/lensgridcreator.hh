@@ -284,7 +284,7 @@ public:
         Dune::FieldVector<Scalar, LENS_DIM> upperRight;
         Dune::FieldVector<Scalar, LENS_DIM> lowerLeft;
 
-        grid_ = nullptr;
+        grid_ = 0;
 
         lowerLeft[1] = 0.0;
         upperRight[0] = GET_PARAM(TypeTag, Scalar, GridSizeX);

@@ -91,7 +91,7 @@ SET_SCALAR_PROP(BoxStokes, NewtonRelTolerance, 1e-7);
 #if HAVE_SUPERLU
 SET_TYPE_PROP(BoxStokes, LinearSolver, SuperLUBackend<TypeTag>);
 #else
-#warning "No SuperLU installed. SuperLU is the recomended linear solver for the Stokes models."
+#warning "No SuperLU installed. SuperLU is the recommended linear solver for the Stokes models."
 #endif
 
 //! the Model property

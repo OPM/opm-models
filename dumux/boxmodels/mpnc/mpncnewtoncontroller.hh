@@ -58,8 +58,8 @@ public:
                      const SolutionVector &uLastIter, 
                      const Model &model)
     {
-        for (int i = 0; i < uLastIter.size(); ++i) {
-            for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
+        for (size_t i = 0; i < uLastIter.size(); ++i) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
                 saturationChop_(uCurrentIter[i][S0Idx + phaseIdx],
                                 uLastIter[i][S0Idx + phaseIdx],
                                 model);
@@ -166,7 +166,7 @@ public:
         if (this->useLineSearch_)
             this->lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
         else {
-            for (int i = 0; i < uLastIter.size(); ++i) {
+            for (size_t i = 0; i < uLastIter.size(); ++i) {
                 for (int j = 0; j < numEq; ++j) {
                     uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
                 }

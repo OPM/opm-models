@@ -41,9 +41,9 @@ typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
 typedef QuadratureGeom::LocalPosition LocalPosition;
 typedef QuadratureGeom::GlobalPosition GlobalPosition;
 
-typename GlobalPosition::field_type f(const GlobalPosition &pos)
+GlobalPosition::field_type f(const GlobalPosition &pos)
 {
-    typename GlobalPosition::field_type result = 1;
+    GlobalPosition::field_type result = 1;
     for (int i = 0; i < GlobalPosition::dimension; ++i)
         result *= pos[i];
     return result;
@@ -63,7 +63,7 @@ void testIdenityMapping()
         { 0, 1, 1 },
         { 1, 1, 1 }
     };
-    foo.setCorners(corners);
+    foo.setCorners(corners, 8);
 
     std::cout << "testing identity mapping...\n";
     int n = 100;

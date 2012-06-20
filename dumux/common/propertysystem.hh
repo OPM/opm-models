@@ -969,7 +969,7 @@ void myReplaceAll_(std::string &s,
                    const std::string &pattern,
                    const std::string &replacement)
 {
-    int pos;
+    size_t pos;
     while ( (pos = s.find(pattern)) != s.npos) {
         s.replace(pos, pattern.size(), replacement);
     };

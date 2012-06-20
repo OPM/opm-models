@@ -42,6 +42,7 @@
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #else
 #warning UG or ALUGrid necessary for this test.
+#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #endif
 
 #include <dune/grid/io/file/dgfparser.hh>
@@ -61,6 +62,8 @@ NEW_TYPE_TAG(NavierStokesTestProblem, INHERITS_FROM(BoxStokes));
 SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::ALUCubeGrid<2,2>);
 #elif HAVE_UG
 SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::UGGrid<2>);
+#else
+SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::YaspGrid<2>);
 #endif
 
 // Set the problem property

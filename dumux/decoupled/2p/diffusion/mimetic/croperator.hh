@@ -282,7 +282,7 @@ public:
             unsigned int numFaces = it->template count<1>();
 
             // get local to global id map
-            for (int k = 0; k < numFaces; k++)
+            for (unsigned k = 0; k < numFaces; k++)
             {
                 int alpha = faceMapper_.map(*it, k, 1);
                 local2Global[k] = alpha;
@@ -294,10 +294,10 @@ public:
 
 
             // accumulate local matrix into global matrix for non-hanging nodes
-            for (int i=0; i<numFaces; i++) // loop over rows, i.e. test functions
+            for (unsigned i=0; i<numFaces; i++) // loop over rows, i.e. test functions
             {
                 // accumulate matrix
-                for (int j=0; j<numFaces; j++)
+                for (unsigned j=0; j<numFaces; j++)
                 {
                     // the standard entry
                     A_[local2Global[i]][local2Global[j]] += loc.mat(i,j);

@@ -59,7 +59,7 @@ public:
     /*!
      * \brief Returns the number of sampling points.
      */
-    int numSamples() const
+    size_t numSamples() const
     { return nSamples; }
 
     ///////////////////////////////////////
@@ -82,14 +82,14 @@ public:
      * sampling points must be larger than 1.
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    void setXYArrays(int numberSamples,
+    void setXYArrays(size_t numberSamples,
                      const ScalarArrayX &x,
                      const ScalarArrayY &y,
                      Scalar m0, Scalar m1)
     {
         assert(numberSamples == numSamples());
 
-        for (int i = 0; i < numberSamples; ++i) {
+        for (size_t i = 0; i < numberSamples; ++i) {
             xPos_[i] = x[i];
             yPos_[i] = y[i];
         }
@@ -133,7 +133,7 @@ public:
      * the number of sampling points must be larger than 1.
      */
     template <class PointArray>
-    void setArrayOfPoints(int numberSamples,
+    void setArrayOfPoints(size_t numberSamples,
                           const PointArray &points,
                           Scalar m0,
                           Scalar m1)
@@ -142,7 +142,7 @@ public:
         // incredible bad idea!
         assert(numberSamples == numSamples());
 
-        for (int i = 0; i < numberSamples; ++i) {
+        for (size_t i = 0; i < numberSamples; ++i) {
             xPos_[i] = points[i][0];
             yPos_[i] = points[i][1];
         }
@@ -230,13 +230,13 @@ public:
      * sampling points must be larger than 1.
      */
     template <class ScalarArrayX, class ScalarArrayY>
-    void setXYArrays(int numberSamples,
+    void setXYArrays(size_t numberSamples,
                      const ScalarArrayX &x,
                      const ScalarArrayY &y)
     {
         assert(numberSamples == numSamples());
 
-        for (int i = 0; i < numberSamples; ++i) {
+        for (size_t i = 0; i < numberSamples; ++i) {
             xPos_[i] = x[i];
             yPos_[i] = y[i];
         }

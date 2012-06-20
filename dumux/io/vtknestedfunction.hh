@@ -61,7 +61,7 @@ public:
         , codim_(codim)
         , numComp_(numComp)
     {
-        assert(buf_.size() == mapper_.size());
+        assert(int(buf_.size()) == mapper_.size());
     }
 
     virtual std::string name () const

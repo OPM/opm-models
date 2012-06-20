@@ -118,7 +118,7 @@ public:
 
     const CellDataVector& cellDataGlobal() const
     {
-        assert(cellDataVector_.size() == gridView_.size(0));
+        assert(int(cellDataVector_.size()) == gridView_.size(0));
 
         return cellDataVector_;
     }
@@ -126,14 +126,14 @@ public:
     //! Return the cell data of a specific cell
     CellData& cellData(const int idx)
     {
-        assert(cellDataVector_.size() == gridView_.size(0));
+        assert(int(cellDataVector_.size()) == gridView_.size(0));
 
         return cellDataVector_[idx];
     }
 
     const CellData& cellData(const int idx) const
     {
-        assert(cellDataVector_.size() == gridView_.size(0));
+        assert(int(cellDataVector_.size()) == gridView_.size(0));
 
         return cellDataVector_[idx];
     }
