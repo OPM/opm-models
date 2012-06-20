@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011 by Andreas Lauser                                    *
+ *   Copyright (C) 2011-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -247,7 +247,7 @@ protected:
         // resize the array which stores the number of peers for
         // each entry.
         domesticOverlapByIndex_.resize(numLocal());
-        borderDistance_.resize(numLocal(), -1);
+        borderDistance_.resize(numLocal(), 0);
 
         PeerSet::const_iterator peerIt;
         PeerSet::const_iterator peerEndIt = foreignOverlap_.peerSet().end();
@@ -276,19 +276,19 @@ protected:
 
     void updateMasterRanks_()
     {
-        int nLocal = numLocal();
-        int nDomestic = numDomestic();
+        unsigned nLocal = numLocal();
+        unsigned nDomestic = numDomestic();
         masterRank_.resize(nDomestic);
         
         // take the master ranks for the local indices from the
         // foreign overlap
-        for (int i = 0; i < nLocal; ++i)
+        for (size_t i = 0; i < nLocal; ++i)
             masterRank_[i] = foreignOverlap_.masterRank(i);
 
         // for non-local indices, initialy use INT_MAX as their master
         // rank
-        for (int i = nLocal; i < nDomestic; ++i)
-            masterRank_[i] = std::numeric_limits<int>::max();
+        for (size_t i = nLocal; i < nDomestic; ++i)
+            masterRank_[i] = std::numeric_limits<ProcessRank>::max();
 
         // for the non-local indices, take the peer process for which
         // a given local index is in the interior
@@ -318,7 +318,7 @@ protected:
         // indices stemming from the overlap (i.e. without the border
         // indices)
         int numIndices = foreignOverlap.size();
-        numIndicesSendBuff_[peerRank] = new MpiBuffer<int>(1);
+        numIndicesSendBuff_[peerRank] = new MpiBuffer<size_t>(1);
         (*numIndicesSendBuff_[peerRank])[0] = numIndices;
         numIndicesSendBuff_[peerRank]->send(peerRank);
 
@@ -360,31 +360,31 @@ protected:
     {
 #if HAVE_MPI
         // receive the number of additional indices
-        int numIndices = -1;
-        MpiBuffer<int> numIndicesRecvBuff(1);
+        size_t numIndices = -1;
+        MpiBuffer<size_t> numIndicesRecvBuff(1);
         numIndicesRecvBuff.receive(peerRank);
         numIndices = numIndicesRecvBuff[0];
 
         // receive the additional indices themselfs
         MpiBuffer<IndexDistanceNpeers> recvBuff(numIndices);
         recvBuff.receive(peerRank);
-        for (int i = 0; i < numIndices; ++i) {
-            int globalIdx = recvBuff[i].index;
-            int borderDistance = recvBuff[i].borderDistance;
+        for (Index i = 0; i < numIndices; ++i) {
+            Index globalIdx = recvBuff[i].index;
+            BorderDistance borderDistance = recvBuff[i].borderDistance;
             
             // if the index is not already known, add it to the
             // domestic indices
             if (!globalIndices_.hasGlobalIndex(globalIdx)) {
-                int newDomesticIdx = globalIndices_.numDomestic();
+                Index newDomesticIdx = globalIndices_.numDomestic();
                 globalIndices_.addIndex(newDomesticIdx, globalIdx);
                 
-                int newSize = globalIndices_.numDomestic();
+                size_t newSize = globalIndices_.numDomestic();
                 borderDistance_.resize(newSize, std::numeric_limits<int>::max());
                 domesticOverlapByIndex_.resize(newSize);
             }
             
             // convert the global index into a domestic one
-            int domesticIdx = globalIndices_.globalToDomestic(globalIdx);
+            Index domesticIdx = globalIndices_.globalToDomestic(globalIdx);
 
             // extend the domestic overlap               
             domesticOverlapByIndex_[domesticIdx][peerRank] = borderDistance;
@@ -406,10 +406,10 @@ protected:
 
     DomesticOverlapByRank domesticOverlapWithPeer_;
     OverlapByIndex domesticOverlapByIndex_;
-    std::vector<int> borderDistance_;
-    std::vector<int> masterRank_;
+    std::vector<BorderDistance> borderDistance_;
+    std::vector<Index> masterRank_;
 
-    std::map<ProcessRank, MpiBuffer<int>* > numIndicesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t>* > numIndicesSendBuff_;
     std::map<ProcessRank, MpiBuffer<IndexDistanceNpeers>* > indicesSendBuff_;
     GlobalIndices globalIndices_;
     PeerSet peerSet_;

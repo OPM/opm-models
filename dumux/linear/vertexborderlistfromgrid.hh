@@ -88,8 +88,8 @@ public:
         BorderIndex bIdx;
 
         bIdx.localIdx = map_.map(e);
-        buff.read(bIdx.peerRank);
-        buff.read(bIdx.peerIdx);
+        { int tmp; buff.read(tmp); bIdx.peerRank = tmp; }
+        { int tmp; buff.read(tmp); bIdx.peerIdx = tmp; }
         bIdx.borderDistance = 0;
 
         borderList_.push_back(bIdx);

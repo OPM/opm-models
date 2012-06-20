@@ -412,10 +412,10 @@ private:
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview
     template <class DataBuffer>
-    void sanitizeBuffer_(DataBuffer &b, int nComps)
+    void sanitizeBuffer_(DataBuffer &b, unsigned nComps)
     {
-        for (int i = 0; i < b.size(); ++i) {
-            for (int j = 0; j < nComps; ++j) {
+        for (size_t i = 0; i < b.size(); ++i) {
+            for (unsigned j = 0; j < nComps; ++j) {
                 Valgrind::CheckDefined(b[i][j]);
 
                 // set values which are too small to 0 to avoid

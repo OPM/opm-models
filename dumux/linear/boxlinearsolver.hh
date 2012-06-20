@@ -167,7 +167,7 @@ public:
         weightVec = 0.0;
         // for rows local to the current peer, ping the model for their
         // relative weight
-        for (int i = 0; i < x.size(); ++i) {
+        for (unsigned i = 0; i < x.size(); ++i) {
             for (int j = 0; j < OverlappingVector::block_type::dimension; ++j) {
                 weightVec[i][j] = this->problem_.model().primaryVarWeight(i, j);
             }

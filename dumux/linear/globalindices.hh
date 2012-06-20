@@ -71,8 +71,11 @@ public:
         mpiSize_ = 1;
 
 #if HAVE_MPI
-        MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
-        MPI_Comm_size(MPI_COMM_WORLD, &mpiSize_);
+        {
+            int tmp;
+            MPI_Comm_rank(MPI_COMM_WORLD, &tmp); myRank_ = tmp;
+            MPI_Comm_size(MPI_COMM_WORLD, &tmp); mpiSize_ = tmp;
+        }
 #endif
 
         // calculate the domestic overlap (i.e. all overlap indices in
@@ -252,7 +255,6 @@ protected:
         peerIt = peerSet_().begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             if (*peerIt < myRank_)
-
                 receiveBorderFrom_(*peerIt);
         }
 
@@ -287,12 +289,12 @@ protected:
         BorderList::const_iterator borderIt = borderList_().begin();
         BorderList::const_iterator borderEndIt = borderList_().end();
         for (; borderIt != borderEndIt; ++borderIt) {
-            int borderPeer = borderIt->peerRank;
+            ProcessRank borderPeer = borderIt->peerRank;
             if (borderPeer != peerRank)
                 continue;
 
-            int localIdx = borderIt->localIdx;
-            int peerIdx = borderIt->peerIdx;
+            Index localIdx = borderIt->localIdx;
+            Index peerIdx = borderIt->peerIdx;
             if (foreignOverlap_.iAmMasterOf(borderIt->localIdx)) {
                 sendBorderIndex(borderPeer, localIdx, peerIdx);
             }
@@ -308,7 +310,7 @@ protected:
         BorderList::const_iterator borderIt = borderList_().begin();
         BorderList::const_iterator borderEndIt = borderList_().end();
         for (; borderIt != borderEndIt; ++borderIt) {
-            int borderPeer = borderIt->peerRank;
+            ProcessRank borderPeer = borderIt->peerRank;
             if (borderPeer != peerRank)
                 continue;
 
@@ -325,11 +327,11 @@ protected:
     const BorderList &borderList_() const
     { return foreignOverlap_.borderList(); }
 
-    int myRank_;
-    int mpiSize_;
+    ProcessRank myRank_;
+    size_t mpiSize_;
 
-    int domesticOffset_;
-    int numDomestic_;
+    size_t domesticOffset_;
+    size_t numDomestic_;
     const ForeignOverlap &foreignOverlap_;
 
     GlobalToDomesticMap globalToDomestic_;

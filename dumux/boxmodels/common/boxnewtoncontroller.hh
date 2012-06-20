@@ -222,7 +222,7 @@ public:
         if (useLineSearch_)
             lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
         else {
-            for (int i = 0; i < uLastIter.size(); ++i) {
+            for (unsigned i = 0; i < uLastIter.size(); ++i) {
                 uCurrentIter[i] = uLastIter[i];
                 uCurrentIter[i] -= deltaU[i];
             }
@@ -285,7 +285,7 @@ protected:
        GlobalEqVector tmp(uLastIter.size());
 
        while (true) {
-           for (int i = 0; i < uCurrentIter.size(); ++i) {
+           for (unsigned i = 0; i < uCurrentIter.size(); ++i) {
                for (int j = 0; j < numEq; ++j) {
                    uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
                }

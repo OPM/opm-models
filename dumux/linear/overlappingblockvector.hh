@@ -351,7 +351,7 @@ private:
             // convert the global indices of the send buffer to
             // domestic ones
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
-            for (int i = 0; i < indicesSendBuff.size(); ++i) {
+            for (unsigned i = 0; i < indicesSendBuff.size(); ++i) {
                 indicesSendBuff[i] = overlap_->globalToDomestic(indicesSendBuff[i]);
             }
         }
@@ -426,7 +426,7 @@ private:
             // convert the global indices of the send buffer to
             // domestic ones
             MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
-            for (int i = 0; i < frontIndicesSendBuff.size(); ++i) {
+            for (unsigned i = 0; i < frontIndicesSendBuff.size(); ++i) {
                 frontIndicesSendBuff[i] = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
             }
         }
@@ -438,7 +438,7 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *indicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *valuesSendBuff_[peerRank];
-        for (int i = 0; i < indices.size(); ++ i)
+        for (unsigned i = 0; i < indices.size(); ++ i)
             values[i] = (*this)[indices[i]];
 
         values.send(peerRank);
@@ -462,7 +462,7 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *frontIndicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *frontValuesSendBuff_[peerRank];
-        for (int i = 0; i < indices.size(); ++ i)
+        for (Index i = 0; i < indices.size(); ++ i)
             values[i] = (*this)[indices[i]];
 
         values.send(peerRank);
@@ -490,8 +490,8 @@ private:
         values.receive(peerRank);
 
         // copy them into the block vector
-        for (int j = 0; j < indices.size(); ++j) {
-            int domRowIdx = indices[j];
+        for (unsigned j = 0; j < indices.size(); ++j) {
+            Index domRowIdx = indices[j];
             if (overlap_->masterRank(domRowIdx) == peerRank)
                 (*this)[domRowIdx] = values[j];
         }
@@ -506,8 +506,8 @@ private:
         frontValues.receive(peerRank);
 
         // copy them into the block vector
-        for (int j = 0; j < frontIndices.size(); ++j) {
-            int domRowIdx = frontIndices[j];
+        for (unsigned j = 0; j < frontIndices.size(); ++j) {
+            Index domRowIdx = frontIndices[j];
             (*this)[domRowIdx] = frontValues[j];
         }
     }
@@ -521,7 +521,7 @@ private:
         values.receive(peerRank);
 
         // add up the values of rows on the shared boundary
-        for (int j = 0; j < indices.size(); ++j) {
+        for (unsigned j = 0; j < indices.size(); ++j) {
             int domRowIdx = indices[j];
             if (overlap_->isBorderWith(domRowIdx, peerRank)) {
                 (*this)[domRowIdx] += values[j];

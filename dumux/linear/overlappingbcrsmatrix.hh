@@ -124,7 +124,7 @@ public:
         BCRSMatrix::operator=(0.0);
 
         // then copy the local entries of M
-        for (int rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
+        for (unsigned rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
             ConstColIterator colIt = M[rowIdx].begin();
             ConstColIterator colEndIt = M[rowIdx].end();
             ColIterator myColIt = (*this)[rowIdx].begin();
@@ -265,7 +265,7 @@ private:
         // first, add all local matrix entries
         /////////
         entries_.resize(overlap_->numDomestic());
-        for (int rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
+        for (unsigned rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
             ConstColIterator colIt = M[rowIdx].begin();
             ConstColIterator colEndIt = M[rowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
@@ -344,11 +344,11 @@ private:
 
         // send size of foreign overlap to peer
         int numOverlapRows = peerOverlap.size();
-        numRowsSendBuff_[peerRank] = new MpiBuffer<int>(1);
+        numRowsSendBuff_[peerRank] = new MpiBuffer<size_t>(1);
         (*numRowsSendBuff_[peerRank])[0] = numOverlapRows;
         numRowsSendBuff_[peerRank]->send(peerRank);
 
-        rowSizesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
+        rowSizesSendBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
         rowIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
 
         // create the row size MPI buffer
@@ -411,22 +411,23 @@ private:
     {
 #if HAVE_MPI
         // receive size of foreign overlap to peer
-        int numOverlapRows;
-        MpiBuffer<int> numRowsRecvBuff(1);
+        size_t numOverlapRows;
+        auto &numRowsRecvBuff = numRowsRecvBuff_[peerRank];
+        numRowsRecvBuff.resize(1);
         numRowsRecvBuff.receive(peerRank);
         numOverlapRows = numRowsRecvBuff[0];
 
         // create receive buffer for the row sizes and receive them
         // from the peer
         rowIndicesRecvBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
-        rowSizesRecvBuff_[peerRank] = new MpiBuffer<int>(numOverlapRows);
+        rowSizesRecvBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
         rowIndicesRecvBuff_[peerRank]->receive(peerRank);
         rowSizesRecvBuff_[peerRank]->receive(peerRank);
 
         // calculate the total number of indices which are send by the
         // peer
         int totalIndices = 0;
-        for (int i = 0; i < numOverlapRows; ++ i) {
+        for (Index i = 0; i < numOverlapRows; ++ i) {
             totalIndices += (*rowSizesRecvBuff_[peerRank])[i];
         }
 
@@ -444,9 +445,9 @@ private:
 
         // add the entries to the global entry map
         int k = 0;
-        for (int i = 0; i < numOverlapRows; ++ i) {
+        for (Index i = 0; i < numOverlapRows; ++ i) {
             int domRowIdx = (*rowIndicesRecvBuff_[peerRank])[i];
-            for (int j = 0; j < (*rowSizesRecvBuff_[peerRank])[i]; ++j) {
+            for (Index j = 0; j < (*rowSizesRecvBuff_[peerRank])[i]; ++j) {
                 int domColIdx = (*entryIndicesRecvBuff_[peerRank])[k];
                 entries_[domRowIdx].insert(domColIdx);
                 ++k;
@@ -519,20 +520,20 @@ private:
     void sendEntries_(int peerRank)
     {
 #if HAVE_MPI
-        MpiBuffer<block_type> &mpiSendBuff = *entryValuesSendBuff_[peerRank];
+        auto &mpiSendBuff = *entryValuesSendBuff_[peerRank];
 
-        MpiBuffer<int> &mpiRowIndicesSendBuff = *rowIndicesSendBuff_[peerRank];
-        MpiBuffer<int> &mpiRowSizesSendBuff = *rowSizesSendBuff_[peerRank];
-        MpiBuffer<int> &mpiColIndicesSendBuff = *entryIndicesSendBuff_[peerRank];
+        auto &mpiRowIndicesSendBuff = *rowIndicesSendBuff_[peerRank];
+        auto &mpiRowSizesSendBuff = *rowSizesSendBuff_[peerRank];
+        auto &mpiColIndicesSendBuff = *entryIndicesSendBuff_[peerRank];
 
         // fill the send buffer
-        int k = 0;
-        for (int i = 0; i < mpiRowIndicesSendBuff.size(); ++i) {
+        unsigned k = 0;
+        for (unsigned i = 0; i < mpiRowIndicesSendBuff.size(); ++i) {
             Index domRowIdx = mpiRowIndicesSendBuff[i];
 
             typedef typename ParentType::ConstColIterator ColIt;
             ColIt colIt = (*this)[domRowIdx].begin();
-            for (int j = 0; j < mpiRowSizesSendBuff[i]; ++j) {
+            for (unsigned j = 0; j < mpiRowSizesSendBuff[i]; ++j) {
                 Index domColIdx = mpiColIndicesSendBuff[k];
                 for (; colIt.index() < domColIdx; ++colIt)
                 { };
@@ -550,19 +551,19 @@ private:
     void receiveAddEntries_(int peerRank)
     {
 #if HAVE_MPI
-        MpiBuffer<block_type> &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
+        auto &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
 
-        MpiBuffer<int> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
-        MpiBuffer<int> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
-        MpiBuffer<int> &mpiColIndicesRecvBuff = *entryIndicesRecvBuff_[peerRank];
+        auto &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
+        auto &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
+        auto &mpiColIndicesRecvBuff = *entryIndicesRecvBuff_[peerRank];
 
         mpiRecvBuff.receive(peerRank);
 
         // retrieve the values from the receive buffer
         int k = 0;
-        for (int i = 0; i < mpiRowIndicesRecvBuff.size(); ++i) {
+        for (unsigned i = 0; i < mpiRowIndicesRecvBuff.size(); ++i) {
             Index domRowIdx = mpiRowIndicesRecvBuff[i];
-            for (int j = 0; j < mpiRowSizesRecvBuff[i]; ++j) {
+            for (unsigned j = 0; j < mpiRowSizesRecvBuff[i]; ++j) {
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
                 (*this)[domRowIdx][domColIdx] += mpiRecvBuff[k];
@@ -577,9 +578,9 @@ private:
 #if HAVE_MPI
         MpiBuffer<block_type> &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
 
-        MpiBuffer<int> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
-        MpiBuffer<int> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
-        MpiBuffer<int> &mpiColIndicesRecvBuff = *entryIndicesRecvBuff_[peerRank];
+        MpiBuffer<Index> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
+        MpiBuffer<size_t> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
+        MpiBuffer<Index> &mpiColIndicesRecvBuff = *entryIndicesRecvBuff_[peerRank];
 
         mpiRecvBuff.receive(peerRank);
 
@@ -604,7 +605,7 @@ private:
 
     void globalToDomesticBuff_(MpiBuffer<Index> &idxBuff)
     {
-        for (int i = 0; i < idxBuff.size(); ++i) {
+        for (unsigned i = 0; i < idxBuff.size(); ++i) {
             idxBuff[i] = overlap_->globalToDomestic(idxBuff[i]);
         }
     }
@@ -613,16 +614,17 @@ private:
     Entries entries_;
     std::shared_ptr<Overlap> overlap_;
 
-    std::map<ProcessRank, MpiBuffer<int>* > rowSizesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<int>* > rowIndicesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<int>* > entryIndicesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesRecvBuff_;
-
-    std::map<ProcessRank, MpiBuffer<int>* > numRowsSendBuff_;
-    std::map<ProcessRank, MpiBuffer<int>* > rowSizesSendBuff_;
-    std::map<ProcessRank, MpiBuffer<int>* > rowIndicesSendBuff_;
-    std::map<ProcessRank, MpiBuffer<int>* > entryIndicesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t>* > numRowsSendBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t>* > rowSizesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index>* > rowIndicesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index>* > entryIndicesSendBuff_;
     std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesSendBuff_;
+
+    std::map<ProcessRank, MpiBuffer<size_t> > numRowsRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t>* > rowSizesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index>* > rowIndicesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index>* > entryIndicesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesRecvBuff_;
 };
 
 } // namespace Linear

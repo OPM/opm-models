@@ -48,12 +48,12 @@ public:
     { return Dune::GeometryType(Dune::GeometryType::cube, dim); }
     
     template <class CornerContainer>
-    void setCorners(const CornerContainer &corners)
-    {
-        int cornerIdx = 0;
-        for (const auto &corner : corners) {
+    void setCorners(const CornerContainer &corners, unsigned numCorners)
+    {        
+        unsigned cornerIdx = 0;
+        for (; cornerIdx != numCorners; ++cornerIdx) {
             for (int j = 0; j < dim; ++ j)
-                corners_[cornerIdx][j] = corner[j];
+                corners_[cornerIdx][j] = corners[cornerIdx][j];
             ++ cornerIdx;
             if (cornerIdx == numCorners)
                 break;
@@ -61,7 +61,7 @@ public:
         assert(cornerIdx == numCorners);
 
         center_ = 0;
-        for (int cornerIdx = 0; cornerIdx < numCorners; ++ cornerIdx)
+        for (unsigned cornerIdx = 0; cornerIdx < numCorners; ++ cornerIdx)
             center_ += corners_[cornerIdx];
         center_ /= numCorners;
     }

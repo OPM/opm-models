@@ -125,7 +125,7 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
             }
 
             // parse argument
-            int j = 0;
+            unsigned j = 0;
             while (true) {
                 if (j >= s.size()) {
                     // encountered the end of the string, i.e. we

@@ -84,7 +84,11 @@ public:
 
         myRank_ = 0;
 #if HAVE_MPI
-        MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
+        {
+            int tmp;
+            MPI_Comm_rank(MPI_COMM_WORLD, &tmp);
+            myRank_ = tmp;
+        }
 #endif
 
         numLocal_ = A.N();
@@ -315,8 +319,8 @@ protected:
         SeedList nextSeedList;
         it = seedList.begin();
         for (; it != endIt; ++it) {
-            int rowIdx = it->index;
-            int peerRank = it->peerRank;
+            Index rowIdx = it->index;
+            ProcessRank peerRank = it->peerRank;
 
             // find all column indies in the row. The indices of the
             // columns are the additional indices of the overlap which
@@ -325,7 +329,7 @@ protected:
             ColIterator colIt = A[rowIdx].begin();
             ColIterator colEndIt = A[rowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                int newIdx = colIt.index();
+                Index newIdx = colIt.index();
 
                 // if the process is already is in the overlap of the
                 // column index, ignore this column index!
@@ -417,11 +421,12 @@ protected:
                     // by the peer to itself
                     continue;
 
-                borderHandle.peerIdx = localToPeerIdx_(idx, neighborIt->first);
-                if (borderHandle.peerIdx < 0)
+                int peerIdx = localToPeerIdx_(idx, neighborIt->first);
+                if (peerIdx < 0)
                     // the index is on the border, but is not on the border
                     // with the considered neighboring process. Ignore it!
                     continue; 
+                borderHandle.peerIdx = peerIdx;
                 borderIndices[neighborIt->first].push_back(borderHandle);
             }
 
@@ -536,8 +541,8 @@ protected:
     {
         // determine the minimum rank for all indices
         masterRank_.resize(numLocal_);
-        for (int localIdx = 0; localIdx < numLocal_; ++localIdx) {
-            int masterRank = myRank_;
+        for (Index localIdx = 0; localIdx < numLocal_; ++localIdx) {
+            unsigned masterRank = myRank_;
             if (isBorder(localIdx)) {
                 // if the local index is a border index, loop over all ranks
                 // for which this index is also a border index. the lowest
@@ -547,7 +552,7 @@ protected:
                 for (; it != endIt; ++it) {
                     if (it->second == 0) {
                         // if the border distance is zero, the rank with the minimum
-                        masterRank = std::min(masterRank, it->first);
+                        masterRank = std::min<ProcessRank>(masterRank, it->first);
                     }
                 }
             }
@@ -611,10 +616,10 @@ protected:
     BorderDistance overlapSize_;
 
     // number of local indices
-    int numLocal_;
+    size_t numLocal_;
 
     // the MPI rank of the local process
-    int myRank_;
+    ProcessRank myRank_;
 };
 
 } // namespace Linear

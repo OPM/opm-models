@@ -38,17 +38,17 @@ namespace Linear {
 /*!
  * \brief The type of an index of a degree of freedom.
  */
-typedef int Index;
+typedef size_t Index;
 
 /*!
  * \brief The type of the rank of a process.
  */
-typedef int ProcessRank;
+typedef unsigned ProcessRank;
 
 /*!
  * \brief The type representing the distance of an index to the border.
  */
-typedef int BorderDistance;
+typedef unsigned BorderDistance;
 
 /*!
  * \brief This structure stores an index and a process rank

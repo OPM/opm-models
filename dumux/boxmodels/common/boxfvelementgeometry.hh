@@ -41,8 +41,8 @@
 
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Warray-bounds"
 
 namespace Dumux
 {
@@ -65,19 +65,19 @@ public:
     static int init()
     {
         // 1D LINE SEGMENTS
-        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
-        {
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = {
             { // corners of the first sub control volume
                 { 0.0 },
                 { 0.5 }
             },
+        
             { // corners of the second sub control volume
                 { 0.5 },
                 { 1.0 }
             }
         };
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+        for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvGeometry::numCorners);
         
         return 0;
     }
@@ -152,7 +152,7 @@ public:
         };
 
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvGeometry::numCorners);
 
         return 0;
     }
@@ -208,7 +208,7 @@ public:
         };
 
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvGeometry::numCorners);
 
         return 0;
     }
@@ -292,7 +292,7 @@ public:
         };
 
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx],  ScvGeometry::numCorners);
 
         return 0;
     }
@@ -422,7 +422,7 @@ public:
         };
 
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx]);
+            scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvGeometry::numCorners);
 
         return 0;
     }
@@ -1203,7 +1203,7 @@ private:
 
 }
 
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic pop
 
 #endif
 
