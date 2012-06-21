@@ -141,7 +141,7 @@ public:
      * \brief Return the global space index of the sub-control volume
      *        at the interior of a boundary segment
      */
-    short globalSpaceIndex(int boundaryFaceIdx, int timeIdx) const
+    int globalSpaceIndex(int boundaryFaceIdx, int timeIdx) const
     { return elemCtx_.globalSpaceIndex(insideScvIndex(boundaryFaceIdx, timeIdx), timeIdx); }
 
     /*!
