@@ -1,7 +1,7 @@
 CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
-    -Wmissing-include-dirs \
+    -Wno-tautological-compare \
     -Wcast-align"
 
 CXX_OPTS=" \
