@@ -61,24 +61,24 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
       int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-    const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+      const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
+      const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+      
+      Vector bTmp(b);
+      
+      const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
+      const int precondOrder = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
-    Vector bTmp(b);
+      Preconditioner precond(A, precondOrder, relaxation);
 
-    const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
-    const int precondIter = GET_PARAM(TypeTag, int, PreconditionerIterations);
+      typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
+      MatrixAdapter operatorA(A);
 
-    Preconditioner precond(A, precondIter, relaxation);
+      Solver solver(operatorA, precond, tolerance, maxIter, verbosity);
 
-    typedef Dune::MatrixAdapter<Matrix, Vector, Vector> MatrixAdapter;
-    MatrixAdapter operatorA(A);
+      solver.apply(x, bTmp, result_);
 
-    Solver solver(operatorA, precond, tolerance, maxIter, verbosity);
-
-    solver.apply(x, bTmp, result_);
-
-    return result_.converged;
+      return result_.converged;
   }
 
   // solve with RestartedGMRes (needs restartGMRes as additional argument)
@@ -92,7 +92,7 @@ public:
     Vector bTmp(b);
 
     const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
-    const int precondIter = GET_PARAM(TypeTag, int, PreconditionerIterations);
+    const int precondIter = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
     Preconditioner precond(A, precondIter, relaxation);
 
@@ -426,7 +426,7 @@ public:
     Vector bTmp(b);
 
     const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
-    //const int precondIter = GET_PARAM(TypeTag, int, PreconditionerIterations);
+    //const int precondIter = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
     Preconditioner precond(A, relaxation);
 

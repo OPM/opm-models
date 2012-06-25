@@ -69,6 +69,8 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
+     *
+     * \todo implement dispersivity
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -97,7 +99,6 @@ public:
         const auto &problem = elemCtx.problem();
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         tortuosity_ = problem.tortuosity(elemCtx, scvIdx, timeIdx);
-#warning "TODO: dispersivity"
         dispersivity_ = 0; // problem.dispersivity(elemCtx, scvIdx, timeIdx);
 
         // Second instance of a parameter cache.

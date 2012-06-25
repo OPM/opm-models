@@ -228,17 +228,23 @@ public:
     typedef typename Dune::BCRSMatrix<MatrixBlock> type;
 };
 
-// use the stabilized BiCG solver preconditioned by the ILU-0 by default
-SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::BoxBiCGStabILU0Solver<TypeTag> );
+// use the MPI parallel version of the stabilized BiCG solver
+// preconditioned by the ILU-n by default
+SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::Linear::BoxParallelSolver<TypeTag>);
+SET_TYPE_PROP(BoxModel, LinearSolverWrapper, Dumux::Linear::SolverWrapperBiCGStab<TypeTag>);
+SET_TYPE_PROP(BoxModel, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag>);
 
+#if HAVE_ISTL_FIXPOINT_CRITERION
+// if the linear solver supports a fixpoint convergence criterion, we
+// solve the linarized system a thousand times more accurately than
+// the tolerance for the non-linear solver
+SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, GET_PROP_VALUE(TypeTag, NewtonRelTolerance)/1000.0);
+#else
 // if the deflection of the newton method is large, we do not
 // need to solve the linear approximation accurately. Assuming
 // that the initial value for the delta vector u is quite
 // close to the final value, a reduction of 6 orders of
 // magnitude in the defect should be sufficient...
-#if HAVE_ISTL_FIXPOINT_CRITERION
-SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, GET_PROP_VALUE(TypeTag, NewtonRelTolerance)/1000.0);
-#else
 SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, 1e-6);
 #endif
 
@@ -253,6 +259,38 @@ SET_INT_PROP(BoxModel, LinearSolverOverlapSize, 2);
 
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
+
+#if 0
+/*!
+ * \brief Set the algorithm used for the linear solver.
+ *
+ * Possible choices are:
+ * - BoxSolverWrapperLoop: A fixpoint solver
+ * - BoxSolverWrapperGradients: Steepest descent
+ * - BoxSolverWrapperCG: Conjugated gradients
+ * - BoxSolverWrapperBiCGStab: The stabilized bi-conjugated gradients
+ * - BoxSolverWrapperMinRes: The minimized residual algorithm
+ * - BoxSolverWrapperGMRes: A restarted GMRES solver
+ */
+SET_TYPE_PROP(BoxModel, 
+              LinearSolverWrapper,
+              Dumux::Linear::BoxSolverWrapperBiCGStab<TypeTag>);
+
+/*!
+ * \brief Set the algorithm used for as the preconditioner for the linear solver.
+ *
+ * Possible choices are:
+ * - BoxPreconditionerWrapperJacobi: A simple Jacobi preconditioner
+ * - BoxPreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
+ * - BoxPreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
+ * - BoxPreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
+ * - BoxPreconditionerWrapperILU: An ILU(n) preconditioner
+ */
+SET_TYPE_PROP(BoxModel, 
+              PreconditionerWrapper,
+              Dumux::Linear::BoxPreconditionerWrapperJacobi<TypeTag>);
+#endif
+
 } // namespace Properties
 } // namespace Dumux
 

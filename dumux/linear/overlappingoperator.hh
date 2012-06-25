@@ -39,6 +39,8 @@ class OverlappingOperator :
                                          DomainVector,
                                          RangeVector>
 {
+    typedef typename OverlappingMatrix::Overlap Overlap;
+
 public:
     //! export types
     typedef DomainVector domain_type;
@@ -68,6 +70,9 @@ public:
     //! returns the matrix
     virtual const OverlappingMatrix& getmat() const
     { return A_; }
+
+    const Overlap &overlap() const
+    { return A_.overlap(); }
 
 private:
     const OverlappingMatrix &A_;

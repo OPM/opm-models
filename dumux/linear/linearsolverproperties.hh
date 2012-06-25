@@ -60,8 +60,14 @@ NEW_PROP_TAG(LinearSolverMaxIterations);
 //! relaxation parameter for the preconditioner
 NEW_PROP_TAG(PreconditionerRelaxation);
 
-//! number of preconditioner iterations per solver iteration
-NEW_PROP_TAG(PreconditionerIterations);
+/*!
+ * \brief the order of the preconditioner.
+ *
+ * for some preconditioners, that means the number of iterations to be
+ * performed per iteration of the linear solver, for others it means
+ * more sophisticated things (e.g. for the ILU preconditioner).
+ */
+NEW_PROP_TAG(PreconditionerOrder);
 
 //! restart parameter for GMRes
 NEW_PROP_TAG(GMResRestart);
@@ -80,8 +86,8 @@ SET_INT_PROP(LinearSolverTypeTag, LinearSolverVerbosity, 0);
 //! set the preconditioner relaxation parameter to 1.0 by default
 SET_SCALAR_PROP(LinearSolverTypeTag, PreconditionerRelaxation, 1.0);
 
-//! set the preconditioner iterations to 1 by default
-SET_INT_PROP(LinearSolverTypeTag, PreconditionerIterations, 1);
+//! set the preconditioner order to 0 by default
+SET_INT_PROP(LinearSolverTypeTag, PreconditionerOrder, 0);
 
 //! set the GMRes restart parameter to 10 by default
 SET_INT_PROP(LinearSolverTypeTag, GMResRestart, 10);

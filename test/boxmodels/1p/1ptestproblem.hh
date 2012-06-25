@@ -77,7 +77,8 @@ SET_SCALAR_PROP(OnePTestProblem, LensUpperRightZ, 0.75);
 SET_SCALAR_PROP(OnePTestProblem, Permeability, 1e-10);
 SET_SCALAR_PROP(OnePTestProblem, PermeabilityLens, 1e-12);
 // Linear solver settings
-SET_TYPE_PROP(OnePTestProblem, LinearSolver, Dumux::BoxCGILU0Solver<TypeTag> );
+SET_TYPE_PROP(OnePTestProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
+SET_TYPE_PROP(OnePTestProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
 SET_INT_PROP(OnePTestProblem, LinearSolverVerbosity, 0);
 
 // Enable gravity

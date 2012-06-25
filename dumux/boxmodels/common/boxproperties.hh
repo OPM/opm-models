@@ -53,7 +53,7 @@ namespace Properties {
 
 //! The type tag for models based on the box-scheme
 NEW_TYPE_TAG(BoxModel, INHERITS_FROM(BoxNewtonMethod,
-                                     LinearSolverTypeTag,
+                                     BoxLinearSolverTypeTag,
                                      ImplicitModel,
                                      VtkPrimaryVars));
 

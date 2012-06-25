@@ -36,6 +36,7 @@
 #include <iostream>
 
 namespace Dumux {
+namespace Linear {
 
 template <class SeqPreCond, class Overlap>
 class OverlappingPreconditioner :
@@ -108,10 +109,11 @@ public:
     }
 
 private:
-    SeqPreCond seqPreCond_;
+    SeqPreCond &seqPreCond_;
     const Overlap *overlap_;
 };
 
+} // namespace Linear
 } // namespace Dumux
 
 #endif
