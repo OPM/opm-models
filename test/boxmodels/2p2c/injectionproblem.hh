@@ -29,7 +29,7 @@
 #ifndef DUMUX_INJECTION_PROBLEM_HH
 #define DUMUX_INJECTION_PROBLEM_HH
 
-#include <dumux/boxmodels/2p2c/2p2cmodel.hh>
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
@@ -50,7 +50,7 @@ class InjectionProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxTwoPTwoC));
+NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(BoxPvs));
 
 // declare some injection problem specific property tags
 NEW_PROP_TAG(FluidSystemPressureLow);
@@ -139,7 +139,6 @@ SET_STRING_PROP(InjectionProblem, SimulationName, "injection");
 
 
 /*!
- * \ingroup TwoPTwoCModel
  * \ingroup BoxTestProblems
  * \brief Problem where air is injected under a low permeable layer in a depth of 2700m.
  *
@@ -151,7 +150,7 @@ SET_STRING_PROP(InjectionProblem, SimulationName, "injection");
  * Air enters a water-filled aquifer, which is situated 2700m below
  * sea level, at the right boundary (\f$ 5m<y<15m\f$) and migrates
  * upwards due to buoyancy. It accumulates and partially enters the
- * lower permeable aquitard. This problem uses the \ref TwoPTwoCModel.
+ * lower permeable aquitard. This problem uses the \ref PvsModel.
  */
 template <class TypeTag>
 class InjectionProblem 

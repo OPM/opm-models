@@ -17,6 +17,11 @@ got altered or to fix issues with newly supported compilers:
 - Support for compilers that don't support the 'auto' keyword and
   initializer lists has been dropped. As a consequence eWoms will not
   compile with GCC prior to version 4.4.
+- The fully-implicit compositional models 1p2c, 2p2c(ni) and 3p3c(ni)
+  are superseeded by the 'pvs' model, a generic model based on primary
+  variable switching. The model supports an arbitrary number of fluid
+  phases and chemical components, but it still assumes that all fluid
+  phases are ideal mixtures.
 - A black-oil model and the corresponding fluid system has been
   added. The black-oil model is a three-phase three-component
   paritially miscible model that is widely used in petrolium

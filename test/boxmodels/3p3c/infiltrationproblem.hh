@@ -28,7 +28,8 @@
 #ifndef DUMUX_INFILTRATIONPROBLEM_HH
 #define DUMUX_INFILTRATIONPROBLEM_HH
 
-#include <dumux/boxmodels/3p3c/3p3cmodel.hh>
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
+//#include <dumux/boxmodels/mpnc/mpncmodel.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
@@ -46,7 +47,8 @@ class InfiltrationProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxThreePThreeC));
+//NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxMPNC));
+NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxPvs));
 
 // Set the grid type
 SET_TYPE_PROP(InfiltrationProblem, Grid, Dune::YaspGrid<2>);
@@ -427,7 +429,7 @@ private:
 
         Valgrind::CheckDefined(Sw);
         Valgrind::CheckDefined(Sg);
-
+           
         fs.setSaturation(wPhaseIdx, Sw);
         fs.setSaturation(gPhaseIdx, Sg);
         fs.setSaturation(nPhaseIdx, 0);
@@ -438,6 +440,8 @@ private:
         // compute pressures
         Scalar pcAll[numPhases];
         Scalar pg = 1e5;
+        if (onLeftBoundary_(pos))
+            pg += 10e3;
         MaterialLaw::capillaryPressures(pcAll, matParams, fs);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
             fs.setPressure(phaseIdx, pg + (pcAll[phaseIdx] - pcAll[gPhaseIdx]));
@@ -454,6 +458,8 @@ private:
                     gPhaseIdx,
                     /*setViscosity=*/false,
                     /*setEnthalpy=*/false);
+
+        fs.setMoleFraction(wPhaseIdx, wCompIdx, 1 - fs.moleFraction(wPhaseIdx, wCompIdx));
     }
 
     static Scalar invertPCGW_(Scalar pcIn, const MaterialLawParams &pcParams)

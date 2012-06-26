@@ -31,7 +31,7 @@
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/boxmodels/2p2cni/2p2cnimodel.hh>
+#include <dumux/boxmodels/pvsni/pvsnimodel.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
@@ -50,7 +50,7 @@ class WaterAirProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxTwoPTwoCNI));
+NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxPvsNI));
 
 // Set the grid type
 SET_PROP(WaterAirProblem, Grid)

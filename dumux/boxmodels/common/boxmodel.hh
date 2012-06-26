@@ -155,7 +155,7 @@ public:
         // also set the solution of the "previous" time step to the
         // initial solution.
         solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
-
+      
         asImp_().registerVtkModules_();
     }
 

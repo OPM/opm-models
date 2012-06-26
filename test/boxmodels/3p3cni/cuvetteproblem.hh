@@ -30,7 +30,7 @@
 #ifndef DUMUX_CUVETTE_PROBLEM_HH
 #define DUMUX_CUVETTE_PROBLEM_HH
 
-#include <dumux/boxmodels/3p3cni/3p3cnimodel.hh>
+#include <dumux/boxmodels/pvsni/pvsnimodel.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
@@ -49,7 +49,7 @@ class CuvetteProblem;
 namespace Properties
 {
 // create a new type tag for the cuvette steam injection problem
-NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxThreePThreeCNI));
+NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxPvsNI));
 
 // Set the grid type
 SET_TYPE_PROP(CuvetteProblem, Grid, Dune::YaspGrid<2>);

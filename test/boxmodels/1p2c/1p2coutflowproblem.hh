@@ -30,7 +30,7 @@
 #ifndef DUMUX_1P2C_OUTFLOW_PROBLEM_HH
 #define DUMUX_1P2C_OUTFLOW_PROBLEM_HH
 
-#include <dumux/boxmodels/1p2c/1p2cmodel.hh>
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #if HAVE_UG
@@ -46,7 +46,7 @@ class OnePTwoCOutflowProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(OnePTwoCOutflowProblem, INHERITS_FROM(BoxOnePTwoC));
+NEW_TYPE_TAG(OnePTwoCOutflowProblem, INHERITS_FROM(BoxPvs));
 
 // Set the grid type
 SET_PROP(OnePTwoCOutflowProblem, Grid)
@@ -113,6 +113,7 @@ class OnePTwoCOutflowProblem
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     // copy some indices for convenience
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -125,9 +126,8 @@ class OnePTwoCOutflowProblem
         H2OIdx = FluidSystem::H2OIdx,
         N2Idx = FluidSystem::N2Idx,
 
-        // indices of the primary variables
-        pressureIdx = Indices::pressureIdx,
-        x1Idx = Indices::x1Idx
+        pressure0Idx = Indices::pressure0Idx,
+        x1Idx = Indices::switch0Idx
     };
 
 
@@ -172,6 +172,13 @@ public:
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return temperature_; } // in [K]
+
+    /*!
+     * \brief Returns the parameters for the material law
+     */
+    template <class Context>
+    const MaterialLawParams &materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    { return materialParams_; } // in [K]
 
     // \}
 
@@ -247,8 +254,7 @@ public:
         Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
-        values[pressureIdx] = fs.pressure(/*phaseIdx=*/0);
-        values[x1Idx] = fs.moleFraction(/*phaseIdx=*/0, /*compIdx=*/1);
+        values.assignNaive(fs);
     }
 
     // \}
@@ -324,6 +330,7 @@ private:
 
     const Scalar eps_;
 
+    MaterialLawParams materialParams_;
     DimMatrix perm_;
     Scalar temperature_;
     Scalar porosity_;

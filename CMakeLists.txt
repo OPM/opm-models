@@ -462,8 +462,8 @@ add_test(test_2p bin/runtest.sh references/lens-reference.vtu lens-00009.vtu tes
 add_test(test_2pni bin/runtest.sh references/injection2pni-reference.vtu injection2pni-00011.vtu test/boxmodels/2pni/test_2pni --parameter-file=parameters/test_2pni.input)
 add_test(test_2p2c bin/runtest.sh references/injection-reference.vtu injection-00009.vtu test/boxmodels/2p2c/test_2p2c --parameter-file=parameters/test_2p2c.input --grid-file=test/boxmodels/2p2c/grids/test_2p2c.dgf)
 add_test(test_2p2cni bin/runtest.sh references/waterair-reference.vtu waterair-00010.vtu test/boxmodels/2p2cni/test_2p2cni --parameter-file=parameters/test_2p2cni.input --grid-file=test/boxmodels/2p2cni/grids/test_2p2cni.dgf)
-add_test(test_3p3c bin/runtest.sh references/infiltration-reference.vtu infiltration-00040.vtu test/boxmodels/3p3c/test_3p3c --parameter-file=parameters/test_3p3c.input --grid-file=test/boxmodels/3p3c/grids/test_3p3c.dgf)
-add_test(test_3p3cni bin/runtest.sh references/cuvette3p3cni-reference.vtu cuvette3p3cni-00039.vtu test/boxmodels/3p3cni/test_3p3cni --parameter-file=parameters/test_3p3cni.input --grid-file=test/boxmodels/3p3cni/grids/cuvette.dgf)
+add_test(test_3p3c bin/runtest.sh references/infiltration-reference.vtu infiltration-00011.vtu test/boxmodels/3p3c/test_3p3c --parameter-file=parameters/test_3p3c.input --grid-file=test/boxmodels/3p3c/grids/test_3p3c.dgf)
+add_test(test_3p3cni bin/runtest.sh references/cuvettepvsni-reference.vtu cuvettepvsni-00013.vtu test/boxmodels/3p3cni/test_3p3cni --parameter-file=parameters/test_3p3cni.input --grid-file=test/boxmodels/3p3cni/grids/cuvette.dgf)
 add_test(test_mpnc bin/runtest.sh references/obstacle-reference.vtu obstacle-00010.vtu test/boxmodels/mpnc/test_mpnc --parameter-file=parameters/test_mpnc.input --grid-file=test/boxmodels/mpnc/grids/obstacle_24x16.dgf)
 add_test(test_richards bin/runtest.sh references/richardslens-reference.vtu richardslens-00008.vtu test/boxmodels/richards/test_richards --parameter-file=parameters/test_richards.input --grid-file=test/boxmodels/richards/grids/richardslens-24x16.dgf)
 

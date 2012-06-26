@@ -1,4 +1,4 @@
-SUBDIRS = common vtk 1p 1p2c 2p 2p2c 2p2cni 2pni 3p3c 3p3cni blackoil mpnc richards
+SUBDIRS = common vtk 1p 2p pvs pvsni 2pni blackoil mpnc richards
 
 boxmodelsdir = $(includedir)/dumux/boxmodels
 
