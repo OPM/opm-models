@@ -30,6 +30,7 @@
 #ifndef DUMUX_IMMISCIBLE_NI_INDICES_HH
 #define DUMUX_IMMISCIBLE_NI_INDICES_HH
 
+#include "immiscibleniproperties.hh"
 #include <dumux/boxmodels/immiscible/immiscibleindices.hh>
 
 namespace Dumux

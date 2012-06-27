@@ -28,8 +28,11 @@
 #ifndef DUMUX_OVERLAP_TYPES_HH
 #define DUMUX_OVERLAP_TYPES_HH
 
-#include <list>
 #include <set>
+#include <list>
+#include <vector>
+#include <map>
+#include <cstddef>
 
 namespace Dumux {
 

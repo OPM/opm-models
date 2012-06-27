@@ -121,10 +121,10 @@ public:
 };
 
 // Enable partial reassembly of the jacobian matrix?
-SET_BOOL_PROP(LensProblem, EnablePartialReassemble, true);
+//SET_BOOL_PROP(LensProblem, EnablePartialReassemble, true);
 
 // Enable reuse of jacobian matrices?
-SET_BOOL_PROP(LensProblem, EnableJacobianRecycling, true);
+//SET_BOOL_PROP(LensProblem, EnableJacobianRecycling, true);
 
 // Write the solutions of individual newton iterations?
 SET_BOOL_PROP(LensProblem, NewtonWriteConvergence, false);
@@ -458,17 +458,19 @@ public:
         
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
+
+        Scalar Sw = 1.0;
+        fs.setSaturation(wPhaseIdx, Sw);
+        fs.setSaturation(nPhaseIdx, 1 - Sw);
+
         fs.setTemperature(temperature_);
+
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fs, wPhaseIdx);
         Scalar densityW = FluidSystem::density(fs, paramCache, wPhaseIdx);
 
-        // set the fluid state's temperature
-        Scalar T = temperature(context, spaceIdx, timeIdx);
-        
         // hydrostatic pressure (assuming incompressibility)
         Scalar pw = 1e5 - densityW*this->gravity()[1]*depth;
-        Scalar Sw = 1.0;
 
         // calculate the capillary pressure
         const MaterialLawParams &matParams =
@@ -479,9 +481,6 @@ public:
         // make a full fluid state
         fs.setPressure(wPhaseIdx, pw);
         fs.setPressure(nPhaseIdx, pw + (pC[wPhaseIdx] - pC[nPhaseIdx]));
-        fs.setSaturation(wPhaseIdx, Sw);
-        fs.setSaturation(nPhaseIdx, 1 - Sw);
-        fs.setTemperature(T);
 
         // assign the primary variables
         values.assignNaive(fs);

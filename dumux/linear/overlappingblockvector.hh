@@ -28,6 +28,8 @@
 #ifndef DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
 #define DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
 
+#include "overlaptypes.hh"
+
 #include <dumux/parallel/mpibuffer.hh>
 #include <dumux/common/valgrind.hh>
 

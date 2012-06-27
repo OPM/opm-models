@@ -216,13 +216,9 @@ public:
 
 protected:
     Implementation *asImp_()
-    {
-        return static_cast<Implementation *> (this);
-    }
+    { return static_cast<Implementation *> (this);  }
     const Implementation *asImp_() const
-    {
-        return static_cast<const Implementation *> (this);
-    }
+    { return static_cast<const Implementation *> (this); }
 };
 
 }

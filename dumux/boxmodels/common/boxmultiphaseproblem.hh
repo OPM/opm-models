@@ -29,11 +29,17 @@
 #ifndef DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 #define DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 
-#include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/boxmodels/common/boxproblem.hh>
+#include <dumux/boxmodels/common/boxproperties.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/common/math.hh>
 
+
 namespace Dumux {
+namespace Properties {
+NEW_PROP_TAG(HeatConductionLawParams);
+NEW_PROP_TAG(EnableGravity);
+}
 
 /*!
  * \ingroup BoxModel
