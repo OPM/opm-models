@@ -29,13 +29,11 @@
 #ifndef DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 #define DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 
+#include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/boxmodels/common/boxproblem.hh>
 #include <dumux/common/math.hh>
 
 namespace Dumux {
-namespace Properties {
-NEW_PROP_TAG(MaterialLawParams);
-}
 
 /*!
  * \ingroup BoxModel
@@ -52,9 +50,9 @@ class BoxMultiPhaseProblem : public BoxProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-
+    typedef typename Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), 
+                                            typename GET_PROP_TYPE(TypeTag, Scalar)>::Params MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -197,7 +195,12 @@ public:
     }
 
     /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     * \brief Returns the material law parameters \f$\mathrm{[K]}\f$ within a control volume.
+     *
+     * If you get a compiler error at this method, you set the
+     * MaterialLaw property to something different than
+     * Dumux::NullMaterialLaw. In this case, you have to overload the
+     * matererialLaw() method in the derived class!
      *
      * \param context Container for the volume variables, element,
      *                fvElementGeometry, etc
@@ -206,11 +209,11 @@ public:
      * \param timeIdx The index used by the time discretization.
      */     
     template <class Context>
-    const MaterialLawParams& 
+    const MaterialLawParams & 
     materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::materialLawParams()");
+        static MaterialLawParams dummy;
+        return dummy;
     }
 
     /*!

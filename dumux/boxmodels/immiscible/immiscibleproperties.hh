@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -23,13 +23,16 @@
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
- * \ingroup OnePBoxModel
+ * \ingroup ImmiscibleBoxModel
+ */
+/*!
  * \file
  *
- * \brief Defines the properties required for the one-phase BOX model.
+ * \brief Defines the properties required for the twophase BOX model.
  */
-#ifndef DUMUX_BOX_1P_PROPERTIES_HH
-#define DUMUX_BOX_1P_PROPERTIES_HH
+
+#ifndef DUMUX_IMMISCIBLE_PROPERTIES_HH
+#define DUMUX_IMMISCIBLE_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
@@ -37,37 +40,48 @@
 
 namespace Dumux
 {
-// \{
-///////////////////////////////////////////////////////////////////////////
-// properties for the isothermal single phase model
-///////////////////////////////////////////////////////////////////////////
-namespace Properties {
+
+////////////////////////////////
+// properties
+////////////////////////////////
+namespace Properties
+{
 
 //////////////////////////////////////////////////////////////////
 // Type tags
 //////////////////////////////////////////////////////////////////
 
-//! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxOneP, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
+//! The generic type tag for problems using the immiscible multi-phase model
+NEW_TYPE_TAG(BoxImmiscible, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
+//! The type tag for single-phase immiscible problems 
+NEW_TYPE_TAG(BoxImmiscibleOnePhase, INHERITS_FROM(BoxImmiscible));
+//! The type tag for two-phase immiscible problems
+NEW_TYPE_TAG(BoxImmiscibleTwoPhase, INHERITS_FROM(BoxImmiscible));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(FluidSystem); //!< The type of the fluid system to use
-NEW_PROP_TAG(Fluid); //!< The fluid used for the default fluid system
-NEW_PROP_TAG(MaterialLaw); //!< The capillary pressure/relative permeability law to be used
-NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the capillary pressure/relative permeability law to be used
+NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
+NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
+NEW_PROP_TAG(FluidState); //!<The phases state
+NEW_PROP_TAG(EnableVelocityOutput); //!< Returns whether vertex velocity vectors are written into the vtk output
 
-// \}
-}
+// these properties only make sense for the BoxImmiscibleTwoPhase type tag
+NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
+NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
 
-} // end namepace
+// these properties only make sense for the BoxImmiscibleOnePhase type tag
+NEW_PROP_TAG(Fluid); //!< The fluid used by the model
+
+} // namespace Properties
+} // namespace Dumux
 
 #endif

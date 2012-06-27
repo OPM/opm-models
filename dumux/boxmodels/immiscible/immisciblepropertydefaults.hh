@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -21,7 +21,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup TwoPBoxModel
+ * \ingroup ImmiscibleBoxModel
  * \ingroup BoxProperties
  * \ingroup Properties
  * \file
@@ -29,23 +29,26 @@
  * \brief Defines default values for the properties required by the
  *        twophase box model.
  */
-#ifndef DUMUX_2P_PROPERTY_DEFAULTS_HH
-#define DUMUX_2P_PROPERTY_DEFAULTS_HH
+#ifndef DUMUX_IMMISCIBLE_PROPERTY_DEFAULTS_HH
+#define DUMUX_IMMISCIBLE_PROPERTY_DEFAULTS_HH
 
-#include "2pmodel.hh"
-#include "2pindices.hh"
-#include "2pfluxvariables.hh"
-#include "2pprimaryvariables.hh"
-#include "2pvolumevariables.hh"
-#include "2pratevector.hh"
-#include "2pboundaryratevector.hh"
-#include "2pproperties.hh"
+#include "immisciblemodel.hh"
+#include "immiscibleindices.hh"
+#include "immisciblefluxvariables.hh"
+#include "immiscibleprimaryvariables.hh"
+#include "immisciblevolumevariables.hh"
+#include "immiscibleratevector.hh"
+#include "immiscibleboundaryratevector.hh"
+#include "immiscibleproperties.hh"
 
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
+#include <dumux/material/fluidsystems/1pfluidsystem.hh>
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
+
+#include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Dumux {
@@ -54,23 +57,23 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Property defaults
 //////////////////////////////////////////////////////////////////
-SET_INT_PROP(BoxTwoP, NumEq, 2); //!< set the number of equations to 2
-SET_INT_PROP(BoxTwoP, NumPhases, 2); //!< The number of phases in the 2p model is 2
-SET_INT_PROP(BoxTwoP, NumComponents, 2);   //!< Number of chemical species in the system
+SET_INT_PROP(BoxImmiscible, NumEq, GET_PROP_VALUE(TypeTag, NumPhases)); //!< set the number of equations to the number of phases
+SET_INT_PROP(BoxImmiscible, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of phases is determined by the fluid system
+SET_INT_PROP(BoxImmiscible, NumComponents, GET_PROP_VALUE(TypeTag, NumPhases));   //!< Number of chemical species in the system
 
-//! Use the 2p local jacobian operator for the 2p model
-SET_TYPE_PROP(BoxTwoP,
+//! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
+SET_TYPE_PROP(BoxImmiscible,
               LocalResidual,
-              TwoPLocalResidual<TypeTag>);
+              ImmiscibleLocalResidual<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(BoxTwoP, Model, TwoPModel<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, Model, ImmiscibleModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoP, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
-//! the TwoPFluidState property
-SET_PROP(BoxTwoP, TwoPFluidState)
+//! the FluidState property
+SET_PROP(BoxImmiscible, FluidState)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -81,57 +84,90 @@ public:
 };
 
 //! the RateVector property
-SET_TYPE_PROP(BoxTwoP, RateVector, TwoPRateVector<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, RateVector, ImmiscibleRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(BoxTwoP, BoundaryRateVector, TwoPBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, BoundaryRateVector, ImmiscibleBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(BoxTwoP, PrimaryVariables, TwoPPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, PrimaryVariables, ImmisciblePrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(BoxTwoP, VolumeVariables, TwoPVolumeVariables<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, VolumeVariables, ImmiscibleVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(BoxTwoP, FluxVariables, TwoPFluxVariables<TypeTag>);
+SET_TYPE_PROP(BoxImmiscible, FluxVariables, ImmiscibleFluxVariables<TypeTag>);
 
-//! The indices required by the isothermal 2p model
-SET_TYPE_PROP(BoxTwoP, Indices, TwoPIndices</*PVOffset=*/0>);
+//! The indices required by the isothermal immiscible multi-phase model
+SET_TYPE_PROP(BoxImmiscible, Indices, ImmiscibleIndices</*PVOffset=*/0>);
+
+/*!
+ * \brief Set the material law to the null law by default.
+ */
+SET_TYPE_PROP(BoxImmiscible,
+              MaterialLaw, 
+              Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(BoxTwoP,
+SET_TYPE_PROP(BoxImmiscible,
               MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(BoxTwoP,
+SET_TYPE_PROP(BoxImmiscible,
               HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxTwoP,
+SET_TYPE_PROP(BoxImmiscible,
               HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
-SET_PROP(BoxTwoP, WettingPhase)
+// disable the smooth upwinding method by default
+SET_BOOL_PROP(BoxImmiscible, EnableSmoothUpwinding, false);
+
+/////////////////////
+// set slightly different properties for the single-phase case
+/////////////////////
+
+//! The fluid system to use by default
+SET_TYPE_PROP(BoxImmiscibleOnePhase, FluidSystem, Dumux::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
+
+SET_PROP(BoxImmiscibleOnePhase, Fluid)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-SET_PROP(BoxTwoP, NonwettingPhase)
+// disable output of a few quantities which make sense in a
+// multi-phase but not in a single-phase context
+SET_BOOL_PROP(BoxImmiscibleOnePhase, VtkWriteSaturations, false);
+SET_BOOL_PROP(BoxImmiscibleOnePhase, VtkWriteMobilities, false);
+SET_BOOL_PROP(BoxImmiscibleOnePhase, VtkWriteRelativePermeabilities, false);
+
+/////////////////////
+// set slightly different properties for the two-phase case
+/////////////////////
+SET_PROP(BoxImmiscibleTwoPhase, WettingPhase)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-SET_PROP(BoxTwoP, FluidSystem)
+SET_PROP(BoxImmiscibleTwoPhase, NonwettingPhase)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+public:
+    typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
+};
+
+SET_PROP(BoxImmiscibleTwoPhase, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
@@ -142,9 +178,6 @@ public:
                                                 WettingPhase,
                                                 NonwettingPhase> type;
 };
-
-// disable the smooth upwinding method by default
-SET_BOOL_PROP(BoxTwoP, EnableSmoothUpwinding, false);
 
 }
 

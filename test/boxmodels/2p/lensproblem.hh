@@ -32,7 +32,7 @@
 
 #include "lensgridcreator.hh"
 
-#include <dumux/boxmodels/2p/2pmodel.hh>
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
@@ -57,7 +57,7 @@ class LensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxTwoP));
+NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxImmiscibleTwoPhase));
 
 // declare the properties specific for the lens problem
 NEW_PROP_TAG(LensLowerLeftX);
@@ -84,7 +84,6 @@ SET_TYPE_PROP(LensProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::G
 // Set the problem property
 SET_TYPE_PROP(LensProblem, Problem, Dumux::LensProblem<TypeTag>);
 
-#if 1
 // Set the wetting phase
 SET_PROP(LensProblem, WettingPhase)
 {
@@ -102,10 +101,6 @@ private:
 public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleDNAPL<Scalar> > type;
 };
-#else
-// OR: set the fluid system
-SET_TYPE_PROP(LensProblem, FluidSystem, FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
-#endif
 
 // Set the material Law
 SET_PROP(LensProblem, MaterialLaw)
@@ -211,11 +206,12 @@ class LensProblem
         numPhases = FluidSystem::numPhases,
 
         // phase indices
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        wPhaseIdx = FluidSystem::wPhaseIdx,
+        nPhaseIdx = FluidSystem::nPhaseIdx,
 
         // equation indices
         contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
+
         // Grid and world dimension
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
@@ -470,14 +466,25 @@ public:
         // set the fluid state's temperature
         Scalar T = temperature(context, spaceIdx, timeIdx);
         
-        // hydrostatic pressure
+        // hydrostatic pressure (assuming incompressibility)
         Scalar pw = 1e5 - densityW*this->gravity()[1]*depth;
         Scalar Sw = 1.0;
 
-        // assign primary variables
+        // calculate the capillary pressure
         const MaterialLawParams &matParams =
             this->materialLawParams(context, spaceIdx, timeIdx);
-        values.assignImmiscibleFromWetting(T, pw, Sw, matParams);
+        Scalar pC[numPhases];
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
+        
+        // make a full fluid state
+        fs.setPressure(wPhaseIdx, pw);
+        fs.setPressure(nPhaseIdx, pw + (pC[wPhaseIdx] - pC[nPhaseIdx]));
+        fs.setSaturation(wPhaseIdx, Sw);
+        fs.setSaturation(nPhaseIdx, 1 - Sw);
+        fs.setTemperature(T);
+
+        // assign the primary variables
+        values.assignNaive(fs);
     }
 
 

@@ -26,44 +26,45 @@
  * \file
  *
  * \brief This file contains the data which is required to calculate
- *        all fluxes (mass and energy) of all phases over a face of a finite volume.
+ *        all fluxes (mass of components and energy) over a face of a finite volume.
  *
- * This means pressure and temperature gradients, phase densities at
- * the integration point, etc.
+ * This means pressure, concentration and temperature gradients, phase
+ * densities at the integration point, etc.
  */
-#ifndef DUMUX_2PNI_FLUX_VARIABLES_HH
-#define DUMUX_2PNI_FLUX_VARIABLES_HH
+#ifndef DUMUX_IMMISCIBLE_NI_FLUX_VARIABLES_HH
+#define DUMUX_IMMISCIBLE_NI_FLUX_VARIABLES_HH
 
 #include <dune/common/fvector.hh>
 
-#include "2pniproperties.hh"
+#include "immiscibleniproperties.hh"
 
 #include <dumux/common/math.hh>
-#include <dumux/boxmodels/2p/2pfluxvariables.hh>
+#include <dumux/boxmodels/immiscible/immisciblefluxvariables.hh>
 
 namespace Dumux
 {
 
 /*!
- * \ingroup TwoPNIModel
+ * \ingroup ImmiscibleNIModel
  * \ingroup BoxFluxVariables
  * \brief This template class contains the data which is required to
  *        calculate all fluxes (mass of components and energy) over a face of a finite
- *        volume for the non-isothermal two-phase model.
+ *        volume for the non-isothermal two-phase, two-component model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.
  */
 template <class TypeTag>
-class TwoPNIFluxVariables : public TwoPFluxVariables<TypeTag>
+class ImmiscibleNIFluxVariables : public ImmiscibleFluxVariables<TypeTag>
 {
-    typedef TwoPFluxVariables<TypeTag> ParentType;
+    typedef ImmiscibleFluxVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dimWorld = GridView::dimensionworld };
+
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
@@ -74,8 +75,9 @@ public:
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
         // gradients
-        DimVector temperatureGrad(0.0);
+        DimVector temperatureGrad;
         DimVector tmp;
+        temperatureGrad = Scalar(0.0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
             const auto &feGrad = scvf.grad[scvIdx];
@@ -91,9 +93,10 @@ public:
         for (int i = 0; i < dimWorld; ++ i)
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
-        // arithmetic mean
-        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx(), timeIdx);
         const auto &volVarsInside = elemCtx.volVars(this->insideIdx(), timeIdx);
+        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx(), timeIdx);
+
+        // arithmetic mean
         heatConductivity_ =
             0.5 * (volVarsInside.heatConductivity()
                    +

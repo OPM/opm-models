@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
- *   Copyright (C) 2008 by Bernd Flemisch                                    *
+ *   Copyright (C) 2008 by Klaus Mosthaf, Andreas Lauser, Bernd Flemisch     *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -21,32 +20,43 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
+ * \ingroup Properties
+ * \ingroup BoxProperties
+ * \ingroup ImmiscibleNIModel
  * \file
  *
- * \brief  Defines the indices for the one-phase box model.
+ * \brief Defines the properties required for the non-isothermal two-phase,
+ * two-component BOX model.
  */
-#ifndef DUMUX_1P_INDICES_HH
-#define DUMUX_1P_INDICES_HH
+#ifndef DUMUX_IMMISCIBLE_NI_PROPERTIES_HH
+#define DUMUX_IMMISCIBLE_NI_PROPERTIES_HH
+
+#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux
 {
-// \{
 
-/*!
- * \ingroup OnePBoxModel
- * \ingroup BoxIndices
- * \brief Indices for the one-phase model.
- */
-struct OnePIndices
+namespace Properties
 {
-    //! index of the pressure primary variable
-    static const int pressureIdx = 0;
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
 
-    //! index of the mass conservation equation
-    static const int contiEqIdx = 0;
-};
+//! The type tag for the non-isothermal problems assuming immiscible fluids
+NEW_TYPE_TAG(BoxImmiscibleEnergy, INHERITS_FROM(VtkEnergy));
+NEW_TYPE_TAG(BoxImmiscibleNI, INHERITS_FROM(BoxImmiscible, BoxImmiscibleEnergy));
+NEW_TYPE_TAG(BoxImmiscibleNIOnePhase, INHERITS_FROM(BoxImmiscibleOnePhase, BoxImmiscibleEnergy));
+NEW_TYPE_TAG(BoxImmiscibleNITwoPhase, INHERITS_FROM(BoxImmiscibleTwoPhase, BoxImmiscibleEnergy));
 
-// \}
-} // end namepace
+//////////////////////////////////////////////////////////////////
+// Property tags
+//////////////////////////////////////////////////////////////////
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
+
+NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
+}
+}
 
 #endif

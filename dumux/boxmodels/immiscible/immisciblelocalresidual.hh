@@ -25,10 +25,10 @@
  *
  * \brief Element-wise calculation of the residual for the two-phase box model.
  */
-#ifndef DUMUX_TWOP_LOCAL_RESIDUAL_BASE_HH
-#define DUMUX_TWOP_LOCAL_RESIDUAL_BASE_HH
+#ifndef DUMUX_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
+#define DUMUX_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
 
-#include "2pproperties.hh"
+#include "immiscibleproperties.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
@@ -37,7 +37,7 @@
 namespace Dumux
 {
 /*!
- * \ingroup TwoPBoxModel
+ * \ingroup ImmiscibleBoxModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the two-phase box model.
@@ -46,7 +46,7 @@ namespace Dumux
  * that it uses static polymorphism.
  */
 template<class TypeTag>
-class TwoPLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;

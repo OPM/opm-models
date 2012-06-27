@@ -1,9 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf                                     *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
- *   Copyright (C) 2008 Bernd Flemisch                                       *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -24,50 +25,65 @@
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
- *  \ingroup TwoPNIBoxModel
+ * \ingroup ImmiscibleNIModel
  * \file
  *
- * \brief Defines the default values for most of the properties
- *        required by the non-isothermal two-phase box model.
+ * \brief Defines default values for most properties required by the 2p2cni
+ *        box model.
  */
+#ifndef DUMUX_IMMISCIBLE_NI_PROPERTY_DEFAULTS_HH
+#define DUMUX_IMMISCIBLE_NI_PROPERTY_DEFAULTS_HH
 
-#ifndef DUMUX_2PNI_PROPERTY_DEFAULTS_HH
-#define DUMUX_2PNI_PROPERTY_DEFAULTS_HH
+#include <dumux/boxmodels/immiscible/immisciblepropertydefaults.hh>
 
-#include "2pniproperties.hh"
-#include "2pnimodel.hh"
+#include "immisciblenimodel.hh"
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
-#include "2pnilocalresidual.hh"
-#include "2pnivolumevariables.hh"
-#include "2pnifluxvariables.hh"
-#include "2pniboundaryratevector.hh"
-#include "2pniindices.hh"
-
-#include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
+#include "immiscibleniindices.hh"
+#include "immiscibleniboundaryratevector.hh"
+#include "immisciblenilocalresidual.hh"
+#include "immisciblenivolumevariables.hh"
+#include "immisciblenifluxvariables.hh"
 
 namespace Dumux
 {
+
 namespace Properties
 {
 //////////////////////////////////////////////////////////////////
 // Property values
 //////////////////////////////////////////////////////////////////
 
-SET_INT_PROP(BoxTwoPNI, NumEq, 3); //!< set the number of equations to 3
+SET_INT_PROP(BoxImmiscibleEnergy, NumEq, GET_PROP_VALUE(TypeTag, NumPhases) + 1); //!< set the number of equations
 
-//! Use the 2pni local jacobian operator for the 2pni model
-SET_TYPE_PROP(BoxTwoPNI,
+//! Use the local jacobian operator for the non-isothermal primary variable switching model
+SET_TYPE_PROP(BoxImmiscibleEnergy,
               LocalResidual,
-              TwoPNILocalResidual<TypeTag>);
+              ImmiscibleNILocalResidual<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(BoxTwoPNI, Model, TwoPNIModel<TypeTag>);
+SET_TYPE_PROP(BoxImmiscibleEnergy, Model, ImmiscibleNIModel<TypeTag>);
 
-//! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxTwoPNI, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
+//! the VolumeVariables property
+SET_TYPE_PROP(BoxImmiscibleEnergy, VolumeVariables, ImmiscibleNIVolumeVariables<TypeTag>);
 
-//! the TwoPFluidState property
-SET_PROP(BoxTwoPNI, TwoPFluidState)
+//! the FluxVariables property
+SET_TYPE_PROP(BoxImmiscibleEnergy, FluxVariables, ImmiscibleNIFluxVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(BoxImmiscibleEnergy, BoundaryRateVector, Dumux::ImmiscibleNIBoundaryRateVector<TypeTag>);
+
+//! The indices required by the non-isothermal primary variable switching model
+SET_TYPE_PROP(BoxImmiscibleEnergy, Indices, ImmiscibleNIIndices<TypeTag, 0>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxImmiscibleEnergy,
+              HeatConductionLawParams,
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
+
+
+//! the FluidState property
+SET_PROP(BoxImmiscibleEnergy, FluidState)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -77,25 +93,7 @@ public:
                                         /*enableEnthalpy=*/true> type;
 };
 
-//! the VolumeVariables property
-SET_TYPE_PROP(BoxTwoPNI, VolumeVariables, TwoPNIVolumeVariables<TypeTag>);
-
-//! the FluxVariables property
-SET_TYPE_PROP(BoxTwoPNI, FluxVariables, TwoPNIFluxVariables<TypeTag>);
-
-//! extract the type parameter objects for the heat conduction law
-//! from the law itself
-SET_TYPE_PROP(BoxTwoPNI,
-              HeatConductionLawParams,
-              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
-
-//! The indices required by the non-isothermal two-phase model
-SET_TYPE_PROP(BoxTwoPNI, Indices, TwoPNIIndices<0>);
-
-//! The boundary rate vector for the 2pni model.
-SET_TYPE_PROP(BoxTwoPNI, BoundaryRateVector, TwoPNIBoundaryRateVector<TypeTag>);
-
-}
 }
 
+}
 #endif

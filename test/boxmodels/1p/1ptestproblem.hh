@@ -29,7 +29,7 @@
 #ifndef DUMUX_1PTEST_PROBLEM_HH
 #define DUMUX_1PTEST_PROBLEM_HH
 
-#include <dumux/boxmodels/1p/1pmodel.hh>
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 
@@ -43,7 +43,7 @@ class OnePTestProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(OnePTestProblem, INHERITS_FROM(BoxOneP));
+NEW_TYPE_TAG(OnePTestProblem, INHERITS_FROM(BoxImmiscibleOnePhase));
 
 NEW_PROP_TAG(LensLowerLeftX);
 NEW_PROP_TAG(LensLowerLeftY);
@@ -122,7 +122,7 @@ class OnePTestProblem
         dimWorld = GridView::dimensionworld,
 
         // indices of the primary variables
-        pressureIdx = Indices::pressureIdx
+        pressure0Idx = Indices::pressure0Idx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -267,7 +267,7 @@ public:
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         //const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        values[pressureIdx] = 1.0e+5;// + 9.81*1.23*(20-globalPos[dim-1]);
+        values[pressure0Idx] = 1.0e+5;// + 9.81*1.23*(20-globalPos[dim-1]);
     }
 
     // \}

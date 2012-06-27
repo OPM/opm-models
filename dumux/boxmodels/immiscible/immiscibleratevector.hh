@@ -27,20 +27,20 @@
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
  */
-#ifndef DUMUX_BOX_1P_RATE_VECTOR_HH
-#define DUMUX_BOX_1P_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_IMMISCIBLE_RATE_VECTOR_HH
+#define DUMUX_BOX_IMMISCIBLE_RATE_VECTOR_HH
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 
-#include "1pvolumevariables.hh"
+#include "immisciblevolumevariables.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup 1PModel
+ * \ingroup ImmiscibleModel
  *
  * \brief Implements a vector representing mass rates.
  *
@@ -48,7 +48,7 @@ namespace Dumux
  * either mass, molar or volumetric rates.
  */
 template <class TypeTag>
-class OnePRateVector
+class ImmiscibleRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -59,7 +59,7 @@ class OnePRateVector
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
@@ -69,21 +69,21 @@ public:
     /*!
      * \brief Default constructor
      */
-    OnePRateVector()
+    ImmiscibleRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    OnePRateVector(Scalar value)
+    ImmiscibleRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    OnePRateVector(const OnePRateVector &value)
+    ImmiscibleRateVector(const ImmiscibleRateVector &value)
         : ParentType(value)
     { }
 
@@ -109,7 +109,7 @@ public:
         // convert to mass rates
         ParentType massRate(value);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            massRate[contiEqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
+            massRate[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
         
         // set the mass rate
         setMassRate(massRate);
@@ -134,7 +134,7 @@ public:
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[contiEqIdx + compIdx] = 
+            (*this)[conti0EqIdx + compIdx] = 
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
                 * volume;

@@ -22,22 +22,25 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the single phase box model.
+ * \brief Represents the primary variables used in the 2-phase box model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
  */
-#ifndef DUMUX_1P_PRIMARY_VARIABLES_HH
-#define DUMUX_1P_PRIMARY_VARIABLES_HH
+#ifndef DUMUX_IMMISCIBLE_PRIMARY_VARIABLES_HH
+#define DUMUX_IMMISCIBLE_PRIMARY_VARIABLES_HH
 
 #include <dune/common/fvector.hh>
 
-#include "1pproperties.hh"
+#include <dumux/material/constraintsolvers/immiscibleflash.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
+
+#include "immiscibleproperties.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup 1PModel
+ * \ingroup ImmiscibleModel
  *
  * \brief Represents the primary variables used in the M-phase,
  *        N-component box model.
@@ -46,7 +49,7 @@ namespace Dumux
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class OnePPrimaryVariables 
+class ImmisciblePrimaryVariables 
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -54,21 +57,31 @@ class OnePPrimaryVariables
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
-    enum { pressureIdx = Indices::pressureIdx };
+    enum { pressure0Idx = Indices::pressure0Idx };
+    enum { saturation0Idx = Indices::saturation0Idx };
 
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
+
+    typedef Dumux::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
 
 public:
     /*!
      * \brief Default constructor
      */
-    OnePPrimaryVariables()
+    ImmisciblePrimaryVariables()
         : ParentType()
     {
         Valgrind::SetUndefined(*this);
@@ -77,14 +90,14 @@ public:
     /*!
      * \brief Constructor with assignment from scalar
      */
-    OnePPrimaryVariables(Scalar value)
+    ImmisciblePrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    OnePPrimaryVariables(const OnePPrimaryVariables &value)
+    ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &value)
         : ParentType(value)
     { }
 
@@ -110,9 +123,24 @@ public:
      */
     template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
+                                const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
-        assignNaive(fluidState);
+        ComponentVector globalMolarities(0.0);
+        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+                globalMolarities[compIdx] += 
+                    fluidState.molarity(phaseIdx, compIdx)
+                    * fluidState.saturation(phaseIdx);
+            }
+        }
+        
+        ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
+        fsFlash.assign(fluidState);
+        typename FluidSystem::ParameterCache paramCache;
+        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+        
+        assignNaive(fsFlash);
     }
 
     template <class FluidState>
@@ -122,7 +150,9 @@ public:
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
         
-        (*this)[pressureIdx] = fluidState.pressure(/*phaseIdx=*/0);
+        (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
+        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++ phaseIdx)
+            (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
 };
 

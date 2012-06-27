@@ -24,25 +24,25 @@
  *
  * \brief Implements a boundary vector for the fully implicit two-phase model.
  */
-#ifndef DUMUX_BOX_2P_BOUNDARY_RATE_VECTOR_HH
-#define DUMUX_BOX_2P_BOUNDARY_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
+#define DUMUX_BOX_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 
-#include "2pvolumevariables.hh"
+#include "immisciblevolumevariables.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup 2PModel
+ * \ingroup ImmiscibleModel
  *
  * \brief Implements a boundary vector for the fully implicit two-phase model.
  */
 template <class TypeTag>
-class TwoPBoundaryRateVector
+class ImmiscibleBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
@@ -61,21 +61,21 @@ public:
     /*!
      * \brief Default constructor
      */
-    TwoPBoundaryRateVector()
+    ImmiscibleBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    TwoPBoundaryRateVector(Scalar value)
+    ImmiscibleBoundaryRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    TwoPBoundaryRateVector(const TwoPBoundaryRateVector &value)
+    ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &value)
         : ParentType(value)
     { }
 

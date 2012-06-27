@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2007-2007 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -23,23 +23,23 @@
 /*!
  * \file
  *
- * \brief Adaption of the box scheme to the two-phase flow model.
+ * \brief Adaption of the box scheme to the immiscible multi-phase flow model.
  */
-#ifndef DUMUX_TWOP_MODEL_HH
-#define DUMUX_TWOP_MODEL_HH
+#ifndef DUMUX_IMMISCIBLE_MODEL_HH
+#define DUMUX_IMMISCIBLE_MODEL_HH
 
-#include "2pproperties.hh"
-#include "2plocalresidual.hh"
+#include "immiscibleproperties.hh"
+#include "immisciblelocalresidual.hh"
 
 #include <sstream>
 #include <string>
 
 namespace Dumux {
 /*!
- * \ingroup TwoPBoxModel
- * \brief A two-phase, isothermal flow model using the box scheme.
+ * \ingroup ImmiscibleBoxModel
+ * \brief A isothermal  multi-phase flow model using the box scheme.
  *
- * This model implements two-phase flow of two immiscible fluids
+ * This model implements multi-phase flow of immiscible fluids
  * \f$\alpha \in \{ w, n \}\f$ using a standard multiphase Darcy
  * approach as the equation for the conservation of momentum, i.e.
  \f[
@@ -64,7 +64,7 @@ namespace Dumux {
  * By using constitutive relations for the capillary pressure \f$p_c =
  * p_n - p_w\f$ and relative permeability \f$k_{r\alpha}\f$ and taking
  * advantage of the fact that \f$S_w + S_n = 1\f$, the number of
- * unknowns can be reduced to two. Currently the model supports
+ * unknowns can be reduced to N. Currently the model supports
  * choosing either \f$p_w\f$ and \f$S_n\f$ or \f$p_n\f$ and \f$S_w\f$
  * as primary variables. The formulation which ought to be used can be
  * specified by setting the <tt>Formulation</tt> property to either
@@ -72,7 +72,7 @@ namespace Dumux {
  * default, the model uses \f$p_w\f$ and \f$S_n\f$.
  */
 template<class TypeTag >
-class TwoPModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 
@@ -95,7 +95,7 @@ public:
      * \brief Returns a string with the model's human-readable name
      */
     const char *name() const
-    { return "2p"; }
+    { return "immiscible"; }
 
     /*!
      * \brief Given an primary variable index, return a human readable name.
@@ -104,11 +104,12 @@ public:
     { 
         std::ostringstream oss;
         
-        if (pvIdx == Indices::pressureIdx) {
-            oss << "pressure_w";
+        if (pvIdx == Indices::pressure0Idx) {
+            oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
-        else if (pvIdx == Indices::saturationIdx) {
-            oss << "saturation_n";
+        else if (Indices::saturation0Idx <= pvIdx && pvIdx < Indices::saturation0Idx + numPhases - 1) {
+            int phaseIdx = pvIdx - Indices::saturation0Idx;
+            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
         }
         else
             assert(false);
@@ -171,11 +172,11 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        if (pvIdx == Indices::pressureIdx) {
+        if (pvIdx == Indices::pressure0Idx) {
             Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
             return std::min(1.0/absPv, 1.0);
         }
-        return 1;
+        return 1.0;
     }
 
 protected:
@@ -192,6 +193,6 @@ protected:
 };
 }
 
-#include "2ppropertydefaults.hh"
+#include "immisciblepropertydefaults.hh"
 
 #endif

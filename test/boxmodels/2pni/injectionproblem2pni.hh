@@ -30,7 +30,7 @@
 #ifndef DUMUX_INJECTION_PROBLEM_2PNI_HH
 #define DUMUX_INJECTION_PROBLEM_2PNI_HH
 
-#include <dumux/boxmodels/2pni/2pnimodel.hh>
+#include <dumux/boxmodels/immiscibleni/immisciblenimodel.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
@@ -48,7 +48,7 @@ class InjectionProblem2PNI;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxTwoPNI));
+NEW_TYPE_TAG(InjectionProblem2PNI, INHERITS_FROM(BoxImmiscibleNI));
 
 // declare the properties specific for the non-isothermal immiscible
 // injection problem
@@ -210,16 +210,14 @@ class InjectionProblem2PNI
     enum {
         numPhases = FluidSystem::numPhases,
 
-        SnIdx = Indices::SnIdx,
-        pwIdx = Indices::pwIdx,
         conti0EqIdx = Indices::conti0EqIdx,
-
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
-
-        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
+        pressure0Idx = Indices::pressure0Idx,
+        saturation0Idx = Indices::saturation0Idx,
 
         temperatureIdx = Indices::temperatureIdx,
+
+        wPhaseIdx = FluidSystem::lPhaseIdx,
+        nPhaseIdx = FluidSystem::gPhaseIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,
@@ -401,14 +399,14 @@ public:
             RateVector massRate(0.0);
             
             // inject air. negative values mean injection
-            massRate[contiNEqIdx] = -1e-3; // kg/(s m^2)
+            massRate[conti0EqIdx + nPhaseIdx] = -1e-3; // kg/(s m^2)
                        
             // calculate the rate of enthalpy inflow
             Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;          
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
             values.setMassRate(massRate);
-            values.setEnthalpyRate(massRate[contiNEqIdx]
+            values.setEnthalpyRate(massRate[conti0EqIdx + nPhaseIdx]
                                    * fs.enthalpy(nPhaseIdx));
            
         }
@@ -448,8 +446,8 @@ public:
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         
         initialFluidState_(fs, context, spaceIdx, timeIdx);
-        values[pwIdx] = fs.pressure(wPhaseIdx);
-        values[SnIdx] = fs.saturation(nPhaseIdx);
+        values[pressure0Idx] = fs.pressure(0);
+        values[saturation0Idx] = fs.saturation(0);
         values[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
     }
     // \}

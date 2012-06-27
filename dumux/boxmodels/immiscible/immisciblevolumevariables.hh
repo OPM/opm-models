@@ -26,10 +26,10 @@
  * \brief Contains the quantities which are constant within a
  *        finite volume in the two-phase model.
  */
-#ifndef DUMUX_2P_VOLUME_VARIABLES_HH
-#define DUMUX_2P_VOLUME_VARIABLES_HH
+#ifndef DUMUX_IMMISCIBLE_VOLUME_VARIABLES_HH
+#define DUMUX_IMMISCIBLE_VOLUME_VARIABLES_HH
 
-#include "2pproperties.hh"
+#include "immiscibleproperties.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
@@ -39,13 +39,13 @@
 namespace Dumux
 {
 /*!
- * \ingroup TwoPBoxModel
+ * \ingroup ImmiscibleBoxModel
  * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the two-phase model.
  */
 template <class TypeTag>
-class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
+class ImmiscibleVolumeVariables : public BoxVolumeVariables<TypeTag>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -56,14 +56,12 @@ class TwoPVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPFluidState) FluidState;
-
+    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum {
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
-    };
+
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { pressure0Idx = Indices::pressure0Idx };
+    enum { saturation0Idx = Indices::saturation0Idx };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
@@ -88,17 +86,19 @@ public:
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
-        Scalar Sn = priVars[Indices::saturationIdx];
-        fluidState_.setSaturation(nPhaseIdx, Sn);
-        fluidState_.setSaturation(wPhaseIdx, 1 - Sn);
+        Scalar sumSat = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+            fluidState_.setSaturation(phaseIdx, priVars[saturation0Idx + phaseIdx]);
+            sumSat += priVars[saturation0Idx + phaseIdx];
+        }
+        fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
         
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         
-        Scalar pW = priVars[Indices::pressureIdx];
-        fluidState_.setPressure(wPhaseIdx, pW);
-        fluidState_.setPressure(nPhaseIdx,
-                                pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+        Scalar p0 = priVars[pressure0Idx];
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;

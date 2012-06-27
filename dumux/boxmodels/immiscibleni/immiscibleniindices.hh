@@ -1,9 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf                                     *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
- *   Copyright (C) 2008 Bernd Flemisch                                       *
+ *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -22,39 +23,38 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup Properties
- * \ingroup BoxProperties
- *  \ingroup TwoPNIBoxModel
  * \file
  *
- * \brief Defines the properties required for the non-isothermal two-phase BOX model.
+ * \brief Defines the indices used by the 2p2cni box model
  */
-#ifndef DUMUX_2PNI_PROPERTIES_HH
-#define DUMUX_2PNI_PROPERTIES_HH
+#ifndef DUMUX_IMMISCIBLE_NI_INDICES_HH
+#define DUMUX_IMMISCIBLE_NI_INDICES_HH
 
-#include <dumux/boxmodels/2p/2pproperties.hh>
-#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
+#include <dumux/boxmodels/immiscible/immiscibleindices.hh>
 
 namespace Dumux
 {
+// \{
 
-namespace Properties
+/*!
+ * \ingroup ImmiscibleNIModel
+ * \ingroup BoxIndices
+ * \brief Enumerations for the non-isothermal 2-phase 2-component model
+ *
+ * \tparam formulation The formulation, either pwSn or pnSw.
+ * \tparam PVOffset The first index in a primary variable vector.
+ */
+template <class TypeTag, int PVOffset>
+class ImmiscibleNIIndices : public ImmiscibleIndices<PVOffset>
 {
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
+    static const int numPhases = GET_PROP_VALUE(TypeTag, NumPhases);
 
-//! The type tag for the non-isothermal two-phase problems
-NEW_TYPE_TAG(BoxTwoPNI, INHERITS_FROM(BoxTwoP, VtkEnergy));
+public:
+    static const int temperatureIdx = PVOffset + numPhases; //! The index for temperature in primary variable vectors.
+    static const int energyEqIdx = PVOffset + numPhases; //! The index for energy in equation vectors.
+};
 
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
+// \}
 
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 }
-}
-
 #endif

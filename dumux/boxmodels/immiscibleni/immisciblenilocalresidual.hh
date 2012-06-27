@@ -26,46 +26,43 @@
  * \file
  *
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the non-isothermal two-phase box model.
+ *        using the non-isothermal two-phase, two-component box model.
  *
  */
-#ifndef DUMUX_2PNI_LOCAL_RESIDUAL_HH
-#define DUMUX_2PNI_LOCAL_RESIDUAL_HH
+#ifndef DUMUX_IMMISCIBLE_NI_LOCAL_RESIDUAL_HH
+#define DUMUX_IMMISCIBLE_NI_LOCAL_RESIDUAL_HH
 
-#include <dumux/boxmodels/2p/2plocalresidual.hh>
+#include <dumux/boxmodels/immiscible/immisciblelocalresidual.hh>
 
-#include <dumux/boxmodels/2pni/2pnivolumevariables.hh>
-#include <dumux/boxmodels/2pni/2pnifluxvariables.hh>
-
-#include <dumux/boxmodels/2pni/2pniproperties.hh>
+#include <dumux/boxmodels/immiscibleni/immisciblenivolumevariables.hh>
+#include <dumux/boxmodels/immiscibleni/immisciblenifluxvariables.hh>
+#include <dumux/boxmodels/immiscibleni/immiscibleniproperties.hh>
 
 namespace Dumux
 {
 /*!
- * \ingroup TwoPNIModel
+ * \ingroup ImmiscibleNIModel
  * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase box model.
+ *        using the two-phasem, two-component box model.
  */
 template<class TypeTag>
-class TwoPNILocalResidual : public TwoPLocalResidual<TypeTag>
+class ImmiscibleNILocalResidual : public ImmiscibleLocalResidual<TypeTag>
 {
-    typedef TwoPLocalResidual<TypeTag> ParentType;
+    typedef ImmiscibleLocalResidual<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
 
         energyEqIdx = Indices::energyEqIdx
     };
 
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
-
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
 public:
     /*!
@@ -89,21 +86,22 @@ public:
 
         const VolumeVariables &volVars =
             elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
 
         storage[energyEqIdx] = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
             // add the internal energy of the phase
             storage[energyEqIdx] +=
-                volVars.porosity() * (
-                    volVars.fluidState().density(phaseIdx)
-                    * volVars.fluidState().internalEnergy(phaseIdx)
-                    * volVars.fluidState().saturation(phaseIdx));
+                volVars.porosity()
+                * fs.saturation(phaseIdx)
+                * fs.internalEnergy(phaseIdx)
+                * fs.density(phaseIdx);
         };
 
         // handle the heat capacity of the solid
         storage[energyEqIdx] +=
-            volVars.fluidState().temperature(/*phaseIdx=*/0)
+            fs.temperature(/*phaseIdx=*/0)
             * volVars.heatCapacitySolid()
             * (1 - volVars.porosity());
     }
@@ -163,7 +161,6 @@ public:
     {
         // diffusive mass flux
         ParentType::computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // diffusive heat flux

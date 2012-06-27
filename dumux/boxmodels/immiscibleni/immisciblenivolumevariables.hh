@@ -2,7 +2,8 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
  *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -24,32 +25,34 @@
  * \file
  *
  * \brief Contains the quantities which are constant within a
- *        finite volume in the non-isothermal two-phase
+ *        finite volume in the non-isothermal two-phase, two-component
  *        model.
  */
-#ifndef DUMUX_2PNI_VOLUME_VARIABLES_HH
-#define DUMUX_2PNI_VOLUME_VARIABLES_HH
+#ifndef DUMUX_IMMISCIBLE_NI_VOLUME_VARIABLES_HH
+#define DUMUX_IMMISCIBLE_NI_VOLUME_VARIABLES_HH
 
-#include <dumux/boxmodels/2p/2pvolumevariables.hh>
+#include <dumux/boxmodels/immiscible/immisciblevolumevariables.hh>
 
-#include "2pniproperties.hh"
+#include "immiscibleniproperties.hh"
 
 namespace Dumux
 {
 
 /*!
- * \ingroup TwoPNIModel
+ * \ingroup ImmiscibleNIModel
  * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the non-isothermal two-phase, two-component
+ *        finite volume in the non-isothermal two-phase
  *        model.
  */
 template <class TypeTag>
-class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
+class ImmiscibleNIVolumeVariables : public ImmiscibleVolumeVariables<TypeTag>
 {
-    typedef TwoPVolumeVariables<TypeTag> ParentType;
+    //! \cond 0
+    typedef ImmiscibleVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -60,13 +63,13 @@ class TwoPNIVolumeVariables : public TwoPVolumeVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPFluidState) FluidState;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
+
+    //! \endcond
 
 public:
-
     /*!
-     * \brief Returns the total heat capacity \f$\mathrm{[J/K*m^3]}\f$ of the rock matrix in
+     * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the rock matrix in
      *        the sub-control volume.
      */
     Scalar heatCapacitySolid() const
@@ -121,7 +124,7 @@ public:
 protected:
     // this method gets called by the parent class. since this method
     // is protected, we are friends with our parent..
-    friend class TwoPVolumeVariables<TypeTag>;
+    friend class ImmiscibleVolumeVariables<TypeTag>;
 
     void updateTemperature_(const ElementContext &elemCtx,
                             int scvIdx,
@@ -143,15 +146,7 @@ protected:
 
             this->fluidState_.setEnthalpy(phaseIdx, h);
         }
-    }
 
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx)
-    {
         // compute and set the heat capacity of the solid phase
         const auto &problem = elemCtx.problem();
         const auto &heatCondParams = problem.heatConductionParams(elemCtx, scvIdx, timeIdx);

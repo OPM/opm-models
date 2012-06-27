@@ -22,14 +22,14 @@
 /*!
  * \file
  *
- * \brief Implements a boundary vector for the fully implicit non-isothermal two-phase model.
+ * \brief Implements a boundary vector for the fully implicit two-phase, two-component model.
  */
-#ifndef DUMUX_BOX_2PNI_BOUNDARY_RATE_VECTOR_HH
-#define DUMUX_BOX_2PNI_BOUNDARY_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_IMMISCIBLE_NI_BOUNDARY_RATE_VECTOR_HH
+#define DUMUX_BOX_IMMISCIBLE_NI_BOUNDARY_RATE_VECTOR_HH
 
-#include "2pniproperties.hh"
+#include "immiscibleniproperties.hh"
 
-#include <dumux/boxmodels/2p/2pboundaryratevector.hh>
+#include <dumux/boxmodels/immiscible/immiscibleboundaryratevector.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>
@@ -37,16 +37,16 @@
 namespace Dumux
 {
 /*!
- * \ingroup 2P2CNIModel
+ * \ingroup ImmiscibleNIModel
  *
- * \brief Implements a boundary vector for the fully implicit non-isothermal two-phase model.
+ * \brief Implements a boundary vector for the fully implicit two-phase, two-component model.
  */
 template <class TypeTag>
-class TwoPNIBoundaryRateVector
-    : public TwoPBoundaryRateVector<TypeTag>
+class ImmiscibleNIBoundaryRateVector
+    : public ImmiscibleBoundaryRateVector<TypeTag>
 {
-    typedef TwoPBoundaryRateVector<TypeTag> ParentType;
-    friend class TwoPBoundaryRateVector<TypeTag>;
+    typedef ImmiscibleBoundaryRateVector<TypeTag> ParentType;
+    friend class ImmiscibleBoundaryRateVector<TypeTag>;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -60,21 +60,21 @@ public:
     /*!
      * \brief Default constructor
      */
-    TwoPNIBoundaryRateVector()
+    ImmiscibleNIBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    TwoPNIBoundaryRateVector(Scalar value)
+    ImmiscibleNIBoundaryRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    TwoPNIBoundaryRateVector(const TwoPNIBoundaryRateVector &value)
+    ImmiscibleNIBoundaryRateVector(const ImmiscibleNIBoundaryRateVector &value)
         : ParentType(value)
     { }
 
@@ -97,7 +97,6 @@ protected:
             fluxVars.filterVelocityNormal(phaseIdx)
             * enthalpy
             * density;
-        Valgrind::CheckDefined((*this)[energyEqIdx]);
     }
 };
 

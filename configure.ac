@@ -15,9 +15,8 @@ AC_CONFIG_FILES([ewoms.pc
     doc/handbook/Makefile
     dumux/Makefile 
     dumux/boxmodels/Makefile 
-    dumux/boxmodels/1p/Makefile 
-    dumux/boxmodels/2p/Makefile 
-    dumux/boxmodels/2pni/Makefile 
+    dumux/boxmodels/immiscible/Makefile 
+    dumux/boxmodels/immiscibleni/Makefile 
     dumux/boxmodels/blackoil/Makefile 
     dumux/boxmodels/common/Makefile 
     dumux/boxmodels/mpnc/Makefile 

@@ -173,13 +173,6 @@ public:
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return temperature_; } // in [K]
 
-    /*!
-     * \brief Returns the parameters for the material law
-     */
-    template <class Context>
-    const MaterialLawParams &materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
-    { return materialParams_; } // in [K]
-
     // \}
 
     /*!

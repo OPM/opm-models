@@ -1,9 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008 by Klaus Mosthaf                                     *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
- *   Copyright (C) 2008 Bernd Flemisch                                       *
+ *   Copyright (C) 2008-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -21,37 +20,37 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+
 /*!
  * \file
  *
- * \brief Defines the indices used by the non-isotherm two-phase BOX model.
+ * \brief Defines the indices required for the two-phase box model.
  */
-#ifndef DUMUX_2PNI_INDICES_HH
-#define DUMUX_2PNI_INDICES_HH
-
-#include <dumux/boxmodels/2p/2pindices.hh>
+#ifndef DUMUX_BOX_IMMISCIBLE_INDICES_HH
+#define DUMUX_BOX_IMMISCIBLE_INDICES_HH
 
 namespace Dumux
 {
 // \{
 
 /*!
- * \ingroup TwoPNIModel
+ * \ingroup ImmiscibleBoxModel
  * \ingroup BoxIndices
- * \brief Enumerations for the non-isothermal two-phase model
+ * \brief The indices for the isothermal two-phase model.
  */
-template <int PVOffset = 0>
-class TwoPNIIndices : public TwoPIndices<PVOffset>
+template <int PVOffset=0>
+struct ImmiscibleIndices
 {
-public:
-    static const int temperatureIdx = PVOffset + 2; //! The primary variable index for temperature
-    static const int energyEqIdx = PVOffset + 2; //! The equation index of the energy equation
+    // Primary variable indices
+    static const int pressure0Idx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
+    static const int saturation0Idx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
 
-    // Phase indices
-    static const int wPhaseIdx = 0; //!< Index of the wetting phase in a phase vector
-    static const int nPhaseIdx = 1; //!< Index of the non-wetting phase in a phase vector
+    // indices of the equations
+    static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
+
 // \}
-}
+} // namespace Dumux
+
 
 #endif
