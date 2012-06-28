@@ -43,13 +43,11 @@ template <class TypeTag, bool enableEnergy/*=false*/>
 class NcpFluxVariablesEnergy
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     NcpFluxVariablesEnergy()
-    {
-    }
+    {}
 
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {}
@@ -68,14 +66,10 @@ class NcpFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
 
     enum {
         dimWorld = GridView::dimensionworld,
-        gPhaseIdx = FluidSystem::gPhaseIdx,
-        lPhaseIdx = FluidSystem::lPhaseIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
 public:
     NcpFluxVariablesEnergy()
@@ -83,7 +77,7 @@ public:
 
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        const FVElementGeometry &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
+        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
 
         // calculate temperature gradient using finite element

@@ -30,13 +30,21 @@
 #ifndef DUMUX_CUVETTE_PROBLEM_HH
 #define DUMUX_CUVETTE_PROBLEM_HH
 
+#define CUVETTE_USE_PVS 1
+
+#if CUVETTE_USE_PVS
 #include <dumux/boxmodels/pvsni/pvsnimodel.hh>
+#else
+#include <dumux/boxmodels/ncp/ncpmodel.hh>
+#endif
+
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
 #include <dumux/material/heatconduction/somerton.hh>
+#include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -49,7 +57,12 @@ class CuvetteProblem;
 namespace Properties
 {
 // create a new type tag for the cuvette steam injection problem
+#if CUVETTE_USE_PVS
 NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxPvsNI));
+#else
+NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxNcp));
+SET_BOOL_PROP(CuvetteProblem, EnableEnergy, true);
+#endif
 
 // Set the grid type
 SET_TYPE_PROP(CuvetteProblem, Grid, Dune::YaspGrid<2>);
