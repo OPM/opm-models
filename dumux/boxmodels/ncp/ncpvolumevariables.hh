@@ -28,12 +28,12 @@
  *        constant within a finite volume) of the M-phase, N-component
  *        model.
  */
-#ifndef DUMUX_MPNC_VOLUME_VARIABLES_HH
-#define DUMUX_MPNC_VOLUME_VARIABLES_HH
+#ifndef DUMUX_NCP_VOLUME_VARIABLES_HH
+#define DUMUX_NCP_VOLUME_VARIABLES_HH
 
-#include "diffusion/volumevariables.hh"
-#include "energy/mpncvolumevariablesenergy.hh"
-#include "mass/mpncvolumevariablesmass.hh"
+#include "diffusion/ncpvolumevariables.hh"
+#include "energy/ncpvolumevariablesenergy.hh"
+#include "mass/ncpvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
@@ -41,17 +41,17 @@
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  * \ingroup BoxVolumeVariables
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the M-phase, N-component model.
  */
 template <class TypeTag>
-class MPNCVolumeVariables
+class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public MPNCVolumeVariablesMass<TypeTag>
-    , public MPNCVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
-    , public MPNCVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public NcpVolumeVariablesMass<TypeTag>
+    , public NcpVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+    , public NcpVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -71,15 +71,15 @@ class MPNCVolumeVariables
         p0Idx = Indices::p0Idx
     };
 
-    typedef MPNCVolumeVariablesMass<TypeTag> MassVolumeVariables;
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyVolumeVariables;
-    typedef MPNCVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef NcpVolumeVariablesMass<TypeTag> MassVolumeVariables;
+    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef NcpVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
 
 public:
     //! The return type of the fluidState() method
     typedef typename MassVolumeVariables::FluidState FluidState;
 
-    MPNCVolumeVariables()
+    NcpVolumeVariables()
     { }
 
     /*!

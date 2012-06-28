@@ -22,16 +22,16 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief A MpNc specific controller for the newton solver.
+ * \brief A Ncp specific controller for the newton solver.
  *
  * This controller 'knows' what a 'physically meaningful' solution is
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
-#ifndef DUMUX_MPNC_NEWTON_CONTROLLER_HH
-#define DUMUX_MPNC_NEWTON_CONTROLLER_HH
+#ifndef DUMUX_NCP_NEWTON_CONTROLLER_HH
+#define DUMUX_NCP_NEWTON_CONTROLLER_HH
 
-#include "mpncproperties.hh"
+#include "ncpproperties.hh"
 
 #include <dumux/boxmodels/common/boxnewtoncontroller.hh>
 
@@ -40,7 +40,7 @@
 namespace Dumux {
 
 template <class TypeTag>
-class MpNcNewtonChop
+class NcpNewtonChop
 {
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
@@ -112,14 +112,14 @@ private:
 
 /*!
  * \ingroup Newton
- * \brief A MpNc specific controller for the newton solver.
+ * \brief A Ncp specific controller for the newton solver.
  *
  * This controller 'knows' what a 'physically meaningful' solution is
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
 template <class TypeTag>
-class MPNCNewtonController : public BoxNewtonController<TypeTag>
+class NcpNewtonController : public BoxNewtonController<TypeTag>
 {
     typedef BoxNewtonController<TypeTag> ParentType;
 
@@ -138,10 +138,10 @@ class MPNCNewtonController : public BoxNewtonController<TypeTag>
         S0Idx = Indices::S0Idx
     };
 
-    typedef MpNcNewtonChop<TypeTag> NewtonChop;
+    typedef NcpNewtonChop<TypeTag> NewtonChop;
 
 public:
-    MPNCNewtonController(Problem &problem)
+    NcpNewtonController(Problem &problem)
         : ParentType(problem)
     {
         choppedIterations_ = GET_PARAM_FROM_GROUP(TypeTag, int, Newton, ChoppedIterations);

@@ -90,6 +90,8 @@ namespace Dumux
  *  <li> Only non-wetting phase is present: The mass fraction of, e.g., water in the non-wetting phase, \f$X^w_n\f$, is used,
  *      as long as the maximum mass fraction is not exceeded \f$(X^w_n<X^w_{n,max})\f$</li>
  * </ul>
+ *
+ * \todo implement/re-enable molecular diffusion
  */
 template<class TypeTag>
 class PvsModel: public GET_PROP_TYPE(TypeTag, BaseModel)

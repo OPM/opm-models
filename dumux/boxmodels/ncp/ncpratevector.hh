@@ -27,19 +27,19 @@
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
  */
-#ifndef DUMUX_MPNC_RATE_VECTOR_HH
-#define DUMUX_MPNC_RATE_VECTOR_HH
+#ifndef DUMUX_NCP_RATE_VECTOR_HH
+#define DUMUX_NCP_RATE_VECTOR_HH
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
-#include "energy/mpncvolumevariablesenergy.hh"
+#include "energy/ncpvolumevariablesenergy.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  *
  * \brief Implements a vector representing molar rates.
  *
@@ -47,7 +47,7 @@ namespace Dumux
  * either mass, molar or volumetric rates.
  */
 template <class TypeTag>
-class MPNCRateVector
+class NcpRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -61,27 +61,27 @@ class MPNCRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
      * \brief Default constructor
      */
-    MPNCRateVector()
+    NcpRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    MPNCRateVector(Scalar value)
+    NcpRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    MPNCRateVector(const MPNCRateVector &value)
+    NcpRateVector(const NcpRateVector &value)
         : ParentType(value)
     { }
 

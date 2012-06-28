@@ -25,12 +25,12 @@
  * \file
  *
  * \brief Contains the quantities to calculate the energy flux in the
- *        MpNc box model.
+ *        Ncp box model.
  */
-#ifndef DUMUX_MPNC_ENERGY_FLUX_VARIABLES_HH
-#define DUMUX_MPNC_ENERGY_FLUX_VARIABLES_HH
+#ifndef DUMUX_NCP_ENERGY_FLUX_VARIABLES_HH
+#define DUMUX_NCP_ENERGY_FLUX_VARIABLES_HH
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 
 #include <dumux/common/spline.hh>
 
@@ -40,14 +40,14 @@ namespace Dumux
 {
 
 template <class TypeTag, bool enableEnergy/*=false*/>
-class MPNCFluxVariablesEnergy
+class NcpFluxVariablesEnergy
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
-    MPNCFluxVariablesEnergy()
+    NcpFluxVariablesEnergy()
     {
     }
 
@@ -56,7 +56,7 @@ public:
 };
 
 template <class TypeTag>
-class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
+class NcpFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -78,7 +78,7 @@ class MPNCFluxVariablesEnergy<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
 
 public:
-    MPNCFluxVariablesEnergy()
+    NcpFluxVariablesEnergy()
     {}
 
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)

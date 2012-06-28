@@ -24,10 +24,10 @@
  *
  * \brief Contains the mass conservation part of the volume variables
  */
-#ifndef DUMUX_MPNC_VOLUME_VARIABLES_MASS_HH
-#define DUMUX_MPNC_VOLUME_VARIABLES_MASS_HH
+#ifndef DUMUX_NCP_VOLUME_VARIABLES_MASS_HH
+#define DUMUX_NCP_VOLUME_VARIABLES_MASS_HH
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
 #include <dune/common/fvector.hh>
@@ -42,7 +42,7 @@ namespace Dumux
  *        equilibrium is assumed
  */
 template <class TypeTag>
-class MPNCVolumeVariablesMass
+class NcpVolumeVariablesMass
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

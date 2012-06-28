@@ -24,10 +24,10 @@
  * \brief The indices for the mass flow part of the compositional
  *        multi-phase model.
  */
-#ifndef DUMUX_MPNC_MASS_INDICES_HH
-#define DUMUX_MPNC_MASS_INDICES_HH
+#ifndef DUMUX_NCP_MASS_INDICES_HH
+#define DUMUX_NCP_MASS_INDICES_HH
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 
 namespace Dumux
 {
@@ -39,7 +39,7 @@ namespace Dumux
  */
 template <int PVOffset,
           class TypeTag>
-class MPNCMassIndices
+class NcpMassIndices
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 

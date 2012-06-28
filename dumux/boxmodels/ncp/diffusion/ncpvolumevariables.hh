@@ -23,18 +23,18 @@
  * \file
  *
  * \brief This file contains the diffusion module for the vertex data
- *        of the fully coupled two-phase N-component model
+ *        of the fully coupled compositional NCP model
  */
-#ifndef DUMUX_MPNC_DIFFUSION_VOLUME_VARIABLES_HH
-#define DUMUX_MPNC_DIFFUSION_VOLUME_VARIABLES_HH
+#ifndef DUMUX_NCP_DIFFUSION_VOLUME_VARIABLES_HH
+#define DUMUX_NCP_DIFFUSION_VOLUME_VARIABLES_HH
 
 #include <dumux/common/valgrind.hh>
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 
 namespace Dumux {
 
 template<class TypeTag, bool enableDiffusion>
-class MPNCVolumeVariablesDiffusion
+class NcpVolumeVariablesDiffusion
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
@@ -46,7 +46,7 @@ class MPNCVolumeVariablesDiffusion
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
 public:
-    MPNCVolumeVariablesDiffusion()
+    NcpVolumeVariablesDiffusion()
     {}
 
     template <class FluidState, class ParameterCache>
@@ -126,13 +126,13 @@ protected:
 
 // dummy class for the case where diffusion is disabled
 template<class TypeTag>
-class MPNCVolumeVariablesDiffusion<TypeTag, false>
+class NcpVolumeVariablesDiffusion<TypeTag, false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    MPNCVolumeVariablesDiffusion()
+    NcpVolumeVariablesDiffusion()
     {}
 
     template <class FluidState, class ParameterCache>
@@ -159,4 +159,4 @@ public:
 
 }
 
-#endif // DUMUX_MPNC_DIFFUSION_VOLUME_VARIABLES_HH
+#endif // DUMUX_NCP_DIFFUSION_VOLUME_VARIABLES_HH

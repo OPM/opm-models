@@ -23,8 +23,8 @@
  * \brief The indices for the non-isothermal part of the compositional
  *        multi-phase model.
  */
-#ifndef DUMUX_MPNC_INDICES_ENERGY_HH
-#define DUMUX_MPNC_INDICES_ENERGY_HH
+#ifndef DUMUX_NCP_INDICES_ENERGY_HH
+#define DUMUX_NCP_INDICES_ENERGY_HH
 
 namespace Dumux
 {
@@ -34,7 +34,7 @@ namespace Dumux
  * This is a dummy class for the isothermal case.
  */
 template <int PVOffset, bool enableEnergy/*=false*/>
-struct MPNCEnergyIndices
+struct NcpEnergyIndices
 {
 public:
     /*!
@@ -48,7 +48,7 @@ public:
  * \brief The indices required for the energy equation.
  */
 template <int PVOffset>
-struct MPNCEnergyIndices<PVOffset, /*enableEnergy=*/true>
+struct NcpEnergyIndices<PVOffset, /*enableEnergy=*/true>
 {
 public:
     /*!

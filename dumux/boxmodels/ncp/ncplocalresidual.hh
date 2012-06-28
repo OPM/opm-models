@@ -19,13 +19,13 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_LOCAL_RESIDUAL_HH
-#define DUMUX_MPNC_LOCAL_RESIDUAL_HH
+#ifndef DUMUX_NCP_LOCAL_RESIDUAL_HH
+#define DUMUX_NCP_LOCAL_RESIDUAL_HH
 
-#include "mpncfluxvariables.hh"
-#include "diffusion/diffusion.hh"
-#include "energy/mpnclocalresidualenergy.hh"
-#include "mass/mpnclocalresidualmass.hh"
+#include "ncpfluxvariables.hh"
+#include "diffusion/ncpdiffusion.hh"
+#include "energy/ncplocalresidualenergy.hh"
+#include "mass/ncplocalresidualmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
@@ -34,16 +34,16 @@
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  * \ingroup BoxLocalResidual
- * \brief two-phase, N-component specific details needed to
- *        approximately calculate the local defect in the BOX scheme.
+ * \brief Compositional NCP-model specific details needed to
+ *        approximately calculate the local defect in the box scheme.
  *
- * This class is used to fill the gaps in BoxLocalResidual for the
- * two-phase, N-component twophase flow.
+ * This class is used to fill the gaps in BoxLocalResidual for
+ * M-phase, N-component flow using NCPs as the model equations.
  */
 template<class TypeTag>
-class MPNCLocalResidual : public BoxLocalResidual<TypeTag>
+class NcpLocalResidual : public BoxLocalResidual<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -65,8 +65,8 @@ protected:
         phase0NcpIdx = Indices::phase0NcpIdx
     };
 
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
-    typedef MPNCLocalResidualMass<TypeTag> MassResid;
+    typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
+    typedef NcpLocalResidualMass<TypeTag> MassResid;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 

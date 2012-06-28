@@ -20,30 +20,30 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_LOCAL_RESIDUAL_MASS_HH
-#define DUMUX_MPNC_LOCAL_RESIDUAL_MASS_HH
+#ifndef DUMUX_NCP_LOCAL_RESIDUAL_MASS_HH
+#define DUMUX_NCP_LOCAL_RESIDUAL_MASS_HH
 
 #include <dune/common/fvector.hh>
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 
 #include <dumux/common/math.hh>
 #include <dumux/common/spline.hh>
 
-#include "../diffusion/diffusion.hh"
-#include "../energy/mpnclocalresidualenergy.hh"
+#include "../diffusion/ncpdiffusion.hh"
+#include "../energy/ncplocalresidualenergy.hh"
 
 namespace Dumux
 {
 /*!
- * \brief The mass conservation part of the Mp-Nc model.
+ * \brief The mass conservation part of the compositional NCP model.
  *
  * This is the class represents methods which are shared amongst all
  * mass conservation modules.
  */
 template<class TypeTag>
-class MPNCLocalResidualMassCommon
+class NcpLocalResidualMassCommon
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -57,9 +57,9 @@ protected:
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef MPNCDiffusion<TypeTag, enableDiffusion> Diffusion;
+    typedef NcpDiffusion<TypeTag, enableDiffusion> Diffusion;
 
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
+    typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
 
 public:
     /*!
@@ -143,15 +143,15 @@ public:
 };
 
 /*!
- * \brief The mass conservation part of the Mp-Nc model.
+ * \brief The mass conservation part of the compositional NCP model.
  *
  * This is the specialization for the case where kinetic mass transfer
  * is not considered.
  */
 template<class TypeTag>
-class MPNCLocalResidualMass
+class NcpLocalResidualMass
 {
-    typedef MPNCLocalResidualMassCommon<TypeTag> MassCommon;
+    typedef NcpLocalResidualMassCommon<TypeTag> MassCommon;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -167,7 +167,7 @@ class MPNCLocalResidualMass
     typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef MPNCLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
+    typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
 
 public:
     /*!

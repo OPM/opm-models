@@ -23,13 +23,12 @@
  * \file
  *
  * \brief This file contains the parts of the local residual to
- *        calculate the heat flux in the fully coupled two-phase
- *        N-component model
+ *        calculate the heat flux in the compositional NCP model
  */
-#ifndef DUMUX_MPNC_LOCAL_RESIDUAL_ENERGY_HH
-#define DUMUX_MPNC_LOCAL_RESIDUAL_ENERGY_HH
+#ifndef DUMUX_NCP_LOCAL_RESIDUAL_ENERGY_HH
+#define DUMUX_NCP_LOCAL_RESIDUAL_ENERGY_HH
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -41,7 +40,7 @@ namespace Dumux {
  * This class just does nothing.
  */
 template <class TypeTag, bool enableEnergy/*=false*/>
-class MPNCLocalResidualEnergy
+class NcpLocalResidualEnergy
 {
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -108,7 +107,7 @@ public:
 
 
 template <class TypeTag>
-class MPNCLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
+class NcpLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -242,4 +241,4 @@ public:
 };
 } // namespace Dumux
 
-#endif // DUMUX_MPNC_LOCAL_RESIDUAL_ENERGY_HH
+#endif // DUMUX_NCP_LOCAL_RESIDUAL_ENERGY_HH

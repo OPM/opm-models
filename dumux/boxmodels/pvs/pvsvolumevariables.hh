@@ -212,7 +212,6 @@ public:
         // energy related quantities
         asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
 
-#warning TODO: diffusion
 #if 0
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // binary diffusion coefficents

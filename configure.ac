@@ -19,10 +19,10 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/boxmodels/immiscibleni/Makefile 
     dumux/boxmodels/blackoil/Makefile 
     dumux/boxmodels/common/Makefile 
-    dumux/boxmodels/mpnc/Makefile 
-    dumux/boxmodels/mpnc/diffusion/Makefile
-    dumux/boxmodels/mpnc/energy/Makefile
-    dumux/boxmodels/mpnc/mass/Makefile
+    dumux/boxmodels/ncp/Makefile 
+    dumux/boxmodels/ncp/diffusion/Makefile
+    dumux/boxmodels/ncp/energy/Makefile
+    dumux/boxmodels/ncp/mass/Makefile
     dumux/boxmodels/pvs/Makefile 
     dumux/boxmodels/pvsni/Makefile 
     dumux/boxmodels/richards/Makefile 

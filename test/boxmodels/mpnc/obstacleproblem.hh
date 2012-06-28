@@ -34,7 +34,7 @@
 #if OBSTACLE_USE_PVS
 #include <dumux/boxmodels/pvs/pvsmodel.hh>
 #else
-#include <dumux/boxmodels/mpnc/mpncmodel.hh>
+#include <dumux/boxmodels/ncp/ncpmodel.hh>
 #endif
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
@@ -65,7 +65,7 @@ namespace Properties
 #if OBSTACLE_USE_PVS
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxPvs));
 #else
-NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxMPNC));
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp));
 #endif
 
 // Set the grid type

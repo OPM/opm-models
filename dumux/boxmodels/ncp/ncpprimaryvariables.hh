@@ -28,18 +28,18 @@
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
  */
-#ifndef DUMUX_MPNC_PRIMARY_VARIABLES_HH
-#define DUMUX_MPNC_PRIMARY_VARIABLES_HH
+#ifndef DUMUX_NCP_PRIMARY_VARIABLES_HH
+#define DUMUX_NCP_PRIMARY_VARIABLES_HH
 
 #include <dune/common/fvector.hh>
 
 #include <dumux/material/constraintsolvers/ncpflash.hh>
-#include "energy/mpncvolumevariablesenergy.hh"
+#include "energy/ncpvolumevariablesenergy.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  *
  * \brief Represents the primary variables used in the M-phase,
  *        N-component box model.
@@ -48,7 +48,7 @@ namespace Dumux
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class MPNCPrimaryVariables 
+class NcpPrimaryVariables 
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -70,7 +70,7 @@ class MPNCPrimaryVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dumux::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
@@ -78,21 +78,21 @@ public:
     /*!
      * \brief Default constructor
      */
-    MPNCPrimaryVariables()
+    NcpPrimaryVariables()
         : ParentType()
     { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    MPNCPrimaryVariables(Scalar value)
+    NcpPrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    MPNCPrimaryVariables(const MPNCPrimaryVariables &value)
+    NcpPrimaryVariables(const NcpPrimaryVariables &value)
         : ParentType(value)
     { }
 

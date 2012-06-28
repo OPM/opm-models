@@ -23,13 +23,13 @@
 /*!
  * \file
  *
- * \brief Contains the energy part of volume variables of the M-phase,
- *        N-component model.
+ * \brief Contains the energy part of volume variables of the
+ *        compositional NCP model.
  */
-#ifndef DUMUX_MPNC_VOLUME_VARIABLES_ENERGY_HH
-#define DUMUX_MPNC_VOLUME_VARIABLES_ENERGY_HH
+#ifndef DUMUX_NCP_VOLUME_VARIABLES_ENERGY_HH
+#define DUMUX_NCP_VOLUME_VARIABLES_ENERGY_HH
 
-#include <dumux/boxmodels/mpnc/mpncproperties.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
 #include <string>
@@ -38,14 +38,14 @@ namespace Dumux {
 
 /*!
  * \brief Contains the energy related quantities which are constant within a
- *        finite volume in the two-phase, N-component model.
+ *        finite volume in the compositional NCP model.
  *
  * This is the dummy class for the isothermal case. Note that we're
  * only isothermal in the sense that the temperature at a location and
  * a time is specified outside of the model!
  */
 template <class TypeTag, bool enableEnergy/*=false*/>
-class MPNCVolumeVariablesEnergy
+class NcpVolumeVariablesEnergy
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -178,10 +178,10 @@ public:
 
 /*!
  * \brief Contains the energy related quantities which are constant within a
- *        finite volume in the two-phase, N-component model.
+ *        finite volume in the compositional NCP model.
  */
 template <class TypeTag>
-class MPNCVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true>
+class NcpVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

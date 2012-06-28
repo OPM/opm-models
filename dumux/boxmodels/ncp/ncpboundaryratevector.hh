@@ -24,11 +24,11 @@
  *
  * \brief Implements a boundary vector for the fully implicit M-phase, N-component model.
  */
-#ifndef DUMUX_BOX_MPNC_BOUNDARY_RATE_VECTOR_HH
-#define DUMUX_BOX_MPNC_BOUNDARY_RATE_VECTOR_HH
+#ifndef DUMUX_BOX_NCP_BOUNDARY_RATE_VECTOR_HH
+#define DUMUX_BOX_NCP_BOUNDARY_RATE_VECTOR_HH
 
-#include "mpncproperties.hh"
-#include "energy/mpncvolumevariablesenergy.hh"
+#include "ncpproperties.hh"
+#include "energy/ncpvolumevariablesenergy.hh"
 
 #include <dumux/common/valgrind.hh>
 
@@ -37,12 +37,12 @@
 namespace Dumux
 {
 /*!
- * \ingroup MpNcModel
+ * \ingroup NcpModel
  *
  * \brief Implements a boundary vector for the fully implicit M-phase, N-component model.
  */
 template <class TypeTag>
-class MPNCBoundaryRateVector
+class NcpBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
@@ -58,27 +58,27 @@ class MPNCBoundaryRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
      * \brief Default constructor
      */
-    MPNCBoundaryRateVector()
+    NcpBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
      * \brief Constructor with assignment from scalar
      */
-    MPNCBoundaryRateVector(Scalar value)
+    NcpBoundaryRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
      * \brief Copy constructor
      */
-    MPNCBoundaryRateVector(const MPNCBoundaryRateVector &value)
+    NcpBoundaryRateVector(const NcpBoundaryRateVector &value)
         : ParentType(value)
     { }
 

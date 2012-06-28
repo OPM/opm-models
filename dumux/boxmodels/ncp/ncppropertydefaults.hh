@@ -19,20 +19,20 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_PROPERTY_DEFAULTS_HH
-#define DUMUX_MPNC_PROPERTY_DEFAULTS_HH
+#ifndef DUMUX_NCP_PROPERTY_DEFAULTS_HH
+#define DUMUX_NCP_PROPERTY_DEFAULTS_HH
 
-#include "mpncmodel.hh"
+#include "ncpmodel.hh"
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
-#include "mpnclocalresidual.hh"
-#include "mpncfluxvariables.hh"
-#include "mpncprimaryvariables.hh"
-#include "mpncboundaryratevector.hh"
-#include "mpncratevector.hh"
-#include "mpncvolumevariables.hh"
-#include "mpncnewtoncontroller.hh"
-#include "mpncindices.hh"
-#include "mpncproperties.hh"
+#include "ncplocalresidual.hh"
+#include "ncpfluxvariables.hh"
+#include "ncpprimaryvariables.hh"
+#include "ncpboundaryratevector.hh"
+#include "ncpratevector.hh"
+#include "ncpvolumevariables.hh"
+#include "ncpnewtoncontroller.hh"
+#include "ncpindices.hh"
+#include "ncpproperties.hh"
 
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
@@ -41,9 +41,9 @@
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
- * \ingroup BoxMpNcModel
+ * \ingroup BoxNcpModel
  * \file
- * \brief  Default properties for the Mp-Nc box model.
+ * \brief  Default properties for the compositional NCP box model.
  */
 namespace Dumux
 {
@@ -58,7 +58,7 @@ namespace Properties
  *
  * We just forward the number from the fluid system.
  */
-SET_INT_PROP(BoxMPNC, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(BoxNcp, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
@@ -66,28 +66,28 @@ SET_INT_PROP(BoxMPNC, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numCom
  * We just forward the number from the fluid system and use an static
  * assert to make sure it is 2.
  */
-SET_INT_PROP(BoxMPNC, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
+SET_INT_PROP(BoxNcp, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 
 /*!
  * \brief Set the property for the number of equations and primary variables.
  */
-SET_INT_PROP(BoxMPNC, NumEq,GET_PROP_TYPE(TypeTag, Indices)::NumPrimaryVars);
+SET_INT_PROP(BoxNcp, NumEq,GET_PROP_TYPE(TypeTag, Indices)::NumPrimaryVars);
 
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(BoxMPNC, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
+SET_TYPE_PROP(BoxNcp, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxMPNC,
+SET_TYPE_PROP(BoxNcp,
               HeatConductionLaw,
               Dumux::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(BoxMPNC,
+SET_TYPE_PROP(BoxNcp,
               HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
@@ -95,7 +95,7 @@ SET_TYPE_PROP(BoxMPNC,
  * \brief Set the themodynamic constraint solver which calculates the
  *        composition of any phase given all component fugacities.
  */
-SET_PROP(BoxMPNC, CompositionFromFugacitiesSolver)
+SET_PROP(BoxNcp, CompositionFromFugacitiesSolver)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -105,49 +105,49 @@ public:
     typedef Dumux::CompositionFromFugacities<Scalar, FluidSystem> type;
 };
 
-//! Use the MpNc local jacobian operator for the MpNc model
-SET_TYPE_PROP(BoxMPNC,
+//! Use the Ncp local jacobian operator for the compositional NCP model
+SET_TYPE_PROP(BoxNcp,
               LocalResidual,
-              MPNCLocalResidual<TypeTag>);
+              NcpLocalResidual<TypeTag>);
 
-//! Use the MpNc specific newton controller for the MpNc model
-SET_TYPE_PROP(BoxMPNC, NewtonController, MPNCNewtonController<TypeTag>);
+//! Use the Ncp specific newton controller for the compositional NCP model
+SET_TYPE_PROP(BoxNcp, NewtonController, NcpNewtonController<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(BoxMPNC, Model, MPNCModel<TypeTag>);
+SET_TYPE_PROP(BoxNcp, Model, NcpModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(BoxMPNC, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(BoxNcp, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 
 //! use an isothermal model by default
-SET_BOOL_PROP(BoxMPNC, EnableEnergy, false);
+SET_BOOL_PROP(BoxNcp, EnableEnergy, false);
 
 //! disable diffusion by default
-SET_BOOL_PROP(BoxMPNC, EnableDiffusion, false);
+SET_BOOL_PROP(BoxNcp, EnableDiffusion, false);
 
 //! do not use smooth upwinding by default
-SET_BOOL_PROP(BoxMPNC, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(BoxNcp, EnableSmoothUpwinding, false);
 
 //! the RateVector property
-SET_TYPE_PROP(BoxMPNC, RateVector, MPNCRateVector<TypeTag>);
+SET_TYPE_PROP(BoxNcp, RateVector, NcpRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(BoxMPNC, BoundaryRateVector, MPNCBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(BoxNcp, BoundaryRateVector, NcpBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(BoxMPNC, PrimaryVariables, MPNCPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(BoxNcp, PrimaryVariables, NcpPrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(BoxMPNC, VolumeVariables, MPNCVolumeVariables<TypeTag>);
+SET_TYPE_PROP(BoxNcp, VolumeVariables, NcpVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(BoxMPNC, FluxVariables, MPNCFluxVariables<TypeTag>);
+SET_TYPE_PROP(BoxNcp, FluxVariables, NcpFluxVariables<TypeTag>);
 
 //! truncate the newton update for the first 2 iterations of a time step
-SET_INT_PROP(BoxMPNC, NewtonChoppedIterations, 2);
+SET_INT_PROP(BoxNcp, NewtonChoppedIterations, 2);
 
-//! The indices required by the compositional twophase model
-SET_TYPE_PROP(BoxMPNC, Indices, MPNCIndices<TypeTag, 0>);
+//! The indices required by the compositional NCP model
+SET_TYPE_PROP(BoxNcp, Indices, NcpIndices<TypeTag, 0>);
 }
 }
 

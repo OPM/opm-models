@@ -30,11 +30,11 @@
  * This means pressure, concentration and temperature gradients, phase
  * densities at the integration point, etc.
  */
-#ifndef DUMUX_MPNC_FLUX_VARIABLES_HH
-#define DUMUX_MPNC_FLUX_VARIABLES_HH
+#ifndef DUMUX_NCP_FLUX_VARIABLES_HH
+#define DUMUX_NCP_FLUX_VARIABLES_HH
 
-#include "diffusion/fluxvariables.hh"
-#include "energy/mpncfluxvariablesenergy.hh"
+#include "diffusion/ncpfluxvariables.hh"
+#include "energy/ncpfluxvariablesenergy.hh"
 
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
@@ -43,17 +43,17 @@
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  * \ingroup BoxFluxVariables
  * \brief This template class contains the data which is required to
  *        calculate all fluxes of components over a face of a finite
- *        volume for the two-phase, three-component model.
+ *        volume for the compositional NCP model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the intergration point, etc.
  */
 template <class TypeTag>
-class MPNCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
+class NcpFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -70,8 +70,8 @@ class MPNCFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
-    typedef MPNCFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
-    typedef MPNCFluxVariablesEnergy<TypeTag, enableEnergy> FluxVariablesEnergy;
+    typedef NcpFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
+    typedef NcpFluxVariablesEnergy<TypeTag, enableEnergy> FluxVariablesEnergy;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)

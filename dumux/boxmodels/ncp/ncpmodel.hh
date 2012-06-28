@@ -19,12 +19,12 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_MODEL_HH
-#define DUMUX_MPNC_MODEL_HH
+#ifndef DUMUX_NCP_MODEL_HH
+#define DUMUX_NCP_MODEL_HH
 
-#include "mpncproperties.hh"
-#include "energy/mpncvolumevariablesenergy.hh"
-#include "mass/mpncvolumevariablesmass.hh"
+#include "ncpproperties.hh"
+#include "energy/ncpvolumevariablesenergy.hh"
+#include "mass/ncpvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
@@ -38,7 +38,7 @@
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  * \brief A fully implicit model for M-phase, N-component flow using
  *        vertex centered finite volumes.
  *
@@ -119,7 +119,7 @@ namespace Dumux
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
 template<class TypeTag>
-class MPNCModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 
@@ -140,9 +140,9 @@ class MPNCModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef MPNCVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
-    typedef MPNCVolumeVariablesMass<TypeTag> MassModule;
+    typedef NcpVolumeVariablesMass<TypeTag> MassModule;
 
 public:
     /*!
@@ -182,7 +182,7 @@ public:
      * \brief Returns a string with the model's human-readable name
      */
     const char *name() const
-    { return "MpNc"; }
+    { return "ncp"; }
 
     /*!
      * \brief Given an primary variable index, return a human readable name.
@@ -299,6 +299,6 @@ protected:
 
 }
 
-#include "mpncpropertydefaults.hh"
+#include "ncppropertydefaults.hh"
 
 #endif

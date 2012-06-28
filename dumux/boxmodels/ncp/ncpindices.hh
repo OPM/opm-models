@@ -19,35 +19,35 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_INDICES_HH
-#define DUMUX_MPNC_INDICES_HH
+#ifndef DUMUX_NCP_INDICES_HH
+#define DUMUX_NCP_INDICES_HH
 
-#include "mpncproperties.hh"
+#include "ncpproperties.hh"
 
-#include "mass/mpncindicesmass.hh"
-#include "energy/mpncindicesenergy.hh"
+#include "mass/ncpindicesmass.hh"
+#include "energy/ncpindicesenergy.hh"
 
 namespace Dumux
 {
 /*!
- * \ingroup MPNCModel
+ * \ingroup NcpModel
  * \ingroup BoxIndices
- * \brief The primary variable and equation indices for the MpNc
+ * \brief The primary variable and equation indices for the Ncp
  *        model.
  */
 template <class TypeTag, int BasePVOffset = 0>
-struct MPNCIndices :
-        public MPNCMassIndices<BasePVOffset,
+struct NcpIndices :
+        public NcpMassIndices<BasePVOffset,
                                TypeTag>,
-        public MPNCEnergyIndices<BasePVOffset +
-                                 MPNCMassIndices<0, TypeTag>::NumPrimaryVars,
+        public NcpEnergyIndices<BasePVOffset +
+                                 NcpMassIndices<0, TypeTag>::NumPrimaryVars,
                                  GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef MPNCMassIndices<BasePVOffset, TypeTag> MassIndices;
-    typedef MPNCEnergyIndices<BasePVOffset + MassIndices::NumPrimaryVars, enableEnergy> EnergyIndices;
+    typedef NcpMassIndices<BasePVOffset, TypeTag> MassIndices;
+    typedef NcpEnergyIndices<BasePVOffset + MassIndices::NumPrimaryVars, enableEnergy> EnergyIndices;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { numPhases = FluidSystem::numPhases };

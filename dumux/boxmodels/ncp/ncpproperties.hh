@@ -19,8 +19,8 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-#ifndef DUMUX_MPNC_PROPERTIES_HH
-#define DUMUX_MPNC_PROPERTIES_HH
+#ifndef DUMUX_NCP_PROPERTIES_HH
+#define DUMUX_NCP_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
@@ -31,9 +31,9 @@
 /*!
  * \ingroup Properties
  * \ingroup BoxProperties
- * \ingroup BoxMpNcModel
+ * \ingroup BoxNcpModel
  * \file
- * \brief  Defines the properties required for the Mp-Nc box model.
+ * \brief  Defines the properties required for the compositional NCP box model.
  */
 namespace Dumux
 {
@@ -44,9 +44,9 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 /*!
- * \brief Define the type tag for the compositional twophase box model.
+ * \brief Define the type tag for the compositional NCP model.
  */
-NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
+NEW_TYPE_TAG(BoxNcp, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -54,7 +54,7 @@ NEW_TYPE_TAG(BoxMPNC, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, Vtk
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(MPNCEnergyIndices); //!< Enumerations for the 2pNc model
+NEW_PROP_TAG(NcpEnergyIndices); //!< Enumerations for the 2pNc model
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
 NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)
