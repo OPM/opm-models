@@ -983,13 +983,11 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         {
             pressW = cellData.pressure(wPhaseIdx);
             pressNW = pressW + pc;
-            break;
         }
         else if (pressureType_ == pn)
         {
             pressNW = cellData.pressure(nPhaseIdx);
             pressW = pressNW - pc;
-            break;
         }
 
         if (compressibility_)
