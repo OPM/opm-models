@@ -60,28 +60,13 @@ class FVTransport2P2CMultiPhysics : public FVTransport2P2C<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
-    typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 
     typedef typename GET_PROP_TYPE(TypeTag, TransportSolutionType) TransportSolutionType;
 
-    enum
-    {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-    enum
-    {
-        pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
-    };
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
@@ -91,7 +76,6 @@ class FVTransport2P2CMultiPhysics : public FVTransport2P2C<TypeTag>
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, 2> PhaseVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 

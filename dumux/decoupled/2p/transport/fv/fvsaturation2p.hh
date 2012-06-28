@@ -116,9 +116,7 @@ class FVSaturation2P: public FVTransport<TypeTag>
     {
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
-        pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
-        pressEqIdx = Indices::pressEqIdx,
         satEqIdx = Indices::satEqIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
@@ -126,10 +124,8 @@ class FVSaturation2P: public FVTransport<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, TransportSolutionType) TransportSolutionType;
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
-    typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
-    typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GridView::Intersection Intersection;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;

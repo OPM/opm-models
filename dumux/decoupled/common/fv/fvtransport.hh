@@ -56,12 +56,6 @@ class FVTransport
     typedef typename GET_PROP_TYPE(TypeTag, TransportModel) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    enum
-    {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
@@ -72,10 +66,10 @@ class FVTransport
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GridView::Intersection Intersection;
 
+    enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 protected:

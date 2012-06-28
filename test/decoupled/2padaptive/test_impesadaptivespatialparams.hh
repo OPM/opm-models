@@ -73,14 +73,11 @@ class TestIMPESAdaptiveSpatialParams: public FVSpatialParams<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef FVSpatialParams<TypeTag> ParentType;
-    typedef typename Grid::ctype CoordScalar;
 
     enum
         {dim=Grid::dimension, dimWorld=Grid::dimensionworld};
     typedef typename Grid::Traits::template Codim<0>::Entity Element;
 
-    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar,dim,dim> FieldMatrix;
 
 public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;

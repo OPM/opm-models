@@ -116,7 +116,6 @@ class OnePTwoCOutflowProblem
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // Grid and world dimension
         dim = GridView::dimension,
@@ -126,8 +125,6 @@ class OnePTwoCOutflowProblem
         H2OIdx = FluidSystem::H2OIdx,
         N2Idx = FluidSystem::N2Idx,
 
-        pressure0Idx = Indices::pressure0Idx,
-        x1Idx = Indices::switch0Idx
     };
 
 

@@ -75,7 +75,6 @@ template<class TypeTag> class MimeticPressure2P
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, Variables) Variables;
 
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
     typedef typename SpatialParams::MaterialLaw MaterialLaw;
@@ -93,11 +92,8 @@ template<class TypeTag> class MimeticPressure2P
     };
     enum
     {
-        pw = Indices::pressureW,
-        pn = Indices::pressureNW,
         pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
     };
     enum
     {
@@ -107,11 +103,8 @@ template<class TypeTag> class MimeticPressure2P
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::Grid Grid;
-    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalStiffness) LocalStiffness;
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 1> > TraceType;
@@ -122,8 +115,6 @@ template<class TypeTag> class MimeticPressure2P
     typedef typename GET_PROP(TypeTag, SolutionTypes)::ScalarSolution ScalarSolution;
     ///@endcond
 
-    typedef typename GET_PROP_TYPE(TypeTag, PressureCoefficientMatrix) Matrix;
-    typedef typename GET_PROP_TYPE(TypeTag, PressureRHSVector) Vector;
 
     //initializes the matrix to store the system of equations
     void initializeMatrix();

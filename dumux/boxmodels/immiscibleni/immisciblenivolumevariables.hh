@@ -49,7 +49,6 @@ template <class TypeTag>
 class ImmiscibleNIVolumeVariables : public ImmiscibleVolumeVariables<TypeTag>
 {
     //! \cond 0
-    typedef ImmiscibleVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

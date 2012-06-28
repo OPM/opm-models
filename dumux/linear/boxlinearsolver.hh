@@ -123,7 +123,6 @@ class BoxParallelSolver
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;

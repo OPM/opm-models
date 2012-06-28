@@ -50,7 +50,6 @@ class OverlappingBlockVector
     typedef Dune::BlockVector<FieldVector> ParentType;
     typedef Dune::BlockVector<FieldVector> BlockVector;
 
-    typedef typename ParentType::field_type Scalar;
 
 public:
     /*!

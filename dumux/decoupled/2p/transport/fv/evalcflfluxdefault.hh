@@ -53,29 +53,17 @@ private:
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-    enum
-    {
-        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
     };
 
     enum
     {
-        pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
-        vw = Indices::velocityW,
-        vn = Indices::velocityNW,
         vt = Indices::velocityTotal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::Intersection Intersection;
 
 public:
@@ -230,7 +218,6 @@ private:
     Scalar fluxOut_;
     Scalar fluxIn_;
     static const int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation);
-    static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation);
 };
 
 // Returns the CFL flux-function

@@ -81,7 +81,6 @@ private:
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::Intersection Intersection;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar,dim,dim> DimMatrix;
 
 public:

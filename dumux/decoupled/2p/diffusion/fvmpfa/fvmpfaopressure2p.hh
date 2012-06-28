@@ -119,8 +119,6 @@ class FVMPFAOPressure2P: public FVPressure<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dim, dim> DimMatrix;
 
-    typedef typename GET_PROP_TYPE(TypeTag, PressureCoefficientMatrix) Matrix;
-    typedef typename GET_PROP_TYPE(TypeTag, PressureRHSVector) Vector;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
 
     //initializes the matrix to store the system of equations

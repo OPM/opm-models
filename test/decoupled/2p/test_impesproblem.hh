@@ -159,8 +159,6 @@ typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
 typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
 typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
 
@@ -168,22 +166,22 @@ typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
 enum
 {
-    dim = GridView::dimension, dimWorld = GridView::dimensionworld
+    dim = GridView::dimension,
+    dimWorld = GridView::dimensionworld
 };
 
 enum
 {
-    wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
     pWIdx = Indices::pwIdx,
     SwIdx = Indices::SwIdx,
     eqIdxPress = Indices::pressEqIdx,
-    eqIdxSat = Indices::satEqIdx
+    eqIdxSat = Indices::satEqIdx,
+    nPhaseIdx = Indices::nPhaseIdx
 };
 
 typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 typedef typename GridView::Traits::template Codim<0>::Entity Element;
-typedef typename GridView::Intersection Intersection;
 typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;

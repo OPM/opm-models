@@ -58,11 +58,6 @@ private:
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
-    enum
-    {
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW
     };
@@ -70,10 +65,8 @@ private:
     {
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.

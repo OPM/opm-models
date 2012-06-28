@@ -49,17 +49,12 @@ class FVVelocity2PAdaptive: public FVVelocity2P<TypeTag>
      typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
 
-     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
-     typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
      typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
 
      typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
      typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
-     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
-    typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 
 typedef typename GridView::Traits::template Codim<0>::Entity Element;
@@ -73,7 +68,6 @@ typedef typename GridView::Traits::template Codim<0>::Entity Element;
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
 
-    typedef Dune::GenericReferenceElements<Scalar, dim> ReferenceElementContainer;
 
     enum
     {
@@ -83,12 +77,6 @@ typedef typename GridView::Traits::template Codim<0>::Entity Element;
         vw = Indices::velocityW,
         vn = Indices::velocityNW,
         vt = Indices::velocityTotal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
-        pressureIdx = Indices::pressureIdx,
-        saturationIdx = Indices::saturationIdx,
-        eqIdxPress = Indices::pressEqIdx,
-        eqIdxSat = Indices::satEqIdx
     };
     enum
     {
@@ -158,7 +146,6 @@ private:
     static const int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
     static const bool compressibility_ = GET_PROP_VALUE(TypeTag, EnableCompressibility);
     static const int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$p_w\f$, \f$p_n\f$, \f$p_{global}\f$)
-    static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$S_w\f$, \f$S_n\f$)
 };
 
 /*! \brief Calculates the velocity at a cell-cell interface.

@@ -84,8 +84,6 @@ class FVTransport2P2C
     {
         pw = Indices::pressureW,
         pn = Indices::pressureNW,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
     };
     enum
     {
@@ -95,7 +93,6 @@ class FVTransport2P2C
     };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
-    typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;

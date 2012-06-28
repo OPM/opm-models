@@ -71,7 +71,6 @@ class ImmisciblePrimaryVariables
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 

@@ -66,20 +66,14 @@ class CellData2P<TypeTag, false>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef FluxData2P<TypeTag> FluxData;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
-    enum
-    {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum
-    {
-        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
+    enum  {
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
     };
     enum
     {
@@ -359,15 +353,8 @@ class CellData2P<TypeTag, true>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef FluxData2P<TypeTag> FluxData;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
-
-    enum
-    {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum

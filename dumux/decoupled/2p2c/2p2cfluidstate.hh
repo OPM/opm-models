@@ -43,7 +43,6 @@ namespace Dumux
 template <class TypeTag>
 class TwoPTwoCFluidState
 {
-    typedef TwoPTwoCFluidState<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar)      Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 

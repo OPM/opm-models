@@ -74,7 +74,6 @@ private:
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum
     {
@@ -83,7 +82,6 @@ private:
     };
     enum
     {
-        wetting = 0, nonwetting = 1,
         adaptiveGrid = GET_PROP_VALUE(TypeTag, AdaptiveGrid)
     };
 

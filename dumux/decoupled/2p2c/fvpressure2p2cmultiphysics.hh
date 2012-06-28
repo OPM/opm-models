@@ -73,7 +73,6 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     typedef FVPressure2P2C<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
@@ -93,27 +92,16 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
     };
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
         wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx,
-        contiWEqIdx = Indices::contiWEqIdx, contiNEqIdx = Indices::contiNEqIdx
-    };
-    enum
-    {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
     // typedefs to abbreviate several dune classes...
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::IntersectionIterator IntersectionIterator;

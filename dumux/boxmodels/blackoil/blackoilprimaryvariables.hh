@@ -58,9 +58,6 @@ class BlackOilPrimaryVariables
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { pressure0Idx = Indices::pressure0Idx };
@@ -68,8 +65,6 @@ class BlackOilPrimaryVariables
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     static_assert(numPhases == 3, "The black-oil model has three phases!");
     static_assert(numComponents == 3, "The black-oil model has three components!");

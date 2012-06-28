@@ -66,7 +66,6 @@ class TransportProblem2P : public OneModelProblem<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     // material properties
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
 
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
@@ -74,15 +73,10 @@ class TransportProblem2P : public OneModelProblem<TypeTag>
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
         dim = Grid::dimension,
         dimWorld = Grid::dimensionworld
-    };
-    enum
-    {
-        transportEqIdx = Indices::transportEqIdx
     };
 
     typedef Dune::FieldVector<Scalar, dimWorld>      GlobalPosition;

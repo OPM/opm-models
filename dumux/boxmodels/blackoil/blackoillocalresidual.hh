@@ -45,9 +45,7 @@ template<class TypeTag>
 class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
-    typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

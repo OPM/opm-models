@@ -78,7 +78,6 @@ template<class TypeTag> class FVMPFAOVelocity2P:public FVMPFAOPressure2P<TypeTag
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Grid Grid;
-    typedef typename GridView::IndexSet IndexSet;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename Grid::template Codim<0>::EntityPointer ElementPointer;
@@ -93,8 +92,6 @@ template<class TypeTag> class FVMPFAOVelocity2P:public FVMPFAOPressure2P<TypeTag
     {
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        vw = Indices::velocityW,
-        vn = Indices::velocityNW,
         vt = Indices::velocityTotal,
         pGlobal = Indices::pressureGlobal
     };

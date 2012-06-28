@@ -67,7 +67,6 @@ template<class TypeTag> class FVPressureCompositional
 : public FVPressure<TypeTag>
 {
     //the model implementation
-    typedef typename GET_PROP_TYPE(TypeTag, PressureModel) Implementation;
     typedef FVPressure<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -76,7 +75,6 @@ template<class TypeTag> class FVPressureCompositional
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
@@ -87,10 +85,6 @@ template<class TypeTag> class FVPressureCompositional
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-    enum
-    {
         pw = Indices::pressureW,
         pn = Indices::pressureNW
     };
@@ -98,7 +92,6 @@ template<class TypeTag> class FVPressureCompositional
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
         wCompIdx = Indices::wCompIdx, nCompIdx = Indices::nCompIdx,
-        contiWEqIdx = Indices::contiWEqIdx, contiNEqIdx = Indices::contiNEqIdx
     };
     enum
     {
@@ -113,12 +106,12 @@ template<class TypeTag> class FVPressureCompositional
 //    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
+    enum { dimWorld = GridView::dimensionworld };
+
     // convenience shortcuts for Vectors/Matrices
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-    typedef Dune::FieldMatrix<Scalar, dim, dim> FieldMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
 public:
     //the variables object is initialized, non-compositional before and compositional after first pressure calculation

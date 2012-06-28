@@ -47,7 +47,6 @@ class GridAdaptInitializationIndicator
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -59,8 +58,6 @@ private:
 
     enum
     {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld,
         numEq = GET_PROP_VALUE(TypeTag, NumEq)
     };
 
@@ -70,7 +67,6 @@ private:
         coarsenCell = -1
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.

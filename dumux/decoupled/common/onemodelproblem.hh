@@ -76,10 +76,6 @@ private:
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
-    enum
-    {
-        wetting = 0, nonwetting = 1
-    };
 
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;

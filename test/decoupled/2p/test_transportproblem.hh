@@ -117,8 +117,6 @@ class TestTransportProblem: public TransportProblem2P<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
@@ -131,19 +129,16 @@ class TestTransportProblem: public TransportProblem2P<TypeTag>
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
-    enum
-    {
-        wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        satEqIdx = Indices::satEqIdx
+        wPhaseIdx = Indices::wPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx,
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Intersection Intersection;
+
+    enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:

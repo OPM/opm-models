@@ -67,18 +67,11 @@ private:
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        eqIdxPress = Indices::pressEqIdx,
         eqIdxSat = Indices::satEqIdx
     };
 
     enum
     {
-        pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
-        vw = Indices::velocityW,
-        vn = Indices::velocityNW,
-        vt = Indices::velocityTotal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW
     };
@@ -501,8 +494,6 @@ private:
     Problem& problem_;//problem data
     Scalar cflFluxFunction_;
     bool hasHangingNode_;
-    static const int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation);
-    static const int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation);
     static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation);
     const Scalar eps_;
 };

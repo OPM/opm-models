@@ -55,17 +55,12 @@ template<class TypeTag> class FVPressure2PAdaptive: public FVPressure2P<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
-    typedef typename SpatialParams::MaterialLaw MaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
-    typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 
     enum
@@ -79,10 +74,6 @@ template<class TypeTag> class FVPressure2PAdaptive: public FVPressure2P<TypeTag>
         pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        pressureIdx = Indices::pressureIdx,
-        saturationIdx = Indices::saturationIdx,
-        eqIdxPress = Indices::pressEqIdx,
-        eqIdxSat = Indices::satEqIdx
     };
     enum
     {

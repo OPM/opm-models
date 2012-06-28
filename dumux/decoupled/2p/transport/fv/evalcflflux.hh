@@ -62,13 +62,6 @@ private:
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
 
-    enum
-    {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-
 public:
 
     /*! \brief adds a flux to the cfl-criterion evaluation

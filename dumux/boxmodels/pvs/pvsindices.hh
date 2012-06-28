@@ -44,7 +44,6 @@ namespace Dumux
 template <class TypeTag, int PVOffset = 0>
 class PvsIndices
 {
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
     // Primary variable indices
