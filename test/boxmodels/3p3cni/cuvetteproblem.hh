@@ -64,6 +64,9 @@ NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxNcp));
 SET_BOOL_PROP(CuvetteProblem, EnableEnergy, true);
 #endif
 
+SET_BOOL_PROP(CuvetteProblem, EnablePartialReassemble, true);
+SET_BOOL_PROP(CuvetteProblem, EnableJacobianRecycling, true);
+
 // Set the grid type
 SET_TYPE_PROP(CuvetteProblem, Grid, Dune::YaspGrid<2>);
 
@@ -199,8 +202,12 @@ public:
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {
-        FluidSystem::init(/*minT=*/283.15, /*maxT=*/500.0, /*nT=*/200,
-                          /*minp=*/0.8e5, /*maxp=*/2e5, /*np=*/100);
+        if (Valgrind::Running())
+            FluidSystem::init(/*minT=*/283.15, /*maxT=*/500.0, /*nT=*/20,
+                              /*minp=*/0.8e5, /*maxp=*/2e5, /*np=*/10);
+        else
+            FluidSystem::init(/*minT=*/283.15, /*maxT=*/500.0, /*nT=*/200,
+                              /*minp=*/0.8e5, /*maxp=*/2e5, /*np=*/100);
 
         // intrinsic permeabilities
         fineK_ = this->toDimMatrix_(6.28e-12);
@@ -267,6 +274,9 @@ public:
         initInjectFluidState_();
     }
 
+    bool shouldWriteRestartFile() const
+    { return true; }
+
     /*!
      * \name Problem parameters
      */
@@ -279,7 +289,7 @@ public:
      */
     const char *name() const
     { 
-        static std::string tmp = std::string("cuvette")+this->model().name();
+        static std::string tmp = std::string("cuvette_")+this->model().name();
         return tmp.c_str();
     }
 

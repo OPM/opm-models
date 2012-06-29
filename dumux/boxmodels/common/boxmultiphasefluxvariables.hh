@@ -316,7 +316,11 @@ private:
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] -= f;
-                assert(std::isfinite(potentialGrad_[phaseIdx].two_norm()));
+                if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
+                    DUNE_THROW(NumericalProblem,
+                               "Non finite potential gradient for phase '"
+                               << FluidSystem::phaseName(phaseIdx) << "'");
+                }
             }
         }
     }

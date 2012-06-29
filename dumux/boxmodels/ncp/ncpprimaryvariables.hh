@@ -61,9 +61,9 @@ class NcpPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum { p0Idx = Indices::p0Idx };
-    enum { S0Idx = Indices::S0Idx };
-    enum { fug0Idx = Indices::fug0Idx };
+    enum { pressure0Idx = Indices::pressure0Idx };
+    enum { saturation0Idx = Indices::saturation0Idx };
+    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -170,14 +170,16 @@ public:
         
         // assign fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[fug0Idx + compIdx] =  fluidState.fugacity(/*phaseIdx=*/0, compIdx);
+            (*this)[fugacityOverPressure0Idx + compIdx] =
+                fluidState.fugacity(/*phaseIdx=*/0, compIdx)
+                / fluidState.pressure(/*phaseIdx=*/0);
         
-        // assign pressure
-        (*this)[p0Idx] = fluidState.pressure(/*phaseIdx=*/0);
+        // assign pressure of first phase
+        (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
         
         // assign first M - 1 saturations
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-            (*this)[S0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
+            (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
  };
 

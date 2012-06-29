@@ -49,9 +49,9 @@ class NcpNewtonChop
 
     enum { numPhases =  GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { fug0Idx = Indices::fug0Idx };
-    enum { S0Idx = Indices::S0Idx };
-    enum { p0Idx = Indices::p0Idx };
+    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
+    enum { saturation0Idx = Indices::saturation0Idx };
+    enum { pressure0Idx = Indices::pressure0Idx };
 
 public:
     static void chop(SolutionVector &uCurrentIter,
@@ -60,30 +60,30 @@ public:
     {
         for (size_t i = 0; i < uLastIter.size(); ++i) {
             for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-                saturationChop_(uCurrentIter[i][S0Idx + phaseIdx],
-                                uLastIter[i][S0Idx + phaseIdx],
+                saturationChop_(uCurrentIter[i][saturation0Idx + phaseIdx],
+                                uLastIter[i][saturation0Idx + phaseIdx],
                                 model);
-            pressureChop_(uCurrentIter[i][p0Idx], 
-                          uLastIter[i][p0Idx],
+            pressureChop_(uCurrentIter[i][pressure0Idx], 
+                          uLastIter[i][pressure0Idx],
                           model);
             
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar &val = uCurrentIter[i][fug0Idx + compIdx];
-                Scalar oldVal = uLastIter[i][fug0Idx + compIdx];
+                Scalar &val = uCurrentIter[i][fugacityOverPressure0Idx + compIdx];
+                Scalar oldVal = uLastIter[i][fugacityOverPressure0Idx + compIdx];
 
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent
                 // fugacity coefficients)
-                Scalar minGamma = model.minActivityCoeff(i, compIdx);
-                Scalar maxDelta = 0.7 * minGamma;
+                Scalar minPhi = model.minFugacityCoeff(i, compIdx);
+                Scalar maxDelta = 0.7 * minPhi;
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
 
                 // do not allow mole fractions lager than 101% or
                 // smaller than -1%
-                val = std::max(-0.01*minGamma, val);
-                val = std::min(1.01*minGamma, val);
+                val = std::max(-0.01*minPhi, val);
+                val = std::min(1.01*minPhi, val);
 
             }
         }
@@ -133,9 +133,6 @@ class NcpNewtonController : public BoxNewtonController<TypeTag>
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-
-        p0Idx = Indices::p0Idx,
-        S0Idx = Indices::S0Idx
     };
 
     typedef NcpNewtonChop<TypeTag> NewtonChop;
@@ -178,6 +175,10 @@ public:
                NewtonChop::chop(uCurrentIter, uLastIter, this->model_());
             }
         }
+        
+        // make sure not to swallow non-finite values at this point
+        if (!std::isfinite(deltaU.two_norm2()))
+            DUNE_THROW(NumericalProblem, "Non-finite update!\n");
     }
 
 protected:

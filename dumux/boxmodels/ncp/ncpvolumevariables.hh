@@ -67,8 +67,8 @@ class NcpVolumeVariables
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
 
-        S0Idx = Indices::S0Idx,
-        p0Idx = Indices::p0Idx
+        saturation0Idx = Indices::saturation0Idx,
+        pressure0Idx = Indices::pressure0Idx
     };
 
     typedef NcpVolumeVariablesMass<TypeTag> MassVolumeVariables;
@@ -102,8 +102,8 @@ public:
         /////////////
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-            sumSat += priVars[S0Idx + phaseIdx];
-            fluidState_.setSaturation(phaseIdx, priVars[S0Idx + phaseIdx]);
+            sumSat += priVars[saturation0Idx + phaseIdx];
+            fluidState_.setSaturation(phaseIdx, priVars[saturation0Idx + phaseIdx]);
         }
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
         Valgrind::CheckDefined(sumSat);
@@ -131,9 +131,9 @@ public:
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
         // add to the pressure of the first fluid phase
-        Scalar p0 = priVars[p0Idx];
+        Scalar pressure0 = priVars[pressure0Idx];
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
-            fluidState_.setPressure(phaseIdx, p0 + (capPress[phaseIdx] - capPress[0]));
+            fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
 
         /////////////
         // set the fluid compositions

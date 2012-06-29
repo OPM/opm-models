@@ -56,12 +56,12 @@ public:
      * The next numComponents indices represent the remaining
      * fugacities:
      *
-     *  fug0Idx + 0 = fugacity of component 0
-     *  fug0Idx + 1 = fugacity of component 1
+     *  fug0Idx + 0 = fugacity over pressure of component 0
+     *  fug0Idx + 1 = fugacity over pressure of component 1
      *  ...
-     *  fug0Idx + N - 1 = fugacity of component N
+     *  fug0Idx + N - 1 = fugacity over pressure of component N
      */
-    static const int fug0Idx = PVOffset + 0;
+    static const int fugacityOverPressure0Idx = PVOffset + 0;
 
     /*!
      * \brief Equation index of the mass conservation equation for the

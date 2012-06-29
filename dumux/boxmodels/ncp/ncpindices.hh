@@ -75,7 +75,7 @@ public:
      * The following (numPhases - 1) primary variables represent the
      * saturations for the phases [1, ..., numPhases - 1]
      */
-    static const int S0Idx =
+    static const int saturation0Idx =
         MassIndices::NumPrimaryVars +
         EnergyIndices::NumPrimaryVars;
 
@@ -83,7 +83,7 @@ public:
      * \brief Index of the first phase' pressure in a vector of
      *        primary variables.
      */
-    static const int p0Idx =
+    static const int pressure0Idx =
         MassIndices::NumPrimaryVars +
         EnergyIndices::NumPrimaryVars +
         numPhases - 1;

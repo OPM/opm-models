@@ -52,7 +52,7 @@ class NcpVolumeVariablesMass
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { fug0Idx = Indices::fug0Idx };
+    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -80,10 +80,6 @@ public:
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto *hint = elemCtx.hint(scvIdx, timeIdx);
 
-        ComponentVector fug;
-        // retrieve component fugacities
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            fug[compIdx] = priVars[fug0Idx + compIdx];
 
         // calculate phase compositions
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -95,11 +91,15 @@ public:
                     xIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
                 // set initial guess of the component's mole fraction
-                fs.setMoleFraction(phaseIdx,
-                                      compIdx,
-                                      xIJ);
+                fs.setMoleFraction(phaseIdx, compIdx, xIJ);
 
             }
+
+            ComponentVector fug;
+            // retrieve component fugacities
+            Scalar pAlpha = fs.pressure(phaseIdx);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                fug[compIdx] = priVars[fugacityOverPressure0Idx + compIdx] * pAlpha;
 
             // calculate the phase composition from the component
             // fugacities
@@ -137,8 +137,8 @@ public:
     static std::string primaryVarName(int pvIdx)
     {
         std::ostringstream oss;
-        if (Indices::fug0Idx <= pvIdx && pvIdx < Indices::fug0Idx + numComponents)
-            oss << "fugacity^" << FluidSystem::componentName(pvIdx - Indices::fug0Idx);
+        if (Indices::fugacityOverPressure0Idx <= pvIdx && pvIdx < Indices::fugacityOverPressure0Idx + numComponents)
+            oss << "f^" << FluidSystem::componentName(pvIdx - Indices::fugacityOverPressure0Idx) << "/p";
         return oss.str();
     }
 

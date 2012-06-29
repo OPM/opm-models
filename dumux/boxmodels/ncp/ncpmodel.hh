@@ -135,7 +135,7 @@ class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
-    enum { fug0Idx = Indices::fug0Idx };
+    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
@@ -154,7 +154,7 @@ public:
     void init(Problem &prob)
     {
         ParentType::init(prob);
-        minActivityCoeff_.resize(this->numDofs());
+        minFugacityCoeff_.resize(this->numDofs());
     }
 
     /*!
@@ -196,10 +196,10 @@ public:
             return s;
 
         std::ostringstream oss;
-        if (pvIdx == Indices::p0Idx)
+        if (pvIdx == Indices::pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        else if (Indices::S0Idx <= pvIdx && pvIdx < Indices::S0Idx + (numPhases - 1))
-            oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - Indices::S0Idx);
+        else if (Indices::saturation0Idx <= pvIdx && pvIdx < Indices::saturation0Idx + (numPhases - 1))
+            oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - Indices::saturation0Idx);
         else
             assert(false);
         
@@ -239,14 +239,13 @@ public:
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                minActivityCoeff_[globalIdx][compIdx] = 1e100;
+                minFugacityCoeff_[globalIdx][compIdx] = 1e100;
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     const auto &fs = elemCtx.volVars(scvIdx, /*timeIdx=*/0).fluidState();
 
-                    minActivityCoeff_[globalIdx][compIdx] =
-                        std::min(minActivityCoeff_[globalIdx][compIdx],
-                                 fs.fugacityCoefficient(phaseIdx, compIdx)
-                                 * fs.pressure(phaseIdx) );
+                    minFugacityCoeff_[globalIdx][compIdx] =
+                        std::min(minFugacityCoeff_[globalIdx][compIdx],
+                                 fs.fugacityCoefficient(phaseIdx, compIdx) );
                 };
             };
         };
@@ -261,11 +260,13 @@ public:
      */
     Scalar primaryVarWeight(int vertIdx, int pvIdx) const
     {
-        if (fug0Idx <= pvIdx && pvIdx < fug0Idx + numComponents) {
-            int compIdx = pvIdx - fug0Idx;
+        //return 1.0;
 
-            Valgrind::CheckDefined(minActivityCoeff_[vertIdx][compIdx]);
-            return 1.0 / minActivityCoeff_[vertIdx][compIdx];
+        if (fugacityOverPressure0Idx <= pvIdx && pvIdx < fugacityOverPressure0Idx + numComponents) {
+            int compIdx = pvIdx - fugacityOverPressure0Idx;
+
+            Valgrind::CheckDefined(minFugacityCoeff_[vertIdx][compIdx]);
+            return 1.0 / minFugacityCoeff_[vertIdx][compIdx];
         }
 
         return ParentType::primaryVarWeight(vertIdx, pvIdx);
@@ -275,9 +276,9 @@ public:
      * \brief Returns the smallest activity coefficient of a component for the most
      *        current solution at a vertex.
      */
-    Scalar minActivityCoeff(int vertIdx, int compIdx) const
+    Scalar minFugacityCoeff(int vertIdx, int compIdx) const
     {
-        return minActivityCoeff_[vertIdx][compIdx];
+        return minFugacityCoeff_[vertIdx][compIdx];
     }
 
 protected:
@@ -294,7 +295,7 @@ protected:
             this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
-    mutable std::vector<ComponentVector> minActivityCoeff_;
+    mutable std::vector<ComponentVector> minFugacityCoeff_;
 };
 
 }
