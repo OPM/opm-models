@@ -203,10 +203,6 @@ public:
     void updateFailed()
     {
         ParentType::updateFailed();
-
-        auto &sol = this->solution(/*timeIdx=*/0);
-        for (size_t i = 0; i < sol.size(); ++i)
-            sol[i].setSwitched(false);
         numSwitched_ = 0;
     }
 
@@ -338,12 +334,9 @@ public:
                                              volVars.fluidState(),
                                              oldPhasePresence,
                                              priVars);
-                    priVars.setSwitched(true);
                     this->jacobianAssembler().markVertexRed(globalIdx);
                     ++ numSwitched_;
                 }
-                else
-                    priVars.setSwitched(false);
             }
         }
 

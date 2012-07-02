@@ -41,6 +41,8 @@
 
 #include <iostream>
 
+#include <strings.h>
+
 namespace Dumux
 {
 /*!
@@ -88,10 +90,6 @@ public:
         : ParentType()
     {
         Valgrind::SetDefined(*this);
-
-        wasSwitched_ = false;
-        phasePresence_ = 0;
-        lowestPresentPhaseIdx_ = -1;
     }
 
     /*!
@@ -104,8 +102,6 @@ public:
         Valgrind::SetDefined(*this);
 
         phasePresence_ = 0;
-        lowestPresentPhaseIdx_ = -1;
-        wasSwitched_ = false;
     }
 
     /*!
@@ -117,8 +113,6 @@ public:
         Valgrind::SetDefined(*this);
 
         phasePresence_ = value.phasePresence_;
-        lowestPresentPhaseIdx_ = value.lowestPresentPhaseIdx_;
-        wasSwitched_ = false;
     }
 
     /*!
@@ -207,17 +201,7 @@ public:
      *        volume.
      */
     void setPhasePresence(short value)
-    { 
-        phasePresence_ = value;
-        
-        lowestPresentPhaseIdx_ = -1;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (phaseIsPresent(phaseIdx)) {
-                lowestPresentPhaseIdx_ = phaseIdx;
-                break;
-            }
-        }
-    }
+    { phasePresence_ = value; }
 
     /*!
      * \brief Set whether a given indivividual phase should be present
@@ -234,7 +218,7 @@ public:
      *        condition of saturation.
      */
     unsigned char implicitSaturationIdx() const 
-    { return lowestPresentPhaseIdx_; }
+    { return lowestPresentPhaseIdx(); }
     
     /*!
      * \brief Returns true iff a phase is present for a given phase presence.
@@ -252,22 +236,7 @@ public:
      * \brief Returns the phase with the lowest index that is present.
      */
     int lowestPresentPhaseIdx() const
-    { return lowestPresentPhaseIdx_; }
-
-    /*!
-     * \brief Returns whether the primary variables where switched in the last iteration
-     */
-    bool wasSwitched() const
-    { return wasSwitched_; }
-
-    /*!
-     * \brief Set whether the primary variables where switched in the last iteration
-     */
-    void setSwitched(bool value)
-    { 
-        Valgrind::CheckDefined(value);
-        wasSwitched_ = value;
-    }
+    { return ffs(phasePresence_) - 1; }
 
     /*!
      * \brief Assignment operator
@@ -276,8 +245,6 @@ public:
     { 
         ParentType::operator=(value);
         phasePresence_ = value.phasePresence_;
-        lowestPresentPhaseIdx_ = value.lowestPresentPhaseIdx_;
-        wasSwitched_ = value.wasSwitched_;
 
         return *this;
     }
@@ -290,8 +257,6 @@ public:
         ParentType::operator=(value);
 
         phasePresence_ = 0;
-        lowestPresentPhaseIdx_ = -1;
-        wasSwitched_ = false;
         return *this;
     }
 
@@ -302,11 +267,7 @@ public:
      */
     Scalar explicitSaturationValue(int phaseIdx) const
     {
-        if (phaseIdx == lowestPresentPhaseIdx_)
-            // the saturation of the present phase with the lowest is
-            // not stored explicitly
-            return 0.0;
-        else if (!phaseIsPresent(phaseIdx)) 
+        if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx()) 
             // non-present phases have saturation 0
             return 0.0;
 
@@ -332,22 +293,17 @@ public:
 
         // determine the phase presence.
         phasePresence_ = 0;
-        lowestPresentPhaseIdx_ = -1;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            // NCP-like condition
+            // use a NCP condition to determine if the phase is
+            // present or not
             Scalar a = 1;
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
                 a -= fluidState.moleFraction(phaseIdx, compIdx);
             }
             Scalar b = fluidState.saturation(phaseIdx);
             
-            if (b > a) {
-                // case a)
+            if (b > a)
                 phasePresence_ |= (1 << phaseIdx);
-
-                if (lowestPresentPhaseIdx_ < 0)
-                    lowestPresentPhaseIdx_ = phaseIdx;
-            }
         }
         
         // assert that some phase is present
@@ -355,10 +311,11 @@ public:
 
         // set the primary variables which correspond to mole
         // fractions of the present phase which has the lowest index.
+        int lowestPhaseIdx = lowestPresentPhaseIdx();
         for (int switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
             int phaseIdx = switchIdx;
             int compIdx = switchIdx + 1;
-            if (switchIdx >= lowestPresentPhaseIdx_)
+            if (switchIdx >= lowestPhaseIdx)
                 ++ phaseIdx;
 
             if (phaseIsPresent(phaseIdx))
@@ -369,103 +326,11 @@ public:
             }
             else {
                 (*this)[switch0Idx + switchIdx] = 
-                    fluidState.moleFraction(lowestPresentPhaseIdx_, compIdx);
+                    fluidState.moleFraction(lowestPhaseIdx, compIdx);
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
         }
     }
-
-#if 0
-    /*!
-     * \brief Assign the primary variables "naively" from a fluid state.
-     *
-     * \attention Some mass might get lost/added if the fluid state is
-     *            not in thermodynamic equilibrium!
-     */
-    template <class FluidState> 
-    void assignNaive(const FluidState &fluidState, short oldPhasePresence)
-    {
-        Scalar switchTol = 0.0;
-        if (wasSwitched()) {
-            switchTol = 0.02;
-        }
-
-        // assign the phase temperatures. this is out-sourced to
-        // the energy module
-        EnergyModule::setPriVarTemperatures(*this, fluidState);
-
-        // set the pressure of the first phase
-        (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
-        Valgrind::CheckDefined((*this)[pressure0Idx]);
-
-        // determine the phase presence.
-        phasePresence_ = 0;
-        lowestPresentPhaseIdx_ = -1;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            // determine wether the phase is be present or not. There
-            // are three cases where a phase is present:
-            // 
-            // a) the current saturation is larger than 0
-            // b) the phase appeared in the current iteration and the
-            //    current saturation is smaller than the switch tolerance           
-            // c) the phase was not present in the previous iteration
-            //    but the sum of the mole fractions in the phase is
-            //    above the switch tolerance
-            if (fluidState.saturation(phaseIdx) > 0) {
-                // case a)
-                phasePresence_ |= (1 << phaseIdx);
-            }
-            else if (phaseIsPresent(phaseIdx, oldPhasePresence) &&
-                     fluidState.saturation(phaseIdx) > -switchTol) {
-                // case b)
-                phasePresence_ |= (1 << phaseIdx);
-            }
-            else if (!phaseIsPresent(phaseIdx, oldPhasePresence)) {
-                // case c)
-                Scalar sumMoleFrac = 0;
-                for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
-                    sumMoleFrac += fluidState.moleFraction(phaseIdx, compIdx);
-
-                if (sumMoleFrac > 1.0 + switchTol) {
-                    phasePresence_ |= (1 << phaseIdx);
-                }
-            }
-            
-            if (lowestPresentPhaseIdx_ < 0 && phaseIsPresent(phaseIdx))
-                lowestPresentPhaseIdx_ = phaseIdx;
-        }
-        
-        // assert that some phase is present
-        assert(phasePresence_ != 0);
-      
-        // set the primary variables which correspond to mole
-        // fractions of the present phase which has the lowest index.
-        for (int switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
-            int phaseIdx = switchIdx;
-            int compIdx = switchIdx + 1;
-            if (switchIdx >= lowestPresentPhaseIdx_)
-                ++ phaseIdx;
-
-            if (phaseIsPresent(phaseIdx))
-            {
-                if (!phaseIsPresent(phaseIdx, oldPhasePresence))
-                    (*this)[switch0Idx + switchIdx] = 0.001;
-                else if (!phaseIsPresent(lowestPresentPhaseIdx_, oldPhasePresence))
-                    (*this)[switch0Idx + switchIdx] = 
-                        fluidState.saturation(phaseIdx) - 0.001;
-                else
-                    (*this)[switch0Idx + switchIdx] = 
-                        fluidState.saturation(phaseIdx);
-                Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
-            }
-            else {
-                (*this)[switch0Idx + switchIdx] = 
-                    fluidState.moleFraction(lowestPresentPhaseIdx_, compIdx);
-                Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
-            }
-        }
-    }
-#endif
 
     /*!
      * \brief Prints the names of the primary variables and their values.
@@ -474,10 +339,11 @@ public:
     {
         os << "(p_" << FluidSystem::phaseName(0)
            << " = " << this->operator[](pressure0Idx);
+        int lowestPhaseIdx = lowestPresentPhaseIdx();
         for (int switchIdx = 0; switchIdx < numPhases - 1; ++ switchIdx) {
             int phaseIdx = switchIdx;
             int compIdx = switchIdx + 1;
-            if (phaseIdx >= lowestPresentPhaseIdx_)
+            if (phaseIdx >= lowestPhaseIdx)
                 ++ phaseIdx; // skip the saturation of the present
                              // phase with the lowest index
 
@@ -486,7 +352,7 @@ public:
                    << " = " << (*this)[switch0Idx + switchIdx];
             }
             else {
-                os << ", x_" << FluidSystem::phaseName(lowestPresentPhaseIdx_)
+                os << ", x_" << FluidSystem::phaseName(lowestPhaseIdx)
                    << "^" << FluidSystem::componentName(compIdx)
                    << " = " << (*this)[switch0Idx + switchIdx];
             }
@@ -497,8 +363,6 @@ public:
     
 protected:
     unsigned char phasePresence_;
-    char lowestPresentPhaseIdx_;
-    bool wasSwitched_;
 };
 
 } // end namepace
