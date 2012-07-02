@@ -260,8 +260,6 @@ public:
      */
     Scalar primaryVarWeight(int vertIdx, int pvIdx) const
     {
-        //return 1.0;
-
         if (fugacityOverPressure0Idx <= pvIdx && pvIdx < fugacityOverPressure0Idx + numComponents) {
             int compIdx = pvIdx - fugacityOverPressure0Idx;
 
