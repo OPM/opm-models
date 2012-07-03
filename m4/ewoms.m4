@@ -211,7 +211,7 @@ AC_DEFUN([EWOMS_GET_CODENAME],[
 #
 # THIS MACRO IS JUST A COPY OF DUNE_CHECK_MODULES WITH THE REQUIREMENT THAT ALL
 # HEADERS MUST RESIDE IN $MODULE_ROOT/dune REMOVED. REMOVE THIS MACRO AS SOON AS DUNE
-# DOES NOT FEATURE THIS BUG ANYMORE.
+# DOES NOT ENFORCE THIS ANYMORE.
 #
 # Generic check for dune modules.  This macro should not be used directly, but
 # in the modules m4/{module}.m4 in the {MODULE}_CHECK_MODULE macro.  The
@@ -252,8 +252,6 @@ AC_DEFUN([EWOMS_GET_CODENAME],[
 #         substitution done by DUNE_CHECK_ALL)
 #   ALL_PKG_CPPFLAGS, ALL_PKG_LDFLAGS, ALL_PKG_LIBS (adds the modules values
 #         here, substitution done by DUNE_CHECK_ALL)
-#   DUNE_PKG_CPPFLAGS, DUNE_PKG_LDFLAGS, DUNE_PKG_LIBS (deprecated, adds the
-#         modules values here)
 #   {MODULE}_VERSION
 #   {MODULE}_VERSION_MAJOR
 #   {MODULE}_VERSION_MINOR
@@ -414,7 +412,7 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
         CXX="./libtool --tag=CXX --mode=link $ac_save_CXX"
 
         # use module LDFLAGS
-        LDFLAGS="$ac_save_LDFLAGS $DUNE_LDFLAGS $DUNE_PKG_LDFLAGS $_dune_cm_LDFLAGS"
+        LDFLAGS="$ac_save_LDFLAGS $DUNE_LDFLAGS $_dune_cm_LDFLAGS"
         LIBS="$_dune_cm_LIBS $DUNE_LIBS $LIBS"
 
         AC_MSG_CHECKING([for lib[]_dune_lib])
@@ -466,12 +464,6 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
     DUNE_LDFLAGS="$DUNE_LDFLAGS $_DUNE_MODULE[]_LDFLAGS"
     DUNE_LIBS="$_DUNE_MODULE[]_LIBS $DUNE_LIBS"
     
-    # add to global list
-    # only add my flags other flags are added by other packages 
-    DUNE_PKG_CPPFLAGS="$DUNE_PKG_CPPFLAGS $_DUNE_MODULE[]_CPPFLAGS"
-    DUNE_PKG_LIBS="$DUNE_PKG_LIBS $LIBS"
-    DUNE_PKG_LDFLAGS="$DUNE_PKG_LDFLAGS $_DUNE_MODULE[]_LDFLAGS"
-
     with_[]_dune_module="yes"
   ],[
     with_[]_dune_module="no"
