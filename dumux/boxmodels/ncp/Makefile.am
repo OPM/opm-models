@@ -1,4 +1,4 @@
-SUBDIRS = diffusion energy mass 
+SUBDIRS = diffusion energy 
 
 mpncdir = $(includedir)/dumux/boxmodels/mpnc
 mpnc_HEADERS = *.hh

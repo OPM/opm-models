@@ -24,7 +24,6 @@
 
 #include "ncpproperties.hh"
 
-#include "mass/ncpindicesmass.hh"
 #include "energy/ncpindicesenergy.hh"
 
 namespace Dumux
@@ -37,20 +36,17 @@ namespace Dumux
  */
 template <class TypeTag, int BasePVOffset = 0>
 struct NcpIndices :
-        public NcpMassIndices<BasePVOffset,
-                               TypeTag>,
-        public NcpEnergyIndices<BasePVOffset +
-                                 NcpMassIndices<0, TypeTag>::NumPrimaryVars,
-                                 GET_PROP_VALUE(TypeTag, EnableEnergy)>
+        public NcpEnergyIndices<BasePVOffset,
+                                GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef NcpMassIndices<BasePVOffset, TypeTag> MassIndices;
-    typedef NcpEnergyIndices<BasePVOffset + MassIndices::NumPrimaryVars, enableEnergy> EnergyIndices;
+    typedef NcpEnergyIndices<BasePVOffset, enableEnergy> EnergyIndices;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { numPhases = FluidSystem::numPhases };
+    enum { numComponents = FluidSystem::numComponents };
 
 public:
     /*!
@@ -58,15 +54,30 @@ public:
      */
     // temperature + Mass Balance  + constraints for switch stuff
     static const int NumPrimaryVars =
-        MassIndices::NumPrimaryVars +
         EnergyIndices::NumPrimaryVars +
+        numComponents +
         numPhases;
 
     /*!
-     * \brief The number of primary variables / equations of the energy module.
+     * \brief Index of the primary variable for the fugacity of the
+     *        first component divided by pressure.
+     *
+     * numComponents primary variables follow...
      */
-    static const int NumPrimaryEnergyVars =
-        EnergyIndices::NumPrimaryVars ;
+    static const int fugacityOverPressure0Idx =
+        BasePVOffset + 
+        EnergyIndices::NumPrimaryVars;
+
+    /*!
+     * \brief Index of the equation for the continuity of mass of the
+     *        first component.
+     *
+     * numComponents equations follow...
+     */
+    static const int conti0EqIdx =
+        BasePVOffset +
+        EnergyIndices::NumPrimaryVars;
+
 
     /*!
      * \brief Index of the saturation of the first phase in a vector
@@ -76,16 +87,14 @@ public:
      * saturations for the phases [1, ..., numPhases - 1]
      */
     static const int saturation0Idx =
-        MassIndices::NumPrimaryVars +
-        EnergyIndices::NumPrimaryVars;
+        fugacityOverPressure0Idx + numComponents;
 
     /*!
      * \brief Index of the first phase' pressure in a vector of
      *        primary variables.
      */
     static const int pressure0Idx =
-        MassIndices::NumPrimaryVars +
-        EnergyIndices::NumPrimaryVars +
+        saturation0Idx +
         numPhases - 1;
 
     /*!
@@ -94,8 +103,8 @@ public:
      * The index for the remaining phases are consecutive.
      */
     static const int phase0NcpIdx =
-        MassIndices::NumPrimaryVars +
-        EnergyIndices::NumPrimaryVars;
+        conti0EqIdx +
+        numComponents;
 };
 
 }

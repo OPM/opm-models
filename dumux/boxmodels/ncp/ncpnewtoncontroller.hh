@@ -132,7 +132,7 @@ class NcpNewtonController : public BoxNewtonController<TypeTag>
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
     typedef NcpNewtonChop<TypeTag> NewtonChop;

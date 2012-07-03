@@ -22,7 +22,6 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/boxmodels/ncp/Makefile 
     dumux/boxmodels/ncp/diffusion/Makefile
     dumux/boxmodels/ncp/energy/Makefile
-    dumux/boxmodels/ncp/mass/Makefile
     dumux/boxmodels/pvs/Makefile 
     dumux/boxmodels/pvsni/Makefile 
     dumux/boxmodels/richards/Makefile 

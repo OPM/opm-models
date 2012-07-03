@@ -24,7 +24,6 @@
 
 #include "ncpproperties.hh"
 #include "energy/ncpvolumevariablesenergy.hh"
-#include "mass/ncpvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
@@ -142,8 +141,6 @@ class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
 
-    typedef NcpVolumeVariablesMass<TypeTag> MassModule;
-
 public:
     /*!
      * \brief Apply the initial conditions to the model.
@@ -172,7 +169,10 @@ public:
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
-            this->localResidual().addPhaseStorage(dest, elemCtx, phaseIdx);
+            this->localResidual().addPhaseStorage(dest, 
+                                                  elemCtx,
+                                                  /*timeIdx=*/0,
+                                                  phaseIdx);
         };
 
         dest = this->gridView_().comm().sum(dest);
@@ -192,14 +192,14 @@ public:
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
             return s;
-        else if (!(s = MassModule::primaryVarName(pvIdx)).empty())
-            return s;
 
         std::ostringstream oss;
         if (pvIdx == Indices::pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         else if (Indices::saturation0Idx <= pvIdx && pvIdx < Indices::saturation0Idx + (numPhases - 1))
             oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - Indices::saturation0Idx);
+        else if (Indices::fugacityOverPressure0Idx <= pvIdx && pvIdx < Indices::fugacityOverPressure0Idx + numComponents)
+            oss << "f^" << FluidSystem::componentName(pvIdx - Indices::fugacityOverPressure0Idx) << "/p";
         else
             assert(false);
         
@@ -214,11 +214,11 @@ public:
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
             return s;
-        else if (!(s = MassModule::eqName(eqIdx)).empty())
-            return s;
 
         std::ostringstream oss;
-        if (Indices::phase0NcpIdx <= eqIdx && eqIdx < Indices::phase0NcpIdx + numPhases)
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "continuity^" << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
+        else if (Indices::phase0NcpIdx <= eqIdx && eqIdx < Indices::phase0NcpIdx + numPhases)
             oss << "ncp_" << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - Indices::phase0NcpIdx);
         else
             assert(false);

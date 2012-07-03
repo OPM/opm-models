@@ -33,7 +33,6 @@
 
 #include "diffusion/ncpvolumevariables.hh"
 #include "energy/ncpvolumevariablesenergy.hh"
-#include "mass/ncpvolumevariablesmass.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
@@ -49,7 +48,6 @@ namespace Dumux
 template <class TypeTag>
 class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public NcpVolumeVariablesMass<TypeTag>
     , public NcpVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
     , public NcpVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
@@ -61,23 +59,26 @@ class NcpVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver) CompositionFromFugacitiesSolver;
+
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
 
+        fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx,
         saturation0Idx = Indices::saturation0Idx,
         pressure0Idx = Indices::pressure0Idx
     };
 
-    typedef NcpVolumeVariablesMass<TypeTag> MassVolumeVariables;
+    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef NcpVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
 
 public:
-    //! The return type of the fluidState() method
-    typedef typename MassVolumeVariables::FluidState FluidState;
 
     NcpVolumeVariables()
     { }
@@ -138,12 +139,32 @@ public:
         /////////////
         // set the fluid compositions
         /////////////
-        MassVolumeVariables::update(fluidState_,
-                                    paramCache,
-                                    elemCtx,
-                                    scvIdx,
-                                    timeIdx);
-        MassVolumeVariables::checkDefined();
+        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
+
+        // calculate phase compositions
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            // initial guess
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar xIJ = 1.0/numComponents;
+                if (hint)
+                    // use the hint for the initial mole fraction!
+                    xIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
+
+                // set initial guess of the component's mole fraction
+                fluidState_.setMoleFraction(phaseIdx, compIdx, xIJ);
+
+            }
+
+            ComponentVector fug;
+            // retrieve component fugacities
+            Scalar pAlpha = fluidState_.pressure(phaseIdx);
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                fug[compIdx] = priVars[fugacityOverPressure0Idx + compIdx] * pAlpha;
+
+            // calculate the phase composition from the component
+            // fugacities
+            CompositionFromFugacitiesSolver::solve(fluidState_, paramCache, phaseIdx, fug);
+        }
 
         /////////////
         // Porosity

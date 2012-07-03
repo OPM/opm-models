@@ -48,6 +48,7 @@ class NcpLocalResidualEnergy
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
     enum { numPhases        = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents    = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -68,35 +69,25 @@ public:
         // do nothing, we're isothermal!
     }
 
-    static void phaseEnthalpyFlux(EqVector &flux,
-                                  const EqVector &compMolFlux,
+    static void addPhaseEnthalpyFlux(RateVector &flux,
+                                     const ElementContext &elemCtx,
+                                     int scvfIdx,
+                                     int timeIdx,
+                                     int phaseIdx,
+                                     const RateVector &molarPhaseFlux)
+    {
+        // do nothing, we're isothermal!
+    }
+
+    static void addHeatConduction(RateVector &result,
                                   const ElementContext &elemCtx,
                                   int scvfIdx,
-                                  int timeIdx,
-                                  int phaseIdx)
+                                  int timeIdx)
     {
         // do nothing, we're isothermal!
     }
 
-    static void heatConduction(EqVector &result,
-                               const ElementContext &elemCtx,
-                               int scvfIdx,
-                               int timeIdx)
-    {
-        // do nothing, we're isothermal!
-    }
-
-
-    static void computeFlux(EqVector & flux,
-                            const ElementContext &elemCtx,
-                            int scvfIdx,
-                            int timeIdx,
-                            const ComponentVector *molarFluxes)
-    {
-        // do nothing, we're isothermal!
-    }
-
-    static void computeSource(EqVector &result,
+    static void computeSource(RateVector &result,
                               const ElementContext &elemCtx,
                               int scvIdx,
                               int timeIdx)
@@ -114,6 +105,7 @@ class NcpLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -126,7 +118,6 @@ class NcpLocalResidualEnergy<TypeTag, /*enableEnergy=*/true>
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { energyEqIdx = Indices::energyEqIdx };
 
-    typedef typename Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
 public:
     static void computeStorage(EqVector &storage,
@@ -150,8 +141,7 @@ public:
                                 const VolumeVariables &volVars,
                                 int phaseIdx)
     {
-        const typename VolumeVariables::FluidState &fs =
-            volVars.fluidState();
+        const auto &fs = volVars.fluidState();
 
         // add the internal energy of the phase
         storage[energyEqIdx] +=
@@ -161,36 +151,12 @@ public:
             * fs.saturation(phaseIdx);
     }
 
-    static void computeFlux(EqVector &flux,
-                            const ElementContext &elemCtx,
-                            int scvfIdx,
-                            int timeIdx,
-                            const ComponentVector molarFlux[numPhases])
-    {
-        flux[energyEqIdx] = 0.0;
-
-        // fluid phases transport enthalpy individually
-        for(int phaseIdx=0; phaseIdx<numPhases; ++phaseIdx)
-            computePhaseEnthalpyFlux(flux,
-                                     elemCtx,
-                                     scvfIdx,
-                                     timeIdx,
-                                     phaseIdx,
-                                     molarFlux[phaseIdx]);
-
-        //conduction is treated lumped in this model
-        computeHeatConduction(flux,
-                              elemCtx,
-                              scvfIdx,
-                              timeIdx);
-    }
-
-    static void computePhaseEnthalpyFlux(EqVector &flux,
-                                         const ElementContext &elemCtx,
-                                         int scvfIdx,
-                                         int timeIdx,
-                                         const int phaseIdx,
-                                         const ComponentVector &molarPhaseFlux)
+    static void addPhaseEnthalpyFlux(RateVector &flux,
+                                     const ElementContext &elemCtx,
+                                     int scvfIdx,
+                                     int timeIdx,
+                                     const int phaseIdx,
+                                     const RateVector &molarPhaseFlux)
     {
         // use the phase enthalpy of the upstream vertex to calculate
         // the enthalpy transport
@@ -216,7 +182,7 @@ public:
                dn.fluidState().enthalpy(phaseIdx));
     }
 
-    static void computeHeatConduction(EqVector &flux,
+    static void addHeatConduction(RateVector &flux,
                                       const ElementContext &elemCtx,
                                       int scvfIdx,
                                       int timeIdx)
@@ -231,13 +197,11 @@ public:
 
 
 
-    static void computeSource(EqVector &source,
+    static void computeSource(RateVector &source,
                               const ElementContext &elemCtx,
                               int scvIdx,
                               int timeIdx)
-    {
-        source[energyEqIdx] = 0.0;
-    }
+    { }
 };
 } // namespace Dumux
 

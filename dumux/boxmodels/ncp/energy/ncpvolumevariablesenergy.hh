@@ -197,7 +197,6 @@ class NcpVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { temperatureIdx = Indices::temperatureIdx };
     enum { energyEqIdx = Indices::energyEqIdx };
-    enum { numEnergyEqs = Indices::NumPrimaryEnergyVars};
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;

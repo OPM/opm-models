@@ -25,7 +25,6 @@
 #include "ncpfluxvariables.hh"
 #include "diffusion/ncpdiffusion.hh"
 #include "energy/ncplocalresidualenergy.hh"
-#include "mass/ncplocalresidualmass.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
@@ -62,15 +61,38 @@ protected:
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        phase0NcpIdx = Indices::phase0NcpIdx
+        phase0NcpIdx = Indices::phase0NcpIdx,
+        conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
-    typedef NcpLocalResidualMass<TypeTag> MassResid;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 
 public:
+    /*!
+     * \brief Evaluate the amount moles within a sub-control volume in
+     *        a phase.
+     *
+     * The result should be averaged over the volume.
+     */
+    void addPhaseStorageMass(EqVector &storage,
+                             const ElementContext &elemCtx,
+                             int scvIdx,
+                             int timeIdx,
+                             int phaseIdx) const
+    {
+        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
+
+        // compute storage term of all components within all phases
+        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+            storage[compIdx] +=
+                volVars.fluidState().saturation(phaseIdx)
+                * volVars.fluidState().molarity(phaseIdx, compIdx)
+                * volVars.porosity();
+        }        
+    }
+
     /*!
      * \brief Evaluate the amount all conservation quantites
      *        (e.g. phase mass) within a sub-control volume.
@@ -93,9 +115,12 @@ public:
 
         storage = 0;
 
-        // compute mass and energy storage terms
-        MassResid::computeStorage(storage, volVars);
+        // compute mass storage terms
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            addPhaseStorageMass(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
         Valgrind::CheckDefined(storage);
+
+        // compute energy storage term
         EnergyResid::computeStorage(storage, volVars);
         Valgrind::CheckDefined(storage);
     }
@@ -107,22 +132,25 @@ public:
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
+                         int timeIdx,
                          int phaseIdx) const
     {
         // calculate the phase storage for all sub-control volumes
         for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
         {
-            PrimaryVariables tmp(0.0);
-
+            EqVector tmp(0.0);
+            
             // compute mass and energy storage terms in terms of
             // averaged quantities
-            MassResid::addPhaseStorage(tmp,
-                                       elemCtx.volVars(scvIdx, /*timeIdx=*/0),
-                                       phaseIdx);
-            EnergyResid::addPhaseStorage(tmp,
+            addPhaseStorageMass(tmp,
+                                elemCtx,
+                                scvIdx,
+                                timeIdx,
+                                phaseIdx);
+            EnergyResid::addPhaseStorage(storage,
                                          elemCtx.volVars(scvIdx, /*timeIdx=*/0),
                                          phaseIdx);
-
+            
             // multiply with volume of sub-control volume
             tmp *=
                 elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor() *
@@ -143,12 +171,67 @@ public:
     {
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+    }
 
-        RateVector tmp(0);
-        MassResid::computeSource(tmp, elemCtx, scvIdx, timeIdx);
-        source += tmp;
-        //EnergyResid::computeSource(tmp, elemCtx, scvIdx);
-        Valgrind::CheckDefined(source);
+    /*!
+     * \brief Evaluates the advective flux of all conservation
+     *        quantities over a face of a subcontrol volume via a
+     *        fluid phase.
+     */
+    void addAdvectiveMassFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx,
+                              int phaseIdx) const
+    {
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &up = elemCtx.volVars(evalFluxVars.upstreamIdx(phaseIdx), timeIdx);
+
+        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+            flux[conti0EqIdx + compIdx] =
+                up.fluidState().molarity(phaseIdx, compIdx)
+                * fluxVars.filterVelocityNormal(phaseIdx);
+        }
+    }
+
+
+    /*!
+     * \brief Evaluates the advective flux of all conservation
+     *        quantities over a face of a subcontrol volume via a
+     *        fluid phase.
+     */
+    void addDiffusiveMassFlux(EqVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx,
+                              int phaseIdx) const
+    {
+#if 0
+        if (!enableDiffusion) {
+            flux = 0.0;
+            return;
+        }
+
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const VolumeVariables &volVarsI = elemCtx.volVars(fluxVars.insideIdx(), timeIdx);
+        const VolumeVariables &volVarsJ = elemCtx.volVars(fluxVars.outsideIdx(), timeIdx);
+        if (volVarsI.fluidState().saturation(phaseIdx) < 1e-4 ||
+            volVarsJ.fluidState().saturation(phaseIdx) < 1e-4)
+        {
+            return; // phase is not present in one of the finite volumes
+        }
+
+        // approximate the total concentration of the phase at the
+        // integration point by the arithmetic mean of the
+        // concentration of the sub-control volumes
+        Scalar molarDensity;
+        molarDensity = volVarsI.fluidState().molarDensity(phaseIdx);
+        molarDensity += volVarsJ.fluidState().molarDensity(phaseIdx);
+        molarDensity /= 2;
+
+        Diffusion::flux(flux, elemCtx, scvfIdx, timeIdx, phaseIdx, molarDensity);
+#endif
     }
 
     /*!
@@ -161,13 +244,40 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        MassResid::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+
+        RateVector tmp;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            tmp = 0.0;
+            addAdvectiveMassFlux(tmp,
+                                 elemCtx,
+                                 scvfIdx,
+                                 timeIdx,
+                                 phaseIdx);
+            flux += tmp;
+            Valgrind::CheckDefined(flux);
+            addDiffusiveMassFlux(flux,
+                                 elemCtx,
+                                 scvfIdx,
+                                 timeIdx,
+                                 phaseIdx);
+            Valgrind::CheckDefined(flux);
+
+            // energy transport in fluid phases
+            EnergyResid::addPhaseEnthalpyFlux(flux,
+                                              elemCtx,
+                                              scvfIdx,
+                                              timeIdx,
+                                              phaseIdx,
+                                              tmp);
+            Valgrind::CheckDefined(flux);
+        }
+
+        // energy transport in fluid phases
+        EnergyResid::addHeatConduction(flux,
+                                       elemCtx,
+                                       scvfIdx,
+                                       timeIdx);
         Valgrind::CheckDefined(flux);
-        /*
-         * EnergyResid also called in the MassResid
-         * 1) Makes some sense because energy is also carried by mass
-         * 2) The component-wise mass flux in each phase is needed.
-         */
     }
 
     /*!
