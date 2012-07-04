@@ -62,7 +62,7 @@ public:
     void reset()
     {
         for (int i=0; i < numEq; ++i) {
-            boundaryInfo_[i].isConstraint = 0;
+            constraintInfo_[i].isConstraint = 0;
 
             eq2pvIdx_[i] = i;
             pv2eqIdx_[i] = i;
@@ -76,7 +76,7 @@ public:
     bool isConstraint() const
     { 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
-            if (boundaryInfo_[eqIdx].isConstraint)
+            if (constraintInfo_[eqIdx].isConstraint)
                 return true;
         return false;
     }
@@ -88,7 +88,7 @@ public:
      * \param eqIdx The index of the equation
      */
     bool isConstraint(int eqIdx) const
-    { return boundaryInfo_[eqIdx].isConstraint; }
+    { return constraintInfo_[eqIdx].isConstraint; }
 
     /*!
      * \brief Set all to be constraint 
@@ -98,12 +98,12 @@ public:
     void setAllConstraint()
     {
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
-            boundaryInfo_[eqIdx].isConstraint = 1;
+            constraintInfo_[eqIdx].isConstraint = 1;
 
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            Valgrind::SetDefined(constraintInfo_[eqIdx]);
         }
     }
     
@@ -118,10 +118,9 @@ public:
     void setConstraint(int eqIdx, int pvIdx, Scalar value)
     {
         setConstraint(eqIdx, pvIdx);
-
         ParentType::operator[](pvIdx) = value;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
@@ -133,13 +132,13 @@ public:
      */
     void setConstraint(int eqIdx, int pvIdx)
     {
-        boundaryInfo_[eqIdx].isConstraint = 1;
+        constraintInfo_[eqIdx].isConstraint = 1;
 
         // update the equation <-> primary variable mapping
         eq2pvIdx_[eqIdx] = pvIdx;
         pv2eqIdx_[pvIdx] = eqIdx;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
@@ -166,7 +165,7 @@ private:
     // this is a bitfield structure!
     struct __attribute__((__packed__)) {
         unsigned char isConstraint : 1;
-    } boundaryInfo_[numEq];
+    } constraintInfo_[numEq];
 
     unsigned char eq2pvIdx_[numEq];
     unsigned char pv2eqIdx_[numEq];

@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009-2010 by Andreas Lauser                               *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -45,12 +45,14 @@ template<class TypeTag>
 class NcpLocalResidual : public BoxLocalResidual<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    friend class BoxLocalResidual<TypeTag>;
 
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef BoxLocalResidual<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -60,12 +62,15 @@ protected:
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
+        numEq = GET_PROP_VALUE(TypeTag, NumEq),
+
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        phase0NcpIdx = Indices::phase0NcpIdx,
+        ncp0EqIdx = Indices::ncp0EqIdx,
         conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
+    typedef Dumux::BoxConstraintsContext<TypeTag> ConstraintsContext;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 
@@ -280,35 +285,31 @@ public:
         Valgrind::CheckDefined(flux);
     }
 
-    /*!
-     * \brief Evaluate the local residual.
-     */
-    using ParentType::eval;
-    void eval(LocalBlockVector &residual,
-              LocalBlockVector &storageTerm,
-              const ElementContext &elemCtx) const
-    {
-        ParentType::eval(residual,
-                         storageTerm,
-                         elemCtx);
-
-        // handle the M additional model equations, make sure that
-        // the dirichlet boundary condition is conserved
-        int numScv = elemCtx.numScv();
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            {
-                residual[scvIdx][phase0NcpIdx + phaseIdx] =
-                    phaseNcp_(elemCtx, scvIdx, /*timeIdx=*/0, phaseIdx);
-            }
-        }
-    }
-
 protected:
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
+
+    /*!
+     * \brief Set the values of the constraint volumes of the current element.
+     */
+    void evalConstraints_(LocalBlockVector &residual,
+                          LocalBlockVector &storageTerm,
+                          const ElementContext &elemCtx,
+                          int timeIdx) const
+    {
+        // set the auxiliary functions
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                residual[scvIdx][ncp0EqIdx + phaseIdx] =
+                    phaseNcp_(elemCtx, scvIdx, timeIdx, phaseIdx);
+            }
+        }
+
+        // overwrite the constraint equations
+        ParentType::evalConstraints_(residual, storageTerm, elemCtx, timeIdx);
+    }
 
     /*!
      * \brief Returns the value of the NCP-function for a phase.
