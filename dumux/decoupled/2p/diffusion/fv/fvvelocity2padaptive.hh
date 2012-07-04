@@ -76,7 +76,7 @@ typedef typename GridView::Traits::template Codim<0>::Entity Element;
         pglobal = Indices::pressureGlobal,
         vw = Indices::velocityW,
         vn = Indices::velocityNW,
-        vt = Indices::velocityTotal,
+        vt = Indices::velocityTotal
     };
     enum
     {

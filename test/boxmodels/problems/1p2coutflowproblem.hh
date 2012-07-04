@@ -123,8 +123,7 @@ class OnePTwoCOutflowProblem
 
         // component indices
         H2OIdx = FluidSystem::H2OIdx,
-        N2Idx = FluidSystem::N2Idx,
-
+        N2Idx = FluidSystem::N2Idx
     };
 
 

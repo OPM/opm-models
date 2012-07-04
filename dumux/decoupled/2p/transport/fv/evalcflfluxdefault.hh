@@ -59,7 +59,7 @@ private:
 
     enum
     {
-        vt = Indices::velocityTotal,
+        vt = Indices::velocityTotal
     };
 
 

@@ -130,7 +130,7 @@ class ReservoirProblem
 
         conti0EqIdx = Indices::conti0EqIdx,
         pressure0Idx = Indices::pressure0Idx,
-        saturation0Idx = Indices::saturation0Idx,
+        saturation0Idx = Indices::saturation0Idx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

@@ -58,7 +58,7 @@ private:
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx,
+        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx
     };
     enum
     {

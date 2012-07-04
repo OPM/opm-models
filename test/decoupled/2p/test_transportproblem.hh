@@ -130,7 +130,7 @@ class TestTransportProblem: public TransportProblem2P<TypeTag>
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        nPhaseIdx = Indices::nPhaseIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

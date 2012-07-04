@@ -91,7 +91,7 @@ template<class TypeTag> class FVPressureCompositional
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        wCompIdx = Indices::wCompIdx, nCompIdx = Indices::nCompIdx,
+        wCompIdx = Indices::wCompIdx, nCompIdx = Indices::nCompIdx
     };
     enum
     {

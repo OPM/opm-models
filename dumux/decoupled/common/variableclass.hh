@@ -56,7 +56,7 @@ private:
 
     enum
     {
-        dim = GridView::dimension,
+        dim = GridView::dimension
     };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
