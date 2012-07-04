@@ -49,7 +49,7 @@ class NcpNewtonChop
 
     enum { numPhases =  GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
+    enum { fugacity00Idx = Indices::fugacity00Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
 
@@ -69,13 +69,13 @@ public:
             
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar &val = uCurrentIter[i][fugacityOverPressure0Idx + compIdx];
-                Scalar oldVal = uLastIter[i][fugacityOverPressure0Idx + compIdx];
+                Scalar &val = uCurrentIter[i][fugacity00Idx + compIdx];
+                Scalar oldVal = uLastIter[i][fugacity00Idx + compIdx];
 
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent
                 // fugacity coefficients)
-                Scalar minPhi = model.minFugacityCoeff(i, compIdx);
+                Scalar minPhi = model.minActivityCoeff(i, compIdx);
                 Scalar maxDelta = 0.7 * minPhi;
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
@@ -167,12 +167,12 @@ public:
                 for (int j = 0; j < numEq; ++j) {
                     uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
                 }
-           }
+            }
            
-           if (this->numSteps_ < choppedIterations_) {
-               // put crash barriers along the update path at the
-               // beginning...
-               NewtonChop::chop(uCurrentIter, uLastIter, this->model_());
+            if (this->numSteps_ < choppedIterations_) {
+                // put crash barriers along the update path at the
+                // beginning...
+                NewtonChop::chop(uCurrentIter, uLastIter, this->model_());
             }
         }
         

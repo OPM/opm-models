@@ -63,7 +63,7 @@ class NcpPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
-    enum { fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx };
+    enum { fugacity00Idx = Indices::fugacity00Idx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -169,10 +169,10 @@ public:
         EnergyModule::setPriVarTemperatures(*this, fluidState);
         
         // assign fugacities
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[fugacityOverPressure0Idx + compIdx] =
-                fluidState.fugacity(/*phaseIdx=*/0, compIdx)
-                / fluidState.pressure(/*phaseIdx=*/0);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            (*this)[fugacity00Idx + compIdx] =
+                fluidState.fugacity(/*phaseIdx=*/0, compIdx);
+        }
         
         // assign pressure of first phase
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);

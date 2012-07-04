@@ -68,7 +68,7 @@ class NcpVolumeVariables
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
 
-        fugacityOverPressure0Idx = Indices::fugacityOverPressure0Idx,
+        fugacity00Idx = Indices::fugacity00Idx,
         saturation0Idx = Indices::saturation0Idx,
         pressure0Idx = Indices::pressure0Idx
     };
@@ -152,14 +152,14 @@ public:
 
                 // set initial guess of the component's mole fraction
                 fluidState_.setMoleFraction(phaseIdx, compIdx, xIJ);
-
             }
 
             ComponentVector fug;
             // retrieve component fugacities
+            Scalar p0 = fluidState_.pressure(0);
             Scalar pAlpha = fluidState_.pressure(phaseIdx);
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fug[compIdx] = priVars[fugacityOverPressure0Idx + compIdx] * pAlpha;
+                fug[compIdx] = priVars[fugacity00Idx + compIdx]/p0 * pAlpha;
 
             // calculate the phase composition from the component
             // fugacities

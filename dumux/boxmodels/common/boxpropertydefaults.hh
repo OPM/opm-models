@@ -231,8 +231,6 @@ public:
 // use the MPI parallel version of the stabilized BiCG solver
 // preconditioned by the ILU-n by default
 SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::Linear::BoxParallelSolver<TypeTag>);
-SET_TYPE_PROP(BoxModel, LinearSolverWrapper, Dumux::Linear::SolverWrapperBiCGStab<TypeTag>);
-SET_TYPE_PROP(BoxModel, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag>);
 
 #if HAVE_ISTL_FIXPOINT_CRITERION
 // if the linear solver supports a fixpoint convergence criterion, we
@@ -260,36 +258,34 @@ SET_INT_PROP(BoxModel, LinearSolverOverlapSize, 2);
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
 
-#if 0
 /*!
  * \brief Set the algorithm used for the linear solver.
  *
  * Possible choices are:
- * - BoxSolverWrapperLoop: A fixpoint solver
- * - BoxSolverWrapperGradients: Steepest descent
- * - BoxSolverWrapperCG: Conjugated gradients
- * - BoxSolverWrapperBiCGStab: The stabilized bi-conjugated gradients
- * - BoxSolverWrapperMinRes: The minimized residual algorithm
- * - BoxSolverWrapperGMRes: A restarted GMRES solver
+ * - SolverWrapperLoop: A fixpoint solver
+ * - SolverWrapperGradients: Steepest descent
+ * - SolverWrapperCG: Conjugated gradients
+ * - SolverWrapperBiCGStab: The stabilized bi-conjugated gradients
+ * - SolverWrapperMinRes: The minimized residual algorithm
+ * - SolverWrapperGMRes: A restarted GMRES solver
  */
 SET_TYPE_PROP(BoxModel, 
               LinearSolverWrapper,
-              Dumux::Linear::BoxSolverWrapperBiCGStab<TypeTag>);
+              Dumux::Linear::SolverWrapperBiCGStab<TypeTag>);
 
 /*!
  * \brief Set the algorithm used for as the preconditioner for the linear solver.
  *
  * Possible choices are:
- * - BoxPreconditionerWrapperJacobi: A simple Jacobi preconditioner
- * - BoxPreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
- * - BoxPreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
- * - BoxPreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
- * - BoxPreconditionerWrapperILU: An ILU(n) preconditioner
+ * - PreconditionerWrapperJacobi: A simple Jacobi preconditioner
+ * - PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
+ * - PreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
+ * - PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
+ * - PreconditionerWrapperILU: An ILU(n) preconditioner
  */
 SET_TYPE_PROP(BoxModel, 
               PreconditionerWrapper,
-              Dumux::Linear::BoxPreconditionerWrapperJacobi<TypeTag>);
-#endif
+              Dumux::Linear::PreconditionerWrapperILU<TypeTag>);
 
 } // namespace Properties
 } // namespace Dumux

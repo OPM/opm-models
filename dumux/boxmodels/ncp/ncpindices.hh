@@ -58,15 +58,6 @@ public:
         numComponents +
         numPhases;
 
-    /*!
-     * \brief Index of the primary variable for the fugacity of the
-     *        first component divided by pressure.
-     *
-     * numComponents primary variables follow...
-     */
-    static const int fugacityOverPressure0Idx =
-        BasePVOffset + 
-        EnergyIndices::NumPrimaryVars;
 
     /*!
      * \brief Index of the equation for the continuity of mass of the
@@ -80,6 +71,25 @@ public:
 
 
     /*!
+     * \brief Index of the first phase NCP equation.
+     *
+     * The index for the remaining phases are consecutive.
+     */
+    static const int ncp0EqIdx =
+        conti0EqIdx +
+        numComponents;
+
+    /*!
+     * \brief Index of the primary variable for the fugacity of the
+     *        first component in the first phase.
+     *
+     * numComponents primary variables follow...
+     */
+    static const int fugacity00Idx =
+        BasePVOffset + 
+        EnergyIndices::NumPrimaryVars;
+
+    /*!
      * \brief Index of the saturation of the first phase in a vector
      *        of primary variables.
      *
@@ -87,7 +97,7 @@ public:
      * saturations for the phases [1, ..., numPhases - 1]
      */
     static const int saturation0Idx =
-        fugacityOverPressure0Idx + numComponents;
+        fugacity00Idx + numComponents;
 
     /*!
      * \brief Index of the first phase' pressure in a vector of
@@ -96,15 +106,6 @@ public:
     static const int pressure0Idx =
         saturation0Idx +
         numPhases - 1;
-
-    /*!
-     * \brief Index of the first phase NCP equation.
-     *
-     * The index for the remaining phases are consecutive.
-     */
-    static const int phase0NcpIdx =
-        conti0EqIdx +
-        numComponents;
 };
 
 }

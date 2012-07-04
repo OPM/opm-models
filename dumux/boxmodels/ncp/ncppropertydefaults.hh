@@ -143,8 +143,8 @@ SET_TYPE_PROP(BoxNcp, VolumeVariables, NcpVolumeVariables<TypeTag>);
 //! the FluxVariables property
 SET_TYPE_PROP(BoxNcp, FluxVariables, NcpFluxVariables<TypeTag>);
 
-//! truncate the newton update for the first 2 iterations of a time step
-SET_INT_PROP(BoxNcp, NewtonChoppedIterations, 2);
+//! truncate the newton update for the first 3 iterations of a time step
+SET_INT_PROP(BoxNcp, NewtonChoppedIterations, 3);
 
 //! The indices required by the compositional NCP model
 SET_TYPE_PROP(BoxNcp, Indices, NcpIndices<TypeTag, 0>);

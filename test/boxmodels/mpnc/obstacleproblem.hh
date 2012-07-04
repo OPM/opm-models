@@ -115,21 +115,6 @@ public:
 // Enable gravity
 SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
 
-// Write Newton convergence to disk?
-SET_BOOL_PROP(ObstacleProblem, NewtonWriteConvergence, false);
-
-// Use the line search strategy for the Newton update?
-SET_BOOL_PROP(ObstacleProblem, NewtonUseLineSearch, false);
-
-// Enable the re-use of the jacobian matrix whenever possible?
-SET_BOOL_PROP(ObstacleProblem, EnableJacobianRecycling, false);
-
-// Reassemble the jacobian matrix only where it changed?
-SET_BOOL_PROP(ObstacleProblem, EnablePartialReassemble, false);
-
-// use forward diffferences to approximate the partial derivatives
-SET_INT_PROP(ObstacleProblem, NumericDifferenceMethod, +1);
-
 #if OBSTACLE_USE_PVS
 /////////
 // PVS specific properties
@@ -140,14 +125,11 @@ SET_INT_PROP(ObstacleProblem, PvsVerbosity, 1);
 
 #else
 /////////
-// Mp-Nc specific properties
+// NCP specific properties
 /////////
 
 // Enable molecular diffusion of the components?
 SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
-
-// number of Newton iterations per time step where the update gets limited
-SET_INT_PROP(ObstacleProblem, NewtonChoppedIterations, 0);
 #endif
 }
 
@@ -222,8 +204,8 @@ public:
         temperature_ = 273.15 + 25; // -> 25°C
 
         // initialize the tables of the fluid system
-        Scalar Tmin = temperature_ - 10.0;
-        Scalar Tmax = temperature_ + 40.0;
+        Scalar Tmin = temperature_ - 1.0;
+        Scalar Tmax = temperature_ + 1.0;
         int nT = 3;
 
         Scalar pmin = 1.0e5 * 0.75;
@@ -444,9 +426,7 @@ public:
     void initial(PrimaryVariables &priVars, const Context &context, int spaceIdx, int timeIdx) const
     {
         const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
-        priVars.assignMassConservative(outletFluidState_,
-                                       matParams,
-                                       /*inThermodynamicEquilibrium=*/false);
+        priVars.assignMassConservative(outletFluidState_, matParams);
     }
 
     // \}
