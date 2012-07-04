@@ -586,16 +586,16 @@ void FVSaturation2P<TypeTag>::getFlux(Scalar& update, const Intersection& inters
     switch (velocityType_)
     {
     case vt:
-        update -= factorTotal / (volume * porosity); //-:v>0, if flow leaves the cell
+        if (porosity > 0.0){update -= factorTotal / (volume * porosity);} //-:v>0, if flow leaves the cell
         break;
     default:
         switch (saturationType_)
         {
         case Sw:
-            update -= factorW / (volume * porosity); //-:v>0, if flow leaves the cell
+            if (porosity > 0.0){ update -= factorW / (volume * porosity);}//-:v>0, if flow leaves the cell
             break;
         case Sn:
-            update -= factorNW / (volume * porosity); //-:v>0, if flow leaves the cell
+            if (porosity > 0.0){update -= factorNW / (volume * porosity);} //-:v>0, if flow leaves the cell
             break;
         }
         break;
@@ -886,16 +886,16 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
     switch (velocityType_)
     {
     case vt:
-        update -= factorTotal / (volume * porosity); //-:v>0, if flow leaves the cell
+        if (porosity > 0.0){ update -= factorTotal / (volume * porosity);} //-:v>0, if flow leaves the cell
         break;
     default:
         switch (saturationType_)
         {
         case Sw:
-            update -= factorW / (volume * porosity); //-:v>0, if flow leaves the cell
+            if (porosity > 0.0){ update -= factorW / (volume * porosity);} //-:v>0, if flow leaves the cell
             break;
         case Sn:
-            update -= factorNW / (volume * porosity); //-:v>0, if flow leaves the cell
+            if (porosity > 0.0){ update -= factorNW / (volume * porosity);} //-:v>0, if flow leaves the cell
             break;
         }
         break;
@@ -952,7 +952,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
         if (sourceVec[wPhaseIdx] < 0 && cellDataI.saturation(wPhaseIdx) < threshold_)
             sourceVec[wPhaseIdx] = 0.0;
 
-        update += sourceVec[wPhaseIdx] / porosity;
+        if (porosity > 0.0){update += sourceVec[wPhaseIdx] / porosity;}
         break;
     }
     case Sn:
@@ -960,7 +960,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
         if (sourceVec[nPhaseIdx] < 0 && cellDataI.saturation(nPhaseIdx) < threshold_)
             sourceVec[nPhaseIdx] = 0.0;
 
-        update += sourceVec[nPhaseIdx] / porosity;
+        if (porosity > 0.0){ update += sourceVec[nPhaseIdx] / porosity;}
         break;
     }
     }
