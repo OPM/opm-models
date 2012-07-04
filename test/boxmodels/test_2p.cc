@@ -27,8 +27,8 @@
  * \brief test for the two-phase box model
  */
 #include "config.h"
-#include "lensproblem.hh"
-#include "lensgridcreator.hh"
+#include "problems/lensproblem.hh"
+#include "problems/lensgridcreator.hh"
 #include <dumux/common/start.hh>
 
 /*!

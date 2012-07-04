@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Onur Dogan                                        *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -20,17 +19,19 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/*!
+
+/**
  * \file
  *
- * \brief test for the one-phase box model
+ * \brief Test for the MpNc box model.
  */
 #include "config.h"
-#include "1ptestproblem.hh"
+#define OBSTACLE_USE_PVS 1
+#include "problems/obstacleproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(OnePTestProblem) ProblemTypeTag;
+    typedef TTAG(ObstacleProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

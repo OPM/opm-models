@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011      by Holger Class                                 *
+ *   Copyright (C) 2011-     by Holger Class                                 *
  *   Copyright (C) 2007-2008 by Klaus Mosthaf                                *
  *   Copyright (C) 2007-2008 by Melanie Darcis                               *
  *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
@@ -26,15 +26,16 @@
 /*!
  * \file
  *
- * \brief test for the 3p3c box model
+ * \brief test for the 3p3cni box model
  */
 #include "config.h"
-#include "infiltrationproblem.hh"
+#include "problems/cuvetteproblem.hh"
+//#include "problems/columnxylolproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InfiltrationProblem) ProblemTypeTag;
+    typedef TTAG(CuvetteProblem) ProblemTypeTag;
+//    typedef TTAG(ColumnProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }
-

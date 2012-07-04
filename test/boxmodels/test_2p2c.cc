@@ -1,10 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2007-2008 by Klaus Mosthaf                                *
- *   Copyright (C) 2007-2008 by Melanie Darcis                               *
- *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -25,14 +22,14 @@
 /*!
  * \file
  *
- * \brief test for the 2p2cni box model
+ * \brief Test for the 2p2c box model.
  */
 #include "config.h"
-#include "waterairproblem.hh"
+#include "problems/injectionproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(WaterAirProblem) ProblemTypeTag;
+    typedef TTAG(InjectionProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

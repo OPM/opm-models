@@ -1,7 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2007-2008 by Melanie Darcis                               *
+ *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -22,14 +24,18 @@
 /*!
  * \file
  *
- * \brief Test for the black-oil box model.
+ * \brief test for the 2pni box model
  */
 #include "config.h"
-#include "reservoirproblem.hh"
+
+#include "problems/injectionproblem2pni.hh"
 #include <dumux/common/start.hh>
 
+////////////////////////
+// the main function
+////////////////////////
 int main(int argc, char** argv)
 {
-    typedef TTAG(ReservoirProblem) ProblemTypeTag;
+    typedef TTAG(InjectionProblem2PNI) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

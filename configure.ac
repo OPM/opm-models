@@ -68,18 +68,9 @@ AC_CONFIG_FILES([ewoms.pc
     m4/Makefile
     test/Makefile
     test/boxmodels/Makefile 
-    test/boxmodels/1p/Makefile 
-    test/boxmodels/2p/Makefile 
-    test/boxmodels/2pni/Makefile
-    test/boxmodels/1p2c/Makefile 
-    test/boxmodels/2p2c/Makefile
-    test/boxmodels/2p2cni/Makefile
-    test/boxmodels/3p3c/Makefile
-    test/boxmodels/3p3cni/Makefile
-    test/boxmodels/blackoil/Makefile
-    test/boxmodels/mpnc/Makefile
+    test/boxmodels/problems/Makefile 
+    test/boxmodels/grids/Makefile 
     test/boxmodels/quadrature/Makefile
-    test/boxmodels/richards/Makefile  
     test/common/Makefile
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
