@@ -193,7 +193,7 @@ public:
 
     /*! \brief Initializes the adaption indicator class */
     void init()
-    {};
+    {}
 
     /*! \brief Constructs a GridAdaptionIndicator instance
      *
