@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Onur Dogan                                        *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -23,14 +22,18 @@
 /*!
  * \file
  *
- * \brief Test for the Richards box model.
+ * \brief Test for the isothermal primary variable switching box model.
  */
 #include "config.h"
-#include "problems/richardslensproblem.hh"
+
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
+#define MODEL_TYPE_TAG BoxPvs
+#include "problems/injectionproblem.hh"
+
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(RichardsLensProblem) ProblemTypeTag;
+    typedef TTAG(InjectionProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

@@ -1,5 +1,5 @@
 ############################################################
-# Parameter file for test_2pni
+# Parameter file for test_1p2c
 # Everything behind a '#' is a comment
 # Groups can be ordered e.g. : [BoundaryConditions],
 # see ../2p2c/ for a more detailed example
@@ -8,12 +8,6 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-InitialTimeStepSize = 250 # [s]
-EndTime = 1e4 # [s]
-
-[Grid]
-CellsX = 24 # [-] resolution in x-direction
-CellsY = 16 # [-] resolution in y-direction
-
-SizeX = 60 # [m] dimension of the grid
-SizeY = 40 # [m] dimension of the grid
+InitialTimeStepSize = 1 # seconds
+EndTime = 100 # seconds
+GridFile = ./grids/outflow.dgf

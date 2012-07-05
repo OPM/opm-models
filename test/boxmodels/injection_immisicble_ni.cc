@@ -1,8 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009 by Onur Dogan                                        *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
+ *   Copyright (C) 2007-2008 by Melanie Darcis                               *
+ *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
+ *   Copyright (C) 2008-2009 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -23,14 +24,20 @@
 /*!
  * \file
  *
- * \brief test for the one-phase box model
+ * \brief test for the 2pni box model
  */
 #include "config.h"
-#include "problems/1ptestproblem.hh"
+
+#include <dumux/boxmodels/immiscibleni/immisciblenimodel.hh>
+#define MODEL_TYPE_TAG BoxImmiscibleNI
+#include "problems/injectionproblem.hh"
 #include <dumux/common/start.hh>
 
+////////////////////////
+// the main function
+////////////////////////
 int main(int argc, char** argv)
 {
-    typedef TTAG(OnePTestProblem) ProblemTypeTag;
+    typedef TTAG(InjectionProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

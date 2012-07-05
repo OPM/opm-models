@@ -1,7 +1,8 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2009 by Onur Dogan                                        *
+ *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -19,22 +20,21 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
-/**
+/*!
  * \file
  *
- * \brief Test for the compositional NCP box model.
+ * \brief test for the one-phase box model
  */
 #include "config.h"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#define MODEL_TYPE_TAG BoxNcp
-#include "problems/obstacleproblem.hh"
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
+#define MODEL_TYPE_TAG BoxImmiscibleOnePhase
+#include "problems/groundwaterproblem.hh"
 
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(ObstacleProblem) ProblemTypeTag;
+    typedef TTAG(GroundWaterProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

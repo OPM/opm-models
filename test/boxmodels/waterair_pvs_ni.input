@@ -1,5 +1,5 @@
 ############################################################
-# Parameter file for test_3p2cni
+# Parameter file for test_2p2cni
 # Everything behind a '#' is a comment
 # Groups can be ordered e.g. : [BoundaryConditions],
 # see ../2p2c/ for a more detailed example
@@ -8,6 +8,6 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-InitialTimeStepSize = 1 # [s]
-EndTime = 180 # [s]
-GridFile = ./grids/cuvette.dgf
+InitialTimeStepSize = 250 # seconds
+EndTime = 1e4 # seconds
+GridFile = ./grids/waterair.dgf

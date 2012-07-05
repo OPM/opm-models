@@ -29,7 +29,6 @@
 #ifndef DUMUX_1PTEST_PROBLEM_HH
 #define DUMUX_1PTEST_PROBLEM_HH
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 
@@ -39,11 +38,11 @@
 namespace Dumux
 {
 template <class TypeTag>
-class OnePTestProblem;
+class GroundWaterProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(OnePTestProblem, INHERITS_FROM(BoxImmiscibleOnePhase));
+NEW_TYPE_TAG(GroundWaterProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 NEW_PROP_TAG(LensLowerLeftX);
 NEW_PROP_TAG(LensLowerLeftY);
@@ -54,7 +53,7 @@ NEW_PROP_TAG(LensUpperRightZ);
 NEW_PROP_TAG(Permeability);
 NEW_PROP_TAG(PermeabilityLens);
 
-SET_PROP(OnePTestProblem, Fluid)
+SET_PROP(GroundWaterProblem, Fluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -63,26 +62,26 @@ public:
 };
 
 // Set the grid type
-SET_TYPE_PROP(OnePTestProblem, Grid, Dune::YaspGrid<2>);
-//SET_TYPE_PROP(OnePTestProblem, Grid, Dune::SGrid<2, 2>);
+SET_TYPE_PROP(GroundWaterProblem, Grid, Dune::YaspGrid<2>);
+//SET_TYPE_PROP(GroundWaterProblem, Grid, Dune::SGrid<2, 2>);
 
-SET_TYPE_PROP(OnePTestProblem, Problem, Dumux::OnePTestProblem<TypeTag>);
+SET_TYPE_PROP(GroundWaterProblem, Problem, Dumux::GroundWaterProblem<TypeTag>);
 
-SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftX, 0.25);
-SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftY, 0.25);
-SET_SCALAR_PROP(OnePTestProblem, LensLowerLeftZ, 0.25);
-SET_SCALAR_PROP(OnePTestProblem, LensUpperRightX, 0.75);
-SET_SCALAR_PROP(OnePTestProblem, LensUpperRightY, 0.75);
-SET_SCALAR_PROP(OnePTestProblem, LensUpperRightZ, 0.75);
-SET_SCALAR_PROP(OnePTestProblem, Permeability, 1e-10);
-SET_SCALAR_PROP(OnePTestProblem, PermeabilityLens, 1e-12);
+SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftX, 0.25);
+SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftY, 0.25);
+SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftZ, 0.25);
+SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightX, 0.75);
+SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightY, 0.75);
+SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightZ, 0.75);
+SET_SCALAR_PROP(GroundWaterProblem, Permeability, 1e-10);
+SET_SCALAR_PROP(GroundWaterProblem, PermeabilityLens, 1e-12);
 // Linear solver settings
-SET_TYPE_PROP(OnePTestProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
-SET_TYPE_PROP(OnePTestProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
-SET_INT_PROP(OnePTestProblem, LinearSolverVerbosity, 0);
+SET_TYPE_PROP(GroundWaterProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
+SET_TYPE_PROP(GroundWaterProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
+SET_INT_PROP(GroundWaterProblem, LinearSolverVerbosity, 0);
 
 // Enable gravity
-SET_BOOL_PROP(OnePTestProblem, EnableGravity, true);
+SET_BOOL_PROP(GroundWaterProblem, EnableGravity, true);
 }
 
 /*!
@@ -106,7 +105,7 @@ SET_BOOL_PROP(OnePTestProblem, EnableGravity, true);
  * and use <tt>1p_3d.dgf</tt> in the parameter file.
  */
 template <class TypeTag>
-class OnePTestProblem 
+class GroundWaterProblem 
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -137,7 +136,7 @@ class OnePTestProblem
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
-    OnePTestProblem(TimeManager &timeManager)
+    GroundWaterProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         eps_ = 1.0e-3;

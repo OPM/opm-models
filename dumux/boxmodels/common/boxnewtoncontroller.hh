@@ -205,6 +205,10 @@ public:
                       const SolutionVector &uLastIter,
                       const GlobalEqVector &deltaU)
     {
+        // make sure not to swallow non-finite values at this point
+        if (!std::isfinite(deltaU.two_norm2()))
+            DUNE_THROW(NumericalProblem, "Non-finite update!\n");
+
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_) {
             const Scalar minReasmTol = 1e-2*this->tolerance_;

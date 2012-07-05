@@ -25,8 +25,8 @@
  * \brief Isothermal NAPL infiltration problem: LNAPL contaminates
  *        the unsaturated and the saturated groundwater zone.
  */
-#ifndef DUMUX_INFILTRATIONPROBLEM_HH
-#define DUMUX_INFILTRATIONPROBLEM_HH
+#ifndef DUMUX_INFILTRATION_PROBLEM_HH
+#define DUMUX_INFILTRATION_PROBLEM_HH
 
 #include <dumux/boxmodels/pvs/pvsmodel.hh>
 //#include <dumux/boxmodels/mpnc/mpncmodel.hh>
@@ -47,8 +47,7 @@ class InfiltrationProblem;
 
 namespace Properties
 {
-//NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxMPNC));
-NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxPvs));
+NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 // Set the grid type
 SET_TYPE_PROP(InfiltrationProblem, Grid, Dune::YaspGrid<2>);

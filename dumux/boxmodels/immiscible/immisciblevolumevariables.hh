@@ -165,8 +165,8 @@ public:
      */
     template <class FluidState>
     static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    {}                                    
-    
+    { }
+
     /*!
      * \brief Set the enthalpy rate per second of a rate vector, .
      */

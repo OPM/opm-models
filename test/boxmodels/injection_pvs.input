@@ -14,7 +14,7 @@ EndTime = 1e4 # [s]
 SimulationName = injection # the name of the output files
 Temperature = 313.15 # [K] initial temperature in the reservoir 273.15 + 40
 MaxDepth = 2700 # [m] depth below ground surface 
-GridFile = grids/test_2p2c.dgf 
+GridFile = grids/injection.dgf 
 
 [FluidSystem]
 NumTemperature = 3 # [-] number of tabularization entries for temperature

@@ -30,7 +30,6 @@
 #ifndef DUMUX_RESERVOIR_PROBLEM_HH
 #define DUMUX_RESERVOIR_PROBLEM_HH
 
-#include <dumux/boxmodels/blackoil/blackoilmodel.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
@@ -46,7 +45,7 @@ class ReservoirProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(BoxBlackOil));
+NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 NEW_PROP_TAG(MaxDepth);
 NEW_PROP_TAG(Temperature);

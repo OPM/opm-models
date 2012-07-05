@@ -28,8 +28,8 @@
  *        around an obstacle with \f$10^3\f$ lower permeability.
  * \author Andreas Lauser, Klaus Mosthaf, Bernd Flemisch
  */
-#ifndef DUMUX_OBSTACLEPROBLEM_HH
-#define DUMUX_OBSTACLEPROBLEM_HH
+#ifndef DUMUX_OBSTACLE_PROBLEM_HH
+#define DUMUX_OBSTACLE_PROBLEM_HH
 
 #if OBSTACLE_USE_PVS
 #include <dumux/boxmodels/pvs/pvsmodel.hh>
@@ -62,11 +62,7 @@ class ObstacleProblem;
 
 namespace Properties
 {
-#if OBSTACLE_USE_PVS
-NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxPvs));
-#else
-NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp));
-#endif
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 // Set the grid type
 SET_TYPE_PROP(ObstacleProblem, Grid, Dune::YaspGrid<2>);

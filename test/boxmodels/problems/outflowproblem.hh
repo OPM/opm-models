@@ -1,9 +1,9 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *   Copyright (C) 2012 by Katherina Baber                                   *
  *   Copyright (C) 2009 by Karin Erbertseder                                 *
- *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Copyright (C) 2008 by Bernd Flemisch                                    *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -27,10 +27,9 @@
  * \brief Definition of a problem, for the 1p2c box problem:
  * Component transport of nitrogen dissolved in the water phase.
  */
-#ifndef DUMUX_1P2C_OUTFLOW_PROBLEM_HH
-#define DUMUX_1P2C_OUTFLOW_PROBLEM_HH
+#ifndef DUMUX_OUTFLOW_PROBLEM_HH
+#define DUMUX_OUTFLOW_PROBLEM_HH
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #if HAVE_UG
@@ -42,14 +41,14 @@
 namespace Dumux
 {
 template <class TypeTag>
-class OnePTwoCOutflowProblem;
+class OutflowProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(OnePTwoCOutflowProblem, INHERITS_FROM(BoxPvs));
+NEW_TYPE_TAG(OutflowProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 // Set the grid type
-SET_PROP(OnePTwoCOutflowProblem, Grid)
+SET_PROP(OutflowProblem, Grid)
 {
 #if HAVE_UG
     typedef Dune::UGGrid<2> type;
@@ -59,10 +58,10 @@ SET_PROP(OnePTwoCOutflowProblem, Grid)
 };
 
 // Set the problem property
-SET_TYPE_PROP(OnePTwoCOutflowProblem, Problem, Dumux::OnePTwoCOutflowProblem<TypeTag>);
+SET_TYPE_PROP(OutflowProblem, Problem, Dumux::OutflowProblem<TypeTag>);
 
 // Set fluid configuration
-SET_PROP(OnePTwoCOutflowProblem, FluidSystem)
+SET_PROP(OutflowProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
@@ -70,10 +69,10 @@ public:
 };
 
 // Disable gravity
-SET_BOOL_PROP(OnePTwoCOutflowProblem, EnableGravity, false);
+SET_BOOL_PROP(OutflowProblem, EnableGravity, false);
 
 // Also write mass fractions to the output
-SET_BOOL_PROP(OnePTwoCOutflowProblem, VtkWriteMassFractions, true);
+SET_BOOL_PROP(OutflowProblem, VtkWriteMassFractions, true);
 }
 
 
@@ -101,7 +100,7 @@ SET_BOOL_PROP(OnePTwoCOutflowProblem, VtkWriteMassFractions, true);
  * <tt>./test_1p2c -parameterFile ./test_1p2c.input</tt>
  */
 template <class TypeTag>
-class OnePTwoCOutflowProblem
+class OutflowProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -133,7 +132,7 @@ class OnePTwoCOutflowProblem
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
-    OnePTwoCOutflowProblem(TimeManager &timeManager)
+    OutflowProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {

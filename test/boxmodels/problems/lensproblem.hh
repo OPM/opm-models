@@ -32,7 +32,6 @@
 
 #include "lensgridcreator.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
@@ -57,7 +56,7 @@ class LensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxImmiscibleTwoPhase));
+NEW_TYPE_TAG(LensProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 // declare the properties specific for the lens problem
 NEW_PROP_TAG(LensLowerLeftX);

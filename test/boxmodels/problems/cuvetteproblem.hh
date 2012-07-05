@@ -30,14 +30,6 @@
 #ifndef DUMUX_CUVETTE_PROBLEM_HH
 #define DUMUX_CUVETTE_PROBLEM_HH
 
-#define CUVETTE_USE_PVS 1
-
-#if CUVETTE_USE_PVS
-#include <dumux/boxmodels/pvsni/pvsnimodel.hh>
-#else
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#endif
-
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
@@ -57,12 +49,7 @@ class CuvetteProblem;
 namespace Properties
 {
 // create a new type tag for the cuvette steam injection problem
-#if CUVETTE_USE_PVS
-NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxPvsNI));
-#else
-NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxNcp));
-SET_BOOL_PROP(CuvetteProblem, EnableEnergy, true);
-#endif
+NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 SET_BOOL_PROP(CuvetteProblem, EnablePartialReassemble, true);
 SET_BOOL_PROP(CuvetteProblem, EnableJacobianRecycling, true);

@@ -107,7 +107,7 @@ public:
      * \brief Returns a string with the model's human-readable name
      */
     std::string name() const
-    { return "immiscibleni"; }
+    { return "immiscible_ni"; }
 
     /*!
      * \brief Given an primary variable index, return a human readable name.

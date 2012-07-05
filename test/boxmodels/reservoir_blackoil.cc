@@ -22,14 +22,17 @@
 /*!
  * \file
  *
- * \brief Test for the 2p2c box model.
+ * \brief Test for the black-oil box model.
  */
 #include "config.h"
-#include "problems/injectionproblem.hh"
+
+#include <dumux/boxmodels/blackoil/blackoilmodel.hh>
+#define MODEL_TYPE_TAG BoxBlackOil
+#include "problems/reservoirproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InjectionProblem) ProblemTypeTag;
+    typedef TTAG(ReservoirProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

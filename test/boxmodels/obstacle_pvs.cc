@@ -26,8 +26,11 @@
  * \brief Test for the MpNc box model.
  */
 #include "config.h"
-#define OBSTACLE_USE_PVS 1
+
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
+#define MODEL_TYPE_TAG BoxPvs
 #include "problems/obstacleproblem.hh"
+
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)

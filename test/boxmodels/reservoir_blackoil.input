@@ -14,4 +14,4 @@ EndTime = 9.3e6 # [s]
 SimulationName = reservoir # the name of the output files
 Temperature = 293.15 # [K] initial temperature in the reservoir 273.15 + 40
 MaxDepth = 2500 # [m] depth below ground surface 
-GridFile = grids/test_blackoil.dgf 
+GridFile = grids/reservoir.dgf 
