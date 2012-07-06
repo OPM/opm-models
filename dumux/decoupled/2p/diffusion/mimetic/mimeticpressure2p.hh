@@ -375,8 +375,8 @@ template<class TypeTag>
 void MimeticPressure2P<TypeTag>::storeVelocity()
 {
     // iterate through leaf grid an evaluate c0 at cell center
-    const ElementIterator &eItEnd = problem_.gridView().template end<0>();
-    for (ElementIterator eIt = problem_.gridView().template begin<0>(); eIt != eItEnd; ++eIt)
+    const ElementIterator &eItEnd = this->problem_.gridView().template end<0>();
+    for (ElementIterator eIt = this->problem_.gridView().template begin<0>(); eIt != eItEnd; ++eIt)
     {
         int globalIdx = problem_.variables().index(*eIt);
 

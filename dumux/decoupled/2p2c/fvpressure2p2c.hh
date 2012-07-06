@@ -156,7 +156,7 @@ public:
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws(bool inPostTimeStep = false);
     //updates secondary variables for one cell and stores in the variables object
-    void updateMaterialLawsInElement(const Element&, bool);
+    void updateMaterialLawsInElement(const Element& elementI, bool postTimeStep);
 
     //! Constructs a FVPressure2P2C object
     /**
