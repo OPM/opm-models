@@ -158,8 +158,6 @@ SET_TYPE_PROP(DecoupledTwoPTwoC, Variables, VariableClass<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoPTwoC, CellData, CellData2P2C<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoPTwoC, FluidState, TwoPTwoCFluidState<TypeTag>);
 
-SET_TYPE_PROP(DecoupledTwoPTwoC, SpatialParameters, typename GET_PROP_TYPE(TypeTag, SpatialParams));//!< DEPRECATED SpatialParameters property
-
 SET_BOOL_PROP(DecoupledTwoPTwoC, EnableMultiPointFluxApproximationOnAdaptiveGrids, false); //!< MPFA disabled on adaptive grids
 SET_BOOL_PROP(DecoupledTwoPTwoC, EnableVolumeIntegral, true); //!< Regard volume integral in pressure equation
 
