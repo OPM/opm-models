@@ -379,23 +379,9 @@ private:
                 if (!asImp_().usePhase(phaseIdx))
                     continue;
 
-                // calculate the phase density at the integration point. we
-                // only do this if the wetting phase is present in both cells
-                Scalar SI = fsI.saturation(phaseIdx);
-                Scalar SJ = fsJ.saturation(phaseIdx);
-                Scalar rhoI = fsI.density(phaseIdx);
-                Scalar rhoJ = FluidSystem::density(fs, paramCache, phaseIdx);
-                Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
-                Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
-                if (fI + fJ == 0)
-                    // doesn't matter because no wetting phase is present in
-                    // both cells!
-                    fI = fJ = 0.5;
-                Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
-
-                // make gravity acceleration a force
+                // calculate volumetric gravity acceleration force
                 DimVector f(g);
-                f *= density;
+                f *= fsI.density(phaseIdx);
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] -= f;
