@@ -3,7 +3,7 @@ Why CMake
 
 We use CMake 2.6 or higher as alternative to the build system provided
 by DUNE. CMake is included in most GNU/Linux distributions or can be
-downloaded at www.cmake.org . Using CMake has several advantages
+downloaded at www.cmake.org. Using CMake has several advantages
 compared to autotools:
 
  - Out-of-tree builds are the default way to build software: The
@@ -20,8 +20,8 @@ But alas, it comes with a cost:
    those picked by DUNE's build system. This might sometimes lead to
    problems.
  - Dependencies between DUNE modules are not yet handled, i.e. all
-   DUNE modules on which DuMuX depends (-> common, grid, istl, disc)
-   need to be installed already.
+   DUNE modules on which DuMuX depends (-> common, grid, istl, 
+   localfunctions, pdelab) need to be installed already.
 
 Preparing the installation
 --------------------------

@@ -1,4 +1,4 @@
-// $Id$
+// $Id: test_2p2c.cc 3779 2010-06-24 07:07:56Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2008 by Klaus Mosthaf                                     *
  *   Institute of Hydraulic Engineering                                      *

@@ -1,10 +1,10 @@
-#dune module information file#
-##############################
+################################
+# Dune module information file #
+################################
 
 #Name of the module
 Module: dumux
-Version: 1.0-unstable
-Maintainer: "Bernd Flemisch <bernd.flemisch@iws.uni-stuttgart.de>"
+Version: 1.1
+Maintainer: bernd@iws.uni-stuttgart.de
 #depending on 
 Depends: dune-pdelab
-Suggests: dune-multidomaingrid

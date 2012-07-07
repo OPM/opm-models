@@ -1,4 +1,4 @@
-SUBDIRS = 1p 1p2c 2p 2p2c 2p2cni 2pni boxscheme pdelab richards 
+SUBDIRS = 1p 1p2c 2p 2p2c 2p2cni 2pni boxscheme pdelab richards
 
 boxmodelsdir = $(includedir)/dumux/boxmodels
 

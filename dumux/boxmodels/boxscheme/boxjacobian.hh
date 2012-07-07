@@ -1,4 +1,4 @@
-// $Id$
+// $Id: boxjacobian.hh 3784 2010-06-24 13:43:57Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2007 by Peter Bastian                                     *
  *   Institute of Parallel and Distributed System                            *

@@ -1,4 +1,4 @@
-// $Id$
+// $Id: gravitypart.hh 3732 2010-06-11 13:27:20Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2008-2010 by Markus Wolff                                 *
  *   Institute of Hydraulic Engineering                                      *

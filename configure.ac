@@ -2,18 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
-AM_INIT_AUTOMAKE([tar-pax])
+AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([test/decoupled/1p/test_diffusion.cc])
 AM_CONFIG_HEADER([config.h])
-#AC_SUBST([LOCAL_LIBS], '$(top_srcdir)/lib/libdunemux.la')
-AC_SUBST([LOCAL_LIBS], '$(top_srcdir)/dumux/libdumux.la')
 
-AC_CHECK_PROGS([TEX], [latex], [true])
-AC_CHECK_PROGS([BIBTEX], [bibtex], [true])
-AC_CHECK_PROGS([DVIPDF], [dvipdf], [true])
-AC_CHECK_PROGS([DVIPS], [dvips], [true])
-AC_CHECK_PROGS([WML], [wml], [true])
-AM_CONDITIONAL([WML], [test "x$WML" != xtrue])
 AC_CHECK_PROGS([TEX4HT], [tex4ht], [true])
 AC_CHECK_PROGS([MK4HT], [mk4ht], [true])
 AC_CHECK_PROGS([T4HT], [t4ht], [true])
@@ -30,8 +22,8 @@ if test x"$HAVE_VALGRIND_H" = "x1"; then
 fi
 
 # we need no more than the standard DE-stuff
-# this module depends on dune-common dune-grid dune-istl dune-disc dune-subgrid
-# this implies checking for [dune-common], [dune-grid], [dune-istl], [dune-disc], [dune-subgrid]
+# this module depends on dune-pdelab
+# this implies checking for [dune-common], [dune-grid], [dune-localfunctions], [dune-istl], [dune-pdelab]
 DUNE_CHECK_ALL
 
 # the Boost c++ template libraries
@@ -116,7 +108,7 @@ AC_CONFIG_FILES([dumux.pc
     dumux/decoupled/2p/transport/Makefile 
     dumux/decoupled/2p/transport/fv/Makefile 
     dumux/decoupled/common/Makefile 
-    dumux/io/Makefile 
+    dumux/io/Makefile
     dumux/material/Makefile 
     dumux/material/binarycoefficients/Makefile 
     dumux/material/components/Makefile 
@@ -135,7 +127,7 @@ AC_CONFIG_FILES([dumux.pc
     test/boxmodels/2p2cni/Makefile
     test/boxmodels/richards/Makefile  
     test/common/Makefile
-    test/common/pardiso/Makefile 
+    test/common/pardiso/Makefile
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
     test/decoupled/Makefile

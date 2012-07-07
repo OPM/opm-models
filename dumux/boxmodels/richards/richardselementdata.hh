@@ -1,4 +1,4 @@
-// $Id$
+// $Id: richardselementdata.hh 3357 2010-03-25 13:02:05Z lauser $
 /*****************************************************************************
  *   Copyright (C) 2009 by Onur Dogan                                        *
  *   Copyright (C) 2009 by Andreas Lauser                                    *

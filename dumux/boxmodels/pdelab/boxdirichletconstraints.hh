@@ -1,4 +1,4 @@
-// $Id$
+// $Id: boxdirichletconstraints.hh 3834 2010-07-14 12:50:32Z bernd $
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 /*****************************************************************************
  *   Copyright (C) 2009-2010 by Andreas Lauser                               *

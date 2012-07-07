@@ -4,6 +4,4 @@ test_1p_SOURCES = test_1p.cc
 test_1p_CXXFLAGS = $(DUNEMPICPPFLAGS)  
 test_1p_LDADD = $(DUNEMPILDFLAGS) 
 
-EXTRA_DIST=CMakeLists.txt
-noinst_HEADERS=*.hh
 include $(top_srcdir)/am/global-rules

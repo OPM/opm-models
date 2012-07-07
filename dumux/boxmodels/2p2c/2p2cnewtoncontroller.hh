@@ -1,4 +1,4 @@
-// $Id$
+// $Id: 2p2cnewtoncontroller.hh 3784 2010-06-24 13:43:57Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2008 by Bernd Flemisch, Andreas Lauser                    *
  *   Institute of Hydraulic Engineering                                      *

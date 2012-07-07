@@ -1,4 +1,4 @@
-// $Id$
+// $Id: boundarytypes.hh 3834 2010-07-14 12:50:32Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2009 by Andreas Lauser                                    *
  *   Institute of Hydraulic Engineering                                      *

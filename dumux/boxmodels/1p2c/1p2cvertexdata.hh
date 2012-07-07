@@ -1,4 +1,4 @@
-// $Id$
+// $Id: 1p2cvertexdata.hh 3838 2010-07-15 08:31:53Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2009 by Karin Erbertseder                                 *
  *   Copyright (C) 2009 by Andreas Lauser                                    *

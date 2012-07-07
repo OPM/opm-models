@@ -1,4 +1,4 @@
-// $Id$
+// $Id: 2pnifluxdata.hh 3793 2010-06-25 15:38:42Z melanie $
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Melanie Darcis                               *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *

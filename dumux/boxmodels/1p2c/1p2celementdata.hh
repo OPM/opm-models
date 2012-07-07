@@ -1,4 +1,4 @@
-// $Id$
+// $Id: 1p2celementdata.hh 3736 2010-06-15 09:52:10Z lauser $
 /*****************************************************************************
  *   Copyright (C) 2009 by Karin Erbertseder                                 *
  *   Copyright (C) 2009 by Andreas Lauser                                    *

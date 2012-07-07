@@ -1,11 +1,4 @@
-SUBDIRS = decoupled material boxmodels common io nonlinear .
-
-# the standard debug streams are put into the libdune
-noinst_LTLIBRARIES = libdumux.la
-SUBLIBS = shape /lib .la /libonedinndgrid.la
-
-libdumux_la_SOURCES =
-libdumux_la_LIBADD = $(SUBLIBS)
+SUBDIRS = boxmodels common decoupled io material nonlinear
 
 dumuxdir = $(includedir)/dune/dumux
 

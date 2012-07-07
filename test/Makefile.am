@@ -1,5 +1,4 @@
-SUBDIRS = boxmodels common decoupled .
+SUBDIRS = boxmodels common decoupled
 
-EXTRA_DIST=CMakeLists.txt
 include $(top_srcdir)/am/global-rules
 

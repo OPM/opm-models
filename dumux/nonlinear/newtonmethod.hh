@@ -1,4 +1,4 @@
-// $Id$
+// $Id: newtonmethod.hh 3738 2010-06-15 14:01:09Z lauser $
 /*****************************************************************************
  *   Copyright (C) 2008 by Andreas Lauser, Bernd Flemisch                    *
  *   Institute of Hydraulic Engineering                                      *

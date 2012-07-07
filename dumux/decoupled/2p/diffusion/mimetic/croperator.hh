@@ -1,4 +1,4 @@
-// $Id$
+// $Id: croperator.hh 3838 2010-07-15 08:31:53Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2007-2009 by Bernd Flemisch                               *
  *   Institute of Hydraulic Engineering                                      *

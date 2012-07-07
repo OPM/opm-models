@@ -1,4 +1,4 @@
-// $Id$
+// $Id: 1pfluxdata.hh 3759 2010-06-21 16:59:10Z bernd $
 /*****************************************************************************
  *   Copyright (C) 2008-2009 by Onur Dogan                                   *
  *   Copyright (C) 2008-2009 by Andreas Lauser                               *
