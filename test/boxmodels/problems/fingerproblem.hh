@@ -367,7 +367,7 @@ public:
                   const Context &context,
                   int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+        const GlobalPosition &pos = context.cvCenter(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(pos) || onRightBoundary_(pos) || onLowerBoundary_(pos)) {
             values.setNoFlow();
@@ -453,7 +453,16 @@ private:
         Scalar width = this->bboxMax()[0] - this->bboxMin()[0];
         Scalar lambda = (this->bboxMax()[0] - pos[0])/width;
         
-        return onUpperBoundary_(pos) && 0.5 < lambda && lambda < 2.0/3.0;
+        if (!onUpperBoundary_(pos))
+            return false;
+        
+        Scalar xInject[] = { 0.25, 0.75 };
+        Scalar injectLen[] = { 0.1, 0.1 };
+        for (int i = 0; i < sizeof(xInject)/sizeof(Scalar); ++ i) {
+            if (xInject[i] - injectLen[i]/2 < lambda &&  lambda < xInject[i] + injectLen[i]/2)
+                return true;
+        }
+        return false;
     }
 
     void setupInitialFluidState_()

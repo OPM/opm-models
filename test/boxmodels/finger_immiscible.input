@@ -1,0 +1,13 @@
+############################################################
+# Parameter file for test_2p
+# Everything behind a '#' is a comment
+# Groups can be ordered e.g. : [BoundaryConditions],
+############################################################
+
+InitialWettingSaturation = 0.01 # [-]
+
+############################################################
+# Mandatory arguments
+############################################################
+InitialTimeStepSize = 10 # [s]
+EndTime = 1e9 # [s]
