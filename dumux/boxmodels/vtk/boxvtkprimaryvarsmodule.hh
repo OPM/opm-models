@@ -32,10 +32,8 @@
 #include <dumux/common/parameters.hh>
 #include <dumux/common/propertysystem.hh>
 
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
 // create new type tag for the VTK primary variables output
 NEW_TYPE_TAG(VtkPrimaryVars);
 

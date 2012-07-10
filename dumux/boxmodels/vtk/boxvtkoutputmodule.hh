@@ -229,7 +229,7 @@ protected:
     {
         char name[512];       
         for (int i = 0; i < numEq; ++i) {
-            std::string eqName = problem_.model().primaryVarName(numEq);
+            std::string eqName = problem_.model().primaryVarName(i);
             snprintf(name, 512, pattern, eqName.c_str());
 
             if (vertexCentered)

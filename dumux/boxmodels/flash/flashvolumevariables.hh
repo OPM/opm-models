@@ -1,9 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2012 by Andreas Lauser,                              *
- *   Copyright (C) 2008-2009 by Klaus Mosthaf,                               *
- *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
+ *   Copyright (C) 2012 by Andreas Lauser,                                   *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -25,18 +23,17 @@
  * \file
  *
  * \brief Contains the quantities which are constant within a
- *        finite volume in the primary variable switching compositional model.
+ *        finite volume for the flash-based compositional model.
  */
-#ifndef DUMUX_PVS_VOLUME_VARIABLES_HH
-#define DUMUX_PVS_VOLUME_VARIABLES_HH
+#ifndef DUMUX_FLASH_VOLUME_VARIABLES_HH
+#define DUMUX_FLASH_VOLUME_VARIABLES_HH
 
-#include "pvsproperties.hh"
-#include "pvsindices.hh"
+#include "flashproperties.hh"
+#include "flashindices.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/common/math.hh>
 
 #include <dune/common/collectivecommunication.hh>
@@ -46,13 +43,13 @@ namespace Dumux
 {
 
 /*!
- * \ingroup PvsModel
+ * \ingroup FlashModel
  * \ingroup BoxVolumeVariables
- * \brief Contains the quantities which are are constant within a
- *        finite volume in the primary variable switching compositional model.
+ * \brief Contains the quantities which are constant within a
+ *        finite volume for the flash-based compositional model.
  */
 template <class TypeTag>
-class PvsVolumeVariables : public BoxVolumeVariables<TypeTag>
+class FlashVolumeVariables : public BoxVolumeVariables<TypeTag>
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -65,20 +62,17 @@ class PvsVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
-    enum {
-        switch0Idx = Indices::switch0Idx,
-        pressure0Idx = Indices::pressure0Idx
-    };
+    enum { cTot0Idx = Indices::cTot0Idx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef Dumux::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
-    typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+    typedef Dumux::NcpFlash<Scalar, FluidSystem> Flash;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
-
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    
 public:
     //! The type of the object returned by the fluidState() method
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> FluidState;
@@ -94,113 +88,34 @@ public:
                            scvIdx,
                            timeIdx);
 
-
         asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
 
-        /////////////
-        // set the saturations
-        /////////////
-        Scalar sumSat = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
-            sumSat += fluidState_.saturation(phaseIdx);
-        }
-        fluidState_.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
-
-        /////////////
-        // set the pressures of the fluid phases
-        /////////////
-
-        // calculate capillary pressure
+        // extract the total molar densities of the components
+        ComponentVector cTotal;
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            cTotal[compIdx] = priVars[cTot0Idx + compIdx];
+        
+        typename FluidSystem::ParameterCache paramCache;
+        const Implementation *hint = elemCtx.hint(scvIdx, timeIdx);
+        if (hint)
+            fluidState_.assign(hint->fluidState());
+        else
+            Flash::guessInitial(fluidState_, paramCache, cTotal);
+        
+        // compute the phase compositions, densities and pressures
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        PhaseVector pC;
-        MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
+        Flash::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal);
 
-        // set the absolute phase pressures in the fluid state
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx, 
-                                   priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
-
-        /////////////
-        // calculate the phase compositions
-        /////////////
-
-        typename FluidSystem::ParameterCache paramCache;
-        int lowestPresentPhaseIdx = priVars.lowestPresentPhaseIdx();
-        int numNonPresentPhases = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!priVars.phaseIsPresent(phaseIdx))
-                ++ numNonPresentPhases;
+        // set the phase viscosities
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            fluidState_.setViscosity(phaseIdx, mu);
         }
-
-        // now comes the tricky part: calculate phase compositions
-        if (numNonPresentPhases == numPhases - 1) {
-            // only one phase is present, i.e. the primary variables
-            // contain the complete composition of the phase
-            Scalar sumx = 0;
-            for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
-                Scalar x = priVars[switch0Idx + compIdx - 1];
-                fluidState_.setMoleFraction(lowestPresentPhaseIdx, compIdx, x);
-                sumx += x;
-            }
-
-            // set the mole fraction of the first component
-            fluidState_.setMoleFraction(lowestPresentPhaseIdx, 0, 1 - sumx);
-
-            // calculate the composition of the remaining phases (as
-            // well as the densities of all phases). this is the job
-            // of the "ComputeFromReferencePhase" constraint solver
-            ComputeFromReferencePhase::solve(fluidState_,
-                                             paramCache,
-                                             lowestPresentPhaseIdx,
-                                             /*setViscosity=*/true,
-                                             /*setEnthalpy=*/false);
-        }
-        else {
-            // create the auxiliary constraints
-            int numAuxConstraints = numComponents + numNonPresentPhases - numPhases;
-            MMPCAuxConstraint<Scalar> auxConstraints[numComponents];
-
-            int auxIdx = 0;
-            int switchIdx = 0;
-            for (; switchIdx < numPhases - 1; ++switchIdx) {
-                int compIdx = switchIdx + 1;
-                int switchPhaseIdx = switchIdx;
-                if (switchIdx >= lowestPresentPhaseIdx)
-                    switchPhaseIdx += 1;
-
-                if (!priVars.phaseIsPresent(switchPhaseIdx)) {
-                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
-                    ++auxIdx;
-                }
-            }
-
-            for (; auxIdx < numAuxConstraints; ++auxIdx, ++switchIdx) {
-                int phaseIdx = priVars.lowestPresentPhaseIdx();
-                int compIdx = numPhases - numNonPresentPhases + auxIdx;
-
-                auxConstraints[auxIdx].set(phaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
-                std::cout << "auxConstraints[" << auxIdx << "] = (" << phaseIdx << ", " << compIdx << ", " << priVars[switch0Idx + switchIdx] << ")\n";
-            }
-
-            // both phases are present, i.e. phase compositions are a
-            // result of the the gas <-> liquid equilibrium. This is
-            // the job of the "MiscibleMultiPhaseComposition"
-            // constraint solver
-            MiscibleMultiPhaseComposition::solve(fluidState_,
-                                                 paramCache,
-                                                 priVars.phasePresence(),
-                                                 auxConstraints,
-                                                 numAuxConstraints,
-                                                 /*setViscosity=*/true,
-                                                 /*setEnthalpy=*/false);
-
-        }
-
+        
         /////////////
         // calculate the remaining quantities
         /////////////
@@ -306,7 +221,11 @@ protected:
                        const ElementContext &elemCtx,
                        int scvIdx,
                        int timeIdx)
-    { }
+    {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            fluidState_.setEnthalpy(phaseIdx, 0);
+        }
+    }
 
     Scalar porosity_;        //!< Effective porosity within the control volume
     Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume

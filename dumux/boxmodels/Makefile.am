@@ -1,4 +1,4 @@
-SUBDIRS = blackoil common immiscible immiscibleni ncp pvs pvsni richards vtk
+SUBDIRS = blackoil common flash immiscible immiscibleni ncp pvs pvsni richards vtk
 
 boxmodelsdir = $(includedir)/dumux/boxmodels
 

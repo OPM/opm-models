@@ -17,9 +17,9 @@ MaxDepth = 2700 # [m] depth below ground surface
 GridFile = grids/injection.dgf 
 
 [FluidSystem]
-NumTemperature = 3 # [-] number of tabularization entries for temperature
+NumTemperature = 100 # [-] number of tabularization entries for temperature
 NumPressure = 200 # [-] number of tabularization entries for pressure
 PressureLow = 1e5 # [Pa] low end for tabularization of fluid properties
 PressureHigh = 3e7 # [Pa] high end for tabularization of fluid properties
 TemperatureLow = 312.15 # [K] low end of temperature for tabularization of fluid properties
-TemperatureHigh = 314.15 # [K] high end of temperature for tabularization of fluid properties
+TemperatureHigh = 420 # [K] high end of temperature for tabularization of fluid properties
