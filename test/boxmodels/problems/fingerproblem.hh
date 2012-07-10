@@ -221,6 +221,19 @@ public:
         FluidSystem::init();
 
         temperature_ = 273.15 + 20; // -> 20°C
+    }
+
+    /*!
+     * \brief Initialize the content of the problem object.
+     *
+     * At this place there is the guarantee that all objects that do
+     * not depend on the model have been allocated. The model itself
+     * and the grid is allocated and initialized, although the initial
+     * solution is not yet set.
+    */
+    void init()
+    {
+        ParentType::init();
 
 #if FINGER_USE_PARKER_LENHARD
         // parameters for the Van Genuchten law of the main imbibition
@@ -237,10 +250,10 @@ public:
         materialParams_.resize(n);
         for (int i = 0; i < n; ++i) {
             materialParams_[i].setMicParams(&micParams_);
-            materialParams_[i].setMicParams(&mdcParams_);
+            materialParams_[i].setMdcParams(&mdcParams_);
             materialParams_[i].setSwr(0.02);
             materialParams_[i].setSnr(0.0);
-            materialParams_[i].setSnre(0.02);
+            materialParams_[i].setSnre(0.0);
         }
 #else
         // parameters for the Van Genuchten law
