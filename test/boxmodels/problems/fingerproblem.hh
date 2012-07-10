@@ -244,7 +244,7 @@ public:
 
         // initialize the material parameter objects of the individual
         // finite volumes
-        int n = this->model().numDofs();
+        int n = GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView().size(dimWorld);
         materialParams_.resize(n);
         for (int i = 0; i < n; ++i) {
             materialParams_[i].setMicParams(&micParams_);
