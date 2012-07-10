@@ -233,8 +233,6 @@ public:
     */
     void init()
     {
-        ParentType::init();
-
 #if FINGER_USE_PARKER_LENHARD
         // parameters for the Van Genuchten law of the main imbibition
         // and the main drainage curves.
@@ -267,6 +265,8 @@ public:
         K_ = this->toDimMatrix_(4.6e-10);
 
         setupInitialFluidState_();
+
+        ParentType::init();
     }
 
     /*!
@@ -401,7 +401,7 @@ public:
     template <class Context>
     void constraints(Constraints &values,
                      const Context &context,
-                  int spaceIdx, int timeIdx) const
+                     int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
