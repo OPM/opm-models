@@ -191,9 +191,6 @@ public:
         };
         os << ")";
     }
-    
-protected:
-    unsigned char phasePresence_;
 };
 
 } // end namepace
