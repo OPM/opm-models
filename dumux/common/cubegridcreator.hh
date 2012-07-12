@@ -45,13 +45,13 @@ namespace Properties
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
 
-NEW_PROP_TAG(GridSizeX);
-NEW_PROP_TAG(GridSizeY);
-NEW_PROP_TAG(GridSizeZ);
+NEW_PROP_TAG(DomainSizeX);
+NEW_PROP_TAG(DomainSizeY);
+NEW_PROP_TAG(DomainSizeZ);
 
-NEW_PROP_TAG(GridCellsX);
-NEW_PROP_TAG(GridCellsY);
-NEW_PROP_TAG(GridCellsZ);
+NEW_PROP_TAG(CellsX);
+NEW_PROP_TAG(CellsY);
+NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
 }
@@ -84,19 +84,19 @@ public:
         GlobalPosition upperRight;
         GlobalPosition lowerLeft;
 
-        upperRight[0] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeX);
-        cellRes[0] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsX);
+        upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
+        cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         if (dimWorld > 1)
         {
-            upperRight[1] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeY);
-            cellRes[1] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsY);
+            upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
+            cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         }
         if (dimWorld > 2)
         {
-            upperRight[2] = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Grid, SizeZ);
-            cellRes[2] = GET_PARAM_FROM_GROUP(TypeTag, int, Grid, CellsZ);
+            upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
+            cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
         cubeGrid_->globalRefine(numRefinments);

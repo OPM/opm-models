@@ -11,11 +11,10 @@
 EndTime = 3e3 # [s]
 InitialTimeStepSize = 200#[s]
 
-[Grid]
 CellsX = 10 # [-] resolution in x-direction
 CellsY = 10 # [-] resolution in y-direction
 CellsZ = 10 # [-] resolution in y-direction
 
-SizeX = 10 # [m] dimension of the grid
-SizeY = 10 # [m] dimension of the grid
-SizeZ = 10 # [m] dimension of the grid
+DomainSizeX = 10 # [m] dimension of the physical domain
+DomainSizeY = 10 # [m] dimension of the physical domain
+DomainSizeZ = 10 # [m] dimension of the physical domain

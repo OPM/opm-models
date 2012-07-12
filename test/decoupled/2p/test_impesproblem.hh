@@ -128,13 +128,13 @@ SET_TYPE_PROP(IMPESTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<Typ
 SET_SCALAR_PROP(IMPESTestProblem, CFLFactor, 0.95);
 
 // define the properties required by the cube grid creator
-SET_SCALAR_PROP(IMPESTestProblem, GridSizeX, 300.0);
-SET_SCALAR_PROP(IMPESTestProblem, GridSizeY, 60.0);
-SET_SCALAR_PROP(IMPESTestProblem, GridSizeZ, 0.0);
+SET_SCALAR_PROP(IMPESTestProblem, DomainSizeX, 300.0);
+SET_SCALAR_PROP(IMPESTestProblem, DomainSizeY, 60.0);
+SET_SCALAR_PROP(IMPESTestProblem, DomainSizeZ, 0.0);
 
-SET_INT_PROP(IMPESTestProblem, GridCellsX, 30);
-SET_INT_PROP(IMPESTestProblem, GridCellsY, 6);
-SET_INT_PROP(IMPESTestProblem, GridCellsZ, 0);
+SET_INT_PROP(IMPESTestProblem, CellsX, 30);
+SET_INT_PROP(IMPESTestProblem, CellsY, 6);
+SET_INT_PROP(IMPESTestProblem, CellsZ, 0);
 
 }
 

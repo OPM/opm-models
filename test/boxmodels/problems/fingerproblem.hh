@@ -60,9 +60,9 @@ namespace Properties
 NEW_TYPE_TAG(FingerProblem, INHERITS_FROM(MODEL_TYPE_TAG));
 
 // declare the properties specific for the finger problem
-NEW_PROP_TAG(GridSizeX);
-NEW_PROP_TAG(GridSizeY);
-NEW_PROP_TAG(GridSizeZ);
+NEW_PROP_TAG(DomainSizeX);
+NEW_PROP_TAG(DomainSizeY);
+NEW_PROP_TAG(DomainSizeZ);
 
 NEW_PROP_TAG(CellsX);
 NEW_PROP_TAG(CellsY);
@@ -141,9 +141,9 @@ SET_INT_PROP(FingerProblem, EnableConstraints, true);
 SET_BOOL_PROP(FingerProblem, EnableGravity, true);
 
 // define the properties specific for the finger problem
-SET_SCALAR_PROP(FingerProblem, GridSizeX, 0.1);
-SET_SCALAR_PROP(FingerProblem, GridSizeY, 1.0);
-SET_SCALAR_PROP(FingerProblem, GridSizeZ, 0.1);
+SET_SCALAR_PROP(FingerProblem, DomainSizeX, 0.1);
+SET_SCALAR_PROP(FingerProblem, DomainSizeY, 1.0);
+SET_SCALAR_PROP(FingerProblem, DomainSizeZ, 0.1);
 
 SET_SCALAR_PROP(FingerProblem, InitialWaterSaturation, 0.01);
 

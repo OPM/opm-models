@@ -9,11 +9,10 @@
 # Mandatory arguments
 ############################################################
 EndTime = 1e7 # [s]
-InitialTimeStepSize = 0#[s]
+InitialTimeStepSize = 0 # ignored, [s]
 
-[Grid]
 CellsX = 30 # [-] resolution in x-direction
 CellsY = 6 # [-] resolution in y-direction
 
-SizeX = 300 # [m] dimension of the grid
-SizeY = 60 # [m] dimension of the grid
+DomainSizeX = 300 # [m] dimension of the physical domain
+DomainSizeY = 60 # [m] dimension of the physical domain

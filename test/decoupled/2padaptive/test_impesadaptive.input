@@ -11,17 +11,15 @@
 EndTime = 2e7 # [s]
 InitialTimeStepSize = 0 # [s]
 
-[Grid]
 CellsX = 2 # [-] level 0 resolution in x-direction
 CellsY = 1 # [-] level 0 resolution in y-direction
 
-SizeX = 300 # [m] dimension of the grid
-SizeY = 100 # [m] dimension of the grid
+DomainSizeX = 300 # [m] dimension of the physical domain
+DomainSizeY = 100 # [m] dimension of the physical domain
 
 ############################################################
 #parameters for grid adaption
 ############################################################
-[]
 MinLevel = 0 # [-] minimum level of refinement 
 MaxLevel = 5 # [-] maximum level of refinement
 RefineTolerance = 0.05 # threshold for refinement criterion

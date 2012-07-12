@@ -66,9 +66,9 @@ NEW_PROP_TAG(LensUpperRightX);
 NEW_PROP_TAG(LensUpperRightY);
 NEW_PROP_TAG(LensUpperRightZ);
 
-NEW_PROP_TAG(GridSizeX);
-NEW_PROP_TAG(GridSizeY);
-NEW_PROP_TAG(GridSizeZ);
+NEW_PROP_TAG(DomainSizeX);
+NEW_PROP_TAG(DomainSizeY);
+NEW_PROP_TAG(DomainSizeZ);
 
 NEW_PROP_TAG(CellsX);
 NEW_PROP_TAG(CellsY);
@@ -142,9 +142,9 @@ SET_SCALAR_PROP(LensProblem, LensUpperRightX, 4.0);
 SET_SCALAR_PROP(LensProblem, LensUpperRightY, 3.0);
 SET_SCALAR_PROP(LensProblem, LensUpperRightZ, 1.0);
 
-SET_SCALAR_PROP(LensProblem, GridSizeX, 6.0);
-SET_SCALAR_PROP(LensProblem, GridSizeY, 4.0);
-SET_SCALAR_PROP(LensProblem, GridSizeZ, 1.0);
+SET_SCALAR_PROP(LensProblem, DomainSizeX, 6.0);
+SET_SCALAR_PROP(LensProblem, DomainSizeY, 4.0);
+SET_SCALAR_PROP(LensProblem, DomainSizeZ, 1.0);
 
 SET_INT_PROP(LensProblem, CellsX, 48);
 SET_INT_PROP(LensProblem, CellsY, 32);

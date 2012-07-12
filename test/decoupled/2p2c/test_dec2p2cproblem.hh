@@ -104,13 +104,13 @@ SET_INT_PROP(TestDecTwoPTwoCProblem,
 SET_SCALAR_PROP(TestDecTwoPTwoCProblem, CFLFactor, 0.8);
 
 // define the properties required by the cube grid creator
-SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeX, 10.0);
-SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeY, 10.0);
-SET_SCALAR_PROP(TestDecTwoPTwoCProblem, GridSizeZ, 10.0);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, DomainSizeX, 10.0);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, DomainSizeY, 10.0);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, DomainSizeZ, 10.0);
 
-SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsX, 10);
-SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsY, 10);
-SET_INT_PROP(TestDecTwoPTwoCProblem, GridCellsZ, 10);
+SET_INT_PROP(TestDecTwoPTwoCProblem, CellsX, 10);
+SET_INT_PROP(TestDecTwoPTwoCProblem, CellsY, 10);
+SET_INT_PROP(TestDecTwoPTwoCProblem, CellsZ, 10);
 }
 
 /*!

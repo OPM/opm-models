@@ -58,9 +58,9 @@ namespace Properties
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
 
-NEW_PROP_TAG(GridSizeX);
-NEW_PROP_TAG(GridSizeY);
-NEW_PROP_TAG(GridSizeZ);
+NEW_PROP_TAG(DomainSizeX);
+NEW_PROP_TAG(DomainSizeY);
+NEW_PROP_TAG(DomainSizeZ);
 
 NEW_PROP_TAG(CellsX);
 NEW_PROP_TAG(CellsY);
@@ -95,13 +95,13 @@ public:
         Dune::FieldVector<Scalar, dim> lowerLeft;
 
         lowerLeft = 0.0;
-        upperRight[0] = GET_PARAM(TypeTag, Scalar, GridSizeX);
-        upperRight[1] = GET_PARAM(TypeTag, Scalar, GridSizeY);
+        upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
+        upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
         
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         if (dim == 3) {
-            upperRight[2] = GET_PARAM(TypeTag, Scalar, GridSizeZ);
+            upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
 
@@ -292,13 +292,13 @@ public:
         grid_ = 0;
 
         lowerLeft[1] = 0.0;
-        upperRight[0] = GET_PARAM(TypeTag, Scalar, GridSizeX);
-        upperRight[1] = GET_PARAM(TypeTag, Scalar, GridSizeY);
+        upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
+        upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
         
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         if (dim == 3) {
-            upperRight[2] = GET_PARAM(TypeTag, Scalar, GridSizeZ);
+            upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
        

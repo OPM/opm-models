@@ -89,13 +89,13 @@ SET_TYPE_PROP(TestProblemOneP, Problem, Dumux::TestProblemOneP<TypeTag>);
 SET_INT_PROP(TestProblemOneP, LinearSolverVerbosity, 1);
 
 // define the properties required by the cube grid creator
-SET_SCALAR_PROP(TestProblemOneP, GridSizeX, 1.0);
-SET_SCALAR_PROP(TestProblemOneP, GridSizeY, 1.0);
-SET_SCALAR_PROP(TestProblemOneP, GridSizeZ, 0.0);
+SET_SCALAR_PROP(TestProblemOneP, DomainSizeX, 1.0);
+SET_SCALAR_PROP(TestProblemOneP, DomainSizeY, 1.0);
+SET_SCALAR_PROP(TestProblemOneP, DomainSizeZ, 0.0);
 
-SET_INT_PROP(TestProblemOneP, GridCellsX, 30);
-SET_INT_PROP(TestProblemOneP, GridCellsY, 30);
-SET_INT_PROP(TestProblemOneP, GridCellsZ, 0);
+SET_INT_PROP(TestProblemOneP, CellsX, 30);
+SET_INT_PROP(TestProblemOneP, CellsY, 30);
+SET_INT_PROP(TestProblemOneP, CellsZ, 0);
 }
 
 /*!

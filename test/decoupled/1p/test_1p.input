@@ -12,11 +12,8 @@ NumRefine = 3 # refinement level of the created grid
 InitialTimeStepSize = 0 # [s]
 EndTime = 0 # [s]
 
-# Delta = 1e-6 # [-] if this is commented in, it is used
-
-[Grid]
 CellsX = 30 # [-] resolution in x-direction
 CellsY = 40 # [-] resolution in y-direction
 
-SizeX = 1 # [m] dimension of the grid
-SizeY = 1 # [m] dimension of the grid
+DomainSizeX = 1 # [m] dimension of the grid
+DomainSizeY = 1 # [m] dimension of the grid

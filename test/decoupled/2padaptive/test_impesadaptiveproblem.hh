@@ -100,13 +100,13 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, CFLFactor, 0.95);
 
 // define the properties required by the cube grid creator
-SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeX, 300.0);
-SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeY, 100.0);
-SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridSizeZ, 0.0);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, DomainSizeX, 300.0);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, DomainSizeY, 100.0);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, DomainSizeZ, 0.0);
 
-SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsX, 2);
-SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsY, 1);
-SET_INT_PROP(TestIMPESAdaptiveProblem, GridCellsZ, 0);
+SET_INT_PROP(TestIMPESAdaptiveProblem, CellsX, 2);
+SET_INT_PROP(TestIMPESAdaptiveProblem, CellsY, 1);
+SET_INT_PROP(TestIMPESAdaptiveProblem, CellsZ, 0);
 }
 
 /*!
