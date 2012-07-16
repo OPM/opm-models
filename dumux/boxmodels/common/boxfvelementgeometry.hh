@@ -41,11 +41,8 @@
 
 #include <vector>
 
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Warray-bounds"
+namespace Dumux {
 
-namespace Dumux
-{
 template <class Scalar, int dim, int basicGeomType>
 class BoxScvGeometries;
 
@@ -1203,7 +1200,6 @@ private:
 
 }
 
-//#pragma GCC diagnostic pop
 
 #endif
 
