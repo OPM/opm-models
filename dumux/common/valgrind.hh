@@ -36,7 +36,7 @@ void voidBlubb() { }
 #define SetDefined(t) voidBlubb()
 #define CheckDefined(t) boolBlubb(true)
 #define SetNoAccess(t) voidBlubb()
-#define Running() boolBlubb(false)
+#define IsRunning() boolBlubb(false)
 }
 
 #else
@@ -49,7 +49,7 @@ namespace Valgrind
  * \ingroup Valgrind
  * \brief Returns whether the program is running under Valgrind or not.
  */
-inline bool Running()
+inline bool IsRunning()
 {
 #if !defined NDEBUG && HAVE_VALGRIND
     return RUNNING_ON_VALGRIND;
