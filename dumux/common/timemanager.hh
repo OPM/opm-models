@@ -191,7 +191,11 @@ public:
      * \param dt The new value for the time step size \f$\mathrm{[s]}\f$
      */
     void setTimeStepSize(Scalar dt)
-    { timeStepSize_ = std::min(dt, maxTimeStepSize()); }
+    { 
+        Scalar dtMax = std::max(1e-5, maxTimeStepSize());
+        dt = std::max(1e-5, dt);
+        timeStepSize_ = std::min(dt, dtMax);
+    }
 
     /*!
      * \brief Returns the suggested time step length \f$\mathrm{[s]}\f$ so that we
@@ -254,7 +258,7 @@ public:
 
 
     /*!
-     * \name episode Episode management
+     * \name Episode management
      * @{
      */
 
@@ -263,16 +267,13 @@ public:
      *
      * \param tStart Time when the episode began \f$\mathrm{[s]}\f$
      * \param len    Length of the episode \f$\mathrm{[s]}\f$
-     * \param description descriptive name of the episode
      */
     void startNextEpisode(Scalar tStart,
-                          Scalar len,
-                          const std::string &description = "")
+                          Scalar len)
     {
         ++ episodeIdx_;
         episodeStartTime_ = tStart;
         episodeLength_ = len;
-        episodeDescription_ = description;
     }
 
     /*!
@@ -287,6 +288,14 @@ public:
         episodeStartTime_ = time_;
         episodeLength_ = len;
     }
+
+    /*!
+     * \brief Sets the index of the current episode.
+     *
+     * Use this method with care!
+     */
+    void setEpisodeIndex(int episodeIdx)
+    { episodeIdx_ = episodeIdx; }
 
     /*!
      * \brief Returns the index of the current episode.
@@ -315,14 +324,14 @@ public:
      *        current time.
      */
     bool episodeIsOver() const
-    { return time() >= episodeStartTime_ + episodeLength(); }
+    { return time() >= episodeStartTime_ + episodeLength() * (1 - 1e-5); }
 
     /*!
      * \brief Returns true if the current episode will be finished
      *        after the current time step.
      */
     bool episodeWillBeOver() const
-    { return time() + timeStepSize() >= episodeStartTime_ + episodeLength(); }
+    { return time() + timeStepSize() >= episodeStartTime_ + episodeLength()*(1 - 1e-5); }
 
 
     /*!
@@ -465,7 +474,6 @@ private:
     int episodeIdx_;
     Scalar episodeStartTime_;
     Scalar episodeLength_;
-    std::string episodeDescription_;
 
     Dune::Timer timer_;
     Scalar time_;
