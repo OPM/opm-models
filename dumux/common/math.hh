@@ -104,8 +104,8 @@ void harmonicMeanMatrix(Dune::FieldMatrix<Scalar, m, n> &K,
  * numbers, i.e. 1 except if the slope of the line is 0.
  *
  * \param sol Container into which the solutions are written
- * \param a The coefficiont for the linear term
- * \param b The coefficiont for the constant term
+ * \param a The coefficient for the linear term
+ * \param b The coefficient for the constant term
  */
 template <class Scalar, class SolContainer>
 int invertLinearPolynomial(SolContainer &sol,
@@ -131,9 +131,9 @@ int invertLinearPolynomial(SolContainer &sol,
  * in order with the smallest root first.
  *
  * \param sol Container into which the solutions are written
- * \param a The coefficiont for the quadratic term
- * \param b The coefficiont for the linear term
- * \param c The coefficiont for the constant term
+ * \param a The coefficient for the quadratic term
+ * \param b The coefficient for the linear term
+ * \param c The coefficient for the constant term
  */
 template <class Scalar, class SolContainer>
 int invertQuadraticPolynomial(SolContainer &sol,
@@ -199,10 +199,10 @@ void invertCubicPolynomialPostProcess_(SolContainer &sol,
  * polynomial in order with the smallest root first.
  *
  * \param sol Container into which the solutions are written
- * \param a The coefficiont for the cubic term
- * \param b The coefficiont for the quadratic term
- * \param c The coefficiont for the linear term
- * \param d The coefficiont for the constant term
+ * \param a The coefficient for the cubic term
+ * \param b The coefficient for the quadratic term
+ * \param c The coefficient for the linear term
+ * \param d The coefficient for the constant term
  */
 template <class Scalar, class SolContainer>
 int invertCubicPolynomial(SolContainer *sol,
