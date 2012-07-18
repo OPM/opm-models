@@ -49,19 +49,16 @@ public:
     
     template <class CornerContainer>
     void setCorners(const CornerContainer &corners, unsigned numCorners)
-    {        
-        unsigned cornerIdx = 0;
-        for (; cornerIdx != numCorners; ++cornerIdx) {
+    {
+        int cornerIdx;
+        for (cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
             for (int j = 0; j < dim; ++ j)
                 corners_[cornerIdx][j] = corners[cornerIdx][j];
-            ++ cornerIdx;
-            if (cornerIdx == numCorners)
-                break;
         }
         assert(cornerIdx == numCorners);
 
         center_ = 0;
-        for (unsigned cornerIdx = 0; cornerIdx < numCorners; ++ cornerIdx)
+        for (cornerIdx = 0; cornerIdx < numCorners; ++ cornerIdx)
             center_ += corners_[cornerIdx];
         center_ /= numCorners;
     }
@@ -122,6 +119,12 @@ public:
     }
 
     /*!
+     * \brief Return the position of the corner with a given index
+     */
+    const GlobalPosition &corner(int cornerIdx) const
+    { return corners_[cornerIdx]; }
+
+    /*!
      * \brief Return the weight of an individual corner for the local
      *        to global mapping.
      */
@@ -137,7 +140,7 @@ public:
 
         return weight;
     }
-
+    
 private:
     GlobalPosition corners_[numCorners];
     GlobalPosition center_;
