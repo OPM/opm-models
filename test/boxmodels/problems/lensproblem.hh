@@ -260,6 +260,11 @@ public:
 
         lensK_ = this->toDimMatrix_(9.05e-12);
         outerK_ = this->toDimMatrix_(4.6e-10);
+
+        if (dimWorld == 3) {
+            this->gravity_ = 0;
+            this->gravity_[1] = -9.81;
+        }
     }
 
     /*!
