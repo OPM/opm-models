@@ -144,6 +144,7 @@ public:
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         dest = 0;
+        EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
@@ -151,13 +152,22 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
+            
+            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+                const auto &scv = fvElemGeom.subContVol[scvIdx];
+                const auto &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-                this->localResidual().addPhaseStorage(dest,
+                tmp = 0;
+                this->localResidual().addPhaseStorage(tmp,
                                                       elemCtx,
                                                       scvIdx,
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
+                tmp *= scv.volume*volVars.extrusionFactor();
+                dest += tmp;
+            }
         };
 
         this->gridView_().comm().sum(dest);

@@ -423,6 +423,8 @@ protected:
         {
             Scalar extrusionFactor =
                 elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+            Scalar scvVolume = 
+                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume * extrusionFactor;
 
             // mass balance within the element. this is the
             // \f$\frac{m}{\partial t}\f$ term if using implicit
@@ -440,17 +442,14 @@ protected:
                                     /*timeIdx=*/1);
 
             tmp -= tmp2;
-            tmp *=
-                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume
-                * extrusionFactor
-                / elemCtx.problem().timeManager().timeStepSize();
+            tmp *= scvVolume / elemCtx.problem().timeManager().timeStepSize();
 
             storageTerm[scvIdx] += tmp;
             residual[scvIdx] += tmp;
 
             // subtract the source term from the residual
             asImp_().computeSource(sourceRate, elemCtx, scvIdx, /*timeIdx=*/0);
-            sourceRate *= elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume * extrusionFactor;
+            sourceRate *= scvVolume;
             residual[scvIdx] -= sourceRate;
 
             // make sure that only defined quantities were used
