@@ -173,9 +173,8 @@ public:
 
             if (porosityOutput_()) porosity_[I] = volVars.porosity();
             if (intrinsicPermeabilityOutput_()) {
-                DUNE_THROW(Dune::NotImplemented,
-                           "Intrinsic permeablility cannot be written to VTK files yet");
-                //intrinsicPermeability_[phaseIdx][I] = ;
+                const auto &K = elemCtx.problem().intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
+                intrinsicPermeability_[I] = K[0][0];
             }
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
