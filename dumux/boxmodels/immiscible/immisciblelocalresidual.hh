@@ -58,8 +58,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    enum
-    {
+    enum {
         conti0EqIdx = Indices::conti0EqIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };

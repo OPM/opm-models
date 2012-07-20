@@ -85,6 +85,7 @@ public:
         const typename MaterialLaw::Params &materialParams =
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        Valgrind::CheckDefined(priVars);
 
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
@@ -95,7 +96,8 @@ public:
         
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        
+        Valgrind::CheckDefined(pC);
+
         Scalar p0 = priVars[pressure0Idx];
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));

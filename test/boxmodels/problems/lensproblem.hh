@@ -152,7 +152,7 @@ SET_INT_PROP(LensProblem, CellsZ, 16);
 }
 
 /*!
- * \ingroup TwoPBoxProblems
+ * \ingroup ImmiscibleBoxProblems
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  *
@@ -175,15 +175,6 @@ SET_INT_PROP(LensProblem, CellsZ, 16);
  * pressure scaled by a factor of 1.125, while on the right side it is
  * just the hydrostatic pressure. The DNAPL saturation on both sides
  * is zero.
- *
- * This problem uses the \ref TwoPBoxModel.
- *
- * This problem should typically be simulated until \f$t_{\text{end}}
- * \approx 20\,000\;s\f$ is reached. A good choice for the initial time step
- * size is \f$t_{\text{inital}} = 250\;s\f$.
- *
- * To run the simulation execute the following line in shell:
- * <tt>./test_2p -parameterFile test_2p.input</tt>
  */
 template <class TypeTag>
 class LensProblem
