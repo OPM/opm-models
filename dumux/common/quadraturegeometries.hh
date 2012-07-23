@@ -50,7 +50,7 @@ public:
     template <class CornerContainer>
     void setCorners(const CornerContainer &corners, unsigned numCorners)
     {
-        int cornerIdx;
+        unsigned cornerIdx;
         for (cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
             for (int j = 0; j < dim; ++ j)
                 corners_[cornerIdx][j] = corners[cornerIdx][j];
