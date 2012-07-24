@@ -38,6 +38,7 @@
 #include <dumux/linear/overlappingpreconditioner.hh>
 #include <dumux/linear/overlappingscalarproduct.hh>
 #include <dumux/linear/overlappingoperator.hh>
+#include <dumux/linear/solverpreconditioner.hh>
 
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
@@ -398,6 +399,7 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(GaussSeidel, Dune::SeqGS)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SOR, Dune::SeqSOR)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SSOR, Dune::SeqSSOR)
 EWOMS_WRAP_ISTL_PRECONDITIONER(ILU, Dune::SeqILUn)
+EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Dumux::Linear::SolverPreconditioner)
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
 } // namespace Linear
