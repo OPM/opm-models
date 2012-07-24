@@ -35,6 +35,7 @@
 #include <dune/common/parametertreeparser.hh>
 #include <dune/grid/io/file/dgfparser.hh>
 
+#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -53,6 +54,24 @@ NEW_PROP_TAG(TimeManager);
 }
 
 //! \cond 0
+/*!
+ * \ingroup Start
+ *
+ * \brief Prints the runtime parameters after a SIGINT signal was retrieved
+ */
+template <class TypeTag>
+void printRuntimeParameters(int signum)
+{
+    // print the runtime parameters
+    std::cout << "\n"
+              << "Program interupted. The following list of run-time parameters might be incomplete:\n";
+    Dumux::Parameters::print<TypeTag>();
+    
+    // restore the original signal handler
+    signal(SIGINT, SIG_DFL);
+    raise(SIGINT); // and continue with that one
+}
+
 /*!
  * \ingroup Start
  *
@@ -320,7 +339,10 @@ int start(int argc,
         bool printParams = true;
         if (ParameterTree::tree().hasKey("PrintParameters"))
             printParams = GET_RUNTIME_PARAM(TypeTag, bool, PrintParameters);
-
+        if (printParams)
+            // register the signal handler to print the runtime
+            // parameters after pressing CTRL+C
+            signal(SIGINT, printRuntimeParameters<TypeTag>);
 
         if (myRank == 0)
             std::cout
