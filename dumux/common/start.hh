@@ -90,9 +90,6 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
         "\t--end-time=ENDTIME                The time of the end of the simlation [s]\n"
         "\t--initial-time-step-size=STEPSIZE The initial time step size [s]\n"
         "\n"
-        "If --parameter-file is specified, parameters can also be defined there. In this case,\n"
-        "camel case is used for the parameters (e.g.: --end-time becomes EndTime). Parameters\n"
-        "specified on the command line have priority over those in the parameter file.\n"
         "Important optional options include:\n"
         "\t--help,-h                        Print this usage message and exit\n"
         "\t--print-parameters[=true|false]  Print the run-time modifiable parameters _after_ \n"
@@ -100,8 +97,11 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
         "\t--print-properties[=true|false]  Print the compile-time parameters _before_ \n"
         "\t                                 the simulation [default: false]\n"
         "\t--parameter-file=FILENAME        File with parameter definitions\n"
-        "\t--restart=RESTARTTIME            Restart simulation from a restart file\n"
+        "\t--restart-time=RESTARTTIME       Restart simulation from a restart file\n"
         "\n"
+        "If --parameter-file is specified, parameters can also be defined there. In this case,\n"
+        "camel case is used for the parameters (e.g.: --end-time becomes EndTime). Parameters\n"
+        "specified on the command line have priority over those in the parameter file;\n"
         "If the --parameter-file option is not specified, the program tries to load the\n"
         "parameter file '"<<progName <<".input'\n"
         "\n";
@@ -353,6 +353,11 @@ int start(int argc,
                 <<" will now start the trip. "
                 << "Please sit back, relax and enjoy the ride.\n";
 
+        // print  parameters if requested
+        if (printProps && myRank == 0) {
+            Dumux::Properties::print<TypeTag>();
+        }
+
         // try to create a grid (from the given grid file)
         if (myRank ==  0) std::cout << "Creating the grid\n";
         try { GridCreator::makeGrid(); }
@@ -360,10 +365,6 @@ int start(int argc,
         if (myRank ==  0) std::cout << "Distributing the grid\n";
         GridCreator::loadBalance();
 
-        // print  parameters if requested
-        if (printProps && myRank == 0) {
-            Dumux::Properties::print<TypeTag>();
-        }
 
         // instantiate and run the concrete problem
         TimeManager timeManager;
