@@ -41,6 +41,10 @@
 #include <sstream>
 #include <string>
 
+#if HAVE_MPI
+#include <mpi.h>
+#endif
+
 namespace Dumux
 {
 // forward declaration of property tags
@@ -62,10 +66,20 @@ NEW_PROP_TAG(TimeManager);
 template <class TypeTag>
 void printRuntimeParameters(int signum)
 {
-    // print the runtime parameters
-    std::cout << "\n"
-              << "Program interupted. The following list of run-time parameters might be incomplete:\n";
-    Dumux::Parameters::print<TypeTag>();
+    int myRank = 0;
+    int worldSize = 1;
+#if HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+#endif
+    if (myRank == worldSize - 1) {
+        // print the runtime parameters on process 0 and process 1
+        // (some MPI implementations intercept SIGINT, so we also
+        // print the parameters on process 1!)
+        std::cout << "\n"
+                  << "Program interrupted. The following list of run-time parameters might be incomplete:\n";
+        Dumux::Parameters::print<TypeTag>();
+    }
     
     // restore the original signal handler
     signal(SIGINT, SIG_DFL);
