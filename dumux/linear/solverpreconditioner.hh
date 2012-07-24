@@ -77,9 +77,24 @@ public:
 
     void apply(domain_type &x, const range_type &d)
     {
+        domain_type x0(x);
         range_type dd(d);
         Dune::InverseOperatorResult result;
         innerSolver_->apply(x, dd, result);
+
+        // make sure that we don't get worse by applying the linear
+        // solver
+        innerOperator_->apply(x0, dd);
+        dd -= d;
+        Scalar defectBefore = dd.two_norm();
+
+        innerOperator_->apply(x, dd);
+        dd -= d;
+        Scalar defectAfter = dd.two_norm();
+        if (defectBefore < defectAfter) {
+            x = x0;
+            innerPreCond_->apply(x, d);
+        }
     }
 
     void post(domain_type &x)
