@@ -170,7 +170,7 @@ public:
             }
         };
 
-        this->gridView_().comm().sum(dest);
+        dest = this->gridView_().comm().sum(dest);
     }
 
     /*!
