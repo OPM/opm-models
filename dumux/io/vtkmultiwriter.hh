@@ -78,12 +78,8 @@ public:
 
         curWriterNum_ = 0;
 
-        commRank_ = 0;
-        commSize_ = 1;
-#if HAVE_MPI
-        MPI_Comm_rank(MPI_COMM_WORLD, &commRank_);
-        MPI_Comm_size(MPI_COMM_WORLD, &commSize_);
-#endif
+        commRank_ = gridView.comm().rank();
+        commSize_ = gridView.comm().size();
     }
 
     ~VtkMultiWriter()
