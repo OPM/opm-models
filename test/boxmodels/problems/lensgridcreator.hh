@@ -105,7 +105,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
 
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
         Dune::GridFactory<Dune::UGGrid<dim> > factory(grid_);
         
@@ -237,7 +237,7 @@ public:
         }
 
         grid_ = factory.createGrid();
-        grid_->globalRefine(numRefinments);
+        grid_->globalRefine(numRefinements);
     }
 
     /*!
@@ -302,7 +302,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
        
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
         grid_ = new Dune::YaspGrid<LENS_DIM>(
 #ifdef HAVE_MPI
@@ -312,7 +312,7 @@ public:
             cellRes, // number of cells
             Dune::FieldVector<bool,LENS_DIM>(false), // periodic
             0); // overlap
-        grid_->globalRefine(numRefinments);
+        grid_->globalRefine(numRefinements);
     }
 
     /*!
