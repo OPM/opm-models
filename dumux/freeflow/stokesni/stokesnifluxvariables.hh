@@ -107,6 +107,12 @@ public:
     const ScalarGradient &temperatureGrad() const
     { return temperatureGrad_; }
 
+    /*!
+     * \brief Return the eddy conductivity (if implemented).
+     */
+    Scalar eddyConductivity() const
+    { return 0; }
+
 protected:
     Scalar heatConductivity_;
     ScalarGradient temperatureGrad_;

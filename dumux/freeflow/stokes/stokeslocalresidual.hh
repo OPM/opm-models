@@ -156,7 +156,7 @@ protected:
                 * vTimesN;
         
         // momentum flux
-        Scalar mu = up.fluidState().viscosity(phaseIdx);
+        Scalar mu = up.fluidState().viscosity(phaseIdx) + fluxVars.eddyViscosity();
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
         {
             // deal with the surface forces, i.e. the $\div[ \mu

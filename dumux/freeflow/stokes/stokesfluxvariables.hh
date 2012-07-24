@@ -1,8 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010-2011 by Katherina Baber, Klaus Mosthaf               *
- *   Copyright (C) 2008-2009 by Bernd Flemisch, Andreas Lauser               *
+ *   Copyright (C) 2010-2011 by Katherina Baber                              *
+ *   Copyright (C) 2010-2011 by Klaus Mosthaf                                *
+ *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -204,6 +206,18 @@ public:
      */
     const DimVector &velocityGrad(int axisIdx) const
     { return velocityGrad_[axisIdx]; }
+
+    /*!
+     * \brief Return the eddy viscosity (if implemented).
+     */
+    Scalar eddyViscosity() const
+    { return 0; }
+
+     /*!
+     * \brief Return the eddy diffusivity (if implemented).
+     */
+    Scalar eddyDiffusivity() const
+    { return 0; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.

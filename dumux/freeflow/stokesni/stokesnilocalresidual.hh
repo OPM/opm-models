@@ -140,7 +140,8 @@ public:
         flux[energyEqIdx] -=
             (fluxVars.temperatureGrad()
              * fluxVars.normal())
-            * fluxVars.heatConductivity();
+            * ( fluxVars.heatConductivity()
+                + fluxVars.eddyConductivity());
     }
 };
 
