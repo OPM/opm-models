@@ -161,7 +161,8 @@ public:
 
         // define the smoother used for the AMG and specify its
         // arguments
-        typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
+        typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
+        //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
@@ -195,17 +196,22 @@ public:
         int verbosity = 0;
         if (overlappingMatrix_->overlap().myRank() == 0)
             verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-        Dune::BiCGSTABSolver<Vector> 
-            solver(fineOperator, 
-                   scalarProduct,
-                   /*preconditioner=*/amg,
-                   /*tolerance=*/1e-9,
-                   /*maxSteps=*/300, 
-                   verbosity);
 
-#if 0 && HAVE_ISTL_FIXPOINT_CRITERION
+#if HAVE_ISTL_FIXPOINT_CRITERION
+        typedef Dune::FixPointCriterion<Vector> ConvergenceCrit;
+        typedef Dune::BiCGSTABSolver<Vector, ConvergenceCrit>  SolverType;
+#endif
+
+        SolverType solver(fineOperator, 
+                          scalarProduct,
+                          /*preconditioner=*/amg,
+                          /*tolerance=*/1e-9,
+                          /*maxSteps=*/300, 
+                          verbosity);
+
+#if HAVE_ISTL_FIXPOINT_CRITERION
         // use the fixpoint convergence criterion if possible
-        OverlappingVector weightVec(*overlappingx_);
+        Vector weightVec(*overlappingx_);
 
         // set the default weight of the row to 0 (-> do not consider
         // the row when calculating the error)
@@ -213,7 +219,7 @@ public:
         // for rows local to the current peer, ping the model for their
         // relative weight
         for (unsigned i = 0; i < x.size(); ++i) {
-            for (int j = 0; j < OverlappingVector::block_type::dimension; ++j) {
+            for (int j = 0; j < Vector::block_type::dimension; ++j) {
                 weightVec[i][j] = this->problem_.model().primaryVarWeight(i, j);
             }
         }
@@ -306,10 +312,10 @@ private:
 
             // an index is used by other processes if it is in the
             // domestic or in the foreign overlap.
-            bool isPublic = overlap.isInOverlap(curIdx);
+            bool isShared = overlap.isInOverlap(curIdx);
 
             istlIndices.add(overlap.domesticToGlobal(curIdx),
-                        Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isPublic));
+                        Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isShared));
 
         }
         istlIndices.endResize();

@@ -298,12 +298,12 @@ private:
 
 #if HAVE_ISTL_FIXPOINT_CRITERION
 // patched dune-istl
-#define EWOMS_ISTL_SOLVER_TYPDEF(ISTL_SOLVER_TYPE)           \
+#define EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE)           \
     typedef Dune::FixPointCriterion<OverlappingVector> ConvergenceCrit; \
     typedef ISTL_SOLVER_TYPE<OverlappingVector, ConvergenceCrit> ParallelSolver
 #else
 // plain dune-istl
-#define EWOMS_ISTL_SOLVER_TYPDEF(ISTL_SOLVER_TYPE)           \
+#define EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE)           \
     typedef ISTL_SOLVER_TYPE<OverlappingVector> ParallelSolver
 #endif
 
@@ -319,7 +319,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix; \
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector; \
                                                                         \
-    EWOMS_ISTL_SOLVER_TYPDEF(ISTL_SOLVER_TYPE);                         \
+    EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE);                         \
                                                                         \
     public:                                                             \
     SolverWrapper##SOLVER_NAME()                                        \
