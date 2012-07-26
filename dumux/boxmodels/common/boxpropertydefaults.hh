@@ -43,6 +43,8 @@
 #include "boxconstraintscontext.hh"
 #include "boxnewtoncontroller.hh"
 
+#include <dumux/linear/boxlinearsolver.hh>
+#include <dumux/linear/boxparallelamgsolver.hh>
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/common/timemanager.hh>
 
@@ -228,8 +230,7 @@ public:
     typedef typename Dune::BCRSMatrix<MatrixBlock> type;
 };
 
-// use the MPI parallel version of the stabilized BiCG solver
-// preconditioned by the ILU-n by default
+// use a parallel iterative solver by default
 SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::Linear::BoxParallelSolver<TypeTag>);
 
 #if HAVE_ISTL_FIXPOINT_CRITERION

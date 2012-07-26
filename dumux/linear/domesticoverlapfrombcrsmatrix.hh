@@ -216,6 +216,15 @@ public:
     { return foreignOverlap_; }
 
     /*!
+     * \brief Returns true if a given domestic index is either in the foreign or in the domestic overlap.
+     */
+    bool isInOverlap(Index domesticIdx) const
+    {
+        return !this->isLocal(domesticIdx) ||
+            this->foreignOverlap_.isInOverlap(domesticIdx);
+    }
+
+    /*!
      * \brief Returns the foreign overlap of a peer process with the
      *        local process.
      */
