@@ -62,7 +62,7 @@ NEW_PROP_TAG(AMGCoarsenTarget);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(BoxLinearSolverTypeTag, AMGCoarsenTarget, 200);
+SET_INT_PROP(BoxLinearSolverTypeTag, AMGCoarsenTarget, 10000);
 }
 
 namespace Linear {
