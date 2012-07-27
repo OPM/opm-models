@@ -124,6 +124,7 @@ class BoxParallelSolver
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
@@ -186,27 +187,28 @@ public:
         // copy the values of the non-overlapping linear system of
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
-        overlapMatrix_->assignAdd(M);
-        overlapb_->assignAddBorder(b);
+        overlappingMatrix_->assignAdd(M);
+        overlappingb_->assignAddBorder(b);
 
-        (*overlapx_) = 0.0;
+        (*overlappingx_) = 0.0;
 
         // run the solver
         // update sequential preconditioner
-        precWrapper_.prepare(*overlapMatrix_);
+        precWrapper_.prepare(*overlappingMatrix_);
 
         // create the parallel preconditioner
-        ParallelPreconditioner parPreCond(precWrapper_.get(), overlapMatrix_->overlap());
+        ParallelPreconditioner parPreCond(precWrapper_.get(), overlappingMatrix_->overlap());
 
         // create the parallel scalar product and the parallel operator
-        ParallelScalarProduct parScalarProduct(overlapMatrix_->overlap());
-        ParallelOperator parOperator(*overlapMatrix_);
+        ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
+        ParallelOperator parOperator(*overlappingMatrix_);
 
         // run the linear solver and have some fun
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
 
-#if HAVE_ISTL_FIXPOINT_CRITERION
-        OverlappingVector weightVec(*overlapx_);
+#if HAVE_ISTL_CONVERGENCE_CRITERIA
+        // use the fixpoint convergence criterion if possible
+        OverlappingVector weightVec(*overlappingx_);
 
         // set the default weight of the row to 0 (-> do not consider
         // the row when calculating the error)
@@ -214,11 +216,20 @@ public:
         // for rows local to the current peer, ping the model for their
         // relative weight
         for (unsigned i = 0; i < x.size(); ++i) {
-            for (int j = 0; j < OverlappingVector::block_type::dimension; ++j) {
-                weightVec[i][j] = this->problem_.model().primaryVarWeight(i, j);
+            for (int j = 0; j < Vector::block_type::dimension; ++j) {
+                weightVec[i][j] = this->problem_.model().eqWeight(i, j);
             }
         }
-        solver.convergenceCriterion().setWeight(weightVec);
+
+        // create a fixpoint convergence criterion
+        auto convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector>(problem_.gridView().comm());
+        Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
+        convCrit->setWeight(weightVec);
+        convCrit->setTolerance(linearSolverTolerance);
+
+        // tell the linear solver to use it
+        typedef Dune::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
 #endif
   
         Dune::InverseOperatorResult result;
@@ -263,52 +274,40 @@ private:
 
         // create the overlapping Jacobian matrix
         int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
-        overlapMatrix_ = new OverlappingMatrix (M,
+        overlappingMatrix_ = new OverlappingMatrix (M,
                                                 borderListCreator.borderList(),
                                                 blackList,
                                                 overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution
-        overlapb_ = new OverlappingVector(overlapMatrix_->overlap());
-        overlapx_ = new OverlappingVector(*overlapb_);
+        overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
+        overlappingx_ = new OverlappingVector(*overlappingb_);
     }
 
     void cleanup_()
     {
         // create the overlapping Jacobian matrix and vectors
-        delete overlapMatrix_;
-        delete overlapb_;
-        delete overlapx_;
+        delete overlappingMatrix_;
+        delete overlappingb_;
+        delete overlappingx_;
 
-        overlapMatrix_ = 0;
-        overlapb_ = 0;
-        overlapx_ = 0;
+        overlappingMatrix_ = 0;
+        overlappingb_ = 0;
+        overlappingx_ = 0;
     }
 
     const Problem &problem_;
 
-    OverlappingMatrix *overlapMatrix_;
-    OverlappingVector *overlapb_;
-    OverlappingVector *overlapx_;
+    OverlappingMatrix *overlappingMatrix_;
+    OverlappingVector *overlappingb_;
+    OverlappingVector *overlappingx_;
 
     PreconditionerWrapper precWrapper_;
     LinearSolverWrapper solverWrapper_;
 };
 
-#if HAVE_ISTL_FIXPOINT_CRITERION
-// patched dune-istl
-#define EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE)           \
-    typedef Dune::FixPointCriterion<OverlappingVector> ConvergenceCrit; \
-    typedef ISTL_SOLVER_TYPE<OverlappingVector, ConvergenceCrit> ParallelSolver
-#else
-// plain dune-istl
-#define EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE)           \
-    typedef ISTL_SOLVER_TYPE<OverlappingVector> ParallelSolver
-#endif
-
-
-/*
+/*!
  * \brief Macro to create a wrapper around an ISTL solver
  */
 #define EWOMS_WRAP_ISTL_SOLVER(SOLVER_NAME, ISTL_SOLVER_TYPE)           \
@@ -319,7 +318,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix; \
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector; \
                                                                         \
-    EWOMS_ISTL_SOLVER_TYPEDEF(ISTL_SOLVER_TYPE);                         \
+    typedef ISTL_SOLVER_TYPE<OverlappingVector> ParallelSolver;         \
                                                                         \
     public:                                                             \
     SolverWrapper##SOLVER_NAME()                                        \

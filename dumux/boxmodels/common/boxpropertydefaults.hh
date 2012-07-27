@@ -233,19 +233,12 @@ public:
 // use a parallel iterative solver by default
 SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::Linear::BoxParallelSolver<TypeTag>);
 
-#if HAVE_ISTL_FIXPOINT_CRITERION
-// if the linear solver supports a fixpoint convergence criterion, we
-// solve the linarized system a thousand times more accurately than
-// the tolerance for the non-linear solver
-SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, GET_PROP_VALUE(TypeTag, NewtonRelTolerance)/1000.0);
-#else
 // if the deflection of the newton method is large, we do not
 // need to solve the linear approximation accurately. Assuming
 // that the initial value for the delta vector u is quite
 // close to the final value, a reduction of 6 orders of
 // magnitude in the defect should be sufficient...
 SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, 1e-6);
-#endif
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);

@@ -197,19 +197,16 @@ public:
         if (overlappingMatrix_->overlap().myRank() == 0)
             verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
 
-#if HAVE_ISTL_FIXPOINT_CRITERION
-        typedef Dune::FixPointCriterion<Vector> ConvergenceCrit;
-        typedef Dune::BiCGSTABSolver<Vector, ConvergenceCrit>  SolverType;
-#endif
-
+        typedef Dune::BiCGSTABSolver<Vector>  SolverType;
+        Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
         SolverType solver(fineOperator, 
                           scalarProduct,
                           /*preconditioner=*/amg,
-                          /*tolerance=*/1e-9,
+                          linearSolverTolerance,
                           /*maxSteps=*/300, 
                           verbosity);
 
-#if HAVE_ISTL_FIXPOINT_CRITERION
+#if HAVE_ISTL_CONVERGENCE_CRITERIA
         // use the fixpoint convergence criterion if possible
         Vector weightVec(*overlappingx_);
 
@@ -223,7 +220,13 @@ public:
                 weightVec[i][j] = this->problem_.model().primaryVarWeight(i, j);
             }
         }
-        solver.convergenceCriterion().setWeight(weightVec);
+
+        auto convCrit = new Dune::FixPointCriterion<Vector>(problem_.gridView().comm());
+        convCrit->setWeight(weightVec);
+        convCrit->setTolerance(linearSolverTolerance);
+
+        typedef Dune::ConvergenceCriterion<Vector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
 #endif
 
         /////////////
