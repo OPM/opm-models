@@ -149,9 +149,9 @@ public:
     BoxParallelSolver(const Problem &problem)
         : problem_(problem)
     {
-        overlapMatrix_ = 0;
-        overlapb_ = 0;
-        overlapx_ = 0;
+        overlappingMatrix_ = 0;
+        overlappingb_ = 0;
+        overlappingx_ = 0;
     }
 
     ~BoxParallelSolver()
@@ -178,7 +178,7 @@ public:
      */
     bool solve(const Matrix &M, Vector &x, const Vector &b)
     {
-        if (!overlapMatrix_) {
+        if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
             // have been created
             prepare_(M);
@@ -231,16 +231,16 @@ public:
         typedef Dune::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
         solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
 #endif
-  
+
         Dune::InverseOperatorResult result;
-        solver.apply(*overlapx_, *overlapb_, result);
+        solver.apply(*overlappingx_, *overlappingb_, result);
 
         // free the unneeded memory of the sequential preconditioner and the linear solver
         solverWrapper_.cleanup();
         precWrapper_.cleanup();
 
         // copy the result back to the non-overlapping vector
-        overlapx_->assignTo(x);
+        overlappingx_->assignTo(x);
 
         // return the result of the solver
         return result.converged;
