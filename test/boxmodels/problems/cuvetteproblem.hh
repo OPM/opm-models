@@ -189,7 +189,7 @@ public:
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {
-        if (Valgrind::Running())
+        if (Valgrind::IsRunning())
             FluidSystem::init(/*minT=*/283.15, /*maxT=*/500.0, /*nT=*/20,
                               /*minp=*/0.8e5, /*maxp=*/2e5, /*np=*/10);
         else

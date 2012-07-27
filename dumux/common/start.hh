@@ -31,7 +31,6 @@
 #include "valgrind.hh"
 
 #include <dune/common/mpihelper.hh>
-#include <dune/common/version.hh>
 #include <dune/common/parametertreeparser.hh>
 #include <dune/grid/io/file/dgfparser.hh>
 

@@ -33,7 +33,6 @@
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/grid.hh>
 #include<dune/grid/common/mcmgmapper.hh>
-#include<dune/common/version.hh>
 #include<dune/geometry/type.hh>
 
 #include<dune/istl/bvector.hh>
