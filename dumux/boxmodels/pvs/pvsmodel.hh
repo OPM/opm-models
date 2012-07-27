@@ -221,6 +221,21 @@ public:
     }
 
     /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        int compIdx = eqIdx - Indices::conti0EqIdx;
+        assert(0 <= compIdx && compIdx <= numPhases);
+
+        // make all kg equal
+        return FluidSystem::molarMass(compIdx);
+    }
+
+    /*!
      * \brief Called by the problem if a time integration was
      *        successful, post processing of the solution is done and the
      *        result has been written to disk.

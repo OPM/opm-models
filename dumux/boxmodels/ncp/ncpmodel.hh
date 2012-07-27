@@ -278,6 +278,25 @@ public:
     }
 
     /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases) {
+            return 1.0;
+        }
+
+        int compIdx = eqIdx - Indices::conti0EqIdx;
+        assert(0 <= compIdx && compIdx <= numPhases);
+
+        // make all kg equal
+        return FluidSystem::molarMass(compIdx);
+    }
+    
+    /*!
      * \brief Returns the smallest activity coefficient of a component for the most
      *        current solution at a vertex.
      */

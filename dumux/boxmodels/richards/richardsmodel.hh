@@ -154,6 +154,22 @@ public:
         return 1;
     }
 
+    /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        int DUNE_UNUSED compIdx = eqIdx - Indices::contiEqIdx;
+        assert(0 <= compIdx && compIdx <= FluidSystem::numPhases);
+
+        // make all kg equal
+        return 1.0;
+    }
+
+
 protected:
     friend class BoxModel<TypeTag>;
 

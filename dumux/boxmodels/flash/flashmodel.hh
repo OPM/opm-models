@@ -141,6 +141,37 @@ public:
         this->gridView_().comm().sum(dest);
     }
 
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     *
+     * \param globalVertexIdx The global vertex index
+     * \param pvIdx The primary variable index
+     */
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    {
+        int compIdx = pvIdx - Indices::cTot0Idx;
+        assert(0 <= compIdx && compIdx <= numPhases);
+
+        // make all kg equal
+        return FluidSystem::molarMass(compIdx);
+    }
+
+    /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        int compIdx = eqIdx - Indices::conti0EqIdx;
+        assert(0 <= compIdx && compIdx <= numPhases);
+
+        // make all kg equal
+        return FluidSystem::molarMass(compIdx);
+    }
+
 protected:
     friend class BoxModel<TypeTag>;
 

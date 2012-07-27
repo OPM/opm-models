@@ -108,6 +108,21 @@ public:
         return 1;
     }
 
+    /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        int compIdx = eqIdx - Indices::conti0EqIdx;
+        assert(0 <= compIdx && compIdx <= numPhases);
+
+        // make all kg equal
+        return FluidSystem::molarMass(compIdx);
+    }
+
 protected:
     friend class BoxModel<TypeTag>;
 

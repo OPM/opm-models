@@ -101,6 +101,7 @@ class ImmiscibleNIModel : public ImmiscibleModel<TypeTag>
 {
     typedef ImmiscibleModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
     /*!
@@ -129,6 +130,36 @@ public:
            return "energy";
        
         return ParentType::eqName(eqIdx);
+    }
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param pvIdx The index of the primary variable
+     */
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    {
+        if (pvIdx == Indices::temperatureIdx)
+            return 1.0/300.0;
+
+        return ParentType::primaryVarWeight(globalVertexIdx, pvIdx);
+    }
+
+    /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    {
+        if (eqIdx == Indices::energyEqIdx)
+            // approximate heat capacity of 1kg of air
+            return 1.0/1.0035e3;
+        
+        return ParentType::eqWeight(globalVertexIdx, eqIdx);
     }
 
 protected:

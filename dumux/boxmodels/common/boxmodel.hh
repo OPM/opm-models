@@ -346,6 +346,15 @@ public:
     }
 
     /*!
+     * \brief Returns the relative weight of an equation
+     *
+     * \param globalVertexIdx The global index of the vertex
+     * \param eqIdx The index of the primary variable
+     */
+    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    { return 1.0; }
+
+    /*!
      * \brief Returns the relative error between two vectors of
      *        primary variables.
      *
