@@ -182,6 +182,7 @@ public:
             CoarsenCriterion;
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
         coarsenCriterion.setDebugLevel(0); // make the AMG shut up
+        coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
         coarsenCriterion.setDefaultValuesIsotropic(2);
     
         // instantiate the AMG preconditioner
