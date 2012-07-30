@@ -228,7 +228,7 @@ public:
                 int J = vertexMapper.map(elem, j, dim);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight = std::max(1e-16, std::abs(fluxVars.filterVelocityNormal(phaseIdx)));
+                    Scalar weight = std::max(1e-16, std::abs(fluxVars.volumeFlux(phaseIdx)));
                     Valgrind::CheckDefined(fluxVars.extrusionFactor());
                     assert(fluxVars.extrusionFactor() > 0);
                     weight *= fluxVars.extrusionFactor();

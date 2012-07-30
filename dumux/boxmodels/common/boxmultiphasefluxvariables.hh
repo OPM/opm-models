@@ -150,8 +150,8 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar filterVelocityNormal(int phaseIdx) const
-    { return filterVelocityNormal_[phaseIdx]; }
+    Scalar volumeFlux(int phaseIdx) const
+    { return volumeFlux_[phaseIdx]; }
 
     /*!
      * \brief Return the local index of the control volume which is on
@@ -175,7 +175,7 @@ public:
      *                 direction is requested.
      */
     short upstreamIdx(int phaseIdx) const
-    { return (filterVelocityNormal_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
+    { return (volumeFlux_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
     /*!
      * \brief Return the local index of the downstream control volume
@@ -185,7 +185,7 @@ public:
      *                 direction is requested.
      */
     short downstreamIdx(int phaseIdx) const
-    { return (filterVelocityNormal_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
+    { return (volumeFlux_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
 
     /*!
      * \brief Return the weight of the upstream control volume
@@ -420,7 +420,7 @@ private:
         {
             if (!asImp_().usePhase(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
-                filterVelocityNormal_[phaseIdx] = 0;
+                volumeFlux_[phaseIdx] = 0;
                 upstreamScvIdx_[phaseIdx] = insideScvIdx_;
                 downstreamScvIdx_[phaseIdx] = outsideScvIdx_;
                 continue;
@@ -434,15 +434,15 @@ private:
             K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
 
             filterVelocity_[phaseIdx] *= -1;
-            filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx] * normal)*scvfArea;
+            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal)*scvfArea;
 
             // determine the upstream index. since this is a
             // semi-smooth non-linear solver, make upstream only look
             // at the evaluation point for the upstream decision
             const auto &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
             if (&evalFluxVars == this || !GET_PARAM(TypeTag, bool, EnableSmoothUpwinding)) {
-                upstreamScvIdx_[phaseIdx] = (filterVelocityNormal_[phaseIdx]>0)?insideScvIdx_:outsideScvIdx_;
-                downstreamScvIdx_[phaseIdx] = (filterVelocityNormal_[phaseIdx]>0)?outsideScvIdx_:insideScvIdx_;
+                upstreamScvIdx_[phaseIdx] = (volumeFlux_[phaseIdx]>0)?insideScvIdx_:outsideScvIdx_;
+                downstreamScvIdx_[phaseIdx] = (volumeFlux_[phaseIdx]>0)?outsideScvIdx_:insideScvIdx_;
             }
             else {
                 upstreamScvIdx_[phaseIdx] = evalFluxVars.upstreamIdx(phaseIdx);
@@ -454,11 +454,11 @@ private:
             if (!GET_PARAM(TypeTag, bool, EnableSmoothUpwinding)) {
                 const VolumeVariables &up = elemCtx.volVars(upstreamIdx(phaseIdx), timeIdx);
                 filterVelocity_[phaseIdx] *= up.mobility(phaseIdx);
-                filterVelocityNormal_[phaseIdx] *= up.mobility(phaseIdx);
+                volumeFlux_[phaseIdx] *= up.mobility(phaseIdx);
             }
             else {
                 handleSmoothUpwinding_(elemCtx, scvfIdx, timeIdx, phaseIdx, normal);
-                filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx]*normal)*scvfArea;
+                volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx]*normal)*scvfArea;
             }
         }
     }
@@ -496,7 +496,7 @@ private:
         {
             if (!asImp_().usePhase(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
-                filterVelocityNormal_[phaseIdx] = 0;
+                volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
@@ -504,7 +504,7 @@ private:
             // taking the mobility into account
             K.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
             filterVelocity_[phaseIdx] *= -1;
-            filterVelocityNormal_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
 
             // calculate the actual darcy velocities by multiplying
             // the current "filter velocity" with the upstream mobility
@@ -520,7 +520,7 @@ private:
             }
 
             filterVelocity_[phaseIdx] *= mobility;
-            filterVelocityNormal_[phaseIdx] *= mobility;
+            volumeFlux_[phaseIdx] *= mobility;
         }
     }
 
@@ -621,7 +621,7 @@ private:
 
     // normal velocities, i.e. filter velocity times face normal times
     // face area
-    Scalar filterVelocityNormal_[numPhases];
+    Scalar volumeFlux_[numPhases];
 };
 
 } // end namepace

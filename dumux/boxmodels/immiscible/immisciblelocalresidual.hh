@@ -167,7 +167,7 @@ public:
             // add advective flux of current component in current
             // phase
             flux[conti0EqIdx + phaseIdx] +=
-                fluxVars.filterVelocityNormal(phaseIdx)
+                fluxVars.volumeFlux(phaseIdx)
                 * (fluxVars.upstreamWeight(phaseIdx)
                    * up.fluidState().density(phaseIdx)
                    +

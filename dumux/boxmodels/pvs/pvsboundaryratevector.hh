@@ -127,7 +127,7 @@ public:
                 // add advective flux of current component in current
                 // phase
                 (*this)[conti0EqIdx + compIdx] +=
-                    fluxVars.filterVelocityNormal(phaseIdx)
+                    fluxVars.volumeFlux(phaseIdx)
                     * molarity;
             }
             

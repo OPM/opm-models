@@ -110,7 +110,7 @@ public:
             // add advective flux of current component in current
             // phase
             (*this)[conti0EqIdx + phaseIdx] +=
-                fluxVars.filterVelocityNormal(phaseIdx)
+                fluxVars.volumeFlux(phaseIdx)
                 * density;
             
             asImp_().enthalpyFlux_(fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);

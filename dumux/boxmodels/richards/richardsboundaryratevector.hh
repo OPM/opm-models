@@ -109,7 +109,7 @@ public:
         // add advective flux of current component in current
         // phase
         (*this)[contiEqIdx] +=
-            fluxVars.filterVelocityNormal(phaseIdx)
+            fluxVars.volumeFlux(phaseIdx)
             * density;
 
 #ifndef NDEBUG

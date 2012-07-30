@@ -108,7 +108,7 @@ public:
         const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.downstreamIdx(wPhaseIdx), timeIdx);
 
         flux[contiEqIdx] =
-            fluxVars.filterVelocityNormal(wPhaseIdx)
+            fluxVars.volumeFlux(wPhaseIdx)
             *( fluxVars.upstreamWeight(wPhaseIdx)*up.fluidState().density(wPhaseIdx)
                +
                fluxVars.downstreamWeight(wPhaseIdx)*dn.fluidState().density(wPhaseIdx));

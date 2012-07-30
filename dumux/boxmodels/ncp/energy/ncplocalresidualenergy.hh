@@ -169,7 +169,7 @@ public:
         const VolumeVariables &dn = elemCtx.volVars(dnIdx, timeIdx);
 
         Scalar massFlux = 
-            fluxVars.filterVelocityNormal(phaseIdx)
+            fluxVars.volumeFlux(phaseIdx)
             * (up.fluidState().density(phaseIdx) * fluxVars.upstreamWeight(phaseIdx)
                + dn.fluidState().density(phaseIdx) * fluxVars.downstreamWeight(phaseIdx));
 

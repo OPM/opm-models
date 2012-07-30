@@ -178,7 +178,7 @@ public:
                 int eqIdx = conti0EqIdx + compIdx;
 
                 flux[eqIdx] +=
-                    fluxVars.filterVelocityNormal(phaseIdx)
+                    fluxVars.volumeFlux(phaseIdx)
                     *(fluxVars.upstreamWeight(phaseIdx)
                       * up.fluidState().molarity(phaseIdx, compIdx)
                       +

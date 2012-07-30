@@ -299,7 +299,7 @@ public:
             : insideVolVars.fluidState().enthalpy(phaseIdx);
         
         rate[energyEqIdx] += 
-            fluxVars.filterVelocityNormal(phaseIdx)
+            fluxVars.volumeFlux(phaseIdx)
             * enthalpy
             * density;
     }

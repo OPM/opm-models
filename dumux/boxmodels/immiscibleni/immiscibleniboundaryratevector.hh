@@ -94,7 +94,7 @@ protected:
             : insideVolVars.fluidState().enthalpy(phaseIdx);
         
         (*this)[energyEqIdx] += 
-            fluxVars.filterVelocityNormal(phaseIdx)
+            fluxVars.volumeFlux(phaseIdx)
             * enthalpy
             * density;
     }

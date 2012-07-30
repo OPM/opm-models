@@ -112,7 +112,7 @@ public:
                 // add advective flux of current component in current
                 // phase
                 flux[conti0EqIdx + compIdx] +=
-                    fluxVars.filterVelocityNormal(phaseIdx)
+                    fluxVars.volumeFlux(phaseIdx)
                     * up.fluidState().molarity(phaseIdx, compIdx);
             }
         }
