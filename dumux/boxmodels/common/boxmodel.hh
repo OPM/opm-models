@@ -232,16 +232,19 @@ public:
             }
         };
 
-        // calculate the square norm of the residual
-        Scalar result2 = dest.two_norm2();
-        result2 = gridView().comm().sum(result2);
-
         // add up the residuals on the process borders
         VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
             sumHandle(dest, vertexMapper());
         gridView().communicate(sumHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
                                Dune::ForwardCommunication);
+
+        // calculate the square norm of the residual. this is not
+        // entirely correct, since the residual for the finite volumes
+        // which are on the boundary are counted once for every
+        // process. As often in life: shit happens (, we don't care)...
+        Scalar result2 = dest.two_norm2();
+        result2 = gridView().comm().sum(result2);
     
         return std::sqrt(result2);
     }
@@ -891,8 +894,7 @@ protected:
             }
         }
 
-        // add up the primary variables and the volumes of the boxes
-        // which cross process borders
+        // add the finite volumes which cross process borders
         VertexHandleSum<Dune::FieldVector<Scalar, 1>,
                         Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
                         VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
