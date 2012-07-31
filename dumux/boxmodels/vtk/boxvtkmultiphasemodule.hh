@@ -36,7 +36,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace Dumux
 {

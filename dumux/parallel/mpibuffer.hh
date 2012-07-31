@@ -32,7 +32,7 @@
 #endif
 
 #include <type_traits>
-#include <assert.h>
+#include <cassert>
 
 namespace Dumux
 {

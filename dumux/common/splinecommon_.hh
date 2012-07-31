@@ -34,7 +34,7 @@
 #include <tuple>
 #include <algorithm>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 namespace Dumux
 {

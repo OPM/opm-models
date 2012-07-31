@@ -44,7 +44,7 @@
 
 #include <iostream>
 
-#define FINGER_USE_PARKER_LENHARD 0
+#define FINGER_USE_PARKER_LENHARD 1
 
 namespace Dumux
 {

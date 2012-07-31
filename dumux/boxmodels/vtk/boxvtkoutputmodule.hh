@@ -34,7 +34,7 @@
 #include <string>
 #include <array>
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace Dumux
 {
