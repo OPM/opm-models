@@ -182,8 +182,9 @@ public:
             CoarsenCriterion;
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
         coarsenCriterion.setDebugLevel(0); // make the AMG shut up
-        coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
-        coarsenCriterion.setDefaultValuesIsotropic(2);
+        coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
+        //coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
+        coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
     
         // instantiate the AMG preconditioner
         typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother, OwnerOverlapCopyCommunication> AMG;
@@ -222,7 +223,7 @@ public:
             }
         }
 
-        auto convCrit = new Dune::FixPointCriterion<Vector>(problem_.gridView().comm());
+        auto convCrit = new Dune::WeightedResidReductionCriterion<Vector>(problem_.gridView().comm());
         convCrit->setWeight(weightVec);
         convCrit->setTolerance(linearSolverTolerance);
 
