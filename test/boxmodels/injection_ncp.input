@@ -1,0 +1,25 @@
+##########################################################################
+# Parameter file for test_2p2c
+# Everything behind a '#' is a comment
+# Groups can be ordered e.g. : [BoundaryConditions]
+# Parameters in groups have to be accessed hierarchically e.g.: FluidSystem.pressureLow
+##########################################################################
+
+####################################################################
+# Mandatory arguments
+####################################################################
+InitialTimeStepSize = 250 # [s]
+EndTime = 1e4 # [s]
+
+SimulationName = injection # the name of the output files
+Temperature = 313.15 # [K] initial temperature in the reservoir 273.15 + 40
+MaxDepth = 2700 # [m] depth below ground surface 
+GridFile = grids/injection.dgf 
+
+[FluidSystem]
+NumTemperature = 100 # [-] number of tabularization entries for temperature
+NumPressure = 200 # [-] number of tabularization entries for pressure
+PressureLow = 1e5 # [Pa] low end for tabularization of fluid properties
+PressureHigh = 3e7 # [Pa] high end for tabularization of fluid properties
+TemperatureLow = 312.15 # [K] low end of temperature for tabularization of fluid properties
+TemperatureHigh = 420 # [K] high end of temperature for tabularization of fluid properties

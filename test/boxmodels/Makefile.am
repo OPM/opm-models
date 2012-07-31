@@ -8,6 +8,7 @@ groundwater_immiscible \
 infiltration_pvs \
 injection_flash \
 injection_immisicble_ni \
+injection_ncp \
 injection_pvs \
 lens_immiscible \
 lens_richards \
@@ -23,6 +24,7 @@ groundwater_immiscible_SOURCES=groundwater_immiscible.cc
 infiltration_pvs_SOURCES=infiltration_pvs.cc
 injection_flash_SOURCES=injection_flash.cc
 injection_immisicble_ni_SOURCES=injection_immisicble_ni.cc
+injection_ncp_SOURCES=injection_ncp.cc
 injection_pvs_SOURCES=injection_pvs.cc
 lens_immiscible_SOURCES=lens_immiscible.cc
 lens_richards_SOURCES=lens_richards.cc

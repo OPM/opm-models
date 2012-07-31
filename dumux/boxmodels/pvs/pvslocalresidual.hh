@@ -77,25 +77,21 @@ public:
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
+                         int scvIdx,
                          int timeIdx,
                          int phaseIdx)
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
 
-            const auto &fs = volVars.fluidState();
-
-            // compute storage term of all components within all phases
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
-                int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] +=
-                    fs.molarity(phaseIdx, compIdx)
-                    * fs.saturation(phaseIdx)
-                    * volVars.porosity()
-                    * volVars.extrusionFactor()
-                    * elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume;
-            }
+        // compute storage term of all components within all phases
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        {
+            int eqIdx = conti0EqIdx + compIdx;
+            storage[eqIdx] +=
+                fs.molarity(phaseIdx, compIdx)
+                * fs.saturation(phaseIdx)
+                * volVars.porosity();
         }
     }
 

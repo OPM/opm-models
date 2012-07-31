@@ -32,6 +32,7 @@
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
+#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
@@ -519,27 +520,9 @@ private:
         fs.setMoleFraction(lPhaseIdx, H2OIdx,
                            1.0 - fs.moleFraction(lPhaseIdx, N2Idx));
 
-        //////
-        // set composition of the gas phase
-        //////
-        fs.setMoleFraction(gPhaseIdx, N2Idx, 
-                           fs.moleFraction(lPhaseIdx, N2Idx) 
-                           * BinaryCoeff::H2O_N2::henry(temperature_)
-                           / pg );
-        fs.setMoleFraction(gPhaseIdx, H2OIdx, 
-                           fs.moleFraction(lPhaseIdx, H2OIdx) 
-                           * FluidSystem::H2O::vaporPressure(temperature_)
-                           / pg);
-
-        //////
-        // set density and enthalpy of the phases
-        //////
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fs);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fs.setDensity(phaseIdx, FluidSystem::density(fs, paramCache, phaseIdx));
-            fs.setEnthalpy(phaseIdx, FluidSystem::enthalpy(fs, paramCache, phaseIdx));
-        }
+        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/false,  /*setEnthalpy=*/true);
     }
 
     bool onLeftBoundary_(const GlobalPosition &pos) const

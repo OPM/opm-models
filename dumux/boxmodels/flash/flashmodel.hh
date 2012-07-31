@@ -120,13 +120,11 @@ public:
     /*!
      * \brief Compute the total storage inside one phase of all
      *        conservation quantities.
-     *
-     * \param dest Contains the storage of each component for one phase
-     * \param phaseIdx The phase index
      */
     void globalPhaseStorage(EqVector &dest, int phaseIdx)
     {
         dest = 0;
+        EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = this->gridView_().template begin<0>();
@@ -135,10 +133,23 @@ public:
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
-            this->localResidual().addPhaseStorage(dest, elemCtx, /*timeIdx=*/0, phaseIdx);
+            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+                tmp = 0;
+                this->localResidual().addPhaseStorage(tmp, 
+                                                      elemCtx,
+                                                      scvIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *= 
+                    fvElemGeom.subContVol[scvIdx].volume
+                    * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                dest += tmp;
+            }
         };
 
-        this->gridView_().comm().sum(dest);
+        dest = this->gridView_().comm().sum(dest);
     }
 
     /*!

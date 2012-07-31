@@ -91,7 +91,7 @@ public:
 
         // compute storage term of all components within all phases
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            storage[compIdx] +=
+            storage[conti0EqIdx + compIdx] +=
                 volVars.fluidState().saturation(phaseIdx)
                 * volVars.fluidState().molarity(phaseIdx, compIdx)
                 * volVars.porosity();
@@ -137,33 +137,20 @@ public:
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
+                         int scvIdx,
                          int timeIdx,
                          int phaseIdx) const
     {
-        // calculate the phase storage for all sub-control volumes
-        for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
-        {
-            EqVector tmp(0.0);
-            
-            // compute mass and energy storage terms in terms of
-            // averaged quantities
-            addPhaseStorageMass(tmp,
-                                elemCtx,
-                                scvIdx,
-                                timeIdx,
-                                phaseIdx);
-            EnergyResid::addPhaseStorage(storage,
-                                         elemCtx.volVars(scvIdx, /*timeIdx=*/0),
-                                         phaseIdx);
-            
-            // multiply with volume of sub-control volume
-            tmp *=
-                elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor() *
-                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
-
-            // Add the storage of the current SCV to the total storage
-            storage += tmp;
-        }
+        // compute mass and energy storage terms in terms of
+        // averaged quantities
+        addPhaseStorageMass(storage,
+                            elemCtx,
+                            scvIdx,
+                            timeIdx,
+                            phaseIdx);
+        EnergyResid::addPhaseStorage(storage,
+                                     elemCtx.volVars(scvIdx, /*timeIdx=*/0),
+                                     phaseIdx);
     }
 
     /*!
