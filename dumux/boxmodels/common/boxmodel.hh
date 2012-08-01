@@ -263,6 +263,9 @@ public:
         ElementIterator elemIt = gridView_().template begin<0>();
         const ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            if (elemIt->partitionType() != Dune::InteriorEntity)
+                continue; // ignore ghost and overlap elements
+
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
             localResidual().evalStorage(elemCtx, /*timeIdx=*/0);

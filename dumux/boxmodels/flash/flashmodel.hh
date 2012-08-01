@@ -136,6 +136,9 @@ public:
             const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
             
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+                if (elemIt->partitionType() != Dune::InteriorEntity)
+                    continue; // ignore ghost and overlap elements
+
                 tmp = 0;
                 this->localResidual().addPhaseStorage(tmp, 
                                                       elemCtx,

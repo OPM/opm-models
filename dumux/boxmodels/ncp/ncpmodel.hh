@@ -158,6 +158,7 @@ public:
     {
         ParentType::init(prob);
         minActivityCoeff_.resize(this->numDofs());
+        std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
     }
 
     /*!
@@ -173,6 +174,9 @@ public:
         ElementIterator elemIt = this->gridView_().template begin<0>();
         const ElementIterator elemEndIt = this->gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            if (elemIt->partitionType() != Dune::InteriorEntity)
+                continue; // ignore ghost and overlap elements
+
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
@@ -264,6 +268,7 @@ public:
                         std::min(minActivityCoeff_[globalIdx][compIdx],
                                  fs.fugacityCoefficient(phaseIdx, compIdx)
                                  * fs.pressure(phaseIdx) );
+                    Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 };
             };
         };
