@@ -81,7 +81,6 @@ public:
         endTime_ = -1e100;
 
         timeStepSize_ = 1.0;
-        previousTimeStepSize_ = timeStepSize_;
         timeStepIdx_ = 0;
         finished_ = false;
 
@@ -109,7 +108,6 @@ public:
         problem_ = &problem;
         time_ = tStart;
         timeStepSize_ = dtInitial;
-        previousTimeStepSize_ = dtInitial;
         endTime_ = tEnd;
 
         if (verbose_)
@@ -194,18 +192,21 @@ public:
      */
     void setTimeStepSize(Scalar dt)
     { 
-        Scalar dtMax = std::max(1e-5, maxTimeStepSize());
-        dt = std::max(1e-5, dt);
-        timeStepSize_ = std::min(dt, dtMax);
+        timeStepSize_ = dt;
     }
 
     /*!
-     * \brief Returns the suggested time step length \f$\mathrm{[s]}\f$ so that we
+     * \brief Returns the time step length \f$\mathrm{[s]}\f$ so that we
      *        don't miss the beginning of the next episode or cross
      *        the end of the simlation.
      */
     Scalar timeStepSize() const
-    { return timeStepSize_; }
+    { 
+        Scalar dtMax = std::max(1e-9, maxTimeStepSize());
+        Scalar dt = std::max(1e-9, timeStepSize_);
+
+        return std::min(dt, dtMax);;
+    }
 
     /*!
      * \brief Returns number of time steps which have been
@@ -238,7 +239,7 @@ public:
      *        time level is incremented by the current time step size.
      */
     bool willBeFinished() const
-    { return finished_ || time() + timeStepSize() >= endTime(); }
+    { return finished_ || time() + timeStepSize_ >= endTime(); }
 
     /*!
      * \brief Aligns dt to the episode boundary or the end time of the
@@ -326,14 +327,14 @@ public:
      *        current time.
      */
     bool episodeIsOver() const
-    { return time() >= episodeStartTime_ + episodeLength() * (1 - 1e-5); }
+    { return time() >= episodeStartTime_ + episodeLength() * (1 - 1e-8); }
 
     /*!
      * \brief Returns true if the current episode will be finished
      *        after the current time step.
      */
     bool episodeWillBeOver() const
-    { return time() + timeStepSize() >= episodeStartTime_ + episodeLength()*(1 - 1e-5); }
+    { return time() + timeStepSize_ >= episodeStartTime_ + episodeLength()*(1 - 1e-8); }
 
 
     /*!
@@ -411,22 +412,12 @@ public:
             if (episodeIsOver()) {
                 //define what to do at the end of an episode in the problem
                 problem_->episodeEnd();
-
-                //check if a time step size was explicitly defined in problem->episodeEnd()
-                if (dt == timeStepSize())
-                {
-                    // set the initial time step size of a an episode to the last real time step size before the episode
-                    Scalar nextDt = std::max(previousTimeStepSize_, timeStepSize());
-                    previousTimeStepSize_ = nextDt;
-                    setTimeStepSize(nextDt);
-                }
             }
             else
             {
                 // notify the problem that the timestep is done and ask it
                 // for a suggestion for the next timestep size
                 // set the time step size for the next step
-                previousTimeStepSize_ = timeStepSize();
                 setTimeStepSize(problem_->nextTimeStepSize(dt));
             }
         }
@@ -491,7 +482,6 @@ private:
     Scalar endTime_;
 
     Scalar timeStepSize_;
-    Scalar previousTimeStepSize_;
     int timeStepIdx_;
     bool finished_;
     bool verbose_;
