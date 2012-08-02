@@ -35,6 +35,14 @@ got altered or to fix issues with newly supported compilers:
   parallelization. As a result, the fully-implicit models should work
   much better for parallel computations. Also, the parallelization is
   no longer considered experimental.
+- A back end for the parallel algebraic multi-grid linear solver
+  provided by DUNE-ISTL has been added for the fully implicit finite
+  volume models. It is still considered to be slightly experimental,
+  but it can be used by specifying the property
+
+    SET_TYPE_PROP(ProblemTypeTag, LinearSolver, Dumux::BoxParallelAmgSolver<TypeTag>
+
+  in the problem file.
 - All fully-implicit models now use the generic M-phase material laws
   which (in principle) allow to implement capillary pressure and
   relative permeability relations depending on absolute pressure,
