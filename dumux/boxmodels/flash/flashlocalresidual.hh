@@ -76,25 +76,21 @@ public:
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
+                         int scvIdx,
                          int timeIdx,
-                         int phaseIdx)
+                         int phaseIdx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
-
-            const auto &fs = volVars.fluidState();
-
-            // compute storage term of all components within all phases
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
-                int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] +=
-                    fs.molarity(phaseIdx, compIdx)
-                    * fs.saturation(phaseIdx)
-                    * volVars.porosity()
-                    * volVars.extrusionFactor()
-                    * elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume;
-            }
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
+        
+        // compute storage term of all components within all phases
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        {
+            int eqIdx = conti0EqIdx + compIdx;
+            storage[eqIdx] +=
+                fs.molarity(phaseIdx, compIdx)
+                * fs.saturation(phaseIdx)
+                * volVars.porosity();
         }
     }
 
@@ -114,21 +110,9 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
-
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
-                int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] +=
-                    fs.molarity(phaseIdx, compIdx)
-                    * fs.saturation(phaseIdx);
-            }
-        }
-        storage *= volVars.porosity();
+            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
     }
 
     /*!
