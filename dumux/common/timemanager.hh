@@ -418,7 +418,7 @@ public:
                 // notify the problem that the timestep is done and ask it
                 // for a suggestion for the next timestep size
                 // set the time step size for the next step
-                setTimeStepSize(problem_->nextTimeStepSize(dt));
+                setTimeStepSize(problem_->nextTimeStepSize());
             }
         }
         

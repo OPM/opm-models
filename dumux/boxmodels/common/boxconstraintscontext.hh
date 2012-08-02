@@ -29,6 +29,7 @@
 #define DUMUX_BOX_CONSTRAINTS_CONTEXT_HH
 
 #include "boxproperties.hh"
+#include "boxelementcontext.hh"
 
 #include <dune/common/fvector.hh>
 
@@ -63,49 +64,49 @@ public:
     { }
 
     /*!
-     * \brief Return a reference to the problem.
+     * \copydoc Dumux::BoxElementContext::problem()
      */
     const Problem &problem() const
     { return elemCtx_.problem(); }
 
     /*!
-     * \brief Return a reference to the model.
+     * \copydoc Dumux::BoxElementContext::model()
      */
     const Model &model() const
     { return elemCtx_.model(); }
 
     /*!
-     * \brief Return a reference to the grid view.
+     * \copydoc Dumux::BoxElementContext::gridView()
      */
     const GridView &gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
-     * \brief Return the current element.
+     * \copydoc Dumux::BoxElementContext::element()
      */
     const Element &element() const
     { return elemCtx_.element(); }
 
     /*!
-     * \brief Return the number of sub-control volumes of the current element.
+     * \copydoc Dumux::BoxElementContext::numScv()
      */
     int numScv() const
     { return elemCtx_.numScv(); }
 
     /*!
-     * \brief Return the number of sub-control volume faces of the current element.
+     * \copydoc Dumux::BoxElementContext::numScvf()
      */
     int numScvf() const
     { return elemCtx_.numScvf(); }
 
     /*!
-     * \brief Return the global index of a degree of freedom.
+     * \copydoc Dumux::BoxElementContext::globalSpaceIndex
      */
     int globalSpaceIndex(int scvIdx, int timeIdx) const
     { return elemCtx_.globalSpaceIndex(scvIdx, timeIdx); }
 
     /*!
-     * \brief Return the position of a degree of freedom in global coordinates.
+     * \copydoc Dumux::BoxElementContext::pos
      */
     const GlobalPosition pos(int scvIdx, int timeIdx) const
     { return elemCtx_.pos(scvIdx, timeIdx); }

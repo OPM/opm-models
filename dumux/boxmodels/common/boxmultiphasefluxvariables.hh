@@ -76,6 +76,13 @@ class BoxMultiPhaseFluxVariables
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 public:
+    /*!
+     * \brief Update the flux variables for a given sub-control-volume-face.
+     *
+     * \param elemCtx Reference to the current element context.
+     * \param scvfIdx The local index of the sub-control-volume face for which the flux variables should be calculated.
+     * \param timeIdx The index used by the time discretization.
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         insideScvIdx_ = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
@@ -94,6 +101,15 @@ public:
     }
 
 
+    /*!
+     * \brief Update the flux variables for a given boundary face.
+     *
+     * \param context Reference to the current execution context.
+     * \param bfIdx The local index of the boundary face for which the flux variables should be calculated.
+     * \param timeIdx The index used by the time discretization.
+     * \param fs The FluidState on the domain boundary.
+     * \param paramCache The FluidSystem's parameter cache.
+     */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
                         int bfIdx, 
@@ -115,6 +131,8 @@ public:
 
     /*!
      * \brief Return true iff a fluid phase ought is used by the model
+     *
+     * \param phaseIdx The index of the phase in question
      */
     bool usePhase(int phaseIdx)
     { return true; }
@@ -144,9 +162,8 @@ public:
     { return filterVelocity_[phaseIdx]; }
 
     /*!
-     * \brief Return the filter velocity of a fluid phase at the
-     *        face's integration point times the phase normal times
-     *        the face area [1/s]
+     * \brief Return the volume flux of a fluid phase at the
+     *        face's integration point \f$[m^3/s]\f$
      *
      * \param phaseIdx The index of the fluid phase
      */

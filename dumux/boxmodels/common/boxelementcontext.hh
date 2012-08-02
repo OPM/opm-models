@@ -89,10 +89,11 @@ public:
     }
 
     /*!
-     * \brief Construct the volume variables of an element from scratch.
+     * \brief Construct all volume and flux variables of an element
+     *        from scratch.
      *
-     * \param problem The problem which needs to be simulated.
-     * \param element The DUNE Codim<0> entity for which the volume variables ought to be calculated
+     * \param elem The DUNE Codim<0> entity for which the volume
+     *             variables ought to be calculated
      */
     void updateAll(const Element &elem)
     {
@@ -101,6 +102,12 @@ public:
         updateAllScvfVars();
     }
 
+    /*!
+     * \brief Compute the finite volume geometry for an element.
+     *
+     * \param elem The grid element for which the finite volume
+     *             geometry ought to be computed.
+     */
     void updateFVElemGeom(const Element &elem)
     {
         // remember the current element
@@ -114,6 +121,10 @@ public:
         scvfVars_.resize(fvElemGeom_.numEdges);
     }
 
+    /*!
+     * \brief Compute the volume variables of all sub-control volumes
+     *        of the current element for all time indices.
+     */
     void updateAllScvVars()
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
@@ -121,6 +132,13 @@ public:
         scvIdxSaved_ = -1;
     }
 
+    /*!
+     * \brief Compute the volume variables of all sub-control volumes
+     *        of the current element for a single time index.
+     *
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
     void updateScvVars(int timeIdx)
     {
         // update the volume variables for the whole history
@@ -143,6 +161,17 @@ public:
         }
     }
 
+    /*!
+     * \brief Compute the volume variables of a single sub-control
+     *        volume of the current element for a single time index.
+     *
+     * \param priVars The PrimaryVariables which should be used to
+     *                calculate the volume variables.
+     * \param scvIdx The local index in the current element of the
+     *               sub-control volume which should be updated.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
     void updateScvVars(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
     {
         updateSingleScvVars_(priVars, scvIdx, timeIdx);
@@ -154,6 +183,10 @@ public:
         }
     }
 
+    /*!
+     * \brief Compute the flux variables of all sub-control volume
+     *        faces of the current element for all time indices.
+     */
     void updateAllScvfVars()
     {
         scvfVarsEval_ = &scvfVars_;
@@ -165,7 +198,13 @@ public:
         }
     }
 
-
+    /*!
+     * \brief Compute the flux variables of all sub-control volume
+     *        faces of the current element for a single time index.
+     *
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
     void updateScvfVars(int timeIdx)
     {
         scvfVarsEval_ = &scvfVars_;
@@ -215,18 +254,31 @@ public:
 
     /*!
      * \brief Return the current finite element geometry.
+     *
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
     const FVElementGeometry &fvElemGeom(int timeIdx) const
     { return fvElemGeom_; }
 
     /*!
      * \brief Return the position of a local entities in global coordinates
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
     const GlobalPosition &pos(int scvIdx, int timeIdx) const
     { return fvElemGeom_.subContVol[scvIdx].global; }
 
     /*!
      * \brief Return the global spatial index for a sub-control volume
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
     int globalSpaceIndex(int scvIdx, int timeIdx) const
     { return model().vertexMapper().map(element(), scvIdx, dim); }
@@ -278,6 +330,16 @@ public:
     const VolumeVariables &volVars(int scvIdx, int timeIdx) const
     { return scvVars_[scvIdx].volVars[timeIdx]; }
 
+    /*!
+     * \brief Return the hint for a given local index.
+     *
+     * \sa BoxModel::hint(int, int)
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
     const VolumeVariables *hint(int scvIdx, int timeIdx) const
     { return scvVars_[scvIdx].hint[timeIdx]; }
     /*!
@@ -286,13 +348,27 @@ public:
     VolumeVariables &volVars(int scvIdx, int timeIdx)
     { return scvVars_[scvIdx].volVars[timeIdx]; }
 
+    /*!
+     * \brief Return the primary variables for a given local index.
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
     PrimaryVariables &primaryVars(int scvIdx, int timeIdx)
     { return scvVars_[scvIdx].priVars[timeIdx]; }
+    /*!
+     * \copydoc primaryVars()
+     */
     const PrimaryVariables &primaryVars(int scvIdx, int timeIdx) const
     { return scvVars_[scvIdx].priVars[timeIdx]; }
 
     /*!
      * \brief Returns the volume variables at the evaluation point.
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
      */
     void saveScvVars(int scvIdx)
     {
@@ -303,6 +379,9 @@ public:
 
     /*!
      * \brief Restores the volume variables at the evaluation point.
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
      */
     void restoreScvVars(int scvIdx)
     {
@@ -317,9 +396,11 @@ public:
      *
      * \param scvfIdx The local index of the sub-control volume face for
      *               which the flux variables are requested
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
-    const FluxVariables &fluxVars(int scvIdx, int timeIdx) const
-    { return scvfVars_[scvIdx]; }
+    const FluxVariables &fluxVars(int scvfIdx, int timeIdx) const
+    { return scvfVars_[scvfIdx]; }
 
     /*!
      * \brief Return a reference to the flux variables of a
@@ -327,6 +408,8 @@ public:
      *
      * \param scvfIdx The local index of the sub-control volume face for
      *               which the flux variables are requested
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
     const FluxVariables &evalPointFluxVars(int scvfIdx, int timeIdx) const
     {
@@ -338,6 +421,11 @@ public:
     /*!
      * \brief Returns the volume variables for history index 0 at the
      *        evaluation point.
+     *
+     * \param scvIdx The local index of the sub-control-volume index
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
      */
     const VolumeVariables &evalPointVolVars(int scvIdx, int timeIdx) const
     {

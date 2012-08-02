@@ -159,6 +159,23 @@ public:
         asImp_().registerVtkModules_();
     }
 
+    /*!
+     * \brief Return the hint for a entity on the grid at given time.
+     *
+     * The hint is defined as a VolumeVariables object which is
+     * supposed to be "close" to the VolumeVariables of the current
+     * solution. It can be used as a good starting point for
+     * non-linear solvers when having to solve non-linear relations
+     * while updating the VolumeVariable. (This may yield a major
+     * performance boost depending on how the physical models
+     * require.) 
+     *
+     * \attention If no hint is available, this method will return 0.
+     *
+     * \param globalIdx The global space index for the entity where a
+     *                  hint is requested.
+     * \param timeIdx The index used by the time discretization.
+     */
     const VolumeVariables *hint(int globalIdx, int timeIdx) const
     {
         if (!enableHints_() ||
@@ -170,6 +187,15 @@ public:
         return &hints_[timeIdx][globalIdx];
     }
 
+    /*!
+     * \brief Update the hint for a entity on the grid at given time.
+     *
+     * \param hint The VolumeVariables object which ought to serve as
+     *             the hint for a given entity.
+     * \param globalIdx The global space index for the entity where a
+     *                  hint is to be set.
+     * \param timeIdx The index used by the time discretization.
+     */
     void setHint(const VolumeVariables &hint,
                  int globalIdx,
                  int timeIdx) const
@@ -181,6 +207,14 @@ public:
         hintsUsable_[timeIdx][globalIdx] = true;
     }
 
+    /*!
+     * \brief Move the hints for a given time index to the back.
+     *
+     * This method should only be called by the time discretization.
+     *
+     * \param numSlots The number of time step slots for which the
+     *                 hints should be shifted.
+     */
     void shiftHints(int numSlots = 1)
     {
         for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx)
@@ -288,12 +322,14 @@ public:
 
     /*!
      * \brief Reference to the solution at a given history index as a block vector.
+     *
+     * \param timeIdx The index of the solution used by the time discretization.
      */
     const SolutionVector &solution(int timeIdx) const
     { return solution_[timeIdx]; }
 
     /*!
-     * \brief Reference to the solution at a given history index as a block vector.
+     * \copydoc solution(int) const
      */
     SolutionVector &solution(int timeIdx)
     { return solution_[timeIdx]; }
@@ -328,7 +364,7 @@ public:
     { return localJacobian_; }
 
     /*!
-     * \brief Returns the local residual function.
+     * \brief Returns the object to calculate the local residual function.
      */
     LocalResidual &localResidual()
     { return localJacobian().localResidual(); }
@@ -355,7 +391,7 @@ public:
      * \brief Returns the relative weight of an equation
      *
      * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \param eqIdx The index of the equation
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     { return 1.0; }
@@ -368,12 +404,6 @@ public:
      *                  associated vertex
      * \param pv1 The first vector of primary variables
      * \param pv2 The second vector of primary variables
-     *
-     * \todo The vertexIdx argument is pretty hacky. it is required by
-     *       models with pseudo primary variables (i.e. the primary
-     *       variable switching models). the clean solution would be
-     *       to access the pseudo primary variables from the primary
-     *       variables.
      */
     Scalar relativeErrorVertex(int vertexIdx,
                                const PrimaryVariables &pv1,
@@ -635,8 +665,8 @@ public:
      * \brief Update the weights of all primary variables within an
      *        element given the complete set of volume variables
      *
-     * \param element The DUNE codim 0 entity
-     * \param volVars All volume variables for the element
+     * \param elemCtx The execution context for which the primary
+     *                variable weights ought to be updated
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     { }
@@ -771,6 +801,13 @@ protected:
     static bool enableHints_()
     { return GET_PARAM(TypeTag, bool, EnableHints); }
 
+    /*!
+     * \brief Register all VTK output modules which make sense for the model.
+     *
+     * This method is supposed to be overloaded by the actual models,
+     * or else only the primary variables can be written to the result
+     * files.
+     */
     void registerVtkModules_()
     {
         // add the VTK output modules available on all model

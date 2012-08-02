@@ -105,6 +105,9 @@ public:
     /*!
      * \brief Return the result of the eval() call using internal
      *        storage.
+     *
+     * \param scvIdx The index of the sub-control volume index for
+     *               which the local residual is of interest.
      */
     const VectorBlock &residual(int scvIdx) const
     { return internalResidual_[scvIdx]; }
@@ -119,6 +122,9 @@ public:
     /*!
      * \brief Return the storage term calculated using the last call
      *        to eval() using internal storage.
+     *
+     * \param scvIdx The index of the sub-control volume index for
+     *               which the local storage term is of interest.
      */
     const VectorBlock &storageTerm(int scvIdx) const
     { return internalStorageTerm_[scvIdx]; }
@@ -130,6 +136,10 @@ public:
      *
      * The results can be requested afterwards using the residual()
      * and storageTerm() methods.
+     *
+     * \param problem The problem which is to be solved.
+     * \param elem The grid element for which the local
+     *             residual should be calculated.
      */
     void eval(const Problem &problem, const Element &elem)
     {
@@ -145,6 +155,9 @@ public:
      *
      * The results can be requested afterwards using the residual()
      * and storageTerm() methods.
+     *
+     * \param elemCtx The element execution context for which the
+     *                local residual should be calculated.
      */
     void eval(const ElementContext &elemCtx)
     {
@@ -205,6 +218,11 @@ public:
      *
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
+     *
+     * \param elemCtx The element execution context for which the
+     *                local residual should be calculated.
+     * \param timeIdx The index for time discretition for which the
+     *                local storage term ought to be calculated.
      */
     void evalStorage(const ElementContext &elemCtx,
                      int timeIdx)
@@ -223,6 +241,13 @@ public:
      *
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
+     *
+     * \param storage A Dune::BlockVector<EqVector> which stores the local
+     *                storage term.
+     * \param elemCtx The element execution context for which the
+     *                local storage term should be calculated.
+     * \param timeIdx The index for time discretition for which the
+     *                local storage term ought to be calculated.
      */
     void evalStorage(LocalBlockVector &storage,
                      const ElementContext &elemCtx,
@@ -245,6 +270,13 @@ public:
 
     /*!
      * \brief Add the flux term to a local residual.
+     *
+     * \param residual A Dune::BlockVector<EqVector> which stores the local
+     *                residual.
+     * \param elemCtx The element execution context for which the
+     *                local residual should be calculated.
+     * \param timeIdx The index for time discretition for which the
+     *                local residual ought to be calculated.
      */
     void evalFluxes(LocalBlockVector &residual,
                     const ElementContext &elemCtx,
@@ -370,12 +402,13 @@ protected:
         if (!GET_PROP_VALUE(TypeTag, EnableConstraints))
             return;
 
+        const auto &problem = elemCtx.problem();
         Constraints constraints;
         ConstraintsContext constraintsCtx(elemCtx);
         for (int scvIdx = 0; scvIdx < constraintsCtx.numScv(); ++scvIdx) {
             // ask the problem for the constraint values
             constraints.reset();
-            asImp_().computeConstraints_(constraints, constraintsCtx, scvIdx, timeIdx);
+            problem.constraints(constraints, elemCtx, scvIdx, timeIdx);
 
             if (!constraints.isConstraint())
                 continue;
@@ -396,15 +429,6 @@ protected:
             };
         };
     }
-
-    void computeConstraints_(Constraints &values,
-                             const ConstraintsContext &context,
-                             int scvIdx,
-                             int timeIdx) const
-    { 
-        context.problem().constraints(values, context, scvIdx, timeIdx);
-    }
-
 
     /*!
      * \brief Add the change in the storage terms and the source term

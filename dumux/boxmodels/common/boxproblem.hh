@@ -129,9 +129,7 @@ public:
     }
 
     ~BoxProblem()
-    {
-        delete resultWriter_;
-    }
+    { delete resultWriter_; }
 
 
     /*!
@@ -188,12 +186,10 @@ public:
     /*!
      * \brief Evaluate the boundary conditions for a boundary segment.
      *
-     * \param values The dirichlet values for the primary variables
-     * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
-     * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param values Stores the fluxes over the boundary segment.
+     * \param context The object representing the execution context from which this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
      * \param timeIdx The index used for the time discretization
-     *
-     * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
     void boundary(BoundaryRateVector &values,
@@ -204,12 +200,10 @@ public:
     /*!
      * \brief Evaluate the constraints for a control volume.
      *
-     * \param values The dirichlet values for the primary variables
-     * \param context The local context. Only the element() and the fvElemGeom() methods are valid at this point
-     * \param spaceIdx The local index of the entity neighboring the Dirichlet boundary.
+     * \param constraints Stores the values of the primary variables at a given spatial and temporal location.
+     * \param context The object representing the execution context from which this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
      * \param timeIdx The index used for the time discretization
-     *
-     * For this method, the \a values parameter stores primary variables.
      */
     template <class Context>
     void constraints(Constraints &constraints,
@@ -221,9 +215,10 @@ public:
      * \brief Evaluate the source term for all phases within a given
      *        sub-control-volume.
      *
-     * This is the method for the case where the source term is
-     * potentially solution dependent and requires some box method
-     * specific things.
+     * \param rate Stores the values of the volumetric creation/anihilition rates of the conserved quantities.
+     * \param context The object representing the execution context from which this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param timeIdx The index used for the time discretization
      */
     template <class Context>
     void source(RateVector &rate,
@@ -234,8 +229,10 @@ public:
     /*!
      * \brief Evaluate the initial value for a control volume.
      *
-     * For this method, the \a values parameter stores primary
-     * variables.
+     * \param values Stores the primary variables.
+     * \param context The object representing the execution context from which this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param timeIdx The index used for the time discretization
      */
     template <class Context>
     void initial(PrimaryVariables &values,
@@ -251,6 +248,10 @@ public:
      * default is 1.0 which means that 1D problems are actually
      * thought as pipes with a cross section of 1 m^2 and 2D problems
      * are assumed to extend 1 m to the back.
+     *
+     * \param context The object representing the execution context from which this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param timeIdx The index used for the time discretization
      */
     template <class Context>
     Scalar extrusionFactor(const Context &context,
@@ -259,19 +260,6 @@ public:
 
     Scalar extrusionFactor() const
     { return 1.0; }
-
-    /*!
-     * \brief If model coupling is used, this updates the parameters
-     *        required to calculate the coupling fluxes between the
-     *        sub-models.
-     *
-     * By default it does nothing
-     *
-     * \param element The DUNE Codim<0> entity for which the coupling
-     *                parameters should be computed.
-     */
-    void updateCouplingParams(const Element &element) const
-    {}
 
     /*!
      * \name Simulation steering
@@ -350,20 +338,18 @@ public:
      * \brief Called by Dumux::TimeManager whenever a solution for a
      *        time step has been computed and the simulation time has
      *        been updated.
-     *
-     * \param dt The current time-step size
      */
-    Scalar nextTimeStepSize(Scalar dt)
+    Scalar nextTimeStepSize()
     {
         return std::min(GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
-                        newtonCtl_.suggestTimeStepSize(dt));
+                        newtonCtl_.suggestTimeStepSize(timeManager().timeStepSize()));
     }
 
     /*!
      * \brief Returns true if a restart file should be written to
      *        disk.
      *
-     * The default behavior is to write one restart file every 5 time
+     * The default behavior is to write one restart file every 10 time
      * steps. This file is intended to be overwritten by the
      * implementation.
      */
@@ -397,9 +383,7 @@ public:
      *        model should be prepared to do the next time integration.
      */
     void advanceTimeLevel()
-    {
-        model_.advanceTimeLevel();
-    }
+    { model_.advanceTimeLevel(); }
 
     /*!
      * \brief Called when the end of an simulation episode is reached.
@@ -422,9 +406,7 @@ public:
      * declared over the setName() function in the application file.
      */
     const char *name() const
-    {
-        return simName_.c_str();
-    }
+    { return simName_.c_str(); }
 
     /*!
      * \brief Set the problem name.
@@ -436,19 +418,7 @@ public:
      * \param newName The problem's name
      */
     void setName(const char *newName)
-    {
-        simName_ = newName;
-    }
-
-
-    /*!
-     * \brief Returns the number of the current VTK file.
-     */
-    int currentVTKFileNumber()
-    {
-        createResultWriter_();
-        return resultWriter_->curWriterNum();
-    }
+    { simName_ = newName; }
 
     /*!
      * \brief The GridView which used by the problem.
@@ -597,14 +567,10 @@ public:
     // \}
 
     /*!
-     * \brief Adds additional VTK output data to the VTKWriter. Function is called by writeOutput().
-     */
-    void addOutputVtkFields()
-    {}
-
-    /*!
      * \brief Write the relevant secondary variables of the current
      *        solution into an VTK output file.
+     *
+     * \param verbose If true, then a message will be printed to stdout if a file is written
      */
     void writeOutput(bool verbose = true)
     {
@@ -618,7 +584,6 @@ public:
             createResultWriter_();
             resultWriter_->beginWrite(t);
             model().addOutputVtkFields(model().solution(/*timeIdx=*/0), *resultWriter_);
-            asImp_().addOutputVtkFields();
             resultWriter_->endWrite();
         }
     }
@@ -634,12 +599,6 @@ protected:
 
     //! Returns the applied VTK-writer for the output
     VtkMultiWriter& resultWriter()
-    {
-        createResultWriter_();
-        return *resultWriter_;
-    }
-    //! \copydoc Dumux::IMPETProblem::resultWriter()
-    VtkMultiWriter& resultWriter() const
     {
         createResultWriter_();
         return *resultWriter_;

@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2009 by Andreas Lauser                               *
+ *   Copyright (C) 2008-2012 by Andreas Lauser                               *
  *   Copyright (C) 2007-2009 by Bernd Flemisch                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
@@ -111,12 +111,12 @@ private:
 public:
     BoxLocalJacobian()
     {
-        internalElemVars_ = 0;
+        internalElemContext_ = 0;
     }
 
     ~BoxLocalJacobian()
     {
-        delete internalElemVars_;
+        delete internalElemContext_;
     }
 
     /*!
@@ -131,20 +131,24 @@ public:
     {
         problemPtr_ = &prob;
         modelPtr_ = &prob.model();
-        internalElemVars_ = new ElementContext(prob);
+        internalElemContext_ = new ElementContext(prob);
     }
 
     /*!
      * \brief Assemble an element's local Jacobian matrix of the
      *        defect.
      *
-     * This assembles the 'grad f(x^k)' and 'f(x^k)' part of the newton update
+     * This assembles the 'grad f(x^k)' and 'f(x^k)' part of the
+     * newton update for a single element.
+     *
+     * \param element The grid element for which the local residual
+     *                and its gradient should be calculated.
      */
     void assemble(const Element &element)
     {
-        internalElemVars_->updateAll(element);
+        internalElemContext_->updateAll(element);
 
-        assemble(*internalElemVars_);
+        assemble(*internalElemContext_);
     }
 
     /*!
@@ -153,6 +157,10 @@ public:
      *
      * After calling this method the ElementContext are in undefined
      * state, so do not use it anymore!
+     *
+     * \param elemCtx The element execution context for which the
+     *                local residual and its gradient should be
+     *                calculated.
      */
     void assemble(ElementContext &elemCtx)
     {
@@ -202,6 +210,9 @@ public:
      * \brief Returns the epsilon value which is added and removed
      *        from the current solution.
      *
+     * \param elemCtx The element execution context for which the
+     *                local residual and its gradient should be
+     *                calculated.
      * \param scvIdx     The local index of the element's vertex for
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
@@ -351,9 +362,8 @@ protected:
      * is the value of a sub-control volume's primary variable at the
      * evaluation point and \f$\epsilon\f$ is a small value larger than 0.
      *
-     * \param dest The vector storing the partial derivatives of all
-     *              equations
-     * \param destStorage the mass matrix contributions
+     * \param elemCtx The element context for which the local partial
+     *                derivative ought to be calculated
      * \param scvIdx The sub-control volume index of the current
      *               finite element for which the partial derivative
      *               ought to be calculated
@@ -466,7 +476,7 @@ protected:
     Problem *problemPtr_;
     Model *modelPtr_;
 
-    ElementContext *internalElemVars_;
+    ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;
     LocalStorageMatrix jacobianStorage_;

@@ -29,6 +29,7 @@
 #define DUMUX_BOX_BOUNDARY_CONTEXT_HH
 
 #include "boxproperties.hh"
+#include "boxelementcontext.hh"
 
 #include <dune/common/fvector.hh>
 
@@ -67,65 +68,70 @@ public:
     explicit BoxBoundaryContext(const ElementContext &elemCtx)
         : elemCtx_(elemCtx)
         , intersectionIt_(gridView().ibegin(element()))
-    {
-    }
+    { }
 
     /*!
-     * \brief Return a reference to the problem.
+     * \copydoc Dumux::BoxElementContext::problem()
      */
     const Problem &problem() const
     { return elemCtx_.problem(); }
 
     /*!
-     * \brief Return a reference to the model.
+     * \copydoc Dumux::BoxElementContext::model()
      */
     const Model &model() const
     { return elemCtx_.model(); }
 
     /*!
-     * \brief Return a reference to the grid view.
+     * \copydoc Dumux::BoxElementContext::gridView()
      */
     const GridView &gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
-     * \brief Return the current element.
+     * \copydoc Dumux::BoxElementContext::element()
      */
     const Element &element() const
     { return elemCtx_.element(); }
 
     /*!
-     * \brief Returns a reference to the element variables.
+     * \brief Returns a reference to the element context object.
      */
     const ElementContext &elemContext() const
     { return elemCtx_; }
 
     /*!
-     * \brief Return the number of sub-control volumes of the current element.
+     * \copydoc Dumux::BoxElementContext::numScv()
      */
     int numScv() const
     { return elemCtx_.numScv(); }
 
     /*!
-     * \brief Return the number of sub-control volume faces of the current element.
+     * \copydoc Dumux::BoxElementContext::numScvf()
      */
     int numScvf() const
     { return elemCtx_.numScvf(); }
 
     /*!
-     * \brief Return the current finite element geometry.
+     * \copydoc Dumux::BoxElementContext::fvElemGeom()
      */
     const FVElementGeometry &fvElemGeom(int timeIdx) const
     { return elemCtx_.fvElemGeom(timeIdx); }
 
     /*!
-     * \brief Return the position of a local entity in global coordinates
+     * \brief Return the position of a local entity in global coordinates.
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
     { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
 
     /*!
      * \brief Return the position of a control volume's center in global coordinates.
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     const GlobalPosition &cvCenter(int boundaryFaceIdx, int timeIdx) const
     { return fvElemGeom(timeIdx).subContVol[insideScvIndex(boundaryFaceIdx, timeIdx)].global; }
@@ -133,6 +139,9 @@ public:
     /*!
      * \brief Return the local sub-control volume index of the
      *        interior of a boundary segment
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     short insideScvIndex(int boundaryFaceIdx, int timeIdx) const
     { return fvElemGeom(timeIdx).subContVolIndex(boundaryFaceIdx); }
@@ -140,6 +149,9 @@ public:
     /*!
      * \brief Return the global space index of the sub-control volume
      *        at the interior of a boundary segment
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     int globalSpaceIndex(int boundaryFaceIdx, int timeIdx) const
     { return elemCtx_.globalSpaceIndex(insideScvIndex(boundaryFaceIdx, timeIdx), timeIdx); }
@@ -147,6 +159,9 @@ public:
     /*!
      * \brief Return the volume variables for the finite volume in the
      *        interiour of a boundary segment
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     const VolumeVariables &volVars(int boundaryFaceIdx, int timeIdx) const
     {
@@ -156,6 +171,9 @@ public:
 
     /*!
      * \brief Return the flux variables for a given boundary face.
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
      */
     const FluxVariables &fluxVars(int boundaryFaceIdx, int timeIdx) const
     { return elemCtx_.boundaryFluxVars(boundaryFaceIdx, timeIdx); }
@@ -166,6 +184,8 @@ public:
      * TODO/HACK: The intersection should take a local index as an
      * argument. since that's not supported efficiently by the DUNE
      * grid interface, we just ignore the index argument here!
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
      */
     const Intersection &intersection(int boundaryFaceIdx) const
     { return *intersectionIt_; }

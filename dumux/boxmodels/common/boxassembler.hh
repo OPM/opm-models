@@ -284,6 +284,9 @@ public:
      *        will be linerized the next time.
      *
      * This only has an effect if partial reassemble is enabled.
+     *
+     * \param u The iterative solution of the last iteration of the Newton method
+     * \param uDelta The negative difference between the last and the next iterative solution.
      */
     void updateDiscrepancy(const SolutionVector &u,
                            const GlobalEqVector &uDelta)

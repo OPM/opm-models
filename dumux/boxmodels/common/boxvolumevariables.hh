@@ -47,9 +47,7 @@ template <class TypeTag>
 class BoxVolumeVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
@@ -79,6 +77,8 @@ public:
      * \brief Sets the evaluation point used by the local jacobian.
      *
      * The evaluation point is only used by semi-smooth models.
+     *
+     * \param ep A pointer to the VolumeVariables object of the evaluation point
      */
     void setEvalPoint(const Implementation *ep)
     {
@@ -96,6 +96,12 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
+     *
+     * \param elemCtx The execution context from which the method is called.
+     * \param scvIdx The index of the sub-control volume for which the
+     *               volume variables should be calculated.
+     * \param timeIdx The index for the time discretization for which
+     *                the volume variables should be calculated
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -106,6 +112,12 @@ public:
 
     /*!
      * \brief Update all gradients for a given control volume.
+     *
+     * \param elemCtx The execution context from which the method is called.
+     * \param scvIdx The index of the sub-control volume for which the
+     *               volume variables should be calculated.
+     * \param timeIdx The index for the time discretization for which
+     *                the volume variables should be calculated
      */
     void updateScvGradients(const ElementContext &elemCtx,
                             int scvIdx,

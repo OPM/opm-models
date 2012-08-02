@@ -97,12 +97,11 @@ public:
     // \{
 
     /*!
-     * \brief Returns the intrinsic permeability tensor [m^2] at a given position
+     * \brief Returns the intrinsic permeability tensor \f$[m^2]\f$ at a given position
      * 
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -117,10 +116,9 @@ public:
      * \brief Returns the porosity [] of the porous medium for a given
      *        control volume.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -135,10 +133,9 @@ public:
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
      *        with no pores in the sub-control volume.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -153,10 +150,9 @@ public:
      * \brief Returns the parameter object for the heat conductivity law in
      *        a sub-control volume.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -168,12 +164,11 @@ public:
     }
 
     /*!
-     * \brief Define the tortuosity \f$[?]\f$.
+     * \brief Define the tortuosity.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -184,12 +179,11 @@ public:
     }
 
     /*!
-     * \brief Define the dispersivity \f$[?]\f$.
+     * \brief Define the dispersivity.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -208,12 +202,11 @@ public:
      * Dumux::NullMaterialLaw. In this case, you have to overload the
      * matererialLaw() method in the derived class!
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
-     */     
+     */
     template <class Context>
     const MaterialLawParams & 
     materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
@@ -225,10 +218,9 @@ public:
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
      *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
@@ -249,16 +241,15 @@ public:
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *
-     * \param context Container for the volume variables, element,
-     *                fvElementGeometry, etc
-     * \param spaceIdx The local index of the sub control volume inside
-     *                 the element
+     *   
+     * \param context Reference to the object which represents the
+     *                current execution context.
+     * \param spaceIdx The local index of spatial entity defined by the context
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
     const DimVector &gravity(const Context &context,
-                          int spaceIdx, int timeIdx) const
+                             int spaceIdx, int timeIdx) const
     { return asImp_().gravity(); }
 
     /*!
@@ -276,9 +267,15 @@ public:
     // \}
 
 protected:
-    const DimMatrix &toDimMatrix_(const DimMatrix &val) const
-    { return val; }
-
+    /*!
+     * \brief Converts a Scalar value to an isotropic Tensor
+     *
+     * This is convenient e.g. for specifying intrinsic permebilities:
+\code{.cpp}
+auto permTensor = this->toDimMatrix_(1e-12);
+\endcode
+     * \param val The scalar value which should be expressed as a tensor
+     */
     DimMatrix toDimMatrix_(Scalar val) const
     {
         DimMatrix ret(0.0);

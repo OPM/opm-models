@@ -138,7 +138,8 @@ public:
      * The relative error can be seen as a norm of the difference
      * between the current and the next iteration.
      *
-     * \param uLastIter The current iterative solution
+     * \param uCurrentIter The current iterative solution
+     * \param uLastIter The solution of the last iteration
      * \param deltaU The difference between the current and the next solution
      */
     void newtonUpdateRelError(const SolutionVector &uCurrentIter,
@@ -168,6 +169,10 @@ public:
     /*!
      * \brief Update the absolute error of the solution compared to
      *        the previous iteration.
+     *
+     * \param uCurrentIter The current iterative solution
+     * \param uLastIter The solution of the last iteration
+     * \param deltaU The difference between the current and the next solution
      */
     void newtonUpdateAbsError(const SolutionVector &uCurrentIter,
                               const SolutionVector &uLastIter,
@@ -273,6 +278,9 @@ protected:
     const Model &model_() const
     { return this->method_->problem().model(); }
 
+    /*!
+     * \brief Update the absolute error for a given solution.
+     */
     void newtonUpdateAbsError_(const SolutionVector &uCurrentIter,
                                const SolutionVector &uLastIter,
                                const GlobalEqVector &deltaU)
@@ -281,6 +289,9 @@ protected:
         this->absoluteError_ = this->problem().model().globalResidual(tmp, uCurrentIter);
     }
 
+    /*!
+     * \brief Update using the line search algorithm.
+     */
     void lineSearchUpdate_(SolutionVector &uCurrentIter,
                            const SolutionVector &uLastIter,
                            const GlobalEqVector &deltaU)

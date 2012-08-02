@@ -457,7 +457,7 @@ public:
      *        timestep has been computed and the simulation time has
      *        been updated.
      */
-    Scalar nextTimeStepSize(const Scalar dt)
+    Scalar nextTimeStepSize()
     { return timeManager().timeStepSize();}
 
     /*!

@@ -71,12 +71,20 @@ public:
     ~BoxNewtonConvergenceWriter()
     { delete vtkMultiWriter_; }
 
+    /*!
+     * \brief Called by the Newton method before the actual algorithm
+     *        is started for any given timestep.
+     */
     void beginTimestep()
     {
         ++timeStepIdx_;
         iteration_ = 0;
     }
 
+    /*!
+     * \brief Called by the Newton method before an iteration of the
+     *        Newton algorithm is started.
+     */
     void beginIteration()
     {
         ++ iteration_;
@@ -85,19 +93,37 @@ public:
         vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
     }
 
+    /*!
+     * \brief Write the Newton update to disk.
+     *
+     * Called after the linear solution is found for an iteration.
+     *
+     * \param uLastIter The solution vector of the previous iteration.
+     * \param deltaU The negative difference between the solution
+     *        vectors of the previous and the current iteration.
+     */
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
     {
         ctl_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
     }
 
+    /*!
+     * \brief Called by the Newton method after an iteration of the
+     *        Newton algorithm has been completed.
+     */
     void endIteration()
     { vtkMultiWriter_->endWrite(); }
 
+    /*!
+     * \brief Called by the Newton method after Newton algorithm
+     *        has been completed for any given timestep.
+     *
+     * This method is called regardless of whether the Newton method
+     * converged or not.
+     */
     void endTimestep()
-    {
-        iteration_ = 0;
-    }
+    { iteration_ = 0; }
 
 private:
     int timeStepIdx_;
