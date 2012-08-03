@@ -4,11 +4,11 @@
  * \brief documentation for the doxygen main page
  */
 
-/** \mainpage DuMuX Documentation
+/** \mainpage eWoms Documentation
 
 \section intro Introduction
 
-Welcome to the DuMuX documentation pages. This documentation has been
+Welcome to the eWoms documentation pages. This documentation has been
 generated using Doxygen, a free source code documentation system for
 documenting C/C++ code.
 
