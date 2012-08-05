@@ -91,6 +91,10 @@ NEW_PROP_TAG(NewtonEnableRelativeCriterion);
 //! the value for the relative error below which convergence is declared
 NEW_PROP_TAG(NewtonRelTolerance);
 
+//! the maximum relative error which may occur in a simulation before
+//! the newton method is aborted
+NEW_PROP_TAG(NewtonMaxRelError);
+
 //! indicate whether the absolute error should be used
 NEW_PROP_TAG(NewtonEnableAbsoluteCriterion);
 
@@ -120,9 +124,9 @@ SET_BOOL_PROP(NewtonMethod, NewtonEnableAbsoluteCriterion, false);
 SET_BOOL_PROP(NewtonMethod, NewtonSatisfyAbsAndRel, false);
 SET_SCALAR_PROP(NewtonMethod, NewtonRelTolerance, 1e-8);
 SET_SCALAR_PROP(NewtonMethod, NewtonAbsTolerance, 1e-5);
+SET_SCALAR_PROP(NewtonMethod, NewtonMaxRelError, 1e100); // effectively disabled if not overwritten at run-time
 SET_INT_PROP(NewtonMethod, NewtonTargetSteps, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxSteps, 18);
-
 }
 
 /*!

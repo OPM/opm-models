@@ -164,6 +164,12 @@ public:
         }
 
         this->error_ = this->comm_.max(this->error_);
+        
+        Scalar maxError = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, MaxRelError);
+        if (this->error_ > maxError)
+            DUNE_THROW(NumericalProblem, 
+                       "Newton: Relative error " << this->error_ 
+                       << " is larger than maximum allowed error of " << maxError);
     }
 
     /*!
