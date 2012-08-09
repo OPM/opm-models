@@ -32,6 +32,7 @@
 #define DUMUX_FLASH_FLUX_VARIABLES_HH
 
 #include "flashproperties.hh"
+#include "energy/flashenergymodule.hh"
 
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
@@ -49,7 +50,9 @@ namespace Dumux {
  * the integration point, etc.
  */
 template <class TypeTag>
-class FlashFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
+class FlashFluxVariables
+    : public BoxMultiPhaseFluxVariables<TypeTag>
+    , public FlashEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 

@@ -6,10 +6,14 @@ check_PROGRAMS = \
 cuvette_pvs \
 groundwater_immiscible \
 infiltration_pvs \
+injection_immisicble \
 injection_flash \
-injection_immisicble_ni \
 injection_ncp \
 injection_pvs \
+injection_immisicble_ni \
+injection_flash_ni \
+injection_ncp_ni \
+injection_pvs_ni \
 lens_immiscible \
 lens_richards \
 obstacle_ncp \
@@ -22,10 +26,14 @@ waterair_pvs_ni
 cuvette_pvs_SOURCES=cuvette_pvs.cc
 groundwater_immiscible_SOURCES=groundwater_immiscible.cc 
 infiltration_pvs_SOURCES=infiltration_pvs.cc
+injection_immisicble_SOURCES=injection_immisicble.cc
 injection_flash_SOURCES=injection_flash.cc
-injection_immisicble_ni_SOURCES=injection_immisicble_ni.cc
 injection_ncp_SOURCES=injection_ncp.cc
 injection_pvs_SOURCES=injection_pvs.cc
+injection_immisicble_ni_SOURCES=injection_immisicble_ni.cc
+injection_flash_ni_SOURCES=injection_flash_ni.cc
+injection_ncp_ni_SOURCES=injection_ncp_ni.cc
+injection_pvs_ni_SOURCES=injection_pvs_ni.cc
 lens_immiscible_SOURCES=lens_immiscible.cc
 lens_richards_SOURCES=lens_richards.cc
 obstacle_ncp_SOURCES=obstacle_ncp.cc

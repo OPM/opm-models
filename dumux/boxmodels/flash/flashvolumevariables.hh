@@ -30,6 +30,7 @@
 
 #include "flashproperties.hh"
 #include "flashindices.hh"
+#include "energy/flashenergymodule.hh"
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
@@ -49,7 +50,9 @@ namespace Dumux
  *        finite volume for the flash-based compositional model.
  */
 template <class TypeTag>
-class FlashVolumeVariables : public BoxVolumeVariables<TypeTag>
+class FlashVolumeVariables
+    : public BoxVolumeVariables<TypeTag>
+    , public FlashEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -60,15 +63,18 @@ class FlashVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-
+    typedef FlashEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyVolumeVariables;
     // primary variable indices
     enum { cTot0Idx = Indices::cTot0Idx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dumux::NcpFlash<Scalar, FluidSystem> Flash;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
@@ -88,7 +94,7 @@ public:
                            scvIdx,
                            timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -125,20 +131,7 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // energy related quantities
-        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
-
-#if 0
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // binary diffusion coefficents
-            diffCoeff_[phaseIdx] =
-                FluidSystem::binaryDiffusionCoefficient(fluidState_,
-                                                        paramCache,
-                                                        phaseIdx,
-                                                        /*compIdx=*/0,
-                                                        /*compIdx=*/1);
-            Valgrind::CheckDefined(diffCoeff_[phaseIdx]);
-        }
-#endif
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
@@ -183,50 +176,8 @@ public:
     Scalar diffCoeff(int phaseIdx) const
     { return diffCoeff_[phaseIdx]; }
 #endif // 0
-
-    /*!
-     * \brief Given a fluid state, set the temperature in the primary variables
-     */
-    template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    {}                                    
-    
-    /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
-     */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    { }
-
-    /*!
-     * \brief Given a fluid state, set the enthalpy rate which emerges
-     *        from a volumetric rate.
-     */
-    template <class FluidState>
-    static void setEnthalpyRate(RateVector &v,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
-                                Scalar volume)
-    { }
-    
+  
 protected:
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx,
-                            int timeIdx)
-    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
-
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(typename FluidSystem::ParameterCache &paramCache,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx)
-    {
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            fluidState_.setEnthalpy(phaseIdx, 0);
-        }
-    }
-
     Scalar porosity_;        //!< Effective porosity within the control volume
     Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume
     //Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases

@@ -31,6 +31,7 @@
 
 #include "flashproperties.hh"
 #include "flashlocalresidual.hh"
+#include "energy/flashenergymodule.hh"
 
 #include <iostream>
 #include <sstream>
@@ -66,9 +67,13 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+
+    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -92,6 +97,10 @@ public:
      */
     std::string primaryVarName(int pvIdx) const
     { 
+        const std::string &tmp = EnergyModule::primaryVarName(pvIdx);
+        if (tmp != "")
+            return tmp;
+
         std::ostringstream oss;
         if (Indices::cTot0Idx <= pvIdx && pvIdx < Indices::cTot0Idx + numComponents)
             oss << "c_tot," << FluidSystem::componentName(/*compIdx=*/pvIdx - Indices::cTot0Idx);
@@ -106,6 +115,10 @@ public:
      */
     std::string eqName(int eqIdx) const
     { 
+        const std::string &tmp = EnergyModule::eqName(eqIdx);
+        if (tmp != "")
+            return tmp;
+
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents) {
             int compIdx = eqIdx - Indices::conti0EqIdx;
@@ -164,8 +177,11 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        if (tmp > 0)
+            return tmp;
+
         int compIdx = pvIdx - Indices::cTot0Idx;
-        assert(0 <= compIdx && compIdx <= numPhases);
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);
@@ -179,8 +195,11 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
+        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        if (tmp > 0)
+            return tmp;
+
         int compIdx = eqIdx - Indices::conti0EqIdx;
-        assert(0 <= compIdx && compIdx <= numPhases);
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);

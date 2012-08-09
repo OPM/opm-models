@@ -36,6 +36,7 @@
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 
 #include "flashvolumevariables.hh"
+#include "energy/flashenergymodule.hh"
 
 namespace Dumux
 {
@@ -55,7 +56,6 @@ class FlashRateVector
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -63,6 +63,7 @@ class FlashRateVector
 
     typedef FlashRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef FlashEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     /*!

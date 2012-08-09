@@ -55,7 +55,7 @@ class NcpVolumeVariablesEnergy
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    //typedef typename GET_PROP_TYPE(TypeTag, Indices) EnergyIndices;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -91,7 +91,35 @@ public:
         // the phase temperatures where already set by the base volume
         // variables!
     }
+    
+    /*!
+     * \brief Returns the name of a primary variable or an empty
+     *        string if the specified primary variable index does not belong to
+     *        the energy module.
+     */
+    static std::string primaryVarName(int pvIdx)
+    { return ""; };
 
+    /*!
+     * \brief Returns the name of an equation or an empty
+     *        string if the specified equation index does not belong to
+     *        the energy module.
+     */
+    static std::string eqName(int eqIdx)
+    { return ""; };
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     */
+    static Scalar primaryVarWeight(const Model &model, int globalVertexIdx, int pvIdx)
+    { return -1; }
+
+    /*!
+     * \brief Returns the relative weight of a equation.
+     */
+    static Scalar eqWeight(const Model &model, int globalVertexIdx, int eqIdx)
+    { return -1; }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables
@@ -104,8 +132,7 @@ public:
      * \brief Set the enthalpy rate per second of a rate vector, .
      */
     static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    {
-    }
+    { }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
@@ -131,22 +158,6 @@ public:
                                      int phaseIdx,
                                      Scalar density)
     { }
-
-    /*!
-     * \brief Given an primary variable index, return a human readable name.
-     */
-    static std::string primaryVarName(int pvIdx)
-    {
-        return "";
-    }
-
-    /*!
-     * \brief Given an equation index, return a human readable name.
-     */
-    static std::string eqName(int eqIdx)
-    {
-        return "";
-    }
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
@@ -186,12 +197,14 @@ class NcpVolumeVariablesEnergy<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -247,6 +260,93 @@ public:
         }
     }
 
+    /*!
+     * \brief Compute the total storage inside one phase of all
+     *        conservation quantities.
+     */
+    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    {
+        dest = 0;
+        EqVector tmp;
+
+        ElementContext elemCtx(this->problem_());
+        auto elemIt = this->gridView_().template begin<0>();
+        const auto &elemEndIt = this->gridView_().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            elemCtx.updateFVElemGeom(*elemIt);
+            elemCtx.updateScvVars(/*timeIdx=*/0);
+
+            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+                if (elemIt->partitionType() != Dune::InteriorEntity)
+                    continue; // ignore ghost and overlap elements
+
+                tmp = 0;
+                this->localResidual().addPhaseStorage(tmp, 
+                                                      elemCtx,
+                                                      scvIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *= 
+                    fvElemGeom.subContVol[scvIdx].volume
+                    * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                dest += tmp;
+            }
+        };
+
+        dest = this->gridView_().comm().sum(dest);
+    }
+
+
+    /*!
+     * \brief Returns the name of a primary variable or an empty
+     *        string if the specified primary variable index does not belong to
+     *        the energy module.
+     */
+    static std::string primaryVarName(int pvIdx)
+    { 
+        if (pvIdx == temperatureIdx)
+            return "temperature";
+        return "";
+    };
+
+    /*!
+     * \brief Returns the name of an equation or an empty
+     *        string if the specified equation index does not belong to
+     *        the energy module.
+     */
+    static std::string eqName(int eqIdx)
+    { 
+        if (eqIdx == energyEqIdx)
+            return "energy";
+        return "";
+    };
+
+    /*!
+     * \brief Returns the relative weight of a primary variable for
+     *        calculating relative errors.
+     */
+    static Scalar primaryVarWeight(const Model &model, int globalVertexIdx, int pvIdx)
+    {
+        if (pvIdx != temperatureIdx)
+            return -1;
+
+        // make the weight of the temperature primary variable inversly proportional to its value
+        return std::max(1.0/1000, 1.0/model.solution(/*timeIdx=*/0)[globalVertexIdx][temperatureIdx]);
+    }
+
+    /*!
+     * \brief Returns the relative weight of a equation.
+     */
+    static Scalar eqWeight(const Model &model, int globalVertexIdx, int eqIdx)
+    {
+        if (eqIdx != energyEqIdx)
+            return -1;
+
+        // approximate heat capacity of 1kg of air
+        return 1.0/1.0035e3;
+    }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables
@@ -302,26 +402,6 @@ public:
             fluxVars.volumeFlux(phaseIdx)
             * enthalpy
             * density;
-    }
-
-    /*!
-     * \brief Given an primary variable index, return a human readable name.
-     */
-    static std::string primaryVarName(int pvIdx)
-    {
-        if (pvIdx == Indices::temperatureIdx)
-            return "temperature";
-        return "";
-    }
-
-    /*!
-     * \brief Given an equation index, return a human readable name.
-     */
-    static std::string eqName(int eqIdx)
-    {
-        if (eqIdx == Indices::energyEqIdx)
-            return "energy";
-        return "";
     }
 
     /*!

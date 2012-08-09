@@ -36,6 +36,7 @@
 #include "flashproperties.hh"
 #include "flashvolumevariables.hh"
 #include "flashfluxvariables.hh"
+#include "energy/flashenergymodule.hh"
 
 namespace Dumux
 {
@@ -61,11 +62,13 @@ protected:
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
 
+        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -92,6 +95,8 @@ public:
                 * fs.saturation(phaseIdx)
                 * volVars.porosity();
         }
+
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
     }
 
     /*!
@@ -113,6 +118,8 @@ public:
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
@@ -125,10 +132,10 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        asImp_().computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
-        asImp_().computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
@@ -172,7 +179,8 @@ public:
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
         }
-
+        
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -204,6 +212,8 @@ public:
             flux[conti0EqIdx + (1 - compIdx)] -= tmp;
         }
 #endif
+
+        EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!

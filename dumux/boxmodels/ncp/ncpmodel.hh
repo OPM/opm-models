@@ -283,14 +283,28 @@ public:
      */
     Scalar primaryVarWeight(int vertIdx, int pvIdx) const
     {
-        if (fugacity00Idx <= pvIdx && pvIdx < fugacity00Idx + numComponents) {
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, vertIdx, pvIdx);
+        if (tmp > 0)
+            // energy related quantity
+            return tmp;
+        else if (fugacity00Idx <= pvIdx && pvIdx < fugacity00Idx + numComponents) {
+            // component fugacity in first phase
             int compIdx = pvIdx - fugacity00Idx;
+            assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[vertIdx][compIdx]);
             return 1.0 / minActivityCoeff_[vertIdx][compIdx];
         }
+        else if (pvIdx == pressure0Idx) {
+            // first phase pressure
+            return 1.0 / this->solution(/*timeIdx=*/0)[vertIdx][pressure0Idx];
+        }
 
-        return ParentType::primaryVarWeight(vertIdx, pvIdx);
+        DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
+        assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
+
+        // saturation
+        return 1.0;
     }
 
     /*!
@@ -301,12 +315,17 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
-        if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases) {
+        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        if (tmp > 0)
+            // energy related equation
+            return tmp;
+        // an NCP
+        else if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
             return 1.0;
-        }
-
+        
+        // mass conservation equation
         int compIdx = eqIdx - Indices::conti0EqIdx;
-        assert(0 <= compIdx && compIdx <= numPhases);
+        assert(0 <= compIdx && compIdx <= numComponents);
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);

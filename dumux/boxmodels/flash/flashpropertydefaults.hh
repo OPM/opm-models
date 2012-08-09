@@ -67,7 +67,7 @@ SET_INT_PROP(BoxFlash, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases
  */
 SET_INT_PROP(BoxFlash, 
              NumEq,
-             GET_PROP_VALUE(TypeTag, NumComponents));
+             GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
@@ -122,7 +122,10 @@ SET_TYPE_PROP(BoxFlash, VolumeVariables, FlashVolumeVariables<TypeTag>);
 SET_TYPE_PROP(BoxFlash, FluxVariables, FlashFluxVariables<TypeTag>);
 
 //! The indices required by the flash-baseed isothermal compositional model
-SET_TYPE_PROP(BoxFlash, Indices, FlashIndices</*PVIdx=*/0>);
+SET_TYPE_PROP(BoxFlash, Indices, FlashIndices<TypeTag, /*PVIdx=*/0>);
+
+// use an isothermal model by default
+SET_BOOL_PROP(BoxFlash, EnableEnergy, false);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxFlash, EnableSmoothUpwinding, false);
