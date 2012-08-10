@@ -81,7 +81,7 @@ class FlashVolumeVariables
     
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> FluidState;
+    typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
 
     /*!
      * \brief Update all quantities for a given control volume.
@@ -106,8 +106,14 @@ public:
         
         typename FluidSystem::ParameterCache paramCache;
         const Implementation *hint = elemCtx.hint(scvIdx, timeIdx);
-        if (hint)
+        if (hint) {
+            // use the same fluid state as the one of the hint, but
+            // make sure that we don't overwrite the temperature
+            // specified by the primary variables
+            Scalar T = fluidState_.temperature(/*phaseIdx=*/0);
             fluidState_.assign(hint->fluidState());
+            fluidState_.setTemperature(T);
+        }
         else
             Flash::guessInitial(fluidState_, paramCache, cTotal);
         

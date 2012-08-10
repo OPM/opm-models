@@ -28,6 +28,7 @@
 #define DUMUX_BOX_FLASH_BOUNDARY_RATE_VECTOR_HH
 
 #include "flashproperties.hh"
+#include "energy/flashenergymodule.hh"
 
 #include <dumux/common/valgrind.hh>
 
@@ -55,7 +56,10 @@ class FlashBoundaryRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+
+    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -131,7 +135,7 @@ public:
                     * molarity;
             }
             
-            asImp_().enthalpyFlux_(fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);
+            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
         }
 
 #ifndef NDEBUG
@@ -188,16 +192,6 @@ public:
 protected:
     Implementation &asImp_() 
     { return *static_cast<Implementation *>(this); }
-
-    template <class FluidState>
-    void enthalpyFlux_(const FluxVariables &fluxVars,
-                       const VolumeVariables &insideVolVars,
-                       const FluidState &fs,
-                       const typename FluidSystem::ParameterCache &paramCache,
-                       int phaseIdx,
-                       Scalar density)
-    { }
-
 };
 
 } // end namepace

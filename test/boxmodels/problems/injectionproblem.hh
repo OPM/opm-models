@@ -423,6 +423,7 @@ public:
         if (onLeftBoundary_(pos)) {
             Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
+            fs.checkDefined();
 
             // impose an freeflow boundary condition
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
@@ -522,7 +523,7 @@ private:
 
         typename FluidSystem::ParameterCache paramCache;
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
-        CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/false,  /*setEnthalpy=*/true);
+        CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/true,  /*setEnthalpy=*/true);
     }
 
     bool onLeftBoundary_(const GlobalPosition &pos) const
@@ -547,6 +548,7 @@ private:
 
         params.setFullySaturatedLambda(gPhaseIdx, lambdaDry);
         params.setFullySaturatedLambda(lPhaseIdx, lambdaWet);
+        params.setVacuumLambda(lambdaDry);
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const

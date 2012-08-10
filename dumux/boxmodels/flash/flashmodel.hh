@@ -183,8 +183,10 @@ public:
 
         int compIdx = pvIdx - Indices::cTot0Idx;
 
-        // make all kg equal
-        return FluidSystem::molarMass(compIdx);
+        // make all kg equal. also, divide the weight of all primary
+        // variables by 100 to make the relative errors more
+        // comparable to the ones of the other models
+        return FluidSystem::molarMass(compIdx) / 1000.0;
     }
 
     /*!
