@@ -31,6 +31,7 @@
 #define DUMUX_PVS_INDICES_HH
 
 #include "pvsproperties.hh"
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 namespace Dumux
 {
@@ -41,11 +42,17 @@ namespace Dumux
  *
  * \tparam PVOffset The first index in a primary variable vector.
  */
-template <class TypeTag, int PVOffset = 0>
+template <class TypeTag, int PVOffset>
 class PvsIndices
+    : public BoxMultiPhaseEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
-
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 public:
+    // number of equations/primary variables
+    static const int numEq = numComponents + EnergyIndices::numEq_;
+
     // Primary variable indices
     static const int pressure0Idx = PVOffset + 0; //!< Index for the pressure of the first phase
     static const int switch0Idx = PVOffset + 1; //!< Index of the either the saturation or the mole fraction of the phase with the lowest index

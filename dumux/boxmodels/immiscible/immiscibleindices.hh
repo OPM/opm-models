@@ -29,18 +29,28 @@
 #ifndef DUMUX_BOX_IMMISCIBLE_INDICES_HH
 #define DUMUX_BOX_IMMISCIBLE_INDICES_HH
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+
 namespace Dumux
 {
-// \{
-
 /*!
  * \ingroup ImmiscibleBoxModel
  * \ingroup BoxIndices
  * \brief The indices for the isothermal two-phase model.
  */
-template <int PVOffset=0>
+template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices
+    : public BoxMultiPhaseEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+
 {
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
+
+public:
+    // number of equations/primary variables
+    static const int numEq = numPhases + EnergyIndices::numEq_;
+
     // Primary variable indices
     static const int pressure0Idx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
     static const int saturation0Idx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
@@ -48,8 +58,6 @@ struct ImmiscibleIndices
     // indices of the equations
     static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
-
-// \}
 } // namespace Dumux
 
 

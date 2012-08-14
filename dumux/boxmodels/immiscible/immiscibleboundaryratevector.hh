@@ -56,6 +56,9 @@ class ImmiscibleBoundaryRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -113,7 +116,7 @@ public:
                 fluxVars.volumeFlux(phaseIdx)
                 * density;
             
-            asImp_().enthalpyFlux_(fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);
+            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
         }
 
 #ifndef NDEBUG
@@ -167,20 +170,6 @@ public:
      */
     void setNoFlow()
     { (*this) = 0.0; }
-
-protected:
-    Implementation &asImp_() 
-    { return *static_cast<Implementation *>(this); }
-
-    template <class FluidState>
-    void enthalpyFlux_(const FluxVariables &fluxVars,
-                       const VolumeVariables &insideVolVars,
-                       const FluidState &fs,
-                       const typename FluidSystem::ParameterCache &paramCache,
-                       int phaseIdx,
-                       Scalar density)
-    { }
-
 };
 
 } // end namepace

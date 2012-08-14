@@ -28,8 +28,9 @@
 #define DUMUX_BOX_NCP_BOUNDARY_RATE_VECTOR_HH
 
 #include "ncpproperties.hh"
-#include "energy/ncpvolumevariablesenergy.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>
@@ -58,7 +59,7 @@ class NcpBoundaryRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -134,7 +135,7 @@ public:
                     * molarity;
             }
             
-            EnergyModule::enthalpyBoundaryFlux(asImp_(), fluxVars, insideVolVars, fs, paramCache, phaseIdx, density);
+            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
         }
 
 #ifndef NDEBUG

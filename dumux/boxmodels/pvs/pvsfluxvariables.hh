@@ -33,6 +33,7 @@
 
 #include "pvsproperties.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -49,7 +50,9 @@ namespace Dumux {
  * the integration point, etc.
  */
 template <class TypeTag>
-class PvsFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
+class PvsFluxVariables
+    : public BoxMultiPhaseFluxVariables<TypeTag>
+    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -66,6 +69,9 @@ class PvsFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
         numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
@@ -73,6 +79,8 @@ public:
 
         // update the PVS specific gradients
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
+
+        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
     }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const

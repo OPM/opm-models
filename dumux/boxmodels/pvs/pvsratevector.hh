@@ -32,8 +32,9 @@
 
 #include <dune/common/fvector.hh>
 
-#include <dumux/common/valgrind.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
+#include <dumux/common/valgrind.hh>
 
 #include "pvsvolumevariables.hh"
 
@@ -55,14 +56,15 @@ class PvsRateVector
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef PvsRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

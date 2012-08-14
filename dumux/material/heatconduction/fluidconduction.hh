@@ -1,10 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2010 by Andreas Lauser                               *
- *   Copyright (C) 2008-2009 by Melanie Darcis                               *
- *   Copyright (C) 2008-2009 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2009 by Bernd Flemisch                               *
+ *   Copyright (C) 2011-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -23,39 +20,48 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \file
+ * \file fluidconduction.hh
  *
- * \brief Defines the indices used by the 2p2cni box model
+ * \brief Implements a heat conduction law which just takes the conductivity of a given fluid phase.
  */
-#ifndef DUMUX_IMMISCIBLE_NI_INDICES_HH
-#define DUMUX_IMMISCIBLE_NI_INDICES_HH
+#ifndef DUMUX_FLUID_HEAT_CONDUCTION_HH
+#define DUMUX_FLUID_HEAT_CONDUCTION_HH
 
-#include "immiscibleniproperties.hh"
-#include <dumux/boxmodels/immiscible/immiscibleindices.hh>
+#include "fluidconductionparams.hh"
+
+#include <dumux/common/spline.hh>
+#include <algorithm>
 
 namespace Dumux
 {
-// \{
-
 /*!
- * \ingroup ImmiscibleNIModel
- * \ingroup BoxIndices
- * \brief Enumerations for the non-isothermal 2-phase 2-component model
+ * \ingroup material
  *
- * \tparam formulation The formulation, either pwSn or pnSw.
- * \tparam PVOffset The first index in a primary variable vector.
+ * \brief Implements a heat conduction law which just takes the conductivity of a given fluid phase.
  */
-template <class TypeTag, int PVOffset>
-class ImmiscibleNIIndices : public ImmiscibleIndices<PVOffset>
+template <class FluidSystem,
+          class ScalarT,
+          int phaseIdx,
+          class ParamsT = FluidHeatConductionParams<ScalarT> >
+class FluidHeatConduction
 {
-    static const int numPhases = GET_PROP_VALUE(TypeTag, NumPhases);
-
 public:
-    static const int temperatureIdx = PVOffset + numPhases; //! The index for temperature in primary variable vectors.
-    static const int energyEqIdx = PVOffset + numPhases; //! The index for energy in equation vectors.
+    typedef ParamsT Params;
+    typedef typename Params::Scalar Scalar;
+
+    /*!
+     * \brief Given a fluid state, return the effective heat conductivity [W/m^2 / (K/m)] of the porous
+     *        medium.
+     */
+    template <class FluidState>
+    static Scalar heatConductivity(const Params &params,
+                                   const FluidState &fluidState)
+    { 
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updatePhase(fluidState, phaseIdx);
+        return FluidSystem::thermalConductivity(fluidState, paramCache, phaseIdx);
+    }
 };
-
-// \}
-
 }
+
 #endif

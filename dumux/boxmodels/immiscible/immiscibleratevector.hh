@@ -57,13 +57,13 @@ class ImmiscibleRateVector
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+
     enum { conti0EqIdx = Indices::conti0EqIdx };
-
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -119,9 +119,7 @@ public:
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
      */
     void setEnthalpyRate(Scalar rate)
-    {
-        EnergyModule::setEnthalpyRate(*this, rate);
-    }
+    { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
      * \brief Set a volumetric rate of a phase.

@@ -27,13 +27,16 @@
 #include "config.h"
 
 #include <dumux/boxmodels/pvs/pvsmodel.hh>
-#define MODEL_TYPE_TAG BoxPvs
 #include "problems/injectionproblem.hh"
-
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(InjectionPvsProblem, INHERITS_FROM(BoxPvs, InjectionBaseProblem));
+} }
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InjectionProblem) ProblemTypeTag;
+    typedef TTAG(InjectionPvsProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

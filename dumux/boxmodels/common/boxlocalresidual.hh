@@ -483,6 +483,22 @@ protected:
         }
     }
 
+    /*!
+     * \brief Calculate the source term of the equation
+     *
+     * \param source The source/sink term [kg/m^3] in the sub control
+     *               volume for each component
+     */
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int timeIdx) const
+    {
+        Valgrind::SetUndefined(source);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        Valgrind::CheckDefined(source);
+    }
+
 private:
     Implementation &asImp_()
     {

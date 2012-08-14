@@ -31,6 +31,7 @@
 
 #include "immiscibleproperties.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
@@ -45,7 +46,9 @@ namespace Dumux
  *        finite volume in the two-phase model.
  */
 template <class TypeTag>
-class ImmiscibleVolumeVariables : public BoxVolumeVariables<TypeTag>
+class ImmiscibleVolumeVariables 
+    : public BoxVolumeVariables<TypeTag>
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -62,8 +65,10 @@ class ImmiscibleVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     /*!
@@ -77,7 +82,7 @@ public:
                            scvIdx,
                            timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -116,20 +121,15 @@ public:
             fluidState_.setDensity(phaseIdx, rho);
         }
 
-        asImp_().updateEnergy_(paramCache,
-                               elemCtx,
-                               scvIdx,
-                               timeIdx);
-
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
-
-        // energy related quantities not belonging to the fluid state
-        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -162,53 +162,10 @@ public:
     Scalar porosity() const
     { return porosity_; }
 
-    /*!
-     * \brief Given a fluid state, set the temperature in the primary variables
-     */
-    template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    { }
-
-    /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
-     */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    { }
-
-    /*!
-     * \brief Given a fluid state, set the enthalpy rate which emerges
-     *        from a volumetric rate.
-     */
-    template <class FluidState>
-    static void setEnthalpyRate(RateVector &v,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
-                                Scalar volume)
-    { }
-
 protected:
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx,
-                            int timeIdx)
-    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
-
-    template<class ParameterCache>
-    void updateEnergy_(const ParameterCache &paramCache,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx)
-    { }
-
     FluidState fluidState_;
     Scalar porosity_;
     Scalar relativePermeability_[numPhases];
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
 };
 
 }

@@ -32,11 +32,11 @@
 
 #include <dune/common/fvector.hh>
 
-#include <dumux/common/valgrind.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
+#include <dumux/common/valgrind.hh>
 
 #include "flashvolumevariables.hh"
-#include "energy/flashenergymodule.hh"
 
 namespace Dumux
 {
@@ -63,7 +63,7 @@ class FlashRateVector
 
     typedef FlashRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-    typedef FlashEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     /*!

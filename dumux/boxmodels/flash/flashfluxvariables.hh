@@ -32,8 +32,8 @@
 #define DUMUX_FLASH_FLUX_VARIABLES_HH
 
 #include "flashproperties.hh"
-#include "energy/flashenergymodule.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -52,7 +52,7 @@ namespace Dumux {
 template <class TypeTag>
 class FlashFluxVariables
     : public BoxMultiPhaseFluxVariables<TypeTag>
-    , public FlashEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -69,13 +69,17 @@ class FlashFluxVariables
         numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
 
-        // update the FLASH specific gradients
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
+
+        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
     }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const

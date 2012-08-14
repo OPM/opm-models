@@ -23,8 +23,8 @@
 #define DUMUX_NCP_MODEL_HH
 
 #include "ncpproperties.hh"
-#include "energy/ncpvolumevariablesenergy.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dune/common/fvector.hh>
@@ -118,7 +118,9 @@ namespace Dumux
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
 template<class TypeTag>
-class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class NcpModel
+    : public GET_PROP_TYPE(TypeTag, BaseModel)
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxModel<TypeTag> ParentType;
 
@@ -145,7 +147,7 @@ class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

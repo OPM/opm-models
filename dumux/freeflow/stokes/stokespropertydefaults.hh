@@ -47,6 +47,7 @@
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/nullcomponent.hh>
+#include <dumux/material/heatconduction/fluidconduction.hh>
 
 #include <dumux/material/fluidsystems/1pfluidsystem.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
@@ -123,7 +124,7 @@ public:
     typedef Dumux::LiquidPhase<Scalar, Dumux::NullComponent<Scalar> > type;
 };
 
-SET_TYPE_PROP(BoxStokes, Indices, StokesIndices<TypeTag>);
+SET_TYPE_PROP(BoxStokes, Indices, StokesIndices<TypeTag, /*PVOffset=*/0>);
 
 //! Choose the type of the employed fluid state.
 SET_PROP(BoxStokes, FluidState)
@@ -134,8 +135,24 @@ public:
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> type;
 };
 
+//! set the heat conduction law to a dummy one by default
+SET_TYPE_PROP(BoxStokes,
+              HeatConductionLaw,
+              Dumux::FluidHeatConduction<typename GET_PROP_TYPE(TypeTag, FluidSystem),
+                                         typename GET_PROP_TYPE(TypeTag, Scalar),
+                                         GET_PROP_VALUE(TypeTag, StokesPhaseIndex)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(BoxStokes,
+              HeatConductionLawParams,
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
+
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
 SET_INT_PROP(BoxStokes, StokesPhaseIndex, 0);
+
+//!< Disable the energy equation by default
+SET_BOOL_PROP(BoxStokes, EnableEnergy, false);
 
 //!< Disable the inertial term by default
 SET_BOOL_PROP(BoxStokes, EnableNavierTerm, false);

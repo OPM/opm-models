@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009-2011 by Andreas Lauser                               *
+ *   Copyright (C) 2011-2012 by Andreas Lauser                               *
  *   Institute for Modelling Hydraulic and Environmental Systems             *
  *   University of Stuttgart, Germany                                        *
  *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
@@ -20,53 +20,33 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \brief The indices for the non-isothermal part of the compositional
- *        multi-phase model.
- */
-#ifndef DUMUX_NCP_INDICES_ENERGY_HH
-#define DUMUX_NCP_INDICES_ENERGY_HH
-
-namespace Dumux
-{
-/*!
- * \brief The indices for the energy equation.
+ * \file fluidconductionparams.hh
  *
- * This is a dummy class for the isothermal case.
+ * \brief Parameters for the heat conduction law which just takes the conductivity of a given fluid phase.
  */
-template <int PVOffset, bool enableEnergy/*=false*/>
-struct NcpEnergyIndices
-{
-public:
-    /*!
-     * \brief This module does not define any primary variables in the
-     *        isothermal case.
-     */
-    static const int NumPrimaryVars = 0;
-};
+#ifndef DUMUX_FLUID_HEAT_CONDUCTION_PARAMS_HH
+#define DUMUX_FLUID_HEAT_CONDUCTION_PARAMS_HH
 
+
+namespace Dumux {
 /*!
- * \brief The indices required for the energy equation.
+ * \brief Parameters for the heat conduction law which just takes the conductivity of a given fluid phase.
  */
-template <int PVOffset>
-struct NcpEnergyIndices<PVOffset, /*enableEnergy=*/true>
+template <class ScalarT>
+class FluidHeatConductionParams
 {
-public:
-    /*!
-     * \brief This module defines one new primary variable.
-     */
-    static const int NumPrimaryVars = 1;
+    // do not copy!
+    FluidHeatConductionParams(const FluidHeatConductionParams &)
+    {}
 
-    /*!
-     * \brief Index for the temperature in a vector of primary
-     *        variables.
-     */
-    static const int temperatureIdx = PVOffset + 0;
-    /*!
-     * \brief Equation index of the energy equation.
-     */
-    static const int energyEqIdx = PVOffset + 0;
+public:
+    typedef ScalarT Scalar;
+
+    FluidHeatConductionParams()
+    { }
+
 };
 
-}
+} // namespace Dumux
 
 #endif

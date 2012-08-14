@@ -71,7 +71,7 @@ SET_INT_PROP(BoxNcp, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 /*!
  * \brief Set the property for the number of equations and primary variables.
  */
-SET_INT_PROP(BoxNcp, NumEq,GET_PROP_TYPE(TypeTag, Indices)::NumPrimaryVars);
+SET_INT_PROP(BoxNcp, NumEq,GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material parameters by extracting

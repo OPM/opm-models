@@ -57,7 +57,7 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Property defaults
 //////////////////////////////////////////////////////////////////
-SET_INT_PROP(BoxImmiscible, NumEq, GET_PROP_VALUE(TypeTag, NumPhases)); //!< set the number of equations to the number of phases
+SET_INT_PROP(BoxImmiscible, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq); //!< set the number of equations to the number of phases
 SET_INT_PROP(BoxImmiscible, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of phases is determined by the fluid system
 SET_INT_PROP(BoxImmiscible, NumComponents, GET_PROP_VALUE(TypeTag, NumPhases));   //!< Number of chemical species in the system
 
@@ -80,7 +80,7 @@ SET_PROP(BoxImmiscible, FluidState)
 public:
     typedef Dumux::ImmiscibleFluidState<Scalar,
                                         FluidSystem,
-                                        /*enableEnthalpy=*/false> type;
+                                        /*storeEnthalpy=*/GET_PROP_VALUE(TypeTag, EnableEnergy)> type;
 };
 
 //! the RateVector property
@@ -99,7 +99,7 @@ SET_TYPE_PROP(BoxImmiscible, VolumeVariables, ImmiscibleVolumeVariables<TypeTag>
 SET_TYPE_PROP(BoxImmiscible, FluxVariables, ImmiscibleFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal immiscible multi-phase model
-SET_TYPE_PROP(BoxImmiscible, Indices, ImmiscibleIndices</*PVOffset=*/0>);
+SET_TYPE_PROP(BoxImmiscible, Indices, ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
 
 /*!
  * \brief Set the material law to the null law by default.
@@ -129,6 +129,9 @@ SET_TYPE_PROP(BoxImmiscible,
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxImmiscible, EnableSmoothUpwinding, false);
+
+// disable the energy equation by default
+SET_BOOL_PROP(BoxImmiscible, EnableEnergy, false);
 
 /////////////////////
 // set slightly different properties for the single-phase case

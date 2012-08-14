@@ -30,16 +30,15 @@
 #ifndef DUMUX_FLASH_LOCAL_RESIDUAL_HH
 #define DUMUX_FLASH_LOCAL_RESIDUAL_HH
 
-#include <dumux/boxmodels/common/boxmodel.hh>
-#include <dumux/common/math.hh>
-
 #include "flashproperties.hh"
 #include "flashvolumevariables.hh"
 #include "flashfluxvariables.hh"
-#include "energy/flashenergymodule.hh"
 
-namespace Dumux
-{
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/common/boxmodel.hh>
+#include <dumux/common/math.hh>
+
+namespace Dumux {
 /*!
  * \ingroup FlashModel
  * \ingroup BoxLocalResidual
@@ -61,14 +60,14 @@ protected:
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
         numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
+
+    enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -231,12 +230,6 @@ public:
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation *> (this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation *> (this); }
 };
 
 } // end namepace

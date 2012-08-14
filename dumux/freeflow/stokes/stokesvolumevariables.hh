@@ -32,6 +32,7 @@
 #include "stokesproperties.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dune/geometry/quadraturerules.hh>
 
@@ -47,7 +48,9 @@ namespace Dumux
  *        finite volume in the Stokes box model.
  */
 template <class TypeTag>
-class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
+class StokesVolumeVariables
+    : public BoxVolumeVariables<TypeTag>
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -64,10 +67,12 @@ class StokesVolumeVariables : public BoxVolumeVariables<TypeTag>
     enum { pressureIdx = Indices::pressureIdx };
     enum { moleFrac1Idx = Indices::moleFrac1Idx };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
+    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     /*!
@@ -77,7 +82,7 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
@@ -103,8 +108,8 @@ public:
                                                         paramCache,
                                                         phaseIdx));
         
-        // compute and set the energy related quantities
-        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         // the effective velocity of the control volume
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
@@ -168,11 +173,10 @@ public:
     { return fluidState_; }
     
     /*!
-     * \brief Returns the molar density \f$\mathrm{[mol/m^3]}\f$ of
-     *        the fluid within the sub-control volume.
+     * \brief Returns the porosity of the medium
      */
-    Scalar molarDensity() const
-    { return fluidState_.density(phaseIdx) / fluidState_.averageMolarMass(phaseIdx); }
+    Scalar porosity() const
+    { return 1.0; }
 
     /*!
      * \brief Returns the average velocity in the sub-control volume.
@@ -238,12 +242,6 @@ protected:
     DimVector gravity_;
     DimVector pressureGrad_;
     FluidState fluidState_;
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
 };
 
 }

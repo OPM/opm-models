@@ -51,7 +51,8 @@ namespace Dumux
  *        Stokes box model.
  */
 template<class TypeTag>
-class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+class StokesLocalResidual
+    : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
 protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
@@ -72,7 +73,9 @@ protected:
     };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
  public:
@@ -104,6 +107,8 @@ protected:
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
             storage[momentum0EqIdx + axisIdx] =
                 fs.density(phaseIdx) * volVars.velocity()[axisIdx];
+
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
     }
 
     /*!
@@ -142,7 +147,7 @@ protected:
         const FluxVariables &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
 
         // data attached to upstream vertex
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(), timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx), timeIdx);
 
         auto normal = fluxVars.normal();
         Scalar faceArea = normal.two_norm();
@@ -181,6 +186,8 @@ protected:
         }
         
         flux *= faceArea;
+
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
     }
 
     /*!
@@ -198,7 +205,10 @@ protected:
                               const ElementContext &elemCtx,
                               int scvfIdx,
                               int timeIdx) const
-    { }
+    {
+        // heat conduction
+        EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+    }
 
     /*!
      * \brief Calculate the source term of all equations.

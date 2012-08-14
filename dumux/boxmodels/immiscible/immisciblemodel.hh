@@ -89,6 +89,7 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     
 public:
     /*!
@@ -217,6 +218,9 @@ protected:
         // add the VTK output modules available on all model
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+
+        if (enableEnergy)
+            this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     }
 };
 }

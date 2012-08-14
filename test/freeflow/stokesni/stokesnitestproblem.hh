@@ -29,7 +29,7 @@
 #ifndef DUMUX_STOKES_NI_TEST_PROBLEM_HH
 #define DUMUX_STOKES_NI_TEST_PROBLEM_HH
 
-#include <dumux/freeflow/stokesni/stokesnimodel.hh>
+#include <dumux/freeflow/stokes/stokesmodel.hh>
 #include <dumux/common/simplexgridcreator.hh>
 #include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 
@@ -47,7 +47,7 @@ class StokesNITestProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(StokesNITestProblem, INHERITS_FROM(BoxStokesNI));
+NEW_TYPE_TAG(StokesNITestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
 SET_TYPE_PROP(StokesNITestProblem, Grid, Dune::YaspGrid<2>);
@@ -67,6 +67,9 @@ SET_INT_PROP(StokesNITestProblem,
 
 // Enable gravity
 SET_BOOL_PROP(StokesNITestProblem, EnableGravity, true);
+
+// Enable the energy equation
+SET_BOOL_PROP(StokesNITestProblem, EnableEnergy, true);
 
 // Enable constraints
 SET_BOOL_PROP(StokesNITestProblem, EnableConstraints, true);

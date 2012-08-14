@@ -24,8 +24,8 @@
 
 #include "ncpfluxvariables.hh"
 #include "diffusion/ncpdiffusion.hh"
-#include "energy/ncplocalresidualenergy.hh"
 
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dumux/common/math.hh>
@@ -66,74 +66,19 @@ protected:
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         ncp0EqIdx = Indices::ncp0EqIdx,
-        conti0EqIdx = Indices::conti0EqIdx
+        conti0EqIdx = Indices::conti0EqIdx,
     };
 
-    typedef NcpLocalResidualEnergy<TypeTag, enableEnergy> EnergyResid;
     typedef Dumux::BoxConstraintsContext<TypeTag> ConstraintsContext;
-
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
-     * \brief Evaluate the amount moles within a sub-control volume in
-     *        a phase.
+     * \brief Evaluate the storage term [kg/m^3] in a single phase.
      *
-     * The result should be averaged over the volume.
-     */
-    void addPhaseStorageMass(EqVector &storage,
-                             const ElementContext &elemCtx,
-                             int scvIdx,
-                             int timeIdx,
-                             int phaseIdx) const
-    {
-        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
-
-        // compute storage term of all components within all phases
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            storage[conti0EqIdx + compIdx] +=
-                volVars.fluidState().saturation(phaseIdx)
-                * volVars.fluidState().molarity(phaseIdx, compIdx)
-                * volVars.porosity();
-        }        
-    }
-
-    /*!
-     * \brief Evaluate the amount all conservation quantites
-     *        (e.g. phase mass) within a sub-control volume.
-     *
-     * The result should be averaged over the volume (e.g. phase mass
-     * inside a sub control volume divided by the volume)
-     */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
-    {
-        // if flag usePrevSol is set, the solution from the previous
-        // time step is used, otherwise the current solution is
-        // used. The secondary variables are used accordingly.  This
-        // is required to compute the derivative of the storage term
-        // using the implicit euler method.
-        const VolumeVariables &volVars =
-            elemCtx.volVars(scvIdx, timeIdx);
-
-        storage = 0;
-
-        // compute mass storage terms
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            addPhaseStorageMass(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
-        Valgrind::CheckDefined(storage);
-
-        // compute energy storage term
-        EnergyResid::computeStorage(storage, volVars);
-        Valgrind::CheckDefined(storage);
-    }
-
-    /*!
-     * \brief Evaluate the amount all conservation quantites
-     *        (e.g. phase mass) within all sub-control volumes of an
-     *        element.
+     * \param element The element
+     * \param phaseIdx The index of the fluid phase
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
@@ -141,89 +86,43 @@ public:
                          int timeIdx,
                          int phaseIdx) const
     {
-        // compute mass and energy storage terms in terms of
-        // averaged quantities
-        addPhaseStorageMass(storage,
-                            elemCtx,
-                            scvIdx,
-                            timeIdx,
-                            phaseIdx);
-        EnergyResid::addPhaseStorage(storage,
-                                     elemCtx.volVars(scvIdx, /*timeIdx=*/0),
-                                     phaseIdx);
-    }
-
-    /*!
-     * \brief Calculate the source term of the equation
-     */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
-    {
-        Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
-    }
-
-    /*!
-     * \brief Evaluates the advective flux of all conservation
-     *        quantities over a face of a subcontrol volume via a
-     *        fluid phase.
-     */
-    void addAdvectiveMassFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx,
-                              int phaseIdx) const
-    {
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
-        const auto &up = elemCtx.volVars(evalFluxVars.upstreamIdx(phaseIdx), timeIdx);
-
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            flux[conti0EqIdx + compIdx] =
-                up.fluidState().molarity(phaseIdx, compIdx)
-                * fluxVars.volumeFlux(phaseIdx);
-        }
-    }
-
-
-    /*!
-     * \brief Evaluates the advective flux of all conservation
-     *        quantities over a face of a subcontrol volume via a
-     *        fluid phase.
-     */
-    void addDiffusiveMassFlux(EqVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx,
-                              int phaseIdx) const
-    {
-#if 0
-        if (!enableDiffusion) {
-            flux = 0.0;
-            return;
-        }
-
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const VolumeVariables &volVarsI = elemCtx.volVars(fluxVars.insideIdx(), timeIdx);
-        const VolumeVariables &volVarsJ = elemCtx.volVars(fluxVars.outsideIdx(), timeIdx);
-        if (volVarsI.fluidState().saturation(phaseIdx) < 1e-4 ||
-            volVarsJ.fluidState().saturation(phaseIdx) < 1e-4)
+        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
+        
+        // compute storage term of all components within all phases
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         {
-            return; // phase is not present in one of the finite volumes
+            int eqIdx = conti0EqIdx + compIdx;
+            storage[eqIdx] +=
+                fs.molarity(phaseIdx, compIdx)
+                * fs.saturation(phaseIdx)
+                * volVars.porosity();
         }
 
-        // approximate the total concentration of the phase at the
-        // integration point by the arithmetic mean of the
-        // concentration of the sub-control volumes
-        Scalar molarDensity;
-        molarDensity = volVarsI.fluidState().molarDensity(phaseIdx);
-        molarDensity += volVarsJ.fluidState().molarDensity(phaseIdx);
-        molarDensity /= 2;
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
+    }
 
-        Diffusion::flux(flux, elemCtx, scvfIdx, timeIdx, phaseIdx, molarDensity);
-#endif
+    /*!
+     * \brief Evaluate the amount all conservation quantities
+     *        (e.g. phase mass) within a sub-control volume.
+     *
+     * The result should be averaged over the volume (e.g. phase mass
+     * inside a sub control volume divided by the volume)
+     *
+     *  \param result The number of moles of the component within the sub-control volume
+     *  \param scvIdx The SCV (sub-control-volume) index
+     *  \param usePrevSol Evaluate function with solution of current or previous time step
+     */
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int timeIdx) const
+    {
+        storage = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
@@ -236,40 +135,88 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-
-        RateVector tmp;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            tmp = 0.0;
-            addAdvectiveMassFlux(tmp,
-                                 elemCtx,
-                                 scvfIdx,
-                                 timeIdx,
-                                 phaseIdx);
-            flux += tmp;
-            Valgrind::CheckDefined(flux);
-            addDiffusiveMassFlux(flux,
-                                 elemCtx,
-                                 scvfIdx,
-                                 timeIdx,
-                                 phaseIdx);
-            Valgrind::CheckDefined(flux);
-
-            // energy transport in fluid phases
-            EnergyResid::addPhaseEnthalpyFlux(flux,
-                                              elemCtx,
-                                              scvfIdx,
-                                              timeIdx,
-                                              phaseIdx,
-                                              tmp);
-            Valgrind::CheckDefined(flux);
-        }
-
-        // energy transport in fluid phases
-        EnergyResid::addHeatConduction(flux,
-                                       elemCtx,
-                                       scvfIdx,
-                                       timeIdx);
+        computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
+
+        computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        Valgrind::CheckDefined(flux);
+    }
+
+    /*!
+     * \brief Evaluates the advective mass flux of all components over
+     *        a face of a subcontrol volume.
+     *
+     * \param flux The advective flux over the sub-control-volume face for each component
+     * \param vars The flux variables at the current SCV
+     */
+    void computeAdvectiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx) const
+    {
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+
+        ////////
+        // advective fluxes of all components in all phases
+        ////////
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        {
+            // data attached to upstream and the downstream vertices
+            // of the current phase
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
+
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            {
+                int eqIdx = conti0EqIdx + compIdx;
+
+                flux[eqIdx] +=
+                    fluxVars.volumeFlux(phaseIdx)
+                    *(fluxVars.upstreamWeight(phaseIdx)
+                      * up.fluidState().molarity(phaseIdx, compIdx)
+                      +
+                      fluxVars.downstreamWeight(phaseIdx)
+                      * dn.fluidState().molarity(phaseIdx, compIdx));
+
+                Valgrind::CheckDefined(flux[eqIdx]);
+            }
+        }
+        
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+    }
+
+    /*!
+     * \brief Adds the diffusive mass flux of all components over
+     *        a face of a subcontrol volume.
+     *
+     * \param flux The diffusive flux over the sub-control-volume face for each component
+     * \param vars The flux variables at the current sub control volume face
+     */
+    void computeDiffusiveFlux(RateVector &flux,
+                              const ElementContext &elemCtx,
+                              int scvfIdx,
+                              int timeIdx) const
+    {
+#if 0
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
+
+        // add diffusive flux of gas component in liquid phase
+        Scalar tmp = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            int compIdx = 1; // HACK
+            tmp = - (fluxVars.moleFracGrad(phaseIdx, compIdx)*normal);
+            tmp *=
+                fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
+                fluxVars.molarDensity(phaseIdx);
+
+            flux[conti0EqIdx + compIdx] += tmp;
+            flux[conti0EqIdx + (1 - compIdx)] -= tmp;
+        }
+#endif
+
+        EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
 protected:

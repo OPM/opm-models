@@ -29,11 +29,16 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvsni/pvsnimodel.hh>
-#define MODEL_TYPE_TAG BoxPvsNI
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
+#define MODEL_TYPE_TAG BoxPvs
 #include "problems/waterairproblem.hh"
 
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+SET_BOOL_PROP(WaterAirProblem, EnableEnergy, true);
+} }
 
 int main(int argc, char** argv)
 {

@@ -24,10 +24,10 @@
  * \file 
  *
  * \brief Contains the classes required to consider energy as a
- *        conservation quantity in the flash model.
+ *        conservation quantity in a multi-phase module.
  */
-#ifndef DUMUX_FLASH_ENERGY_MODULE_HH
-#define DUMUX_FLASH_ENERGY_MODULE_HH
+#ifndef DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
+#define DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
 
 namespace Dumux {
 
@@ -35,17 +35,17 @@ namespace Dumux {
  * \brief Provides the indices required for consideration of the energy equation.
  */
 template <int PVOffset, bool enableEnergy>
-struct FlashEnergyIndices;
+struct BoxMultiPhaseEnergyIndices;
 
 template <int PVOffset>
-struct FlashEnergyIndices<PVOffset, /*enableEnergy=*/false>
+struct BoxMultiPhaseEnergyIndices<PVOffset, /*enableEnergy=*/false>
 {
 protected:
     enum { numEq_ = 0 };
 };
 
 template <int PVOffset>
-struct FlashEnergyIndices<PVOffset, /*enableEnergy=*/true>
+struct BoxMultiPhaseEnergyIndices<PVOffset, /*enableEnergy=*/true>
 {  
     //! The index of the primary variable representing temperature
     enum { temperatureIdx = PVOffset };
@@ -61,10 +61,10 @@ protected:
  * \brief Provides the auxiliary methods required for consideration of the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
-class FlashEnergyModule;
+class BoxMultiPhaseEnergyModule;
 
 template <class TypeTag>
-class FlashEnergyModule<TypeTag, /*enableEnergy=*/false>
+class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -175,7 +175,7 @@ public:
 };
 
 template <class TypeTag>
-class FlashEnergyModule<TypeTag, /*enableEnergy=*/true>
+class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
 { 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -242,20 +242,6 @@ public:
     }
 
     /*!
-     * \brief Given a fluid state, set the temperature in the primary variables
-     */
-    template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    {
-        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
-#ifndef NDEBUG
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            assert(fs.temperature(/*phaseIdx=*/0) == fs.temperature(phaseIdx));
-        }
-#endif
-    }
-    
-    /*!
      * \brief Set the enthalpy rate per second of a rate vector, .
      */
     static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
@@ -278,11 +264,24 @@ public:
     }
 
     /*!
+     * \brief Given a fluid state, set the temperature in the primary variables
+     */
+    template <class FluidState>
+    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
+    {
+        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
+#ifndef NDEBUG
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            assert(fs.temperature(/*phaseIdx=*/0) == fs.temperature(phaseIdx));
+        }
+#endif
+    }
+    
+    /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
     static void addPhaseStorage(EqVector &storage, const VolumeVariables &volVars, int phaseIdx)
     {
-        assert(energyEqIdx == 2);
         const auto &fs = volVars.fluidState();
         storage[energyEqIdx] +=
             fs.density(phaseIdx)
@@ -365,14 +364,31 @@ public:
  * \brief Provides the volumetric quantities for the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
-class FlashEnergyVolumeVariables;
+class BoxMultiPhaseEnergyVolumeVariables;
 
 template <class TypeTag>
-class FlashEnergyVolumeVariables<TypeTag, /*enableEnergy=*/false>
+class BoxMultiPhaseEnergyVolumeVariables<TypeTag, /*enableEnergy=*/false>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
+
+public:
+    /*!
+     * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the rock matrix in
+     *        the sub-control volume.
+     */
+    Scalar heatCapacitySolid() const
+    { DUNE_THROW(Dune::InvalidStateException, "Method heatCapacitySolid() does not make sense for isothermal models"); }
+
+    /*!
+     * \brief Returns the total conductivity capacity
+     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
+     *        sub-control volume.
+     */
+    Scalar heatConductivity() const
+    { DUNE_THROW(Dune::InvalidStateException, "Method heatConductivity() does not make sense for isothermal models"); }
 
 protected:
     /*!
@@ -397,7 +413,7 @@ protected:
 };
 
 template <class TypeTag>
-class FlashEnergyVolumeVariables<TypeTag, /*enableEnergy=*/true>
+class BoxMultiPhaseEnergyVolumeVariables<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -473,11 +489,12 @@ private:
  * \brief Provides the quantities required to calculate energy fluxes.
  */
 template <class TypeTag, bool enableEnergy>
-class FlashEnergyFluxVariables;
+class BoxMultiPhaseEnergyFluxVariables;
 
 template <class TypeTag>
-class FlashEnergyFluxVariables<TypeTag, /*enableEnergy=*/false>
+class BoxMultiPhaseEnergyFluxVariables<TypeTag, /*enableEnergy=*/false>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 protected:
@@ -485,12 +502,25 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void updateEnergy(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     { }
+
+public:
+    /*!
+     * \brief The temperature gradient times the face normal [K m^2 / m]
+     */
+    Scalar temperatureGradNormal() const
+    { DUNE_THROW(Dune::InvalidStateException, "Method temperatureGradNormal() does not make sense for isothermal models"); }
+
+    /*!
+     * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 / (K/m)]}\f$
+     */
+    Scalar heatConductivity() const
+    { DUNE_THROW(Dune::InvalidStateException, "Method heatConductivity() does not make sense for isothermal models"); }
 };
 
 template <class TypeTag>
-class FlashEnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
+class BoxMultiPhaseEnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -504,7 +534,7 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void updateEnergy(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
@@ -527,8 +557,9 @@ protected:
         for (int i = 0; i < dimWorld; ++ i)
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
-        const auto &volVarsInside = elemCtx.volVars(this->insideIdx(), timeIdx);
-        const auto &volVarsOutside = elemCtx.volVars(this->outsideIdx(), timeIdx);
+        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &volVarsInside = elemCtx.volVars(fluxVars.insideIdx(), timeIdx);
+        const auto &volVarsOutside = elemCtx.volVars(fluxVars.outsideIdx(), timeIdx);
 
         // arithmetic mean
         heatConductivity_ =

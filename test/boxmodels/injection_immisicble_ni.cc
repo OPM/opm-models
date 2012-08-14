@@ -24,14 +24,21 @@
 /*!
  * \file
  *
- * \brief test for the 2pni box model
+ * \brief The injection problem using the box model assuming
+ *        immisicibility and energy enabled.
  */
 #include "config.h"
 
-#include <dumux/boxmodels/immiscibleni/immisciblenimodel.hh>
-#define MODEL_TYPE_TAG BoxImmiscibleNI
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include "problems/injectionproblem.hh"
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(InjectionImmiscibleNIProblem, INHERITS_FROM(BoxImmiscible, InjectionBaseProblem));
+
+SET_BOOL_PROP(InjectionImmiscibleNIProblem, EnableEnergy, true);
+} }
 
 ////////////////////////
 // the main function

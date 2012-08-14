@@ -30,8 +30,8 @@
 
 #include "flashproperties.hh"
 #include "flashindices.hh"
-#include "energy/flashenergymodule.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
@@ -52,7 +52,7 @@ namespace Dumux
 template <class TypeTag>
 class FlashVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public FlashEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -63,7 +63,6 @@ class FlashVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef FlashEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyVolumeVariables;
     // primary variable indices
     enum { cTot0Idx = Indices::cTot0Idx };
 
@@ -74,10 +73,10 @@ class FlashVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dumux::NcpFlash<Scalar, FluidSystem> Flash;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     
 public:
     //! The type of the object returned by the fluidState() method
@@ -93,7 +92,6 @@ public:
         ParentType::update(elemCtx,
                            scvIdx,
                            timeIdx);
-
         EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);

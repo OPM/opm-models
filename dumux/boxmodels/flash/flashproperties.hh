@@ -40,6 +40,7 @@
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkphasepresencemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux
 {
@@ -51,7 +52,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxFlash, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature));
+NEW_TYPE_TAG(BoxFlash, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

@@ -68,7 +68,7 @@ SET_INT_PROP(BoxPvs, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
  */
 SET_INT_PROP(BoxPvs, 
              NumEq,
-             GET_PROP_VALUE(TypeTag, NumComponents));
+             GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
@@ -133,6 +133,9 @@ SET_BOOL_PROP(BoxPvs, EnableSmoothUpwinding, false);
 
 // set the model to a medium verbosity
 SET_INT_PROP(BoxPvs, PvsVerbosity, 1);
+
+// disable the energy equation by default
+SET_BOOL_PROP(BoxPvs, EnableEnergy, false);
 }
 
 }

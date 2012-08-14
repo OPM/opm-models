@@ -52,7 +52,7 @@ class InjectionProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InjectionProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(InjectionBaseProblem);
 
 // declare some injection problem specific property tags
 NEW_PROP_TAG(FluidSystemPressureLow);
@@ -67,16 +67,16 @@ NEW_PROP_TAG(Temperature);
 NEW_PROP_TAG(SimulationName);
 
 // Set the grid type
-SET_TYPE_PROP(InjectionProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(InjectionBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_PROP(InjectionProblem, Problem)
+SET_PROP(InjectionBaseProblem, Problem)
 {
     typedef Dumux::InjectionProblem<TypeTag> type;
 };
 
 // Set fluid configuration
-SET_PROP(InjectionProblem, FluidSystem)
+SET_PROP(InjectionBaseProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     static const bool useComplexRelations = false;
@@ -85,7 +85,7 @@ public:
 };
 
 // Set the material Law
-SET_PROP(InjectionProblem, MaterialLaw)
+SET_PROP(InjectionBaseProblem, MaterialLaw)
 {
 private:
     // define the material law which is parameterized by effective
@@ -103,7 +103,7 @@ public:
 };
 
 // Set the heat conduction law
-SET_PROP(InjectionProblem, HeatConductionLaw)
+SET_PROP(InjectionBaseProblem, HeatConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -115,28 +115,28 @@ public:
 };
 
 // Write the Newton convergence behavior to disk?
-SET_BOOL_PROP(InjectionProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(InjectionBaseProblem, NewtonWriteConvergence, false);
 
 // Enable gravity
-SET_BOOL_PROP(InjectionProblem, EnableGravity, true);
+SET_BOOL_PROP(InjectionBaseProblem, EnableGravity, true);
 
 // Reuse Jacobian matrices if possible?
-SET_BOOL_PROP(InjectionProblem, EnableJacobianRecycling, true);
+SET_BOOL_PROP(InjectionBaseProblem, EnableJacobianRecycling, true);
 
 // Smoothen the upwinding method?
-SET_BOOL_PROP(InjectionProblem, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(InjectionBaseProblem, EnableSmoothUpwinding, false);
 
 // set the defaults for some problem specific properties
-SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureLow, 1e6);
-SET_SCALAR_PROP(InjectionProblem, FluidSystemPressureHigh, 3e7);
-SET_INT_PROP(InjectionProblem, FluidSystemNumPressure, 100);
-SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureLow, 290);
-SET_SCALAR_PROP(InjectionProblem, FluidSystemTemperatureHigh, 500);
-SET_INT_PROP(InjectionProblem, FluidSystemNumTemperature, 100);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureLow, 1e6);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureHigh, 3e7);
+SET_INT_PROP(InjectionBaseProblem, FluidSystemNumPressure, 100);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemTemperatureLow, 290);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemTemperatureHigh, 500);
+SET_INT_PROP(InjectionBaseProblem, FluidSystemNumTemperature, 100);
 
-SET_SCALAR_PROP(InjectionProblem, MaxDepth, 2500);
-SET_SCALAR_PROP(InjectionProblem, Temperature, 293.15);
-SET_STRING_PROP(InjectionProblem, SimulationName, "injection");
+SET_SCALAR_PROP(InjectionBaseProblem, MaxDepth, 2500);
+SET_SCALAR_PROP(InjectionBaseProblem, Temperature, 293.15);
+SET_STRING_PROP(InjectionBaseProblem, SimulationName, "injection");
 }
 
 

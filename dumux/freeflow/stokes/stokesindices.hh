@@ -30,9 +30,9 @@
 #define DUMUX_STOKES_INDICES_HH
 
 #include "stokesproperties.hh"
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxIndices
@@ -40,11 +40,19 @@ namespace Dumux
  *
  * \tparam PVOffset The first index in a primary variable vector.
  */
-template <class TypeTag, int PVOffset = 0>
+template <class TypeTag, int PVOffset>
 class StokesIndices
+    : public BoxMultiPhaseEnergyIndices<PVOffset 
+                                        + GET_PROP_VALUE(TypeTag, NumComponents)
+                                        + GET_PROP_VALUE(TypeTag, NumPhases), 
+                                        GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
+private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    static const int numComponents = FluidSystem::numComponents;
+    enum { numComponents = FluidSystem::numComponents };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
+    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
     // Primary variable indices

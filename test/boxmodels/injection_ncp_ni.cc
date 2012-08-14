@@ -27,19 +27,18 @@
 #include "config.h"
 
 #include <dumux/boxmodels/ncp/ncpmodel.hh>
-#define MODEL_TYPE_TAG BoxNcp
 #include "problems/injectionproblem.hh"
-
 #include <dumux/common/start.hh>
 
 namespace Dumux {
 namespace Properties {
-SET_BOOL_PROP(InjectionProblem, EnableEnergy, true);
+NEW_TYPE_TAG(InjectionNcpNIProblem, INHERITS_FROM(BoxNcp, InjectionBaseProblem));
+SET_BOOL_PROP(InjectionNcpNIProblem, EnableEnergy, true);
 }
 }
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InjectionProblem) ProblemTypeTag;
+    typedef TTAG(InjectionNcpNIProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

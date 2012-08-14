@@ -59,7 +59,9 @@ class StokesBoundaryRateVector
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
@@ -122,7 +124,7 @@ public:
         }
 
         // specify the mass fluxes over the boundary
-        Scalar vTimesN = velocity*normal;
+        Scalar volumeFlux = velocity*normal;
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fs, phaseIdx);
@@ -130,7 +132,7 @@ public:
         Scalar molarDensity = density / fs.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] = 
-                vTimesN
+                volumeFlux
                 * molarDensity
                 * fs.moleFraction(phaseIdx, compIdx);
         }
@@ -150,7 +152,7 @@ public:
                 * (tmp * normal);
         }
 
-        asImp_().enthalpyFlux_(velocity, density, normal, insideVolVars, fs, paramCache);
+        EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, volumeFlux);
     }
 
     /*!

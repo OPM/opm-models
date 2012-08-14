@@ -28,8 +28,8 @@
 #define DUMUX_BOX_FLASH_BOUNDARY_RATE_VECTOR_HH
 
 #include "flashproperties.hh"
-#include "energy/flashenergymodule.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>
@@ -56,10 +56,10 @@ class FlashBoundaryRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

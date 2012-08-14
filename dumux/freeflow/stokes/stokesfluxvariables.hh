@@ -35,8 +35,9 @@
 
 #include "stokesproperties.hh"
 
-#include <dumux/common/math.hh>
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/common/valgrind.hh>
+#include <dumux/common/math.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -56,6 +57,7 @@ namespace Dumux
  */
 template <class TypeTag>
 class StokesFluxVariables
+    : public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -66,6 +68,9 @@ class StokesFluxVariables
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
@@ -74,6 +79,9 @@ public:
             isBoundaryFace?
             fvGeom.boundaryFace[scvfIdx]:
             fvGeom.subContVolFace[scvfIdx];
+
+        insideIdx_ = scvf.i;
+        outsideIdx_ = scvf.j;
 
         onBoundary_ = isBoundaryFace;
         normal_ = scvf.normal;
@@ -85,7 +93,7 @@ public:
         molarDensity_ = Scalar(0);
         viscosity_ = Scalar(0);
         pressure_ = Scalar(0);
-        normalVelocity_ = Scalar(0);
+        volumeFlux_ = Scalar(0);
         velocity_ = Scalar(0);
         pressureGrad_ = Scalar(0);
         
@@ -137,14 +145,16 @@ public:
         }
         Valgrind::CheckDefined(velocity_);
 
-        normalVelocity_ = velocity_ * normal_;
-        Valgrind::CheckDefined(normalVelocity_);
+        volumeFlux_ = velocity_ * normal_;
+        Valgrind::CheckDefined(volumeFlux_);
 
         // set the upstream and downstream vertices
         upstreamIdx_ = scvf.i;
         downstreamIdx_ = scvf.j;
-        if (normalVelocity_ < 0)
+        if (volumeFlux_ < 0)
             std::swap(upstreamIdx_, downstreamIdx_);
+
+        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
 
         Valgrind::CheckDefined(density_);
         Valgrind::CheckDefined(viscosity_);
@@ -182,13 +192,6 @@ public:
     { return viscosity_; }
 
     /*!
-     * \brief Return the velocity \f$ \mathrm{[m/s]} \f$ at the integration
-     *        point multiplied by the normal and the area.
-     */
-    Scalar normalVelocity() const
-    { return normalVelocity_; }
-
-    /*!
      * \brief Return the pressure gradient at the integration point.
      */
     const DimVector &pressureGrad() const
@@ -220,16 +223,46 @@ public:
     { return 0; }
 
     /*!
+     * \brief Return the volume flux of mass
+     */
+    Scalar volumeFlux(int phaseIdx) const
+    { return volumeFlux_; }
+
+    /*!
+     * \brief Return the weight of the upstream index
+     */
+    Scalar upstreamWeight(int phaseIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Return the weight of the downstream index
+     */
+    Scalar downstreamWeight(int phaseIdx) const
+    { return 0.0; }
+
+    /*!
      * \brief Return the local index of the upstream sub-control volume.
      */
-    int upstreamIdx() const
+    int upstreamIdx(int phaseIdx) const
     { return upstreamIdx_; }
 
     /*!
      * \brief Return the local index of the downstream sub-control volume.
      */
-    int downstreamIdx() const
+    int downstreamIdx(int phaseIdx) const
     { return downstreamIdx_; }
+
+    /*!
+     * \brief Return the local index of the sub-control volume which is located in negative normal direction.
+     */
+    int insideIdx() const
+    { return insideIdx_; }
+
+    /*!
+     * \brief Return the local index of the sub-control volume which is located in negative normal direction.
+     */
+    int outsideIdx() const
+    { return outsideIdx_; }
 
     /*!
      * \brief Indicates if a face is on a boundary. Used for in the
@@ -258,7 +291,7 @@ protected:
     Scalar molarDensity_;
     Scalar viscosity_;
     Scalar pressure_;
-    Scalar normalVelocity_;
+    Scalar volumeFlux_;
     DimVector velocity_;
     DimVector normal_;
 
@@ -270,6 +303,9 @@ protected:
     int upstreamIdx_;
     // local index of the downwind vertex
     int downstreamIdx_;
+
+    int insideIdx_;
+    int outsideIdx_;
 };
 
 } // end namepace

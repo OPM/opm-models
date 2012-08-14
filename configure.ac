@@ -15,16 +15,15 @@ AC_CONFIG_FILES([ewoms.pc
     doc/handbook/Makefile
     dumux/Makefile 
     dumux/boxmodels/Makefile 
-    dumux/boxmodels/immiscible/Makefile 
-    dumux/boxmodels/immiscibleni/Makefile 
     dumux/boxmodels/blackoil/Makefile 
     dumux/boxmodels/common/Makefile 
     dumux/boxmodels/flash/Makefile 
+    dumux/boxmodels/immiscible/Makefile 
+    dumux/boxmodels/modules/Makefile 
+    dumux/boxmodels/modules/energy/Makefile 
     dumux/boxmodels/ncp/Makefile 
     dumux/boxmodels/ncp/diffusion/Makefile
-    dumux/boxmodels/ncp/energy/Makefile
     dumux/boxmodels/pvs/Makefile 
-    dumux/boxmodels/pvsni/Makefile 
     dumux/boxmodels/richards/Makefile 
     dumux/boxmodels/vtk/Makefile 
     dumux/common/Makefile 
@@ -48,7 +47,6 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/decoupled/spatialparams/Makefile 
     dumux/freeflow/Makefile
     dumux/freeflow/stokes/Makefile
-    dumux/freeflow/stokesni/Makefile
     dumux/io/Makefile
     dumux/linear/Makefile
     dumux/material/Makefile 

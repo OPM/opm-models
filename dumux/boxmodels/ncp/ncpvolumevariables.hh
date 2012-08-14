@@ -32,9 +32,9 @@
 #define DUMUX_NCP_VOLUME_VARIABLES_HH
 
 #include "diffusion/ncpvolumevariables.hh"
-#include "energy/ncpvolumevariablesenergy.hh"
 
-#include <dumux/boxmodels/common/boxvolumevariables.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 
 namespace Dumux
@@ -49,7 +49,7 @@ template <class TypeTag>
 class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public NcpVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
-    , public NcpVolumeVariablesEnergy<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -75,11 +75,10 @@ class NcpVolumeVariables
 
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef NcpVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
-
     NcpVolumeVariables()
     { }
 
@@ -94,6 +93,7 @@ public:
                            scvIdx,
                            timeIdx);
         ParentType::checkDefined();
+
 
         typename FluidSystem::ParameterCache paramCache;
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
@@ -113,12 +113,7 @@ public:
         /////////////
         // set the fluid phase temperatures
         /////////////
-        EnergyVolumeVariables::updateTemperatures(fluidState_,
-                                                  paramCache,
-                                                  elemCtx,
-                                                  scvIdx,
-                                                  timeIdx);
-
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         /////////////
         // set the phase pressures
@@ -206,13 +201,8 @@ public:
         // energy
         /////////////
 
-        // update the remaining parts of the energy module
-        EnergyVolumeVariables::update(fluidState_,
-                                      paramCache,
-                                      elemCtx,
-                                      scvIdx,
-                                      timeIdx);
-        EnergyVolumeVariables::checkDefined();
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         fluidState_.checkDefined();
         checkDefined();

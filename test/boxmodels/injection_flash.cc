@@ -28,21 +28,21 @@
 #include "config.h"
 
 #include <dumux/boxmodels/flash/flashmodel.hh>
-#define MODEL_TYPE_TAG BoxFlash
 #include "problems/injectionproblem.hh"
-
 #include <dumux/common/start.hh>
 
 namespace Dumux {
 namespace Properties {
+NEW_TYPE_TAG(InjectionFlashProblem, INHERITS_FROM(BoxFlash, InjectionBaseProblem));
+
 // for the flash model we want to use thermodynamic hints or it will
 // get _very_ slow.
-SET_BOOL_PROP(InjectionProblem, EnableHints, true);
+SET_BOOL_PROP(InjectionFlashProblem, EnableHints, true);
 }
 }
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InjectionProblem) ProblemTypeTag;
+    typedef TTAG(InjectionFlashProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

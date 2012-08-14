@@ -34,8 +34,8 @@
 #define DUMUX_NCP_FLUX_VARIABLES_HH
 
 #include "diffusion/ncpfluxvariables.hh"
-#include "energy/ncpfluxvariablesenergy.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -53,7 +53,9 @@ namespace Dumux
  * the intergration point, etc.
  */
 template <class TypeTag>
-class NcpFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
+class NcpFluxVariables
+    : public BoxMultiPhaseFluxVariables<TypeTag>
+    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -61,30 +63,25 @@ class NcpFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum {
-        dimWorld = GridView::dimensionworld,
-
-        enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy)
-    };
-
+    enum { dimWorld = GridView::dimensionworld };   
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     typedef NcpFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
-    typedef NcpFluxVariablesEnergy<TypeTag, enableEnergy> FluxVariablesEnergy;
+
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
 
-        // update the flux data of the energy module (i.e. isothermal
-        // or non-isothermal)
-        energyVars_.update(elemCtx, scvfIdx, timeIdx);
-
         // update the flux data of the diffusion module (i.e. with or
         // without diffusion)
         diffusionVars_.update(elemCtx, scvfIdx, timeIdx);
+        
+        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
     }
 
     ////////////////////////////////////////////////
@@ -104,16 +101,9 @@ public:
     // end of forward calls to the diffusion module
     ////////////////////////////////////////////////
 
-    /*!
-     * \brief Returns the variables relevant for the energy module
-     */
-    const FluxVariablesEnergy &energyVars() const
-    { return energyVars_; }
-
 private:
     // data for the diffusion and the energy modules
     FluxVariablesDiffusion diffusionVars_;
-    FluxVariablesEnergy energyVars_;
 };
 
 } // end namepace

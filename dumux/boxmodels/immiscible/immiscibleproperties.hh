@@ -37,6 +37,7 @@
 #include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/boxmodels/vtk/boxvtkmultiphasemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux
 {
@@ -52,7 +53,7 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The generic type tag for problems using the immiscible multi-phase model
-NEW_TYPE_TAG(BoxImmiscible, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature));
+NEW_TYPE_TAG(BoxImmiscible, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature, VtkEnergy));
 //! The type tag for single-phase immiscible problems 
 NEW_TYPE_TAG(BoxImmiscibleOnePhase, INHERITS_FROM(BoxImmiscible));
 //! The type tag for two-phase immiscible problems
@@ -72,7 +73,7 @@ NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidState); //!<The phases state
-NEW_PROP_TAG(EnableVelocityOutput); //!< Returns whether vertex velocity vectors are written into the vtk output
+NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
 
 // these properties only make sense for the BoxImmiscibleTwoPhase type tag
 NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models

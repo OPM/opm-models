@@ -26,14 +26,19 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvsni/pvsnimodel.hh>
-#define MODEL_TYPE_TAG BoxPvsNI
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include "problems/injectionproblem.hh"
-
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(InjectionPvsNIProblem, INHERITS_FROM(BoxPvs, InjectionBaseProblem));
+
+SET_BOOL_PROP(InjectionPvsNIProblem, EnableEnergy, true);
+} }
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(InjectionProblem) ProblemTypeTag;
+    typedef TTAG(InjectionPvsNIProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

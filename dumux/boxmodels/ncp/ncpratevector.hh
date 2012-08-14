@@ -34,7 +34,7 @@
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
-#include "energy/ncpvolumevariablesenergy.hh"
+#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 namespace Dumux
 {
@@ -61,8 +61,7 @@ class NcpRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef NcpVolumeVariablesEnergy<TypeTag, enableEnergy> EnergyModule;
-
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 public:
     /*!
      * \brief Default constructor

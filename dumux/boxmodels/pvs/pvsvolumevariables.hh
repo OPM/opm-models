@@ -33,6 +33,7 @@
 #include "pvsproperties.hh"
 #include "pvsindices.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
@@ -52,7 +53,9 @@ namespace Dumux
  *        finite volume in the primary variable switching compositional model.
  */
 template <class TypeTag>
-class PvsVolumeVariables : public BoxVolumeVariables<TypeTag>
+class PvsVolumeVariables
+    : public BoxVolumeVariables<TypeTag>
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -72,12 +75,14 @@ class PvsVolumeVariables : public BoxVolumeVariables<TypeTag>
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef Dumux::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
     typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -93,9 +98,7 @@ public:
         ParentType::update(elemCtx,
                            scvIdx,
                            timeIdx);
-
-
-        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -210,7 +213,7 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // energy related quantities
-        asImp_().updateEnergy_(paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
 #if 0
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -268,57 +271,12 @@ public:
     Scalar diffCoeff(int phaseIdx) const
     { return diffCoeff_[phaseIdx]; }
 #endif // 0
-
-    /*!
-     * \brief Given a fluid state, set the temperature in the primary variables
-     */
-    template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    {}                                    
-    
-    /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
-     */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    { }
-
-    /*!
-     * \brief Given a fluid state, set the enthalpy rate which emerges
-     *        from a volumetric rate.
-     */
-    template <class FluidState>
-    static void setEnthalpyRate(RateVector &v,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
-                                Scalar volume)
-    { }
     
 protected:
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx,
-                            int timeIdx)
-    { fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx)); }
-
-    /*!
-     * \brief Called by update() to compute the energy related quantities
-     */
-    void updateEnergy_(typename FluidSystem::ParameterCache &paramCache,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx)
-    { }
-
     Scalar porosity_;        //!< Effective porosity within the control volume
     Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume
     //Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
     FluidState fluidState_;
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
 };
 
 } // end namepace

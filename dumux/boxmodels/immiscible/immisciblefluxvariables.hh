@@ -34,6 +34,7 @@
 
 #include "immiscibleproperties.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 namespace Dumux
@@ -50,8 +51,24 @@ namespace Dumux
  * the intergration point, etc.
  */
 template <class TypeTag>
-class ImmiscibleFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
+class ImmiscibleFluxVariables
+    : public BoxMultiPhaseFluxVariables<TypeTag>
+    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
+    typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
+
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+
+public:
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    {
+        MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+    }
+
 };
 
 } // end namepace

@@ -68,6 +68,9 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+
 public:
     /*!
      * \brief Evaluate the storage term [kg/m^3] in a single phase.
@@ -79,11 +82,11 @@ public:
                          const ElementContext &elemCtx,
                          int scvIdx,
                          int timeIdx,
-                         int phaseIdx)
+                         int phaseIdx) const
     {
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
-
+        
         // compute storage term of all components within all phases
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         {
@@ -93,6 +96,8 @@ public:
                 * fs.saturation(phaseIdx)
                 * volVars.porosity();
         }
+
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
     }
 
     /*!
@@ -111,21 +116,11 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
-
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
-                int eqIdx = conti0EqIdx + compIdx;
-                storage[eqIdx] +=
-                    fs.molarity(phaseIdx, compIdx)
-                    * fs.saturation(phaseIdx);
-            }
-        }
-        storage *= volVars.porosity();
+            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
@@ -138,10 +133,10 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        asImp_().computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
-        asImp_().computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
@@ -185,7 +180,8 @@ public:
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
         }
-
+        
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -217,6 +213,8 @@ public:
             flux[conti0EqIdx + (1 - compIdx)] -= tmp;
         }
 #endif
+
+        EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -234,12 +232,6 @@ public:
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation *> (this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation *> (this); }
 };
 
 } // end namepace

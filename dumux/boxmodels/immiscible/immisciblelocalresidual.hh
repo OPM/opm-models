@@ -30,12 +30,12 @@
 
 #include "immiscibleproperties.hh"
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 /*!
  * \ingroup ImmiscibleBoxModel
  * \ingroup BoxLocalResidual
@@ -60,8 +60,12 @@ protected:
 
     enum {
         conti0EqIdx = Indices::conti0EqIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+
+        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy)
     };
+
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -86,6 +90,8 @@ public:
             volVars.porosity()
             * volVars.fluidState().saturation(phaseIdx)
             * volVars.fluidState().density(phaseIdx);
+        
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
     }
 
     /*!
@@ -111,6 +117,8 @@ public:
                 * volVars.fluidState().saturation(phaseIdx)
                 * volVars.fluidState().density(phaseIdx);
         }
+
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
@@ -174,6 +182,8 @@ public:
                    fluxVars.downstreamWeight(phaseIdx)
                    * dn.fluidState().density(phaseIdx));
         }
+
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -192,7 +202,10 @@ public:
                               int scvfIdx,
                               int timeIdx) const
     {
-        // no diffusive fluxes for immiscible models
+        // no diffusive mass fluxes for the immiscible model
+        
+        // heat conduction
+        EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -207,10 +220,10 @@ public:
                        int scvIdx,
                        int timeIdx) const
     {
-        // retrieve the source term intrinsic to the problem
+        Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        Valgrind::CheckDefined(source);
     }
-
 
 protected:
     Implementation *asImp_()

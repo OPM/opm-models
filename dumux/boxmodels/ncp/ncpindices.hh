@@ -23,8 +23,7 @@
 #define DUMUX_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
-
-#include "energy/ncpindicesenergy.hh"
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 namespace Dumux
 {
@@ -34,29 +33,26 @@ namespace Dumux
  * \brief The primary variable and equation indices for the Ncp
  *        model.
  */
-template <class TypeTag, int BasePVOffset = 0>
-struct NcpIndices :
-        public NcpEnergyIndices<BasePVOffset,
-                                GET_PROP_VALUE(TypeTag, EnableEnergy)>
+template <class TypeTag, int PVOffset = 0>
+struct NcpIndices 
+    : public BoxMultiPhaseEnergyIndices<PVOffset 
+                                        + GET_PROP_VALUE(TypeTag, NumComponents)
+                                        + GET_PROP_VALUE(TypeTag, NumPhases), 
+                                        GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-
-    typedef NcpEnergyIndices<BasePVOffset, enableEnergy> EnergyIndices;
-
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
+    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
 
 public:
     /*!
      * \brief The number of primary variables / equations.
      */
-    // temperature + Mass Balance  + constraints for switch stuff
-    static const int NumPrimaryVars =
-        EnergyIndices::NumPrimaryVars +
-        numComponents +
-        numPhases;
+    static const int numEq = numComponents + numPhases + EnergyIndices::numEq_;
 
 
     /*!
@@ -66,8 +62,7 @@ public:
      * numComponents equations follow...
      */
     static const int conti0EqIdx =
-        BasePVOffset +
-        EnergyIndices::NumPrimaryVars;
+        PVOffset;
 
 
     /*!
@@ -86,8 +81,7 @@ public:
      * numComponents primary variables follow...
      */
     static const int fugacity00Idx =
-        BasePVOffset + 
-        EnergyIndices::NumPrimaryVars;
+        PVOffset;
 
     /*!
      * \brief Index of the saturation of the first phase in a vector

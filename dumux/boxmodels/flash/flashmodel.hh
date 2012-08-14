@@ -31,7 +31,7 @@
 
 #include "flashproperties.hh"
 #include "flashlocalresidual.hh"
-#include "energy/flashenergymodule.hh"
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 #include <iostream>
 #include <sstream>
@@ -73,7 +73,7 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef FlashEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -218,6 +218,9 @@ protected:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
+
+        if (enableEnergy)
+            this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     }
 };
 

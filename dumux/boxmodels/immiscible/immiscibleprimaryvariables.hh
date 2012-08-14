@@ -32,6 +32,7 @@
 
 #include <dune/common/fvector.hh>
 
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/material/constraintsolvers/immiscibleflash.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
@@ -71,10 +72,8 @@ class ImmisciblePrimaryVariables
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
-
     typedef Dumux::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     /*!

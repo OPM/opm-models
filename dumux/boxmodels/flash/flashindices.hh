@@ -29,7 +29,7 @@
 #ifndef DUMUX_FLASH_INDICES_HH
 #define DUMUX_FLASH_INDICES_HH
 
-#include "energy/flashenergymodule.hh"
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 namespace Dumux {
 /*!
@@ -40,11 +40,11 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset>
 class FlashIndices
-    : public FlashEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public BoxMultiPhaseEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef FlashEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
+    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 public:
     // number of equations/primary variables
     static const int numEq = numComponents + EnergyIndices::numEq_;
