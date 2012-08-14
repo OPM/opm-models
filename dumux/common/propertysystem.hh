@@ -525,7 +525,7 @@ public:
     typedef std::list<std::string> ChildrenList;
     typedef std::map<std::string, ChildrenList> ChildrenListMap;
 
-    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Dummy>
+    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Child6, class Child7, class Dummy>
     static void addChildren()
     {
         std::string typeTagName = Dune::className<TypeTag>();
@@ -539,27 +539,39 @@ public:
             keys_[typeTagName].push_front(Dune::className<Child4>());
         if (typeid(Child5) != typeid(void))
             keys_[typeTagName].push_front(Dune::className<Child5>());
+        if (typeid(Child6) != typeid(void))
+            keys_[typeTagName].push_front(Dune::className<Child6>());
+        if (typeid(Child7) != typeid(void))
+            keys_[typeTagName].push_front(Dune::className<Child7>());
     }
+
+    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Child6, class Dummy>
+    static void addChildren()
+    { addChildren<TypeTag, Child1, Child2, Child3, Child4, Child5, Child6, void, Dummy>(); }
+
+    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Dummy>
+    static void addChildren()
+    { addChildren<TypeTag, Child1, Child2, Child3, Child4, Child5, void, void, Dummy>(); }
 
     template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Dummy>
     static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, Child4, void, Dummy>(); }
+    { addChildren<TypeTag, Child1, Child2, Child3, Child4, void, void, void, Dummy>(); }
 
     template <class TypeTag, class Child1, class Child2, class Child3, class Dummy>
     static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, void, void, Dummy>(); }
+    { addChildren<TypeTag, Child1, Child2, Child3, void, void, void, void, Dummy>(); }
 
     template <class TypeTag, class Child1, class Child2, class Dummy>
     static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, void, void,  void, Dummy>(); }
+    { addChildren<TypeTag, Child1, Child2, void, void, void, void, void, Dummy>(); }
 
     template <class TypeTag, class Child1, class Dummy>
     static void addChildren()
-    { addChildren<TypeTag, Child1, void, void, void, void, Dummy>(); }
+    { addChildren<TypeTag, Child1, void, void, void, void, void, void, Dummy>(); }
 
     template <class TypeTag, class Dummy>
     static void addChildren()
-    { addChildren<TypeTag, void, void, void, void, void, Dummy>(); }
+    { addChildren<TypeTag, void, void, void, void, void, void, void, Dummy>(); }
 
     static const ChildrenList &children(const std::string &typeTagName)
     {
@@ -578,26 +590,26 @@ using std::is_void;
 using std::is_base_of;
 
 // logical AND, OR and NOT operations to be used for template meta programming
-template <bool b1, bool b2, bool b3 = true, bool b4 = true, bool b5 = true, bool b6 = true, bool b7 = true>
+template <bool b1, bool b2, bool b3 = true, bool b4 = true, bool b5 = true, bool b6 = true, bool b7 = true, bool b8 = true>
 struct ice_and
 {
     static const bool value = false;
 };
 
 template <>
-struct ice_and<true, true, true, true, true, true, true>
+struct ice_and<true, true, true, true, true, true, true, true>
 {
     static const bool value = true;
 };
 
-template <bool b1, bool b2, bool b3 = false, bool b4 = false, bool b5 = false, bool b6 = false, bool b7 = false>
+template <bool b1, bool b2, bool b3 = false, bool b4 = false, bool b5 = false, bool b6 = false, bool b7 = false, bool b8 = false>
 struct ice_or
 {
     static const bool value = true;
 };
 
 template <>
-struct ice_or<false, false, false, false, false, false, false>
+struct ice_or<false, false, false, false, false, false, false, false>
 {
     static const bool value = false;
 };
@@ -662,7 +674,10 @@ class propertyExplicitlyUnsetOnTree
                                        is_void<typename Tree::Child2>::value,
                                        is_void<typename Tree::Child3>::value,
                                        is_void<typename Tree::Child4>::value,
-                                       is_void<typename Tree::Child5>::value >::value;
+                                       is_void<typename Tree::Child5>::value,
+                                       is_void<typename Tree::Child6>::value,
+                                       is_void<typename Tree::Child7>::value
+                                       >::value;
 
 public:
     static const bool value =
@@ -672,7 +687,9 @@ public:
                        propertyExplicitlyUnsetOnTree<typename Tree::Child2, PropertyTag>::value,
                        propertyExplicitlyUnsetOnTree<typename Tree::Child3, PropertyTag>::value,
                        propertyExplicitlyUnsetOnTree<typename Tree::Child4, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child5, PropertyTag>::value
+                       propertyExplicitlyUnsetOnTree<typename Tree::Child5, PropertyTag>::value,
+                       propertyExplicitlyUnsetOnTree<typename Tree::Child6, PropertyTag>::value,
+                       propertyExplicitlyUnsetOnTree<typename Tree::Child7, PropertyTag>::value
                        >::value
                >::value;
 };
@@ -713,7 +730,9 @@ public:
                        propertyDefinedOnTree<RealTypeTag, typename Tree::Child2, PropertyTag>::value,
                        propertyDefinedOnTree<RealTypeTag, typename Tree::Child3, PropertyTag>::value,
                        propertyDefinedOnTree<RealTypeTag, typename Tree::Child4, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child5, PropertyTag>::value
+                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child5, PropertyTag>::value,
+                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child6, PropertyTag>::value,
+                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child7, PropertyTag>::value
                        >::value >::value;
 };
 
@@ -745,7 +764,10 @@ class defaultPropertyDefinedOnTree
                                        is_void<typename Tree::Child2>::value,
                                        is_void<typename Tree::Child3>::value,
                                        is_void<typename Tree::Child4>::value,
-                                       is_void<typename Tree::Child5>::value >::value;
+                                       is_void<typename Tree::Child5>::value,
+                                       is_void<typename Tree::Child6>::value,
+                                       is_void<typename Tree::Child7>::value
+                                       >::value;
 
     static const bool explicitlyUnset =
         propertyExplicitlyUnsetOnTree<Tree, PropertyTag>::value;
@@ -758,7 +780,9 @@ public:
                        defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child2, PropertyTag>::value,
                        defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child3, PropertyTag>::value,
                        defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child4, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child5, PropertyTag>::value
+                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child5, PropertyTag>::value,
+                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child6, PropertyTag>::value,
+                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child7, PropertyTag>::value
                        >::value >::value;
 };
 
@@ -781,6 +805,8 @@ public:
     static const bool onChild3 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child3,PropertyTag>::value;
     static const bool onChild4 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child4,PropertyTag>::value;
     static const bool onChild5 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child5,PropertyTag>::value;
+    static const bool onChild6 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child6,PropertyTag>::value;
+    static const bool onChild7 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child7,PropertyTag>::value;
 
     static const bool asDefault =
         defaultPropertyDefinedOnTree<RealTypeTag, Tree,PropertyTag>::value;
@@ -790,7 +816,9 @@ public:
                onChild2,
                onChild3,
                onChild4,
-               onChild5
+               onChild5,
+               onChild6,
+               onChild7
                >::value;
 
     static const bool value =
@@ -809,13 +837,15 @@ class propertyTagIndex
 public:
     static const int value =
         definedWhere::onSelf ? 0 :
-        ( definedWhere::onChild5 ? 5 :
-          ( definedWhere::onChild4 ? 4 :
-            ( definedWhere::onChild3 ? 3 :
-              ( definedWhere::onChild2 ? 2 :
-                ( definedWhere::onChild1 ? 1 :
-                  ( definedWhere::asDefault ? -1 :
-                    -1000))))));
+        ( definedWhere::onChild7 ? 7 :
+          ( definedWhere::onChild6 ? 6 :
+            ( definedWhere::onChild5 ? 5 :
+              ( definedWhere::onChild4 ? 4 :
+                ( definedWhere::onChild3 ? 3 :
+                  ( definedWhere::onChild2 ? 2 :
+                    ( definedWhere::onChild1 ? 1 :
+                      ( definedWhere::asDefault ? -1 :
+                        -1000))))))));
 };
 
 
@@ -825,7 +855,9 @@ template <class SelfT,
           class Child2T = void,
           class Child3T = void,
           class Child4T = void,
-          class Child5T = void>
+          class Child5T = void,
+          class Child6T = void,
+          class Child7T = void>
 class TypeTag
 {
 public:
@@ -836,6 +868,8 @@ public:
     typedef Child3T Child3;
     typedef Child4T Child4;
     typedef Child5T Child5;
+    typedef Child6T Child6;
+    typedef Child7T Child7;
 };
 
 //! \internal
@@ -896,6 +930,18 @@ template <class TypeTag, class PropertyTag, class RealTypeTag>
 struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 5>
 {
     typedef typename GetProperty<typename TypeTag::Child5, PropertyTag, RealTypeTag>::p p;
+};
+
+template <class TypeTag, class PropertyTag, class RealTypeTag>
+struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 6>
+{
+    typedef typename GetProperty<typename TypeTag::Child6, PropertyTag, RealTypeTag>::p p;
+};
+
+template <class TypeTag, class PropertyTag, class RealTypeTag>
+struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 7>
+{
+    typedef typename GetProperty<typename TypeTag::Child7, PropertyTag, RealTypeTag>::p p;
 };
 
 #if !defined NO_PROPERTY_INTROSPECTION
