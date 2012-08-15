@@ -33,7 +33,7 @@
 
 #include <dumux/material/components/unit.hh>
 #include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
-#include <dumux/decoupled/2p/diffusion/fvmpfa/fvmpfaopressureproperties2p.hh>
+#include <dumux/decoupled/2p/diffusion/fvmpfa/omethod/fvmpfaopressurepropertiessimple2p.hh>
 #include <dumux/decoupled/2p/diffusion/mimetic/mimeticpressureproperties2p.hh>
 #include <dumux/decoupled/2p/diffusion/diffusionproblem2p.hh>
 #include <dumux/decoupled/common/fv/fvvelocity.hh>
@@ -220,6 +220,7 @@ public:
             this->variables().cellData(i).setSaturation(wPhaseIdx, 1.0);
         }
         this->model().initialize();
+        velocity_.initialize();
     }
 
     /*!
