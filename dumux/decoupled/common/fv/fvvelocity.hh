@@ -71,6 +71,11 @@ template<class TypeTag, class Velocity> class FVVelocity
 
 public:
 
+    void initialize()
+    {
+        velocity_.initialize();
+    }
+
     //function which iterates through the grid and calculates the global velocity field
     void calculateVelocity();
 

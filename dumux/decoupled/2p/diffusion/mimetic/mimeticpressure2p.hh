@@ -125,6 +125,7 @@ template<class TypeTag> class MimeticPressure2P
     void assemble(bool first)
     {
         LocalStiffness lstiff(problem_, false, problem_.gridView());
+        lstiff.initialize();
         A_.assemble(lstiff, pressTrace_, f_);
         return;
     }
@@ -135,6 +136,7 @@ template<class TypeTag> class MimeticPressure2P
     void postprocess()
     {
         LocalStiffness lstiff(problem_, false, problem_.gridView());
+        lstiff.initialize();
         A_.calculatePressure(lstiff, pressTrace_, normalVelocity_, pressure_);
         return;
     }
@@ -165,6 +167,20 @@ public:
      */
     void initialize(bool solveTwice = true)
     {
+        ElementIterator element = problem_.gridView().template begin<0> ();
+        FluidState fluidState;
+        fluidState.setPressure(wPhaseIdx, problem_.referencePressure(*element));
+        fluidState.setPressure(nPhaseIdx, problem_.referencePressure(*element));
+        fluidState.setTemperature(problem_.temperature(*element));
+        fluidState.setSaturation(wPhaseIdx, 1.);
+        fluidState.setSaturation(nPhaseIdx, 0.);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState);
+        density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
+        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
+
         updateMaterialLaws();
         A_.initializeMatrix();
         f_.resize(problem_.gridView().size(1));//resize to make sure the final grid size (after the problem was completely built) is used!
@@ -286,21 +302,6 @@ public:
         {
             DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
-
-        ElementIterator element = problem_.gridView().template begin<0> ();
-        FluidState fluidState;
-        fluidState.setPressure(wPhaseIdx, problem_.referencePressure(*element));
-        fluidState.setPressure(nPhaseIdx, problem_.referencePressure(*element));
-        fluidState.setTemperature(problem_.temperature(*element));
-        fluidState.setSaturation(wPhaseIdx, 1.);
-        fluidState.setSaturation(nPhaseIdx, 0.);
-
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
-        density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
-        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
-        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
     }
 
 private:

@@ -53,6 +53,9 @@ private:
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
+    //! For initialization
+    void initialize(){};
+
     /*! \brief Returns convective term for current element face
      *  \param intersection  Intersection of two grid elements/global boundary
      *  \param sat           Saturation of current element
