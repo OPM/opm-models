@@ -180,8 +180,6 @@ namespace Properties
     namespace PTag {                                       \
     struct PTagName; } extern int semicolonHack_
 
- * \code
- * \endcode
 //! Internal macro
 #define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)       \
     template <class TypeTag>                                        \
