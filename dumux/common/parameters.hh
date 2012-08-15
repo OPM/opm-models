@@ -50,8 +50,8 @@
  * Example:
  *
  * \code
- * // -> retrieves scalar value UpwindWeight, default
- * // is taken from the property UpwindWeight
+ * // -> retrieves scalar value UpwindWeight, default 
+ * // is taken from the property UpwindWeight 
  * GET_PARAM(TypeTag, Scalar, UpwindWeight);
  * \endcode
  */
