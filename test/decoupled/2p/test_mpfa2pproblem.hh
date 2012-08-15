@@ -92,11 +92,18 @@ public:
 };
 
 // Enable gravity
-SET_BOOL_PROP(MPFATwoPTestProblem, ProblemEnableGravity, true);
+SET_BOOL_PROP(MPFATwoPTestProblem, EnableGravity, true);
 
 SET_TYPE_PROP(MPFATwoPTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
-SET_SCALAR_PROP(MPFATwoPTestProblem, ImpetCFLFactor, 1.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, CFLFactor, 1.0);
 SET_TYPE_PROP(MPFATwoPTestProblem, AdaptionIndicator, Dumux::GridAdaptionIndicator2PLocal<TypeTag>);
+SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeX, 20.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeY, 10.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeZ, 1.0);
+
+SET_INT_PROP(MPFATwoPTestProblem, CellsX, 10);
+SET_INT_PROP(MPFATwoPTestProblem, CellsY, 10);
+SET_INT_PROP(MPFATwoPTestProblem, CellsZ, 1);
 
 NEW_TYPE_TAG(FVTwoPTestProblem, INHERITS_FROM(FVPressureTwoP, FVTransportTwoP, IMPESTwoP, MPFATwoPTestProblem));
 NEW_TYPE_TAG(FVAdaptiveTwoPTestProblem, INHERITS_FROM(FVPressureTwoPAdaptive, FVTransportTwoP, IMPESTwoPAdaptive, MPFATwoPTestProblem));
@@ -154,8 +161,8 @@ typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
 public:
-MPFATwoPTestProblem(TimeManager &timeManager,const GridView &gridView) :
-ParentType(timeManager, gridView)
+MPFATwoPTestProblem(TimeManager &timeManager) 
+    : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
 {
     this->setGrid(GridCreator::grid());
 
@@ -344,7 +351,7 @@ bool isBottom(const GlobalPosition& globalPos) const
 Scalar inFlux_;
 GlobalPosition inletLeftCoord_;
 GlobalPosition inletRightCoord_;
-static const Scalar eps_ = 1e-6;
+static constexpr Scalar eps_ = 1e-6;
 };
 } //end namespace
 

@@ -7,14 +7,12 @@
 ############################################################
 # Mandatory arguments
 ############################################################
-[TimeManager]
-TEnd = 5e4# [s]
-DtInitial = 0# [s]
+EndTime = 5e4# [s]
+InitialTimeStepSize = 0# [s]
 
-[Grid]
 #For nine-spot problem
-NumberOfCellsX = 10# [-] level 0 resolution in x-direction
-NumberOfCellsY = 10# [-] level 0 resolution in y-direction
+CellsX = 10# [-] level 0 resolution in x-direction
+CellsY = 10# [-] level 0 resolution in y-direction
 
 UpperRightX = 20# [m] dimension of the grid
 UpperRightY = 10# [m] dimension of the grid # 2D
@@ -22,8 +20,9 @@ UpperRightY = 10# [m] dimension of the grid # 2D
 ############################################################
 # Optional arguments
 ############################################################
-[Problem]
 EnableGravity = true
+
+[Problem]
 OutputInterval =0
 OutputTimeInterval = 1e4
 

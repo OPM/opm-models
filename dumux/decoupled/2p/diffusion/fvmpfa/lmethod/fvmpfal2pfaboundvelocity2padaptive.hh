@@ -127,10 +127,12 @@ public:
         fluidState.setTemperature(problem_.temperature(*element));
         fluidState.setSaturation(wPhaseIdx, 1.);
         fluidState.setSaturation(nPhaseIdx, 0.);
-        density_[wPhaseIdx] = FluidSystem::density(fluidState, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(fluidState, nPhaseIdx);
-        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, wPhaseIdx);
-        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, nPhaseIdx);
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState);
+        density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
+        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
     }
 
     void calculateVelocity();
@@ -232,10 +234,10 @@ private:
      Scalar density_[numPhases];
      Scalar viscosity_[numPhases];
 
-     static const Scalar threshold_ = 1e-15;
-     static const int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
-     static const int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
-     static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
+     static constexpr Scalar threshold_ = 1e-15;
+     static constexpr int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
+     static constexpr int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
+     static constexpr int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
 };
 // end of template
 
