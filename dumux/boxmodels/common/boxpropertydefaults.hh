@@ -44,7 +44,7 @@
 #include "boxnewtoncontroller.hh"
 
 #include <dumux/linear/boxlinearsolver.hh>
-#include <dumux/linear/boxparallelamgsolver.hh>
+//#include <dumux/linear/boxparallelamgsolver.hh>
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/common/timemanager.hh>
 

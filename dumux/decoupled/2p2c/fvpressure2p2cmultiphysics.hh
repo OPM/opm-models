@@ -29,9 +29,6 @@
 #include <dumux/decoupled/2p2c/fvpressure2p2c.hh>
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
-#include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
-
 /**
  * @file
  * @brief  Finite Volume Diffusion Model
@@ -73,6 +70,7 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     typedef FVPressure2P2C<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
@@ -91,17 +89,28 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     };
     enum
     {
-        pw = Indices::pressureW
+        pw = Indices::pressureW,
+        pn = Indices::pressureNW,
+        pglobal = Indices::pressureGlobal,
+        Sw = Indices::saturationW,
+        Sn = Indices::saturationNW
     };
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx
+        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx,
+        contiWEqIdx = Indices::contiWEqIdx, contiNEqIdx = Indices::contiNEqIdx
+    };
+    enum
+    {
+        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
     };
 
     // typedefs to abbreviate several dune classes...
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
@@ -199,7 +208,7 @@ protected:
 };
 
 //! function which assembles the system of equations to be solved
-/** for first == true, this function assembles the matrix and right hand side for
+/*! for first == true, this function assembles the matrix and right hand side for
  * the solution of the pressure field in the same way as in the class FVPressure2P.
  * for first == false, the approach is changed to \f[-\frac{\partial V}{\partial p}
  * \frac{\partial p}{\partial t}+\sum_{\kappa}\frac{\partial V}{\partial m^{\kappa}}\nabla\cdot
@@ -284,9 +293,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::assemble(bool first)
         else
             problem().pressureModel().getStorage(entries, *eIt, cellDataI, first);
 
-        this->f_[globalIdxI] += entries[1];
+        this->f_[globalIdxI] += entries[rhs];
         // set diagonal entry
-        this->A_[globalIdxI][globalIdxI] += entries[0];
+        this->A_[globalIdxI][globalIdxI] += entries[matrix];
     } // end grid traversal
 //        printmatrix(std::cout, this->A_, "global stiffness matrix after assempling", "row", 11,3);
 //        printvector(std::cout, this->f_, "right hand side", "row", 10);
@@ -307,7 +316,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pSource(Dune::FieldVector<Scalar, 
     problem().source(source, elementI);
     source[1+subdomainIdx] /= cellDataI.density(subdomainIdx);
 
-    sourceEntry[1] = volume * source[1+subdomainIdx];
+    sourceEntry[rhs] = volume * source[1+subdomainIdx];
 
     return;
 }
@@ -341,12 +350,11 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
         Scalar Z1 = cellDataI.massConcentration(wCompIdx) / sumC;
         // initialize simple fluidstate object
         PseudoOnePTwoCFluidState<TypeTag> pseudoFluidState;
-        pseudoFluidState.update(Z1, p_, cellDataI.subdomain(),
+        CompositionalFlash<TypeTag> flashSolver;
+        flashSolver.concentrationFlash1p2c(pseudoFluidState, Z1, p_, cellDataI.subdomain(),
                 problem().temperatureAtPos(elementI.geometry().center()));
 
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updatePhase(pseudoFluidState, presentPhaseIdx);
-        Scalar v_ = 1. / FluidSystem::density(pseudoFluidState, paramCache, presentPhaseIdx);
+        Scalar v_ = 1. / pseudoFluidState.density(presentPhaseIdx);
         cellDataI.dv_dp() = (sumC * ( v_ - (1. /cellDataI.density(presentPhaseIdx)))) /incp;
 
         if (cellDataI.dv_dp()>0)
@@ -355,9 +363,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
             Dune::dinfo << "dv_dp larger 0 at Idx " << globalIdxI << " , try and invert secant"<< std::endl;
 
             p_ -= 2*incp;
-            pseudoFluidState.update(Z1, p_, cellDataI.subdomain(),
+            flashSolver.concentrationFlash1p2c(pseudoFluidState, Z1, p_, cellDataI.subdomain(),
                     problem().temperatureAtPos(elementI.geometry().center()));
-            v_ = 1. / FluidSystem::density(pseudoFluidState, paramCache, presentPhaseIdx);
+            v_ = 1. / pseudoFluidState.density(presentPhaseIdx);
             cellDataI.dv_dp() = (sumC * ( v_ - (1. /cellDataI.density(presentPhaseIdx)))) /incp;
             // dV_dp > 0 is unphysical: Try inverse increment for secant
             if (cellDataI.dv_dp()>0)
@@ -369,10 +377,10 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
 
         Scalar compress_term = cellDataI.dv_dp() / timestep_;
 
-        storageEntry[rhs] -= compress_term*volume;
-        storageEntry[matrix] -= cellDataI.pressure(pressureType) * compress_term * volume;
+        storageEntry[matrix] -= compress_term*volume;
+        storageEntry[rhs] -= cellDataI.pressure(pressureType) * compress_term * volume;
 
-        if (std::isnan(compress_term) || std::isinf(compress_term))
+        if (isnan(compress_term) || isinf(compress_term))
             DUNE_THROW(Dune::MathError, "Compressibility term leads to NAN matrix entry at index " << globalIdxI);
 
         if(!GET_PROP_VALUE(TypeTag, EnableCompressibility))
@@ -392,7 +400,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
     // if damping is not done, the solution method gets unstable!
     problem().variables().cellData(globalIdxI).volumeError() /= timestep_;
     Scalar maxError = this->maxError_;
-    Scalar erri = std::abs(cellDataI.volumeError());
+    Scalar erri = fabs(cellDataI.volumeError());
     Scalar x_lo = this->ErrorTermLowerBound_;
     Scalar x_mi = this->ErrorTermUpperBound_;
     Scalar fac  = this->ErrorTermFactor_;
@@ -472,9 +480,10 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
         // due to "safety cell" around subdomain, both cells I and J
         // have single-phase conditions, although one is in 2p domain.
         int phaseIdx = std::min(cellDataI.subdomain(), cellDataJ.subdomain());
+        // determine respective equation Idx
+        int contiEqIdx = (phaseIdx == wPhaseIdx) ? contiWEqIdx : contiNEqIdx;
 
         Scalar rhoMean = 0.5 * (cellDataI.density(phaseIdx) + cellDataJ.density(phaseIdx));
-
         //Scalar density = 0;
 
         // 1p => no pC => only 1 pressure, potential
@@ -484,20 +493,28 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pFlux(Dune::FieldVector<Scalar, 2>
 
         Scalar lambda;
 
-        if (potential >= 0.)
+        if (potential > 0.)
         {
             lambda = cellDataI.mobility(phaseIdx);
+            cellDataJ.setUpwindCell(intersection.indexInOutside(), contiEqIdx, false);  // store in cellJ since cellI is const
             //density = cellDataI.density(phaseIdx);
+        }
+        else if (potential < 0.)
+        {
+            lambda = cellDataJ.mobility(phaseIdx);
+            cellDataJ.setUpwindCell(intersection.indexInOutside(), contiEqIdx, true);
+            //density = cellDataJ.density(phaseIdx);
         }
         else
         {
-            lambda = cellDataJ.mobility(phaseIdx);
+            lambda = harmonicMean(cellDataI.mobility(phaseIdx) , cellDataJ.mobility(phaseIdx));
+            cellDataJ.setUpwindCell(intersection.indexInOutside(), contiEqIdx, false);
             //density = cellDataJ.density(phaseIdx);
         }
 
-        entries[matrix]  = lambda * faceArea * (permeability * unitOuterNormal) / (dist);
-        entries[rhs]  = rhoMean * lambda;
-        entries[rhs] *= faceArea * (permeability * gravity_) * (unitOuterNormal * unitDistVec);
+        entries[0]  = lambda * faceArea * (permeability * unitOuterNormal) / (dist);
+        entries[1]  = rhoMean * lambda;
+        entries[1] *= faceArea * (permeability * gravity_) * (unitOuterNormal * unitDistVec);
         return;
 }
 
@@ -709,6 +726,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
         }// end complex domain
         else if (nextSubdomain[globalIdx] != 2) //check if cell remains in simple subdomain
             nextSubdomain[globalIdx] = cellData.subdomain();
+
     } //end define complex area of next subdomain
 
     timer_.start();
@@ -718,48 +736,42 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
     {
         int globalIdx = problem().variables().index(*eIt);
         CellData& cellData = problem().variables().cellData(globalIdx);
- 
+
         // store old subdomain information and assign new info
         int oldSubdomainI = cellData.subdomain();
         cellData.subdomain() = nextSubdomain[globalIdx];
- 
+
         //first check if simple will become complicated
         if(oldSubdomainI != 2
                     && nextSubdomain[globalIdx] == 2)
         {
-            // assure correct PV if subdomain used to be simple
-            if(cellData.fluidStateType() != 0) // i.e. it was simple
-            {
-              timer_.stop();
-            }
+            // use complex update of the fluidstate
+            timer_.stop();
             this->updateMaterialLawsInElement(*eIt, postTimeStep);
             timer_.start();
         }
         else if(oldSubdomainI != 2
                     && nextSubdomain[globalIdx] != 2)    // will be simple and was simple
         {
-//            // determine which phase should be present
-//            int presentPhaseIdx = cellData.subdomain(); // this is already =nextSubomainIdx
- 
-            // perform simple update
+			// perform simple update
             this->update1pMaterialLawsInElement(*eIt, cellData, postTimeStep);
-            timer_.stop();
-         }
+        }
         //else
         // a) will remain complex -> everything already done in loop A
         // b) will be simple and was complex: complex FS available, so next TS
         //         will use comlex FS, next updateMaterialLaw will transform to simple
 
-        maxError = std::max(maxError, std::abs(cellData.volumeError()));
+        maxError = std::max(maxError, fabs(cellData.volumeError()));
     }// end grid traversal
     this->maxError_ = maxError/problem().timeManager().timeStepSize();
 
     timer_.stop();
-    Dune::dinfo << "Subdomain routines took " << timer_.elapsed() << " seconds" << std::endl;
+    
+    if(problem().timeManager().willBeFinished() or problem().timeManager().episodeWillBeOver())
+    	Dune::dinfo << "Subdomain routines took " << timer_.elapsed() << " seconds" << std::endl;
 
     return;
 }
-
 template<class TypeTag>
 void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const Element& elementI, CellData& cellData, bool postTimeStep)
 {
@@ -795,18 +807,13 @@ void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const El
         pressure[nPhaseIdx] = this->pressure(globalIdx);
     }
 
-//            // make shure total concentrations from solution vector are exact in fluidstate
-//            pseudoFluidState.setMassConcentration(wCompIdx,
-//                    problem().transportModel().totalConcentration(wCompIdx,globalIdx));
-//            pseudoFluidState.setMassConcentration(nCompIdx,
-//                    problem().transportModel().totalConcentration(nCompIdx,globalIdx));
-
     // get the overall mass of component 1:  Z1 = C^k / (C^1+C^2) [-]
     Scalar sumConc = cellData.massConcentration(wCompIdx)
             + cellData.massConcentration(nCompIdx);
     Scalar Z1 = cellData.massConcentration(wCompIdx)/ sumConc;
 
-    pseudoFluidState.update(Z1, pressure, presentPhaseIdx, problem().temperatureAtPos(globalPos));
+    CompositionalFlash<TypeTag> flashSolver;
+    flashSolver.concentrationFlash1p2c(pseudoFluidState, Z1, pressure, presentPhaseIdx, problem().temperatureAtPos(globalPos));
 
     // write stuff in fluidstate
     assert(presentPhaseIdx == pseudoFluidState.presentPhaseIdx());
@@ -816,8 +823,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const El
     // initialize viscosities
     typename FluidSystem::ParameterCache paramCache;
     paramCache.updatePhase(pseudoFluidState, presentPhaseIdx);
-    Scalar mu = FluidSystem::viscosity(pseudoFluidState, paramCache, presentPhaseIdx);
-    cellData.setViscosity(presentPhaseIdx, mu);
+    cellData.setViscosity(presentPhaseIdx, FluidSystem::viscosity(pseudoFluidState, paramCache, presentPhaseIdx));
 
     // initialize mobilities
     if(presentPhaseIdx == wPhaseIdx)

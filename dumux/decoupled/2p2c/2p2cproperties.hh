@@ -83,9 +83,9 @@ NEW_PROP_TAG( ErrorTermUpperBound ); //!< Lower bound where error is not correct
 NEW_PROP_TAG( FluidSystem ); //!< The fluid system
 NEW_PROP_TAG( FluidState ); //!< The fluid state
 NEW_PROP_TAG( EnableVolumeIntegral ); //!< Enables volume integral in the pressure equation (volume balance formulation)
-NEW_PROP_TAG( EnableMultiPointFluxApproximationOnAdaptiveGrids ); //!< Two-point flux approximation (false) or mpfa (true)
+NEW_PROP_TAG( EnableMultiPointFluxApproximation); //!< HangingNode: Two-point flux approximation (false) or mpfa (true)
 NEW_PROP_TAG( EnableSecondHalfEdge ); //!< Uses second interaction volume for second half-edge in 2D
-
+NEW_PROP_TAG( EnableSecondHalfEdge ); //!< Uses second interaction volume for second half-edge in 2D
 }}
 
 //DUMUX includes
@@ -158,7 +158,7 @@ SET_TYPE_PROP(DecoupledTwoPTwoC, Variables, VariableClass<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoPTwoC, CellData, CellData2P2C<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoPTwoC, FluidState, TwoPTwoCFluidState<TypeTag>);
 
-SET_BOOL_PROP(DecoupledTwoPTwoC, EnableMultiPointFluxApproximationOnAdaptiveGrids, false); //!< MPFA disabled on adaptive grids
+SET_BOOL_PROP(DecoupledTwoPTwoC, EnableMultiPointFluxApproximation, false); //!< MPFA disabled on adaptive grids
 SET_BOOL_PROP(DecoupledTwoPTwoC, EnableVolumeIntegral, true); //!< Regard volume integral in pressure equation
 
 SET_SCALAR_PROP(DecoupledTwoPTwoC, ErrorTermFactor, 0.5); //!< Damping factor \f$ \alpha \f$ in pressure equation

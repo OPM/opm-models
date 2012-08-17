@@ -222,10 +222,10 @@ public:
         }
 
         // create a fixpoint convergence criterion
-        auto convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector>(problem_.gridView().comm());
         Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
-        convCrit->setWeight(weightVec);
-        convCrit->setTolerance(linearSolverTolerance);
+        auto *convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector>(problem_.gridView().comm(), 
+                                                                                      weightVec,
+                                                                                      linearSolverTolerance);
 
         // tell the linear solver to use it
         typedef Dune::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;

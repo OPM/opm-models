@@ -27,6 +27,7 @@
 // dumux environment
 #include "dumux/common/math.hh"
 #include <dumux/decoupled/common/fv/fvpressure.hh>
+#include <dumux/material/constraintsolvers/compositionalflash.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 
@@ -231,6 +232,10 @@ public:
         ScalarSolutionType *totalConcentration2 = writer.allocateManagedBuffer (size);
         ScalarSolutionType *viscosityWetting = writer.allocateManagedBuffer(size);
         ScalarSolutionType *viscosityNonwetting = writer.allocateManagedBuffer(size);
+//        ScalarSolutionType *nun = writer.allocateManagedBuffer(size);
+//        ScalarSolutionType *nuw = writer.allocateManagedBuffer(size);
+        ScalarSolutionType *faceUpwindW = writer.allocateManagedBuffer(size);
+        ScalarSolutionType *faceUpwindN = writer.allocateManagedBuffer(size);
         for (int i = 0; i < size; i++)
         {
             CellData& cellData = problem_.variables().cellData(i);
@@ -238,8 +243,25 @@ public:
             (*totalConcentration2)[i] = cellData.massConcentration(nCompIdx);
             (*viscosityWetting)[i] = cellData.viscosity(wPhaseIdx);
             (*viscosityNonwetting)[i] = cellData.viscosity(nPhaseIdx);
+//            (*nun)[i] = cellData.phaseMassFraction(nPhaseIdx);
+//            (*nuw)[i] = cellData.phaseMassFraction(wPhaseIdx);
+            (*faceUpwindW)[i] = 0;
+            (*faceUpwindN)[i] = 0;
+            // run thorugh all local face idx and collect upwind information
+            for(int faceIdx = 0; faceIdx<cellData.fluxData().size(); faceIdx++)
+            {
+                if(cellData.isUpwindCell(faceIdx, contiWEqIdx))
+                    (*faceUpwindW)[i] += pow(10,static_cast<double>(1-faceIdx));
+                if(cellData.isUpwindCell(faceIdx, contiNEqIdx))
+                    (*faceUpwindN)[i] += pow(10,static_cast<double>(1-faceIdx));
+            }
         }
+//        writer.attachCellData(*nun, "phase mass fraction n-phase");
+//        writer.attachCellData(*nuw, "phase mass fraction w-phase");
         *pressurePV = this->pressure();
+
+        writer.attachCellData(*faceUpwindW, "isUpwind w-phase");
+        writer.attachCellData(*faceUpwindN, "isUpwind n-phase");
         writer.attachCellData(*pressurePV, "pressure (Primary Variable");
         writer.attachCellData(*totalConcentration1, "C^w from cellData");
         writer.attachCellData(*totalConcentration2, "C^n from cellData");
@@ -449,6 +471,7 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
         CellData& cellData = problem_.variables().cellData(globalIdx);
         // acess the fluid state and prepare for manipulation
         FluidState& fluidState = cellData.manipulateFluidState();
+        CompositionalFlash<TypeTag> flashSolver;
 
         // initial conditions
         PhaseVector pressure(0.);
@@ -465,12 +488,13 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
             if (icFormulation == Indices::saturation)  // saturation initial condition
             {
                 sat_0 = problem_.initSat(*eIt);
-                fluidState.satFlash(sat_0, pressure, problem_.spatialParams().porosity(*eIt), temperature_);
+                flashSolver.saturationFlash2p2c(fluidState, sat_0, pressure, problem_.spatialParams().porosity(*eIt), temperature_);
             }
             else if (icFormulation == Indices::concentration) // concentration initial condition
             {
                 Scalar Z1_0 = problem_.initConcentration(*eIt);
-                fluidState.update(Z1_0, pressure, problem_.spatialParams().porosity(*eIt), temperature_);
+                flashSolver.concentrationFlash2p2c(fluidState, Z1_0, pressure,
+                        problem_.spatialParams().porosity(*eIt), temperature_);
             }
         }
         else if(compositional)    //means we regard compositional effects since we know an estimate pressure field
@@ -504,8 +528,8 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                         break;
                     }
                 }
-
-                fluidState.satFlash(sat_0, pressure, problem_.spatialParams().porosity(*eIt), temperature_);
+                flashSolver.saturationFlash2p2c(fluidState, sat_0, pressure,
+                        problem_.spatialParams().porosity(*eIt), temperature_);
             }
             else if (icFormulation == Indices::concentration) // concentration initial condition
             {
@@ -543,8 +567,8 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                         //store old pc
                         Scalar oldPc = pc;
                         //update with better pressures
-                        fluidState.update(Z1_0, pressure, problem_.spatialParams().porosity(*eIt),
-                                            problem_.temperatureAtPos(globalPos));
+                        flashSolver.concentrationFlash2p2c(fluidState, Z1_0, pressure,
+                                problem_.spatialParams().porosity(*eIt), problem_.temperatureAtPos(globalPos));
                         pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt),
                                             fluidState.saturation(wPhaseIdx));
                         // TODO: get right criterion, do output for evaluation
@@ -560,7 +584,8 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                 {
                     pressure[wPhaseIdx] = pressure[nPhaseIdx]
                         = this->pressure()[globalIdx];
-                    fluidState.update(Z1_0, pressure, problem_.spatialParams().porosity(*eIt), temperature_);
+                    flashSolver.concentrationFlash2p2c(fluidState, Z1_0,
+                            pressure, problem_.spatialParams().porosity(*eIt), temperature_);
                 }
             } //end conc initial condition
             cellData.calculateMassConcentration(problem_.spatialParams().porosity(*eIt));
@@ -626,8 +651,9 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
     // get cell temperature
     Scalar temperature_ = problem_.temperatureAtPos(globalPos);
 
-    // initialize an Fluid state for the update
+    // initialize an Fluid state and a flash solver
     FluidState updFluidState;
+    CompositionalFlash<TypeTag> flashSolver;
 
     /**********************************
      * a) get necessary variables
@@ -664,7 +690,6 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
     }
     Scalar incp = 1e-2;
 
-
     /**********************************
      * c) Secant method for derivatives
      **********************************/
@@ -673,7 +698,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
     PhaseVector p_(incp);
     p_ += pressure;
     Scalar Z1 = mass[0] / mass.one_norm();
-    updFluidState.update(Z1,
+    flashSolver.concentrationFlash2p2c(updFluidState, Z1,
             p_, problem_.spatialParams().porosity(element), temperature_);
 
     specificVolume=0.; // = \sum_{\alpha} \nu_{\alpha} / \rho_{\alpha}
@@ -688,7 +713,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
         Dune::dinfo << "dv_dp larger 0 at Idx " << globalIdx << " , try and invert secant"<< std::endl;
 
         p_ -= 2*incp;
-        updFluidState.update(Z1,
+        flashSolver.concentrationFlash2p2c(updFluidState, Z1,
                     p_, problem_.spatialParams().porosity(element), temperature_);
 
         specificVolume=0.; // = \sum_{\alpha} \nu_{\alpha} / \rho_{\alpha}
@@ -709,7 +734,9 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
         mass[compIdx] +=  massIncrement[compIdx];
 
         Z1 = mass[0] / mass.one_norm();
-        updFluidState.update(Z1, pressure, problem_.spatialParams().porosity(element), temperature_);
+
+        flashSolver.concentrationFlash2p2c(updFluidState, Z1,
+                pressure, problem_.spatialParams().porosity(element), temperature_);
 
         specificVolume=0.; // = \sum_{\alpha} \nu_{\alpha} / \rho_{\alpha}
         for(int phaseIdx = 0; phaseIdx< numPhases; phaseIdx++)
