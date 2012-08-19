@@ -27,7 +27,7 @@
 // dumux environment
 #include "dumux/common/math.hh"
 #include <dumux/decoupled/common/fv/fvpressure.hh>
-#include <dumux/material/constraintsolvers/compositionalflash.hh>
+#include <dumux/decoupled/constraintsolvers/compositionalflash.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 

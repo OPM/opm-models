@@ -46,6 +46,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/decoupled/common/fv/Makefile
     dumux/decoupled/common/fv/mpfa/Makefile
     dumux/decoupled/common/mimetic/Makefile
+    dumux/decoupled/constraintsolvers/Makefile 
     dumux/decoupled/spatialparams/Makefile 
     dumux/freeflow/Makefile
     dumux/freeflow/stokes/Makefile

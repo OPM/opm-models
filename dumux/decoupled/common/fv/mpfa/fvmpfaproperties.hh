@@ -107,8 +107,8 @@ NEW_TYPE_TAG(MPFAProperties);
 NEW_PROP_TAG( GridTypeIndices );//!< The grid type indices to decide which grid is used
 NEW_PROP_TAG( GridImplementation ); //!< Gives kind of grid implementation in form of a GridType
 NEW_PROP_TAG( EnableComplexLStencil ); //!< Enable use of four different L-shapes instead of 2 (3-d)
-NEW_PROP_TAG( MPFATransmissibilityCriterionThreshold ); //!< Threshold for transmissibility choice
-NEW_PROP_TAG( MPFATransmissibilityCriterion ); //!< Choose transmissibility criterion
+NEW_PROP_TAG( TransmissibilityCriterionThreshold ); //!< Threshold for transmissibility choice
+NEW_PROP_TAG( TransmissibilityCriterion ); //!< Choose transmissibility criterion
 }
 }
 
@@ -134,10 +134,10 @@ SET_TYPE_PROP(MPFAProperties, GridTypeIndices, GridTypes);
 SET_BOOL_PROP(MPFAProperties, EnableComplexLStencil, true);
 
 //! Allow use of all available L-shapes
-SET_SCALAR_PROP(MPFAProperties, MPFATransmissibilityCriterionThreshold, 1e-8);
+SET_SCALAR_PROP(MPFAProperties, TransmissibilityCriterionThreshold, 1e-8);
 
 //! Set standard criterion
-SET_INT_PROP(MPFAProperties, MPFATransmissibilityCriterion, 0);
+SET_INT_PROP(MPFAProperties, TransmissibilityCriterion, 0);
 }
 }// end of Dune namespace
 #endif

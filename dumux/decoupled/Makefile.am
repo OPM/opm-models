@@ -1,4 +1,4 @@
-SUBDIRS = 1p 2p 2p2c common spatialparams
+SUBDIRS = 1p 2p 2p2c common constraintsolvers spatialparams
 
 decoupleddir = $(includedir)/dumux/decoupled
 

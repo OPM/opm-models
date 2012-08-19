@@ -72,7 +72,7 @@ NEW_PROP_TAG( Formulation); //!< The formulation of the model
 NEW_PROP_TAG( PressureFormulation); //!< The formulation of the pressure model
 NEW_PROP_TAG( SaturationFormulation); //!< The formulation of the saturation model
 NEW_PROP_TAG( VelocityFormulation); //!< The type of velocity reconstructed for the transport model
-NEW_PROP_TAG( EnableCompressibility);// !< Returns whether compressibility is allowed
+NEW_PROP_TAG( EnableCompressibility);//!< Returns whether compressibility is allowed
 NEW_PROP_TAG( WettingPhase); //!< The wetting phase of a two-phase model
 NEW_PROP_TAG( NonwettingPhase); //!< The non-wetting phase of a two-phase model
 NEW_PROP_TAG( FluidSystem ); //!< Defines the fluid system
@@ -121,11 +121,6 @@ SET_PROP(DecoupledTwoP, Indices)
 {
 typedef DecoupledTwoPIndices<GET_PROP_VALUE(TypeTag, Formulation), 0> type;
 };
-
-//! \cond \private
-//! DEPRECATED TwoPIndices property
-SET_TYPE_PROP(DecoupledTwoP, TwoPIndices, typename GET_PROP_TYPE(TypeTag, Indices));
-//! \endcond
 
 //! Set the default pressure formulation according to the chosen two-phase formulation
 SET_INT_PROP(DecoupledTwoP,

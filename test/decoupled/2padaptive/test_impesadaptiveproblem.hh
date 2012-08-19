@@ -129,7 +129,7 @@ class TestIMPESAdaptiveProblem: public IMPESProblem2P<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef typename GET_PROP_TYPE(TypeTag, TwoPIndices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
 
@@ -137,7 +137,8 @@ class TestIMPESAdaptiveProblem: public IMPESProblem2P<TypeTag>
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
+        dim = GridView::dimension,
+        dimWorld = GridView::dimensionworld
     };
 
     enum
