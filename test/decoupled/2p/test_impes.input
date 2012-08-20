@@ -16,3 +16,4 @@ CellsY = 6 # [-] resolution in y-direction
 
 DomainSizeX = 300 # [m] dimension of the physical domain
 DomainSizeY = 60 # [m] dimension of the physical domain
+
