@@ -396,7 +396,7 @@ protected:
      */
     template <class FluidState, class Context>
     static void updateTemperatures_(FluidState &fluidState, const Context &context, int spaceIdx, int timeIdx)
-    { fluidState.setTemperature(context.problem().temperature(context, spaceIdx, timeIdx)); };
+    { fluidState.setTemperature(context.problem().temperature(context, spaceIdx, timeIdx)); }
 
 
     /*!
@@ -434,7 +434,7 @@ protected:
     static void updateTemperatures_(FluidState &fluidState, const Context &context, int spaceIdx, int timeIdx)
     { 
         fluidState.setTemperature(context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]);
-    };
+    }
 
 
     /*!
