@@ -87,6 +87,8 @@ SET_BOOL_PROP(ReservoirProblem, EnableConstraints, true);
 SET_SCALAR_PROP(ReservoirProblem, MaxDepth, 2500);
 SET_SCALAR_PROP(ReservoirProblem, Temperature, 293.15);
 SET_STRING_PROP(ReservoirProblem, SimulationName, "reservoir");
+
+SET_TYPE_PROP(ReservoirProblem, LinearSolver, SuperLUBackend<TypeTag>);
 }
 
 
@@ -143,9 +145,7 @@ class ReservoirProblem
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
@@ -234,6 +234,7 @@ public:
         FluidSystem::setOilFormationVolumeFactor(Bo);
         FluidSystem::setGasFormationFactor(Rs);
         FluidSystem::setOilViscosity(muo);
+        FluidSystem::setBubblePressure(2.206322e+07);
         FluidSystem::setGasViscosity(mug);
         FluidSystem::setWaterViscosity(9.6e-4);
         FluidSystem::setWaterCompressibility(1.450377e-10);
@@ -382,12 +383,13 @@ public:
              || onRightBoundary_(pos))
             && y < height/2)
         {
+            // injectors
             auto fs = initialFluidState_;
 
-            Scalar pwInj = fs.pressure(wPhaseIdx)*1.5;
-            fs.setPressure(wPhaseIdx, pwInj);
-            fs.setPressure(oPhaseIdx, pwInj);
-            fs.setPressure(gPhaseIdx, pwInj);
+            Scalar pInj = fs.pressure(wPhaseIdx)*1.5;
+            fs.setPressure(wPhaseIdx, pInj);
+            fs.setPressure(oPhaseIdx, pInj);
+            fs.setPressure(gPhaseIdx, pInj);
             fs.setSaturation(wPhaseIdx, 1.0);
             fs.setSaturation(oPhaseIdx, 0.0);
             fs.setSaturation(gPhaseIdx, 0.0);
@@ -398,12 +400,13 @@ public:
         }
         else if (width/2 - 1 < x && x < width/2 + 1 && y > height/2)
         {
+            // producer
             auto fs = initialFluidState_;
 
-            Scalar pwInj = fs.pressure(wPhaseIdx)/1.5;
-            fs.setPressure(wPhaseIdx, pwInj);
-            fs.setPressure(oPhaseIdx, pwInj);
-            fs.setPressure(gPhaseIdx, pwInj);
+            Scalar pProd = FluidSystem::bubblePressure()/1.05;
+            fs.setPressure(wPhaseIdx, pProd);
+            fs.setPressure(oPhaseIdx, pProd);
+            fs.setPressure(gPhaseIdx, pProd);
             fs.setSaturation(wPhaseIdx, 0.0);
             fs.setSaturation(oPhaseIdx, 1.0);
             fs.setSaturation(gPhaseIdx, 0.0);
@@ -452,7 +455,6 @@ private:
     void initFluidState_()
     {
         auto &fs = initialFluidState_;
-        const auto &pos = this->bboxMin();
 
         //////
         // set temperatures
@@ -469,9 +471,7 @@ private:
         //////
         // set pressures
         //////
-        Scalar densityL = 1e3;
-        Scalar depth = maxDepth_ - pos[dim -1];
-        Scalar pl = 1e5 - densityL*this->gravity()[dim - 1]*depth;
+        Scalar pl = 1.5 * FluidSystem::bubblePressure();
 
         PhaseVector pC;
         const auto &matParams = fineMaterialParams_;

@@ -122,18 +122,24 @@ public:
 
         // retrieve the relevant black-oil parameters from the fluid
         // system.
-        Scalar Bg = FluidSystem::gasFormationVolumeFactor(fluidState_.pressure(oPhaseIdx));
-        Scalar Bo = FluidSystem::oilFormationVolumeFactor(fluidState_.pressure(oPhaseIdx));
-        Scalar Rs = FluidSystem::gasFormationFactor(fluidState_.pressure(oPhaseIdx));
+        Scalar pBub = FluidSystem::bubblePressure();
+        Scalar p = fluidState_.pressure(oPhaseIdx);
+        if (fluidState_.pressure(oPhaseIdx) > pBub)
+            p = pBub;
+        Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);
+        Scalar Bo = FluidSystem::oilFormationVolumeFactor(p);
+        Scalar Rs = FluidSystem::gasFormationFactor(p);
         Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
-        Scalar rhogref = FluidSystem::surfaceDensity(gPhaseIdx);
+        Scalar rhorefg = FluidSystem::surfaceDensity(gPhaseIdx);
         Scalar MG = FluidSystem::molarMass(gPhaseIdx);
         Scalar MO = FluidSystem::molarMass(oPhaseIdx);
-
+        
         // calculate composition of oil phase in terms of mass
         // fractions.
-        Scalar XoG = Rs*rhogref / rhoo;
+        Scalar XoG = Rs*rhorefg / rhoo;
         Scalar XoO = 1 - XoG;
+        
+        assert(XoG >= 0 && XoO >= 0);
 
         // convert to mole fractions
         Scalar avgMolarMass = MO*MG/(MG + XoO*(MO - MG));
@@ -143,6 +149,10 @@ public:
         // finally set the oil-phase composition. yeah!
         fluidState_.setMoleFraction(oPhaseIdx, gCompIdx, xoG);
         fluidState_.setMoleFraction(oPhaseIdx, oCompIdx, xoO);
+
+        // handle undersaturated oil
+        if (fluidState_.pressure(oPhaseIdx) > pBub)
+            rhoo += FluidSystem::oilCompressibility() * (fluidState_.pressure(oPhaseIdx) - pBub);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
@@ -154,15 +164,11 @@ public:
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
-        // set the gas and oil densities
+        // set the phase densities
         fluidState_.setDensity(oPhaseIdx, rhoo);
         fluidState_.setDensity(wPhaseIdx, FluidSystem::density(fluidState_, paramCache, wPhaseIdx));
-        fluidState_.setDensity(gPhaseIdx, rhogref/Bg);
+        fluidState_.setDensity(gPhaseIdx, rhorefg/Bg);
         
-        // set the water density
-        Scalar rhow = FluidSystem::density(fluidState_, paramCache, wPhaseIdx);
-        fluidState_.setViscosity(wPhaseIdx, rhow);
-
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
