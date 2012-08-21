@@ -22,6 +22,16 @@ got altered or to fix issues with newly supported compilers:
   variable switching. The model supports an arbitrary number of fluid
   phases and chemical components, but it still assumes that all fluid
   phases are ideal mixtures.
+- The fully implicit non-isothermal models (2pni, 2p2cni, 3p3cni,
+  stokes2cni) have been removed. They have been replaced by a generic
+  implementation of the energy equation. As a consequence you have to
+  derive your problem's type tag from the one of the isothermal model
+  (i.e. BoxNcp, BoxPvs, BoxImmisicible or BoxStokes) and set the
+  property ‘EnableEnergy’ to true. The latter can be done by adding
+  the following line to the problem file:
+
+    SET_BOOL_PROP(YourProblemTypeTag, EnableEnergy, true);
+
 - The fully-implicit multi-phase models which assume immiscibility --
   i.e. 1p and 2p(ni) are superseeded by 'immiscible' model which
   supports an arbitrary number of fluid phases.
