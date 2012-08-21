@@ -43,9 +43,6 @@
 #include <dumux/material/components/oil.hh>
 #include <dumux/common/cubegridcreator.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>
@@ -69,12 +66,7 @@ SET_TYPE_PROP(IMPESTestProblem, GridCreator, Dumux::CubeGridCreator<TypeTag>);
 // Set the grid type
 SET_PROP(IMPESTestProblem, Grid)
 {
-#if HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#else
     typedef Dune::YaspGrid<2> type;
-    //typedef Dune::SGrid<2, 2> type;
-#endif
 };
 
 // Set the problem property

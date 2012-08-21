@@ -29,9 +29,9 @@
 #ifndef DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 #define DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 
-#include "test_impesadaptivespatialparams.hh"
-
+#include <dune/grid/alugrid/2d/alugrid.hh>
 #include <dumux/common/cubegridcreator.hh>
+
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/oil.hh>
@@ -40,9 +40,8 @@
 #include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
 #include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
+#include "test_impesadaptivespatialparams.hh"
+
 #include <dune/common/fvector.hh>
 
 namespace Dumux
@@ -61,9 +60,7 @@ NEW_TYPE_TAG(TestIMPESAdaptiveProblem, INHERITS_FROM(FVPressureTwoPAdaptive, FVT
 // Set the grid type
 SET_PROP(TestIMPESAdaptiveProblem, Grid)
 {
-#if HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#endif
+    typedef Dune::ALUGrid<2, 2, Dune::cube, Dune::nonconforming> type;
 };
 
 // set the GridCreator property
@@ -164,7 +161,6 @@ public:
     TestIMPESAdaptiveProblem(TimeManager &timeManager) :
           ParentType(timeManager, GridCreator::grid().leafView()), eps_(1e-6)
     {
-        GridCreator::grid().setClosureType(Grid::ClosureType::NONE);
         GridCreator::grid().globalRefine(GET_PARAM(TypeTag, int, MaxLevel));
         this->setGrid(GridCreator::grid());
 

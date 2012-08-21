@@ -29,46 +29,23 @@
  */
 #include "config.h"
 
-#if !HAVE_UG
-#warning You need to have an UGGrid installed to run this test
+#if HAVE_ALUGRID
+#include "test_impesadaptiveproblem.hh"
+#include <dumux/common/start.hh>
+
+int main(int argc, char** argv)
+{
+        typedef TTAG(TestIMPESAdaptiveProblem) ProblemTypeTag;
+        return Dumux::start<ProblemTypeTag>(argc, argv);
+}
+#else
+#warning You need to have ALUGrid installed to run this test
 
 #include <iostream>
 
 int main()
 {
-    std::cerr << "You need to have an UGGrid installed to run this test\n";
+    std::cerr << "You need to have ALUGrid installed to run this test\n";
     return 1;
-}
-#else
-
-#include "test_impesadaptiveproblem.hh"
-#include <dumux/common/start.hh>
-
-////////////////////////
-// the main function
-////////////////////////
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-tEnd                          The end of the simulation. [s] \n"
-                                        "\t-dtInitial                     The initial timestep size. [s] \n"
-                                        "\t-Grid.numberOfCellsX           Resolution in x-direction [-]\n"
-                                        "\t-Grid.numberOfCellsY           Resolution in y-direction [-]\n"
-                                        "\t-Grid.upperRightX              Dimension of the grid [m]\n"
-                                        "\t-Grid.upperRightY              Dimension of the grid [m]\n";
-        std::cout << errorMessageOut
-                  << "\n";
-    }
-}
-
-int main(int argc, char** argv)
-{
-        typedef TTAG(TestIMPESAdaptiveProblem) ProblemTypeTag;
-        return Dumux::start<ProblemTypeTag>(argc, argv, usage);
 }
 #endif

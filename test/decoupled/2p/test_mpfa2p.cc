@@ -30,28 +30,6 @@
 ////////////////////////
 // the main function
 ////////////////////////
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0)
-    {
-        std::string errorMessageOut = "\nUsage: ";
-        errorMessageOut += progName;
-        errorMessageOut += " [options]\n";
-        errorMessageOut += errorMsg;
-        errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                "\t-TEnd                          The end of the simulation. [s] \n"
-                "\t-DtInitial                     The initial timestep size. [s] \n"
-                "\t-Grid.NumberOfCellsX           Resolution in x-direction [-]\n"
-                "\t-Grid.NumberOfCellsY           Resolution in y-direction [-]\n"
-                "\t-Grid.UpperRightX              Dimension of the grid [m]\n"
-                "\t-Grid.UpperRightY              Dimension of the grid [m]\n";
-        errorMessageOut += "\n\nThe Optional command line argument:\n"
-                "\t-ModelType                     Can be: FV (standard finite volume), FVAdaptive (adaptive finite volume),\n"
-                "\t                     MPFAO (MPFA o-method), MPFAL (MPFA l-method), MPFALAdaptive (adaptive MPFA l-method)\n";
-        std::cout << errorMessageOut << "\n";
-    }
-}
-
 int main(int argc, char** argv)
 {
     Dune::ParameterTree paramTree;
@@ -68,7 +46,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::runTimeParams();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used standard finite volume model\n";
                 return startReturn;
@@ -79,7 +57,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::runTimeParams();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used adaptive finite volume model\n";
                 return startReturn;
@@ -90,7 +68,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::runTimeParams();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used finite volume MPFA o-method model\n";
                 return startReturn;
@@ -101,7 +79,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::runTimeParams();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used finite volume MPFA l-method model\n";
                 return startReturn;
@@ -112,7 +90,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::runTimeParams();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used adaptive finite volume MPFA l-method model\n";
                 return startReturn;
@@ -120,7 +98,7 @@ int main(int argc, char** argv)
             else
             {
                 typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Unknwon model type "<<modelType<<" specified\n";
                 std::cout<<"Default to finite volume MPFA o-method model\n";
@@ -130,7 +108,7 @@ int main(int argc, char** argv)
         else
         {
             typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-            int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+            int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
             std::cout<<"######################################################\n";
             std::cout<<"No model type specified\n";
             std::cout<<"Default to finite volume MPFA o-method model\n";
@@ -140,7 +118,7 @@ int main(int argc, char** argv)
     else
     {
         typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-        int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv, usage);
+        int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
         std::cout<<"######################################################\n";
         std::cout<<s<<" is not a valid model type specification!\n";
         std::cout<<"Default to finite volume MPFA o-method model\n";
