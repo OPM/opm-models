@@ -193,10 +193,13 @@ public:
         fluidState.setTemperature(problem_.temperature(*element));
         fluidState.setSaturation(wPhaseIdx, 1.);
         fluidState.setSaturation(nPhaseIdx, 0.);
-        density_[wPhaseIdx] = FluidSystem::density(fluidState, wPhaseIdx);
-        density_[nPhaseIdx] = FluidSystem::density(fluidState, nPhaseIdx);
-        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, wPhaseIdx);
-        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, nPhaseIdx);
+
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.updateAll(fluidState);
+        density_[wPhaseIdx] = FluidSystem::density(fluidState, paramCache, wPhaseIdx);
+        density_[nPhaseIdx] = FluidSystem::density(fluidState, paramCache, nPhaseIdx);
+        viscosity_[wPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, wPhaseIdx);
+        viscosity_[nPhaseIdx] = FluidSystem::viscosity(fluidState, paramCache, nPhaseIdx);
 
         updateMaterialLaws();
 

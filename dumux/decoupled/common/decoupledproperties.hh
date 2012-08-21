@@ -75,6 +75,7 @@ NEW_PROP_TAG( CellData );//!< Defines data object to be stored
 NEW_PROP_TAG( TimeManager );  //!< Manages the simulation time
 NEW_PROP_TAG( BoundaryTypes ); //!< Stores the boundary types of a single degree of freedom
 NEW_PROP_TAG( MaxIntersections ); //!< Gives maximum number of intersections of an element and neighboring elements
+NEW_PROP_TAG( VtkOutputLevel); //! VtkOutputLevel is equal to zero (default) only primary variables are written, all available quantities are written if it's larger than 0.
 }
 }
 
@@ -204,6 +205,7 @@ public:
 //Set default class for adaptation initialization indicator
 SET_TYPE_PROP(GridAdaptTypeTag,  AdaptionInitializationIndicator, GridAdaptInitializationIndicatorDefault<TypeTag>);
 
+SET_INT_PROP(NumericModel, VtkOutputLevel, 0);
 }
 }
 
