@@ -30,11 +30,10 @@
 #ifndef DUMUX_OUTFLOW_PROBLEM_HH
 #define DUMUX_OUTFLOW_PROBLEM_HH
 
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
+#include <dumux/boxmodels/pvs/pvsproperties.hh>
 #include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
-#if HAVE_UG
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
-#endif
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
@@ -45,23 +44,19 @@ class OutflowProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(OutflowProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(OutflowBaseProblem);
 
 // Set the grid type
-SET_PROP(OutflowProblem, Grid)
+SET_PROP(OutflowBaseProblem, Grid)
 {
-#if HAVE_UG
-    typedef Dune::UGGrid<2> type;
-#else
     typedef Dune::YaspGrid<2> type;
-#endif
 };
 
 // Set the problem property
-SET_TYPE_PROP(OutflowProblem, Problem, Dumux::OutflowProblem<TypeTag>);
+SET_TYPE_PROP(OutflowBaseProblem, Problem, Dumux::OutflowProblem<TypeTag>);
 
 // Set fluid configuration
-SET_PROP(OutflowProblem, FluidSystem)
+SET_PROP(OutflowBaseProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
@@ -69,10 +64,10 @@ public:
 };
 
 // Disable gravity
-SET_BOOL_PROP(OutflowProblem, EnableGravity, false);
+SET_BOOL_PROP(OutflowBaseProblem, EnableGravity, false);
 
 // Also write mass fractions to the output
-SET_BOOL_PROP(OutflowProblem, VtkWriteMassFractions, true);
+SET_BOOL_PROP(OutflowBaseProblem, VtkWriteMassFractions, true);
 }
 
 

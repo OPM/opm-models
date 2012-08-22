@@ -29,6 +29,7 @@
 #ifndef DUMUX_BOX_IMMISCIBLE_INDICES_HH
 #define DUMUX_BOX_IMMISCIBLE_INDICES_HH
 
+#include "immiscibleproperties.hh"
 #include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 namespace Dumux

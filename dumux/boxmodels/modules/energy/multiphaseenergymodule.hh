@@ -29,7 +29,14 @@
 #ifndef DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
 #define DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
 
+#include <dumux/boxmodels/common/boxproperties.hh>
+
 namespace Dumux {
+namespace Properties {
+NEW_PROP_TAG(Indices);
+NEW_PROP_TAG(HeatConductionLaw);
+NEW_PROP_TAG(HeatConductionLawParams);
+}
 
 /*!
  * \brief Provides the indices required for consideration of the energy equation.

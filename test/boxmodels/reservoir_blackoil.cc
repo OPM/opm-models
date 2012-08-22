@@ -26,10 +26,15 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/blackoil/blackoilmodel.hh>
-#define MODEL_TYPE_TAG BoxBlackOil
 #include "problems/reservoirproblem.hh"
+
 #include <dumux/common/start.hh>
+#include <dumux/boxmodels/blackoil/blackoilmodel.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(BoxBlackOil, ReservoirBaseProblem));
+}}
 
 int main(int argc, char** argv)
 {

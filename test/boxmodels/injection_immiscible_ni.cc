@@ -29,8 +29,9 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include "problems/injectionproblem.hh"
+
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {

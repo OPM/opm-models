@@ -30,13 +30,13 @@
 #ifndef DUMUX_BOX_PVS_RATE_VECTOR_HH
 #define DUMUX_BOX_PVS_RATE_VECTOR_HH
 
-#include <dune/common/fvector.hh>
+#include "pvsindices.hh"
 
 #include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/common/valgrind.hh>
 
-#include "pvsvolumevariables.hh"
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

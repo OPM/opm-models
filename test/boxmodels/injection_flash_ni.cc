@@ -27,8 +27,9 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/flash/flashmodel.hh>
 #include "problems/injectionproblem.hh"
+
+#include <dumux/boxmodels/flash/flashmodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {

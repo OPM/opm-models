@@ -35,16 +35,14 @@
 
 #include "stokesproperties.hh"
 
-#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 #include <dumux/common/math.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
-{
-
+namespace Dumux {
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxFluxVariables

@@ -27,11 +27,18 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#define MODEL_TYPE_TAG BoxNcp
 #include "problems/obstacleproblem.hh"
 
+#include <dumux/boxmodels/ncp/ncpmodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp, ObstacleBaseProblem));
+
+// Enable molecular diffusion of the components?
+SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
+}}
 
 int main(int argc, char** argv)
 {

@@ -19,7 +19,6 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
  * \file
  *
@@ -29,6 +28,7 @@
 #ifndef DUMUX_FLASH_INDICES_HH
 #define DUMUX_FLASH_INDICES_HH
 
+#include "flashproperties.hh"
 #include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 
 namespace Dumux {

@@ -26,8 +26,9 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
 #include "problems/injectionproblem.hh"
+
+#include <dumux/boxmodels/ncp/ncpmodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {

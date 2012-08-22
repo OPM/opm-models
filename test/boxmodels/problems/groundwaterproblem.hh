@@ -23,13 +23,17 @@
 /*!
  * \file
  *
- * \brief A test problem for the one-phase box model:
- * water is flowing from bottom to top through and around a low permeable lens.
+ * \brief Test for the immisicible box model with only a single phase
+ *
+ * This problem is inspired by groundwater flow. Don't expect it to be
+ * realistic, though.
  */
-#ifndef DUMUX_1PTEST_PROBLEM_HH
-#define DUMUX_1PTEST_PROBLEM_HH
+#ifndef DUMUX_GROUND_WATER_PROBLEM_HH
+#define DUMUX_GROUND_WATER_PROBLEM_HH
 
+#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
 #include <dumux/material/components/simpleh2o.hh>
+#include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
@@ -42,7 +46,7 @@ class GroundWaterProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(GroundWaterProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(GroundWaterBaseProblem);
 
 NEW_PROP_TAG(LensLowerLeftX);
 NEW_PROP_TAG(LensLowerLeftY);
@@ -53,7 +57,7 @@ NEW_PROP_TAG(LensUpperRightZ);
 NEW_PROP_TAG(Permeability);
 NEW_PROP_TAG(PermeabilityLens);
 
-SET_PROP(GroundWaterProblem, Fluid)
+SET_PROP(GroundWaterBaseProblem, Fluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -62,47 +66,35 @@ public:
 };
 
 // Set the grid type
-SET_TYPE_PROP(GroundWaterProblem, Grid, Dune::YaspGrid<2>);
-//SET_TYPE_PROP(GroundWaterProblem, Grid, Dune::SGrid<2, 2>);
+SET_TYPE_PROP(GroundWaterBaseProblem, Grid, Dune::YaspGrid<2>);
+//SET_TYPE_PROP(GroundWaterBaseProblem, Grid, Dune::SGrid<2, 2>);
 
-SET_TYPE_PROP(GroundWaterProblem, Problem, Dumux::GroundWaterProblem<TypeTag>);
+SET_TYPE_PROP(GroundWaterBaseProblem, Problem, Dumux::GroundWaterProblem<TypeTag>);
 
-SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftX, 0.25);
-SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftY, 0.25);
-SET_SCALAR_PROP(GroundWaterProblem, LensLowerLeftZ, 0.25);
-SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightX, 0.75);
-SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightY, 0.75);
-SET_SCALAR_PROP(GroundWaterProblem, LensUpperRightZ, 0.75);
-SET_SCALAR_PROP(GroundWaterProblem, Permeability, 1e-10);
-SET_SCALAR_PROP(GroundWaterProblem, PermeabilityLens, 1e-12);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensLowerLeftX, 0.25);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensLowerLeftY, 0.25);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensLowerLeftZ, 0.25);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensUpperRightX, 0.75);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensUpperRightY, 0.75);
+SET_SCALAR_PROP(GroundWaterBaseProblem, LensUpperRightZ, 0.75);
+SET_SCALAR_PROP(GroundWaterBaseProblem, Permeability, 1e-10);
+SET_SCALAR_PROP(GroundWaterBaseProblem, PermeabilityLens, 1e-12);
 // Linear solver settings
-SET_TYPE_PROP(GroundWaterProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
-SET_TYPE_PROP(GroundWaterProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
-SET_INT_PROP(GroundWaterProblem, LinearSolverVerbosity, 0);
+SET_TYPE_PROP(GroundWaterBaseProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
+SET_TYPE_PROP(GroundWaterBaseProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
+SET_INT_PROP(GroundWaterBaseProblem, LinearSolverVerbosity, 0);
 
 // Enable gravity
-SET_BOOL_PROP(GroundWaterProblem, EnableGravity, true);
+SET_BOOL_PROP(GroundWaterBaseProblem, EnableGravity, true);
 }
 
 /*!
  * \ingroup OnePBoxModel
  * \ingroup BoxTestProblems
- * \brief  Test problem for the one-phase box model:
- * water is flowing from bottom to top through and around a low permeable lens.
+ * \brief Test for the immisicible box model with only a single phase
  *
- * The domain is box shaped. All sides are closed (Neumann 0 boundary)
- * except the top and bottom boundaries (Dirichlet), where water is
- * flowing from bottom to top.
- *
- * In the middle of the domain, a lens with low permeability (\f$K=10e-12\f$)
- * compared to the surrounding material (\f$ K=10e-10\f$) is defined.
- *
- * To run the simulation execute the following line in shell:
- * <tt>./test_1p -parameterFile test_1p.input</tt>
- * The same parameter file can be also used for 3d simulation but you need to change line
- * <tt>typedef Dune::SGrid<2,2> type;</tt> to
- * <tt>typedef Dune::SGrid<3,3> type;</tt> in the problem file
- * and use <tt>1p_3d.dgf</tt> in the parameter file.
+ * This problem is inspired by groundwater flow. Don't expect it to be
+ * realistic, though.
  */
 template <class TypeTag>
 class GroundWaterProblem 

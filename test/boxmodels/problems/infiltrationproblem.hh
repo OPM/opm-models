@@ -28,11 +28,13 @@
 #ifndef DUMUX_INFILTRATION_PROBLEM_HH
 #define DUMUX_INFILTRATION_PROBLEM_HH
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-//#include <dumux/boxmodels/mpnc/mpncmodel.hh>
+#include <dumux/boxmodels/pvs/pvsproperties.hh>
+
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/heatconduction/somerton.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
@@ -47,33 +49,33 @@ class InfiltrationProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(InfiltrationBaseProblem);
 
 // Set the grid type
-SET_TYPE_PROP(InfiltrationProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(InfiltrationBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(InfiltrationProblem, Problem, Dumux::InfiltrationProblem<TypeTag>);
+SET_TYPE_PROP(InfiltrationBaseProblem, Problem, Dumux::InfiltrationProblem<TypeTag>);
 
 // Set the fluid system
-SET_TYPE_PROP(InfiltrationProblem,
+SET_TYPE_PROP(InfiltrationBaseProblem,
               FluidSystem,
               Dumux::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity?
-SET_BOOL_PROP(InfiltrationProblem, EnableGravity, true);
+SET_BOOL_PROP(InfiltrationBaseProblem, EnableGravity, true);
 
 // Write newton convergence?
-SET_BOOL_PROP(InfiltrationProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(InfiltrationBaseProblem, NewtonWriteConvergence, false);
 
 // Maximum tolerated relative error in the Newton method
-SET_SCALAR_PROP(InfiltrationProblem, NewtonRelTolerance, 1e-8);
+SET_SCALAR_PROP(InfiltrationBaseProblem, NewtonRelTolerance, 1e-8);
 
 // -1 backward differences, 0: central differences, +1: forward differences
-SET_INT_PROP(InfiltrationProblem, NumericDifferenceMethod, 1);
+SET_INT_PROP(InfiltrationBaseProblem, NumericDifferenceMethod, 1);
 
 // Set the material Law
-SET_PROP(InfiltrationProblem, MaterialLaw)
+SET_PROP(InfiltrationBaseProblem, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -93,7 +95,7 @@ public:
 };
 
 // Set the heat conduction law
-SET_PROP(InfiltrationProblem, HeatConductionLaw)
+SET_PROP(InfiltrationBaseProblem, HeatConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

@@ -27,11 +27,15 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#define MODEL_TYPE_TAG BoxImmiscibleTwoPhase
 #include "problems/lensproblem.hh"
 
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, LensBaseProblem));
+}}
 
 int main(int argc, char** argv)
 {

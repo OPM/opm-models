@@ -22,8 +22,9 @@
 #ifndef DUMUX_FVTRANSPORT2P2C_HH
 #define DUMUX_FVTRANSPORT2P2C_HH
 
-#include <dune/grid/common/gridenums.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
+#include <dumux/decoupled/constraintsolvers/compositionalflash.hh>
+#include <dune/grid/common/gridenums.hh>
 #include <dumux/common/math.hh>
 
 #include <dune/common/fvector.hh>

@@ -30,11 +30,13 @@
 #ifndef DUMUX_NCP_RATE_VECTOR_HH
 #define DUMUX_NCP_RATE_VECTOR_HH
 
-#include <dune/common/fvector.hh>
+#include "ncpindices.hh"
 
 #include <dumux/common/valgrind.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

@@ -35,10 +35,11 @@
 
 #include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+#include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 /*!
  * \ingroup NcpModel
  * \ingroup BoxVolumeVariables

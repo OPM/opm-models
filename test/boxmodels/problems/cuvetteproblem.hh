@@ -30,6 +30,7 @@
 #ifndef DUMUX_CUVETTE_PROBLEM_HH
 #define DUMUX_CUVETTE_PROBLEM_HH
 
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
 #include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
@@ -37,6 +38,8 @@
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
 #include <dumux/material/heatconduction/somerton.hh>
 #include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
+
+#include <dumux/boxmodels/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -49,30 +52,30 @@ class CuvetteProblem;
 namespace Properties
 {
 // create a new type tag for the cuvette steam injection problem
-NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(CuvetteBaseProblem);
 
-SET_BOOL_PROP(CuvetteProblem, EnablePartialReassemble, true);
-SET_BOOL_PROP(CuvetteProblem, EnableJacobianRecycling, true);
+SET_BOOL_PROP(CuvetteBaseProblem, EnablePartialReassemble, true);
+SET_BOOL_PROP(CuvetteBaseProblem, EnableJacobianRecycling, true);
 
 // Set the grid type
-SET_TYPE_PROP(CuvetteProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(CuvetteBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(CuvetteProblem, Problem, Dumux::CuvetteProblem<TypeTag>);
+SET_TYPE_PROP(CuvetteBaseProblem, Problem, Dumux::CuvetteProblem<TypeTag>);
 
 // Set the fluid system
-SET_TYPE_PROP(CuvetteProblem, 
+SET_TYPE_PROP(CuvetteBaseProblem, 
               FluidSystem,
               Dumux::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
-SET_BOOL_PROP(CuvetteProblem, EnableGravity, true);
+SET_BOOL_PROP(CuvetteBaseProblem, EnableGravity, true);
 
 // Set the maximum time step
-SET_SCALAR_PROP(CuvetteProblem, MaxTimeStepSize, 600.);
+SET_SCALAR_PROP(CuvetteBaseProblem, MaxTimeStepSize, 600.);
 
 // Set the material Law
-SET_PROP(CuvetteProblem, MaterialLaw)
+SET_PROP(CuvetteBaseProblem, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -96,7 +99,7 @@ public:
 };
 
 // Set the heat conduction law
-SET_PROP(CuvetteProblem, HeatConductionLaw)
+SET_PROP(CuvetteBaseProblem, HeatConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

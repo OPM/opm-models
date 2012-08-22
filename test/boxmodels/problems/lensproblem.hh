@@ -36,10 +36,11 @@
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/dnapl.hh>
+#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -56,7 +57,7 @@ class LensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(LensProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(LensBaseProblem);
 
 // declare the properties specific for the lens problem
 NEW_PROP_TAG(LensLowerLeftX);
@@ -75,16 +76,16 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 // set the GridCreator property
-SET_TYPE_PROP(LensProblem, GridCreator, LensGridCreator<TypeTag>);
+SET_TYPE_PROP(LensBaseProblem, GridCreator, LensGridCreator<TypeTag>);
 
 // Retrieve the grid type from the grid creator
-SET_TYPE_PROP(LensProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
+SET_TYPE_PROP(LensBaseProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
 
 // Set the problem property
-SET_TYPE_PROP(LensProblem, Problem, Dumux::LensProblem<TypeTag>);
+SET_TYPE_PROP(LensBaseProblem, Problem, Dumux::LensProblem<TypeTag>);
 
 // Set the wetting phase
-SET_PROP(LensProblem, WettingPhase)
+SET_PROP(LensBaseProblem, WettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -93,7 +94,7 @@ public:
 };
 
 // Set the non-wetting phase
-SET_PROP(LensProblem, NonwettingPhase)
+SET_PROP(LensBaseProblem, NonwettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -102,7 +103,7 @@ public:
 };
 
 // Set the material Law
-SET_PROP(LensProblem, MaterialLaw)
+SET_PROP(LensBaseProblem, MaterialLaw)
 {
 private:
     // define the material law which is parameterized by effective
@@ -120,35 +121,35 @@ public:
 };
 
 // Enable partial reassembly of the jacobian matrix?
-//SET_BOOL_PROP(LensProblem, EnablePartialReassemble, true);
+//SET_BOOL_PROP(LensBaseProblem, EnablePartialReassemble, true);
 
 // Enable reuse of jacobian matrices?
-//SET_BOOL_PROP(LensProblem, EnableJacobianRecycling, true);
+//SET_BOOL_PROP(LensBaseProblem, EnableJacobianRecycling, true);
 
 // Write the solutions of individual newton iterations?
-SET_BOOL_PROP(LensProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(LensBaseProblem, NewtonWriteConvergence, false);
 
 // Use forward differences instead of central differences
-SET_INT_PROP(LensProblem, NumericDifferenceMethod, +1);
+SET_INT_PROP(LensBaseProblem, NumericDifferenceMethod, +1);
 
 // Enable gravity
-SET_BOOL_PROP(LensProblem, EnableGravity, true);
+SET_BOOL_PROP(LensBaseProblem, EnableGravity, true);
 
 // define the properties specific for the lens problem
-SET_SCALAR_PROP(LensProblem, LensLowerLeftX, 1.0);
-SET_SCALAR_PROP(LensProblem, LensLowerLeftY, 2.0);
-SET_SCALAR_PROP(LensProblem, LensLowerLeftZ, 0.0);
-SET_SCALAR_PROP(LensProblem, LensUpperRightX, 4.0);
-SET_SCALAR_PROP(LensProblem, LensUpperRightY, 3.0);
-SET_SCALAR_PROP(LensProblem, LensUpperRightZ, 1.0);
+SET_SCALAR_PROP(LensBaseProblem, LensLowerLeftX, 1.0);
+SET_SCALAR_PROP(LensBaseProblem, LensLowerLeftY, 2.0);
+SET_SCALAR_PROP(LensBaseProblem, LensLowerLeftZ, 0.0);
+SET_SCALAR_PROP(LensBaseProblem, LensUpperRightX, 4.0);
+SET_SCALAR_PROP(LensBaseProblem, LensUpperRightY, 3.0);
+SET_SCALAR_PROP(LensBaseProblem, LensUpperRightZ, 1.0);
 
-SET_SCALAR_PROP(LensProblem, DomainSizeX, 6.0);
-SET_SCALAR_PROP(LensProblem, DomainSizeY, 4.0);
-SET_SCALAR_PROP(LensProblem, DomainSizeZ, 1.0);
+SET_SCALAR_PROP(LensBaseProblem, DomainSizeX, 6.0);
+SET_SCALAR_PROP(LensBaseProblem, DomainSizeY, 4.0);
+SET_SCALAR_PROP(LensBaseProblem, DomainSizeZ, 1.0);
 
-SET_INT_PROP(LensProblem, CellsX, 48);
-SET_INT_PROP(LensProblem, CellsY, 32);
-SET_INT_PROP(LensProblem, CellsZ, 16);
+SET_INT_PROP(LensBaseProblem, CellsX, 48);
+SET_INT_PROP(LensBaseProblem, CellsY, 32);
+SET_INT_PROP(LensBaseProblem, CellsZ, 16);
 }
 
 /*!

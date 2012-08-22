@@ -27,6 +27,9 @@
 #ifndef DUMUX_SOLVER_PRECONDITIONER_HH
 #define DUMUX_SOLVER_PRECONDITIONER_HH
 
+#include <dune/istl/solvers.hh>
+#include <dune/istl/preconditioners.hh>
+
 namespace Dumux {
 namespace Linear {
 

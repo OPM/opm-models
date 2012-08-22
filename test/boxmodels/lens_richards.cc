@@ -27,8 +27,6 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/richards/richardsmodel.hh>
-#define MODEL_TYPE_TAG BoxRichards
 #include "problems/richardslensproblem.hh"
 
 #include <dumux/common/start.hh>

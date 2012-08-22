@@ -31,6 +31,8 @@
 #define DUMUX_RESERVOIR_PROBLEM_HH
 
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
+#include <dumux/boxmodels/blackoil/blackoilproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -45,20 +47,20 @@ class ReservoirProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(ReservoirBaseProblem);
 
 NEW_PROP_TAG(MaxDepth);
 NEW_PROP_TAG(Temperature);
 NEW_PROP_TAG(SimulationName);
 
 // Set the grid type
-SET_TYPE_PROP(ReservoirProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(ReservoirBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(ReservoirProblem, Problem, Dumux::ReservoirProblem<TypeTag>);
+SET_TYPE_PROP(ReservoirBaseProblem, Problem, Dumux::ReservoirProblem<TypeTag>);
 
 // Set the material Law
-SET_PROP(ReservoirProblem, MaterialLaw)
+SET_PROP(ReservoirBaseProblem, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -69,24 +71,24 @@ public:
 };
 
 // Write the Newton convergence behavior to disk?
-SET_BOOL_PROP(ReservoirProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(ReservoirBaseProblem, NewtonWriteConvergence, false);
 
 // Enable gravity
-SET_BOOL_PROP(ReservoirProblem, EnableGravity, true);
+SET_BOOL_PROP(ReservoirBaseProblem, EnableGravity, true);
 
 // Reuse Jacobian matrices if possible?
-SET_BOOL_PROP(ReservoirProblem, EnableJacobianRecycling, true);
+SET_BOOL_PROP(ReservoirBaseProblem, EnableJacobianRecycling, true);
 
 // Smoothen the upwinding method?
-SET_BOOL_PROP(ReservoirProblem, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(ReservoirBaseProblem, EnableSmoothUpwinding, false);
 
 // Enable constraint DOFs?
-SET_BOOL_PROP(ReservoirProblem, EnableConstraints, true);
+SET_BOOL_PROP(ReservoirBaseProblem, EnableConstraints, true);
 
 // set the defaults for some problem specific properties
-SET_SCALAR_PROP(ReservoirProblem, MaxDepth, 2500);
-SET_SCALAR_PROP(ReservoirProblem, Temperature, 293.15);
-SET_STRING_PROP(ReservoirProblem, SimulationName, "reservoir");
+SET_SCALAR_PROP(ReservoirBaseProblem, MaxDepth, 2500);
+SET_SCALAR_PROP(ReservoirBaseProblem, Temperature, 293.15);
+SET_STRING_PROP(ReservoirBaseProblem, SimulationName, "reservoir");
 }
 
 /*!

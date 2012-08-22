@@ -26,11 +26,15 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#define MODEL_TYPE_TAG BoxImmiscibleTwoPhase
 #include "problems/fingerproblem.hh"
 
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(FingerProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, FingerBaseProblem));
+}}
 
 int main(int argc, char** argv)
 {

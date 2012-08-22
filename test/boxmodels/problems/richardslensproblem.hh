@@ -30,6 +30,7 @@
 #ifndef DUMUX_RICHARDS_LENS_PROBLEM_HH
 #define DUMUX_RICHARDS_LENS_PROBLEM_HH
 
+#include <dumux/boxmodels/richards/richardsmodel.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
@@ -51,7 +52,7 @@ class RichardsLensProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(RichardsLensProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(RichardsLensProblem, BoxRichards);
 
 // Use 2d YaspGrid
 SET_TYPE_PROP(RichardsLensProblem, Grid, Dune::YaspGrid<2>);

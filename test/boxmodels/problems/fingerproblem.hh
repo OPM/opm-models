@@ -35,10 +35,13 @@
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/parkerlenhard.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+
+#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/dnapl.hh>
+
+#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -57,7 +60,7 @@ class FingerProblem;
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(FingerProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(FingerBaseProblem);
 
 // declare the properties specific for the finger problem
 NEW_PROP_TAG(DomainSizeX);
@@ -71,16 +74,16 @@ NEW_PROP_TAG(CellsZ);
 NEW_PROP_TAG(InitialWaterSaturation);
 
 // set the GridCreator property
-SET_TYPE_PROP(FingerProblem, GridCreator, FingerGridCreator<TypeTag>);
+SET_TYPE_PROP(FingerBaseProblem, GridCreator, FingerGridCreator<TypeTag>);
 
 // Retrieve the grid type from the grid creator
-SET_TYPE_PROP(FingerProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
+SET_TYPE_PROP(FingerBaseProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
 
 // Set the problem property
-SET_TYPE_PROP(FingerProblem, Problem, Dumux::FingerProblem<TypeTag>);
+SET_TYPE_PROP(FingerBaseProblem, Problem, Dumux::FingerProblem<TypeTag>);
 
 // Set the wetting phase
-SET_PROP(FingerProblem, WettingPhase)
+SET_PROP(FingerBaseProblem, WettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -89,7 +92,7 @@ public:
 };
 
 // Set the non-wetting phase
-SET_PROP(FingerProblem, NonwettingPhase)
+SET_PROP(FingerBaseProblem, NonwettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -98,7 +101,7 @@ public:
 };
 
 // Set the material Law
-SET_PROP(FingerProblem, MaterialLaw)
+SET_PROP(FingerBaseProblem, MaterialLaw)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 #if FINGER_USE_PARKER_LENHARD
@@ -120,36 +123,36 @@ SET_PROP(FingerProblem, MaterialLaw)
 };
 
 // Enable partial reassembly of the jacobian matrix?
-//SET_BOOL_PROP(FingerProblem, EnablePartialReassemble, true);
+//SET_BOOL_PROP(FingerBaseProblem, EnablePartialReassemble, true);
 
 // Enable reuse of jacobian matrices?
-//SET_BOOL_PROP(FingerProblem, EnableJacobianRecycling, true);
+//SET_BOOL_PROP(FingerBaseProblem, EnableJacobianRecycling, true);
 
 // Write the solutions of individual newton iterations?
-SET_BOOL_PROP(FingerProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(FingerBaseProblem, NewtonWriteConvergence, false);
 
 // Use forward differences instead of central differences
-SET_INT_PROP(FingerProblem, NumericDifferenceMethod, +1);
+SET_INT_PROP(FingerBaseProblem, NumericDifferenceMethod, +1);
 
 // Enable smooth upwinding
-SET_INT_PROP(FingerProblem, EnableSmoothUpwinding, true);
+SET_INT_PROP(FingerBaseProblem, EnableSmoothUpwinding, true);
 
 // Enable constraints
-SET_INT_PROP(FingerProblem, EnableConstraints, true);
+SET_INT_PROP(FingerBaseProblem, EnableConstraints, true);
 
 // Enable gravity
-SET_BOOL_PROP(FingerProblem, EnableGravity, true);
+SET_BOOL_PROP(FingerBaseProblem, EnableGravity, true);
 
 // define the properties specific for the finger problem
-SET_SCALAR_PROP(FingerProblem, DomainSizeX, 0.1);
-SET_SCALAR_PROP(FingerProblem, DomainSizeY, 1.0);
-SET_SCALAR_PROP(FingerProblem, DomainSizeZ, 0.1);
+SET_SCALAR_PROP(FingerBaseProblem, DomainSizeX, 0.1);
+SET_SCALAR_PROP(FingerBaseProblem, DomainSizeY, 1.0);
+SET_SCALAR_PROP(FingerBaseProblem, DomainSizeZ, 0.1);
 
-SET_SCALAR_PROP(FingerProblem, InitialWaterSaturation, 0.01);
+SET_SCALAR_PROP(FingerBaseProblem, InitialWaterSaturation, 0.01);
 
-SET_INT_PROP(FingerProblem, CellsX, 20);
-SET_INT_PROP(FingerProblem, CellsY, 200);
-SET_INT_PROP(FingerProblem, CellsZ, 1);
+SET_INT_PROP(FingerBaseProblem, CellsX, 20);
+SET_INT_PROP(FingerBaseProblem, CellsY, 200);
+SET_INT_PROP(FingerBaseProblem, CellsZ, 1);
 }
 
 /*!

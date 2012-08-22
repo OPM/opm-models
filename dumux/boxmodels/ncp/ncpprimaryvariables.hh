@@ -31,11 +31,13 @@
 #ifndef DUMUX_NCP_PRIMARY_VARIABLES_HH
 #define DUMUX_NCP_PRIMARY_VARIABLES_HH
 
-#include <dune/common/fvector.hh>
+#include "ncpproperties.hh"
 
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+
+#include <dune/common/fvector.hh>
 
 namespace Dumux
 {

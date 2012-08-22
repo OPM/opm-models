@@ -56,6 +56,7 @@ NEW_TYPE_TAG(BoxBlackOil, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition,
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(BlackOilFluidState); //!< The fluid state used by the model
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)

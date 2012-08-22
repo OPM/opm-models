@@ -223,8 +223,7 @@ public:
             }
         }
 
-        // create a fixpoint convergence criterion
-        Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
+        // create a weighted residual reduction convergence criterion
         auto *convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector>(problem_.gridView().comm(), 
                                                                                       weightVec,
                                                                                       linearSolverTolerance);

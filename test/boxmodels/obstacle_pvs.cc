@@ -27,11 +27,18 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#define MODEL_TYPE_TAG BoxPvs
 #include "problems/obstacleproblem.hh"
 
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxPvs, ObstacleBaseProblem));
+
+// Verbosity of the PVS model (0=silent, 1=medium, 2=chatty)
+SET_INT_PROP(ObstacleProblem, PvsVerbosity, 1);
+}}
 
 int main(int argc, char** argv)
 {

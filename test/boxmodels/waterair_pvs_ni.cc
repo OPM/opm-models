@@ -29,14 +29,15 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#define MODEL_TYPE_TAG BoxPvs
 #include "problems/waterairproblem.hh"
 
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {
 namespace Properties {
+NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxPvs, WaterAirBaseProblem));
+
 SET_BOOL_PROP(WaterAirProblem, EnableEnergy, true);
 } }
 

@@ -39,14 +39,12 @@
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 ////////////////////////////////
 // properties
 ////////////////////////////////
-namespace Properties
-{
+namespace Properties {
 
 //////////////////////////////////////////////////////////////////
 // Type tags
@@ -74,6 +72,7 @@ NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law f
 NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 
 // these properties only make sense for the BoxImmiscibleTwoPhase type tag
 NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models

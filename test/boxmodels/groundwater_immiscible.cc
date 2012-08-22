@@ -23,15 +23,19 @@
 /*!
  * \file
  *
- * \brief test for the one-phase box model
+ * \brief Test for the immisicible box model with only a single phase
  */
 #include "config.h"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#define MODEL_TYPE_TAG BoxImmiscibleOnePhase
 #include "problems/groundwaterproblem.hh"
 
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(GroundWaterProblem, INHERITS_FROM(BoxImmiscibleOnePhase, GroundWaterBaseProblem));
+}}
 
 int main(int argc, char** argv)
 {

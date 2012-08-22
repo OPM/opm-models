@@ -26,8 +26,9 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include "problems/injectionproblem.hh"
+
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {

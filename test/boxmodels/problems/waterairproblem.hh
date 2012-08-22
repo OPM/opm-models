@@ -31,11 +31,14 @@
 
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 #include <dumux/material/heatconduction/somerton.hh>
+#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
+#include <dumux/boxmodels/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
@@ -49,22 +52,22 @@ class WaterAirProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(WaterAirBaseProblem);
 
 // Set the grid type
-SET_PROP(WaterAirProblem, Grid)
+SET_PROP(WaterAirBaseProblem, Grid)
 {
     typedef Dune::YaspGrid<2> type;
 };
 
 // Set the problem property
-SET_PROP(WaterAirProblem, Problem)
+SET_PROP(WaterAirBaseProblem, Problem)
 {
     typedef Dumux::WaterAirProblem<TypeTag> type;
 };
 // Set the material Law
 
-SET_PROP(WaterAirProblem, MaterialLaw)
+SET_PROP(WaterAirBaseProblem, MaterialLaw)
 {
 private:
     // define the material law which is parameterized by effective
@@ -83,7 +86,7 @@ public:
 };
 
 // Set the heat conduction law
-SET_PROP(WaterAirProblem, HeatConductionLaw)
+SET_PROP(WaterAirBaseProblem, HeatConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -96,21 +99,21 @@ public:
 
 
 // Set the wetting phase
-SET_TYPE_PROP(WaterAirProblem, FluidSystem, 
+SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem, 
               Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar),
                                          /*complexRelations=*/true>);
 
 // Enable gravity
-SET_BOOL_PROP(WaterAirProblem, EnableGravity, true);
+SET_BOOL_PROP(WaterAirBaseProblem, EnableGravity, true);
 
 // Enable constraints
-SET_BOOL_PROP(WaterAirProblem, EnableConstraints, true);
+SET_BOOL_PROP(WaterAirBaseProblem, EnableConstraints, true);
 
 // Use forward differences instead of central differences
-SET_INT_PROP(WaterAirProblem, NumericDifferenceMethod, +1);
+SET_INT_PROP(WaterAirBaseProblem, NumericDifferenceMethod, +1);
 
 // Write newton convergence
-SET_BOOL_PROP(WaterAirProblem, NewtonWriteConvergence, false);
+SET_BOOL_PROP(WaterAirBaseProblem, NewtonWriteConvergence, false);
 }
 
 

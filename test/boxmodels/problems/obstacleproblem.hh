@@ -62,23 +62,23 @@ class ObstacleProblem;
 
 namespace Properties
 {
-NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(MODEL_TYPE_TAG));
+NEW_TYPE_TAG(ObstacleBaseProblem);
 
 // Set the grid type
-SET_TYPE_PROP(ObstacleProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(ObstacleBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(ObstacleProblem,
+SET_TYPE_PROP(ObstacleBaseProblem,
               Problem,
               Dumux::ObstacleProblem<TypeTag>);
 
 // Set fluid configuration
-SET_TYPE_PROP(ObstacleProblem,
+SET_TYPE_PROP(ObstacleBaseProblem,
               FluidSystem,
               Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Set the material Law
-SET_PROP(ObstacleProblem, MaterialLaw)
+SET_PROP(ObstacleBaseProblem, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -97,7 +97,7 @@ public:
 };
 
 // Set the heat conduction law
-SET_PROP(ObstacleProblem, HeatConductionLaw)
+SET_PROP(ObstacleBaseProblem, HeatConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -109,24 +109,7 @@ public:
 };
 
 // Enable gravity
-SET_BOOL_PROP(ObstacleProblem, EnableGravity, true);
-
-#if OBSTACLE_USE_PVS
-/////////
-// PVS specific properties
-/////////
-
-// Verbosity of the PVS model (0=silent, 1=medium, 2=chatty)
-SET_INT_PROP(ObstacleProblem, PvsVerbosity, 1);
-
-#else
-/////////
-// NCP specific properties
-/////////
-
-// Enable molecular diffusion of the components?
-SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
-#endif
+SET_BOOL_PROP(ObstacleBaseProblem, EnableGravity, true);
 }
 
 

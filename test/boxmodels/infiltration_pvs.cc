@@ -30,10 +30,14 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#define MODEL_TYPE_TAG BoxPvs
 #include "problems/infiltrationproblem.hh"
+#include <dumux/boxmodels/pvs/pvsmodel.hh>
 #include <dumux/common/start.hh>
+
+namespace Dumux {
+namespace Properties {
+NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxPvs, InfiltrationBaseProblem));
+}}
 
 int main(int argc, char** argv)
 {
