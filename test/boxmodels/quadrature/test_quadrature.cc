@@ -21,11 +21,13 @@
  *****************************************************************************/
 #include "config.h"
 
-#include<dune/common/exceptions.hh>
-#include<dune/grid/yaspgrid.hh>
-#include<dune/grid/alugrid.hh>
-#include<dune/grid/uggrid.hh>
-#include<dune/grid/io/file/vtk/vtkwriter.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
+
+#if HAVE_ALUGRID
+#include <dune/grid/alugrid.hh>
+#endif // HAVE_ALUGRID
 
 #include<dune/common/version.hh>
 #include<dune/geometry/quadraturerules.hh>
@@ -86,6 +88,7 @@ void testIdenityMapping()
 template <class Grid>
 void writeSubControlVolumes(const Grid &grid)
 {
+#if HAVE_ALUGRID
     typedef typename Grid::LeafGridView GridView;
 
     typedef Dune::ALUCubeGrid<dim, dim> Grid2;
@@ -134,10 +137,12 @@ void writeSubControlVolumes(const Grid &grid)
     typedef Dune::VTKWriter<GridView2> VtkWriter;
     VtkWriter writer(grid2.leafView(), Dune::VTK::conforming);
     writer.write("quadrature", Dune::VTK::ascii);
+#endif // HAVE_ALUGRID
 }
 
 void testTetrahedron()
 {
+#if HAVE_ALUGRID
     typedef Dune::ALUSimplexGrid<dim, dim> Grid;
     typedef Grid::LeafGridView GridView;
     typedef Dune::GridFactory<Grid> GridFactory;
@@ -161,6 +166,7 @@ void testTetrahedron()
     const auto &grid = *gf.createGrid();
 
     writeSubControlVolumes(grid);
+#endif // HAVE_ALUGRID
 }
 
 void testQuadrature()
