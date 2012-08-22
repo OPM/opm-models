@@ -79,7 +79,7 @@ class FVTransport2P2C
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld,
+        dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
     enum
     {
