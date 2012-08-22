@@ -87,10 +87,7 @@ SET_BOOL_PROP(ReservoirProblem, EnableConstraints, true);
 SET_SCALAR_PROP(ReservoirProblem, MaxDepth, 2500);
 SET_SCALAR_PROP(ReservoirProblem, Temperature, 293.15);
 SET_STRING_PROP(ReservoirProblem, SimulationName, "reservoir");
-
-SET_TYPE_PROP(ReservoirProblem, LinearSolver, SuperLUBackend<TypeTag>);
 }
-
 
 /*!
  * \ingroup TwoPTwoCModel
