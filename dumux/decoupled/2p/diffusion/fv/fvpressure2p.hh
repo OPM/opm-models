@@ -357,7 +357,6 @@ public:
         for (int i = 0; i < size; i++)
         {
             CellData& cellData = problem_.variables().cellData(i);
-            storePressureSolution(i, cellData);
 
             if (pressureType_ == pw)
             {
