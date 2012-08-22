@@ -38,7 +38,7 @@
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/simplednapl.hh>
+#include <dumux/material/components/dnapl.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -94,7 +94,7 @@ SET_PROP(FingerProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleDNAPL<Scalar> > type;
+    typedef Dumux::LiquidPhase<Scalar, Dumux::DNAPL<Scalar> > type;
 };
 
 // Set the material Law

@@ -39,8 +39,7 @@
 #include <dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
 #include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/simplednapl.hh>
-#include <dumux/material/components/oil.hh>
+#include <dumux/material/components/lnapl.hh>
 #include <dumux/common/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
