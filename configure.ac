@@ -79,7 +79,6 @@ AC_CONFIG_FILES([ewoms.pc
     test/decoupled/Makefile
     test/decoupled/1p/Makefile
     test/decoupled/2p/Makefile
-    test/decoupled/2padaptive/Makefile
     test/decoupled/2p2c/Makefile
     test/freeflow/Makefile
     test/freeflow/navierstokes/Makefile
