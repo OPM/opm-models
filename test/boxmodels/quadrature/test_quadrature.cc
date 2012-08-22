@@ -178,7 +178,6 @@ void testQuadrature()
 
     typedef Dune::YaspGrid<dim> Grid;
     typedef Grid::LeafGridView GridView;
-    typedef Dune::GridFactory<Grid> GridFactory;
     Grid grid(
 #ifdef HAVE_MPI
         Dune::MPIHelper::getCommunicator(),
