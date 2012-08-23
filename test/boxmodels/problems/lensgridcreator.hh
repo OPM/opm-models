@@ -85,8 +85,6 @@ public:
      */
     static void makeGrid()
     {
-        grid_ = new Grid;
-        
         Dune::FieldVector<int, dim> cellRes;
         Dune::FieldVector<Scalar, dim> upperRight;
         Dune::FieldVector<Scalar, dim> lowerLeft;
@@ -102,9 +100,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
 
-        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
-
-        Dune::GridFactory<Dune::UGGrid<dim> > factory(grid_);
+        Dune::GridFactory<Dune::UGGrid<dim> > factory;
         
         if (dim == 3) {
             Dune::FieldVector<double,dim> pos;
@@ -234,6 +230,8 @@ public:
         }
 
         grid_ = factory.createGrid();
+
+        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
         grid_->globalRefine(numRefinements);
     }
 
