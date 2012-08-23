@@ -3,9 +3,6 @@
 /*****************************************************************************
  *   Copyright (C) 20010 by Benjamin Faigle                                  *
  *   Copyright (C) 2007-2008 by Bernd Flemisch                               *
- *   Institute for Modelling Hydraulic and Environmental Systems             *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *

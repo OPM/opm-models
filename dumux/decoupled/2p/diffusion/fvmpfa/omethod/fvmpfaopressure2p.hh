@@ -3,9 +3,6 @@
 /*****************************************************************************
  *   Copyright (C) 2010 by Markus Wolff                                      *
  *   Copyright (C) 2007-2010 by Yufei Cao                                    *
- *   Institute of Applied Analysis and Numerical Simulation                  *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@mathematik.uni-stuttgart.de                   *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
