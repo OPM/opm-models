@@ -107,7 +107,7 @@ public:
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int upIdx = evalPointFluxVars.upstreamIdx(phaseIdx);
+                int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
                 const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
 
                 // add advective flux of current component in current

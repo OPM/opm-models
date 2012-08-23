@@ -164,8 +164,8 @@ public:
             // made using the evaluation point and *not* the current
             // solution. (although the actual secondary variables must
             // obviously come from the current solution.)
-            int upIdx = evalPointFluxVars.upstreamIdx(phaseIdx);
-            int dnIdx = evalPointFluxVars.downstreamIdx(phaseIdx);
+            int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
+            int dnIdx = evalPointFluxVars.downstreamIndex(phaseIdx);
 
             const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
             const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*timeIdx=*/0);

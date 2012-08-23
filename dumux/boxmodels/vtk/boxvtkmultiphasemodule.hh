@@ -192,10 +192,10 @@ public:
                 const auto &normal = elemCtx.fvElemGeom(/*timeIdx=*/0).subContVolFace[scvfIdx].normal;
                 const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
 
-                int i = fluxVars.insideIdx();
+                int i = fluxVars.insideIndex();
                 int I = vertexMapper.map(elem, i, dim);
 
-                int j = fluxVars.outsideIdx();
+                int j = fluxVars.outsideIndex();
                 int J = vertexMapper.map(elem, j, dim);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -219,10 +219,10 @@ public:
             for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++ scvfIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
 
-                int i = fluxVars.insideIdx();
+                int i = fluxVars.insideIndex();
                 int I = vertexMapper.map(elem, i, dim);
 
-                int j = fluxVars.outsideIdx();
+                int j = fluxVars.outsideIndex();
                 int J = vertexMapper.map(elem, j, dim);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

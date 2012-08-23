@@ -103,8 +103,8 @@ public:
 
         // data attached to upstream and the downstream vertices
         // of the current phase
-        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIdx(wPhaseIdx), timeIdx);
-        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.downstreamIdx(wPhaseIdx), timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIndex(wPhaseIdx), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.downstreamIndex(wPhaseIdx), timeIdx);
 
         flux[contiEqIdx] =
             fluxVars.volumeFlux(wPhaseIdx)

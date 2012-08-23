@@ -236,25 +236,25 @@ public:
     /*!
      * \brief Return the local index of the upstream sub-control volume.
      */
-    int upstreamIdx(int phaseIdx) const
+    int upstreamIndex(int phaseIdx) const
     { return upstreamIdx_; }
 
     /*!
      * \brief Return the local index of the downstream sub-control volume.
      */
-    int downstreamIdx(int phaseIdx) const
+    int downstreamIndex(int phaseIdx) const
     { return downstreamIdx_; }
 
     /*!
      * \brief Return the local index of the sub-control volume which is located in negative normal direction.
      */
-    int insideIdx() const
+    int insideIndex() const
     { return insideIdx_; }
 
     /*!
      * \brief Return the local index of the sub-control volume which is located in negative normal direction.
      */
-    int outsideIdx() const
+    int outsideIndex() const
     { return outsideIdx_; }
 
     /*!

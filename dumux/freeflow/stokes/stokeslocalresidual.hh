@@ -143,7 +143,7 @@ protected:
         const FluxVariables &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
 
         // data attached to upstream vertex
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIdx(phaseIdx), timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
 
         auto normal = fluxVars.normal();
         Scalar faceArea = normal.two_norm();

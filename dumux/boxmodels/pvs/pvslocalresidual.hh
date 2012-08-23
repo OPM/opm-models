@@ -160,8 +160,8 @@ public:
         {
             // data attached to upstream and the downstream vertices
             // of the current phase
-            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
-            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
+            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIndex(phaseIdx), timeIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {

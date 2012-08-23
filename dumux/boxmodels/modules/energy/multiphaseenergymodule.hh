@@ -324,8 +324,8 @@ public:
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
-            const VolumeVariables &up = context.volVars(evalPointFluxVars.upstreamIdx(phaseIdx), timeIdx);
-            const VolumeVariables &dn = context.volVars(evalPointFluxVars.downstreamIdx(phaseIdx), timeIdx);
+            const VolumeVariables &up = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
+            const VolumeVariables &dn = context.volVars(evalPointFluxVars.downstreamIndex(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
                 fluxVars.volumeFlux(phaseIdx)
@@ -561,8 +561,8 @@ protected:
             temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &volVarsInside = elemCtx.volVars(fluxVars.insideIdx(), timeIdx);
-        const auto &volVarsOutside = elemCtx.volVars(fluxVars.outsideIdx(), timeIdx);
+        const auto &volVarsInside = elemCtx.volVars(fluxVars.insideIndex(), timeIdx);
+        const auto &volVarsOutside = elemCtx.volVars(fluxVars.outsideIndex(), timeIdx);
 
         // arithmetic mean
         heatConductivity_ =

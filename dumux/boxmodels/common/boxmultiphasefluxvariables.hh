@@ -170,14 +170,14 @@ public:
      * \brief Return the local index of the control volume which is on
      *        the "inside" of the sub-control volume face.
      */
-    short insideIdx() const
+    short insideIndex() const
     { return insideScvIdx_; }
 
     /*!
      * \brief Return the local index of the control volume which is on
      *        the "outside" of the sub-control volume face.
      */
-    short outsideIdx() const
+    short outsideIndex() const
     { return outsideScvIdx_; }
 
     /*!
@@ -187,7 +187,7 @@ public:
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
      */
-    short upstreamIdx(int phaseIdx) const
+    short upstreamIndex(int phaseIdx) const
     { return (volumeFlux_[phaseIdx] > 0)?insideScvIdx_:outsideScvIdx_; }
 
     /*!
@@ -197,7 +197,7 @@ public:
      * \param phaseIdx The index of the fluid phase for which the downstream
      *                 direction is requested.
      */
-    short downstreamIdx(int phaseIdx) const
+    short downstreamIndex(int phaseIdx) const
     { return (volumeFlux_[phaseIdx] > 0)?outsideScvIdx_:insideScvIdx_; }
 
     /*!
@@ -458,14 +458,14 @@ private:
                 downstreamScvIdx_[phaseIdx] = (volumeFlux_[phaseIdx]>0)?outsideScvIdx_:insideScvIdx_;
             }
             else {
-                upstreamScvIdx_[phaseIdx] = evalFluxVars.upstreamIdx(phaseIdx);
-                downstreamScvIdx_[phaseIdx] = evalFluxVars.downstreamIdx(phaseIdx);
+                upstreamScvIdx_[phaseIdx] = evalFluxVars.upstreamIndex(phaseIdx);
+                downstreamScvIdx_[phaseIdx] = evalFluxVars.downstreamIndex(phaseIdx);
             }
 
             // calculate the actual darcy velocities by multiplying
             // the current "filter velocity" with the upstream mobility
             if (!GET_PARAM(TypeTag, bool, EnableSmoothUpwinding)) {
-                const VolumeVariables &up = elemCtx.volVars(upstreamIdx(phaseIdx), timeIdx);
+                const VolumeVariables &up = elemCtx.volVars(upstreamIndex(phaseIdx), timeIdx);
                 filterVelocity_[phaseIdx] *= up.mobility(phaseIdx);
                 volumeFlux_[phaseIdx] *= up.mobility(phaseIdx);
             }
@@ -543,8 +543,8 @@ private:
                                 int phaseIdx,
                                 const DimVector &normal)
     {
-        const VolumeVariables &up = elemCtx.volVars(upstreamIdx(phaseIdx), timeIdx);
-        const VolumeVariables &dn = elemCtx.volVars(downstreamIdx(phaseIdx), timeIdx);
+        const VolumeVariables &up = elemCtx.volVars(upstreamIndex(phaseIdx), timeIdx);
+        const VolumeVariables &dn = elemCtx.volVars(downstreamIndex(phaseIdx), timeIdx);
         
         // first, calculate the component of the "prelimary velocity"
         // which is parallel to the normal of the sub-control volume
