@@ -2,7 +2,13 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2008-2012 by Andreas Lauser                               *
- *   Copyright (C) 2008-2010 by Bernd Flemisch                               *
+ *   Copyright (C) 2009-2012 by Bernd Flemisch                               *
+ *   Copyright (C) 2008-2012 by Klaus Mosthaf                                *
+ *   Copyright (C) 2012 by Christoph Grueninger                              *
+ *   Copyright (C) 2010 by Benjamin Faigle                                   *
+ *   Copyright (C) 2009 by Karin Erbertseder                                 *
+ *   Copyright (C) 2008-2009 by Melanie Darcis                               *
+ *   Copyright (C) 2010 by Philipp Nuske                                     *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
