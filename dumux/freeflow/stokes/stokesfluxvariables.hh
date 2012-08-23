@@ -301,6 +301,6 @@ protected:
     int outsideIdx_;
 };
 
-} // end namepace
+} // end namespace
 
 #endif
