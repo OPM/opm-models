@@ -43,8 +43,7 @@
 #include <dune/common/collectivecommunication.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup FlashModel
@@ -56,6 +55,7 @@ template <class TypeTag>
 class FlashVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -66,12 +66,15 @@ class FlashVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
     // primary variable indices
     enum { cTot0Idx = Indices::cTot0Idx };
-
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -79,6 +82,9 @@ class FlashVolumeVariables
     typedef Dumux::NcpFlash<Scalar, FluidSystem> Flash;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     
 public:
@@ -144,6 +150,8 @@ public:
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -151,6 +159,13 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
+
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     */
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns the relative permeability of a given phase
@@ -185,17 +200,11 @@ public:
 #endif // 0
   
 protected:
-    Scalar porosity_;        //!< Effective porosity within the control volume
-    Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume
-    //Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
     FluidState fluidState_;
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    Scalar porosity_;
+    DimMatrix intrinsicPerm_;
+    Scalar relativePermeability_[numPhases];
+    //Scalar diffCoeff_[numPhases];
 };
 
 } // end namepace

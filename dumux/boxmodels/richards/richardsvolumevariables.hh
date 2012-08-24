@@ -48,7 +48,9 @@ namespace Dumux
  * volume in the Richards model
  */
 template <class TypeTag>
-class RichardsVolumeVariables : public BoxVolumeVariables<TypeTag>
+class RichardsVolumeVariables 
+    : public BoxVolumeVariables<TypeTag>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -60,16 +62,18 @@ class RichardsVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum {
-        pwIdx = Indices::pwIdx,
-        numPhases = FluidSystem::numPhases,
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx
-    };
+    enum { pwIdx = Indices::pwIdx };
+    enum { numPhases = FluidSystem::numPhases };
+    enum { wPhaseIdx = Indices::wPhaseIdx };
+    enum { nPhaseIdx = Indices::nPhaseIdx };
+    enum { dimWorld = GridView::dimensionworld };
 
-
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
@@ -97,7 +101,7 @@ public:
 
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, scvIdx, timeIdx);
+        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -147,16 +151,15 @@ public:
         fluidState_.setDensity(wPhaseIdx, rho);
         fluidState_.setDensity(nPhaseIdx, 1e-20);
 
-        asImp_().updateEnergy_(paramCache,
-                               elemCtx,
-                               scvIdx,
-                               timeIdx);
-
         //////////
         // specify the other parameters
         //////////
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        
+        
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -173,6 +176,12 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     */
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns relative permeability [-] of a given phase within
@@ -227,39 +236,11 @@ public:
                                 Scalar volume)
     { }
 
-    static void updateTemperature(FluidState &fs,
-                                  const ElementContext &elemCtx,
-                                  int scvIdx,
-                                  int timeIdx)
-    {
-        fs.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    }
-
 protected:
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx,
-                            int timeIdx)
-    {
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
-    }
-
-    template<class ParameterCache>
-    void updateEnergy_(const ParameterCache &paramCache,
-                         const ElementContext &elemCtx,
-                         int scvIdx,
-                         int timeIdx)
-    { }
-
     FluidState fluidState_;
+    DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];
     Scalar porosity_;
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
 };
 
 }

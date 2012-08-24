@@ -4,6 +4,7 @@ EXTRA_DIST = CMakeLists.txt
 
 check_PROGRAMS = \
 cuvette_pvs \
+finger_immiscible \
 groundwater_immiscible \
 infiltration_pvs \
 injection_immiscible \
@@ -19,11 +20,13 @@ lens_richards \
 obstacle_ncp \
 obstacle_pvs \
 outflow_pvs \
-finger_immiscible \
+powerinjection_darcy \
+powerinjection_forchheimer \
 reservoir_blackoil \
 waterair_pvs_ni
 
 cuvette_pvs_SOURCES=cuvette_pvs.cc
+finger_immiscible_SOURCES=finger_immiscible.cc
 groundwater_immiscible_SOURCES=groundwater_immiscible.cc 
 infiltration_pvs_SOURCES=infiltration_pvs.cc
 injection_immiscible_SOURCES=injection_immiscible.cc
@@ -39,7 +42,8 @@ lens_richards_SOURCES=lens_richards.cc
 obstacle_ncp_SOURCES=obstacle_ncp.cc
 obstacle_pvs_SOURCES=obstacle_pvs.cc
 outflow_pvs_SOURCES=outflow_pvs.cc
-finger_immiscible_SOURCES=finger_immiscible.cc
+powerinjection_darcy_SOURCES=powerinjection_darcy.cc
+powerinjection_forchheimer_SOURCES=powerinjection_forchheimer.cc
 reservoir_blackoil_SOURCES=reservoir_blackoil.cc
 waterair_pvs_ni_SOURCES=waterair_pvs_ni.cc
 

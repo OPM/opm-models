@@ -51,7 +51,6 @@ class RichardsNewtonController : public BoxNewtonController<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -129,8 +128,11 @@ public:
                     const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
                     
                     ImmiscibleFluidState<Scalar, FluidSystem> fs;
-                    EnergyModule::updateTemperature(fs, elemCtx, scvIdx, /*timeIdx=*/0);
-                    
+
+                    // set the temperatures
+                    Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, /*timeIdx=*/0);
+                    fs.setTemperature(T);
+
                     /////////
                     // calculate the phase pressures of the previous iteration
                     /////////

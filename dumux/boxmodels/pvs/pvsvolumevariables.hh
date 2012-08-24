@@ -57,32 +57,37 @@ template <class TypeTag>
 class PvsVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
+
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
-    // primary variable indices
-    enum {
-        switch0Idx = Indices::switch0Idx,
-        pressure0Idx = Indices::pressure0Idx
-    };
-
+    enum { switch0Idx = Indices::switch0Idx };
+    enum { pressure0Idx = Indices::pressure0Idx };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef Dumux::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
     typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
@@ -233,6 +238,9 @@ public:
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
+
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -240,6 +248,12 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     */
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns the relative permeability of a given phase
@@ -274,10 +288,11 @@ public:
 #endif // 0
     
 protected:
-    Scalar porosity_;        //!< Effective porosity within the control volume
-    Scalar relativePermeability_[numPhases]; //!< Relative permeability within the control volume
-    //Scalar diffCoeff_[numPhases]; //!< Binary diffusion coefficients for the phases
     FluidState fluidState_;
+    Scalar porosity_;
+    DimMatrix intrinsicPerm_;
+    Scalar relativePermeability_[numPhases];
+    //Scalar diffCoeff_[numPhases];
 };
 
 } // end namepace

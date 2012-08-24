@@ -80,6 +80,8 @@ NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation (u
 NEW_PROP_TAG(ElementEqVector); //!< Vector containing a quantity of for equation on a single element
 NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation on the whole grid
 
+NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
+
 NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of quantities
 NEW_PROP_TAG(BoundaryRateVector); //!< Type of object for specifying boundary conditions
 NEW_PROP_TAG(Constraints); //!< The class which represents a constraint degree of freedom

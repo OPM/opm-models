@@ -21,6 +21,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/boxmodels/immiscible/Makefile 
     dumux/boxmodels/modules/Makefile 
     dumux/boxmodels/modules/energy/Makefile 
+    dumux/boxmodels/modules/velocity/Makefile 
     dumux/boxmodels/ncp/Makefile 
     dumux/boxmodels/ncp/diffusion/Makefile
     dumux/boxmodels/pvs/Makefile 

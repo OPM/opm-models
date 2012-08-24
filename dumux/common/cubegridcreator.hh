@@ -81,8 +81,8 @@ public:
     static void makeGrid()
     {
         Dune::array< unsigned int, dimWorld > cellRes;
-        GlobalPosition upperRight;
-        GlobalPosition lowerLeft;
+        GlobalPosition upperRight(0.0);
+        GlobalPosition lowerLeft(0.0);
 
         upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);

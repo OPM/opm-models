@@ -47,6 +47,7 @@
 //#include <dumux/linear/boxparallelamgsolver.hh>
 #include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/common/timemanager.hh>
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -251,6 +252,9 @@ SET_INT_PROP(BoxModel, LinearSolverOverlapSize, 2);
 
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxModel, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 /*!
  * \brief Set the algorithm used for the linear solver.

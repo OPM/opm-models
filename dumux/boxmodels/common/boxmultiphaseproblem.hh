@@ -48,7 +48,9 @@ NEW_PROP_TAG(EnableGravity);
  *        with a multi-phase flow through a porous medium.
  */
 template<class TypeTag>
-class BoxMultiPhaseProblem : public BoxProblem<TypeTag>
+class BoxMultiPhaseProblem 
+    : public BoxProblem<TypeTag>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityBaseProblem
 {
     typedef Dumux::BoxProblem<TypeTag> ParentType;
     

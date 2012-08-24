@@ -48,17 +48,14 @@
 
 #include <iostream>
 
-namespace Dumux
-{
-
+namespace Dumux {
 template <class TypeTag>
 class LensProblem;
 
 //////////
 // Specify the properties for the lens problem
 //////////
-namespace Properties
-{
+namespace Properties {
 NEW_TYPE_TAG(LensBaseProblem);
 
 // declare the properties specific for the lens problem

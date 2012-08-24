@@ -48,6 +48,7 @@ class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public NcpVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -58,23 +59,24 @@ class NcpVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver) CompositionFromFugacitiesSolver;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion),
-
-        fugacity00Idx = Indices::fugacity00Idx,
-        saturation0Idx = Indices::saturation0Idx,
-        pressure0Idx = Indices::pressure0Idx
-    };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
+    enum { fugacity00Idx = Indices::fugacity00Idx };
+    enum { saturation0Idx = Indices::saturation0Idx };
+    enum { pressure0Idx = Indices::pressure0Idx };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef NcpVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
 public:
     NcpVolumeVariables()
@@ -203,6 +205,10 @@ public:
         EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         fluidState_.checkDefined();
+
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+
         checkDefined();
     }
 
@@ -214,11 +220,10 @@ public:
     { return fluidState_; }
 
     /*!
-     * \brief Returns the effective mobility of a given phase within
-     *        the control volume.
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
      */
-    Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns the relative permeability of a given phase within
@@ -226,6 +231,13 @@ public:
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
+
+    /*!
+     * \brief Returns the effective mobility of a given phase within
+     *        the control volume.
+     */
+    Scalar mobility(int phaseIdx) const
+    { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
 
     /*!
      * \brief Returns the average porosity within the control volume.
@@ -250,11 +262,10 @@ public:
     }
 
 protected:
-    Scalar porosity_; //!< Effective porosity within the control volume
-    Scalar relativePermeability_[numPhases]; //!< Effective mobility within the control volume
-
-    //! Mass fractions of each component within each phase
     FluidState fluidState_;
+    Scalar porosity_;
+    DimMatrix intrinsicPerm_;
+    Scalar relativePermeability_[numPhases];
 };
 
 } // end namepace

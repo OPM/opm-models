@@ -47,7 +47,10 @@ namespace Dumux
  *        finite volume in the black-oil model.
  */
 template <class TypeTag>
-class BlackOilVolumeVariables : public BoxVolumeVariables<TypeTag>
+class BlackOilVolumeVariables
+    : public BoxVolumeVariables<TypeTag>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
@@ -57,22 +60,23 @@ class BlackOilVolumeVariables : public BoxVolumeVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BlackOilFluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-        
-        saturation0Idx = Indices::saturation0Idx,
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { saturation0Idx = Indices::saturation0Idx };
+    enum { wCompIdx = FluidSystem::wCompIdx };
+    enum { oCompIdx = FluidSystem::oCompIdx };
+    enum { gCompIdx = FluidSystem::gCompIdx };
+    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
+    enum { oPhaseIdx = FluidSystem::oPhaseIdx };
+    enum { gPhaseIdx = FluidSystem::gPhaseIdx };
+    enum { dimWorld = GridView::dimensionworld };
 
-        wCompIdx = FluidSystem::wCompIdx,
-        oCompIdx = FluidSystem::oCompIdx,
-        gCompIdx = FluidSystem::gCompIdx,
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-        wPhaseIdx = FluidSystem::wPhaseIdx,
-        oPhaseIdx = FluidSystem::oPhaseIdx,
-        gPhaseIdx = FluidSystem::gPhaseIdx
-    };
-
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
 public:
     /*!
@@ -178,6 +182,9 @@ public:
 
         // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -185,6 +192,12 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     */
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns the relative permeability of a given phase
@@ -214,6 +227,7 @@ public:
 protected:
     FluidState fluidState_;
     Scalar porosity_;
+    DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];
 };
 

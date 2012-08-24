@@ -50,11 +50,13 @@ namespace Dumux
 template <class TypeTag>
 class ImmiscibleVolumeVariables 
     : public BoxVolumeVariables<TypeTag>
-    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -63,13 +65,18 @@ class ImmiscibleVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { dimWorld = GridView::dimensionworld };
 
+    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+        
+    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
@@ -132,6 +139,12 @@ public:
 
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+
+        // intrinsic permeability
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+
+        // update the quantities specific for the velocity model
+        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -139,6 +152,12 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
+
+    /*!
+     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     */
+    const DimMatrix &intrinsicPermeability() const
+    { return intrinsicPerm_; }
 
     /*!
      * \brief Returns the relative permeability of a given phase
@@ -167,6 +186,7 @@ public:
 protected:
     FluidState fluidState_;
     Scalar porosity_;
+    DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];
 };
 
