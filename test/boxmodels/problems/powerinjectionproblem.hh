@@ -21,10 +21,16 @@
  *
  * \brief 1D problem with very fast injection of gas on the left.
  *
- * The velocity model is chosen in the .cc file for the problem!
+ * The velocity model is chosen in the .cc file for the problem. The
+ * spatial parameters are inspired by the ones given by
+ *
+ * V. Jambhekar: "Forchheimer Porous-media Flow models -- Numerical
+ * Investigation and Comparison with Experimental Data", Master's
+ * Thesis at Institute for Modelling Hydraulic and Environmental
+ * Systems, University of Stuttgart, 2011
  */
-#ifndef DUMUX_POWERINJECTION_PROBLEM_HH
-#define DUMUX_POWERINJECTION_PROBLEM_HH
+#ifndef DUMUX_POWER_INJECTION_PROBLEM_HH
+#define DUMUX_POWER_INJECTION_PROBLEM_HH
 
 #include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
@@ -125,7 +131,13 @@ SET_INT_PROP(PowerInjectionBaseProblem, CellsZ, 1);
  * \ingroup ImmiscibleBoxProblems
  * \brief 1D Problem with very fast injection of gas on the left.
  *
- * The velocity model is chosen in the .cc file for the problem!
+ * The velocity model is chosen in the .cc file for the problem. The
+ * spatial parameters are inspired by the ones given by
+ *
+ * V. Jambhekar: "Forchheimer Porous-media Flow models -- Numerical
+ * Investigation and Comparison with Experimental Data", Master's
+ * Thesis at Institute for Modelling Hydraulic and Environmental
+ * Systems, University of Stuttgart, 2011
  */
 template <class TypeTag>
 class PowerInjectionProblem
@@ -182,14 +194,14 @@ public:
         eps_ = 3e-6;
         FluidSystem::init();
 
-        temperature_ = 273.15 + 20; // -> 20°C
+        temperature_ = 273.15 + 26.6;
         
         // parameters for the Van Genuchten law
         // alpha and n
         materialParams_.setVgAlpha(0.00045);
         materialParams_.setVgN(7.3);
 
-        K_ = this->toDimMatrix_(9.05e-8);
+        K_ = this->toDimMatrix_(5.73e-08); // [m^2]
 
         setupInitialFluidState_();
     }
@@ -216,14 +228,14 @@ public:
      */
     template <class Context>
     Scalar ergunCoefficient(const Context &context, int spaceIdx, int timeIdx) const
-    { return 0.05; }
+    { return 0.3866; }
 
     /*!
      * \brief Porosity
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
-    { return 0.8; }
+    { return 0.558; }
 
     /*!
      * \brief Parameters of the  constitutive relationships (kr(Sw), pc(Sw), etc.).
