@@ -22,7 +22,6 @@
 #define DUMUX_NCP_PROPERTY_DEFAULTS_HH
 
 #include "ncpmodel.hh"
-#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "ncplocalresidual.hh"
 #include "ncpfluxvariables.hh"
 #include "ncpprimaryvariables.hh"
@@ -33,6 +32,8 @@
 #include "ncpindices.hh"
 #include "ncpproperties.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -108,6 +109,9 @@ public:
 SET_TYPE_PROP(BoxNcp,
               LocalResidual,
               NcpLocalResidual<TypeTag>);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxNcp, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 //! Use the Ncp specific newton controller for the compositional NCP model
 SET_TYPE_PROP(BoxNcp, NewtonController, NcpNewtonController<TypeTag>);

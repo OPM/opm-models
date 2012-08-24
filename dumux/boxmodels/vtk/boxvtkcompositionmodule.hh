@@ -92,9 +92,7 @@ class BoxVtkCompositionModule : public BoxVtkOutputModule<TypeTag>
 public:
     BoxVtkCompositionModule(const Problem &problem)
         : ParentType(problem)
-    {
-    }
-
+    { }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to

@@ -66,6 +66,9 @@ NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
 NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
 
+//! Specifies the relation used for velocity
+NEW_PROP_TAG(VelocityModule);
+
 NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered as a conservation quantity or not
 NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used

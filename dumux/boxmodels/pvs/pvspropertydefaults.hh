@@ -34,7 +34,6 @@
 #define DUMUX_PVS_PROPERTY_DEFAULTS_HH
 
 #include "pvsmodel.hh"
-#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "pvsnewtoncontroller.hh"
 #include "pvsprimaryvariables.hh"
 #include "pvsratevector.hh"
@@ -44,6 +43,8 @@
 #include "pvsindices.hh"
 #include "pvsproperties.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -102,6 +103,9 @@ SET_TYPE_PROP(BoxPvs,
 SET_TYPE_PROP(BoxPvs,
               LocalResidual,
               PvsLocalResidual<TypeTag>);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxPvs, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 //! Use the PVS specific newton controller for the PVS model
 SET_TYPE_PROP(BoxPvs, NewtonController, PvsNewtonController<TypeTag>);

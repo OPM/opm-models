@@ -32,7 +32,6 @@
 #define DUMUX_RICHARDS_PROPERTY_DEFAULTS_HH
 
 #include "richardsmodel.hh"
-#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "richardsindices.hh"
 #include "richardsfluxvariables.hh"
 #include "richardsratevector.hh"
@@ -42,6 +41,8 @@
 #include "richardsproperties.hh"
 #include "richardsnewtoncontroller.hh"
 
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
 #include <dumux/material/components/nullcomponent.hh>
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
@@ -115,6 +116,9 @@ SET_TYPE_PROP(BoxRichards,
 SET_TYPE_PROP(BoxRichards,
               HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxRichards, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 /*!
  * \brief The wetting phase used.

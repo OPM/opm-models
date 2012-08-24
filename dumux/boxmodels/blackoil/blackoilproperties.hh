@@ -64,6 +64,8 @@ NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidState); //!<The phases state
+NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
+NEW_PROP_TAG(FluidState); //!<The type of the fluid state
 }
 
 }

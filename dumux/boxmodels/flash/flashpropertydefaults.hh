@@ -34,7 +34,6 @@
 #define DUMUX_FLASH_PROPERTY_DEFAULTS_HH
 
 #include "flashmodel.hh"
-#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "flashprimaryvariables.hh"
 #include "flashratevector.hh"
 #include "flashboundaryratevector.hh"
@@ -43,6 +42,8 @@
 #include "flashindices.hh"
 #include "flashproperties.hh"
 
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -107,6 +108,9 @@ SET_TYPE_PROP(BoxFlash, Model, FlashModel<TypeTag>);
 
 //! The type of the base base class for actual problems
 SET_TYPE_PROP(BoxFlash, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxFlash, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(BoxFlash, PrimaryVariables, FlashPrimaryVariables<TypeTag>);

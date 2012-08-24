@@ -73,6 +73,9 @@ NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 
+//! Specifies the relation used for velocity
+NEW_PROP_TAG(VelocityModule);
+
 // these properties only make sense for the BoxImmiscibleTwoPhase type tag
 NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
 NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models

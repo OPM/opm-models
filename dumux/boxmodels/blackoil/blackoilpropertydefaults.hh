@@ -33,7 +33,6 @@
 #define DUMUX_BLACK_OIL_PROPERTY_DEFAULTS_HH
 
 #include "blackoilmodel.hh"
-#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include "blackoilindices.hh"
 #include "blackoilfluxvariables.hh"
 #include "blackoilprimaryvariables.hh"
@@ -42,6 +41,8 @@
 #include "blackoilboundaryratevector.hh"
 #include "blackoilproperties.hh"
 
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
+#include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidsystems/blackoilfluidsystem.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
@@ -76,6 +77,9 @@ public:
                                            FluidSystem,
                                            /*enableEnthalpy=*/false> type;
 };
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxBlackOil, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(BoxBlackOil, RateVector, BlackOilRateVector<TypeTag>);

@@ -63,6 +63,7 @@ NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law f
 NEW_PROP_TAG(FluidSystem); //!< The fluid system to be used for the Richards model
 NEW_PROP_TAG(WettingPhase); //!< Fluid which represents the wetting phase
 NEW_PROP_TAG(NonwettingPhase); //!< Fluid which represents the non-wetting phase
+NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 // \}

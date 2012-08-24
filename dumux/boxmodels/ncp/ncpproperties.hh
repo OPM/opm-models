@@ -80,6 +80,9 @@ NEW_PROP_TAG(EnableGravity);
 //! Use the smooth upwinding method?
 NEW_PROP_TAG(EnableSmoothUpwinding);
 
+//! Specifies the relation used for velocity
+NEW_PROP_TAG(VelocityModule);
+
 //! Number of Newton iterations per time step where the update gets chopped?
 NEW_PROP_TAG(NewtonChoppedIterations);
 }

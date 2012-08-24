@@ -40,6 +40,7 @@
 #include "immiscibleboundaryratevector.hh"
 #include "immiscibleproperties.hh"
 
+#include <dumux/boxmodels/modules/velocity/boxvelocitymodules.hh>
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/fluidsystems/liquidphase.hh>
@@ -70,6 +71,9 @@ SET_TYPE_PROP(BoxImmiscible, Model, ImmiscibleModel<TypeTag>);
 
 //! The type of the base base class for actual problems
 SET_TYPE_PROP(BoxImmiscible, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(BoxImmiscible, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
 //! the FluidState property
 SET_PROP(BoxImmiscible, FluidState)
