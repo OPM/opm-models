@@ -85,20 +85,17 @@ public:
     };
 
     /*!
-     * \brief Returns the passability coefficient
+     * \brief Returns the ratio between the phase mobility \f$k_{r,\alpha}\f$ and its passability
      *        \f$\eta_{r,\alpha}\f$ for a given fluid phase \f$\alpha\f$.
      *
      * The passability coefficient specifies the influence of the
      * other fluid phases on the turbolent behaviour of a given fluid
      * phase. By default it is equal to the relative permeability. The
-     * relative permability must go to zero, as the passability goes
-     * to zero, i.e.
-     *
-     * \f[ \eta_{r,alpha} \to 0 \quad \implies \quad k_{r,\alpha} \to zero \f]
+     * mobility to passability ratio is the inverse of phase' the viscosity.
      */
     template <class Context>
-    Scalar passability(Context &context, int spaceIdx, int timeIdx, int phaseIdx) const
-    { return context.volVars(spaceIdx, timeIdx).relativePermeability(phaseIdx); };
+    Scalar mobilityPassabilityRatio(Context &context, int spaceIdx, int timeIdx, int phaseIdx) const
+    { return 1.0/context.volVars(spaceIdx, timeIdx).fluidState().viscosity(phaseIdx); };
 };
 
 /*!
@@ -127,8 +124,8 @@ public:
     /*!
      * \brief Returns the passability of a phase.
      */
-    Scalar passability(int phaseIdx) const
-    { return passability_[phaseIdx]; };
+    Scalar mobilityPassabilityRatio(int phaseIdx) const
+    { return mobilityPassabilityRatio_[phaseIdx]; };
 
 protected:
     void update_(const ElementContext &elemCtx, int scvIdx, int timeIdx)
@@ -137,12 +134,12 @@ protected:
         ergunCoefficient_ = problem.ergunCoefficient(elemCtx, scvIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            passability_[phaseIdx] = problem.passability(elemCtx, scvIdx, timeIdx, phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = problem.mobilityPassabilityRatio(elemCtx, scvIdx, timeIdx, phaseIdx);
     }
 
 private:
     Scalar ergunCoefficient_;
-    Scalar passability_[numPhases];
+    Scalar mobilityPassabilityRatio_[numPhases];
 };
 
 /*!
@@ -219,11 +216,14 @@ public:
     { return ergunCoefficient_; }
 
     /*!
-     * \brief Return the passability at the face's integration
-     *        point for a given fluid phase.
+     * \brief Return the ratio of the mobility divided by the
+     *        passability at the face's integration point for a given
+     *        fluid phase.
+     *
+     * Usually, that's the inverse of the viscosity.
      */
-    Scalar passability(int phaseIdx) const
-    { return passability_[phaseIdx]; }
+    Scalar mobilityPassabilityRatio(int phaseIdx) const
+    { return mobilityPassabilityRatio_[phaseIdx]; }
 
     /*!
      * \brief Return the filter velocity of a fluid phase at the
@@ -295,7 +295,7 @@ protected:
             const auto &up = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
             density_[phaseIdx] = up.fluidState().density(phaseIdx);
             mobility_[phaseIdx] = up.mobility(phaseIdx);
-            passability_[phaseIdx] = up.passability(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = filterVelocity_[phaseIdx] * normal;
@@ -363,8 +363,8 @@ protected:
                 density_[phaseIdx] = fsInside.density(phaseIdx);
             }
 
-            // take the passability of the phase from the inside SCV
-            passability_[phaseIdx] = volVarsInside.passability(phaseIdx);
+            // take the mobility/passability ratio of the phase from the inside SCV
+            mobilityPassabilityRatio_[phaseIdx] = volVarsInside.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = filterVelocity_[phaseIdx] * normal;
@@ -410,11 +410,7 @@ protected:
         // Obtaining the upstreamed quantities
         Scalar mobility = mobility_[phaseIdx];
         Scalar density = density_[phaseIdx];
-        Scalar passability = passability_[phaseIdx];
-        if (passability < 1e-35) {
-            assert(mobility < 1e-25);
-            passability = 1;
-        }
+        Scalar mobilityPassabilityRatio = mobilityPassabilityRatio_[phaseIdx];
         
         // optain the quantites for the integration point
         const auto &pGrad = imp.potentialGrad(phaseIdx);
@@ -429,8 +425,7 @@ protected:
         //
         // residual += \rho_\alpha * mobility_\alpha * C_E / \eta_{r,\alpha} * abs(v_\alpha) * sqrt(K)*v_\alpha
         sqrtK_.usmv(density
-                    * mobility
-                    / passability
+                    * mobilityPassabilityRatio
                     * ergunCoefficient_
                     * velocity.two_norm(),
                     velocity,
@@ -497,7 +492,7 @@ protected:
     Scalar ergunCoefficient_;
 
     // Passability of all phases at the integration point
-    Scalar passability_[numPhases];
+    Scalar mobilityPassabilityRatio_[numPhases];
 
     // Density of all phases at the integration point
     Scalar density_[numPhases];
