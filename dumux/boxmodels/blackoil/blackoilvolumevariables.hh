@@ -177,6 +177,9 @@ public:
         // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
+        // intrinsic permeability
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }

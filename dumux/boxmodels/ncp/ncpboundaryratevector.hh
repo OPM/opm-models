@@ -119,11 +119,15 @@ public:
                     molarity = 
                         fs.moleFraction(phaseIdx, compIdx)
                         * density / meanMBoundary;
+                    Valgrind::CheckDefined(molarity);
                 }
                 else  {
                     molarity = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
+                    Valgrind::CheckDefined(molarity);
                 }
 
+
+                Valgrind::CheckDefined(fluxVars.volumeFlux(phaseIdx));
 
                 // add advective flux of current component in current
                 // phase
@@ -131,8 +135,21 @@ public:
                     fluxVars.volumeFlux(phaseIdx)
                     * molarity;
             }
-            
-            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
+
+            if (enableEnergy) {
+                Scalar specificEnthalpy;
+                if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+                    specificEnthalpy = FluidSystem::enthalpy(fs, paramCache, phaseIdx);
+                else 
+                    specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
+
+                // currently we neglect heat conduction!
+                Scalar enthalpyRate = 
+                    density
+                    * fluxVars.volumeFlux(phaseIdx)
+                    * specificEnthalpy;
+                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+            }
         }
 
 #ifndef NDEBUG

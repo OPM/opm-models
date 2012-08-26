@@ -236,6 +236,8 @@ public:
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
+        // intrinsic permeability
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);

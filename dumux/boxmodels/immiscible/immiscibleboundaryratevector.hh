@@ -42,7 +42,6 @@ template <class TypeTag>
 class ImmiscibleBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -112,8 +111,21 @@ public:
             (*this)[conti0EqIdx + phaseIdx] +=
                 fluxVars.volumeFlux(phaseIdx)
                 * density;
-            
-            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
+
+            if (enableEnergy) {
+                Scalar specificEnthalpy;
+                if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+                    specificEnthalpy = FluidSystem::enthalpy(fs, paramCache, phaseIdx);
+                else 
+                    specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
+
+                // currently we neglect heat conduction!
+                Scalar enthalpyRate = 
+                    density
+                    * fluxVars.volumeFlux(phaseIdx)
+                    * specificEnthalpy;
+                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+            }
         }
 
 #ifndef NDEBUG

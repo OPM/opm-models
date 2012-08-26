@@ -42,7 +42,6 @@ template <class TypeTag>
 class FlashBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -132,7 +131,20 @@ public:
                     * molarity;
             }
             
-            EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, fluxVars.volumeFlux(phaseIdx));
+            if (enableEnergy) {
+                Scalar specificEnthalpy;
+                if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+                    specificEnthalpy = FluidSystem::enthalpy(fs, paramCache, phaseIdx);
+                else 
+                    specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
+
+                // currently we neglect heat conduction!
+                Scalar enthalpyRate = 
+                    density
+                    * fluxVars.volumeFlux(phaseIdx)
+                    * specificEnthalpy;
+                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+            }
         }
 
 #ifndef NDEBUG
@@ -185,10 +197,6 @@ public:
      */
     void setNoFlow()
     { (*this) = 0.0; }
-
-protected:
-    Implementation &asImp_() 
-    { return *static_cast<Implementation *>(this); }
 };
 
 } // end namepace
