@@ -22,9 +22,9 @@
 /*!
  * \file
  *
- * \brief   This file contains the data which is required to calculate
- *          all fluxes of components over a face of a finite volume for
- *          the primary variable switching compositional model.
+ * \brief This file contains the data which is required to calculate
+ *        all fluxes of components over a face of a finite volume for
+ *        the primary variable switching compositional model.
  */
 #ifndef DUMUX_PVS_FLUX_VARIABLES_HH
 #define DUMUX_PVS_FLUX_VARIABLES_HH
@@ -78,7 +78,7 @@ public:
         // update the PVS specific gradients
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
-        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
@@ -109,9 +109,6 @@ public:
         return moleFracGrad_[phaseIdx][compIdx];
     }
 
-    const DimVector &temperatureGrad() const
-    { return temperatureGrad_; }
-
 private:
     void calculateGradients_(const ElementContext &elemCtx,
                              int scvfIdx,
@@ -126,7 +123,6 @@ private:
                 moleFrac_[phaseIdx][compIdx] = Scalar(0);
             }
         }
-        temperatureGrad_ = Scalar(0);
 
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
 
@@ -156,8 +152,6 @@ private:
             }
 
             tmp = feGrad;
-            tmp *= fluidState.temperature(/*phaseIdx=*/0);
-            temperatureGrad_ += tmp;
         }
 
 #if 0
@@ -200,7 +194,6 @@ private:
     Scalar molarDensity_[numPhases];
     Scalar moleFrac_[numPhases][numComponents];
     DimVector moleFracGrad_[numPhases][numComponents];
-    DimVector temperatureGrad_;
 };
 
 } // end namepace

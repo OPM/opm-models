@@ -57,6 +57,7 @@ class NcpFluxVariables
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dimWorld = GridView::dimensionworld };   
@@ -77,7 +78,26 @@ public:
         // without diffusion)
         diffusionVars_.update(elemCtx, scvfIdx, timeIdx);
         
-        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+    }
+
+
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     */
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int bfIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {
+        MultiPhaseFluxVariables::updateBoundary(context, 
+                                                bfIdx, 
+                                                timeIdx, 
+                                                fs, 
+                                                paramCache);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
     }
 
     ////////////////////////////////////////////////

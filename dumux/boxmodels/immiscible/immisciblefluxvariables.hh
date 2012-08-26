@@ -54,19 +54,40 @@ class ImmiscibleFluxVariables
     , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
-    typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
+    typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::update()
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
-        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     */
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int bfIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {
+        MultiPhaseFluxVariables::updateBoundary(context, 
+                                                bfIdx, 
+                                                timeIdx, 
+                                                fs, 
+                                                paramCache);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
+    }
 };
 
 } // end namepace

@@ -52,6 +52,9 @@ class PvsBoundaryRateVector
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -139,9 +142,11 @@ public:
                     density
                     * fluxVars.volumeFlux(phaseIdx)
                     * specificEnthalpy;
-                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+                EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
+
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(fluxVars));
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {

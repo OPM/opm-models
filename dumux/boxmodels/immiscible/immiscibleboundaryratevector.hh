@@ -124,9 +124,11 @@ public:
                     density
                     * fluxVars.volumeFlux(phaseIdx)
                     * specificEnthalpy;
-                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+                EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
+
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(fluxVars));
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {

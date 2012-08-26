@@ -74,6 +74,7 @@ class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -85,7 +86,7 @@ public:
      *        the energy module.
      */
     static std::string primaryVarName(int pvIdx)
-    { return ""; };
+    { return ""; }
 
     /*!
      * \brief Returns the name of an equation or an empty
@@ -93,7 +94,7 @@ public:
      *        the energy module.
      */
     static std::string eqName(int eqIdx)
-    { return ""; };
+    { return ""; }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -114,12 +115,6 @@ public:
     template <class FluidState>
     static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
     { }
-    
-    /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
-     */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    { }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
@@ -133,16 +128,34 @@ public:
     { }
 
     /*!
+     * \brief Add the rate of the enthalpy flux to a rate vector.
+     */
+    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    { }
+
+    /*!
+     * \brief Add the rate of the enthalpy flux to a rate vector.
+     */
+    static void addToEnthalpyRate(RateVector &rateVec, Scalar rate)
+    { }
+
+    /*!
+     * \brief Add the rate of the conductive heat flux to a rate vector.
+     */
+    static Scalar heatConductionRate(const FluxVariables &fluxVars)
+    { return 0.0; }
+
+    /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
     static void addPhaseStorage(EqVector &storage, const VolumeVariables &volVars, int phaseIdx)
-    { };
+    { }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
     static void addSolidHeatStorage(EqVector &storage, const VolumeVariables &volVars)
-    { };
+    { }
 
     /*!
      * \brief Evaluates the advective energy fluxver a face of a
@@ -186,6 +199,7 @@ class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -205,7 +219,7 @@ public:
         if (pvIdx == temperatureIdx)
             return "temperature";
         return "";
-    };
+    }
 
     /*!
      * \brief Returns the name of an equation or an empty
@@ -217,7 +231,7 @@ public:
         if (eqIdx == energyEqIdx)
             return "energy";
         return "";
-    };
+    }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -245,10 +259,26 @@ public:
     }
 
     /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
+     * \brief Add the rate of the enthalpy flux to a rate vector.
      */
     static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
     { rateVec[energyEqIdx] = rate; }
+
+    /*!
+     * \brief Add the rate of the enthalpy flux to a rate vector.
+     */
+    static void addToEnthalpyRate(RateVector &rateVec, Scalar rate)
+    { rateVec[energyEqIdx] += rate; }
+
+    /*!
+     * \brief Add the rate of the conductive heat flux to a rate vector.
+     */
+    static Scalar heatConductionRate(const FluxVariables &fluxVars)
+    { 
+        return 
+            - fluxVars.temperatureGradNormal()
+            * fluxVars.heatConductivity();
+    }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
@@ -291,7 +321,7 @@ public:
             * fs.internalEnergy(phaseIdx)
             * fs.saturation(phaseIdx)
             * volVars.porosity();
-    };
+    }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
@@ -301,7 +331,7 @@ public:
         storage[energyEqIdx] +=
             volVars.heatCapacitySolid()
             * volVars.fluidState().temperature(/*phaseIdx=*/0);
-    };
+    }
 
     /*!
      * \brief Evaluates the advective energy fluxver a face of a
@@ -505,7 +535,14 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void updateEnergy(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    { }
+
+    template <class Context, class FluidState>
+    void updateBoundary_(const Context &context,
+                         int bfIdx,
+                         int timeIdx,
+                         const FluidState &fs)
     { }
 
 public:
@@ -537,7 +574,7 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void updateEnergy(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         // calculate temperature gradient using finite element
@@ -556,9 +593,7 @@ protected:
         }
 
         // scalar product of temperature gradient and scvf normal
-        temperatureGradNormal_ = 0.0;
-        for (int i = 0; i < dimWorld; ++ i)
-            temperatureGradNormal_ += scvf.normal[i]*temperatureGrad[i];
+        temperatureGradNormal_ = scvf.normal*temperatureGrad;
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &volVarsInside = elemCtx.volVars(fluxVars.insideIndex(), timeIdx);
@@ -570,6 +605,44 @@ protected:
                    +
                    volVarsOutside.heatConductivity());
         Valgrind::CheckDefined(heatConductivity_);
+    }
+
+    template <class Context, class FluidState>
+    void updateBoundary_(const Context &context,
+                         int bfIdx,
+                         int timeIdx,
+                         const FluidState &fs)
+    {
+        const auto &fvElemGeom = context.fvElemGeom(timeIdx);
+        const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
+        
+        const auto &elemCtx = context.elemContext();
+        int insideScvIdx = scvf.i;
+        const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx];
+
+        const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
+        const auto &fsInside = volVarsInside.fluidState();
+
+            
+        // distance between the center of the SCV and center of the boundary face
+        DimVector distVec = scvf.ipGlobal;
+        distVec -= context.element().geometry().global(insideScv.localGeometry->center());
+
+        const DimVector &n = scvf.normal;
+        Scalar dist = (distVec * n)/n.two_norm();
+
+        // if the following assertation triggers, the center of the
+        // center of the interior SCV was not inside the element!
+        assert(dist > 0); 
+        
+        // calculate the temperature gradient using two-point gradient
+        // appoximation
+        temperatureGradNormal_ =
+            (fsInside.temperature(/*phaseIdx=*/0) - fs.temperature(/*phaseIdx=*/0))
+            / dist;
+
+        // take the value for heat conductivity from the interior finite volume
+        heatConductivity_ = volVarsInside.heatConductivity();
     }
 
 public:

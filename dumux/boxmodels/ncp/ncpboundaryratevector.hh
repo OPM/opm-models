@@ -144,13 +144,15 @@ public:
                     specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate = 
+                Scalar phaseEnthalpyRate = 
                     density
                     * fluxVars.volumeFlux(phaseIdx)
                     * specificEnthalpy;
-                EnergyModule::setEnthalpyRate(*this, enthalpyRate);
+                EnergyModule::addToEnthalpyRate(*this, phaseEnthalpyRate);
             }
         }
+
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(fluxVars));
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++ i) {

@@ -19,9 +19,10 @@
 /*!
  * \file
  *
- * \brief   This file contains the data which is required to calculate
- *          all fluxes of components over a face of a finite volume for
- *          the primary variable switching compositional model.
+ * \brief This file contains the data which is required to calculate
+ *        all fluxes of components over a face of a finite volume for
+ *        the primary variable compositional model which is based on
+ *        flash calculations.
  */
 #ifndef DUMUX_FLASH_FLUX_VARIABLES_HH
 #define DUMUX_FLASH_FLUX_VARIABLES_HH
@@ -54,17 +55,14 @@ class FlashFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dimWorld = GridView::dimensionworld };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
-    };
-
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
@@ -74,7 +72,25 @@ public:
 
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
-        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+    }
+
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     */
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int bfIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {
+        MultiPhaseFluxVariables::updateBoundary(context, 
+                                                bfIdx, 
+                                                timeIdx, 
+                                                fs, 
+                                                paramCache);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
     }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
@@ -105,9 +121,6 @@ public:
         return moleFracGrad_[phaseIdx][compIdx];
     }
 
-    const DimVector &temperatureGrad() const
-    { return temperatureGrad_; }
-
 private:
     void calculateGradients_(const ElementContext &elemCtx,
                              int scvfIdx,
@@ -122,7 +135,6 @@ private:
                 moleFrac_[phaseIdx][compIdx] = Scalar(0);
             }
         }
-        temperatureGrad_ = Scalar(0);
 
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
 
@@ -152,8 +164,6 @@ private:
             }
 
             tmp = feGrad;
-            tmp *= fluidState.temperature(/*phaseIdx=*/0);
-            temperatureGrad_ += tmp;
         }
 
 #if 0
@@ -196,7 +206,6 @@ private:
     Scalar molarDensity_[numPhases];
     Scalar moleFrac_[numPhases][numComponents];
     DimVector moleFracGrad_[numPhases][numComponents];
-    DimVector temperatureGrad_;
 };
 
 } // end namepace

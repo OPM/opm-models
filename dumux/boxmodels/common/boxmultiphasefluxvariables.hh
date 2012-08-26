@@ -381,9 +381,13 @@ private:
         n /= scvf.normal.two_norm();
             
         // distance between the center of the SCV and center of the boundary face
-        DimVector distVec = context.element().geometry().global(insideScv.localGeometry->center());
-        distVec -= scvf.ipGlobal;
-        Scalar dist = distVec.two_norm();
+        DimVector distVec = scvf.ipGlobal;
+        distVec -= context.element().geometry().global(insideScv.localGeometry->center());
+        Scalar dist = distVec * n;
+
+        // if the following assertation triggers, the center of the
+        // center of the interior SCV was not inside the element!
+        assert(dist > 0);
         
         // calculate the pressure gradient using two-point gradient
         // appoximation
