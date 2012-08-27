@@ -56,6 +56,7 @@ class PvsFluxVariables
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dimWorld = GridView::dimensionworld };
@@ -71,6 +72,9 @@ class PvsFluxVariables
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::update()
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
@@ -79,6 +83,24 @@ public:
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+    }
+
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     */
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int bfIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {
+        MultiPhaseFluxVariables::updateBoundary(context, 
+                                                bfIdx, 
+                                                timeIdx, 
+                                                fs, 
+                                                paramCache);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
     }
 
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const

@@ -81,7 +81,6 @@ public:
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
-
     /*!
      * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
      */

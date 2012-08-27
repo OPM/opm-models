@@ -54,6 +54,7 @@ class StokesFluxVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dimWorld = GridView::dimensionworld };
@@ -147,13 +148,23 @@ public:
         if (volumeFlux_ < 0)
             std::swap(upstreamIdx_, downstreamIdx_);
 
-        EnergyFluxVariables::updateEnergy(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
 
         Valgrind::CheckDefined(density_);
         Valgrind::CheckDefined(viscosity_);
         Valgrind::CheckDefined(velocity_);
         Valgrind::CheckDefined(pressureGrad_);
         Valgrind::CheckDefined(velocityGrad_);
+    }
+
+    template <class Context, class FluidState>
+    void updateBoundary(const Context &context, 
+                        int bfIdx, 
+                        int timeIdx, 
+                        const FluidState &fs, 
+                        typename FluidSystem::ParameterCache &paramCache)
+    {      
+        update(context, bfIdx, timeIdx, fs, paramCache, /*isOnBoundary=*/true);
     }
 
 public:

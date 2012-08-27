@@ -82,7 +82,7 @@ public:
     {
         DUNE_THROW(Dune::NotImplemented,
                    "Problem::ergunCoefficient()");
-    };
+    }
 
     /*!
      * \brief Returns the ratio between the phase mobility \f$k_{r,\alpha}\f$ and its passability
@@ -95,7 +95,7 @@ public:
      */
     template <class Context>
     Scalar mobilityPassabilityRatio(Context &context, int spaceIdx, int timeIdx, int phaseIdx) const
-    { return 1.0/context.volVars(spaceIdx, timeIdx).fluidState().viscosity(phaseIdx); };
+    { return 1.0/context.volVars(spaceIdx, timeIdx).fluidState().viscosity(phaseIdx); }
 };
 
 /*!

@@ -64,7 +64,7 @@ protected:
 
         enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
         ncp0EqIdx = Indices::ncp0EqIdx,
-        conti0EqIdx = Indices::conti0EqIdx,
+        conti0EqIdx = Indices::conti0EqIdx
     };
 
     typedef Dumux::BoxConstraintsContext<TypeTag> ConstraintsContext;
