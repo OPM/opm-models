@@ -21,7 +21,7 @@
 #define DUMUX_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 namespace Dumux
 {

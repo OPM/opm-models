@@ -26,7 +26,7 @@
 
 #include "flashproperties.hh"
 #include "flashlocalresidual.hh"
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 #include <iostream>
 #include <sstream>

@@ -28,7 +28,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dune/common/fvector.hh>

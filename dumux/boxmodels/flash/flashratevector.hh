@@ -29,7 +29,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/common/valgrind.hh>
 

@@ -26,7 +26,7 @@
 #define DUMUX_STOKES_INDICES_HH
 
 #include "stokesproperties.hh"
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 namespace Dumux {
 /*!

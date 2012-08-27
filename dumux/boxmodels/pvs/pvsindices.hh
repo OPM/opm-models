@@ -28,7 +28,7 @@
 #define DUMUX_PVS_INDICES_HH
 
 #include "pvsproperties.hh"
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 namespace Dumux
 {

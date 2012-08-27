@@ -29,7 +29,7 @@
 #include "stokesproperties.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dune/geometry/quadraturerules.hh>
 

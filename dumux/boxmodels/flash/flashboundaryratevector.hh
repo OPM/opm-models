@@ -26,7 +26,7 @@
 
 #include "flashproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>

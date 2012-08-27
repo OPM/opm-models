@@ -29,7 +29,7 @@
 #include "flashvolumevariables.hh"
 #include "flashfluxvariables.hh"
 
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/common/math.hh>
 

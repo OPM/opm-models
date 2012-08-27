@@ -30,7 +30,7 @@
 
 #include "stokesproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 #include <dumux/common/math.hh>
 

@@ -26,7 +26,7 @@
 #define DUMUX_FLASH_INDICES_HH
 
 #include "flashproperties.hh"
-#include <dumux/boxmodels/modules/energy/multiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 namespace Dumux {
 /*!
