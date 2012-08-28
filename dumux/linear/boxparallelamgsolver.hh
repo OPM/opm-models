@@ -222,9 +222,12 @@ public:
         }
 
         // create a weighted residual reduction convergence criterion
-        auto *convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector>(problem_.gridView().comm(), 
-                                                                                      weightVec,
-                                                                                      linearSolverTolerance);
+        auto *convCrit = 
+            new Dune::WeightedResidReductionCriterion<Vector, 
+                                                      typename GridView::CollectiveCommunication>
+            (problem_.gridView().comm(), 
+             weightVec,
+             linearSolverTolerance);
 
         typedef Dune::ConvergenceCriterion<Vector> ConvergenceCriterion;
         solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));

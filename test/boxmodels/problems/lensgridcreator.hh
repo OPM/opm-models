@@ -28,8 +28,8 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
+#if HAVE_ALUGRID
+#include <dune/grid/alugrid.hh>
 #else
 #include <dune/grid/yaspgrid.hh>
 #endif
@@ -78,7 +78,11 @@ class LensGridCreator
     enum { dim = LENS_DIM };
 
 public:
-    typedef Dune::UGGrid<LENS_DIM> Grid;
+#if LENS_CUBES
+    typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::cube, Dune::nonconforming> Grid;
+#else
+    typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::simplex, Dune::nonconforming> Grid;
+#endif
 
     /*!
      * \brief Create the Grid
@@ -100,7 +104,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
 
-        Dune::GridFactory<Dune::UGGrid<dim> > factory;
+        Dune::GridFactory<Grid> factory;
         
         if (dim == 3) {
             Dune::FieldVector<double,dim> pos;
@@ -261,7 +265,7 @@ private:
 };
 
 template <class TypeTag>
-Dune::UGGrid<LENS_DIM> *LensGridCreator<TypeTag>::grid_;
+typename LensGridCreator<TypeTag>::Grid *LensGridCreator<TypeTag>::grid_;
 
 #else // ! HAVE_UG
 
