@@ -46,7 +46,7 @@ class NcpNewtonChop
 
     enum { numPhases =  GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { fugacity00Idx = Indices::fugacity00Idx };
+    enum { fugacity0Idx = Indices::fugacity0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
 
@@ -66,8 +66,8 @@ public:
             
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar &val = uCurrentIter[i][fugacity00Idx + compIdx];
-                Scalar oldVal = uLastIter[i][fugacity00Idx + compIdx];
+                Scalar &val = uCurrentIter[i][fugacity0Idx + compIdx];
+                Scalar oldVal = uLastIter[i][fugacity0Idx + compIdx];
 
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent

@@ -74,11 +74,11 @@ public:
 
     /*!
      * \brief Index of the primary variable for the fugacity of the
-     *        first component in the first phase.
+     *        first component.
      *
      * numComponents primary variables follow...
      */
-    static const int fugacity00Idx =
+    static const int fugacity0Idx =
         PVOffset;
 
     /*!
@@ -89,7 +89,7 @@ public:
      * saturations for the phases [1, ..., numPhases - 1]
      */
     static const int saturation0Idx =
-        fugacity00Idx + numComponents;
+        fugacity0Idx + numComponents;
 
     /*!
      * \brief Index of the first phase' pressure in a vector of

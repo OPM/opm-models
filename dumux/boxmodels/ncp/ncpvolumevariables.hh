@@ -66,7 +66,7 @@ class NcpVolumeVariables
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    enum { fugacity00Idx = Indices::fugacity00Idx };
+    enum { fugacity0Idx = Indices::fugacity0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { dimWorld = GridView::dimensionworld };
@@ -151,10 +151,8 @@ public:
 
             ComponentVector fug;
             // retrieve component fugacities
-            Scalar p0 = fluidState_.pressure(0);
-            Scalar pAlpha = fluidState_.pressure(phaseIdx);
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fug[compIdx] = priVars[fugacity00Idx + compIdx]/p0 * pAlpha;
+                fug[compIdx] = priVars[fugacity0Idx + compIdx];
 
             // calculate the phase composition from the component
             // fugacities

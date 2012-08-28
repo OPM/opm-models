@@ -135,7 +135,7 @@ class NcpModel
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
 
-    enum { fugacity00Idx = Indices::fugacity00Idx };
+    enum { fugacity0Idx = Indices::fugacity0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
 
@@ -219,8 +219,8 @@ public:
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         else if (saturation0Idx <= pvIdx && pvIdx < saturation0Idx + (numPhases - 1))
             oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - saturation0Idx);
-        else if (fugacity00Idx <= pvIdx && pvIdx < fugacity00Idx + numComponents)
-            oss << "fugacity_" << FluidSystem::phaseName(/*phaseIdx=*/0) << "^" << FluidSystem::componentName(pvIdx - fugacity00Idx);
+        else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents)
+            oss << "fugacity^" << FluidSystem::componentName(pvIdx - fugacity0Idx);
         else
             assert(false);
         
@@ -287,9 +287,9 @@ public:
         if (tmp > 0)
             // energy related quantity
             return tmp;
-        else if (fugacity00Idx <= pvIdx && pvIdx < fugacity00Idx + numComponents) {
-            // component fugacity in first phase
-            int compIdx = pvIdx - fugacity00Idx;
+        else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents) {
+            // component fugacity
+            int compIdx = pvIdx - fugacity0Idx;
             assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[vertIdx][compIdx]);
