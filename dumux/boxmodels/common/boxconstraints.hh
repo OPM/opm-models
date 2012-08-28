@@ -50,6 +50,8 @@ public:
     BoxConstraints()
     { reset(); }
 
+    using ParentType::operator=;
+    
     /*!
      * \brief Reset the constraints types.
      *
