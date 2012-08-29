@@ -36,7 +36,7 @@ namespace Dumux
 {
 
 /*!\ingroup IMPET
- * @brief Standard Module for h-adaptive simulations
+ * \brief Standard Module for h-adaptive simulations
  *
  * This class is created by the problem class with the template
  * parameters <TypeTag, true> and provides basic functionality
@@ -67,7 +67,7 @@ class GridAdapt
 public:
     /*!
      * Constructor for h-adaptive simulations (adaptive grids)
-     * @param problem The problem
+     * \param problem The problem
      */
     GridAdapt (Problem& problem)
     : problem_(problem), adaptionIndicator_(problem), marked_(0), coarsened_(0)
@@ -107,7 +107,7 @@ public:
     }
 
     /*!
-     * @brief Standard method to adapt the grid
+     * \brief Standard method to adapt the grid
      *
      * This method is called in preTimeStep() of the problem if
      * adaptive grids are used in the simulation.
@@ -181,7 +181,7 @@ public:
 
     /*!
      * Mark Elements for grid refinement according to applied Indicator
-     * @return Total ammount of marked cells
+     * \return Total ammount of marked cells
      */
     template<class Indicator>
     int markElements(Indicator& indicator)
@@ -257,8 +257,8 @@ public:
     /*!
      * Sets minimum and maximum refinement levels
      *
-     * @param levMin minimum level for coarsening
-     * @param levMax maximum level for refinement
+     * \param levMin minimum level for coarsening
+     * \param levMax maximum level for refinement
      */
     void setLevels(int levMin, int levMax)
     {
@@ -272,7 +272,7 @@ public:
     /*!
      * Gets maximum refinement level
      *
-     * @return levelMax_ maximum level for refinement
+     * \return levelMax_ maximum level for refinement
      */
     const int getMaxLevel() const
     {
@@ -281,7 +281,7 @@ public:
     /*!
      * Gets minimum refinement level
      *
-     * @return levelMin_ minimum level for coarsening
+     * \return levelMin_ minimum level for coarsening
      */
     const int getMinLevel() const
     {
@@ -300,16 +300,16 @@ public:
 
 private:
     /*!
-     * @brief Method ensuring the refinement ratio of 2:1
+     * \brief Method ensuring the refinement ratio of 2:1
      *
      * For any given entity, a loop over the neighbors checks weather the
      * entities refinement would require that any of the neighbors has
      * to be refined, too.
      * This is done recursively over all levels of the grid.
      *
-     * @param entity Element of interest that is to be refined
-     * @param level level of the refined entity: it is at least 1
-     * @return true if everything was successful
+     * \param entity Element of interest that is to be refined
+     * \param level level of the refined entity: it is at least 1
+     * \return true if everything was successful
      */
     bool checkNeighborsRefine_(const Element &entity, int level = 1)
     {
@@ -341,7 +341,7 @@ private:
      * If the refine ratio is not taken into consideration during
      * marking, then this method ensures a certain ratio.
      *
-     * @param maxLevelDelta The maximum level difference (refine ratio)
+     * \param maxLevelDelta The maximum level difference (refine ratio)
      *             between neighbors.
      */
     void forceRefineRatio(int maxLevelDelta = 1)
@@ -399,7 +399,7 @@ private:
 };
 
 /*!
- * @brief Class for NON-adaptive simulations
+ * \brief Class for NON-adaptive simulations
  *
  * This class provides empty methods for non-adaptive simulations
  * for compilation reasons. If adaptivity is desired, create the

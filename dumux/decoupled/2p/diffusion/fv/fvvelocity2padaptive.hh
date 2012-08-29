@@ -21,8 +21,8 @@
 #ifndef DUMUX_FVVELOCITY2P_ADAPTIVE_HH
 #define DUMUX_FVVELOCITY2P_ADAPTIVE_HH
 /**
- * @file
- * @brief  Velocity Field from a finite volume solution of a pressure equation.
+ * \file
+ * \brief  Velocity Field from a finite volume solution of a pressure equation.
  */
 
 #include <dumux/decoupled/2p/diffusion/fv/fvvelocity2p.hh>

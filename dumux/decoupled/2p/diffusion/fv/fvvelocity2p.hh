@@ -23,8 +23,8 @@
 #define DUMUX_FVVELOCITY2P_HH
 
 /**
- * @file
- * @brief  Velocity Field from a finite volume solution of a pressure equation.
+ * \file
+ * \brief  Velocity Field from a finite volume solution of a pressure equation.
  */
 
 #include <dune/grid/common/gridenums.hh>

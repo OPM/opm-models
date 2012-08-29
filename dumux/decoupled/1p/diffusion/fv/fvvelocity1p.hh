@@ -28,8 +28,8 @@
 #include <dune/common/fmatrix.hh>
 
 /**
- * @file
- * @brief  Single phase finite volume velocity reconstruction
+ * \file
+ * \brief  Single phase finite volume velocity reconstruction
  */
 
 
@@ -45,7 +45,7 @@ namespace Dumux
  * \f]
  * where, \f$ p \f$ is the pressure, \f$ \boldsymbol K \f$ the absolute permeability, \f$ \mu \f$ the viscosity, \f$ \rho \f$ the density and \f$ g \f$ the gravity constant.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 
 template<class TypeTag>

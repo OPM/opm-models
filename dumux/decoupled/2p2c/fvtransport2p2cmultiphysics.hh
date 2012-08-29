@@ -28,8 +28,8 @@
 #include <dune/common/fvector.hh>
 
 /**
- * @file
- * @brief  Finite Volume discretization of the component transport equation
+ * \file
+ * \brief  Finite Volume discretization of the component transport equation
  */
 
 namespace Dumux

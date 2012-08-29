@@ -39,8 +39,8 @@
 #include <dune/common/fmatrix.hh>
 
 /**
- * @file
- * @brief  Finite Volume 2p2c Diffusion Model
+ * \file
+ * \brief  Finite Volume 2p2c Diffusion Model
  */
 
 namespace Dumux

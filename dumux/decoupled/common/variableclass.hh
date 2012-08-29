@@ -27,8 +27,8 @@
 #include <vector>
 
 /**
- * @file
- * @brief  Base class holding the variables for sequential models.
+ * \file
+ * \brief  Base class holding the variables for sequential models.
  */
 
 namespace Dumux
@@ -42,7 +42,7 @@ namespace Dumux
  * Stores global information and variables that are common for all sequential models and also functions needed to access these variables.
  * Can be directly used for a single phase model.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  *
  */
 template<class TypeTag>
@@ -76,7 +76,7 @@ private:
 public:
     //! Constructs a VariableClass object
     /**
-     *  @param gridView a DUNE gridview object corresponding to diffusion and transport equation
+     *  \param gridView a DUNE gridview object corresponding to diffusion and transport equation
      */
     VariableClass(const GridView& gridView) :
         gridView_(gridView), elementMapper_(gridView), vertexMapper_(gridView)
@@ -134,7 +134,7 @@ public:
 
     //! Get index of element (codim 0 entity)
     /*! Get index of element (codim 0 entity).
-     * @param element codim 0 entity
+     * \param element codim 0 entity
      * \return element index
      */
     int index(const Element& element) const
@@ -144,7 +144,7 @@ public:
 
     //! Get index of vertex (codim dim entity)
     /*! Get index of vertex (codim dim entity).
-     * @param vertex codim dim entity
+     * \param vertex codim dim entity
      * \return vertex index
      */
     int index(const Vertex& vertex) const

@@ -34,8 +34,8 @@
 #include <iostream>
 
 /**
- * @file
- * @brief  Finite Volume discretization of the component transport equation
+ * \file
+ * \brief  Finite Volume discretization of the component transport equation
  */
 
 namespace Dumux
@@ -179,7 +179,7 @@ public:
     {
         return totalConcentration_[compIdx][globalIdx][0];
     }
-    //@}
+    //\}
     //! Constructs a FVTransport2P2C object
     /*!
      * Currently, the miscible transport scheme can not be applied with a global pressure / total velocity

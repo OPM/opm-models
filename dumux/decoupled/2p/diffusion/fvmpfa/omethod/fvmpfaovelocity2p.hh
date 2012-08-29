@@ -29,8 +29,8 @@
 #include <iostream>
 
 /**
- * @file
- * @brief  Velocity Field from a finite volume MPFA O-method solution of a pressure equation.
+ * \file
+ * \brief  Velocity Field from a finite volume MPFA O-method solution of a pressure equation.
  */
 
 namespace Dumux

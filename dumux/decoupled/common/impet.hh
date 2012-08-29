@@ -23,8 +23,8 @@
 #define DUMUX_IMPET_HH
 
 /**
- * @file
- * @brief  IMPET scheme
+ * \file
+ * \brief  IMPET scheme
  */
 
 #include "impetproperties.hh"

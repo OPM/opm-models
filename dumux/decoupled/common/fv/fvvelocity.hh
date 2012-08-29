@@ -28,8 +28,8 @@
 #include <dune/common/fvector.hh>
 
 /**
- * @file
- * @brief  Finite volume velocity reconstruction
+ * \file
+ * \brief  Finite volume velocity reconstruction
  */
 
 namespace Dumux

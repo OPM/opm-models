@@ -27,8 +27,8 @@
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 
 /**
- * @file
- * @brief  Grid adaptive finite volume MPFA L-method discretization of a two-phase pressure equation of the sequential IMPES model.
+ * \file
+ * \brief  Grid adaptive finite volume MPFA L-method discretization of a two-phase pressure equation of the sequential IMPES model.
  */
 
 namespace Dumux

@@ -40,8 +40,8 @@
 #include<cassert>
 
 /**
- * @file
- * @brief  defines a class for piecewise linear finite element functions
+ * \file
+ * \brief  defines a class for piecewise linear finite element functions
  */
 
 namespace Dumux
@@ -50,11 +50,11 @@ namespace Dumux
  * \ingroup MimeticPressure2p
  */
 /**
- * @brief defines a class for Crozieux-Raviart piecewise linear finite element functions
+ * \brief defines a class for Crozieux-Raviart piecewise linear finite element functions
  *
  */
 
-/*! @brief A class for mapping a CR function to a CR function
+/*! \brief A class for mapping a CR function to a CR function
 
   This class sets up a compressed row storage matrix with connectivity for CR elements.
 
@@ -64,7 +64,7 @@ namespace Dumux
   <dt>LevelTag</dt> We assemble on a grid level.
   <dt>LeafTag</dt> We assemble on the leaf entities of the grid
 */
-/*! @brief Extends CROperatorBase by a generic methods to assemble global stiffness matrix from local stiffness matrices
+/*! \brief Extends CROperatorBase by a generic methods to assemble global stiffness matrix from local stiffness matrices
  *
  * \tparam Scalar The field type used in the elements of the global stiffness matrix
  * \tparam GridView The grid view of the simulation grid
@@ -235,20 +235,20 @@ public:
         return A_;
     }
 
-    /*! @brief Assemble global stiffness matrix
+    /*! \brief Assemble global stiffness matrix
 
       This method takes an object that can compute local stiffness matrices and
       assembles the global linear system Au=f.
 
-      @param[in] loc the local assembler providing element stiffness and boundary conditions for all elements
-      @param[in,out] u solution, contains initial values on input, Dirichlet values are set. The
+      \param[in] loc the local assembler providing element stiffness and boundary conditions for all elements
+      \param[in,out] u solution, contains initial values on input, Dirichlet values are set. The
       type of boundary condition for a node is inferred from the values returned
       by the local assembler. A node is of Neumann type if all elements referring
       to that node report a Neumann boundary condition, it is set to Dirichlet
       if a least one element reports a process or Dirichlet boundary condition. The difference
       between process and Dirichlet is that process always denotes a homogeneous Dirichlet
       value.
-      @param[in] f right hand side is filled by this method
+      \param[in] f right hand side is filled by this method
 
       Note that the rows corresponding to nodes at the Dirichlet boundary are filled
       with trivial equations of the form \f[1\cdot u_i = f_i \f] where \f$u_i\f$ and \f$f_i\f$ are both set to the

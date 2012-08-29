@@ -25,8 +25,8 @@
 #include <dune/common/fvector.hh>
 
 /**
- * @file
- * @brief  Class storing data assigned to a cell-cell interfaces, so-called flux-data
+ * \file
+ * \brief  Class storing data assigned to a cell-cell interfaces, so-called flux-data
  */
 
 namespace Dumux
@@ -37,7 +37,7 @@ namespace Dumux
 //! Class storing data assigned to a cell-cell interfaces, so-called flux-data.
 /*! Stores velocities and potentials at cell-cell interfaces. Further it provides methods which interpret stored phase potentials for upwind decisions.
 *
-* @tparam TypeTag The problem TypeTag
+* \tparam TypeTag The problem TypeTag
 */
 template<class TypeTag>
 class FluxData1P

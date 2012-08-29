@@ -30,8 +30,8 @@
 #include <dune/common/fmatrix.hh>
 
 /**
- * @file
- * @brief  Finite Volume discretization of a two-phase flow pressure equation.
+ * \file
+ * \brief  Finite Volume discretization of a two-phase flow pressure equation.
  */
 
 namespace Dumux

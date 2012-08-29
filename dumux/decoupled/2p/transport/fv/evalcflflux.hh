@@ -26,14 +26,14 @@
 #include <dune/common/fvector.hh>
 
 /**
- * @file
- * @brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
+ * \file
+ * \brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
  */
 namespace Dumux
 {
 /*!\ingroup IMPES
  * \ingroup Saturation2p
- * @brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
+ * \brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
  *
  *  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition of the form
  *
@@ -111,7 +111,7 @@ public:
         return 0.0;
     }
 
-    /*! @brief Constructs a EvalCflFlux instance */
+    /*! \brief Constructs a EvalCflFlux instance */
     EvalCflFlux ()
     {}
 };

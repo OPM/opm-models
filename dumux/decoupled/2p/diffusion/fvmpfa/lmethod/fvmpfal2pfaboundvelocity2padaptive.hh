@@ -26,8 +26,8 @@
 #include "fvmpfal2pfaboundpressure2padaptive.hh"
 
 /**
- * @file
- * @brief  Velocity Field from a finite volume solution of a pressure equation using a grid adaptive MPFA L-method.
+ * \file
+ * \brief  Velocity Field from a finite volume solution of a pressure equation using a grid adaptive MPFA L-method.
  */
 
 namespace Dumux

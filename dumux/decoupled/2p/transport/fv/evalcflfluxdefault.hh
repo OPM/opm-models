@@ -21,8 +21,8 @@
 #define DUMUX_EVALCFLFLUX_DEFAULT_HH
 
 /**
- * @file
- * @brief  Fluxes to evaluate a CFL-Condition
+ * \file
+ * \brief  Fluxes to evaluate a CFL-Condition
  */
 
 #include "evalcflflux.hh"
@@ -32,7 +32,7 @@
 namespace Dumux
 {
 /*!\ingroup IMPES
- * @brief  Default implementation of cfl-fluxes to evaluate a CFL-Condition
+ * \brief  Default implementation of cfl-fluxes to evaluate a CFL-Condition
  *
  * Compares the maximum of inflow and outflow to the element volume weighted by relative permeability and viscosity ratios.
  *

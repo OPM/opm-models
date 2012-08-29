@@ -27,8 +27,8 @@
 #include <dune/common/fmatrix.hh>
 
 /**
- * @file
- * @brief  Class for defining the gravity term of a two-phase flow saturation equation
+ * \file
+ * \brief  Class for defining the gravity term of a two-phase flow saturation equation
  */
 
 namespace Dumux

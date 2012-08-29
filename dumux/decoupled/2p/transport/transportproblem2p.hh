@@ -48,7 +48,7 @@ SET_TYPE_PROP(TransportTwoP, Velocity, FVVelocityDefault<TypeTag>); //this Prope
  * \ingroup IMPETproblems
  * \brief  Base class for a decoupled two-phase transport problem
  *
- * @tparam TypeTag The problem Type Tag
+ * \tparam TypeTag The problem Type Tag
  */
 template<class TypeTag>
 class TransportProblem2P : public OneModelProblem<TypeTag>

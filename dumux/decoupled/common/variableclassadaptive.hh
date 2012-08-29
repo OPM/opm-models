@@ -26,8 +26,8 @@
 #include <dune/grid/utility/persistentcontainer.hh>
 
 /**
- * @file
- * @brief  Base class holding the variables for sequential models.
+ * \file
+ * \brief  Base class holding the variables for sequential models.
  */
 
 namespace Dumux
@@ -40,7 +40,7 @@ namespace Dumux
  * Stores global information and variables that are common for all sequential models and also functions needed to access these variables.
  * Can be directly used for a single phase model.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  *
  */
 template<class TypeTag>
@@ -69,7 +69,7 @@ public:
      * In addition to providing a storage object for cell-centered Methods, this class provides
      * mapping functionality to adapt the grid.
      *
-     *  @param gridView a DUNE gridview object corresponding to diffusion and transport equation
+     *  \param gridView a DUNE gridview object corresponding to diffusion and transport equation
      */
     VariableClassAdaptive(const GridView& gridView) :
         ParentType(gridView), grid_(gridView.grid()), adaptationMap_(grid_, 0)
@@ -85,7 +85,7 @@ public:
      * object, before the grid is adapted. Father elements hold averaged information
      * from the son cells for the case of the sons being coarsened.
      *
-     * @param problem The current problem
+     * \param problem The current problem
      */
     void storePrimVars(const Problem& problem)
     {
@@ -136,7 +136,7 @@ public:
      * and then a new son is created. That is then stored into the general data
      * structure (CellData).
      *
-     * @param problem The current problem
+     * \param problem The current problem
      */
     void reconstructPrimVars(const Problem& problem)
     {

@@ -26,8 +26,8 @@
 #include "fvmpfal2pfaboundpressure2p.hh"
 
 /**
- * @file
- * @brief  Velocity Field from a finite volume solution of a pressure equation using a MPFA L-method.
+ * \file
+ * \brief  Velocity Field from a finite volume solution of a pressure equation using a MPFA L-method.
  */
 
 namespace Dumux

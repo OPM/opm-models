@@ -41,7 +41,7 @@ namespace Dumux
  * \ingroup IMPES
  * \brief  Base class for all 2-phase problems which use an impes algorithm
  *
- * @tparam TypeTag The problem TypeTag
+ * \tparam TypeTag The problem TypeTag
  */
 template<class TypeTag>
 class IMPESProblem2P : public IMPETProblem<TypeTag>

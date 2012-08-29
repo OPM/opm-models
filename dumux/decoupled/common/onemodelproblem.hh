@@ -34,8 +34,8 @@
 #include <string>
 
 /**
- * @file
- * @brief  Base class for definition of an decoupled diffusion (pressure) or transport problem
+ * \file
+ * \brief  Base class for definition of an decoupled diffusion (pressure) or transport problem
  */
 
 namespace Dumux
@@ -43,9 +43,9 @@ namespace Dumux
 
 /*! \ingroup IMPET
  *
- * @brief Base class for definition of an decoupled diffusion (pressure) or transport problem
+ * \brief Base class for definition of an decoupled diffusion (pressure) or transport problem
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 template<class TypeTag>
 class OneModelProblem

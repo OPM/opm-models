@@ -133,7 +133,7 @@ public:
 
     /*!
      *  \name Simulated time and time step management
-     * @{
+     * \{
      */
 
     /*!
@@ -258,13 +258,13 @@ public:
     }
 
     /*
-     * @}
+     * \}
      */
 
 
     /*!
      * \name Episode management
-     * @{
+     * \{
      */
 
     /*!
@@ -360,7 +360,7 @@ public:
     }
 
     /*
-     * @}
+     * \}
      */
 
     /*!
@@ -429,7 +429,7 @@ public:
 
     /*!
      * \name Saving/restoring the object state
-     * @{
+     * \{
      */
     /*!
      * \brief Write the time manager's state to a restart file.
@@ -470,7 +470,7 @@ public:
     }
 
     /*
-     * @}
+     * \}
      */
 
 private:

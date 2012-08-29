@@ -26,13 +26,13 @@
 #include <dune/common/dynvector.hh>
 
 /**
- * @file
- * @brief  Class defining a start indicator for grid adaption
+ * \file
+ * \brief  Class defining a start indicator for grid adaption
  */
 namespace Dumux
 {
 /*!\ingroup IMPES
- * @brief  Class defining a start indicator for grid adaption
+ * \brief  Class defining a start indicator for grid adaption
  *
  *  Uses the defined grid adaptation indicator and further accounts for sources and boundaries.
  *  Only for grid initialization!

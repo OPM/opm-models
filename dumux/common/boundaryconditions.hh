@@ -21,8 +21,8 @@
 #define DUMUX_BOUNDARYCONDITIONS_HH
 
 /**
-* @file
-* @brief  Definition of boundary condition types, extend if necessary
+* \file
+* \brief  Definition of boundary condition types, extend if necessary
 */
 namespace Dumux
 {
@@ -30,7 +30,7 @@ namespace Dumux
  * \ingroup BC
  */
 /**
-* @brief Define a class containing boundary condition flags
+* \brief Define a class containing boundary condition flags
 *
 */
 
@@ -48,6 +48,6 @@ struct BoundaryConditions
     };
 };
 
-/** @} */
+/** \} */
 }
 #endif

@@ -28,8 +28,8 @@
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
 /**
- * @file
- * @brief  Finite Volume Diffusion Model
+ * \file
+ * \brief  Finite Volume Diffusion Model
  */
 
 namespace Dumux

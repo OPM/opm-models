@@ -22,8 +22,8 @@
 #define DUMUX_EVALCFLFLUX_COATS_HH
 
 /**
- * @file
- * @brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
+ * \file
+ * \brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
  */
 
 #include "evalcflfluxdefault.hh"
@@ -34,7 +34,7 @@
 namespace Dumux
 {
 /*!\ingroup IMPES
- * @brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
+ * \brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
  *
  * tparam TypeTag The problem TypeTag
  */

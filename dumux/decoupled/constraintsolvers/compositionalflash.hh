@@ -68,7 +68,7 @@ public:
 /*!
  * \name Concentration flash for a given feed fraction
  */
-//@{
+//\{
     //! 2p2c Flash for constant p & t if concentrations (feed mass fraction) is given.
     /*!
      * Routine goes as follows:
@@ -249,12 +249,12 @@ public:
 
         return;
     }
-//@}
+//\}
 
 /*!
  * \name Saturation flash for a given saturation (e.g. at boundary)
  */
-//@{
+//\{
     //! a flash routine for 2p2c systems if the saturation instead of total concentration is known.
     /*!
      * Routine goes as follows:
@@ -320,7 +320,7 @@ public:
         // set saturation
         fluidState.setSaturation(wPhaseIdx, saturation);
     }
-//@}
+//\}
 };
 
 } // end namespace Dumux

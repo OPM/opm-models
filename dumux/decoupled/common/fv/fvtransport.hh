@@ -30,8 +30,8 @@
 #include <iostream>
 
 /**
- * @file
- * @brief  Finite Volume discretization of a  transport equation
+ * \file
+ * \brief  Finite Volume discretization of a  transport equation
  */
 
 namespace Dumux

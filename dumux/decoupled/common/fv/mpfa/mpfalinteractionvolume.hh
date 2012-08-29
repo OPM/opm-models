@@ -21,8 +21,8 @@
 #define DUMUX_FVMPFALINTERACTIONVOLUME_HH
 
 /**
- * @file
- * @brief  Class including the information of an interaction volume of a MPFA L-method that does not change with time.
+ * \file
+ * \brief  Class including the information of an interaction volume of a MPFA L-method that does not change with time.
  */
 
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
@@ -52,9 +52,9 @@ private:
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
 
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
-    ///@cond 0
+    ///\cond 0
     typedef typename GET_PROP(TypeTag, SolutionTypes)::PrimaryVariables PrimaryVariables;
-    ///@endcond
+    ///\endcond
 
     typedef Dune::FieldVector<Scalar, dim> DimVector;
     typedef Dune::FieldVector<DimVector, dim> FieldVectorVector;

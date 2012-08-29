@@ -63,7 +63,7 @@ public:
     /*!
      * \name acess functions
      */
-    //@{
+    //\{
     /*!
      * \brief Returns the saturation of a phase.
      *
@@ -205,12 +205,12 @@ public:
     /*!
      * \name Functions to set Data
      */
-    //@{
+    //\{
     /*!
      * \brief Sets the viscosity of a phase \f$\mathrm{[Pa*s]}\f$.
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setViscosity(int phaseIdx, Scalar value)
     { viscosity_[phaseIdx] = value; }
@@ -221,7 +221,7 @@ public:
      *
      * \param phaseIdx the index of the phase
      * \param compIdx the index of the component
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setMassFraction(int phaseIdx, int compIdx, Scalar value)
     {
@@ -233,7 +233,7 @@ public:
      *
      * \param phaseIdx the index of the phase
      * \param compIdx the index of the component
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setMoleFraction(int phaseIdx, int compIdx, Scalar value)
     {
@@ -243,7 +243,7 @@ public:
      * \brief Sets the density of a phase \f$\mathrm{[kg/m^3]}\f$.
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setDensity(int phaseIdx, Scalar value)
     { density_[phaseIdx] = value; }
@@ -251,7 +251,7 @@ public:
      * \brief Sets the saturation of a phase.
      * Internally, only the wetting saturation is stored.
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setSaturation(int phaseIdx, Scalar value)
     {
@@ -265,7 +265,7 @@ public:
      * \brief Sets the phase mass fraction. phase mass per total mass \f$\mathrm{[kg/kg]}\f$.
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setNu(int phaseIdx, Scalar value)
     {
@@ -274,7 +274,7 @@ public:
     /*!
      * \brief Sets the temperature
      *
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setTemperature(Scalar value)
     {
@@ -284,14 +284,14 @@ public:
      * \brief Sets phase pressure
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setPressure(int phaseIdx, Scalar value)
     {
         phasePressure_[phaseIdx] = value;
     }
 
-    //@}
+    //\}
     TwoPTwoCFluidState()
     { Valgrind::SetUndefined(*this); }
 private:

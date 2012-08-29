@@ -31,8 +31,8 @@
 #include <iostream>
 
 /**
- * @file
- * @brief  Finite Volume discretization of a saturation transport equation
+ * \file
+ * \brief  Finite Volume discretization of a saturation transport equation
  */
 
 namespace Dumux

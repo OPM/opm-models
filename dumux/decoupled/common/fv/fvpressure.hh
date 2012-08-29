@@ -32,8 +32,8 @@
 #include <string>
 
 /**
- * @file
- * @brief  Finite Volume Diffusion Model
+ * \file
+ * \brief  Finite Volume Diffusion Model
  */
 
 namespace Dumux
@@ -56,9 +56,9 @@ template<class TypeTag> class FVPressure
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    ///@cond 0
+    ///\cond 0
     typedef typename GET_PROP(TypeTag, SolutionTypes)::ScalarSolution ScalarSolution;
-    ///@endcond
+    ///\endcond
 
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 

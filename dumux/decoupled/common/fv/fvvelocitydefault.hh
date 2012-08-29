@@ -21,8 +21,8 @@
 #define DUMUX_VELOCITYDEFAULT_HH
 
 /**
- * @file
- * @brief  Default implementation of velocity class.
+ * \file
+ * \brief  Default implementation of velocity class.
  */
 
 #include <dune/grid/common/gridenums.hh>

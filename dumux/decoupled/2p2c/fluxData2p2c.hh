@@ -90,17 +90,17 @@ public:
         return isUpwindCell_.size();
     }
     //! functions returning upwind information
-    /* @param indexInInside The local inside index of the intersection
-     * @param equationIdx The equation index
+    /* \param indexInInside The local inside index of the intersection
+     * \param equationIdx The equation index
      */
     const bool& isUpwindCell(int indexInInside, int equationIdx) const
     {
         return isUpwindCell_[indexInInside][equationIdx];
     }
     //! Sets the upwind information
-    /* @param indexInInside The local inside index of the intersection
-     * @param equationIdx The equation index
-     * @value value set true or false
+    /* \param indexInInside The local inside index of the intersection
+     * \param equationIdx The equation index
+     * \return value set true or false
      */
     void setUpwindCell(int indexInInside, int equationIdx, bool value)
     {

@@ -24,13 +24,13 @@
 #include <dumux/decoupled/2p/2pproperties.hh>
 
 /**
- * @file
- * @brief  Class defining a standard, saturation dependent indicator for grid adaption
+ * \file
+ * \brief  Class defining a standard, saturation dependent indicator for grid adaption
  */
 namespace Dumux
 {
 /*!\ingroup IMPES
- * @brief  Class defining a standard, saturation dependent indicator for grid adaption
+ * \brief  Class defining a standard, saturation dependent indicator for grid adaption
  *
  * \tparam TypeTag The problem TypeTag
  */
@@ -269,7 +269,7 @@ public:
         indicatorVector_[idx] = refineBound_ - 1;
     }
 
-    /*! @brief Constructs a GridAdaptionIndicator instance
+    /*! \brief Constructs a GridAdaptionIndicator instance
      *
      *  This standard indicator is based on the saturation gradient. It checks the local gradient compared to the maximum global gradient.
      *  The indicator is compared locally to a refinement/coarsening threshold to decide whether a cell should be marked for refinement or coarsening or should not be adapted.

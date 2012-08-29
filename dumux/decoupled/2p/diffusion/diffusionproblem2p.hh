@@ -41,7 +41,7 @@ SET_TYPE_PROP(PressureTwoP, Model, typename GET_PROP_TYPE(TypeTag, PressureModel
  * \ingroup Pressure2p
  * \brief  Base class for stationary solution of a two-phase diffusion/pressure equation
  *
- * @tparam TypeTag The problem TypeTag
+ * \tparam TypeTag The problem TypeTag
  */
 template<class TypeTag>
 class DiffusionProblem2P: public OneModelProblem<TypeTag>

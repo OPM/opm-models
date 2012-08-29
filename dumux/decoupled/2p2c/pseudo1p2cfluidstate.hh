@@ -62,7 +62,7 @@ public:
      * \name flash calculation routines
      * Routine to determine the phase composition after the transport step.
      */
-    //@{
+    //\{
     //! The simplest possible update routine for 1p2c "flash" calculations
     /*!
      * Routine goes as follows:
@@ -75,7 +75,7 @@ public:
      * \param temperature Temperature \f$\mathrm{[K]}\f$
      */
     /*! \name Acess functions */
-    //@{
+    //\{
     /*! \brief Returns the saturation of a phase.
      *  \param phaseIdx Index of the phase
      */
@@ -163,17 +163,17 @@ public:
      */
     Scalar temperature(int phaseIdx) const
     { return temperature_; }
-    //@}
+    //\}
 
     /*!
      * \name Functions to set Data
      */
-    //@{
+    //\{
     /*!
      * \brief Sets the viscosity of a phase \f$\mathrm{[Pa*s]}\f$.
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setViscosity(int phaseIdx, Scalar value)
     {
@@ -185,7 +185,7 @@ public:
      *
      * \param phaseIdx the index of the phase
      * \param compIdx the index of the component
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setMassFraction(int phaseIdx, int compIdx, Scalar value)
     {
@@ -200,7 +200,7 @@ public:
      *
      * \param phaseIdx the index of the phase
      * \param compIdx the index of the component
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setMoleFraction(int phaseIdx, int compIdx, Scalar value)
     {
@@ -213,7 +213,7 @@ public:
      * \brief Sets the density of a phase \f$\mathrm{[kg/m^3]}\f$.
      *
      * \param phaseIdx the index of the phase
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setDensity(int phaseIdx, Scalar value)
     {
@@ -222,7 +222,7 @@ public:
     }
     /*!
      * \brief Sets the phase Index that is present in this fluidState.
-     * @param phaseIdx the index of the phase
+     * \param phaseIdx the index of the phase
      */
     void setPresentPhaseIdx(int phaseIdx)
     {
@@ -232,7 +232,7 @@ public:
     /*!
      * \brief Sets the temperature
      *
-     * @param value Value to be stored
+     * \param value Value to be stored
      */
     void setTemperature(Scalar value)
     {
@@ -250,7 +250,7 @@ public:
     {
         pressure_[phaseIdx] = value;
     }
-    //@}
+    //\}
 
 public:
     Scalar aveMoMass_;

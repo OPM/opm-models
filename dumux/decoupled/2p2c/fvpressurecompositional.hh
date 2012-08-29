@@ -35,8 +35,8 @@
 #include <iostream>
 
 /**
- * @file
- * @brief  Base Class for compositional pressure Equations
+ * \file
+ * \brief  Base Class for compositional pressure Equations
  */
 namespace Dumux
 {
@@ -76,9 +76,9 @@ template<class TypeTag> class FVPressureCompositional
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
-    ///@cond 0
+    ///\cond 0
     typedef typename GET_PROP_TYPE(TypeTag, SpatialParams)::MaterialLaw MaterialLaw;
-    ///@endcond
+    ///\endcond
 
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
     enum
@@ -145,7 +145,7 @@ public:
     void volumeDerivatives(const GlobalPosition&,const Element& ep);
 
     /*! \name general methods for output */
-    //@{
+    //\{
     //! \brief Write data files
      /*  \param name file name */
     template<class MultiWriter>
@@ -303,7 +303,7 @@ public:
         initializationOutputWriter_.endWrite();
         return;
     }
-    //@}
+    //\}
 
     //! Constructs a FVPressureCompositional object
     /**

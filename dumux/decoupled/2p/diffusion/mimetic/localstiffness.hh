@@ -37,23 +37,23 @@
 #include <vector>
 
 /**
- * @file
- * @brief  defines a class for piecewise linear finite element functions
+ * \file
+ * \brief  defines a class for piecewise linear finite element functions
  */
 
 namespace Dumux
 {
-  /** @ingroup MimeticPressure2p
+  /** \ingroup MimeticPressure2p
    *
-   * @{
+   * \{
    */
   /**
-   * @brief base class for assembling local stiffness matrices
+   * \brief base class for assembling local stiffness matrices
    *
    */
 
 
-  /*! @brief Base class for local assemblers
+  /*! \brief Base class for local assemblers
 
   This class serves as a base class for local assemblers. It provides
   space and access to the local stiffness matrix. The actual assembling is done
@@ -97,8 +97,8 @@ namespace Dumux
         condition or the assembled source term and neumann boundary condition.
         It is accessible via the rhs() method.
 
-      @param[in]  e a codim 0 entity reference
-      @param[in]  k order of Lagrange basis (default is 1)
+      \param[in]  e a codim 0 entity reference
+      \param[in]  k order of Lagrange basis (default is 1)
      */
       virtual void assemble (const Entity& e, int k=1) = 0;
 
@@ -121,9 +121,9 @@ namespace Dumux
         condition or the assembled source term and neumann boundary condition.
         It is accessible via the rhs() method.
 
-      @param[in]  e a codim 0 entity reference
-          @param[in] localSolution The current solution on the entity, which is needed by nonlinear assemblers
-      @param[in]  k order of Lagrange basis (default is 1)
+      \param[in]  e a codim 0 entity reference
+          \param[in] localSolution The current solution on the entity, which is needed by nonlinear assemblers
+      \param[in]  k order of Lagrange basis (default is 1)
      */
       virtual void assemble (const Entity& e, const Dune::BlockVector<VBlockType>& localSolution, int k=1) = 0;
 
@@ -142,8 +142,8 @@ namespace Dumux
         condition or the assembled neumann boundary condition.
         It is accessible via the rhs() method.
 
-      @param[in]  e a codim 0 entity reference
-      @param[in]  k order of Lagrange basis (default is 1)
+      \param[in]  e a codim 0 entity reference
+      \param[in]  k order of Lagrange basis (default is 1)
      */
       virtual void assembleBoundaryCondition (const Entity& e, int k=1) = 0;
 
@@ -232,7 +232,7 @@ namespace Dumux
 
   };
 
-  /*! @brief Base class for linear local assemblers
+  /*! \brief Base class for linear local assemblers
 
   This class serves as a base class for linear local assemblers. It provides
   space and access to the local stiffness matrix. The actual assembling is done
@@ -280,8 +280,8 @@ namespace Dumux
         condition or the assembled source term and neumann boundary condition.
         It is accessible via the rhs() method.
 
-        @param[in]  e a codim 0 entity reference
-        @param[in]  k order of Lagrange basis (default is 1)
+        \param[in]  e a codim 0 entity reference
+        \param[in]  k order of Lagrange basis (default is 1)
       */
       virtual void assemble (const Entity& e, int k=1) = 0;
 
@@ -289,9 +289,9 @@ namespace Dumux
 
       Since this is a base class for linear assemblers, the local solution will be ignored.
 
-      @param[in]  e a codim 0 entity reference
-      @param[in] localSolution The current solution on the entity, which is needed by nonlinear assemblers
-      @param[in]  k order of Lagrange basis (default is 1)
+      \param[in]  e a codim 0 entity reference
+      \param[in] localSolution The current solution on the entity, which is needed by nonlinear assemblers
+      \param[in]  k order of Lagrange basis (default is 1)
       */
       virtual void assemble (const Entity& e, const Dune::BlockVector<VBlockType>& localSolution, int k=1)
       {
@@ -300,7 +300,7 @@ namespace Dumux
 
   };
 
-  /** @} */
+  /** \} */
 
 }
 #endif

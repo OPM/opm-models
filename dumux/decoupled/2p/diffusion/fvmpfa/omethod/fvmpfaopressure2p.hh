@@ -30,8 +30,8 @@
 #include <dune/common/fmatrix.hh>
 
 /**
- * @file
- * @brief  Finite Volume MPFA O-method discretization of a two-phase pressure equation.
+ * \file
+ * \brief  Finite Volume MPFA O-method discretization of a two-phase pressure equation.
  */
 
 namespace Dumux

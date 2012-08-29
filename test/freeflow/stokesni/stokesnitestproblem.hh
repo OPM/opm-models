@@ -17,9 +17,8 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /**
- * @file
- * @brief  Definition of a simple Stokes problem
- * @author Klaus Mosthaf, Andreas Lauser, Bernd Flemisch
+ * \file
+ * \brief  Definition of a simple Stokes problem
  */
 #ifndef DUMUX_STOKES_NI_TEST_PROBLEM_HH
 #define DUMUX_STOKES_NI_TEST_PROBLEM_HH

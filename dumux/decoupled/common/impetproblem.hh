@@ -35,15 +35,15 @@
 #include <string>
 
 /**
- * @file
- * @brief  Base class for defining an instance of the diffusion problem
+ * \file
+ * \brief  Base class for defining an instance of the diffusion problem
  */
 
 namespace Dumux
 {
 /*!
  * \ingroup IMPET
- * @brief base class for problems using a sequential implicit-explicit strategy
+ * \brief base class for problems using a sequential implicit-explicit strategy
  *
  *  \tparam TypeTag      problem TypeTag
  *  \tparam Implementation problem implementation
@@ -655,7 +655,7 @@ public:
     { return bboxMax_; }
 
     //! \name Access functions
-    //@{
+    //\{
     /*!
      * \brief Returns TimeManager object used by the simulation
      */
@@ -747,7 +747,7 @@ public:
      *        from disk.
      *
      * It is the inverse of the serialize() method.
-     * @param tRestart Restart time
+     * \param tRestart Restart time
      */
     void restart(const double tRestart)
     {

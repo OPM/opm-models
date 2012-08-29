@@ -25,8 +25,8 @@
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
 /**
- * @file
- * @brief  Storage container for discretized data for multiphysics models
+ * \file
+ * \brief  Storage container for discretized data for multiphysics models
  */
 
 namespace Dumux
@@ -40,7 +40,7 @@ namespace Dumux
  * fluidState can be stored in cells being in the simpler subdomain.
  * Hence, acess functions either direct to the full fluidstate, or to the simple fluidstate.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 template<class TypeTag>
 class CellData2P2Cmultiphysics : public CellData2P2C<TypeTag>
@@ -78,7 +78,7 @@ public:
     }
 
     /*! \name Acess to primary variables */
-    //@{
+    //\{
     //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::pressure()
     Scalar pressure(int phaseIdx)
     {
@@ -107,7 +107,7 @@ public:
         else
             manipulateFluidState().setPressure(phaseIdx, value);
     }
-    //@}
+    //\}
 
 
     //////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ public:
     }
 
     /*! \name Acess to secondary variables */
-    //@{
+    //\{
     //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::setSaturation()
     void setSaturation(int phaseIdx, Scalar value)
     {
@@ -254,7 +254,7 @@ public:
         else
             return this->fluidState_->phaseMassFraction(phaseIdx);
     }
-    //@}
+    //\}
 
 
 //    FluxData& setFluxData()
@@ -271,7 +271,7 @@ public:
      * and functionality.
      * Makes shure the fluidStateType_ flag is set appropriately in this
      * cell.
-     * @param simpleFluidState A fluidstate storing a 1p2c mixture
+     * \param simpleFluidState A fluidstate storing a 1p2c mixture
      */
     void setSimpleFluidState(SimpleFluidState& simpleFluidState)
     {

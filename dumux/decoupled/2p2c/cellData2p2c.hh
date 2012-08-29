@@ -25,8 +25,8 @@
 #include <dumux/decoupled/2p2c/dec2p2cfluidstate.hh>
 
 /**
- * @file
- * @brief  Storage container for discretized data of the constitutive relations for one element
+ * \file
+ * \brief  Storage container for discretized data of the constitutive relations for one element
  */
 
 namespace Dumux
@@ -40,7 +40,7 @@ namespace Dumux
  * fluidstate, so the CellData contains the fluidstate object for the current element.
  * At the moment, the compositional model does not use fluxVariables that are stored on the interfaces.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 template<class TypeTag>
 class CellData2P2C
@@ -112,24 +112,24 @@ public:
     }
 
     /*! \name Acess to primary variables */
-    //@{
+    //\{
     /*! Acess to the phase pressure
-     * @param phaseIdx index of the Phase
+     * \param phaseIdx index of the Phase
      */
     Scalar pressure(int phaseIdx)
     {
         return fluidState_->pressure(phaseIdx);
     }
     /*! Acess to the phase pressure
-     * @param phaseIdx index of the Phase
+     * \param phaseIdx index of the Phase
      */
     const Scalar pressure(int phaseIdx) const
     {
         return fluidState_->pressure(phaseIdx);
     }
     /*! Modify the phase pressure
-     * @param phaseIdx index of the Phase
-     * @param value Value to be stored
+     * \param phaseIdx index of the Phase
+     * \param value Value to be stored
      */
     void setPressure(int phaseIdx, Scalar value)
     {
@@ -157,8 +157,8 @@ public:
     /*!
      * \brief Sets the total mass concentration of a component \f$\mathrm{[kg/m^3]}\f$.
      *
-     * @param compIdx index of the Component
-     * @param value Value to be stored
+     * \param compIdx index of the Component
+     * \param value Value to be stored
      */
     void setTotalConcentration(int compIdx, Scalar value)
     {
@@ -172,7 +172,7 @@ public:
     /*!
      * \brief Calculate the total mass concentration of a component \f$\mathrm{[kg/m^3]}\f$
      * for a given porosity (within the initialization procedure).
-     * @param porosity Porosity
+     * \param porosity Porosity
      */
     void calculateMassConcentration(Scalar porosity)
     {
@@ -183,14 +183,14 @@ public:
                 porosity * (massFraction(wPhaseIdx,nCompIdx) * saturation(wPhaseIdx) * density(wPhaseIdx)
               + massFraction(nPhaseIdx,nCompIdx) * saturation(nPhaseIdx) * density(nPhaseIdx));
     }
-    //@}
+    //\}
 
 
     /*! \name Acess to secondary variables */
-    //@{
+    //\{
     //! Return phase mobilities
     /*
-     * @param phaseIdx index of the Phase
+     * \param phaseIdx index of the Phase
      */
     const Scalar& mobility(int phaseIdx) const
     {
@@ -198,8 +198,8 @@ public:
     }
     //! Set phase mobilities
     /*
-     * @param phaseIdx index of the Phase
-     * @param value Value to be stored
+     * \param phaseIdx index of the Phase
+     * \param value Value to be stored
      */
     void setMobility(int phaseIdx, Scalar value)
     {
@@ -252,7 +252,7 @@ public:
     //! Return the derivative of spec. volume w.r.t. change of mass
     /**
      * For details, see description of FVPressureCompositional<TypeTag>::volumeDerivatives()
-     * @param compIdx index of the Component
+     * \param compIdx index of the Component
      */
     Scalar& dv(int compIdx)
     {
@@ -340,7 +340,7 @@ public:
     {
         return fluidState_->phaseMassFraction(phaseIdx);
     }
-    //@}
+    //\}
 
 
     //! Returns a reference to the cells fluid state
@@ -386,17 +386,17 @@ public:
     const bool& wasRefined() const
     {   return wasRefined_;}
     //! Indicates if current cell is the upwind cell for a given interface
-    /* @param indexInInside Local face index seen from current cell
-     * @param phaseIdx The index of the phase
+    /* \param indexInInside Local face index seen from current cell
+     * \param phaseIdx The index of the phase
      */
     const bool& isUpwindCell(int indexInInside, int phaseIdx) const
     {
         return fluxData_.isUpwindCell(indexInInside, phaseIdx);
     }
     //! Specifies if current cell is the upwind cell for a given interface
-    /* @param indexInInside Local face index seen from current cell
-     * @param phaseIdx The index of the phase
-     * @param value Value: true (->outflow) or false (-> inflow)
+    /* \param indexInInside Local face index seen from current cell
+     * \param phaseIdx The index of the phase
+     * \param value Value: true (->outflow) or false (-> inflow)
      */
     void setUpwindCell(int indexInInside, int phaseIdx, bool value)
     {
