@@ -28,7 +28,6 @@
 /**
  * \file
  * \brief  Base class for defining a convective part of the saturation transport equation
- * \author Markus Wolff
  */
 
 namespace Dumux

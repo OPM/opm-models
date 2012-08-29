@@ -34,7 +34,6 @@
 /**
  * @file
  * @brief  Finite Volume Diffusion Model
- * @author Benjamin Faigle, Bernd Flemisch, Markus Wolff
  */
 
 namespace Dumux

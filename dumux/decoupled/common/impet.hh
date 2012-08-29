@@ -25,7 +25,6 @@
 /**
  * @file
  * @brief  IMPET scheme
- * @author Bernd Flemisch, Markus Wolff
  */
 
 #include "impetproperties.hh"

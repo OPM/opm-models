@@ -26,7 +26,6 @@
 /**
  * @file
  * @brief  Class including data of one grid cell
- * @author Markus Wolff
  */
 
 namespace Dumux

@@ -23,7 +23,6 @@
 /**
  * @file
  * @brief  Class including the information of an interaction volume of a MPFA O-method that does not change with time.
- * @author Markus Wolff
  */
 
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>

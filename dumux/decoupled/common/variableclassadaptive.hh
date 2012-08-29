@@ -28,7 +28,6 @@
 /**
  * @file
  * @brief  Base class holding the variables for sequential models.
- * @author Markus Wolff
  */
 
 namespace Dumux

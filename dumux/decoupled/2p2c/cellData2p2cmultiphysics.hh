@@ -27,7 +27,6 @@
 /**
  * @file
  * @brief  Storage container for discretized data for multiphysics models
- * @author Benjamin Faigle
  */
 
 namespace Dumux

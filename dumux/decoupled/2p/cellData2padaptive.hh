@@ -28,7 +28,6 @@
 /**
  * @file
  * @brief  Class including the data of a grid cell needed if an adaptive grid is used.
- * @author Markus Wolff
  */
 
 namespace Dumux
