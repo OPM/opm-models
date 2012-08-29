@@ -11,6 +11,7 @@ CXX_OPTS=" \
     -DDEBUG=1"
 
 CONFIGURE_FLAGS="\
+  CC=\"clang\" \
   CXX=\"clang++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   --disable-documentation \

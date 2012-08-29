@@ -15,6 +15,7 @@ CXX_OPTS=" \
 
 # configure flags 
 CONFIGURE_FLAGS=" \
+  CC=\"clang\" \
   CXX=\"clang++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   --enable-fieldvector-size-is-method \
