@@ -41,6 +41,7 @@ namespace Dumux
 template<class TypeTag>
 class BoxBoundaryContext
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, FVElementGeometry) FVElementGeometry;
@@ -114,6 +115,12 @@ public:
      */
     const FVElementGeometry &fvElemGeom(int timeIdx) const
     { return elemCtx_.fvElemGeom(timeIdx); }
+
+    /*!
+     * \brief Returns the area [m^2] of a given boudary segment.
+     */
+    Scalar boundarySegmentArea(int boundaryFaceIdx, int timeIdx) const
+    { return elemCtx_.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area; }
 
     /*!
      * \brief Return the position of a local entity in global coordinates.
