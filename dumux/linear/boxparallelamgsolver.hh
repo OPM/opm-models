@@ -124,6 +124,10 @@ public:
      */
     bool solve(const Matrix &M, Vector &x, const Vector &b)
     {
+        int verbosity = 0;
+        if (problem_.gridView().comm().rank() == 0)
+            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+
         /////////////
         // set-up the overlapping matrix and vector
         /////////////
@@ -143,6 +147,10 @@ public:
         (*overlappingx_) = 0.0;
 
         int coarsenTarget = GET_PARAM(TypeTag, int, AMGCoarsenTarget);
+        int rank = problem_.gridView().comm().rank();
+
+        if (verbosity > 1 && rank == 0)
+            std::cout << "Setting up the AMG preconditioner\n";
 
         /////////////
         // set-up the AMG preconditioner
@@ -159,8 +167,8 @@ public:
 
         // define the smoother used for the AMG and specify its
         // arguments
-        typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
-        //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
+        //typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
+        typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
@@ -179,7 +187,10 @@ public:
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
             CoarsenCriterion;
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
-        coarsenCriterion.setDebugLevel(0); // make the AMG shut up
+        if (verbosity > 0)
+            coarsenCriterion.setDebugLevel(1);
+        else
+            coarsenCriterion.setDebugLevel(0); // make the AMG shut up
         coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
         //coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
         coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
@@ -190,12 +201,12 @@ public:
                 coarsenCriterion, 
                 smootherArgs,
                 *istlComm_);
+
         /////////////
         // set-up the linear solver
         /////////////
-        int verbosity = 0;
-        if (overlappingMatrix_->overlap().myRank() == 0)
-            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+        if (verbosity > 1 && problem_.gridView().comm().rank() == 0)
+            std::cout << "Creating the solver\n";
 
         typedef Dune::BiCGSTABSolver<Vector>  SolverType;
         Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
@@ -254,6 +265,16 @@ private:
 
     void prepare_(const Matrix &M)
     {
+        int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
+
+        int verbosity = 0;
+        if (problem_.gridView().comm().rank() == 0) {
+            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+
+            if (verbosity > 1)
+                std::cout << "Creating algebraic overlap of size " << overlapSize << "\n";
+        }
+
         Linear::VertexBorderListFromGrid<GridView, VertexMapper>
             borderListCreator(problem_.gridView(), problem_.vertexMapper());
         
@@ -272,7 +293,6 @@ private:
         }
 
         // create the overlapping Jacobian matrix
-        int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
         overlappingMatrix_ = new OverlappingMatrix (M,
                                                 borderListCreator.borderList(),
                                                 blackList,
