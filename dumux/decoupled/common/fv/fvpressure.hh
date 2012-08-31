@@ -4,7 +4,6 @@
  *   Copyright (C) 2012 by Markus Wolff                                      *
  *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Copyright (C) 2012 by Benjamin Faigle                                   *
- *   Copyright (C) 2012 by Vishal Jambhekar                                  *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
