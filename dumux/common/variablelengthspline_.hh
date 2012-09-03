@@ -88,6 +88,10 @@ public:
             xPos_[i] = x[i];
             yPos_[i] = y[i];
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeFullSpline_(m0, m1);
     }
 
@@ -111,8 +115,13 @@ public:
         assert(x.size() > 1);
 
         setNumSamples_(x.size());
+
         std::copy(x.begin(), x.end(), xPos_.begin());
         std::copy(y.begin(), y.end(), yPos_.begin());
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeFullSpline_(m0, m1);
     }
 
@@ -143,6 +152,10 @@ public:
             xPos_[i] = points[i][0];
             yPos_[i] = points[i][1];
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeFullSpline_(m0, m1);
     }
 
@@ -174,6 +187,9 @@ public:
             xPos_[i] = (*it)[0];
             yPos_[i] = (*it)[1];
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
 
         // make a full spline
         makeFullSpline_(m0, m1);
@@ -207,6 +223,9 @@ public:
             xPos_[i] = std::get<0>(*it);
             yPos_[i] = std::get<1>(*it);
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
 
         // make a full spline
         makeFullSpline_(m0, m1);
@@ -242,6 +261,9 @@ public:
             yPos_[i] = y[i];
         }
 
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeNaturalSpline_();
     }
 
@@ -266,6 +288,10 @@ public:
         setNumSamples_(x.size());
         std::copy(x.begin(), x.end(), xPos_.begin());
         std::copy(y.begin(), y.end(), yPos_.begin());
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeNaturalSpline_();
     }
 
@@ -294,6 +320,10 @@ public:
             xPos_[i] = points[i][0];
             yPos_[i] = points[i][1];
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         makeNaturalSpline_();
     }
 
@@ -322,6 +352,9 @@ public:
             xPos_[i] = (*it)[0];
             yPos_[i] = (*it)[1];
         }
+
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
 
         // make a natural spline
         makeNaturalSpline_();
@@ -353,11 +386,28 @@ public:
             yPos_[i] = std::get<1>(*it);
         }
 
+        if (xPos_[0] > xPos_[numSamples() - 1])
+            reverseSamplingPoints_();
+
         // make a natural spline
         makeNaturalSpline_();
     }
 
 protected:
+    /*!
+     * \brief Reverse order of the elements in the arrays which
+     *        contain the sampling points.
+     */
+    void reverseSamplingPoints_()
+    {
+        // reverse the arrays
+        int n = numSamples();
+        for (int i = 0; i <= (n - 1)/2; ++i) {
+            std::swap(xPos_[i], xPos_[n - i - 1]);
+            std::swap(yPos_[i], yPos_[n - i - 1]);
+        }
+    }
+
     /*!
      * \brief Resizes the internal vectors to store the sample points.
      */

@@ -149,8 +149,8 @@ public:
                 return y0 + m*(x - xMin());
             }
             else if (x > xMax()) {
-                Scalar m = evalDerivative(xMax(), /*segmentIdx=*/numSamples_()-1);
-                Scalar y0 = y_(numSamples_()-1);
+                Scalar m = evalDerivative(xMax(), /*segmentIdx=*/numSamples_()-2);
+                Scalar y0 = y_(numSamples_() - 1);
                 return y0 + m*(x - xMax());
             }
         }
@@ -178,7 +178,7 @@ public:
             if (x < xMin())
                 evalDerivative_(xMin(), 0);
             else if (x > xMax())
-                evalDerivative_(xMax(), numSamples_() - 1);
+                evalDerivative_(xMax(), numSamples_() - 2);
         }
 
         return evalDerivative_(x, segmentIdx_(x));
