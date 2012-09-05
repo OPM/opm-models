@@ -473,7 +473,7 @@ private:
         
         Scalar xInject[] = { 0.25, 0.75 };
         Scalar injectLen[] = { 0.1, 0.1 };
-        for (int i = 0; i < sizeof(xInject)/sizeof(Scalar); ++ i) {
+        for (unsigned i = 0; i < sizeof(xInject)/sizeof(Scalar); ++ i) {
             if (xInject[i] - injectLen[i]/2 < lambda &&  lambda < xInject[i] + injectLen[i]/2)
                 return true;
         }

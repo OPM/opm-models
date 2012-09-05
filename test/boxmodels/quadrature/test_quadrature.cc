@@ -31,7 +31,7 @@
 
 #include <dumux/boxmodels/common/boxfvelementgeometry.hh>
 
-const int dim = 3;
+const unsigned dim = 3;
 typedef double Scalar;
 typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
 typedef QuadratureGeom::LocalPosition LocalPosition;

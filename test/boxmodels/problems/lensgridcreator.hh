@@ -69,7 +69,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 /*!
  * \brief Helper class for grid instantiation of the lens problem.
  */
-#if HAVE_UG
+#if HAVE_ALUGRID
 template <class TypeTag>
 class LensGridCreator
 {

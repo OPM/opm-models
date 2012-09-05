@@ -438,7 +438,7 @@ protected:
                           LocalBlockVector &storageTerm,
                           const ElementContext &elemCtx) const
     {
-        EqVector tmp, tmp2;
+        EqVector tmp(0), tmp2(0);
         RateVector sourceRate;
 
         // evaluate the volume terms (storage + source terms)

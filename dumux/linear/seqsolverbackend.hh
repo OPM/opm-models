@@ -550,7 +550,7 @@ public:
     if (result_.converged) {
         // make sure that the result only contains finite values.
         Scalar tmp = 0;
-        for (int i = 0; i < x.size(); ++i) {
+        for (unsigned i = 0; i < x.size(); ++i) {
             const auto &xi = x[i];
             for (int j = 0; j < Vector::block_type::dimension; ++j) 
                 tmp += xi[j];
