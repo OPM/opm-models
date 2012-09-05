@@ -121,7 +121,7 @@ public:
         Scalar potentialNW = cellDataI.fluxData().potential(nPhaseIdx, indexInInside);
 
         DimMatrix meanPermeability(0);
-        GlobalPosition distVec(0);
+        DimVector distVec(0);
         Scalar lambdaW =  0;
         Scalar lambdaNW = 0;
 
