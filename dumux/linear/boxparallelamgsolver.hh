@@ -59,7 +59,7 @@ NEW_PROP_TAG(AMGCoarsenTarget);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(BoxLinearSolverTypeTag, AMGCoarsenTarget, 1000);
+SET_INT_PROP(BoxLinearSolverTypeTag, AMGCoarsenTarget, 10000);
 }
 
 namespace Linear {
@@ -166,8 +166,8 @@ public:
 
         // define the smoother used for the AMG and specify its
         // arguments
-        //typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
-        typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
+        typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
+        //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
@@ -209,11 +209,12 @@ public:
 
         typedef Dune::BiCGSTABSolver<Vector>  SolverType;
         Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
+        int maxIterations = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, MaxIterations);
         SolverType solver(fineOperator, 
                           scalarProduct,
                           /*preconditioner=*/amg,
                           linearSolverTolerance,
-                          /*maxSteps=*/300, 
+                          /*maxSteps=*/maxIterations,
                           verbosity);
 
 #if HAVE_ISTL_CONVERGENCE_CRITERIA
