@@ -221,7 +221,7 @@ public:
     {
         // define the base epsilon as 10^-10 and make sure that this is 
         // at least 10^4 times more than the machine precision
-        static constexpr Scalar baseEps = 1e-10;
+        static const Scalar baseEps = std::max(std::numeric_limits<Scalar>::epsilon()*1e6, 1e-15);
         assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps);
 
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
