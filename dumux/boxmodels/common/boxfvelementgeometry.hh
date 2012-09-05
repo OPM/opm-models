@@ -438,17 +438,6 @@ typename BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::ScvGeome
 BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::scvGeoms_[
     BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::numScv];
 
-static int foo1DCube_ 
-= BoxScvGeometries<double, /*dim=*/1, Dune::GeometryType::cube>::init();
-static int foo2DCube_ 
-= BoxScvGeometries<double, /*dim=*/2, Dune::GeometryType::cube>::init();
-static int foo2DSimplex_ 
-= BoxScvGeometries<double, /*dim=*/2, Dune::GeometryType::simplex>::init();
-static int foo3DCube_ 
-= BoxScvGeometries<double, /*dim=*/3, Dune::GeometryType::cube>::init();
-static int foo3DSimplex_ 
-= BoxScvGeometries<double, /*dim=*/3, Dune::GeometryType::simplex>::init();
-
 /*!
  * \ingroup BoxModel
  *
@@ -529,19 +518,16 @@ class BoxFVElementGeometry
         DimVector m;
         crossProduct(m, a, b);
 
-        a = p1;
         for (int k = 0; k < dimWorld; ++k)
-            a[k] -= p0[k];
-        b = p2;
+            a[k] = p1[k] - p0[k];
         for (int k = 0; k < dimWorld; ++k)
-            b[k] -= p0[k];
+            b[k] = p2[k] - p0[k];
         DimVector n;
         crossProduct(n, a, b);
         n += m;
 
-        a = p5;
         for (int k = 0; k < dimWorld; ++k)
-            a[k] -= p0[k];
+            a[k] = p5[k] - p0[k];
 
         return std::abs(1.0/6.0*(n*a));
     }
@@ -761,6 +747,17 @@ public:
 
     void update(const GridView& gridView, const Element& e)
     {
+        static bool localGeometriesInitialized = false;
+        if (!localGeometriesInitialized) {
+            localGeometriesInitialized = true;
+
+            BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::init();
+            BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::init();
+            BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::init();
+            BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::init();
+            BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::init();
+        }
+
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
 
@@ -826,13 +823,13 @@ public:
                 ipLocal = referenceElement.position(k, dim-1) + elementLocal;
                 ipLocal *= 0.5;
                 subContVolFace[k].ipLocal = ipLocal;
-                diffVec = elementGlobal - edgeCoord[k];
+                for (int m = 0; m < dimWorld; ++m)
+                    diffVec[m] = elementGlobal[m] - edgeCoord[k][m];
                 subContVolFace[k].normal[0] = diffVec[1];
                 subContVolFace[k].normal[1] = -diffVec[0];
 
-                diffVec = subContVol[j].global;
                 for (int m = 0; m < dimWorld; ++m)
-                    diffVec[m] -= subContVol[i].global[m];
+                    diffVec[m] = subContVol[j].global[m] - subContVol[i].global[m];
                 // make sure the normal points to the right direction
                 if (subContVolFace[k].normal * diffVec < 0)
                     subContVolFace[k].normal *= -1;
@@ -908,7 +905,8 @@ public:
 
                 // ASSUME constant normal
                 Dune::FieldVector<CoordScalar, dim-1> localDimM1(0);
-                boundaryFace[bfIdx].normal = it->unitOuterNormal(localDimM1);
+                for (int i = 0; i < dimWorld; ++i) 
+                    boundaryFace[bfIdx].normal[i] = Scalar(it->unitOuterNormal(localDimM1)[i]);
                 boundaryFace[bfIdx].normal *= boundaryFace[bfIdx].area;
 
                 typedef Dune::FieldVector< Scalar, 1 > ShapeValue;
