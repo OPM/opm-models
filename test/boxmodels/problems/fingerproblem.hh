@@ -278,7 +278,6 @@ public:
     {
 #if FINGER_USE_PARKER_LENHARD
         // update the history of the hysteresis law
-        std::cout << "POST!\n";
         ElementContext elemCtx(*this);
 
         auto elemIt = this->gridView().template begin<0>();

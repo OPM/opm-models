@@ -10,4 +10,4 @@ InitialWettingSaturation = 0.01 # [-]
 # Mandatory arguments
 ############################################################
 InitialTimeStepSize = 10 # [s]
-EndTime = 1e9 # [s]
+EndTime = 1e3 # [s]
