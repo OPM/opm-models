@@ -743,21 +743,21 @@ public:
     const LocalFiniteElementCache feCache_;
 
     BoxFVElementGeometry()
-    { }
-
-    void update(const GridView& gridView, const Element& e)
     {
         static bool localGeometriesInitialized = false;
         if (!localGeometriesInitialized) {
             localGeometriesInitialized = true;
-
+            
             BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::init();
             BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::init();
             BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::init();
             BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::init();
             BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::init();
         }
+    }
 
+    void update(const GridView& gridView, const Element& e)
+    {
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
 
