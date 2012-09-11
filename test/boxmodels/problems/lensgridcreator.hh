@@ -305,12 +305,12 @@ public:
 
         grid_ = new Dune::YaspGrid<LENS_DIM>(
 #ifdef HAVE_MPI
-            Dune::MPIHelper::getCommunicator(),
+            /*mpiCommunicator=*/Dune::MPIHelper::getCommunicator(),
 #endif
-            upperRight, // upper right
-            cellRes, // number of cells
-            Dune::FieldVector<bool,LENS_DIM>(false), // periodic
-            0); // overlap
+            /*upperRightCorner=*/upperRight,
+            /*numCells=*/cellRes,
+            /*isPeriodic=*/Dune::FieldVector<bool,LENS_DIM>(false),
+            /*overlap=*/1);
         grid_->globalRefine(numRefinements);
     }
 

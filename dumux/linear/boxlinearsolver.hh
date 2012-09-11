@@ -214,9 +214,11 @@ public:
         weightVec = 0.0;
         // for rows local to the current peer, ping the model for their
         // relative weight
-        for (unsigned i = 0; i < x.size(); ++i) {
-            for (int j = 0; j < Vector::block_type::dimension; ++j) {
-                weightVec[i][j] = this->problem_.model().eqWeight(i, j);
+        const auto &foreignOverlap = overlappingMatrix_->overlap().foreignOverlap();
+        for (unsigned localIdx = 0; localIdx < foreignOverlap.numLocal(); ++localIdx) {
+            int nativeIdx = foreignOverlap.localToNative(localIdx);
+            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
+                weightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
             }
         }
 

@@ -446,9 +446,10 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *indicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *valuesSendBuff_[peerRank];
-        for (unsigned i = 0; i < indices.size(); ++ i)
+        for (unsigned i = 0; i < indices.size(); ++ i) {
             values[i] = (*this)[indices[i]];
-
+        }
+        
         values.send(peerRank);
     }
 

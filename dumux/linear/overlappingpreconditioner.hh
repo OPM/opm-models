@@ -90,8 +90,9 @@ public:
                               MPI_COMM_WORLD); // communicator
             }
 
-            if (success)
+            if (success) {
                 x.sync();
+            }
             else
                 DUNE_THROW(NumericalProblem,
                            "Preconditioner threw an exception on some process.");

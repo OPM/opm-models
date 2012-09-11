@@ -93,6 +93,9 @@ public:
         const auto &endIt = borderList.end();
         for (; it != endIt; ++it) {
             int localIdx = nativeToLocal(it->localIdx);
+            if (localIdx < 0)
+                continue;
+
             borderIndices_.insert(localIdx);
         }
 
@@ -109,7 +112,7 @@ public:
 
         // calculate the foreign overlap for the local partition,
         // i.e. find the distance of each row from the seed set.
-        foreignOverlapByIndex_.resize(numNative());
+        foreignOverlapByIndex_.resize(numLocal());
         extendForeignOverlap_(A, initialSeedList, 0, overlapSize);
 
         // computes the process with the lowest rank for all local
@@ -331,6 +334,8 @@ protected:
             int localIdx = nativeToLocal(it->index);
             int peerRank = it->peerRank;
             int distance = borderDistance;
+            if (localIdx < 0)
+                continue;
             if (foreignOverlapByIndex_[localIdx].count(peerRank) == 0)
                 foreignOverlapByIndex_[localIdx][peerRank] = distance;
         }
@@ -345,33 +350,35 @@ protected:
         SeedList nextSeedList;
         it = seedList.begin();
         for (; it != endIt; ++it) {
-            Index rowIdx = it->index;
+            Index nativeRowIdx = it->index;
+            if (nativeToLocal(nativeRowIdx) < 0)
+                continue;
             ProcessRank peerRank = it->peerRank;
 
             // find all column indies in the row. The indices of the
             // columns are the additional indices of the overlap which
             // we would like to add
             typedef typename BCRSMatrix::ConstColIterator ColIterator;
-            ColIterator colIt = A[rowIdx].begin();
-            ColIterator colEndIt = A[rowIdx].end();
+            ColIterator colIt = A[nativeRowIdx].begin();
+            ColIterator colEndIt = A[nativeRowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                Index newIdx = colIt.index();
-
+                Index nativeColIdx = colIt.index();
+                int localColIdx = nativeToLocal(nativeColIdx);
+                
+                // ignore if the native index is not a local one
+                if (localColIdx < 0)
+                    continue;
                 // if the process is already is in the overlap of the
                 // column index, ignore this column index!
-                if (foreignOverlapByIndex_[newIdx].count(peerRank) > 0)
+                else if (foreignOverlapByIndex_[localColIdx].count(peerRank) > 0)
                     continue;
-                else if (blackList_.count(newIdx)) {
-                    // also ignore the index if it is black-listed
-                    continue;
-                }
 
                 // check whether the new index is already in the overlap
                 bool hasIndex = false;
                 typename SeedList::iterator sIt = nextSeedList.begin();
                 typename SeedList::iterator sEndIt = nextSeedList.end();
                 for (; sIt != sEndIt; ++sIt) {
-                    if (sIt->index == newIdx &&
+                    if (sIt->index == nativeColIdx &&
                         sIt->peerRank == peerRank)
                     {
                         hasIndex = true;
@@ -384,7 +391,7 @@ protected:
                 // add the current processes to the seed list for the
                 // next overlap level
                 IndexRankDist newTuple;
-                newTuple.index = newIdx;
+                newTuple.index = nativeColIdx;
                 newTuple.peerRank = peerRank;
                 newTuple.borderDistance =  borderDistance + 1;
                 nextSeedList.push_back(newTuple);
@@ -405,8 +412,9 @@ protected:
     void createLocalIndices_()
     {
         // create the native <-> local maps
-        for (int nativeIdx = 0, localIdx = 0; nativeIdx < numNative_;) {
-            if (blackList_.count(localIdx) == 0) {
+        int localIdx = 0;
+        for (unsigned nativeIdx = 0; nativeIdx < numNative_;) {
+            if (blackList_.count(nativeIdx) == 0) {
                 localToNativeIndices_.push_back(nativeIdx);
                 nativeToLocalIndices_.push_back(localIdx);
                 ++ nativeIdx;
@@ -418,7 +426,7 @@ protected:
             }
         }
 
-        numLocal_ = nativeToLocalIndices_.size();
+        numLocal_ = localToNativeIndices_.size();
     };
 
     Index localToPeerIdx_(Index localIdx, ProcessRank peerRank) const
@@ -447,17 +455,17 @@ protected:
         auto it = seedList.begin();
         const auto &endIt = seedList.end();
         for (; it != endIt; ++it) {
-            int idx = nativeToLocal(it->index);
-            if (!isBorder(idx))
+            int localIdx = nativeToLocal(it->index);
+            if (!isBorder(localIdx))
                 continue;
             BorderIndex borderHandle;
-            borderHandle.localIdx = idx;
+            borderHandle.localIdx = localIdx;
             borderHandle.peerRank = it->peerRank;
             borderHandle.borderDistance = it->borderDistance;
             
             // add the border index to all the neighboring peers
-            auto neighborIt = foreignOverlapByIndex_[idx].begin();
-            const auto &neighborEndIt = foreignOverlapByIndex_[idx].end();
+            auto neighborIt = foreignOverlapByIndex_[localIdx].begin();
+            const auto &neighborEndIt = foreignOverlapByIndex_[localIdx].end();
             for (; neighborIt != neighborEndIt; ++neighborIt) {
                 if (neighborIt->second != 0)
                     // not a border index for the neighbor
@@ -467,7 +475,7 @@ protected:
                     // by the peer to itself
                     continue;
 
-                int peerIdx = localToPeerIdx_(idx, neighborIt->first);
+                int peerIdx = localToPeerIdx_(localIdx, neighborIt->first);
                 if (peerIdx < 0)
                     // the index is on the border, but is not on the border
                     // with the considered neighboring process. Ignore it!

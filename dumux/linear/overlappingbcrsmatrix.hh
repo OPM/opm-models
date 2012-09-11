@@ -219,7 +219,7 @@ private:
                     continue; // black.listed entry
 
                 while (true) {
-                    if (myColIt.index() == localColIdx) {
+                    if (int(myColIt.index()) == localColIdx) {
                         (*myColIt) = *colIt;
                         break;
                     }
@@ -385,7 +385,7 @@ private:
             }
 
             (*rowSizesSendBuff_[peerRank])[i] = j;
-            (*rowIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(nativeRowIdx);
+            (*rowIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(localRowIdx);
             numEntries += j;
             ++i;
         }

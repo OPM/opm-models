@@ -166,7 +166,7 @@ public:
                  MPI_COMM_WORLD, // communicator
                  MPI_STATUS_IGNORE); // status
 
-        int domesticIdx = recvBuf.peerIdx;
+        int domesticIdx = foreignOverlap_.nativeToLocal(recvBuf.peerIdx);
         int globalIdx = recvBuf.globalIdx;
         addIndex(domesticIdx, globalIdx);
 #endif // HAVE_MPI
@@ -291,9 +291,10 @@ protected:
             if (borderPeer != peerRank)
                 continue;
 
-            Index localIdx = borderIt->localIdx;
+            int localIdx = foreignOverlap_.nativeToLocal(borderIt->localIdx);
             Index peerIdx = borderIt->peerIdx;
-            if (foreignOverlap_.iAmMasterOf(borderIt->localIdx)) {
+            assert(localIdx >= 0);
+            if (foreignOverlap_.iAmMasterOf(localIdx)) {
                 sendBorderIndex(borderPeer, localIdx, peerIdx);
             }
         }
@@ -312,7 +313,9 @@ protected:
             if (borderPeer != peerRank)
                 continue;
 
-            if (foreignOverlap_.masterRank(borderIt->localIdx) == borderPeer) {
+            int nativeIdx = borderIt->localIdx;
+            int localIdx = foreignOverlap_.nativeToLocal(nativeIdx);
+            if (localIdx >= 0 && foreignOverlap_.masterRank(localIdx) == borderPeer) {
                 receiveBorderIndex(borderPeer);
             }
         }
