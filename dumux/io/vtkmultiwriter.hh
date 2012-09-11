@@ -25,8 +25,8 @@
  * \file
  * \brief Simplifies writing multi-file VTK datasets.
  */
-#ifndef VTK_MULTI_WRITER_HH
-#define VTK_MULTI_WRITER_HH
+#ifndef DUMUX_VTK_MULTI_WRITER_HH
+#define DUMUX_VTK_MULTI_WRITER_HH
 
 #include "vtknestedfunction.hh"
 

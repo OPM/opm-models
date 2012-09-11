@@ -275,14 +275,15 @@ private:
         // create the overlapping Jacobian matrix
         int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
         overlappingMatrix_ = new OverlappingMatrix (M,
-                                                borderListCreator.borderList(),
-                                                blackList,
-                                                overlapSize);
+                                                    borderListCreator.borderList(),
+                                                    blackList,
+                                                    overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
+        
     }
 
     void cleanup_()
@@ -297,6 +298,30 @@ private:
         overlappingx_ = 0;
     }
 
+    void writeOverlapToVTK_(int lookedAtRank)
+    {
+        std::cout << "writing overlap for rank " << lookedAtRank << "\n";
+        typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > VtkField;
+        int n = problem_.gridView().size(/*codim=*/dimWorld);
+        VtkField isInOverlap(n, 0.0);
+        VtkField rankField(n, 0.0);
+        auto vIt = problem_.gridView().template begin</*codim=*/dimWorld>();
+        const auto &vEndIt = problem_.gridView().template end</*codim=*/dimWorld>();
+        const auto &overlap = overlappingMatrix_->overlap();
+        for (; vIt != vEndIt; ++vIt) {
+            int globalVertexIdx = problem_.vertexMapper().map(*vIt);
+            rankField[globalVertexIdx] = problem_.gridView().comm().rank();
+            if (overlap.peerHasIndex(lookedAtRank, globalVertexIdx))
+                isInOverlap[globalVertexIdx] = 1.0;
+        };
+        
+        typedef Dune::VTKWriter<GridView> VtkWriter;
+        VtkWriter writer(problem_.gridView(), Dune::VTK::conforming);
+        writer.addVertexData(isInOverlap, "overlap");
+        writer.addVertexData(rankField, "rank");
+        writer.write("overlap", Dune::VTK::ascii);
+    }
+    
     const Problem &problem_;
 
     OverlappingMatrix *overlappingMatrix_;

@@ -341,8 +341,8 @@ private:
             // domestic or in the foreign overlap.
             bool isShared = overlap.isInOverlap(curIdx);
 
-            istlIndices.add(overlap.domesticToGlobal(curIdx),
-                        Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isShared));
+            istlIndices.add(/*globalIdx=*/overlap.domesticToGlobal(curIdx),
+                            Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isShared));
 
         }
         istlIndices.endResize();

@@ -260,7 +260,7 @@ public:
     { return foreignOverlapByIndex_[localIdx].size(); }
 
     /*!
-     * \brief Returns true if a given domestic index is either in the foreign overlap.
+     * \brief Returns true if a given local index is in the foreign overlap of any rank.
      */
     bool isInOverlap(Index localIdx) const
     { return foreignOverlapByIndex_[localIdx].size() > 0; }
