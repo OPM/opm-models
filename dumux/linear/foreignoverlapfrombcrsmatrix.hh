@@ -82,14 +82,19 @@ public:
             myRank_ = tmp;
         }
 #endif
+        numNative_ = A.N();
 
-        numLocal_ = A.N();
+        // Computes the local <-> native index maps and also converts
+        // the foreign overlap from native indices to local ones.
+        createLocalIndices_();
 
         // update the set of indices at the border
         auto it = borderList.begin();
         const auto &endIt = borderList.end();
-        for (; it != endIt; ++it)
-            borderIndices_.insert(it->localIdx);
+        for (; it != endIt; ++it) {
+            int localIdx = nativeToLocal(it->localIdx);
+            borderIndices_.insert(localIdx);
+        }
 
         // find the set of processes which have an overlap with the
         // local processes. (i.e. the set of processes which we will
@@ -104,9 +109,11 @@ public:
 
         // calculate the foreign overlap for the local partition,
         // i.e. find the distance of each row from the seed set.
-        foreignOverlapByIndex_.resize(A.N());
+        foreignOverlapByIndex_.resize(numNative());
         extendForeignOverlap_(A, initialSeedList, 0, overlapSize);
 
+        // computes the process with the lowest rank for all local
+        // indices.
         computeMasterRanks_();
 
         // group foreign overlap by peer process rank
@@ -241,7 +248,13 @@ public:
     { return neighborPeerSet_; }
 
     /*!
-     * \brief Returns the number local indices
+     * \brief Returns the number of native indices
+     */
+    int numNative() const
+    { return numNative_; }
+
+    /*!
+     * \brief Returns the number of local indices
      */
     int numLocal() const
     { return numLocal_; }
@@ -251,6 +264,21 @@ public:
      */
     bool isLocal(int domesticIdx) const
     { return domesticIdx < numLocal(); }
+
+    /*!
+     * \brief Convert a native index to a local one.
+     *
+     * If a given native index is not in the set of local indices,
+     * this method returns -1.
+     */
+    int nativeToLocal(int nativeIdx) const
+    { return nativeToLocalIndices_[nativeIdx]; }
+
+    /*!
+     * \brief Convert a local index to a native one.
+     */
+    int localToNative(int localIdx) const
+    { return localToNativeIndices_[localIdx]; }
 
     /*!
      * \brief Return the number of peer ranks for which a given local
@@ -300,7 +328,7 @@ protected:
         auto it = seedList.begin();
         const auto &endIt = seedList.end();
         for (; it != endIt; ++it) {
-            int localIdx = it->index;
+            int localIdx = nativeToLocal(it->index);
             int peerRank = it->peerRank;
             int distance = borderDistance;
             if (foreignOverlapByIndex_[localIdx].count(peerRank) == 0)
@@ -373,6 +401,26 @@ protected:
                               overlapSize);
     }
 
+    // Computes the local <-> native index maps
+    void createLocalIndices_()
+    {
+        // create the native <-> local maps
+        for (int nativeIdx = 0, localIdx = 0; nativeIdx < numNative_;) {
+            if (blackList_.count(localIdx) == 0) {
+                localToNativeIndices_.push_back(nativeIdx);
+                nativeToLocalIndices_.push_back(localIdx);
+                ++ nativeIdx;
+                ++ localIdx;
+            }
+            else  {
+                nativeToLocalIndices_.push_back(-1);
+                ++ nativeIdx;
+            }
+        }
+
+        numLocal_ = nativeToLocalIndices_.size();
+    };
+
     Index localToPeerIdx_(Index localIdx, ProcessRank peerRank) const
     {
         auto it = borderList_.begin();
@@ -393,13 +441,13 @@ protected:
         // first, create the buffers which will contain the number of
         // border indices relevant for a neighbor peer
         std::map<ProcessRank, std::vector<BorderIndex> > borderIndices;
-            
+
         // get all indices in the border which have borderDist as
         // their distance to the closest border of their local process
         auto it = seedList.begin();
         const auto &endIt = seedList.end();
         for (; it != endIt; ++it) {
-            int idx = it->index;
+            int idx = nativeToLocal(it->index);
             if (!isBorder(idx))
                 continue;
             BorderIndex borderHandle;
@@ -462,7 +510,7 @@ protected:
             indicesSendBufs[neighborPeer].send(neighborPeer);
         }
         
-        // next receive all data from the neighbors
+        // receive all data from the neighbors
         std::map<ProcessRank, MpiBuffer<int>> numIndicesRcvBufs;
         std::map<ProcessRank, MpiBuffer<BorderIndex>> indicesRcvBufs;
         peerIt = neighborPeerSet().begin();
@@ -594,6 +642,10 @@ protected:
     // the set of indices which should not be considered
     const std::set<Index> &blackList_;
 
+    // local indices are the native indices sans the black listed ones
+    std::vector<Index> nativeToLocalIndices_;
+    std::vector<Index> localToNativeIndices_;
+
     // an array which contains the rank of the master process for each
     // index
     std::vector<ProcessRank> masterRank_;
@@ -615,6 +667,9 @@ protected:
 
     // number of local indices
     size_t numLocal_;
+
+    // number of native indices
+    size_t numNative_;
 
     // the MPI rank of the local process
     ProcessRank myRank_;

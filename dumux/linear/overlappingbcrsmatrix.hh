@@ -121,23 +121,8 @@ public:
         // first, set everything to 0
         BCRSMatrix::operator=(0.0);
 
-        // then copy the local entries of M
-        for (unsigned rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
-            ConstColIterator colIt = M[rowIdx].begin();
-            ConstColIterator colEndIt = M[rowIdx].end();
-            ColIterator myColIt = (*this)[rowIdx].begin();
-            for (; colIt != colEndIt; ++colIt) {
-                while (true) {
-                    if (myColIt.index() == colIt.index())
-                        break;
-
-                    ++ myColIt;
-                }
-                assert(myColIt.index() == colIt.index());
-
-                (*myColIt) = *colIt;
-            }
-        }
+        // copy the native entries
+        assignFromNative_(M);
 
         // communicate and add the contents of overlapping rows
         syncAdd_();
@@ -154,23 +139,8 @@ public:
         // first, set everything to 0
         BCRSMatrix::operator=(0.0);
 
-        // assign the local rows
-        for (int rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
-            ConstColIterator colIt = M[rowIdx].begin();
-            ConstColIterator colEndIt = M[rowIdx].end();
-            ColIterator myColIt = (*this)[rowIdx].begin();
-            for (; colIt != colEndIt; ++colIt) {
-                while (true) {
-                    if (myColIt.index() == colIt.index())
-                        break;
-
-                    ++ myColIt;
-                }
-                assert(myColIt.index() == colIt.index());
-
-                (*myColIt) = *colIt;
-            }
-        }
+        // copy the native entries
+        assignFromNative_(M);
 
         // communicate and add the contents of overlapping rows
         syncCopy_();
@@ -230,6 +200,36 @@ public:
     }
 
 private:
+    void assignFromNative_(const BCRSMatrix &M)
+    {
+        const auto &foreignOverlap = overlap_->foreignOverlap();
+
+        // then copy the local entries of M to the overlapping matrix
+        for (unsigned nativeRowIdx = 0; nativeRowIdx < M.N(); ++nativeRowIdx) {
+            int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
+            if (localRowIdx < 0)
+                continue; // black-listed entry
+                        
+            ConstColIterator colIt = M[nativeRowIdx].begin();
+            ConstColIterator colEndIt = M[nativeRowIdx].end();
+            ColIterator myColIt = (*this)[localRowIdx].begin();
+            for (; colIt != colEndIt; ++colIt) {
+                int localColIdx = foreignOverlap.nativeToLocal(colIt.index());
+                if (localColIdx < 0)
+                    continue; // black.listed entry
+
+                while (true) {
+                    if (myColIt.index() == localColIdx) {
+                        (*myColIt) = *colIt;
+                        break;
+                    }
+
+                    ++ myColIt;
+                }
+            }
+        }
+    }
+
     void build_(const BCRSMatrix &M)
     {
         int numDomestic = overlap_->numDomestic();
@@ -259,15 +259,25 @@ private:
 
     void buildIndices_(const BCRSMatrix &M)
     {
+        const auto &foreignOverlap = overlap_->foreignOverlap();
+
         /////////
         // first, add all local matrix entries
         /////////
         entries_.resize(overlap_->numDomestic());
-        for (unsigned rowIdx = 0; rowIdx < M.N(); ++rowIdx) {
-            ConstColIterator colIt = M[rowIdx].begin();
-            ConstColIterator colEndIt = M[rowIdx].end();
+        for (unsigned nativeRowIdx = 0; nativeRowIdx < M.N(); ++nativeRowIdx) {
+            int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
+            if (localRowIdx < 0)
+                continue;
+
+            ConstColIterator colIt = M[nativeRowIdx].begin();
+            ConstColIterator colEndIt = M[nativeRowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                entries_[rowIdx].insert(colIt.index());
+                int localColIdx = foreignOverlap.nativeToLocal(colIt.index());
+                if (localColIdx < 0)
+                    continue;
+
+                entries_[localRowIdx].insert(localColIdx);
             }
         }
 
@@ -349,29 +359,37 @@ private:
         rowSizesSendBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
         rowIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
 
+        const auto &foreignOverlap = overlap_->foreignOverlap();
+
         // create the row size MPI buffer
         int numEntries = 0;
         auto it = peerOverlap.begin();
         const auto &endIt = peerOverlap.end();
         int i = 0;
-        for (; it != endIt; ++it, ++i) {
-            int rowIdx = it->index;
-
+        for (; it != endIt; ++it) {
+            int localRowIdx = it->index;
+            int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
+            
             typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt colIt = M[rowIdx].begin();
-            ColIt colEndIt = M[rowIdx].end();
+            ColIt colIt = M[nativeRowIdx].begin();
+            ColIt colEndIt = M[nativeRowIdx].end();
             int j = 0;
             for (; colIt != colEndIt; ++colIt) {
-                if (!overlap_->peerHasIndex(peerRank, colIt.index())) {
+                int localColIdx = foreignOverlap.nativeToLocal(colIt.index());
+                if (localColIdx < 0)
+                    continue;
+                else if (!overlap_->peerHasIndex(peerRank, localColIdx)) {
                     continue;
                 }
                 ++ j;
             }
 
             (*rowSizesSendBuff_[peerRank])[i] = j;
-            (*rowIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(rowIdx);
+            (*rowIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(nativeRowIdx);
             numEntries += j;
+            ++i;
         }
+        assert(i == numOverlapRows);
 
         // actually communicate with the peer
         rowIndicesSendBuff_[peerRank]->send(peerRank);
@@ -383,15 +401,21 @@ private:
         i = 0;
         it = peerOverlap.begin();
         for (; it != endIt; ++it) {
-            int rowIdx = it->index;
+            int localRowIdx = it->index;
+            int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt colIt = M[rowIdx].begin();
-            ColIt colEndIt = M[rowIdx].end();
+            ColIt colIt = M[nativeRowIdx].begin();
+            ColIt colEndIt = M[nativeRowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                if (!overlap_->peerHasIndex(peerRank, colIt.index()))
+                int localColIdx = foreignOverlap.nativeToLocal(colIt.index());
+                if (localColIdx < 0)
                     continue;
-                (*entryIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(colIt.index());
+                else if (!overlap_->peerHasIndex(peerRank, localColIdx))
+                    continue;
+
+                int globalColIdx = overlap_->domesticToGlobal(localColIdx);
+                (*entryIndicesSendBuff_[peerRank])[i] = globalColIdx;
                 ++i;
             }
         }

@@ -117,8 +117,11 @@ public:
         int numDomestic = overlap_->numDomestic();
 
         // assign the local rows from the non-overlapping block vector
-        for (int rowIdx = 0; rowIdx < numLocal; ++rowIdx)
-            (*this)[rowIdx] = nbv[rowIdx];
+        const auto &foreignOverlap = overlap_->foreignOverlap();
+        for (int localRowIdx = 0; localRowIdx < numLocal; ++localRowIdx)  {
+            int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
+            (*this)[localRowIdx] = nbv[nativeRowIdx];
+        };
         
         // set the remote indices to 0 (strictly speaking, that's not
         // necessary because they will be overwritten by the values
@@ -139,9 +142,15 @@ public:
     void assignTo(BlockVector &nbv) const
     {
         // assign the local rows
-        int numLocal = overlap_->numLocal();
-        for (int rowIdx = 0; rowIdx < numLocal; ++rowIdx) {
-            nbv[rowIdx] = (*this)[rowIdx];
+        const auto &foreignOverlap = overlap_->foreignOverlap();
+        int numNative = foreignOverlap.numNative();
+        for (int nativeRowIdx = 0; nativeRowIdx < numNative; ++nativeRowIdx) {
+            int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
+            
+            if (localRowIdx < 0)
+                nbv[nativeRowIdx] = 0.0;
+            else
+                nbv[nativeRowIdx] = (*this)[localRowIdx];
         }
     }
 

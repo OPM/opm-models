@@ -77,7 +77,7 @@ public:
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
 #endif // HAVE_MPI
 
-        buildDomesticOverlap_(A);
+        buildDomesticOverlap_();
         updateMasterRanks_();
     }
 
@@ -245,7 +245,7 @@ public:
     }
 
 protected:
-    void buildDomesticOverlap_(const BCRSMatrix &A)
+    void buildDomesticOverlap_()
     {
         // copy the set of peers from the foreign overlap
         peerSet_ = foreignOverlap_.peerSet();
