@@ -124,7 +124,6 @@ public:
     /*!
      * \brief Initialize the static data with the initial solution.
      *
-     * \param problem The problem to be solved
      */
     void init(Problem &problem)
     {

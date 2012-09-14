@@ -22,7 +22,6 @@
 
 /*!
  * \ingroup FVPressure2p
- * \ingroup IMPETProperties
  * \file
  *
  * \brief Properties for two-phase finite volume model with MPFA-O method.

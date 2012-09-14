@@ -8,13 +8,13 @@
 
 \section intro Introduction
 
-Welcome to the eWoms documentation pages. This documentation has been
+Welcome to the eWoms reference documentation. This documentation has been
 generated using Doxygen, a free source code documentation system for
 documenting C/C++ code.
 
-\section mods Modules
+\section mods Getting Started
 
-The best way to start is from the page Modules which gives
-you access to the documentation by category.
+The best way to start accessing this documentation is the \subpage
+modules page which structures the documentation by category.
 
 */

@@ -32,7 +32,6 @@ namespace Dumux
 {
 /*!
  * \ingroup NcpModel
- * \ingroup BoxLocalResidual
  * \brief Compositional NCP-model specific details needed to
  *        approximately calculate the local defect in the box scheme.
  *
@@ -75,7 +74,6 @@ public:
     /*!
      * \brief Evaluate the storage term [kg/m^3] in a single phase.
      *
-     * \param element The element
      * \param phaseIdx The index of the fluid phase
      */
     void addPhaseStorage(EqVector &storage,
@@ -108,8 +106,6 @@ public:
      * inside a sub control volume divided by the volume)
      *
      *  \param result The number of moles of the component within the sub-control volume
-     *  \param scvIdx The SCV (sub-control-volume) index
-     *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -144,8 +140,6 @@ public:
      * \brief Evaluates the advective mass flux of all components over
      *        a face of a subcontrol volume.
      *
-     * \param flux The advective flux over the sub-control-volume face for each component
-     * \param vars The flux variables at the current SCV
      */
     void computeAdvectiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,
@@ -183,8 +177,6 @@ public:
      * \brief Adds the diffusive mass flux of all components over
      *        a face of a subcontrol volume.
      *
-     * \param flux The diffusive flux over the sub-control-volume face for each component
-     * \param vars The flux variables at the current sub control volume face
      */
     void computeDiffusiveFlux(RateVector &flux,
                               const ElementContext &elemCtx,

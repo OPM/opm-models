@@ -36,7 +36,6 @@
 namespace Dumux {
 /*!
  * \ingroup ImmiscibleBoxModel
- * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the two-phase box model.
  *
@@ -71,8 +70,6 @@ public:
      *        mass) within a single fluid phase
      *
      *  \param result The phase mass within the sub-control volume
-     *  \param scvIdx The SCV (sub-control-volume) index
-     *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
@@ -97,8 +94,6 @@ public:
      *        (e.g. phase mass) within a finite sub-control volume.
      *
      *  \param result The phase mass within the sub-control volume
-     *  \param scvIdx The SCV (sub-control-volume) index
-     *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -123,8 +118,6 @@ public:
      * \brief Evaluates the mass flux over a face of a sub-control
      *        volume.
      *
-     * \param flux The flux over the SCV (sub-control-volume) face for each phase
-     * \param faceIdx The index of the SCV face
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -140,8 +133,6 @@ public:
      * \brief Evaluates the advective mass flux of all components over
      *        a face of a sub-control volume.
      *
-     * \param flux The advective flux over the sub-control-volume face for each phase
-     * \param fluxVars The flux variables at the current SCV
      *
      * This method is called by compute flux and is mainly there for
      * derived models to ease adding equations selectively.
@@ -188,8 +179,6 @@ public:
      * \brief Adds the diffusive flux to the flux vector over
      *        the face of a sub-control volume.
      *
-     * \param flux The diffusive flux over the sub-control-volume face for each phase
-     * \param fluxData The flux variables at the current SCV
      *
      * It doesn't do anything in two-phase model but is used by the
      * non-isothermal two-phase models to calculate diffusive heat
@@ -209,8 +198,6 @@ public:
     /*!
      * \brief Calculate the source term of the equation
      *
-     * \param q The source/sink in the SCV for each phase
-     * \param localVertexIdx The index of the SCV
      *
      */
     void computeSource(RateVector &source,

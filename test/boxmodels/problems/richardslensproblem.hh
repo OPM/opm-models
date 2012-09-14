@@ -115,7 +115,6 @@ SET_BOOL_PROP(RichardsLensProblem, NewtonWriteConvergence, false);
 }
 
 /*!
- * \ingroup RichardsModel
  * \ingroup BoxTestProblems
  *
  * \brief A water infiltration problem with a low-permeability lens
@@ -242,9 +241,6 @@ public:
     /*!
      * \brief Returns the intrinsic permeability tensor [m^2] at a given location
      *
-     * \param element An arbitrary DUNE Codim<0> entity of the grid view
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
@@ -258,9 +254,6 @@ public:
     /*!
      * \brief Returns the porosity [] at a given location
      *
-     * \param element An arbitrary DUNE Codim<0> entity of the grid view
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
@@ -269,9 +262,6 @@ public:
     /*!
      * \brief Returns the parameters for the material law at a given location
      *
-     * \param element An arbitrary DUNE Codim<0> entity of the grid view
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
@@ -287,12 +277,6 @@ public:
      *        fluid phase within a finite volume
      *
      * This problem assumes a constant reference pressure of 1 bar.
-     *
-     * \param element The DUNE Codim<0> entity which intersects with
-     *                the finite volume in question
-     * \param fvElemGeom The finite volume geometry of the element
-     * \param scvIdx The sub control volume index inside the finite
-     *               volume geometry
      */
     template <class Context>
     Scalar referencePressure(const Context &context, int spaceIdx, int timeIdx) const

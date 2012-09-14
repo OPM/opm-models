@@ -27,8 +27,6 @@
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 /*!
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup BoxNcpModel
  * \file
  * \brief  Defines the properties required for the compositional NCP box model.

@@ -32,7 +32,7 @@
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
 
-#include<dumux/common/boundaryconditions.hh>
+#include <dumux/decoupled/common/boundaryconditions.hh>
 #include "localstiffness.hh"
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
 

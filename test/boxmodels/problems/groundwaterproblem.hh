@@ -90,7 +90,6 @@ SET_BOOL_PROP(GroundWaterBaseProblem, EnableGravity, true);
 }
 
 /*!
- * \ingroup OnePBoxModel
  * \ingroup BoxTestProblems
  * \brief Test for the immisicible box model with only a single phase
  *
@@ -152,9 +151,6 @@ public:
 
     /*! \brief Define the porosity.
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
@@ -164,10 +160,6 @@ public:
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
      *
-     * \param element The current finite element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index sub-control volume face where the
-     *                      intrinsic velocity ought to be calculated.
      */
     template <class Context>
     const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const

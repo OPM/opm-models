@@ -21,7 +21,6 @@
 
 /*!
  * \ingroup IMPET
- * \ingroup IMPETProperties
  * \file
  *
  * \brief Properties for a MPFA method.

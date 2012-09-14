@@ -19,8 +19,6 @@
  *****************************************************************************/
 /*!
  * \ingroup ImmiscibleBoxModel
- * \ingroup BoxProperties
- * \ingroup Properties
  * \file
  *
  * \brief Defines default values for the properties required by the

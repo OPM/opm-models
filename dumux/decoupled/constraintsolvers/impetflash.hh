@@ -24,8 +24,8 @@
  * \brief Determines the pressures and saturations of all fluid phases
  *        given the total mass of all components.
  */
-#ifndef DUMUX_COMPOSITIONAL_FLASH_HH
-#define DUMUX_COMPOSITIONAL_FLASH_HH
+#ifndef DUMUX_IMPET_FLASH_HH
+#define DUMUX_IMPET_FLASH_HH
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -45,7 +45,7 @@ namespace Dumux
  *  \tparam TypeTag The property Type Tag
  */
 template <class TypeTag>
-class CompositionalFlash
+class ImpetFlash
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar)      Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

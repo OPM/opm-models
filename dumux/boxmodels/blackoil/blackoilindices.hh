@@ -28,7 +28,6 @@
 namespace Dumux {
 /*!
  * \ingroup BlackOilBoxModel
- * \ingroup BoxIndices
  * \brief The indices for the isothermal black-oil model.
  */
 template <int PVOffset=0>

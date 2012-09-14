@@ -73,12 +73,10 @@ SET_BOOL_PROP(OutflowBaseProblem, VtkWriteMassFractions, true);
 
 
 /*!
- * \ingroup OnePTwoCBoxModel
  * \ingroup BoxTestProblems
  *
- * \brief Definition of a problem, for the 1p2c box problem:
- * Nitrogen is dissolved in the water phase and
- * is transported with the water flow from the left side to the right.
+ * \brief Problem where dissolved nitrogen is transported with the water 
+ *        phase from the left side to the right.
  *
  * The model domain is 1m times 1m with a discretization length of 0.05m
  * and homogeneous soil properties (\f$ \mathrm{K=10e-10, \Phi=0.4}\f$).
@@ -246,9 +244,6 @@ public:
     /*!
      * \brief Define the intrinsic permeability \f$[m^2]\f$.
      *
-     * \param element The current finite element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
@@ -257,9 +252,6 @@ public:
     /*!
      * \brief Define the porosity \f$[-]\f$.
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
@@ -268,9 +260,6 @@ public:
     /*!
      * \brief Define the tortuosity \f$[?]\f$.
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
     Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
@@ -279,9 +268,6 @@ public:
     /*!
      * \brief Define the dispersivity \f$[?]\f$.
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
      */
     template <class Context>
     Scalar dispersivity(const Context &context,

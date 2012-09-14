@@ -977,7 +977,7 @@ void FVPressure2P2C<TypeTag>::updateMaterialLawsInElement(const Element& element
     }
 
     //complete fluid state
-    CompositionalFlash<TypeTag> flashSolver;
+    ImpetFlash<TypeTag> flashSolver;
     flashSolver.concentrationFlash2p2c(fluidState,  Z1, pressure, problem().spatialParams().porosity(elementI), temperature_);
 
     // iterations part in case of enabled capillary pressure

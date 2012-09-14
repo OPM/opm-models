@@ -128,7 +128,7 @@ SET_INT_PROP(PowerInjectionBaseProblem, CellsZ, 1);
 }
 
 /*!
- * \ingroup ImmiscibleBoxProblems
+ * \ingroup BoxTestProblems
  * \brief 1D Problem with very fast injection of gas on the left.
  *
  * The velocity model is chosen in the .cc file for the problem. The
@@ -214,9 +214,6 @@ public:
     /*!
      * \brief Intrinsic permability
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return Intrinsic permeability
      */
     template <class Context>

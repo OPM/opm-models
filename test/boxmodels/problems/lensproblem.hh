@@ -148,7 +148,7 @@ SET_INT_PROP(LensBaseProblem, CellsZ, 16);
 }
 
 /*!
- * \ingroup ImmiscibleBoxProblems
+ * \ingroup BoxTestProblems
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  *
@@ -262,9 +262,6 @@ public:
     /*!
      * \brief Intrinsic permability
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return Intrinsic permeability
      */
     template <class Context>
@@ -280,9 +277,6 @@ public:
     /*!
      * \brief Porosity
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return Porosity
      */
      template <class Context>
@@ -292,9 +286,6 @@ public:
     /*!
      * \brief Function for defining the parameters needed by constitutive relationships (kr-Sw, pc-Sw, etc.).
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return the material parameters object
      */
     template <class Context>

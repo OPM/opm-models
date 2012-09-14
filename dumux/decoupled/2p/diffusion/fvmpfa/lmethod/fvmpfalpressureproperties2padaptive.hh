@@ -20,7 +20,6 @@
 
 /*!
  * \ingroup MPFA
- * \ingroup Properties
  * \file
  *
  * \brief Properties for the adaptive MPFA-L method.

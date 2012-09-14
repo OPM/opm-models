@@ -22,8 +22,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup BoxModel
  *
  * \brief Default properties for box models

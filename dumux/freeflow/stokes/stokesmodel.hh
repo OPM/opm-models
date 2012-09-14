@@ -1,10 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *                                                                           *
  *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Copyright (C) 2012 by Klaus Mosthaf                                     *
  *   Copyright (C) 2012 by Christoph Grueninger                              *
+ *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
  *   the Free Software Foundation, either version 2 of the License, or       *
@@ -39,7 +39,7 @@ namespace Dumux
  *
  * This model implements laminar Stokes flow of a single fluid, solving a momentum balance:
  * \f[
-%\frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} +
+\frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} +
 boldsymbol{\nabla} p_g
 - \boldsymbol{\nabla} \boldsymbol{\cdot} \left( 
   \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g + \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)

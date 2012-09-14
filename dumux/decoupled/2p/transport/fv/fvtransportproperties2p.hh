@@ -24,7 +24,6 @@
 
 /*!
  * \ingroup FVSaturation2p
- * \ingroup IMPETProperties
  */
 /*!
  * \file

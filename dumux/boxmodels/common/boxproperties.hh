@@ -20,8 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup BoxModel
  *
  * \brief Specify the shape functions, operator assemblers, etc

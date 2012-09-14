@@ -232,6 +232,7 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
     }
     return "";
 }
+//! \endcond
 
 /*!
  * \ingroup Start

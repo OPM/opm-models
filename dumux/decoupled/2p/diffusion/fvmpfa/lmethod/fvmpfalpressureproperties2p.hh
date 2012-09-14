@@ -20,7 +20,6 @@
 
 /*!
  * \ingroup MPFA
- * \ingroup Properties
  * \file
  *
  * \brief Properties for the MPFA-O method.

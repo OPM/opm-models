@@ -155,7 +155,7 @@ SET_INT_PROP(FingerBaseProblem, CellsZ, 1);
 }
 
 /*!
- * \ingroup ImmiscibleBoxProblems
+ * \ingroup BoxTestProblems
  * \brief Two-phase problem might sometimes featuring a saturation overshoot.
  *
  * This problem was proposed by Rainer Helmig.
@@ -164,6 +164,7 @@ template <class TypeTag>
 class FingerProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
+//!\cond 0
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -208,6 +209,7 @@ class FingerProblem
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+//!\endcond
 
 public:
     /*!
@@ -303,9 +305,6 @@ public:
     /*!
      * \brief Intrinsic permability
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return Intrinsic permeability
      */
     template <class Context>
@@ -315,9 +314,6 @@ public:
     /*!
      * \brief Porosity
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return Porosity
      */
      template <class Context>
@@ -327,9 +323,6 @@ public:
     /*!
      * \brief Function for defining the parameters needed by constitutive relationships (kr-Sw, pc-Sw, etc.).
      *
-     * \param element The current element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume.
      * \return the material parameters object
      */
     template <class Context>

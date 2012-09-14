@@ -45,7 +45,7 @@ template <class TypeTag>
 class BoxForchheimerBaseProblem;
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxForchheimerVelocity
  * \brief Specifies a velocity module which uses the Forchheimer relation.
  */
 template <class TypeTag>
@@ -57,7 +57,7 @@ struct BoxForchheimerVelocityModule
 };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxForchheimerVelocity
  * \brief Provides the defaults for the parameters required by the
  *        Forchheimer velocity approach.
  */
@@ -99,7 +99,7 @@ public:
 };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxForchheimerVelocity
  * \brief Provides the volume variables for the Forchheimer module
  */
 template <class TypeTag>
@@ -143,7 +143,7 @@ private:
 };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxForchheimerVelocity
  * \brief Provides the Forchheimer velocity module
  *
  * The commonly used Darcy relation looses its validity for Reynolds

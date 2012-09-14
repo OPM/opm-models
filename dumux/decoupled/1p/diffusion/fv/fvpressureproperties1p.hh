@@ -20,7 +20,6 @@
 
 /*!
  * \ingroup FV1p
- * \ingroup Properties
  */
 /*!
  * \file

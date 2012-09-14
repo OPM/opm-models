@@ -67,6 +67,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 }
 
 /*!
+ * \ingroup BoxTestProblems
  * \brief Helper class for grid instantiation of the lens problem.
  */
 #if HAVE_ALUGRID
@@ -267,7 +268,7 @@ private:
 template <class TypeTag>
 typename LensGridCreator<TypeTag>::Grid *LensGridCreator<TypeTag>::grid_;
 
-#else // ! HAVE_UG
+#else // ! HAVE_ALUGRID
 
 template <class TypeTag>
 class LensGridCreator
@@ -342,7 +343,7 @@ private:
 template <class TypeTag>
 Dune::YaspGrid<LENS_DIM> *LensGridCreator<TypeTag>::grid_;
 
-#endif // HAVE_UG
+#endif // HAVE_ALUGRID
 
 }
 

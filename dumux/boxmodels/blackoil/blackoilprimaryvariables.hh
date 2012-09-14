@@ -38,13 +38,9 @@
 namespace Dumux
 {
 /*!
- * \ingroup BLACK_OILModel
+ * \ingroup BlackOilModel
  *
- * \brief Represents the primary variables used in the M-phase,
- *        N-component box model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \brief Represents the primary variables used by the black-oil model.
  */
 template <class TypeTag>
 class BlackOilPrimaryVariables 

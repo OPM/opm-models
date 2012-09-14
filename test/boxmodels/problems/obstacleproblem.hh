@@ -110,7 +110,6 @@ SET_BOOL_PROP(ObstacleBaseProblem, EnableGravity, true);
 
 
 /*!
- * \ingroup MPNCModel
  * \ingroup BoxTestProblems
  * \brief Problem where liquid water is injected by means of a
  *        dirchlet condition on the lower right of the domain which have to go

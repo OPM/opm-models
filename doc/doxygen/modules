@@ -11,11 +11,7 @@
 	/*!
 	 * \ingroup Common
 	 * \defgroup Properties Property System
-         	 */
-	/*!
-	 * \ingroup Common
-	 * \defgroup Parameter Parameters
-	 */
+         */
 	/*!
 	 * \ingroup Common
 	 * \defgroup Start Starting the Simulation
@@ -30,19 +26,7 @@
 	 */
 	/*! 
 	 * \ingroup Common
-	 * \defgroup Linear Linear Solver Backends
-	 */
-	/*! 
-	 * \ingroup Common
-	 * \defgroup BC Boundary Conditions
-	 */
-	/*! 
-	 * \ingroup Common
-	 * \defgroup Valgrind Valgrind
-	 */
-	/*! 
-	 * \ingroup Common
-	 * \defgroup Exception Exceptions
+	 * \defgroup Linear Linear Solvers
 	 */
 	/*! 
 	 * \ingroup Common
@@ -52,10 +36,18 @@
 	 * \ingroup Common
 	 * \defgroup Math Elementary Math Functions
 	 */
+	/*! 
+	 * \ingroup Common
+	 * \defgroup Valgrind Valgrind Client Requests
+	 */
+	/*! 
+	 * \ingroup Common
+	 * \defgroup Exception Exceptions
+	 */
 
 /****************** Material ******************/
 /*!
- * \defgroup Material Material Properties and Laws
+ * \defgroup Material Material Properties
  */
 	/*!
 	 * \ingroup Material
@@ -64,16 +56,9 @@
 		/*!
 		 * \ingroup Components
 		 * \defgroup IAPWS IAPWS'97 Water
-         *
-         * This module implements the properties of water according to
-         * the 1997 specifications of the International Association
-         * for the Properties of Water and Steam. See:
-         * 
-         * Revised Release on the IAPWS Industrial Formulation 1997
-         * for the Thermodynamic Properties of Water and Steam,
-         * International Association for the Properties of Water and
-         * Steam, 2007. http://www.iapws.org/relguide/IF97-Rev.pdf
-		 */
+                 *
+                 * \copydoc Dumux::H2O
+                 */
 	/*!
 	 * \ingroup Material
 	 * \defgroup Binarycoefficients Binary Coefficients
@@ -81,10 +66,6 @@
 	/*!
 	 * \ingroup Material
 	 * \defgroup Fluidsystems Fluid Systems
-	 */
-	/*!
-	 * \ingroup Material
-	 * \defgroup SpatialParameters Spatial Parameters
 	 */
 	/*!
 	 * \ingroup Material
@@ -109,121 +90,69 @@
  	 */
 		/*!
 		 * \ingroup BoxModels
-		 * \defgroup OnePBoxModel One-phase
+		 * \defgroup ImmiscibleBoxModel Immiscible 
                  *
-                 * \copydetails Dumux::OnePBoxModel
+                 * \copydetails Dumux::ImmiscibleModel
 		 */
 		/*!
 		 * \ingroup BoxModels
-		 * \defgroup OnePTwoCBoxModel One-phase Two-component
+		 * \defgroup PvsBoxModel Compositional using Primary Variable Switching
                  *
-                 * \copydetails Dumux::OnePTwoCBoxModel
+                 * \copydetails Dumux::PvsModel
 		 */
 		/*!
 		 * \ingroup BoxModels
-		 * \defgroup TwoPBoxModel Two-phase 
+		 * \defgroup NcpBoxModel Compositional using Non-linear Complementarity Problems
                  *
-                 * \copydetails Dumux::TwoPModel
+                 * \copydetails Dumux::NcpModel
 		 */
 		/*!
 		 * \ingroup BoxModels
-		 * \defgroup TwoPNIModel Non-isothermal two-phase
-                 *
-                 * \copydetails Dumux::TwoPNIModel
-              	 */
-		/*!
-		 * \ingroup BoxModels
-		 * \defgroup TwoPTwoCModel Two-phase, two-component
-                 *
-                 * \copydetails Dumux::TwoPTwoCModel
-		 */
-		/*!
-		 * \ingroup BoxModels
-		 * \defgroup TwoPTwoCNIModel Non-isothermal two-phase, two-component
-                 *
-                 * \copydetails Dumux::TwoPTwoCNIModel
-		 */
-		/*!
-		 * \ingroup BoxModels
-                 * \defgroup ThreePThreeCModel Three-phase, three-component
-                 *
-                 * \copydetails Dumux::ThreePThreeCModel
-		 */
-		/*!
-		 * \ingroup BoxModels
-                 * \defgroup ThreePThreeCNIModel Non-isothermal three-phase, three-component
-                 *
-                 * \copydetails Dumux::ThreePThreeCNIModel
-		 */
-		/*!
-		 * \ingroup BoxModels
-		 * \defgroup MPNCModel M-phase N-component
-                 *
-                 * \copydetails Dumux::MPNCModel
-		 */
-		/*!
-		 * \ingroup BoxModels
-		 * \defgroup RichardsModel Richards
+		 * \defgroup RichardsModel Immiscible using the Richards Equation
                  *
                  * \copydetails Dumux::RichardsModel
 		 */
 		/*!
 		 * \ingroup BoxModels
-		 * \defgroup BoxStokesModel Stokes
+		 * \defgroup BoxStokesModel Compositional/Immiscible (Navier-)Stokes
                  *
                  * \copydetails Dumux::StokesModel
 		 */
-                /*!
-                 * \ingroup BoxModels
-                 * \defgroup BoxStokes2cModel Two-component Stokes
+	/*!
+ 	 * \ingroup BoxModel
+ 	 * \defgroup BoxModules Modules
+ 	 */
+		/*!
+		 * \ingroup BoxModules
+		 * \defgroup BoxDarcyVelocity Darcy Velocity Module 
                  *
-                 * \copydetails Dumux::Stokes2cModel
-                 */
-                /*!
-                 * \ingroup BoxModels
-                 * \defgroup BoxStokes2cniModel Non-isothermal two-component Stokes
-                 *
-                 * \copydetails Dumux::Stokes2cniModel
-                 */
+                 * \copydetails Dumux::BoxDarcyVelocityModule
+		 */
 
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxBaseProblems Base Problems
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxVolumeVariables Volume Variables
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxFluxVariables Flux Variables
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxLocalResidual Local Residual
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxLocalJacobian Local Jacobian
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxBoundaryTypes Boundary Types
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxIndices Indices
-	 */
-	/*!
-	 * \ingroup BoxModel
-	 * \defgroup BoxProperties Properties
-	 */
+		/*!
+		 * \ingroup BoxModules
+		 * \defgroup BoxForchheimerVelocity Forchheimer Velocity Module 
+                 *
+                 * \copydetails Dumux::BoxForchheimerVelocityModule
+		 */
+
+		/*!
+		 * \ingroup BoxModules
+		 * \defgroup BoxEnergy Energy Equation
+                 *
+                 * \copydetails Dumux::BoxMultiPhaseEnergyModule
+		 */
+
+		/*!
+		 * \ingroup BoxModules
+		 * \defgroup BoxVtk VTK Output Modules
+		 */
 	/*!
 	 * \ingroup BoxModel
 	 * \defgroup BoxTestProblems Test Problems
 	 */
 
-/****************** Sequential ******************/ 
+/****************** Semi-Implicit ******************/ 
 /*!
  * \defgroup Sequential Sequential Scheme: IMPET (Implicit Pressure Explicit Transport)
  */
@@ -242,7 +171,7 @@
 			*/
 				/*!
 			 	* \ingroup Pressure1p
-			 	* \defgroup FV1p Finite Volume
+			 	* \defgroup FV1p Finite Volumes
 			 	*/	
 		/*!
 		 * \ingroup IMPET
@@ -274,11 +203,11 @@
 		 */
 			/*!
 			 * \ingroup IMPEC
-			 * \defgroup multiphase Multiphase Compositional Models
+			 * \defgroup multiphase Compositional Multiphase Models
 			 */
 			/*!
 			 * \ingroup IMPEC
-			 * \defgroup multiphysics Multiphysics Compositional Models
+			 * \defgroup multiphysics Compositional Multiphysics Models
 			 */
 	/*!
 	 * \ingroup Sequential

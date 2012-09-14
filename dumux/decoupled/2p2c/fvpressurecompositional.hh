@@ -24,7 +24,7 @@
 // dumux environment
 #include "dumux/common/math.hh"
 #include <dumux/decoupled/common/fv/fvpressure.hh>
-#include <dumux/decoupled/constraintsolvers/compositionalflash.hh>
+#include <dumux/decoupled/constraintsolvers/impetflash.hh>
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
 #include <dumux/io/vtkmultiwriter.hh>
 
@@ -467,7 +467,7 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
         CellData& cellData = problem_.variables().cellData(globalIdx);
         // acess the fluid state and prepare for manipulation
         FluidState& fluidState = cellData.manipulateFluidState();
-        CompositionalFlash<TypeTag> flashSolver;
+        ImpetFlash<TypeTag> flashSolver;
 
         // initial conditions
         PhaseVector pressure(0.);
@@ -649,7 +649,7 @@ void FVPressureCompositional<TypeTag>::volumeDerivatives(const GlobalPosition& g
 
     // initialize an Fluid state and a flash solver
     FluidState updFluidState;
-    CompositionalFlash<TypeTag> flashSolver;
+    ImpetFlash<TypeTag> flashSolver;
 
     /**********************************
      * a) get necessary variables

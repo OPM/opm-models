@@ -219,7 +219,7 @@ inline void SetDefined(const T &value)
  * \tparam T The type of the object which valgrind should consider as defined
  *
  * \param value Pointer to the first object of the array.
- * \param size The size of the array in number of objects
+ * \param n The size of the array in number of objects
  */
 template <class T>
 inline void SetDefined(const T *value, int n)

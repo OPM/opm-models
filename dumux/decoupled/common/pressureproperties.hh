@@ -34,7 +34,6 @@
 
 /*!
  * \ingroup Sequential
- * \ingroup IMPETProperties
  */
 /*!
  * \file

@@ -28,8 +28,8 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
+#if HAVE_ALUGRDID
+#include <dune/grid/alugrid.hh>
 #else
 #include <dune/grid/yaspgrid.hh>
 #endif
@@ -69,7 +69,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 /*!
  * \brief Helper class for grid instantiation of the finger problem.
  */
-#if HAVE_UG
+#if HAVE_ALUGRDID
 template <class TypeTag>
 class FingerGridCreator
 {
@@ -78,7 +78,7 @@ class FingerGridCreator
     enum { dim = FINGER_DIM };
 
 public:
-    typedef Dune::UGGrid<FINGER_DIM> Grid;
+    typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::cube, Dune::nonconforming> Grid;
 
     /*!
      * \brief Create the Grid
@@ -104,7 +104,7 @@ public:
 
         unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
 
-        Dune::GridFactory<Dune::UGGrid<dim> > factory(grid_);
+        Dune::GridFactory<Grid> factory(grid_);
         
         if (dim == 3) {
             Dune::FieldVector<double,dim> pos;
@@ -263,9 +263,9 @@ private:
 };
 
 template <class TypeTag>
-Dune::UGGrid<FINGER_DIM> *FingerGridCreator<TypeTag>::grid_;
+typename FingerGridCreator<TypeTag>::Grid *FingerGridCreator<TypeTag>::grid_;
 
-#else // ! HAVE_UG
+#else // ! HAVE_ALUGRDID
 
 template <class TypeTag>
 class FingerGridCreator
@@ -340,7 +340,7 @@ private:
 template <class TypeTag>
 Dune::YaspGrid<FINGER_DIM> *FingerGridCreator<TypeTag>::grid_;
 
-#endif // HAVE_UG
+#endif // HAVE_ALUGRDID
 
 }
 

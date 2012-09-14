@@ -43,7 +43,6 @@ namespace Dumux
 {
 /*!
  * \ingroup BoxModel
- * \ingroup BoxLocalJacobian
  *
  * \brief Calculates the Jacobian of the local residual for box models
  *

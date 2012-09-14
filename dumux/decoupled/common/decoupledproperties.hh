@@ -31,7 +31,6 @@
 
 /*!
  * \ingroup Sequential
- * \ingroup IMPETProperties
  */
 /*!
  * \file
@@ -85,7 +84,7 @@ NEW_PROP_TAG( VtkOutputLevel); //! VtkOutputLevel is equal to zero (default) onl
 
 #include <dumux/common/timemanager.hh>
 #include <dumux/decoupled/common/boundarytypes.hh>
-#include<dumux/common/boundaryconditions.hh>
+#include <dumux/decoupled/common/boundaryconditions.hh>
 
 namespace Dumux
 {

@@ -25,15 +25,13 @@
 #ifndef BOUNDARY_TYPES_HH
 #define BOUNDARY_TYPES_HH
 
-
-
 #include <dumux/common/valgrind.hh>
 
 namespace Dumux
 {
 
 /*!
- * \ingroup BC
+ * \ingroup Sequential
  * \brief Class to specify the type of a boundary.
  */
 template <int numEq>

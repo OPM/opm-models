@@ -48,7 +48,7 @@ SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
 }
 
 /*!
- * \ingroup BoxModels
+ * \ingroup BoxVtk
  *
  * \brief VTK output module for the temperature in which assume
  *        thermal equilibrium

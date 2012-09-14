@@ -51,7 +51,7 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 }
 
 /*!
- * \ingroup BoxModels
+ * \ingroup BoxVtk
  *
  * \brief VTK output module for quantities which make sense for models which
  *        assume thermal equilibrium.

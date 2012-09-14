@@ -34,7 +34,6 @@ namespace Dumux
 {
 /*!
  * \ingroup BlackOilBoxModel
- * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the Jacobian matrix for problems
  *        using the black-oil box model.
  */
@@ -62,8 +61,6 @@ public:
      *        (e.g. phase mass) within a finite sub-control volume.
      *
      *  \param result The phase mass within the sub-control volume
-     *  \param scvIdx The SCV (sub-control-volume) index
-     *  \param usePrevSol Evaluate function with solution of current or previous time step
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -89,8 +86,6 @@ public:
      * \brief Evaluates the mass flux over a face of a sub-control
      *        volume.
      *
-     * \param flux The flux over the SCV (sub-control-volume) face for each phase
-     * \param faceIdx The index of the SCV face
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -118,8 +113,6 @@ public:
     /*!
      * \brief Calculate the source term of the equation
      *
-     * \param q The source/sink in the SCV for each phase
-     * \param localVertexIdx The index of the SCV
      *
      */
     void computeSource(RateVector &source,

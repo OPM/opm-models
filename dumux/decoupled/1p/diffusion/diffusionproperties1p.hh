@@ -25,7 +25,6 @@
 
 /*!
  * \ingroup Pressure1p
- * \ingroup IMPETProperties
  */
 /*!
  * \file

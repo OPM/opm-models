@@ -79,16 +79,6 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
-     *
-     * \param priVars The primary variables as a vector for the finite
-     *                volume.
-     * \param problem The physical problem which needs to be solved.
-     * \param element The DUNE Codim<0> enitity which intersects
-     *                the control volume of the box method
-     * \param elemGeom The element's finite volume geometry
-     * \param scvIdx The local index of the sub control volume inside the element
-     * \param isOldSol Specifies whether the solution is from
-     *                 the previous time step or from the current one
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,

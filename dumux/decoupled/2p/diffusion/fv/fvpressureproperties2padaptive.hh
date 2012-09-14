@@ -20,7 +20,6 @@
 
 /*!
  * \ingroup FVPressure2p
- * \ingroup IMPETProperties
  */
 /*!
  * \file

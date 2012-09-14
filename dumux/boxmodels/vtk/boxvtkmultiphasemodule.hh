@@ -71,7 +71,7 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
 }
 
 /*!
- * \ingroup BoxModels
+ * \ingroup BoxVtk
  *
  * \brief VTK output module for quantities which make sense for all
  *        models which deal with multiple fluid phases in porous media

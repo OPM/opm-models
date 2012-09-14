@@ -36,7 +36,6 @@ namespace Dumux
 {
 /*!
  * \ingroup RichardsModel
- * \ingroup BoxLocalResidual
  * \brief Element-wise calculation of the residual for the Richards box model.
  */
 template<class TypeTag>
@@ -63,9 +62,6 @@ public:
      * This function should not include the source and sink terms.
      *
      * \param result Stores the average mass per unit volume for each phase \f$\mathrm{[kg/m^3]}\f$
-     * \param scvIdx The sub control volume index of the current element
-     * \param usePrevSol Calculate the storage term of the previous solution
-     *                   instead of the model's current solution.
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -84,12 +80,6 @@ public:
     /*!
      * \brief Evaluates the mass flux over a face of a subcontrol
      *        volume.
-     *
-     *
-     * \param flux Stores the total mass fluxes over a sub-control volume face
-     *             of the current element \f$\mathrm{[kg/s]}\f$
-     * \param scvfIdx The sub control volume face index inside the current
-     *                element
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -114,11 +104,6 @@ public:
 
     /*!
      * \brief Calculate the source term of the equation
-     *
-     * \param q Stores the average source term of all phases inside a
-     *          sub-control volume of the current element \f$\mathrm{[kg/(m^3 * s)]}\f$
-     * \param scvIdx The sub control volume index inside the current
-     *               element
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

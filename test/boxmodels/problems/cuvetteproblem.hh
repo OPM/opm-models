@@ -112,7 +112,6 @@ public:
 
 
 /*!
- * \ingroup ThreePThreeCNIBoxModel
  * \ingroup BoxTestProblems
  * \brief Non-isothermal gas injection problem where a gas (e.g. steam/air)
  *        is injected into a unsaturated porous medium with a residually
@@ -286,9 +285,6 @@ public:
      * \brief Apply the intrinsic permeability tensor to a pressure
      *        potential gradient.
      *
-     * \param element The current finite element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx, int timeIdx) const
@@ -306,10 +302,6 @@ public:
     /*!
      * \brief Define the porosity \f$[-]\f$ of the spatial parameters
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
-     *                    the porosity needs to be defined
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
@@ -324,9 +316,6 @@ public:
     /*!
      * \brief return the parameter object for the material law which depends on the position
      *
-     * \param element The current finite element
-     * \param fvElemGeom The current finite volume geometry of the element
-     * \param scvIdx The index of the sub-control volume
      */
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
@@ -352,10 +341,6 @@ public:
      *
      * This is only required for non-isothermal models.
      *
-     * \param element The finite element
-     * \param fvElemGeom The finite volume geometry
-     * \param scvIdx The local index of the sub-control volume where
-     *                    the heat capacity needs to be defined
      */
     template <class Context>
     Scalar heatCapacitySolid(const Context &context, int spaceIdx, int timeIdx) const
@@ -430,9 +415,6 @@ public:
      * \brief Evaluate the initial value for a control volume.
      *
      * \param values The initial values for the primary variables
-     * \param element The finite element
-     * \param fvElemGeom The finite-volume geometry in the box scheme
-     * \param scvIdx The local vertex index
      *
      * For this method, the \a values parameter stores primary
      * variables.

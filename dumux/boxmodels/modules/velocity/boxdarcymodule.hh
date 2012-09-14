@@ -45,7 +45,7 @@ template <class TypeTag>
 class BoxDarcyBaseProblem;
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxDarcyVelocity
  * \brief Specifies a velocity module which uses the Darcy relation.
  */
 template <class TypeTag>
@@ -57,7 +57,7 @@ struct BoxDarcyVelocityModule
 };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxDarcyVelocity
  * \brief Provides the defaults for the parameters required by the
  *        Darcy velocity approach.
  */
@@ -66,7 +66,7 @@ class BoxDarcyBaseProblem
 { };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxDarcyVelocity
  * \brief Provides the volume variables for the Darcy velocity module
  */
 template <class TypeTag>
@@ -79,7 +79,7 @@ protected:
 };
 
 /*!
- * \ingroup BoxModel
+ * \ingroup BoxDarcyVelocity
  * \brief Provides the Darcy velocity module
  *
  * The commonly used Darcy relation looses its validity for Reynolds

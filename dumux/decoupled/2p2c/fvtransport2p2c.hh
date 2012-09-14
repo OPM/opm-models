@@ -24,7 +24,7 @@
 #define DUMUX_FVTRANSPORT2P2C_HH
 
 #include <dumux/decoupled/2p2c/2p2cproperties.hh>
-#include <dumux/decoupled/constraintsolvers/compositionalflash.hh>
+#include <dumux/decoupled/constraintsolvers/impetflash.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dumux/common/math.hh>
 
@@ -812,7 +812,7 @@ void FVTransport2P2C<TypeTag>::evalBoundary(GlobalPosition globalPosFace,
                                             PhaseVector &pressBound)
 {
     // prepare a flash solver
-    CompositionalFlash<TypeTag> flashSolver;
+    ImpetFlash<TypeTag> flashSolver;
 
     const ElementPointer eIt= intersection.inside();
     // read boundary values

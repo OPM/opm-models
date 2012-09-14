@@ -38,8 +38,6 @@
 
 
 /*!
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup BoxNcpModel
  * \file
  * \brief  Default properties for the compositional NCP box model.

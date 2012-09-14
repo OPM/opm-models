@@ -20,8 +20,6 @@
  * \file
  *
  * \ingroup BlackOilBoxModel
- * \ingroup BoxProperties
- * \ingroup Properties
  *
  * \brief Defines default values for the properties required by the
  *        twophase box model.

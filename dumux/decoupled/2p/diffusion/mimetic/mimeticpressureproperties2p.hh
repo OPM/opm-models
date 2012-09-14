@@ -19,7 +19,6 @@
  *****************************************************************************/
 /*!
  * \ingroup MimeticPressure2p
- * \ingroup IMPETProperties
  */
 /*!
  * \file

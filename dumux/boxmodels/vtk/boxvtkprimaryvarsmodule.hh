@@ -43,7 +43,7 @@ SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
 }
 
 /*!
- * \ingroup BoxModels
+ * \ingroup BoxVtk
  *
  * \brief VTK output module for the fluid composition
  */

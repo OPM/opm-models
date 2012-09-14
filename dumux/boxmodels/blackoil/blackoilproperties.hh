@@ -19,8 +19,6 @@
 /*!
  * \file
  *
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup BlackOilBoxModel
  *
  * \brief Defines the properties required for the twophase BOX model.

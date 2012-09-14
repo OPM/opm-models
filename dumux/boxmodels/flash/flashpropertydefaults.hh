@@ -18,8 +18,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup FlashModel
  *
  * \brief Defines default values for most properties required by the

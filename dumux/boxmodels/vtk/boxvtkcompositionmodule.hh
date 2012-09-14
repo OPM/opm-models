@@ -57,7 +57,7 @@ SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
 }
 
 /*!
- * \ingroup BoxModels
+ * \ingroup BoxVtk
  *
  * \brief VTK output module for the fluid composition
  *

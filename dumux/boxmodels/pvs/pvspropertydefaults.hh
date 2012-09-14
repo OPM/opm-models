@@ -20,8 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup Properties
- * \ingroup BoxProperties
  * \ingroup PvsModel
  *
  * \brief Defines default values for most properties required by the

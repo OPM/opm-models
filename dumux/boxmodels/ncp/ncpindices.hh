@@ -27,7 +27,6 @@ namespace Dumux
 {
 /*!
  * \ingroup NcpModel
- * \ingroup BoxIndices
  * \brief The primary variable and equation indices for the Ncp
  *        model.
  */

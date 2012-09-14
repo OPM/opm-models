@@ -34,7 +34,6 @@ namespace Dumux
 {
 /*!
  * \ingroup ImmiscibleBoxModel
- * \ingroup BoxIndices
  * \brief The indices for the isothermal two-phase model.
  */
 template <class TypeTag, int PVOffset>

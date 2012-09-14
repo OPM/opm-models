@@ -35,6 +35,7 @@ NEW_PROP_TAG(HeatConductionLawParams);
 }
 
 /*!
+ * \ingroup BoxEnergy
  * \brief Provides the indices required for consideration of the energy equation.
  */
 template <int PVOffset, bool enableEnergy>
@@ -61,6 +62,7 @@ protected:
 };
 
 /*!
+ * \ingroup BoxEnergy
  * \brief Provides the auxiliary methods required for consideration of the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
@@ -161,9 +163,6 @@ public:
      * \brief Evaluates the advective energy fluxver a face of a
      *        subcontrol volume and adds the result in the flux vector.
      *
-     * \param flux The advective flux over the SCV (sub-control-volume) face for each component
-     * \param fluxData The flux variables at the current SCV face
-     *
      * This method is called by compute flux (base class)
      */
     template <class Context>
@@ -176,9 +175,6 @@ public:
     /*!
      * \brief Adds the diffusive heat flux to the flux vector over
      *        the face of a sub-control volume.
-     *
-     * \param flux The diffusive flux over the SCV (sub-control-volume) face for each conservation quantity (mass, energy)
-     * \param fluxData The flux variables at the current SCV face
      *
      * This method is called by compute flux (base class)
      */
@@ -337,9 +333,6 @@ public:
      * \brief Evaluates the advective energy fluxver a face of a
      *        subcontrol volume and adds the result in the flux vector.
      *
-     * \param flux The advective flux over the SCV (sub-control-volume) face for each component
-     * \param fluxData The flux variables at the current SCV face
-     *
      * This method is called by compute flux (base class)
      */
     template <class Context>
@@ -373,9 +366,6 @@ public:
      * \brief Adds the diffusive heat flux to the flux vector over
      *        the face of a sub-control volume.
      *
-     * \param flux The diffusive flux over the SCV (sub-control-volume) face for each conservation quantity (mass, energy)
-     * \param fluxData The flux variables at the current SCV face
-     *
      * This method is called by compute flux (base class)
      */
     template <class Context>
@@ -394,7 +384,8 @@ public:
 };
 
 /*!
- * \brief Provides the volumetric quantities for the energy equation.
+ * \ingroup BoxEnergy
+ * \brief Provides the volumetric quantities required for the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
 class BoxMultiPhaseEnergyVolumeVariables;
@@ -519,6 +510,7 @@ private:
 };
 
 /*!
+ * \ingroup BoxEnergy
  * \brief Provides the quantities required to calculate energy fluxes.
  */
 template <class TypeTag, bool enableEnergy>

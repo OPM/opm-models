@@ -347,7 +347,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
         Scalar Z1 = cellDataI.massConcentration(wCompIdx) / sumC;
         // initialize simple fluidstate object
         PseudoOnePTwoCFluidState<TypeTag> pseudoFluidState;
-        CompositionalFlash<TypeTag> flashSolver;
+        ImpetFlash<TypeTag> flashSolver;
         flashSolver.concentrationFlash1p2c(pseudoFluidState, Z1, p_, cellDataI.subdomain(),
                 problem().temperatureAtPos(elementI.geometry().center()));
 
@@ -809,7 +809,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::update1pMaterialLawsInElement(const El
             + cellData.massConcentration(nCompIdx);
     Scalar Z1 = cellData.massConcentration(wCompIdx)/ sumConc;
 
-    CompositionalFlash<TypeTag> flashSolver;
+    ImpetFlash<TypeTag> flashSolver;
     flashSolver.concentrationFlash1p2c(pseudoFluidState, Z1, pressure, presentPhaseIdx, problem().temperatureAtPos(globalPos));
 
     // write stuff in fluidstate

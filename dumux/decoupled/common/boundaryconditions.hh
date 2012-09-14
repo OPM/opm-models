@@ -27,7 +27,7 @@
 namespace Dumux
 {
 /*!
- * \ingroup BC
+ * \ingroup Sequential
  */
 /**
 * \brief Define a class containing boundary condition flags
