@@ -19,7 +19,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Writes the intermediate solutions during the Newton scheme
  *        for models using the box scheme

@@ -18,7 +18,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup RichardsModel
  * \file
  *
  * \brief Contains the default definitions for the properties required
@@ -43,10 +42,7 @@
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
-namespace Dumux
-{
-// \{
-
+namespace Dumux {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Properties values
@@ -169,9 +165,7 @@ public:
                                                 NonwettingPhase> type;
 };
 
-// \}
-}
-
-} // end namepace
+} // end namepace Properties
+} // end namepace Dumux
 
 #endif

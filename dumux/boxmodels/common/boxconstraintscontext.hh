@@ -18,7 +18,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Represents all quantities which available for calculating constraints
  */
@@ -30,8 +29,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BoxModel

@@ -20,8 +20,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup IMPEC
- *
  * \file
  *
  * \brief Defines the properties required for the decoupled 2p2c models.
@@ -181,8 +179,8 @@ private:
 
 public:
     // Component indices
-    static const int wPhaseIdx = FluidSystem::wPhaseIdx;
-    static const int nPhaseIdx = FluidSystem::nPhaseIdx;
+    static const int wPhaseIdx = 0;
+    static const int nPhaseIdx = 1;
 
     // Component indices
     static const int wCompIdx = wPhaseIdx; //!< Component index equals phase index

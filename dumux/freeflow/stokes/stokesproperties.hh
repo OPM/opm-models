@@ -18,23 +18,18 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup BoxStokesModel
- *
  * \file
  *
  * \brief Defines the properties required for the Stokes box model.
  */
-
-#ifndef DUMUX_STOKESPROPERTIES_HH
-#define DUMUX_STOKESPROPERTIES_HH
+#ifndef DUMUX_STOKES_PROPERTIES_HH
+#define DUMUX_STOKES_PROPERTIES_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+namespace Properties {
 
-namespace Properties
-{
 //////////////////////////////////////////////////////////////////
 // Type tags
 //////////////////////////////////////////////////////////////////

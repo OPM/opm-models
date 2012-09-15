@@ -58,7 +58,7 @@ NEW_PROP_TAG(TimeManager);
 
 //! \cond 0
 /*!
- * \ingroup Start
+ * \ingroup Startup
  *
  * \brief Prints the runtime parameters after a SIGINT signal was retrieved
  */
@@ -86,7 +86,7 @@ void printRuntimeParameters(int signum)
 }
 
 /*!
- * \ingroup Start
+ * \ingroup Startup
  *
  * \brief Prints the default usage message for the startWithParameters() function
  */
@@ -121,7 +121,7 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
 }
 
 /*!
- * \ingroup Start
+ * \ingroup Startup
  * \brief Read the command line arguments and write them into the parameter tree.
  *        Do some syntax checks.
  *
@@ -235,7 +235,7 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
 //! \endcond
 
 /*!
- * \ingroup Start
+ * \ingroup Startup
  *
  * \brief Provides a main function which reads in parameters from the
  *        command line and a parameter file.

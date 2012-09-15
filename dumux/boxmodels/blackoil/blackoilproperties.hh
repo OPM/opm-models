@@ -19,8 +19,6 @@
 /*!
  * \file
  *
- * \ingroup BlackOilBoxModel
- *
  * \brief Defines the properties required for the twophase BOX model.
  */
 #ifndef DUMUX_BLACK_OIL_PROPERTIES_HH
@@ -32,9 +30,11 @@
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 
 namespace Dumux {
+
 ////////////////////////////////
 // properties
 ////////////////////////////////
+
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Type tags

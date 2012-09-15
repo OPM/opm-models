@@ -1,0 +1,281 @@
+/*!
+ * \file
+ *
+ * \brief This file contains all module definitions for the doxygen documentation.
+ */
+
+/****************** Common ******************/
+/*!
+ * \defgroup Common Common Infrastucture
+ * \brief Common Infrastucture
+ */
+    /*!
+     * \ingroup Common
+     * \defgroup PropertySystem Property System
+     * \brief The Property System
+     *
+     * \copydetails propertysystem.hh
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Startup Startup
+     * \brief Starting the Program
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup TimeManager Time
+     * \brief Controlling the Simulation Time
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Newton Non-Linear Solver
+     * \brief The Non-Linear Solver (Newton)
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Linear Linear Solvers
+     * \brief Linear Solvers
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Spline Splines
+     * \brief Splines
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Math Math 
+     * \brief Basic Mathematical Functions
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Valgrind Valgrind
+     * \brief Valgrind Client Requests
+     */
+    /*!
+     * \ingroup Common
+     * \defgroup Exception Exceptions
+     * \brief C++ Runtime Exceptions
+     */
+
+/****************** Material ******************/
+/*!
+ * \defgroup Material Material Properties
+ * \brief Material Properties
+ */
+    /*!
+     * \ingroup Material
+     * \defgroup Components Components
+     * \brief Components
+     */
+        /*!
+         * \ingroup Components
+         * \defgroup IAPWS IAPWS'97 Water
+         * \brief IAPWS'97 Water
+         *
+         * \copydetails Dumux::H2O
+         */
+    /*!
+     * \ingroup Material
+     * \defgroup Binarycoefficients Binary Coefficients
+     * \brief Binary Coefficients
+     */
+    /*!
+     * \ingroup Material
+     * \defgroup Fluidsystems Fluid Systems
+     * \brief Fluid Systems
+     */
+    /*!
+     * \ingroup Material
+     * \defgroup fluidmatrixinteractions Fluid-Matrix Interactions
+     * \brief Fluid-Matrix Interactions
+     */
+        /*!
+         * \ingroup fluidmatrixinteractions
+         * \defgroup fluidmatrixinteractionslaws Fluid-Matrix Interaction Relations
+         * \brief Laws for Fluid-Matrix Interactions
+         */
+         /*!
+         * \ingroup fluidmatrixinteractions
+         * \defgroup fluidmatrixinteractionsparams Parameters for Fluid-Matrix Interaction Relations
+         * \brief Parameters for Fluid-Matrix Interaction Relations
+         */
+
+/****************** Fully Implicit ******************/
+/*!
+ * \defgroup BoxModel Box Scheme
+ * \brief Fully Implicit Vertex Centered Finite Volune Scheme
+ */
+    /*!
+     * \ingroup BoxModel
+     * \defgroup BoxModels Models
+     * \brief Models
+     */
+        /*!
+         * \ingroup BoxModels
+         * \defgroup ImmiscibleBoxModel Immiscible
+         * \brief Immiscible Multi-Phase Model
+         *
+         * \copydetails Dumux::ImmiscibleModel
+         */
+         /*!
+          * \ingroup BoxModels
+          * \defgroup PvsBoxModel PVS
+          * \brief Compositional Model Using Primary Variable Switching
+          *
+          * \copydetails Dumux::PvsModel
+          */
+         /*!
+          * \ingroup BoxModels
+          * \defgroup NcpBoxModel NCP
+          * \brief Compositional Model Solving Non-linear Complementarity Problems
+          *
+          * \copydetails Dumux::NcpModel
+          */
+         /*!
+          * \ingroup BoxModels
+          * \defgroup BlackOilBoxModel Black Oil
+          * \brief Partially Miscible Model Based on the Black Oil Assumptions
+          *
+          * \copydetails Dumux::BlackOilModel
+          */
+         /*!
+          * \ingroup BoxModels
+          * \defgroup RichardsModel Richards
+          * \brief Immiscible Model Using the Richards Equation
+          *
+          * \copydetails Dumux::RichardsModel
+          */
+         /*!
+          * \ingroup BoxModels
+          * \defgroup BoxStokesModel (Navier-)Stokes
+          * \brief Compositional/Immiscible Model for the (Navier-)Stokes Equations
+          *
+          * \copydetails Dumux::StokesModel
+          */
+      /*!
+       * \ingroup BoxModel
+       * \defgroup BoxModules Modules
+       * \brief Modules
+       */
+          /*!
+           * \ingroup BoxModules
+           * \defgroup BoxDarcyVelocity Darcy Velocity
+           * \brief Darcy Velocity Module
+           *
+           * \copydetails Dumux::BoxDarcyVelocityModule
+           */
+
+          /*!
+           * \ingroup BoxModules
+           * \defgroup BoxForchheimerVelocity Forchheimer Velocity
+           * \brief Forchheimer Velocity Module
+           *
+           * \copydetails Dumux::BoxForchheimerVelocityModule
+           */
+
+          /*!
+           * \ingroup BoxModules
+           * \defgroup BoxEnergy Energy
+           * \brief Energy Equation
+           *
+           * \copydetails DoxyEnergyModule
+           */
+
+          /*!
+           * \ingroup BoxModules
+           * \defgroup BoxVtk VTK
+           * \brief VTK Output Modules
+           */
+    /*!
+     * \ingroup BoxModel
+     * \defgroup BoxTestProblems Test Problems
+     * \brief Test Problems
+     */
+
+/****************** Semi-Implicit ******************/
+/*!
+ * \defgroup Sequential Semi-Implicit Models
+ * \brief IMPET (Implicit Pressure Explicit Transport)
+ */
+
+    /*!
+     * \ingroup Sequential
+     * \defgroup IMPET Models
+     * \brief Models
+     */
+         /*!
+          * \ingroup IMPET
+          * \defgroup OnePhase Single Phase
+          * \brief Single Phase (finite volumes)
+          */
+              /*!
+               * \ingroup OnePhase
+               * \defgroup Pressure1p Pressure Equation
+               * \brief Pressure Equation
+               */
+                   /*!
+                    * \ingroup Pressure1p
+                    * \defgroup FV1p Finite Volumes
+                    * \brief Finite Volumes Discretization
+                    */
+        /*!
+         * \ingroup IMPET
+         * \defgroup IMPES IMPES
+         * \brief Immiscible IMPET
+         */
+             /*!
+              * \ingroup IMPES
+              * \defgroup Pressure2p Pressure Equation
+              * \brief Pressure Equation for IMPES
+              */
+                  /*!
+                   * \ingroup Pressure2p
+                   * \defgroup FVPressure2p Finite Volumes
+                   * \brief Finite Volumes
+                   */
+                  /*!
+                   * \ingroup Pressure2p
+                   * \defgroup MimeticPressure2p Mimetic Finite Differences
+                   * \brief Mimetic Finite Differences
+                   */
+             /*!
+              * \ingroup IMPES
+              * \defgroup Saturation2p Saturation Transport
+              * \brief Saturation Transport
+              */
+                  /*!
+                   * \ingroup Saturation2p
+                   * \defgroup FVSaturation2p Finite Volumes
+                   * \brief Finite Volumes
+                   */
+        /*!
+         * \ingroup IMPET
+         * \defgroup IMPEC IMPEC
+         * \brief Miscible IMPET
+         */
+            /*!
+             * \ingroup IMPEC
+             * \defgroup multiphase Multiphase Models
+             * \brief Compositional Multiphase Models
+             */
+            /*!
+             * \ingroup IMPEC
+             * \defgroup multiphysics Multiphysics Models
+             * \brief Compositional Multiphysics Models
+             */
+    /*!
+     * \ingroup Sequential
+     * \defgroup IMPETproblems Base Problems
+     * \brief Base Problems
+     */
+    /*!
+     * \ingroup Sequential
+     * \defgroup IMPETProperties Properties
+     * \brief Properties
+     */
+    /*!
+     * \ingroup Sequential
+     * \defgroup IMPETtests Test Problems
+     * \brief Test Problems
+     */
+

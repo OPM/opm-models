@@ -17,6 +17,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \brief  Defines the properties required for the compositional NCP box model.
+ */
 #ifndef DUMUX_NCP_PROPERTIES_HH
 #define DUMUX_NCP_PROPERTIES_HH
 
@@ -26,15 +30,8 @@
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
-/*!
- * \ingroup BoxNcpModel
- * \file
- * \brief  Defines the properties required for the compositional NCP box model.
- */
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Type tags
 //////////////////////////////////////////////////////////////////

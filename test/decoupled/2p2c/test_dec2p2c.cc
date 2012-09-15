@@ -23,8 +23,7 @@
 /*!
  * \file
  *
- * \ingroup IMPETtests
- * \brief test for the sequential 2p2c model
+ * \brief Source file of a test for the sequential 2p2c model
  */
 #include "config.h"
 

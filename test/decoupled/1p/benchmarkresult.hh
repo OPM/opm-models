@@ -22,19 +22,17 @@
 /*!
  * \file
  *
- * \ingroup IMPETtests
  * \brief Calculate errors for a benchmark problem.
  */
-#ifndef DUMUX_BENCHMARKRESULT_HH
-#define DUMUX_BENCHMARKRESULT_HH
+#ifndef DUMUX_BENCHMARK_RESULT_HH
+#define DUMUX_BENCHMARK_RESULT_HH
 
 #include <dumux/decoupled/common/onemodelproblem.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \brief calculate errors for a benchmark problem

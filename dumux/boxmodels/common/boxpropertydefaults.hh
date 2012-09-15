@@ -22,7 +22,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Default properties for box models
  */
@@ -254,12 +253,12 @@ SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
  * \brief Set the algorithm used for the linear solver.
  *
  * Possible choices are:
- * - SolverWrapperLoop: A fixpoint solver
- * - SolverWrapperGradients: Steepest descent
- * - SolverWrapperCG: Conjugated gradients
- * - SolverWrapperBiCGStab: The stabilized bi-conjugated gradients
- * - SolverWrapperMinRes: The minimized residual algorithm
- * - SolverWrapperGMRes: A restarted GMRES solver
+ * - \c SolverWrapperLoop: A fixpoint solver (using the Richardson iteration)
+ * - \c SolverWrapperGradients: The steepest descent solver
+ * - \c SolverWrapperCG: A conjugated gradients solver
+ * - \c SolverWrapperBiCGStab: A stabilized bi-conjugated gradients solver
+ * - \c SolverWrapperMinRes: A solver based on the  minimized residual algorithm
+ * - \c SolverWrapperGMRes: A restarted GMRES solver
  */
 SET_TYPE_PROP(BoxModel, 
               LinearSolverWrapper,
@@ -269,11 +268,11 @@ SET_TYPE_PROP(BoxModel,
  * \brief Set the algorithm used for as the preconditioner for the linear solver.
  *
  * Possible choices are:
- * - PreconditionerWrapperJacobi: A simple Jacobi preconditioner
- * - PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
- * - PreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
- * - PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
- * - PreconditionerWrapperILU: An ILU(n) preconditioner
+ * - \c PreconditionerWrapperJacobi: A simple Jacobi preconditioner
+ * - \c PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
+ * - \c PreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
+ * - \c PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
+ * - \c PreconditionerWrapperILU: An ILU(n) preconditioner
  */
 SET_TYPE_PROP(BoxModel, 
               PreconditionerWrapper,

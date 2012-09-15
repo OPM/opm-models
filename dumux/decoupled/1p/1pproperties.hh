@@ -18,9 +18,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
- * \ingroup OnePhase
  * \file
  *
  * \brief Defines the properties required for the single phase sequential model.

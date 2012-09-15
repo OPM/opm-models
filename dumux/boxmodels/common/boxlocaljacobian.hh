@@ -20,7 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Caculates the Jacobian of the local residual for box models
  */
@@ -39,8 +38,8 @@
 
 #include <limits>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxModel
  *

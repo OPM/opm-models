@@ -24,10 +24,9 @@
 #ifndef DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH
 #define DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH
 
-#include "n2constviscosity.hh"
-
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
+#include <dumux/material/components/n2.hh>
 #include <dumux/freeflow/stokes/stokesmodel.hh>
 
 #if HAVE_ALUGRID
@@ -71,7 +70,7 @@ SET_PROP(NavierStokesTestProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::N2ConstViscosity<Scalar> > type;
+    typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
 };
 
 // Disable gravity

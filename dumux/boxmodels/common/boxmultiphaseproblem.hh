@@ -18,7 +18,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief The base class for the problems of box models which deal
  *        with a multi-phase flow through a porous medium.
@@ -30,7 +29,6 @@
 #include <dumux/boxmodels/common/boxproperties.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/common/math.hh>
-
 
 namespace Dumux {
 namespace Properties {

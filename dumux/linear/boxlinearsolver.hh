@@ -111,11 +111,36 @@ NEW_PROP_TAG(GMResRestart);
 namespace Linear {
 /*!
  * \ingroup Linear
- * \brief The base class of the linear solvers for the vertex-centered
- *        finite volume ("box") method.
  *
- * This solver's intention is to be used in conjunction with the box
- * method, so it assumes that the vertices are the only DOFs.
+ * \brief Implements a generic linear solver abstraction for the
+ *        vertex-centered finite volume ("box") method.
+ *
+ * This class' intention is to be used in conjunction with the box
+ * method, so it assumes that the vertices are the only degrees of
+ * freedom.  It is also capable of parallel executions on arbitrary
+ * grids and is generic in the sense that it allows to combine any
+ * linear solver implemented by Dune-ISTL with any preconditioner
+ * (except the algebraic multigrid preconditioner). To set the linear
+ * solver, use 
+ * \code SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,Dumux::Linear::DesiredLinearSolver<TypeTag>); \endcode
+ *
+ * The possible choices for '\c DesiredLinearSolver' are:
+ * - \c SolverWrapperLoop: A fixpoint solver (using the Richardson iteration)
+ * - \c SolverWrapperGradients: The steepest descent solver
+ * - \c SolverWrapperCG: A conjugated gradients solver
+ * - \c SolverWrapperBiCGStab: A stabilized bi-conjugated gradients solver
+ * - \c SolverWrapperMinRes: A solver based on the  minimized residual algorithm
+ * - \c SolverWrapperGMRes: A restarted GMRES solver
+ *
+ * Chosing the preconditioner works analogous: \code
+ * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,Dumux::Linear::DesiredPreconditioner<TypeTag>); \endcode
+ * 
+ * Where the choices possible for '\c DesiredPreconditioner' are:
+ * - \c PreconditionerWrapperJacobi: A Jacobi preconditioner
+ * - \c PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
+ * - \c PreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
+ * - \c PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
+ * - \c PreconditionerWrapperILU: An ILU(n) preconditioner
  */
 template <class TypeTag>
 class BoxParallelSolver

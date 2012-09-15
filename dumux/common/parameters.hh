@@ -19,12 +19,13 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup Parameter
  * \file
  *
- * \brief The infrastructure to retrieve run-time parameters from
- *        Dune::ParameterTrees with the defaul value taken from the
- *        property system.
+ * \brief This file provides the infrastructure to retrieve run-time parameters
+ *
+ * Internally, runtime parameters are implemented using
+ * Dune::ParameterTree with the default value taken from the property
+ * system.
  */
 #ifndef DUMUX_PARAMETERS_HH
 #define DUMUX_PARAMETERS_HH
@@ -57,7 +58,7 @@
 #define GET_PARAM(TypeTag, ParamType, ParamName)                        \
     Dumux::Parameters::get<TypeTag,                                     \
                            ParamType,                                   \
-                           PTAG_(ParamName)>(#ParamName, #ParamName)
+                           PTAG(ParamName)>(#ParamName, #ParamName)
 
 /*!
  * \ingroup Parameter
@@ -78,7 +79,7 @@
 #define GET_PARAM_FROM_GROUP(TypeTag, ParamType, GroupName, ParamName)  \
     Dumux::Parameters::get<TypeTag,                                     \
                            ParamType,                                   \
-                           PTAG_(GroupName##ParamName)>(#GroupName#ParamName, #GroupName, #ParamName)
+                           PTAG(GroupName##ParamName)>(#GroupName#ParamName, #GroupName, #ParamName)
 
 /*!
  * \ingroup Parameter
@@ -113,10 +114,9 @@
 #define GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, ParamType, GroupName, ParamName) \
     Dumux::Parameters::getRuntime<TypeTag, ParamType>(#GroupName, #ParamName)
 
-namespace Dumux
-{
-namespace Properties
-{
+//!\cond 0
+namespace Dumux {
+namespace Properties {
 NEW_PROP_TAG(ParameterTree);
 NEW_PROP_TAG(ModelParameterGroup);
 } // namespace Properties
@@ -155,6 +155,7 @@ void findUnusedKeys_(std::list<std::string> &unusedParams,
     }
 
 }
+//! \endcond
 
 /*!
  * \ingroup Parameter
@@ -201,6 +202,7 @@ void print(std::ostream &os = std::cout)
     }
 }
 
+//! \cond 0
 const char *getString_(const char *foo = 0)
 { return foo; }
 
@@ -460,8 +462,9 @@ const ParamType &getRuntime(const char *paramOrGroupName,
                                                           paramNameOrNil);
 }
 
-} // namespace Parameters
+//! \endcond
 
+} // namespace Parameters
 } // namespace Dumux
 
 

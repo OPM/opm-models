@@ -20,7 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Represents all quantities which are relevant for an element
  */
@@ -33,8 +32,7 @@
 
 #include <vector>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BoxModel

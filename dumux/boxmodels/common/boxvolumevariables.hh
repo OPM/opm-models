@@ -19,7 +19,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Base class for the model specific class which provides
  *        access to all volume averaged quantities.
@@ -31,8 +30,7 @@
 
 #include <dumux/common/valgrind.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BoxModel

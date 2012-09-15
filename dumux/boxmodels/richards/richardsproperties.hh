@@ -19,7 +19,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup RichardsModel
  * \file
  *
  * \brief Contains the property declarations for the Richards box

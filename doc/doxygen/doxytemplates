@@ -1,0 +1,117 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
+/*!
+ * \file
+ *
+ * \brief This file contains templates for the doxygen documentation
+ *        intented to in increasing maintainability to avoid excessive
+ *        copy-and-paste of the documentation.
+ */
+class Doxygen {
+public:
+    /*!
+     * \param timeIdx The index used by the time discretization.
+     */
+    void timeIdxParam(int timeIdx);
+
+    /*!
+     * \tparam Context The type of the execution context.
+     *
+     * \param context The execution context.
+     * \param spaceIdx The local index used by the space discretization.
+     * \param timeIdx The index used by the time discretization.
+     */
+    template <class Context>
+    void contextParams(const Context &context, int spaceIdx, int timeIdx);
+
+    /*!
+     * \param problem The physical problem which ought to be solved.
+     */
+    void problemParam(Problem &problem);
+
+    /*!
+     * \param element The DUNE element (i.e. the codim-0 entity) of interest.
+     */
+    void elementParam(Element &element);
+
+    /*!
+     * \param scvIdx The local sub-control volume index of interest
+     *               (equivalent to the local vertex index of the
+     *               element).
+     */
+    void boxScvIdxParam(int scvIdx);
+
+    /*!
+     * \param source The values of the source term.
+     */
+    void sourceParam(RateVector &source);
+
+    /*!
+     * \param storage Stores the total amount of each conserved quantity inside the domain.
+     */
+    void storageParam(EqVector &storage);
+
+    /*!
+     * \param residual Stores the residual  of each conserved quantity.
+     */
+    void residualParam(EqVector &residual);
+
+    /*!
+     * \param elemCtx The element execution context of the box scheme.
+     */
+    void boxElemCtxParam(const ElementContext &elemCtx);
+
+    /*!
+     * \copydetails Doxygen::boxScvIdxParam
+     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::timeIdxParam
+     */
+    void boxScvCtxParams(const ElementContext &elemCtx, int scvIdx, int timeIdx);
+    
+    /*!
+     * \tparam FluidState The type of the fluid state.
+     *
+     * \param fluidState The object expressing the termodynamic state of the system.
+     * \param paramCache The fluid system's parameter cache
+     */
+    template <class FluidState>
+    void fluidSystemBaseParams(const FluidState &fluidState,
+                               const ParameterCache &paramCache);
+
+    /*!
+     * \param phaseIdx The index of the fluid phase of interest.
+     */
+    void phaseIdxParam(int phaseIdx);
+
+    /*!
+     * \param compIdx The index of the (pseudo-)component of interest.
+     */
+    void compIdxParam(int compIdx);
+
+    /*!
+     * \param compIIdx The index of the first (pseudo-)component of interest.
+     */
+    void compIIdxParam(int compIIdx);
+
+    /*!
+     * \param compJIdx The index of the second (pseudo-)component of interest.
+     */
+    void compJIdxParam(int compJIdx);
+
+    /*!
+     * \param temperature The temperature of interest [K]
+     */
+    void temperatureParam(Scalar temperature);
+
+    /*!
+     * \param temperature The temperature of interest [K]
+     * \param pressure The pressure of interest [Pa]
+     */
+    void TpParams(Scalar temperature, Scalar pressure);
+
+    /*!
+     * \tparam TypeTag The type tag on which all required properties are defined.
+     */
+    template <class TypeTag>
+    void typeTagTParam();
+};

@@ -17,6 +17,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \brief  Default properties for the compositional NCP box model.
+ */
 #ifndef DUMUX_NCP_PROPERTY_DEFAULTS_HH
 #define DUMUX_NCP_PROPERTY_DEFAULTS_HH
 
@@ -36,16 +40,8 @@
 #include <dumux/material/constraintsolvers/compositionfromfugacities.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
-
-/*!
- * \ingroup BoxNcpModel
- * \file
- * \brief  Default properties for the compositional NCP box model.
- */
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
 //////////////////////////////////////////////////////////////////
 // default property values
 //////////////////////////////////////////////////////////////////

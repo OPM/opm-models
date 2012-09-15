@@ -161,9 +161,9 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
         numPhases = FluidSystem::numPhases,
 
         // component indices
-        cCompIdx = FluidSystem::cCompIdx,
-        wCompIdx = FluidSystem::wCompIdx,
-        aCompIdx = FluidSystem::aCompIdx,
+        NAPLIdx = FluidSystem::NAPLIdx,
+        H2OIdx = FluidSystem::H2OIdx,
+        airIdx = FluidSystem::airIdx,
 
         // phase indices
         wPhaseIdx = FluidSystem::wPhaseIdx,
@@ -326,7 +326,7 @@ public:
         }
         else if (onInlet_(pos)) {
             RateVector molarRate(0.0);
-            molarRate[conti0EqIdx + cCompIdx] = -0.001;
+            molarRate[conti0EqIdx + NAPLIdx] = -0.001;
             
             values.setMolarRate(molarRate);
             Valgrind::CheckDefined(values);
@@ -426,9 +426,9 @@ private:
             fs.setPressure(phaseIdx, pg + (pcAll[phaseIdx] - pcAll[gPhaseIdx]));
 
         // set composition of gas phase
-        fs.setMoleFraction(gPhaseIdx, wCompIdx, 1e-6);
-        fs.setMoleFraction(gPhaseIdx, aCompIdx, 1 - fs.moleFraction(gPhaseIdx, wCompIdx));
-        fs.setMoleFraction(gPhaseIdx, cCompIdx, 0);
+        fs.setMoleFraction(gPhaseIdx, H2OIdx, 1e-6);
+        fs.setMoleFraction(gPhaseIdx, airIdx, 1 - fs.moleFraction(gPhaseIdx, H2OIdx));
+        fs.setMoleFraction(gPhaseIdx, NAPLIdx, 0);
 
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
@@ -438,7 +438,7 @@ private:
                     /*setViscosity=*/false,
                     /*setEnthalpy=*/false);
 
-        fs.setMoleFraction(wPhaseIdx, wCompIdx, 1 - fs.moleFraction(wPhaseIdx, wCompIdx));
+        fs.setMoleFraction(wPhaseIdx, H2OIdx, 1 - fs.moleFraction(wPhaseIdx, H2OIdx));
     }
 
     static Scalar invertPCGW_(Scalar pcIn, const MaterialLawParams &pcParams)

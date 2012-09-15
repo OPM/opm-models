@@ -23,8 +23,7 @@
 /*!
  * \file
  *
- * \ingroup IMPETtests
- * \brief test for the decoupled one-phase model.
+ * \brief Source file of a test for the decoupled one-phase model.
  */
 #include "config.h"
 

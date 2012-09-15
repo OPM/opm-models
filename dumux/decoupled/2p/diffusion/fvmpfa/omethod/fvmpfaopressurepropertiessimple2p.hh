@@ -19,9 +19,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
- * \ingroup FVPressure2p
  * \file
  *
  * \brief Properties for two-phase finite volume model with MPFA-O method.

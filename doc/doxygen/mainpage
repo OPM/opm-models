@@ -14,7 +14,9 @@ documenting C/C++ code.
 
 \section mods Getting Started
 
-The best way to start accessing this documentation is the \subpage
-modules page which structures the documentation by category.
+The best entry-point to access the reference documentation is the
+\subpage modules page which structures the documentation by
+category. For a structured introduction into eWoms and the rationale
+behind its technical concepts, please refer to the eWoms handbook.
 
 */

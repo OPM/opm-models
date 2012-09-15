@@ -12,7 +12,7 @@
  *                                                                           *
  *   This program is distributed in the hope that it will be useful,         *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- *   MERCHANTBILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
+ *   MERCHANTBILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
  *   GNU General Public License for more details.                            *
  *                                                                           *
  *   You should have received a copy of the GNU General Public License       *
@@ -22,31 +22,27 @@
  * \file
  * \brief Provides the magic behind the DuMuX property system.
  *
- * \ingroup Properties
  * Properties allow to associate arbitrary data types to
- * identifiers. A property is always defined on a pair (TypeTag,
- * PropertyTag) where TypeTag is the identifier for the object the
- * property is defined for and PropertyTag is an unique identifier of
+ * identifiers. A property is always defined on a pair (\c TypeTag,
+ * \c PropertyTag) where \c TypeTag is the identifier for the object the
+ * property is defined for and \c PropertyTag is an unique identifier of
  * the property.
  *
  * Type tags are hierarchic and inherit properties defined on their
  * ancesters. At each level, properties defined on lower levels can be
- * overwritten or even made undefined. It is also possible to define
- * defaults for properties if it makes sense.
+ * overwritten or even made undefined.
  *
- * Properties may make use other properties for the respective type
- * tag and these properties can also be defined on an arbitrary level
- * of the hierarchy.
+ * Properties may use other properties for the respective type tag and
+ * these properties can also be defined on an arbitrary level of the
+ * hierarchy. The only restriction on this is that cycles are not
+ * allowed when defining properties.
  */
 #ifndef DUMUX_PROPERTIES_HH
 #define DUMUX_PROPERTIES_HH
 
-// For is_base_of
-#include <type_traits>
-
-// Integral Constant Expressions
-
 #include <dune/common/classname.hh>
+
+#include <type_traits> // required for 'is_base_of<A, B>'
 
 #include <map>
 #include <set>
@@ -56,10 +52,11 @@
 #include <sstream>
 #include <cstring>
 
-namespace Dumux
-{
-namespace Properties
-{
+//! \cond 0
+
+namespace Dumux {
+namespace Properties {
+
 #define DUMUX_GET_HEAD_(Arg1, ...) Arg1
 #define DUMUX_GET_TAIL_(Arg1, ...) Blubber // __VA_ARGS__
 
@@ -71,7 +68,7 @@ namespace Properties
 //! Internal macro which is only required if the property introspection is enabled
 #define PROP_INFO_(EffTypeTagName, PropKind, PropTagName, ...)          \
     template <>                                                         \
-    struct PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>       \
+    struct PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>       \
     {                                                                   \
     static int init() {                                                 \
         PropertyRegistryKey key(                                        \
@@ -86,8 +83,8 @@ namespace Properties
     }                                                                  \
     static int foo;                                                     \
     };                                                                  \
-    int PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::foo =   \
-    PropertyInfo<TTAG(EffTypeTagName), PTAG_(PropTagName)>::init();
+    int PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::foo =   \
+    PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();
 
 //! Internal macro which is only required if the property introspection is enabled
 #define TTAG_INFO_(...)                                                 \
@@ -111,22 +108,28 @@ namespace Properties
 
 // some macros for simplification
 
+//! \endcond
+
 /*!
- * \brief Makes a type out of a type tag name
+ * \ingroup PropertySystem
+ * \brief Convert a type tag name to a type
+ *
+ * The main advantage of the type of a \c TypeTag is that it can be
+ * passed as a template argument.
  */
 #define TTAG(TypeTagName) ::Dumux::Properties::TTag::TypeTagName
 
 /*!
+ * \ingroup PropertySystem
  * \brief Makes a type out of a property tag name
+ *
+ * Again property type names can be passed as template argument. This
+ * is rarely needed, though.
  */
-#define PTAG(PropTagName) PropTagName
+#define PTAG(PropTagName) ::Dumux::Properties::PTag::PropTagName
 
 /*!
- * \brief Makes a type out of a property tag name
- */
-#define PTAG_(PropTagName) ::Dumux::Properties::PTag::PropTagName
-
-/*!
+ * \ingroup PropertySystem
  * \brief Define a new type tag.
  *
  * A type tag can inherit the properties defined on up to five parent
@@ -155,6 +158,7 @@ namespace Properties
     extern int semicolonHack_
 
 /*!
+ * \ingroup PropertySystem
  * \brief Syntactic sugar for NEW_TYPE_TAG.
  *
  * See the documentation for NEW_TYPE_TAG.
@@ -162,6 +166,7 @@ namespace Properties
 #define INHERITS_FROM(...) __VA_ARGS__
 
 /*!
+ * \ingroup PropertySystem
  * \brief Define a property tag.
  *
  * A property tag is the unique identifier for a property. It may only
@@ -179,12 +184,12 @@ namespace Properties
     namespace PTag {                                       \
     struct PTagName; } extern int semicolonHack_
 
-//! Internal macro
+//! \cond 0
 #define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)       \
     template <class TypeTag>                                        \
     struct Property<TypeTag,                                        \
                     TTAG(EffTypeTagName),                           \
-                    PTAG_(PropTagName)>;                            \
+                    PTAG(PropTagName)>;                            \
     PROP_INFO_(EffTypeTagName,                                      \
                /*kind=*/PropKind,                                   \
                PropTagName,                                         \
@@ -192,15 +197,17 @@ namespace Properties
     template <class TypeTag>                                        \
     struct Property<TypeTag,                                        \
                     TTAG(EffTypeTagName),                           \
-                    PTAG_(PropTagName) >
+                    PTAG(PropTagName) >
+//! \endcond
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property for a specific type tag.
  *
  * After this macro, you must to specify a complete body of a class
  * template, including the trailing semicolon. If you need to retrieve
- * another property within the class body, you can use TypeTag as the
- * argument for the type tag for the GET_PROP macro.
+ * another property within the class body, you can use \c TypeTag as the
+ * argument for the type tag for the \c GET_PROP macro.
  *
  * Example:
  *
@@ -212,7 +219,7 @@ namespace Properties
  *    { calculateInternal_(arg); }
  *
  * private:
- *    // retrieve the blabbProp property for the real TypeTag the
+ *    // retrieve the blabbProp property for the TypeTag the
  *    // property is defined on. Note that blabbProb does not need to
  *    // be defined on FooTypeTag, but can also be defined for some
  *    // derived type tag.
@@ -227,7 +234,7 @@ namespace Properties
     template <class TypeTag>                                    \
     struct Property<TypeTag,                                    \
                     TTAG(EffTypeTagName),                       \
-                    PTAG_(PropTagName)>;                        \
+                    PTAG(PropTagName)>;                        \
     PROP_INFO_(EffTypeTagName,                                  \
                /*kind=*/"opaque",                               \
                PropTagName,                                     \
@@ -235,9 +242,10 @@ namespace Properties
     template <class TypeTag>                                    \
     struct Property<TypeTag,                                    \
                     TTAG(EffTypeTagName),                       \
-                    PTAG_(PropTagName) >
+                    PTAG(PropTagName) >
 
 /*!
+ * \ingroup PropertySystem
  * \brief Explicitly unset a property for a type tag.
  *
  * This means that the property will not be inherited from the type
@@ -253,21 +261,22 @@ namespace Properties
 #define UNSET_PROP(EffTypeTagName, PropTagName)                 \
     template <>                                                 \
     struct PropertyUnset<TTAG(EffTypeTagName),                  \
-                         PTAG_(PropTagName) >;                  \
+                         PTAG(PropTagName) >;                  \
     PROP_INFO_(EffTypeTagName,                                  \
                /*kind=*/"withdraw",                             \
                PropTagName,                                     \
                /*value=*/<none>)                                \
     template <>                                                 \
     struct PropertyUnset<TTAG(EffTypeTagName),                  \
-                         PTAG_(PropTagName) >                   \
+                         PTAG(PropTagName) >                   \
         : public PropertyExplicitlyUnset                        \
         {}
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property to a simple constant integer value.
  *
- * The constant can be accessed by the 'value' attribute.
+ * The constant can be accessed by the \c value attribute.
  */
 #define SET_INT_PROP(EffTypeTagName, PropTagName, /*Value*/...)    \
     SET_PROP_(EffTypeTagName,                                   \
@@ -280,9 +289,10 @@ namespace Properties
     }
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property to a simple constant boolean value.
  *
- * The constant can be accessed by the 'value' attribute.
+ * The constant can be accessed by the \c value attribute.
  */
 #define SET_BOOL_PROP(EffTypeTagName, PropTagName, /*Value*/...)    \
     SET_PROP_(EffTypeTagName,                                       \
@@ -295,9 +305,10 @@ namespace Properties
     }
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property which defines a type.
  *
- * The type can be accessed by the 'type' attribute.
+ * The type can be accessed by the \c type attribute.
  */
 #define SET_TYPE_PROP(EffTypeTagName, PropTagName, /*Value*/...)  \
     SET_PROP_(EffTypeTagName,                                     \
@@ -309,11 +320,12 @@ namespace Properties
     }
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property to a simple constant scalar value.
  *
- * The constant can be accessed by the 'value' attribute. In order to
- * use this macro, the property tag "Scalar" needs to be defined for
- * the real type tag.
+ * The constant can be accessed by the \c value attribute. In order to
+ * use this macro, the property tag \c Scalar needs to be defined for
+ * the type tag.
  */
 #define SET_SCALAR_PROP(EffTypeTagName, PropTagName, ...)               \
     SET_PROP_(EffTypeTagName,                                           \
@@ -327,14 +339,15 @@ namespace Properties
         static const Scalar value;                                      \
     };                                                                  \
     template <class TypeTag>                                            \
-    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG_(PropTagName)>::type   \
-    Property<TypeTag, TTAG(EffTypeTagName), PTAG_(PropTagName)>::value(__VA_ARGS__)
+    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type   \
+    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
 
 /*!
+ * \ingroup PropertySystem
  * \brief Set a property to a simple constant string value.
  *
- * The constant can be accessed by the 'value' attribute and is of
- * type std::string.
+ * The constant can be accessed by the \c value attribute and is of
+ * type <tt>std::string</tt>.
  */
 #define SET_STRING_PROP(EffTypeTagName, PropTagName, ...)               \
     SET_PROP_(EffTypeTagName,                                           \
@@ -347,52 +360,63 @@ namespace Properties
         static const std::string value;                                 \
     };                                                                  \
     template <class TypeTag>                                            \
-    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG_(PropTagName)>::type \
-    Property<TypeTag, TTAG(EffTypeTagName), PTAG_(PropTagName)>::value(__VA_ARGS__)
+    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
+    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
 
 /*!
- * \brief Get the property for a type tag.
+ * \ingroup PropertySystem
+ * \brief Retrieve a property for a type tag.
  *
- * If you use GET_PROP within a template and want to refer to some
- * type (including the property itself), GET_PROP must be preceeded by
- * the 'typename' keyword.
+ * If you use \c GET_PROP within a template and want to refer to some
+ * type (including the property itself), \c GET_PROP must be preceeded by
+ * the '\c typename' keyword.
  */
 #define GET_PROP(TypeTag, PropTagName) \
-    ::Dumux::Properties::GetProperty<TypeTag, PTAG_(PropTagName)>::p
+    ::Dumux::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p
+//!\cond 0
 #define GET_PROP_(TypeTag, PropTag) \
     ::Dumux::Properties::GetProperty<TypeTag, PropTag>::p
+//!\endcond
 
 /*!
- * \brief Access the 'value' attribute of a property for a type tag.
+ * \ingroup PropertySystem
+ * \brief Access the \c value attribute of a property for a type tag.
  *
- * This is just for convenience and equivalent to GET_PROP(TypeTag,
- * PropTag) :: value.  If the property doesn't have an attribute named
- * 'value', this yields a compiler error.
+ * This is just for convenience and equivalent to 
+ * <tt>GET_PROP(TypeTag, PropTag)::</tt><tt>value</tt> .  If the property doesn't
+ * have an attribute named \c value, this yields a compiler error.
  */
 #define GET_PROP_VALUE(TypeTag, PropTagName)                            \
-    ::Dumux::Properties::GetProperty<TypeTag, PTAG_(PropTagName)>::p::value
+    ::Dumux::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::value
+//!\cond 0
 #define GET_PROP_VALUE_(TypeTag, PropTag)                               \
     ::Dumux::Properties::GetProperty<TypeTag, PropTag>::p::value
+//!\endcond
 
 /*!
- * \brief Access the 'type' attribute of a property for a type tag.
+ * \ingroup PropertySystem
+ * \brief Access the \c type attribute of a property for a type tag.
  *
- * This is just for convenience and equivalent to GET_PROP(TypeTag,
- * PropTag) :: type.  If the property doesn't have an attribute named
- * 'type', this yields a compiler error. Also, if you use this macro
- * within a template, it must be preceeded by the 'typename' keyword.
+ * This is just for convenience and equivalent to
+ * <tt>GET_PROP(TypeTag, PropTag)::</tt><tt>type</tt>.  If the property doesn't
+ * have an attribute named \c type, this yields a compiler error. Also,
+ * if you use this macro within a template, it must be preceeded by
+ * the \c typename keyword.
  */
 #define GET_PROP_TYPE(TypeTag, PropTagName) \
-    ::Dumux::Properties::GetProperty<TypeTag, PTAG_(PropTagName)>::p::type
+    ::Dumux::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::type
+//!\cond 0
 #define GET_PROP_TYPE_(TypeTag, PropTag) \
     ::Dumux::Properties::GetProperty<TypeTag, PropTag>::p::type
+//!\endcond
 
 #if !defined NO_PROPERTY_INTROSPECTION
 /*!
+ * \ingroup PropertySystem
  * \brief Return a human readable diagnostic message how exactly a
  *        property was defined.
  *
- * This is only enabled if the NO_PROPERTY_INTROSPECTION macro is not
+ * This is only enabled if the \c NO_PROPERTY_INTROSPECTION macro is not
  * defined.
  *
  * Example:
@@ -408,22 +432,6 @@ namespace Properties
     ::Dumux::Properties::getDiagnostic<TypeTag>(#PropTagName)
 
 #else
-/*!
- * \brief Return a human readable diagnostic message how exactly a
- *        property was defined.
- *
- * This is only enabled if the NO_PROPERTY_INTROSPECTION macro is not
- * defined.
- *
- * Example:
- *
- * \code
- * int main()
- * {
- *    std::cout << PROP_DIAGNOSTIC(FooBarTypeTag, blabbPropTag) << "\n";
- * };
- * \endcode
- */
 #define PROP_DIAGNOSTIC(TypeTag, PropTagName) "Property introspection disabled by NO_PROPERTY_INTROSPECTION"
 #endif
 

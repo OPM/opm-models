@@ -20,7 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup PvsModel
  *
  * \brief Defines default values for most properties required by the
  *        PVS box model.
@@ -43,9 +42,7 @@
 #include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
 
-namespace Dumux
-{
-
+namespace Dumux {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Property values

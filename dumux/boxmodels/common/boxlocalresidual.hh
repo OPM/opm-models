@@ -21,7 +21,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Calculates the residual of models based on the box scheme element-wise.
  */
@@ -39,15 +38,15 @@
 #include "boxboundarycontext.hh"
 #include "boxconstraintscontext.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxModel
  *
  * \brief Element-wise caculation of the residual matrix for models
  *        based on the box scheme .
  *
- * \todo Please doc me more!
+ * \copydetails Doxygen::typeTagTParam
  */
 template<class TypeTag>
 class BoxLocalResidual
@@ -104,8 +103,7 @@ public:
      * \brief Return the result of the eval() call using internal
      *        storage.
      *
-     * \param scvIdx The index of the sub-control volume index for
-     *               which the local residual is of interest.
+     * \copydetails Doxygen::boxScvIdxParam
      */
     const VectorBlock &residual(int scvIdx) const
     { return internalResidual_[scvIdx]; }
@@ -121,8 +119,7 @@ public:
      * \brief Return the storage term calculated using the last call
      *        to eval() using internal storage.
      *
-     * \param scvIdx The index of the sub-control volume index for
-     *               which the local storage term is of interest.
+     * \copydetails Doxygen::boxScvIdxParam
      */
     const VectorBlock &storageTerm(int scvIdx) const
     { return internalStorageTerm_[scvIdx]; }
@@ -135,14 +132,13 @@ public:
      * The results can be requested afterwards using the residual()
      * and storageTerm() methods.
      *
-     * \param problem The problem which is to be solved.
-     * \param elem The grid element for which the local
-     *             residual should be calculated.
+     * \copydetails Doxygen::problemParam
+     * \copydetails Doxygen::elementParam
      */
-    void eval(const Problem &problem, const Element &elem)
+    void eval(const Problem &problem, const Element &element)
     {
         ElementContext elemCtx(problem);
-        elemCtx.updateAll(elem);
+        elemCtx.updateAll(element);
         eval(elemCtx);
     }
 
@@ -154,8 +150,7 @@ public:
      * The results can be requested afterwards using the residual()
      * and storageTerm() methods.
      *
-     * \param elemCtx The element execution context for which the
-     *                local residual should be calculated.
+     * \copydetails Doxygen::boxElemCtxParam
      */
     void eval(const ElementContext &elemCtx)
     {
@@ -169,16 +164,16 @@ public:
      * \brief Compute the local residual, i.e. the deviation of the
      *        conservation equations from zero.
      *
-     * \param residual Stores the residual vector
-     * \param storageTerm Stores the derivative of the storage term to time
-     * \param elemCtx All the element's secondary variables required to calculate the local residual
+     * \copydetails Doxygen::residualParam
+     * \copydetails Doxygen::storageParam
+     * \copydetails Doxygen::boxElemCtxParam
      */
     void eval(LocalBlockVector &residual,
-              LocalBlockVector &storageTerm,
+              LocalBlockVector &storage,
               const ElementContext &elemCtx) const
     {
         residual = 0.0;
-        storageTerm = 0.0;
+        storage = 0.0;
 
         // evaluate the flux terms
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
@@ -189,7 +184,7 @@ public:
 #endif // HAVE_VALGRIND
 
         // evaluate the storage and the source terms
-        asImp_().evalVolumeTerms_(residual, storageTerm, elemCtx);
+        asImp_().evalVolumeTerms_(residual, storage, elemCtx);
 
 #if !defined NDEBUG && HAVE_VALGRIND
         for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
@@ -197,10 +192,10 @@ public:
 #endif // !defined NDEBUG && HAVE_VALGRIND
 
         // evaluate the boundary conditions
-        asImp_().evalBoundary_(residual, storageTerm, elemCtx, /*timeIdx=*/0);
+        asImp_().evalBoundary_(residual, storage, elemCtx, /*timeIdx=*/0);
 
         // evaluate the constraint DOFs
-        asImp_().evalConstraints_(residual, storageTerm, elemCtx, /*timeIdx=*/0);
+        asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
         for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++) {
@@ -217,10 +212,8 @@ public:
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
      *
-     * \param elemCtx The element execution context for which the
-     *                local residual should be calculated.
-     * \param timeIdx The index for time discretition for which the
-     *                local storage term ought to be calculated.
+     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::timeIdxParam
      */
     void evalStorage(const ElementContext &elemCtx,
                      int timeIdx)
@@ -240,12 +233,9 @@ public:
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
      *
-     * \param storage A Dune::BlockVector<EqVector> which stores the local
-     *                storage term.
-     * \param elemCtx The element execution context for which the
-     *                local storage term should be calculated.
-     * \param timeIdx The index for time discretition for which the
-     *                local storage term ought to be calculated.
+     * \copydetails Doxygen::storageParam
+     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::timeIdxParam
      */
     void evalStorage(LocalBlockVector &storage,
                      const ElementContext &elemCtx,
@@ -269,12 +259,9 @@ public:
     /*!
      * \brief Add the flux term to a local residual.
      *
-     * \param residual A Dune::BlockVector<EqVector> which stores the local
-     *                residual.
-     * \param elemCtx The element execution context for which the
-     *                local residual should be calculated.
-     * \param timeIdx The index for time discretition for which the
-     *                local residual ought to be calculated.
+     * \copydetails Doxygen::residualParam
+     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::timeIdxParam
      */
     void evalFluxes(LocalBlockVector &residual,
                     const ElementContext &elemCtx,
@@ -319,7 +306,7 @@ protected:
      * \brief Evaluate the boundary conditions of an element.
      */
     void evalBoundary_(LocalBlockVector &residual,
-                       LocalBlockVector &storageTerm,
+                       LocalBlockVector &storage,
                        const ElementContext &elemCtx,
                        int timeIdx) const
     {
@@ -393,7 +380,7 @@ protected:
      * \brief Set the values of the constraint volumes of the current element.
      */
     void evalConstraints_(LocalBlockVector &residual,
-                          LocalBlockVector &storageTerm,
+                          LocalBlockVector &storage,
                           const ElementContext &elemCtx,
                           int timeIdx) const
     {
@@ -423,7 +410,7 @@ protected:
                 Valgrind::CheckDefined(constraints[pvIdx]);
 
                 residual[scvIdx][eqIdx] = priVars[pvIdx] - constraints[pvIdx];
-                storageTerm[scvIdx][eqIdx] = 0.0;
+                storage[scvIdx][eqIdx] = 0.0;
             };
         };
     }
@@ -434,7 +421,7 @@ protected:
      *        current element.
      */
     void evalVolumeTerms_(LocalBlockVector &residual,
-                          LocalBlockVector &storageTerm,
+                          LocalBlockVector &storage,
                           const ElementContext &elemCtx) const
     {
         EqVector tmp(0), tmp2(0);
@@ -466,7 +453,7 @@ protected:
             tmp -= tmp2;
             tmp *= scvVolume / elemCtx.problem().timeManager().timeStepSize();
 
-            storageTerm[scvIdx] += tmp;
+            storage[scvIdx] += tmp;
             residual[scvIdx] += tmp;
 
             // subtract the source term from the residual
@@ -476,7 +463,7 @@ protected:
 
             // make sure that only defined quantities were used
             // to calculate the residual.
-            Valgrind::CheckDefined(storageTerm[scvIdx]);
+            Valgrind::CheckDefined(storage[scvIdx]);
             Valgrind::CheckDefined(residual[scvIdx]);
         }
     }
@@ -484,8 +471,8 @@ protected:
     /*!
      * \brief Calculate the source term of the equation
      *
-     * \param source The source/sink term [kg/m^3] in the sub control
-     *               volume for each component
+     * \copydoc Doxygen::sourceParam
+     * \copydoc Doxygen::boxScvCtxParams
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

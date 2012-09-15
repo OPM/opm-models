@@ -22,8 +22,7 @@
 /*!
  * \file
  *
- * \ingroup IMPETtests
- * \brief test for diffusion models
+ * \brief Source file for a test of the diffusion model 
  */
 #include "config.h"
 #include <iostream>

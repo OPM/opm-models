@@ -18,8 +18,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup BoxStokesModel
- *
  * \file
  *
  * \brief Defines default properties for the Stokes box model.
@@ -47,11 +45,9 @@
 #include <dumux/material/fluidsystems/1pfluidsystem.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
-namespace Properties
-{
+namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Properties
 //////////////////////////////////////////////////////////////////

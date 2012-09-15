@@ -18,7 +18,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Represents all quantities which available on boundary segments
  */
@@ -30,8 +29,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BoxModel
@@ -210,6 +208,6 @@ protected:
     IntersectionIterator intersectionIt_;
 };
 
-} // namespace Dumux
+} // end namespace Dumux
 
 #endif

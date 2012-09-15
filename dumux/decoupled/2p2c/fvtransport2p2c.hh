@@ -164,7 +164,6 @@ public:
                  >> totalConcentration_[nCompIdx][globalIdx];
     }
 
-    //! \copydoc transportedQuantity()
     void getTransportedQuantity(TransportSolutionType& transportedQuantity)
     {
         // resize update vector and set to zero
@@ -174,7 +173,6 @@ public:
 
         transportedQuantity = totalConcentration_;
     }
-    //! \copydoc transportedQuantity()
     Scalar& totalConcentration(int compIdx, int globalIdx)
     {
         return totalConcentration_[compIdx][globalIdx][0];

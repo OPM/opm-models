@@ -20,7 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief An assembler for the global Jacobian matrix for models using the box discretization.
  */
@@ -72,11 +71,7 @@ class BoxAssembler
     typedef GlobalEqVector Vector;
     typedef JacobianMatrix Matrix;
 
-    enum {
-        numEq = GET_PROP_VALUE(TypeTag, NumEq)
-    };
-    
-
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
 
@@ -129,9 +124,7 @@ public:
     }
 
     ~BoxAssembler()
-    {
-        delete matrix_;
-    }
+    { delete matrix_; }
 
     /*!
      * \brief Initialize the jacobian assembler.
@@ -140,7 +133,7 @@ public:
      * the model have been allocated. We can not assume that they are
      * fully initialized, though.
      *
-     * \param problem The problem object
+     * \copydetails Doxygen::problemParam
      */
     void init(Problem& problem)
     {
@@ -487,15 +480,15 @@ public:
     /*!
      * \brief Returns the reassemble color of a vertex
      *
-     * \param element An element which contains the vertex
-     * \param vertIdx The local index of the vertex in the element.
+     * \copydetails Doxygen::elementParam
+     * \copydetails Doxygen::boxScvIdxParam
      */
-    int vertexColor(const Element &element, int vertIdx) const
+    int vertexColor(const Element &element, int scvIdx) const
     {
         if (!enablePartialReassemble_())
             return Red; // reassemble unconditionally!
 
-        int globalIdx = vertexMapper_().map(element, vertIdx, dim);
+        int globalIdx = vertexMapper_().map(element, scvIdx, dim);
         return vertexColor_[globalIdx];
     }
 
@@ -514,7 +507,7 @@ public:
     /*!
      * \brief Returns the Jacobian reassemble color of an element
      *
-     * \param element The Codim-0 DUNE entity
+     * \copydetails Doxygen::elementParam
      */
     int elementColor(const Element &element) const
     {

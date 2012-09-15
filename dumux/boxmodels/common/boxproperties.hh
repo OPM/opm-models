@@ -20,7 +20,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Specify the shape functions, operator assemblers, etc
  *        used for the BoxModel.
@@ -38,6 +37,7 @@
 namespace Dumux {
 
 namespace Properties {
+
 /*!
  * \ingroup BoxModel
  */

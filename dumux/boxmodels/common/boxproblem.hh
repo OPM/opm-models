@@ -24,7 +24,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief Base class for all problems which use the box scheme
  */
@@ -41,8 +40,8 @@
 #include <limits>
 #include <string>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxModel
  *

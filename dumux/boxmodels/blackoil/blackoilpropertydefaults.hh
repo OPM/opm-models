@@ -19,8 +19,6 @@
 /*!
  * \file
  *
- * \ingroup BlackOilBoxModel
- *
  * \brief Defines default values for the properties required by the
  *        twophase box model.
  */

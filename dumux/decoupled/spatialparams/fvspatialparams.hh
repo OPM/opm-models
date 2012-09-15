@@ -21,7 +21,6 @@
 /*!
  * \file
  *
- * \ingroup SpatialParams
  * \brief The base class for spatial parameters of problems using the
  *        fv method.
  */

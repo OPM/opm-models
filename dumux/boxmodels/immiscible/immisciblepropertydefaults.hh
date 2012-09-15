@@ -18,7 +18,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup ImmiscibleBoxModel
  * \file
  *
  * \brief Defines default values for the properties required by the

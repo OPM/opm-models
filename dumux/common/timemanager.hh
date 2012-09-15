@@ -45,7 +45,7 @@ NEW_PROP_TAG(Problem);
 }
 
 /*!
- * \ingroup SimControl
+ * \ingroup TimeManager
  * \brief Simplify the handling of time dependent problems.
  *
  * This class manages a sequence of "episodes" which determine the

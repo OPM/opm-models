@@ -18,7 +18,6 @@
  *****************************************************************************/
 /*!
  * \file
- * \ingroup BoxModel
  *
  * \brief A Newton controller for models using the box scheme.
  *
@@ -33,8 +32,8 @@
 #include <dumux/nonlinear/newtoncontroller.hh>
 #include <dumux/common/propertysystem.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class BoxNewtonController;
 

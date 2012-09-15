@@ -63,11 +63,15 @@ protected:
 
 /*!
  * \ingroup BoxEnergy
+ * \class DoxyEnergyModule
  * \brief Provides the auxiliary methods required for consideration of the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
 class BoxMultiPhaseEnergyModule;
 
+/*!
+ * \copydoc DoxyEnergyModule
+ */
 template <class TypeTag>
 class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/false>
 {
@@ -186,6 +190,9 @@ public:
     { }
 };
 
+/*!
+ * \copydoc DoxyEnergyModule
+ */
 template <class TypeTag>
 class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
 { 
