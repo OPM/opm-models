@@ -93,6 +93,9 @@ SET_TYPE_PROP(BoxFlash,
               LocalResidual,
               FlashLocalResidual<TypeTag>);
 
+//! Let the flash solver choose its tolerance by default
+SET_SCALAR_PROP(BoxFlash, FlashTolerance, 0.0);
+
 //! the Model property
 SET_TYPE_PROP(BoxFlash, Model, FlashModel<TypeTag>);
 

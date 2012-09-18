@@ -99,6 +99,7 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
+        Scalar flashTolerance = GET_PARAM(TypeTag, Scalar, FlashTolerance);
 
         // extract the total molar densities of the components
         ComponentVector cTotal;
@@ -121,7 +122,7 @@ public:
         // compute the phase compositions, densities and pressures
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        Flash::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal);
+        Flash::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {

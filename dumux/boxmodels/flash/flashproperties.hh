@@ -51,6 +51,7 @@ NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
+NEW_PROP_TAG(FlashTolerance); //!< The maximum accepted error of the flash solver
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
 NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
