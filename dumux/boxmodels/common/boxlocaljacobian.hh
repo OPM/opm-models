@@ -108,6 +108,7 @@ public:
     BoxLocalJacobian()
     {
         internalElemContext_ = 0;
+        newtonTolerance_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, RelTolerance);
     }
 
     ~BoxLocalJacobian()
@@ -217,9 +218,7 @@ public:
                           int scvIdx,
                           int pvIdx) const
     {
-        // define the base epsilon as 10^-10 and make sure that this is 
-        // at least 10^4 times more than the machine precision
-        static const Scalar baseEps = std::max(std::numeric_limits<Scalar>::epsilon()*1e6, 1e-15);
+        const Scalar baseEps = newtonTolerance_/1e3;
         assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps);
 
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
@@ -472,6 +471,7 @@ protected:
     Problem *problemPtr_;
     Model *modelPtr_;
 
+    Scalar newtonTolerance_;
     ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;
