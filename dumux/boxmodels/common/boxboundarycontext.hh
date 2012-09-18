@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents all quantities which available on boundary segments
+ * \copydoc Dumux::BoxBoundaryContext
  */
 #ifndef DUMUX_BOX_BOUNDARY_CONTEXT_HH
 #define DUMUX_BOX_BOUNDARY_CONTEXT_HH

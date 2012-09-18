@@ -23,8 +23,7 @@
 /*!
  * \file
  *
- * \brief Contains the quantities which are constant within a
- *        finite volume in the two-phase model.
+ * \copydoc Dumux::ImmiscibleVolumeVariables
  */
 #ifndef DUMUX_IMMISCIBLE_VOLUME_VARIABLES_HH
 #define DUMUX_IMMISCIBLE_VOLUME_VARIABLES_HH
@@ -37,8 +36,8 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup ImmiscibleBoxModel
  * \ingroup BoxVolumeVariables
@@ -79,7 +78,7 @@ class ImmiscibleVolumeVariables
 
 public:
     /*!
-     * \brief Update all quantities for a given control volume.
+     * \copydoc BoxVolumeVariables::update
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -161,7 +160,7 @@ public:
      * \brief Returns the relative permeability of a given phase
      *        within the control volume.
      *
-     * \param phaseIdx The phase index
+     * \copydetails Doxygen::phaseIdxParam
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
@@ -170,7 +169,7 @@ public:
      * \brief Returns the effective mobility of a given phase within
      *        the control volume.
      *
-     * \param phaseIdx The phase index
+     * \copydetails Doxygen::phaseIdxParam
      */
     Scalar mobility(int phaseIdx) const
     { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }

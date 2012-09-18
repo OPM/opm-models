@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing mass rates.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::ImmiscibleRateVector
  */
 #ifndef DUMUX_BOX_IMMISCIBLE_RATE_VECTOR_HH
 #define DUMUX_BOX_IMMISCIBLE_RATE_VECTOR_HH
@@ -39,7 +36,7 @@ namespace Dumux
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Implements a vector representing mass rates.
+ * \brief Implements a vector representing rates of consered quantities.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -72,6 +69,8 @@ public:
 
     /*!
      * \brief Constructor with assignment from scalar
+     *
+     * \param value The scalar value to which all entries of the vector will be set.
      */
     ImmiscibleRateVector(Scalar value)
         : ParentType(value)
@@ -79,6 +78,8 @@ public:
 
     /*!
      * \brief Copy constructor
+     *
+     * \param value The rate vector that will be duplicated.
      */
     ImmiscibleRateVector(const ImmiscibleRateVector &value)
         : ParentType(value)
@@ -90,6 +91,8 @@ public:
      * Enthalpy is _not_ taken into account seperately here. This
      * means that it must be set to the desired value in the
      * parameter.
+     *
+     * \param value The mass rate in \f$[kg/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     void setMassRate(const ParentType &value)
     { ParentType::operator=(value); }
@@ -100,6 +103,8 @@ public:
      * Enthalpy is _not_ taken into account seperately here. This
      * means that it must be set to the desired value in the
      * parameter.
+     *
+     * \param value The molar rate in \f$[mol/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     void setMolarRate(const ParentType &value)
     {
@@ -114,6 +119,10 @@ public:
 
     /*!
      * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
+     *
+     * If the energy equation is not enabled, this method is a no-op.
+     *
+     * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     void setEnthalpyRate(Scalar rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
@@ -121,7 +130,17 @@ public:
     /*!
      * \brief Set a volumetric rate of a phase.
      *
-     * Enthalpy is taken into account here.
+     * The Enthalpy contained in the volume is taken into account by
+     * this method.
+     * 
+     * \param fluidState The thermodynamic state of the fluids which
+     *                   should be considered. The density and the
+     *                   composition of the considered phase must be
+     *                   specified before calling this method.
+     * \param phaseIdx The index of the fluid phase for which the
+     *                 given amount of volume should be specified.
+     * \param volume The volumetric rate of the fluid phase in
+     *               \f$[m^3/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     template <class FluidState>
     void setVolumetricRate(const FluidState &fluidState, 

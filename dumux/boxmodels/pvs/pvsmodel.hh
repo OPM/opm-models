@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \brief Adaption of the BOX scheme to the two-phase two-component flow model.
+ * \copybrief PvsModel
  */
 #ifndef DUMUX_PVS_MODEL_HH
 #define DUMUX_PVS_MODEL_HH

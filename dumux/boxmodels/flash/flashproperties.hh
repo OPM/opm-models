@@ -17,9 +17,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup FlashModel
- */
-/*!
  * \file
  *
  * \brief Defines the properties required for the FLASH BOX model.

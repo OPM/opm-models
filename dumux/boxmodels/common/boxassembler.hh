@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief An assembler for the global Jacobian matrix for models using the box discretization.
+ * \copydoc Dumux::BoxAssembler
  */
 #ifndef DUMUX_BOX_ASSEMBLER_HH
 #define DUMUX_BOX_ASSEMBLER_HH

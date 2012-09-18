@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents all quantities which available for calculating constraints
+ * \copydoc Dumux::BoxConstraintsContext
  */
 #ifndef DUMUX_BOX_CONSTRAINTS_CONTEXT_HH
 #define DUMUX_BOX_CONSTRAINTS_CONTEXT_HH

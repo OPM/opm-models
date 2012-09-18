@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \brief Base class for models using box discretization
+ * \copydoc Dumux::BoxModel
  */
 #ifndef DUMUX_BOX_MODEL_HH
 #define DUMUX_BOX_MODEL_HH
@@ -46,6 +46,7 @@
 #include <vector>
 
 namespace Dumux {
+
 /*!
  * \ingroup BoxModel
  *
@@ -118,12 +119,11 @@ public:
     /*!
      * \brief Apply the initial conditions to the model.
      *
-     * \param prob The object representing the problem which needs to
-     *             be simulated.
+     * \copydetails Doxygen::problemParam
      */
-    void init(Problem &prob)
+    void init(Problem &problem)
     {
-        problemPtr_ = &prob;
+        problemPtr_ = &problem;
 
         updateBoundary_();
 
@@ -285,11 +285,11 @@ public:
      * \brief Compute the integral over the domain of the storage
      *        terms of all conservation quantities.
      *
-     * \param dest Stores the result
+     * \copydetails Doxygen::storageParam
      */
-    void globalStorage(EqVector &dest)
+    void globalStorage(EqVector &storage)
     {
-        dest = 0;
+        storage = 0;
 
         ElementContext elemCtx(this->problem_());
         ElementIterator elemIt = gridView_().template begin<0>();
@@ -303,10 +303,10 @@ public:
             localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i)
-                dest += localResidual().storageTerm()[i];
+                storage += localResidual().storageTerm()[i];
         };
 
-        dest = gridView_().comm().sum(dest);
+        storage = gridView_().comm().sum(storage);
     }
 
     /*!
@@ -336,13 +336,13 @@ public:
      * \brief Returns the operator assembler for the global jacobian of
      *        the problem.
      */
-    JacobianAssembler &jacobianAssembler()
+    const JacobianAssembler &jacobianAssembler() const
     { return *jacAsm_; }
 
     /*!
-     * \copydoc jacobianAssembler()
+     * \copydoc jacobianAssembler() const
      */
-    const JacobianAssembler &jacobianAssembler() const
+    JacobianAssembler &jacobianAssembler()
     { return *jacAsm_; }
 
     /*!
@@ -353,35 +353,35 @@ public:
      * the jacobian assembler to produce a global linerization of the
      * problem.
      */
-    LocalJacobian &localJacobian()
+    const LocalJacobian &localJacobian() const
     { return localJacobian_; }
     /*!
-     * \copydoc localJacobian()
+     * \copydoc localJacobian() const
      */
-    const LocalJacobian &localJacobian() const
+    LocalJacobian &localJacobian()
     { return localJacobian_; }
 
     /*!
      * \brief Returns the object to calculate the local residual function.
      */
-    LocalResidual &localResidual()
+    const LocalResidual &localResidual() const
     { return localJacobian().localResidual(); }
     /*!
-     * \copydoc localResidual()
+     * \copydoc localResidual() const
      */
-    const LocalResidual &localResidual() const
+    LocalResidual &localResidual()
     { return localJacobian().localResidual(); }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      *
-     * \param vertIdx The global index of the control volume
+     * \param globalVertexIdx The global index of the control volume
      * \param pvIdx The index of the primary variable
      */
-    Scalar primaryVarWeight(int vertIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[vertIdx][pvIdx]);
+        Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
         return 1.0/std::max(absPv, 1.0);
     }
 
@@ -572,13 +572,13 @@ public:
      *
      * \param instream The stream from which the vertex data should
      *                  be deserialized from
-     * \param vert The DUNE Codim<dim> entity which's data should be
-     *             deserialized
+     * \param vertex The DUNE Codim<dim> entity which's data should be
+     *               deserialized
      */
     void deserializeEntity(std::istream &instream,
-                           const Vertex &vert)
+                           const Vertex &vertex)
     {
-        int vertIdx = dofMapper().map(vert);
+        int vertIdx = dofMapper().map(vertex);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
                 DUNE_THROW(Dune::IOError,
@@ -629,6 +629,8 @@ public:
     /*!
      * \brief Return whether a degree of freedom is located on the
      *        domain boundary.
+     *
+     * \param globalIdx The global space index of the degree of freedom of interest.
      */
     bool onBoundary(int globalIdx) const
     { return onBoundary_[globalIdx]; }
@@ -641,6 +643,8 @@ public:
 
     /*!
      * \brief Given an primary variable index, return a human readable name.
+     *
+     * \param pvIdx The index of the primary variable of interest.
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -651,6 +655,8 @@ public:
 
     /*!
      * \brief Given an equation index, return a human readable name.
+     *
+     * \param eqIdx The index of the conservation equation of interest.
      */
     std::string eqName(int eqIdx) const
     { 
@@ -663,8 +669,7 @@ public:
      * \brief Update the weights of all primary variables within an
      *        element given the complete set of volume variables
      *
-     * \param elemCtx The execution context for which the primary
-     *                variable weights ought to be updated
+     * \copydetails Doxygen::boxElemCtxParam
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     { }
@@ -744,11 +749,11 @@ public:
             writer.attachVertexData(*def[i], oss.str());
         }
 
-        asImp_().addOutputVtkFields(u, writer);
+        asImp_().addOutputVtkFields(writer);
     }
 
     /*!
-     * \brief Add the quantities of a time step which ought to be written to disk.
+     * \brief Append the quantities relevant for the current solution to a VTK multi writer.
      *
      * This should be overwritten by the actual model if any secondary
      * variables should be written out. Read: This should _always_ be
@@ -756,12 +761,10 @@ public:
      *
      * \tparam MultiWriter The type of the VTK multi writer
      *
-     * \param sol The global vector of primary variable values.
      * \param writer The VTK multi writer where the fields should be added.
      */
     template <class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer) const
+    void addOutputVtkFields(MultiWriter &writer) const
     {
         auto modIt = vtkOutputModules_.begin();
         const auto &modEndIt = vtkOutputModules_.end();

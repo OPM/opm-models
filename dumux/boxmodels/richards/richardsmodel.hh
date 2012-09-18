@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Adaption of the box scheme to the Richards model.
+ * \copybrief RichardsModel
  */
 #ifndef DUMUX_RICHARDS_MODEL_HH
 #define DUMUX_RICHARDS_MODEL_HH

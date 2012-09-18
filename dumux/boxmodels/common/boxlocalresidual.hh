@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \brief Calculates the residual of models based on the box scheme element-wise.
+ * \copydoc Dumux::BoxLocalResidual
  */
 #ifndef DUMUX_BOX_LOCAL_RESIDUAL_HH
 #define DUMUX_BOX_LOCAL_RESIDUAL_HH
@@ -301,6 +301,61 @@ public:
         }
     }
 
+    /////////////////////////////
+    // The following methods _must_ be overloaded by the actual flow
+    // models!
+    /////////////////////////////
+
+    /*!
+     * \brief Evaluate the amount all conservation quantities
+     *        (e.g. phase mass) within a finite sub-control volume.
+     *
+     * \copydetails Doxygen::storageParam
+     * \copydetails Doxygen::boxScvCtxParams
+     */
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int scvIdx,
+                        int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented, 
+                   "The local residual " << Dune::className<Implementation>() 
+                   << " does not implement the required method 'computeStorage()'");
+    };
+
+    /*!
+     * \brief Evaluates the total mass flux of all conservation
+     *        quantities over a face of a sub-control volume.
+     *
+     * \copydetails Doxygen::areaFluxParam
+     * \copydetails Doxygen::boxScvfCtxParams
+     */
+    void computeFlux(RateVector &flux,
+                     const ElementContext &elemCtx,
+                     int scvfIdx,
+                     int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented, 
+                   "The local residual " << Dune::className<Implementation>() 
+                   << " does not implement the required method 'computeFlux()'");
+    }
+
+    /*!
+     * \brief Calculate the source term of the equation
+     *
+     * \copydoc Doxygen::sourceParam
+     * \copydoc Doxygen::boxScvCtxParams
+     */
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int timeIdx) const
+    {
+        DUNE_THROW(Dune::NotImplemented, 
+                   "The local residual " << Dune::className<Implementation>() 
+                   << " does not implement the required method 'computeSource()'");
+    }
+
 protected:
     /*!
      * \brief Evaluate the boundary conditions of an element.
@@ -468,21 +523,6 @@ protected:
         }
     }
 
-    /*!
-     * \brief Calculate the source term of the equation
-     *
-     * \copydoc Doxygen::sourceParam
-     * \copydoc Doxygen::boxScvCtxParams
-     */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
-    {
-        Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
-        Valgrind::CheckDefined(source);
-    }
 
 private:
     Implementation &asImp_()

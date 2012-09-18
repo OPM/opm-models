@@ -130,25 +130,25 @@ public:
         return 1;
     }
 
-    //! \copydoc BoxModel::addOutputVtkFields
+    /*!
+     * \copydoc BoxModel::addOutputVtkFields
+     */
     template <class MultiWriter>
-    void addOutputVtkFields(const SolutionVector &sol,
-                            MultiWriter &writer) const
+    void addOutputVtkFields(MultiWriter &writer) const
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
         typedef Dune::BlockVector<Dune::FieldVector<double, dimWorld> > VelocityField;
 
         // create the required scalar fields
         unsigned numVertices = this->gridView_().size(dimWorld);
-        ScalarField &pN = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &delP = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &rho = *writer.allocateManagedBuffer(numVertices);
+        ScalarField &pressure = *writer.allocateManagedBuffer(numVertices);
+        ScalarField &density = *writer.allocateManagedBuffer(numVertices);
         ScalarField &temperature = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &mu = *writer.allocateManagedBuffer(numVertices);
+        ScalarField &viscosity = *writer.allocateManagedBuffer(numVertices);
         VelocityField &velocity = *writer.template allocateManagedBuffer<double, dimWorld> (numVertices);
-        ScalarField *moleFrac[numComponents];
+        ScalarField *moleFraction[numComponents];
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            moleFrac[compIdx] = writer.allocateManagedBuffer(numVertices);
+            moleFraction[compIdx] = writer.allocateManagedBuffer(numVertices);
 
         // iterate over grid
         ElementContext elemCtx(this->problem_());
@@ -159,46 +159,42 @@ public:
         {
             elemCtx.updateAll(*elemIt);
 
-            int numLocalVerts = elemIt->template count<dimWorld>();
-            for (int i = 0; i < numLocalVerts; ++i)
+            int numScv = elemCtx.numScv();
+            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
             {
-                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
-                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0);
-                const auto &fs = volVars.fluidState();
+                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
+                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
+                const auto &fluidState = volVars.fluidState();
                 
-                pN[globalIdx] = fs.pressure(phaseIdx);
-                delP[globalIdx] = fs.pressure(phaseIdx) - 1e5;
-                rho[globalIdx] = fs.density(phaseIdx);
-                temperature[globalIdx] = fs.temperature(phaseIdx);
-                mu[globalIdx] = fs.viscosity(phaseIdx);
+                pressure[globalIdx] = fluidState.pressure(phaseIdx);
+                density[globalIdx] = fluidState.density(phaseIdx);
+                temperature[globalIdx] = fluidState.temperature(phaseIdx);
+                viscosity[globalIdx] = fluidState.viscosity(phaseIdx);
                 velocity[globalIdx] = volVars.velocityCenter();
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                    (*moleFrac[compIdx])[globalIdx] = fs.moleFraction(phaseIdx, compIdx);
+                    (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
             };
         }
 
         std::ostringstream tmp;
 
         tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(pN, tmp.str());
-
-        tmp.str(""); tmp << "delta pressure_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(delP, tmp.str());
+        writer.attachVertexData(pressure, tmp.str());
 
         tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(rho, tmp.str());
+        writer.attachVertexData(density, tmp.str());
 
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             tmp.str(""); tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^" << FluidSystem::componentName(compIdx);
-            writer.attachVertexData(*moleFrac[compIdx], tmp.str());
+            writer.attachVertexData(*moleFraction[compIdx], tmp.str());
         }
 
         tmp.str(""); tmp << "temperature_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(temperature, tmp.str());
 
         tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(mu, tmp.str());
+        writer.attachVertexData(viscosity, tmp.str());
 
         tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(velocity, tmp.str(), dimWorld);

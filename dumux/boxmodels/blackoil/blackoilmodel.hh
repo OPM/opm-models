@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Adaption of the box scheme to the black-oil flow model.
+ * \copybrief BlackOilModel
  */
 #ifndef DUMUX_BLACK_OIL_MODEL_HH
 #define DUMUX_BLACK_OIL_MODEL_HH

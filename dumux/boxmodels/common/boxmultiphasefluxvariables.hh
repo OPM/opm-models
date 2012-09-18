@@ -20,8 +20,7 @@
 /*!
  * \file
  *
- * \brief This class calculates the pressure potential gradients and
- *        the filter velocities for multi-phase flow in porous media
+ * \copydoc Dumux::BoxMultiPhaseFluxVariables
  */
 #ifndef DUMUX_BOX_MULTIPHASE_FLUX_VARIABLES_HH
 #define DUMUX_BOX_MULTIPHASE_FLUX_VARIABLES_HH
@@ -36,7 +35,6 @@
 #include "boxproperties.hh"
 
 namespace Dumux {
-
 namespace Properties {
 NEW_PROP_TAG(EnableSmoothUpwinding);
 NEW_PROP_TAG(MaterialLaw);

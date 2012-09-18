@@ -21,7 +21,7 @@
  * \file
  *
  * \brief Defines default values for the properties required by the
- *        twophase box model.
+ *        immiscible multi-phase model.
  */
 #ifndef DUMUX_IMMISCIBLE_PROPERTY_DEFAULTS_HH
 #define DUMUX_IMMISCIBLE_PROPERTY_DEFAULTS_HH

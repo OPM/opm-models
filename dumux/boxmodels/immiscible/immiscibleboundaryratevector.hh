@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \copydoc Dumux::ImmiscibleBoundaryRateVector
  */
 #ifndef DUMUX_BOX_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
 #define DUMUX_BOX_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
@@ -31,12 +31,12 @@
 
 #include "immisciblevolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \brief Implements a boundary vector for the fully implicit immiscible multi-phase model.
  */
 template <class TypeTag>
 class ImmiscibleBoundaryRateVector
@@ -57,15 +57,15 @@ class ImmiscibleBoundaryRateVector
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     ImmiscibleBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \brief Constructor that assigns all entries to a scalar value.
+     *
+     * \param value The scalar value to which all components of the
+     *              boundary rate vector will be set.
      */
     ImmiscibleBoundaryRateVector(Scalar value)
         : ParentType(value)
@@ -73,6 +73,8 @@ public:
 
     /*!
      * \brief Copy constructor
+     *
+     * \param value The boundary rate vector to be duplicated.
      */
     ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &value)
         : ParentType(value)
@@ -80,18 +82,23 @@ public:
 
     /*!
      * \brief Specify a free-flow boundary
+     *
+     * \param context The execution context for which the boundary rate should be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param timeIdx The index used by the time discretization.
+     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
     void setFreeFlow(const Context &context, 
                      int bfIdx, 
                      int timeIdx,
-                     const FluidState &fs)
+                     const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fs);
+        paramCache.updateAll(fluidState);
 
         FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fs, paramCache);      
+        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);      
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         ////////
@@ -101,8 +108,8 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
         {
             Scalar density;
-            if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
-                density = FluidSystem::density(fs, paramCache, phaseIdx);
+            if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+                density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else 
                 density = insideVolVars.fluidState().density(phaseIdx);
 
@@ -114,8 +121,8 @@ public:
 
             if (enableEnergy) {
                 Scalar specificEnthalpy;
-                if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
-                    specificEnthalpy = FluidSystem::enthalpy(fs, paramCache, phaseIdx);
+                if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+                    specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
                 else 
                     specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
 
@@ -140,14 +147,20 @@ public:
 
     /*!
      * \brief Specify an inflow boundary
+     * 
+     * An inflow boundary condition is basically a free flow boundary
+     * condition that is not prevented from specifying a flow out of
+     * the domain.
+     *
+     * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
     void setInFlow(const Context &context, 
                    int bfIdx, 
                    int timeIdx,
-                   const FluidState &fs)
+                   const FluidState &fluidState)
     {
-        this->setFreeFlow(context, bfIdx, timeIdx, fs);
+        this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
         
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
@@ -159,14 +172,20 @@ public:
 
     /*!
      * \brief Specify an outflow boundary
+     * 
+     * An outflow boundary condition is basically a free flow boundary
+     * condition that is not prevented from specifying a flow into
+     * the domain.
+     *
+     * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
     void setOutFlow(const Context &context, 
                     int bfIdx, 
                     int timeIdx,
-                    const FluidState &fs)
+                    const FluidState &fluidState)
     {
-        this->setFreeFlow(context, bfIdx, timeIdx, fs);
+        this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
         
         // we only allow fluxes in the same direction as the outer
         // unit normal
@@ -177,7 +196,7 @@ public:
     }
     
     /*!
-     * \brief Specify a no-flow boundary.
+     * \brief Specify a no-flow boundary for all conserved quantities.
      */
     void setNoFlow()
     { (*this) = 0.0; }

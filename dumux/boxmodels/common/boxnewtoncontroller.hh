@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief A Newton controller for models using the box scheme.
- *
- * Usually, this controller should be sufficient for models using the
- * box scheme.
+ * \copydoc Dumux::BoxNewtonController
  */
 #ifndef DUMUX_BOX_NEWTON_CONTROLLER_HH
 #define DUMUX_BOX_NEWTON_CONTROLLER_HH
@@ -40,8 +37,7 @@ class BoxNewtonController;
 template <class TypeTag>
 class BoxNewtonConvergenceWriter;
 
-namespace Properties
-{
+namespace Properties {
 //! create a type tag for the box specific Newton method
 NEW_TYPE_TAG(BoxNewtonMethod, INHERITS_FROM(NewtonMethod));
 

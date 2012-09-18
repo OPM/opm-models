@@ -19,14 +19,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \ingroup ImmiscibleBoxModel
- */
-/*!
  * \file
  *
- * \brief Defines the properties required for the twophase BOX model.
+ * \brief Defines the properties required for the immiscible
+ *        multi-phase box model.
  */
-
 #ifndef DUMUX_IMMISCIBLE_PROPERTIES_HH
 #define DUMUX_IMMISCIBLE_PROPERTIES_HH
 

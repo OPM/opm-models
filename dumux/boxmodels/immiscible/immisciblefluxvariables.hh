@@ -21,11 +21,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        all fluxes of fluid phases over a face of a finite volume.
- *
- * This means pressure and temperature gradients, phase densities at
- * the integration point, etc.
+ * \copydoc Dumux::ImmiscibleFluxVariables
  */
 #ifndef DUMUX_IMMISCIBLE_FLUX_VARIABLES_HH
 #define DUMUX_IMMISCIBLE_FLUX_VARIABLES_HH
@@ -35,15 +31,15 @@
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup ImmiscibleBoxModel
  * \ingroup BoxFluxVariables
- * \brief This template class contains the data which is required to
+ *
+ * \brief This class provides the data all quantities that are required to
  *        calculate the fluxes of the fluid phases over a face of a
- *        finite volume for the two-phase model.
+ *        finite volume for the immiscible multi-phase model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the intergration point, etc.

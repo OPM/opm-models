@@ -21,8 +21,8 @@
 /*!
  * \file
  *
- * \brief Specify the shape functions, operator assemblers, etc
- *        used for the BoxModel.
+ * \brief Declare the basic properties used by the common infrastructure of
+ *        the box discretization.
  */
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH

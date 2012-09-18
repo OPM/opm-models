@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \brief Default properties for box models
+ * \brief Defines defaults for the common properties of the box models.
  */
 #ifndef DUMUX_BOX_PROPERTY_DEFAULTS_HH
 #define DUMUX_BOX_PROPERTY_DEFAULTS_HH

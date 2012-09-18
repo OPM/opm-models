@@ -22,8 +22,7 @@
 /*!
  * \file
  *
- * \brief Represents the finite volume geometry of a single element in
- *        the box scheme.
+ * \copydoc Dumux::BoxFVElementGeometry
  */
 #ifndef DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
 #define DUMUX_BOX_FV_ELEMENTGEOMETRY_HH
@@ -41,6 +40,9 @@
 
 namespace Dumux {
 
+/*!
+ * \cond 0
+ */
 template <class Scalar, int dim, int basicGeomType>
 class BoxScvGeometries;
 
@@ -436,6 +438,10 @@ template <class Scalar>
 typename BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::ScvGeometry
 BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::scvGeoms_[
     BoxScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::numScv];
+
+/*!
+ * \endcond
+ */
 
 /*!
  * \ingroup BoxModel

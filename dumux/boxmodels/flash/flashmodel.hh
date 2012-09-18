@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief The flash calculation based compositional flow model.
+ * \copybrief FlashModel
  */
 #ifndef DUMUX_FLASH_MODEL_HH
 #define DUMUX_FLASH_MODEL_HH
@@ -33,8 +33,8 @@
 #include <string>
 #include <vector>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup FlashModel
  * \brief A compositional model based on flash-calculations

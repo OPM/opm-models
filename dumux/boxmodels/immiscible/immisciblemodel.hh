@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \brief Adaption of the box scheme to the immiscible multi-phase flow model.
+ * \copydoc Dumux::ImmiscibleModel
  */
 #ifndef DUMUX_IMMISCIBLE_MODEL_HH
 #define DUMUX_IMMISCIBLE_MODEL_HH
@@ -36,7 +36,7 @@
 namespace Dumux {
 /*!
  * \ingroup ImmiscibleBoxModel
- * \brief A isothermal  multi-phase flow model using the box scheme.
+ * \brief A isothermal multi-phase flow model using the box scheme.
  *
  * This model implements multi-phase flow of immiscible fluids
  * \f$\alpha \in \{ w, n \}\f$ using a standard multiphase Darcy
@@ -92,13 +92,13 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     
 public:
     /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     const char *name() const
     { return "immiscible"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -118,7 +118,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -136,14 +136,14 @@ public:
      * \brief Compute the total storage inside one phase of all
      *        conservation quantities.
      *
-     * \param dest Contains the storage of each component for one phase
-     * \param phaseIdx The phase index
+     * \copydetails Doxygen::storageParam
+     * \copydetails Doxygen::phaseIdxParam
      */
-    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &storage, int phaseIdx)
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
-        dest = 0;
+        storage = 0;
         EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
@@ -169,19 +169,15 @@ public:
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
                 tmp *= scv.volume*volVars.extrusionFactor();
-                dest += tmp;
+                storage += tmp;
             }
         };
 
-        dest = this->gridView_().comm().sum(dest);
+        storage = this->gridView_().comm().sum(storage);
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param pvIdx The index of the primary variable
+     * \copydetails BoxModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
@@ -193,10 +189,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydetails BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {

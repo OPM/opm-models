@@ -20,8 +20,7 @@
 /*!
  * \file
  *
- * \brief Writes the intermediate solutions during the Newton scheme
- *        for models using the box scheme
+ * \copydoc Dumux::BoxNewtonConvergenceWriter
  */
 #ifndef DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
 #define DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH

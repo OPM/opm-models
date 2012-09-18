@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Caculates the Jacobian of the local residual for box models
+ * \copydoc Dumux::BoxLocalJacobian
  */
 #ifndef DUMUX_BOX_LOCAL_JACOBIAN_HH
 #define DUMUX_BOX_LOCAL_JACOBIAN_HH

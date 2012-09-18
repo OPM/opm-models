@@ -6,30 +6,30 @@
 
 /****************** Common ******************/
 /*!
- * \defgroup Common Common Infrastucture
+ * \defgroup Common Common
  * \brief Common Infrastucture
  */
     /*!
      * \ingroup Common
      * \defgroup PropertySystem Property System
-     * \brief The Property System
+     * \brief The eWoms Property System
      *
      * \copydetails propertysystem.hh
      */
     /*!
      * \ingroup Common
      * \defgroup Startup Startup
-     * \brief Starting the Program
+     * \brief Helper Routines to Start the Simulation
      */
     /*!
      * \ingroup Common
      * \defgroup TimeManager Time
-     * \brief Controlling the Simulation Time
+     * \brief Helper Routines to Control the Simulation Time
      */
     /*!
      * \ingroup Common
      * \defgroup Newton Non-Linear Solver
-     * \brief The Non-Linear Solver (Newton)
+     * \brief The Newton-Raphson Non-Linear Solver 
      */
     /*!
      * \ingroup Common
@@ -91,13 +91,13 @@
      */
         /*!
          * \ingroup fluidmatrixinteractions
-         * \defgroup fluidmatrixinteractionslaws Fluid-Matrix Interaction Relations
-         * \brief Laws for Fluid-Matrix Interactions
+         * \defgroup fluidmatrixinteractionslaws Laws
+         * \brief Relations Describing Fluid-Matrix Interactions
          */
          /*!
          * \ingroup fluidmatrixinteractions
-         * \defgroup fluidmatrixinteractionsparams Parameters for Fluid-Matrix Interaction Relations
-         * \brief Parameters for Fluid-Matrix Interaction Relations
+         * \defgroup fluidmatrixinteractionsparams Parameters
+         * \brief Parameters for the Fluid-Matrix Interaction Laws
          */
 
 /****************** Fully Implicit ******************/
@@ -108,7 +108,7 @@
     /*!
      * \ingroup BoxModel
      * \defgroup BoxModels Models
-     * \brief Models
+     * \brief Models Using the Box Scheme
      */
         /*!
          * \ingroup BoxModels
@@ -120,35 +120,42 @@
          /*!
           * \ingroup BoxModels
           * \defgroup PvsBoxModel PVS
-          * \brief Compositional Model Using Primary Variable Switching
+          * \brief Compositional Multi-Phase Model Using Primary Variable Switching
           *
           * \copydetails Dumux::PvsModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup NcpBoxModel NCP
-          * \brief Compositional Model Solving Non-linear Complementarity Problems
+          * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
           *
           * \copydetails Dumux::NcpModel
           */
          /*!
           * \ingroup BoxModels
+          * \defgroup FlashModel Flash
+          * \brief Compositional Multi-Phase Model Based on Flash Calculations
+          *
+          * \copydetails Dumux::FlashModel
+          */
+         /*!
+          * \ingroup BoxModels
           * \defgroup BlackOilBoxModel Black Oil
-          * \brief Partially Miscible Model Based on the Black Oil Assumptions
+          * \brief Partially Miscible Three-Phase Model Based on the Black Oil Assumptions
           *
           * \copydetails Dumux::BlackOilModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup RichardsModel Richards
-          * \brief Immiscible Model Using the Richards Equation
+          * \brief Immiscible Two-Phase Model Using the Richards Equation
           *
           * \copydetails Dumux::RichardsModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup BoxStokesModel (Navier-)Stokes
-          * \brief Compositional/Immiscible Model for the (Navier-)Stokes Equations
+          * \brief Compositional/Immiscible Single-Phase Model for Turbolent Flow
           *
           * \copydetails Dumux::StokesModel
           */
@@ -176,7 +183,7 @@
           /*!
            * \ingroup BoxModules
            * \defgroup BoxEnergy Energy
-           * \brief Energy Equation
+           * \brief Provides the Energy Equation
            *
            * \copydetails DoxyEnergyModule
            */
@@ -184,12 +191,12 @@
           /*!
            * \ingroup BoxModules
            * \defgroup BoxVtk VTK
-           * \brief VTK Output Modules
+           * \brief Various VTK Output Modules
            */
     /*!
      * \ingroup BoxModel
      * \defgroup BoxTestProblems Test Problems
-     * \brief Test Problems
+     * \brief Test Problems for the Box Models
      */
 
 /****************** Semi-Implicit ******************/
@@ -201,7 +208,7 @@
     /*!
      * \ingroup Sequential
      * \defgroup IMPET Models
-     * \brief Models
+     * \brief Semi-Implicit Models
      */
          /*!
           * \ingroup IMPET

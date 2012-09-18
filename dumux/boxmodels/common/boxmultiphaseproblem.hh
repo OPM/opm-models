@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief The base class for the problems of box models which deal
- *        with a multi-phase flow through a porous medium.
+ * \copydoc Dumux::BoxMultiPhaseProblem
  */
 #ifndef DUMUX_BOX_MULTI_PHASE_PROBLEM_HH
 #define DUMUX_BOX_MULTI_PHASE_PROBLEM_HH

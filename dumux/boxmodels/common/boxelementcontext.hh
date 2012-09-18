@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Represents all quantities which are relevant for an element
+ * \copydoc Dumux::BoxElementContext
  */
 #ifndef DUMUX_BOX_ELEMENT_CONTEXT_HH
 #define DUMUX_BOX_ELEMENT_CONTEXT_HH

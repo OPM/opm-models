@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the 2-phase box model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::ImmisciblePrimaryVariables
  */
 #ifndef DUMUX_IMMISCIBLE_PRIMARY_VARIABLES_HH
 #define DUMUX_IMMISCIBLE_PRIMARY_VARIABLES_HH
@@ -35,13 +32,13 @@
 
 #include "immiscibleproperties.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Represents the primary variables used in the M-phase,
- *        N-component box model.
+ * \brief Represents the primary variables used by the immiscible
+ *        multi-phase, model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -84,6 +81,8 @@ public:
 
     /*!
      * \brief Constructor with assignment from scalar
+     *
+     * \param value The scalar value to which all entries of the vector will be set.
      */
     ImmisciblePrimaryVariables(Scalar value)
         : ParentType(value)
@@ -91,6 +90,8 @@ public:
 
     /*!
      * \brief Copy constructor
+     *
+     * \param value The primary variables that will be duplicated.
      */
     ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &value)
         : ParentType(value)
@@ -138,6 +139,22 @@ public:
         assignNaive(fsFlash);
     }
 
+    /*!
+     * \brief Directly retrieve the primary variables from an
+     *        arbitrary fluid state.
+     *
+     * This method retrieves all primary variables from an abitrary
+     * fluid state without careing whether the state which is
+     * represented by the resulting primary variables features the
+     * equivalent mass as the given fluid state. This method is
+     * massively cheaper and simpler than assignMassConservative() but
+     * it should be used with care!
+     *
+     * \param fluidState The fluid state which should be represented
+     *                   by the primary variables. The temperatures,
+     *                   pressures, compositions and densities of all
+     *                   phases must be defined.
+     */
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {

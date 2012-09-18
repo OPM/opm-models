@@ -18,11 +18,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
  * \file
  *
- * \brief Defines the indices required for the two-phase box model.
+ * \copydoc Dumux::ImmiscibleIndices
  */
 #ifndef DUMUX_BOX_IMMISCIBLE_INDICES_HH
 #define DUMUX_BOX_IMMISCIBLE_INDICES_HH
@@ -30,11 +29,11 @@
 #include "immiscibleproperties.hh"
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup ImmiscibleBoxModel
- * \brief The indices for the isothermal two-phase model.
+ * \brief The indices for the isothermal multi-phase model.
  */
 template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices

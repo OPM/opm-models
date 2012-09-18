@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Element-wise calculation of the residual for the two-phase box model.
+ * \copydoc Dumux::ImmiscibleLocalResidual
  */
 #ifndef DUMUX_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
 #define DUMUX_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
@@ -34,13 +34,12 @@
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
+
 /*!
  * \ingroup ImmiscibleBoxModel
- * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase box model.
  *
- * This class is also used for the non-isothermal model, which means
- * that it uses static polymorphism.
+ * \brief Calculates the local residual of the immiscible multi-phase
+ *        box model.
  */
 template<class TypeTag>
 class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
@@ -69,7 +68,9 @@ public:
      * \brief Adds the amount all conservation quantities (e.g. phase
      *        mass) within a single fluid phase
      *
-     *  \param result The phase mass within the sub-control volume
+     * \copydetails Doxygen::storageParam
+     * \copydetails Doxygen::boxScvCtxParams
+     * \copydetails Doxygen::phaseIdxParam
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
@@ -90,10 +91,7 @@ public:
     }
 
     /*!
-     * \brief Evaluate the amount all conservation quantities
-     *        (e.g. phase mass) within a finite sub-control volume.
-     *
-     *  \param result The phase mass within the sub-control volume
+     * \copydoc BoxLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -115,9 +113,7 @@ public:
     }
 
     /*!
-     * \brief Evaluates the mass flux over a face of a sub-control
-     *        volume.
-     *
+     * \copydoc BoxLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -125,22 +121,24 @@ public:
                      int timeIdx) const
     {
         flux = 0;
-        asImp_()->computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        asImp_()->computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        asImp_()->addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        asImp_()->addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \brief Evaluates the advective mass flux of all components over
+     * \brief Add the advective mass flux of all components over
      *        a face of a sub-control volume.
      *
      *
      * This method is called by compute flux and is mainly there for
      * derived models to ease adding equations selectively.
+     *
+     * \copydetails computeFlux
      */
-    void computeAdvectiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
         const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
@@ -176,18 +174,19 @@ public:
     }
 
     /*!
-     * \brief Adds the diffusive flux to the flux vector over
-     *        the face of a sub-control volume.
+     * \brief Adds the diffusive flux of all conservation quantitis to
+     *        the flux vector over the face of a sub-control volume.
      *
+     * For the immiscible model, this is a no-op for mass fluxes. For
+     * energy it adds the contribution of heat conduction to the
+     * enthalpy flux.
      *
-     * It doesn't do anything in two-phase model but is used by the
-     * non-isothermal two-phase models to calculate diffusive heat
-     * fluxes
+     * \copydetails computeFlux
      */
-    void computeDiffusiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
         // no diffusive mass fluxes for the immiscible model
         
@@ -196,9 +195,10 @@ public:
     }
 
     /*!
-     * \brief Calculate the source term of the equation
+     * \copydoc BoxLocalResidual::computeSource
      *
-     *
+     * By default, this method only asks the problem to specify a
+     * source term.
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

@@ -18,7 +18,8 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Class to specify constraints in a box model.
+ *
+ * \copydoc Dumux::BoxConstraints
  */
 #ifndef DUMUX_BOX_CONSTRAINTS_HH
 #define DUMUX_BOX_CONSTRAINTS_HH
@@ -26,10 +27,8 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/valgrind.hh>
 
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
 NEW_PROP_TAG(PrimaryVariables);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);

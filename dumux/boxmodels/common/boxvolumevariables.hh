@@ -20,8 +20,7 @@
 /*!
  * \file
  *
- * \brief Base class for the model specific class which provides
- *        access to all volume averaged quantities.
+ * \copydoc Dumux::BoxVolumeVariables
  */
 #ifndef DUMUX_BOX_VOLUME_VARIABLES_HH
 #define DUMUX_BOX_VOLUME_VARIABLES_HH

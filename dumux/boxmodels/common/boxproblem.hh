@@ -25,7 +25,7 @@
 /*!
  * \file
  *
- * \brief Base class for all problems which use the box scheme
+ * \copydoc Dumux::BoxProblem
  */
 #ifndef DUMUX_BOX_PROBLEM_HH
 #define DUMUX_BOX_PROBLEM_HH
@@ -585,7 +585,7 @@ public:
             Scalar t = timeManager().time() + timeManager().timeStepSize();
             createResultWriter_();
             resultWriter_->beginWrite(t);
-            model().addOutputVtkFields(model().solution(/*timeIdx=*/0), *resultWriter_);
+            model().addOutputVtkFields(*resultWriter_);
             resultWriter_->endWrite();
         }
     }

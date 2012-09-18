@@ -42,6 +42,13 @@ public:
     void boxScvIdxParam(int scvIdx);
 
     /*!
+     * \param scvfIdx The local sub-control volume face index of interest
+     *               (equivalent to the local edge index of the
+     *               element).
+     */
+    void boxScvfIdxParam(int scvfIdx);
+
+    /*!
      * \param source The values of the source term.
      */
     void sourceParam(RateVector &source);
@@ -50,6 +57,11 @@ public:
      * \param storage Stores the total amount of each conserved quantity inside the domain.
      */
     void storageParam(EqVector &storage);
+
+    /*!
+     * \param flux Area-specific flux over the phase.
+     */
+    void areaFluxParam(RateVector &flux);
 
     /*!
      * \param residual Stores the residual  of each conserved quantity.
@@ -67,6 +79,13 @@ public:
      * \copydetails Doxygen::timeIdxParam
      */
     void boxScvCtxParams(const ElementContext &elemCtx, int scvIdx, int timeIdx);
+
+    /*!
+     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::boxScvfIdxParam
+     * \copydetails Doxygen::timeIdxParam
+     */
+    void boxScvfCtxParams(const ElementContext &elemCtx, int scvfIdx, int timeIdx);
     
     /*!
      * \tparam FluidState The type of the fluid state.
