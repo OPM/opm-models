@@ -93,7 +93,7 @@ public:
         : ParentType(timeManager, gridView),
         gravity_(0)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, CFLFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
 
         newSpatialParams_ = true;
         spatialParams_ = new SpatialParams(gridView);
@@ -114,7 +114,7 @@ public:
         : ParentType(timeManager, gridView),
         gravity_(0),spatialParams_(spatialParams)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, CFLFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
 
         newSpatialParams_ = false;
 

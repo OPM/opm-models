@@ -125,6 +125,15 @@ public:
     { delete matrix_; }
 
     /*!
+     * \brief Register all run-time parameters for the box jacobian assembler.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling, "Re-use of the jacobian matrix at the first iteration of the next time step");
+        REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble, "Re-assemble only those degrees of freedom that have changed 'sufficiently' be changed between two Newton iterations");
+    }
+
+    /*!
      * \brief Initialize the jacobian assembler.
      *
      * At this point we can assume that all objects in the problem and

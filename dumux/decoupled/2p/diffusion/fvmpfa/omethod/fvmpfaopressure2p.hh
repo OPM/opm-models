@@ -263,7 +263,7 @@ public:
             DUNE_THROW(Dune::NotImplemented, "MPFA method only implemented for 2-d!");
         }
 
-        vtkOutputLevel_ = GET_PARAM_FROM_GROUP(TypeTag, int, Vtk, OutputLevel);
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
 private:

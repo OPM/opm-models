@@ -55,11 +55,11 @@
 
 namespace Dumux {
 namespace Properties {
-NEW_PROP_TAG(AMGCoarsenTarget);
+NEW_PROP_TAG(AmgCoarsenTarget);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(BoxLinearSolverTypeTag, AMGCoarsenTarget, 10000);
+SET_INT_PROP(BoxLinearSolverTypeTag, AmgCoarsenTarget, 10000);
 }
 
 namespace Linear {
@@ -102,6 +102,13 @@ public:
     ~BoxParallelAmgSolver()
     { cleanup_(); }
 
+    static void registerParameters()
+    {
+        BoxParallelSolver<TypeTag>::registerParameters();
+
+        REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget, "The coarsening target for the agglomerations of the AMG preconditioner");
+    }
+
     /*!
      * \brief Set the structure of the linear system of equations to be solved.
      *
@@ -125,7 +132,7 @@ public:
     {
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0)
-            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+            verbosity = GET_PARAM(TypeTag, int, LinearSolver, Verbosity);
 
         /////////////
         // set-up the overlapping matrix and vector
@@ -145,7 +152,7 @@ public:
 
         (*overlappingx_) = 0.0;
 
-        int coarsenTarget = GET_PARAM(TypeTag, int, AMGCoarsenTarget);
+        int coarsenTarget = GET_PARAM(TypeTag, int, AmgCoarsenTarget);
         int rank = problem_.gridView().comm().rank();
 
         if (verbosity > 1 && rank == 0)
@@ -208,8 +215,8 @@ public:
             std::cout << "Creating the solver\n";
 
         typedef Dune::BiCGSTABSolver<Vector>  SolverType;
-        Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
-        int maxIterations = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, MaxIterations);
+        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+        int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
         SolverType solver(fineOperator, 
                           scalarProduct,
                           /*preconditioner=*/amg,
@@ -267,11 +274,11 @@ private:
 
     void prepare_(const Matrix &M)
     {
-        int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
+        int overlapSize = GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
 
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0) {
-            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
             if (verbosity > 1)
                 std::cout << "Creating algebraic overlap of size " << overlapSize << "\n";

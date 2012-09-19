@@ -82,6 +82,15 @@ protected:
     //! \endcond
 
 public:
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");
+        REGISTER_PARAM(TypeTag, bool, ImpetSwitchNormals, "Invert the direction of the normal vectors");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetCflFactor, "The CFL factor to be used for transport");
+    }
 
     // Calculate the update vector.
     void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet=false);

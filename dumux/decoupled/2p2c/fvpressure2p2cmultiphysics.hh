@@ -122,6 +122,11 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     const Problem& problem() const
     {    return this->problem_;   }
 public:
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+    }
+
     //function which assembles the system of equations to be solved
     void assemble(bool first);
 

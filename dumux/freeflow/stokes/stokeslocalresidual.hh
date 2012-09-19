@@ -48,7 +48,7 @@ template<class TypeTag>
 class StokesLocalResidual
     : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-protected:
+    typedef typename GET_PROP_TYPE(TypeTag, BaseLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -72,7 +72,17 @@ protected:
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
- public:
+public:
+    /*!
+     * \brief Register all run-time parameters for the local residual.
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, bool, EnableNavierTerm, "Enable the Navier term (convective flux term).");
+    }
+
     /*!
      * \copydoc BoxLocalResidual::computeStorage
      */

@@ -29,40 +29,11 @@
 #include "test_dec2p2cproblem.hh"
 #include <dumux/common/start.hh>
 
-/*!
- * \brief Provides an interface for customizing error messages associated with
- *        reading in parameters.
- *
- * \param progName  The name of the program, that was tried to be started.
- * \param errorMsg  The error message that was issued by the start function.
- *                  Comprises the thing that went wrong and a general help message.
- */
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-tEnd                          The end of the simulation. [s] \n"
-                                        "\t-dtInitial                     The initial timestep size. [s] \n"
-                                        "\t-Grid.numberOfCellsX           Resolution in x-direction [-]\n"
-                                        "\t-Grid.numberOfCellsY           Resolution in y-direction [-]\n"
-                                        "\t-Grid.numberOfCellsZ           Resolution in z-direction [-]\n"
-                                        "\t-Grid.upperRightX              Dimension of the grid [m]\n"
-                                        "\t-Grid.upperRightY              Dimension of the grid [m]\n"
-                                        "\t-Grid.upperRightZ              Dimension of the grid [m]\n";
-        std::cout << errorMessageOut
-                  << "\n";
-    }
-}
-
 ////////////////////////
 // the main function
 ////////////////////////
 int main(int argc, char** argv)
 {
     typedef TTAG(TestDecTwoPTwoCProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv, usage);
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }

@@ -106,6 +106,13 @@ class FVTransport2P2C
     {return problem_;}
 
 public:
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetCflFactor, "The CFL factor to be used for transport");
+        REGISTER_PARAM(TypeTag, bool, ImpetRestrictFluxInTransport, "Impose an upper limit on the flux in the transport equation");
+    }
+
     virtual void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet = false);
 
     void updateTransportedQuantity(TransportSolutionType& updateVector);
@@ -299,7 +306,7 @@ void FVTransport2P2C<TypeTag>::update(const Scalar t, Scalar& dt,
     if(impet)
     {
         Dune::dinfo << "Timestep restricted by CellIdx " << restrictingCell << " leads to dt = "
-                <<dt * GET_PARAM(TypeTag, Scalar, CFLFactor)<< std::endl;
+                <<dt * GET_PARAM(TypeTag, Scalar, ImpetCflFactor)<< std::endl;
     	if(averagedFaces_ != 0)
             Dune::dinfo  << " Averageing done for " << averagedFaces_ << " faces. "<< std::endl;
     }

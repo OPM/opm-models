@@ -81,6 +81,24 @@ public:
     typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::cube, Dune::nonconforming> Grid;
 
     /*!
+     * \brief Register all run-time parameters for the grid creator.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
+        REGISTER_PARAM(TypeTag, Scalar, CellsX, "The number of intervalls in x direction");
+        if (dim > 1) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsY, "The number of intervalls in y direction");
+        }
+        if (dim > 2) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsZ, "The number of intervalls in z direction");
+        }
+    }
+
+    /*!
      * \brief Create the Grid
      */
     static void makeGrid()
@@ -278,6 +296,24 @@ public:
     typedef Dune::YaspGrid<FINGER_DIM> Grid;
 
     /*!
+     * \brief Register all run-time parameters for the grid creator.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
+        REGISTER_PARAM(TypeTag, Scalar, CellsX, "The number of intervalls in x direction");
+        if (dim > 1) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsY, "The number of intervalls in y direction");
+        }
+        if (dim > 2) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsZ, "The number of intervalls in z direction");
+        }
+    }
+
+    /*!
      * \brief Create the Grid
      */
     static void makeGrid()
@@ -299,7 +335,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
        
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         grid_ = new Dune::YaspGrid<FINGER_DIM>(
 #ifdef HAVE_MPI

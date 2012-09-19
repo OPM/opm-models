@@ -139,6 +139,14 @@ public:
     }
 
     /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+    }
+
+    /*!
      * \name Problem parameters
      */
     // \{

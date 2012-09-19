@@ -50,7 +50,6 @@ namespace Dumux
  */
 template<class TypeTag> class IMPET
 {
-
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -60,6 +59,20 @@ template<class TypeTag> class IMPET
 
 public:
     typedef typename SolutionTypes::ScalarSolution SolutionType;
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermFactor, "The weight of the calculated error term");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermLowerBound, "The lower limit of the error term for IMPET");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermUpperBound, "The upper limit of the error term for IMPET");
+        REGISTER_PARAM(TypeTag, int, ImpetIterationFlag, "Enable multiple iterations per time step");
+        REGISTER_PARAM(TypeTag, int, ImpetIterationNumber, "The number of iterations done per time step");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetMaximumDefect, "The maximum residual tolerated");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetRelaxationFactor, "The relaxation factor for the update");
+    }
 
     //! Set initial solution and initialize parameters
     void initialize()
@@ -184,11 +197,11 @@ public:
     IMPET(Problem& prob) :
             problem_(prob)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, CFLFactor);
-        iterFlag_ = GET_PARAM(TypeTag, int, IterationFlag);
-        nIter_ = GET_PARAM(TypeTag, int, IterationNumber);
-        maxDefect_ = GET_PARAM(TypeTag, Scalar, MaximumDefect);
-        omega_ = GET_PARAM(TypeTag, Scalar, RelaxationFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
+        iterFlag_ = GET_PARAM(TypeTag, int, ImpetIterationFlag);
+        nIter_ = GET_PARAM(TypeTag, int, ImpetIterationNumber);
+        maxDefect_ = GET_PARAM(TypeTag, Scalar, ImpetMaximumDefect);
+        omega_ = GET_PARAM(TypeTag, Scalar, ImpetRelaxationFactor);
     }
 
 private:

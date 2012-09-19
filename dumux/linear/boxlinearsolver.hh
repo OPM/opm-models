@@ -181,6 +181,19 @@ public:
     { cleanup_(); }
 
     /*!
+     * \brief Register all run-time parameters for the linear solver.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+        REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
+        REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
+        REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+        REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner");
+        REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner");
+    }
+
+    /*!
      * \brief Set the structure of the linear system of equations to be solved.
      *
      * This method allocates space an does the necessary
@@ -247,7 +260,7 @@ public:
         }
 
         // create a fixpoint convergence criterion
-        Scalar linearSolverTolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance);
+        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         auto *convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector, 
                                                                    typename GridView::CollectiveCommunication>(problem_.gridView().comm(), 
                                                                                                                weightVec,
@@ -299,7 +312,7 @@ private:
         }
 
         // create the overlapping Jacobian matrix
-        int overlapSize = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, OverlapSize);
+        int overlapSize = GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix (M,
                                                     borderListCreator.borderList(),
                                                     blackList,
@@ -380,12 +393,12 @@ private:
                         ScalarProduct &parScalarProduct,                \
                         Preconditioner &parPreCond)                     \
     {                                                                   \
-        Scalar tolerance = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, Tolerance); \
-        int maxIter = GET_PARAM_FROM_GROUP(TypeTag, Scalar, LinearSolver, MaxIterations); \
+        Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance); \
+        int maxIter = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations); \
                                                                         \
         int verbosity = 0;                                              \
         if (parOperator.overlap().myRank() == 0)                        \
-            verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity); \
+            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity); \
         solver_ = new ParallelSolver(parOperator,                       \
                                      parScalarProduct,                  \
                                      parPreCond,                        \

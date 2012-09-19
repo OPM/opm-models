@@ -86,6 +86,24 @@ public:
 #endif
 
     /*!
+     * \brief Register all run-time parameters for the grid creator.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
+        REGISTER_PARAM(TypeTag, Scalar, CellsX, "The number of intervalls in x direction");
+        if (dim > 1) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsY, "The number of intervalls in y direction");
+        }
+        if (dim > 2) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsZ, "The number of intervalls in z direction");
+        }
+    }
+
+    /*!
      * \brief Create the Grid
      */
     static void makeGrid()
@@ -236,7 +254,7 @@ public:
 
         grid_ = factory.createGrid();
 
-        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinements = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
         grid_->globalRefine(numRefinements);
     }
 
@@ -279,6 +297,24 @@ class LensGridCreator
 
 public:
     typedef Dune::YaspGrid<LENS_DIM> Grid;
+
+    /*!
+     * \brief Register all run-time parameters for the grid creator.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
+        REGISTER_PARAM(TypeTag, Scalar, CellsX, "The number of intervalls in x direction");
+        if (dim > 1) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsY, "The number of intervalls in y direction");
+        }
+        if (dim > 2) {
+            REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
+            REGISTER_PARAM(TypeTag, Scalar, CellsZ, "The number of intervalls in z direction");
+        }
+    }
 
     /*!
      * \brief Create the Grid

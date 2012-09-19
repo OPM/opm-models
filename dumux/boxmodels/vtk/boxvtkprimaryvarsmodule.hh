@@ -70,6 +70,15 @@ public:
     { }
 
     /*!
+     * \brief Register all run-time parameters for the Vtk output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars, "Include the primary variables in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank, "Include the MPI process rank in the VTK output files");
+    }
+
+    /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
@@ -113,9 +122,9 @@ public:
 
 private:
     static bool primaryVarsOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePrimaryVars); }
+    { return GET_PARAM(TypeTag, bool, VtkWritePrimaryVars); }
     static bool processRankOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteProcessRank); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteProcessRank); }
 
     EqBuffer primaryVars_;
     ScalarBuffer processRank_;

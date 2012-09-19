@@ -88,7 +88,9 @@ SET_INT_PROP(TransportTestProblem, VelocityFormulation,
 // Disable gravity
 SET_BOOL_PROP(TransportTestProblem, EnableGravity, false);
 
-SET_SCALAR_PROP(TransportTestProblem, CFLFactor, 1.0);
+SET_SCALAR_PROP(TransportTestProblem, ImpetCflFactor, 1.0);
+SET_SCALAR_PROP(TransportTestProblem, EndTime, 1e4);
+SET_STRING_PROP(TransportTestProblem, GridFile, "./grids/test_transport.dgf");
 }
 
 /*!

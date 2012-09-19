@@ -25,98 +25,13 @@
 #include "config.h"
 
 #include "test_multiphysics2p2cproblem.hh"
-
-#include <dune/grid/common/gridinfo.hh>
-
-#include <dune/common/exceptions.hh>
-#include <dune/common/mpihelper.hh>
-
-#include <iostream>
+#include <dumux/common/start.hh>
 
 ////////////////////////
 // the main function
 ////////////////////////
-void usage(const char *progname)
-{
-    std::cout << "usage: " << progname << " [--restart restartTime] tEnd firstDt\n";
-    exit(1);
-}
-
 int main(int argc, char** argv)
 {
-    try {
-        typedef TTAG(TestMultTwoPTwoCProblem) TypeTag;
-        typedef GET_PROP_TYPE(TypeTag, Scalar)  Scalar;
-        typedef GET_PROP_TYPE(TypeTag, Grid)    Grid;
-        typedef GET_PROP_TYPE(TypeTag, Problem) Problem;
-        typedef GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-        typedef Dune::FieldVector<Scalar, Grid::dimensionworld> GlobalPosition;
-
-        static const int dim = Grid::dimension;
-
-        // initialize MPI, finalize is done automatically on exit
-        Dune::MPIHelper::instance(argc, argv);
-
-        ////////////////////////////////////////////////////////////
-        // parse the command line arguments
-        ////////////////////////////////////////////////////////////
-        // deal with the restart stuff
-        int argPos = 1;
-        bool restart = false;
-        double startTime = 0;
-        // deal with start parameters
-        double tEnd= 3e3;
-        double firstDt = 200;
-        if (argc != 1)
-        {
-            // deal with the restart stuff
-            if (std::string("--restart") == argv[argPos]) {
-                restart = true;
-                ++argPos;
-
-                std::istringstream(argv[argPos++]) >> startTime;
-            }
-            if (argc - argPos == 2)
-            {
-                // read the initial time step and the end time
-                std::istringstream(argv[argPos++]) >> tEnd;
-                std::istringstream(argv[argPos++]) >> firstDt;
-            }
-            else
-                usage(argv[0]);
-        }
-        else
-        {
-            Dune::dwarn << "simulation started with predefs" << std::endl;
-        }
-
-        ////////////////////////////////////////////////////////////
-        // create the grid
-        ////////////////////////////////////////////////////////////
-        Dune::FieldVector<int,dim> N(10);
-        Dune::FieldVector<double ,dim> L(0);
-        Dune::FieldVector<double,dim> H(10);
-        Grid grid(N,L,H);
-
-        ////////////////////////////////////////////////////////////
-        // instantiate and run the concrete problem
-        ////////////////////////////////////////////////////////////
-        TimeManager timeManager;
-        Problem problem(timeManager, grid.leafView(), L, H);
-
-        // initialize the simulation
-        timeManager.init(problem, startTime, firstDt, tEnd, restart);
-        // run the simulation
-        timeManager.run();
-        return 0;
-    }
-    catch (Dune::Exception &e) {
-        std::cerr << "Dune reported error: " << e << std::endl;
-    }
-    catch (...) {
-        std::cerr << "Unknown exception thrown!\n";
-        throw;
-    }
-
-    return 3;
+    typedef TTAG(TestMultTwoPTwoCProblem) ProblemTypeTag;
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }

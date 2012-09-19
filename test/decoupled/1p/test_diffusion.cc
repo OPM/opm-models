@@ -48,8 +48,12 @@ int main(int argc, char** argv)
         typedef TTAG(FVVelocity2PTestProblem) TypeTag;
         typedef GET_PROP_TYPE(TypeTag, Scalar) Scalar;
         typedef GET_PROP_TYPE(TypeTag, Grid) Grid;
+        typedef GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
         static const int dim = Grid::dimension;
         typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
+
+        TimeManager::registerParameters();
+        END_PARAM_REGISTRATION;
 
         // initialize MPI, finalize is done automatically on exit
         Dune::MPIHelper::instance(argc, argv);

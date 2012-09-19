@@ -50,17 +50,26 @@ NEW_PROP_TAG(GridView);
 template <class TypeTag>
 class IterativePrecondSolverBackend
 {
+  typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-
   IterativePrecondSolverBackend()
   {}
+
+  static void registerParameters()
+  {
+      REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+      REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
+      REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+      REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner");
+      REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner");
+  }
 
   template<class Preconditioner, class Solver, class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
-      int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-      const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-      const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+      int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+      const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
+      const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
       
       Vector bTmp(b);
       
@@ -83,9 +92,9 @@ public:
   template<class Preconditioner, class Solver, class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b, const int restartGMRes)
   {
-    int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-    const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+    int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
 
     Vector bTmp(b);
 
@@ -385,17 +394,27 @@ public:
 template <class TypeTag>
 class ILU0SolverBackend
 {
-public:
+  typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
+public:
   ILU0SolverBackend()
   {}
+
+  static void registerParameters()
+  {
+      REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+      REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
+      REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+      REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner");
+      REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner");
+  };
 
   template<class Preconditioner, class Solver, class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
-    int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-    const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+    int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
 
     Vector bTmp(b);
 
@@ -417,9 +436,9 @@ public:
   template<class Preconditioner, class Solver, class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b, const int restartGMRes)
   {
-    int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
-    const int maxIter = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, MaxIterations);
-    const double tolerance = GET_PARAM_FROM_GROUP(TypeTag, double, LinearSolver, Tolerance);
+    int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
 
     Vector bTmp(b);
 
@@ -509,6 +528,12 @@ public:
   ILU0RestartedGMResBackend(const Problem& problem)
   {}
 
+  static void registerParameters()
+  {
+      ParentType::registerParameters();
+      REGISTER_PARAM(TypeTag, int, GMResRestart, "The number of iterations after which GMRES solver is restarted");
+  }
+
   template<class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
@@ -527,10 +552,14 @@ class SuperLUBackend
   typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
 public:
-
   SuperLUBackend(const Problem& problem)
   : problem_(problem)
   {}
+
+  static void registerParameters()
+  {
+      REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+  }
 
   template<class Matrix, class Vector>
   bool solve(const Matrix& A, Vector& x, const Vector& b)
@@ -542,7 +571,7 @@ public:
     typedef typename Dune::FieldMatrix<Scalar, blockSize, blockSize> MatrixBlock;
     typedef typename Dune::BCRSMatrix<MatrixBlock> ISTLMatrix;
 
-    int verbosity = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+    int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     Dune::SuperLU<ISTLMatrix> solver(A, verbosity > 0);
 
     solver.apply(x, bTmp, result_);

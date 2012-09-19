@@ -37,6 +37,12 @@
 
 namespace Dumux
 {
+namespace Properties {
+NEW_PROP_TAG( ImpetErrorTermFactor ); //! Scaling factor for the error term (term to damp unphysical saturation overshoots via pressure correction)
+NEW_PROP_TAG( ImpetErrorTermLowerBound );//! Lower threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
+NEW_PROP_TAG( ImpetErrorTermUpperBound );//!Upper threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
+}
+
 //! The finite volume base class for the solution of a pressure equation
 /*! \ingroup IMPET
  *  Base class for finite volume (FV) implementations of a diffusion-like pressure equation.
@@ -117,6 +123,17 @@ protected:
     {   return pressure_;}
 
 public:
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
+        LinearSolver::registerParameters();
+
+        REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");
+    }
+
     /*! \brief Function which calculates the source entry
      *
      * Function computes the source term and writes it to the corresponding entry of the entry vector
@@ -453,7 +470,7 @@ void FVPressure<TypeTag>::solve()
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Solver;
 
-    int verboseLevelSolver = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+    int verboseLevelSolver = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
     if (verboseLevelSolver)
         std::cout << __FILE__ << ": solve for pressure" << std::endl;

@@ -58,12 +58,19 @@ class ImmiscibleFluxVariables
 
 public:
     /*!
+     * \brief Register all run-time parameters for the flux variables.
+     */
+    static void registerParameters()
+    {
+        MultiPhaseFluxVariables::registerParameters();
+    }
+
+    /*!
      * \copydoc BoxMultiPhaseFluxVariables::update()
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
-        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!

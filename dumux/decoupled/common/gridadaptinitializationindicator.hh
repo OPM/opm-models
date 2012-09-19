@@ -47,7 +47,7 @@ private:
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef typename GET_PROP_TYPE(TypeTag, AdaptionIndicator) AdaptionIndicator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridAdaptIndicator) GridAdaptIndicator;
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
@@ -66,6 +66,15 @@ private:
 
 
 public:
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, GridAdaptEnableInitializationIndicator, "Enable the initialization indicator for grid adaption");
+
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtDirichletBC, "Refine the grid at Dirichlet boundaries");
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtFluxBC, "Refine the grid at flux boundaries");
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtSource, "Refine the grid at regions with a source term");
+    }
+
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
      *
      */
@@ -225,7 +234,7 @@ public:
     void init()
     {}
 
-    /*! \brief Constructs a GridAdaptionIndicator instance
+    /*! \brief Constructs a GridGridAdaptIndicator instance
      *
      * This standard indicator is based on the saturation gradient. It checks the local gradient 
      * compared to the maximum global gradient. The indicator is compared locally to a 
@@ -235,20 +244,20 @@ public:
      * \param problem The problem object
      * \param adaptionIndicator Indicator whether a be adapted
      */
-    GridAdaptInitializationIndicator(Problem& problem, AdaptionIndicator& adaptionIndicator):
+    GridAdaptInitializationIndicator(Problem& problem, GridAdaptIndicator& adaptionIndicator):
         problem_(problem), adaptionIndicator_(adaptionIndicator), maxLevel_(0)
     {
-        minAllowedLevel_ = GET_PARAM(TypeTag, int, MinLevel);
-        maxAllowedLevel_ = GET_PARAM(TypeTag, int, MaxLevel);
-        enableInitializationIndicator_ = GET_PARAM(TypeTag, bool, EnableInitializationIndicator);
-        refineAtDirichletBC_ = GET_PARAM(TypeTag, bool, RefineAtDirichletBC);
-        refineAtFluxBC_ = GET_PARAM(TypeTag, bool, RefineAtFluxBC);
-        refineAtSource_ = GET_PARAM(TypeTag, bool, RefineAtSource);
+        minAllowedLevel_ = GET_PARAM(TypeTag, int, GridAdaptMinLevel);
+        maxAllowedLevel_ = GET_PARAM(TypeTag, int, GridAdaptMaxLevel);
+        enableInitializationIndicator_ = GET_PARAM(TypeTag, bool, GridAdaptEnableInitializationIndicator);
+        refineAtDirichletBC_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtDirichletBC);
+        refineAtFluxBC_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtFluxBC);
+        refineAtSource_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtSource);
     }
 
 private:
     Problem& problem_;
-    AdaptionIndicator& adaptionIndicator_;
+    GridAdaptIndicator& adaptionIndicator_;
     Dune::DynamicVector<int> indicatorVector_;
     int maxLevel_;
     int minAllowedLevel_;

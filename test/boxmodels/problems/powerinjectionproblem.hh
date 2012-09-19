@@ -125,6 +125,12 @@ SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeZ, 1.0);
 SET_INT_PROP(PowerInjectionBaseProblem, CellsX, 250);
 SET_INT_PROP(PowerInjectionBaseProblem, CellsY, 1);
 SET_INT_PROP(PowerInjectionBaseProblem, CellsZ, 1);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(PowerInjectionBaseProblem, EndTime, 100);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(PowerInjectionBaseProblem, InitialTimeStepSize, 1e-3);
 }
 
 /*!

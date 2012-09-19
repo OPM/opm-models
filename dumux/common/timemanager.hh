@@ -64,7 +64,6 @@ class TimeManager
     TimeManager(const TimeManager&)
     {}
 public:
-
     TimeManager(bool verbose = true)
     {
         verbose_ =
@@ -82,6 +81,14 @@ public:
         finished_ = false;
 
         episodeLength_ = 1e100;
+    }
+
+    /*!
+     * \brief Registers all runtime parameters used by the simulation.
+     */
+    static void registerParameters()
+    {
+        Problem::registerParameters();
     }
 
     /*!

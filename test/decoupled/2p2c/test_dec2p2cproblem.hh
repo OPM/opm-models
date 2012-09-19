@@ -34,9 +34,6 @@
 //#include <dumux/linear/impetbicgstabilu0solver.hh>
 #include <dumux/common/cubegridcreator.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 
@@ -97,7 +94,10 @@ SET_BOOL_PROP(TestDecTwoPTwoCProblem, EnableCapillarity, true);
 SET_INT_PROP(TestDecTwoPTwoCProblem,
         BoundaryMobility,
         GET_PROP_TYPE(TypeTag, Indices)::satDependent);
-SET_SCALAR_PROP(TestDecTwoPTwoCProblem, CFLFactor, 0.8);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, ImpetCflFactor, 0.8);
+
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, InitialTimeStepSize, 200);
+SET_SCALAR_PROP(TestDecTwoPTwoCProblem, EndTime, 3e3);
 
 // define the properties required by the cube grid creator
 SET_SCALAR_PROP(TestDecTwoPTwoCProblem, DomainSizeX, 10.0);
@@ -153,11 +153,11 @@ ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()),
 //    this->setOutputInterval(20);
     // initialize the tables of the fluid system
     FluidSystem::init(/*tempMin=*/280,
-            /*tempMax=*/290,
-            /*numTemp=*/10,
-            /*pMin=*/190000,
-            /*pMax=*/280000,
-            /*numP=*/400);
+                      /*tempMax=*/290,
+                      /*numTemp=*/10,
+                      /*pMin=*/190000,
+                      /*pMax=*/280000,
+                      /*numP=*/400);
 }
 
 /*!

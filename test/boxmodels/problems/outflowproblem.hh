@@ -32,20 +32,16 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class OutflowProblem;
 
-namespace Properties
-{
+namespace Properties {
 NEW_TYPE_TAG(OutflowBaseProblem);
 
 // Set the grid type
-SET_PROP(OutflowBaseProblem, Grid)
-{
-    typedef Dune::YaspGrid<2> type;
-};
+SET_TYPE_PROP(OutflowBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
 SET_TYPE_PROP(OutflowBaseProblem, Problem, Dumux::OutflowProblem<TypeTag>);
@@ -63,6 +59,16 @@ SET_BOOL_PROP(OutflowBaseProblem, EnableGravity, false);
 
 // Also write mass fractions to the output
 SET_BOOL_PROP(OutflowBaseProblem, VtkWriteMassFractions, true);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(OutflowBaseProblem, EndTime, 100);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(OutflowBaseProblem, InitialTimeStepSize, 1);
+
+// The default DGF file to load
+SET_STRING_PROP(OutflowBaseProblem, GridFile, "./grids/outflow.dgf");
+
 }
 
 

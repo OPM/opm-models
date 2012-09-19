@@ -106,6 +106,15 @@ public:
     // define the material law parameterized by absolute saturations
     typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(CuvetteBaseProblem, EndTime, 180);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(CuvetteBaseProblem, InitialTimeStepSize, 1);
+
+// The default DGF file to load
+SET_STRING_PROP(CuvetteBaseProblem, GridFile, "./grids/cuvette_11x4.dgf");
 }
 
 

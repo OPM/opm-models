@@ -48,14 +48,12 @@
 
 #include <iostream>
 
-namespace Dumux
-{
+namespace Dumux {
 
 template <class TypeTag>
 class ObstacleProblem;
 
-namespace Properties
-{
+namespace Properties {
 NEW_TYPE_TAG(ObstacleBaseProblem);
 
 // Set the grid type
@@ -104,6 +102,15 @@ public:
 
 // Enable gravity
 SET_BOOL_PROP(ObstacleBaseProblem, EnableGravity, true);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(ObstacleBaseProblem, EndTime, 1e4);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(ObstacleBaseProblem, InitialTimeStepSize, 250);
+
+// The default DGF file to load
+SET_STRING_PROP(ObstacleBaseProblem, GridFile, "./grids/obstacle_24x16.dgf");
 }
 
 

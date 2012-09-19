@@ -156,6 +156,17 @@ public:
     }
 
     /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        Model::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Enable gravity.");
+    }
+
+
+    /*!
      * \brief Specifies which kind of boundary condition should be
      *        used for which equation on a given boundary segment.
      *

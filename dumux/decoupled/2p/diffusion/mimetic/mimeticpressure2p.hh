@@ -152,6 +152,15 @@ protected:
     //! \endcond
 
 public:
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolverSolver;
+        LinearSolverSolver::registerParameters();
+    }
+
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws();
 
@@ -321,7 +330,7 @@ void MimeticPressure2P<TypeTag>::solve()
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Solver;
 
-    int verboseLevelSolver = GET_PARAM_FROM_GROUP(TypeTag, int, LinearSolver, Verbosity);
+    int verboseLevelSolver = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
     if (verboseLevelSolver)
     std::cout << "MimeticPressure2P: solve for pressure" << std::endl;

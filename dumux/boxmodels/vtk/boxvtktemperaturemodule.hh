@@ -75,6 +75,14 @@ public:
     }
 
     /*!
+     * \brief Register all run-time parameters for the Vtk output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature, "Include the temperature in the VTK output files");
+    }
+
+    /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
@@ -111,7 +119,7 @@ public:
 
 private:
     static bool temperatureOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTemperature); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteTemperature); }
 
     ScalarBuffer temperature_;
 };

@@ -23,9 +23,9 @@ UpperRightY = 10# [m] dimension of the grid # 2D
 ############################################################
 # Optional arguments
 ############################################################
+[]
 EnableGravity = true
 
-[Problem]
 OutputInterval =0
 OutputTimeInterval = 1e4
 

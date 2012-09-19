@@ -127,6 +127,14 @@ public:
     ~BoxProblem()
     { delete resultWriter_; }
 
+    /*!
+     * \brief Register all run-time parameters for the problem and the model.
+     */
+    static void registerParameters()
+    {
+        Model::registerParameters();
+        REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
+    }
 
     /*!
      * \brief Called by the Dumux::TimeManager in order to

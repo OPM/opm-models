@@ -46,7 +46,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, AdaptionIndicator) AdaptionIndicator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridAdaptIndicator) GridAdaptIndicator;
 
 public:
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
@@ -87,7 +87,7 @@ public:
     void init()
     {}
 
-    /*! \brief Constructs a GridAdaptionIndicator instance
+    /*! \brief Constructs a GridGridAdaptIndicator instance
      *
      * This standard indicator is based on the saturation gradient. It checks the local gradient 
      * compared to the maximum global gradient. The indicator is compared locally to a 
@@ -97,9 +97,9 @@ public:
      * \param problem The problem object
      * \param adaptionIndicator Indicator whether a be adapted
      */
-    GridAdaptInitializationIndicatorDefault(Problem& problem, AdaptionIndicator& adaptionIndicator)
+    GridAdaptInitializationIndicatorDefault(Problem& problem, GridAdaptIndicator& adaptionIndicator)
     {
-        maxLevel_ = GET_PARAM(TypeTag, int, MaxLevel);
+        maxLevel_ = GET_PARAM(TypeTag, int, GridAdaptMaxLevel);
     }
 
 private:

@@ -64,6 +64,15 @@ SET_BOOL_PROP(Stokes2cTestProblem, EnableGravity, false);
 
 // Enable constraints
 SET_BOOL_PROP(Stokes2cTestProblem, EnableConstraints, true);
+
+// Default simulation end time [s]
+SET_SCALAR_PROP(Stokes2cTestProblem, EndTime, 2.0);
+
+// Default initial time step size [s]
+SET_SCALAR_PROP(Stokes2cTestProblem, InitialTimeStepSize, 0.1);
+
+// Default grid file to load
+SET_STRING_PROP(Stokes2cTestProblem, GridFile, "grids/test_stokes2c.dgf");
 }
 
 /*!

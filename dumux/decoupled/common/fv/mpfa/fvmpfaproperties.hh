@@ -31,9 +31,6 @@
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid/2d/alugrid.hh>
 #endif
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 
 namespace Dumux
 {
@@ -83,13 +80,6 @@ struct GridImp<Dune::ALUGrid<dim, dim, Dune::cube, Dune::nonconforming>, dim>
 };
 #endif
 
-#if HAVE_UG
-template<int dim>
-struct GridImp<Dune::UGGrid<dim>, dim>
-{
-    static const int imp = GridTypes::ugGrid;
-};
-#endif
 //! \endcond
 
 namespace Properties

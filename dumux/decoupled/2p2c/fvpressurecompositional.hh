@@ -110,6 +110,11 @@ template<class TypeTag> class FVPressureCompositional
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
 public:
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+    }
+
     //the variables object is initialized, non-compositional before and compositional after first pressure calculation
     void initialMaterialLaws(bool compositional);
 
@@ -129,7 +134,7 @@ public:
         // estimate then the size of the last time step
         if(problem_.timeManager().time() == problem_.timeManager().episodeStartTime()
                 && problem_.timeManager().episodeIndex() > 0)
-            problem_.timeManager().setTimeStepSize(dt_estimate*GET_PARAM(TypeTag, Scalar, CFLFactor));
+            problem_.timeManager().setTimeStepSize(dt_estimate*GET_PARAM(TypeTag, Scalar, ImpetCflFactor));
 
         updateEstimate_ *= problem_.timeManager().timeStepSize();
 

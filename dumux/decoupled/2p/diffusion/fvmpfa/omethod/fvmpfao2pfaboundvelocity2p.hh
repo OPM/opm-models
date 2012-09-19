@@ -143,7 +143,7 @@ public:
         viscosity_[wPhaseIdx] = 0.;
         viscosity_[nPhaseIdx] = 0.;
 
-        vtkOutputLevel_ = GET_PARAM_FROM_GROUP(TypeTag, int, Vtk, OutputLevel);
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
     //Calculates the velocities at all cell-cell interfaces.
@@ -206,11 +206,8 @@ public:
     {
         ParentType::addOutputVtkFields(writer);
 
-        std::cout<<"muh\n";
         if (vtkOutputLevel_ > 0)
         {
-            std::cout<<"muhin\n";
-
             Dune::BlockVector < DimVector > &velocityWetting = *(writer.template allocateManagedBuffer<
                     Scalar, dim>(problem_.gridView().size(0)));
             Dune::BlockVector < DimVector > &velocityNonwetting =

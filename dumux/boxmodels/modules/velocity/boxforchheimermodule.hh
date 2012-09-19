@@ -54,6 +54,12 @@ struct BoxForchheimerVelocityModule
     typedef BoxForchheimerVolumeVariables<TypeTag> VelocityVolumeVariables;
     typedef BoxForchheimerFluxVariables<TypeTag> VelocityFluxVariables;
     typedef BoxForchheimerBaseProblem<TypeTag> VelocityBaseProblem;
+
+    /*!
+     * \brief Register all run-time parameters for the velocity module.
+     */
+    static void registerParameters()
+    { }
 };
 
 /*!

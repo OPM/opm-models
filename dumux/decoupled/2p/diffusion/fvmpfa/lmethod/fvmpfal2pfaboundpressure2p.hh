@@ -156,6 +156,10 @@ private:
     void assemble();
 
 public:
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+    }
 
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws();
@@ -430,7 +434,7 @@ public:
         viscosity_[wPhaseIdx] = 0.;
         viscosity_[nPhaseIdx] = 0.;
 
-        vtkOutputLevel_ = GET_PARAM_FROM_GROUP(TypeTag, int, Vtk, OutputLevel);
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
 private:

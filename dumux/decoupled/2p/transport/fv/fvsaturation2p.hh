@@ -406,7 +406,7 @@ public:
         gravityFlux_ = new GravityFlux(problem);
         velocity_ = new Velocity(problem);
 
-        vtkOutputLevel_ = GET_PARAM_FROM_GROUP(TypeTag, int, Vtk, OutputLevel);
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
     //! Destructor

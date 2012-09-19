@@ -47,10 +47,10 @@ NEW_TYPE_TAG(Transport, INHERITS_FROM(DecoupledModel));
 //////////////////////////////////////////////////////////////////
 NEW_PROP_TAG( TransportSolutionType);
 NEW_PROP_TAG( EvalCflFluxFunction ); //!< Type of the evaluation of the CFL-condition
-NEW_PROP_TAG( CFLFactor );
+NEW_PROP_TAG( ImpetCflFactor );
 NEW_PROP_TAG( SwitchNormals );
 
-SET_SCALAR_PROP(Transport, CFLFactor, 1.0);
+SET_SCALAR_PROP(Transport, ImpetCflFactor, 1.0);
 SET_BOOL_PROP(Transport, SwitchNormals, false);
 
 /*!

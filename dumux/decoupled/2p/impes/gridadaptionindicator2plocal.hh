@@ -278,11 +278,11 @@ public:
     GridAdaptionIndicator2PLocal (Problem& problem):
         problem_(problem)
     {
-        refinetol_ = GET_PARAM(TypeTag, Scalar, RefineTolerance);
-        coarsentol_ = GET_PARAM(TypeTag, Scalar, CoarsenTolerance);
-        refineAtDirichletBC_ = GET_PARAM(TypeTag, bool, RefineAtDirichletBC);
-        refineAtFluxBC_ = GET_PARAM(TypeTag, bool, RefineAtFluxBC);
-        refineAtSource_ = GET_PARAM(TypeTag, bool, RefineAtSource);
+        refinetol_ = GET_PARAM(TypeTag, Scalar, GridAdaptRefineTolerance);
+        coarsentol_ = GET_PARAM(TypeTag, Scalar, GridAdaptCoarsenTolerance);
+        refineAtDirichletBC_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtDirichletBC);
+        refineAtFluxBC_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtFluxBC);
+        refineAtSource_ = GET_PARAM(TypeTag, bool, GridAdaptRefineAtSource);
     }
 
 private:

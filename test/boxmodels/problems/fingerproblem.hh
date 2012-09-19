@@ -150,6 +150,12 @@ SET_SCALAR_PROP(FingerBaseProblem, InitialWaterSaturation, 0.01);
 SET_INT_PROP(FingerBaseProblem, CellsX, 20);
 SET_INT_PROP(FingerBaseProblem, CellsY, 200);
 SET_INT_PROP(FingerBaseProblem, CellsZ, 1);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(FingerBaseProblem, EndTime, 1e3);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(FingerBaseProblem, InitialTimeStepSize, 10);
 }
 
 /*!
@@ -223,6 +229,16 @@ public:
         FluidSystem::init();
 
         temperature_ = 273.15 + 20; // -> 20°C
+    }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, Scalar, InitialWaterSaturation, "The initial saturation in the domain [] of the wetting phase");
     }
 
     /*!

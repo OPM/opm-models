@@ -113,7 +113,9 @@ SET_BOOL_PROP(IMPESTestProblem, EnableGravity, false);
 
 SET_TYPE_PROP(IMPESTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
 
-SET_SCALAR_PROP(IMPESTestProblem, CFLFactor, 0.95);
+SET_SCALAR_PROP(IMPESTestProblem, ImpetCflFactor, 0.95);
+
+SET_SCALAR_PROP(IMPESTestProblem, EndTime, 1e7);
 
 // define the properties required by the cube grid creator
 SET_SCALAR_PROP(IMPESTestProblem, DomainSizeX, 300.0);

@@ -105,6 +105,15 @@ SET_INT_PROP(RichardsLensProblem, NewtonTargetSteps, 18);
 
 // Do not write the intermediate results of the newton method
 SET_BOOL_PROP(RichardsLensProblem, NewtonWriteConvergence, false);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(RichardsLensProblem, EndTime, 3000);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(RichardsLensProblem, InitialTimeStepSize, 100);
+
+// The default DGF file to load
+SET_STRING_PROP(RichardsLensProblem, GridFile, "./grids/richardslens_24x16.dgf");
 }
 
 /*!

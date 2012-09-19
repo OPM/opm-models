@@ -67,6 +67,15 @@ SET_BOOL_PROP(StokesNITestProblem, EnableEnergy, true);
 
 // Enable constraints
 SET_BOOL_PROP(StokesNITestProblem, EnableConstraints, true);
+
+// Default simulation end time [s]
+SET_SCALAR_PROP(StokesNITestProblem, EndTime, 3.0);
+
+// Default initial time step size [s]
+SET_SCALAR_PROP(StokesNITestProblem, InitialTimeStepSize, 0.1);
+
+// Default grid file to load
+SET_STRING_PROP(StokesNITestProblem, GridFile, "grids/test_stokes2cni.dgf");
 }
 
 /*!

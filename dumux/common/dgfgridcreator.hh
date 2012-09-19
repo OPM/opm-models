@@ -37,7 +37,7 @@ namespace Dumux
 namespace Properties
 {
 NEW_PROP_TAG(Grid);
-
+NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 }
 
@@ -52,12 +52,21 @@ class DgfGridCreator
 
 public:
     /*!
+     * \brief Register all run-time parameters for the grid creator.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
+        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+    }
+
+    /*!
      * \brief Load the grid from the file.
      */
     static void makeGrid()
     {
-        const std::string dgfFileName = GET_RUNTIME_PARAM(TypeTag, std::string, GridFile);
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        const std::string dgfFileName = GET_PARAM(TypeTag, std::string, GridFile);
+        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
         if (numRefinments > 0)

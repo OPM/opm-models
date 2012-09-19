@@ -84,6 +84,15 @@ SET_BOOL_PROP(ReservoirBaseProblem, EnableConstraints, true);
 SET_SCALAR_PROP(ReservoirBaseProblem, MaxDepth, 2500);
 SET_SCALAR_PROP(ReservoirBaseProblem, Temperature, 293.15);
 SET_STRING_PROP(ReservoirBaseProblem, SimulationName, "reservoir");
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(ReservoirBaseProblem, EndTime, 1e6);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(ReservoirBaseProblem, InitialTimeStepSize, 10);
+
+// The default DGF file to load
+SET_STRING_PROP(ReservoirBaseProblem, GridFile, "grids/reservoir.dgf");
 }
 
 /*!
@@ -259,6 +268,18 @@ public:
         }
 
         initFluidState_();
+    }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, Scalar, Temperature, "The temperature [K] in the reservoir");
+        REGISTER_PARAM(TypeTag, Scalar, MaxDepth, "The maximum depth [m] of the reservoir");
+        REGISTER_PARAM(TypeTag, Scalar, SimulationName, "The name of the simulation used for the output files");
     }
 
     /*!

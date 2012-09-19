@@ -60,7 +60,7 @@ class IMPETProblem2P2C : public IMPESProblem2P<TypeTag>
 
     enum
     {
-        adaptiveGrid = GET_PROP_VALUE(TypeTag, AdaptiveGrid)
+        adaptiveGrid = GET_PROP_VALUE(TypeTag, EnableGridAdapt)
     };
     enum {
         dim = Grid::dimension,

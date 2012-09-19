@@ -69,6 +69,7 @@ namespace Dumux
 template<class TypeTag> class FVPressure2P2C
 : public FVPressureCompositional<TypeTag>
 {
+    typedef FVPressureCompositional<TypeTag> ParentType;
     //the model implementation
     typedef typename GET_PROP_TYPE(TypeTag, PressureModel) Implementation;
 
@@ -138,6 +139,13 @@ protected:
     }
 
 public:
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, ImpetEnableVolumeIntegral, "Enable the evaluation of the volume integral");
+    }
+
     void getSource(Dune::FieldVector<Scalar, 2>&, const Element&, const CellData&, const bool);
 
     void getStorage(Dune::FieldVector<Scalar, 2>&, const Element&, const CellData&, const bool);

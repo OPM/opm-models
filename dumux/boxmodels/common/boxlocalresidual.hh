@@ -90,6 +90,12 @@ public:
     { }
 
     /*!
+     * \brief Register all run-time parameters for the local residual.
+     */
+    static void registerParameters()
+    { }
+
+    /*!
      * \brief Return the result of the eval() call using internal
      *        storage.
      */

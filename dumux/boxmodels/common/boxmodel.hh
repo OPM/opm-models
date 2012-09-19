@@ -67,6 +67,7 @@ class BoxModel
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
@@ -111,6 +112,25 @@ public:
             delete *modIt;
 
         delete jacAsm_;
+    }
+
+    /*!
+     * \brief Register all run-time parameters for the model.
+     */
+    static void registerParameters()
+    {
+        JacobianAssembler::registerParameters();
+        LocalJacobian::registerParameters();
+        LocalResidual::registerParameters();
+        VolumeVariables::registerParameters();
+        FluxVariables::registerParameters();
+        NewtonMethod::registerParameters();
+        NewtonController::registerParameters();
+
+        // register runtime parameters of the VTK output modules
+        Dumux::BoxVtkPrimaryVarsModule<TypeTag>::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, EnableHints, "Enable thermodynamic hints");
     }
 
     /*!

@@ -59,8 +59,8 @@ class GridAdapt
     typedef typename Grid::template Codim<0>::Entity         Element;
     typedef typename Grid::template Codim<0>::EntityPointer         ElementPointer;
 
-    typedef typename GET_PROP_TYPE(TypeTag, AdaptionIndicator) AdaptionIndicator;
-    typedef typename GET_PROP_TYPE(TypeTag, AdaptionInitializationIndicator) AdaptionInitializationIndicator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridAdaptIndicator) GridAdaptIndicator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridAdaptInitializationIndicator) GridAdaptInitializationIndicator;
 
 public:
     /*!
@@ -70,23 +70,33 @@ public:
     GridAdapt (Problem& problem)
     : problem_(problem), adaptionIndicator_(problem), marked_(0), coarsened_(0)
     {
-        levelMin_ = GET_PARAM(TypeTag, int, MinLevel);
-        levelMax_ = GET_PARAM(TypeTag, int, MaxLevel);
-        adaptationInterval_ = GET_PARAM(TypeTag, int, AdaptionInterval);
+        levelMin_ = GET_PARAM(TypeTag, int, GridAdaptMinLevel);
+        levelMax_ = GET_PARAM(TypeTag, int, GridAdaptMaxLevel);
+        adaptationInterval_ = GET_PARAM(TypeTag, int, GridAdaptInterval);
 
         if (levelMin_ < 0)
             Dune::dgrave <<  __FILE__<< ":" <<__LINE__
             << " :  Dune cannot coarsen to gridlevels smaller 0! "<< std::endl;
     }
-
+    
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, GridAdaptMinLevel, "The minimum number of times an element gets refined");
+        REGISTER_PARAM(TypeTag, int, GridAdaptMaxLevel, "The maximum number of times an element gets refined");
+        REGISTER_PARAM(TypeTag, int, GridAdaptInterval, "The number of time steps between grid adaption");
+        REGISTER_PARAM(TypeTag, Scalar, GridAdaptRefineTolerance, "The maximum value of the grid adaption indicator before an element gets refined");
+        REGISTER_PARAM(TypeTag, Scalar, GridAdaptCoarsenTolerance, "The minimum value of the grid adaption indicator before an element gets coarsened");
+        REGISTER_PARAM(TypeTag, int, GridAdaptEnableInitializationIndicator, "Adapt the grid for the initial solution");
+    }
+    
     void init()
     {
         adaptionIndicator_.init();
 
-        if (!GET_PARAM(TypeTag, bool, EnableInitializationIndicator))
+        if (!GET_PARAM(TypeTag, bool, GridAdaptEnableInitializationIndicator))
             return;
 
-        AdaptionInitializationIndicator adaptionInitIndicator(problem_, adaptionIndicator_);
+        GridAdaptInitializationIndicator adaptionInitIndicator(problem_, adaptionIndicator_);
 
         int maxIter = 2*levelMax_;
         int iter = 0;
@@ -286,12 +296,12 @@ public:
         return levelMin_;
     }
 
-    AdaptionIndicator& adaptionIndicator()
+    GridAdaptIndicator& adaptionIndicator()
     {
         return adaptionIndicator_;
     }
 
-    AdaptionIndicator& adaptionIndicator() const
+    GridAdaptIndicator& adaptionIndicator() const
     {
         return adaptionIndicator_;
     }
@@ -385,7 +395,7 @@ private:
 
     // private Variables
     Problem& problem_;
-    AdaptionIndicator adaptionIndicator_;
+    GridAdaptIndicator adaptionIndicator_;
 
     int marked_;
     int coarsened_;
@@ -412,6 +422,9 @@ class GridAdapt<TypeTag, false>
     typedef typename SolutionTypes::ScalarSolution ScalarSolutionType;
 
 public:
+    static void registerParameters()
+    { }
+
     void init()
     {}
     void adaptGrid()

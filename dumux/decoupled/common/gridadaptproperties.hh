@@ -35,65 +35,65 @@ namespace Properties
 NEW_TYPE_TAG(GridAdaptTypeTag);
 
 //! Defines if the grid is h-adaptive
-NEW_PROP_TAG( AdaptiveGrid);
+NEW_PROP_TAG( EnableGridAdapt);
 
 //! Class defining the refinement/coarsening indicator
-NEW_PROP_TAG(AdaptionIndicator);
+NEW_PROP_TAG(GridAdaptIndicator);
 
 //! Class defining the refinement/coarsening indicator for grid initialization
-NEW_PROP_TAG(AdaptionInitializationIndicator);
+NEW_PROP_TAG(GridAdaptInitializationIndicator);
 
 //! Switch the use of initial grid adaption on/of
-NEW_PROP_TAG(EnableInitializationIndicator);
+NEW_PROP_TAG(GridAdaptEnableInitializationIndicator);
 
 //! Mimimum allowed level
-NEW_PROP_TAG(MinLevel);
+NEW_PROP_TAG(GridAdaptMinLevel);
 
 //! Maximum allowed level
-NEW_PROP_TAG(MaxLevel);
+NEW_PROP_TAG(GridAdaptMaxLevel);
 
 //! Tolerance for refinement
-NEW_PROP_TAG(RefineTolerance);
+NEW_PROP_TAG(GridAdaptRefineTolerance);
 
 //! Tolerance for coarsening
-NEW_PROP_TAG(CoarsenTolerance);
+NEW_PROP_TAG(GridAdaptCoarsenTolerance);
 
 //! Tolerance for refinement
-NEW_PROP_TAG(RefineThreshold);
+NEW_PROP_TAG(GridAdaptRefineThreshold);
 
 //! Tolerance for coarsening
-NEW_PROP_TAG(CoarsenThreshold);
+NEW_PROP_TAG(GridAdaptCoarsenThreshold);
 
 //! Time step interval for adaption
-NEW_PROP_TAG(AdaptionInterval);
+NEW_PROP_TAG(GridAdaptInterval);
 
 //! Switch for refinement at dirichlet BC's -> not used by all indicators!
-NEW_PROP_TAG(RefineAtDirichletBC);
+NEW_PROP_TAG(GridAdaptRefineAtDirichletBC);
 
 //! Switch for refinement at neumann BC's -> not used by all indicators!
-NEW_PROP_TAG(RefineAtFluxBC);
+NEW_PROP_TAG(GridAdaptRefineAtFluxBC);
 
 //! Switch for refinement at sources -> not used by all indicators!
-NEW_PROP_TAG(RefineAtSource);
+NEW_PROP_TAG(GridAdaptRefineAtSource);
 
 //no adaptive grid
-SET_BOOL_PROP(GridAdaptTypeTag, AdaptiveGrid, false);
+SET_BOOL_PROP(GridAdaptTypeTag, EnableGridAdapt, false);
 
 //standard setting
-SET_INT_PROP(GridAdaptTypeTag, MinLevel, 0);
-SET_INT_PROP(GridAdaptTypeTag, MaxLevel, 1);
-SET_SCALAR_PROP(GridAdaptTypeTag, RefineTolerance, 0.05);
-SET_SCALAR_PROP(GridAdaptTypeTag, CoarsenTolerance, 0.001);
-SET_SCALAR_PROP(GridAdaptTypeTag, RefineThreshold, 0.0);
-SET_SCALAR_PROP(GridAdaptTypeTag, CoarsenThreshold, 0.0);
-SET_INT_PROP(GridAdaptTypeTag, AdaptionInterval, 1);
+SET_INT_PROP(GridAdaptTypeTag, GridAdaptMinLevel, 0);
+SET_INT_PROP(GridAdaptTypeTag, GridAdaptMaxLevel, 1);
+SET_SCALAR_PROP(GridAdaptTypeTag, GridAdaptRefineTolerance, 0.05);
+SET_SCALAR_PROP(GridAdaptTypeTag, GridAdaptCoarsenTolerance, 0.001);
+SET_SCALAR_PROP(GridAdaptTypeTag, GridAdaptRefineThreshold, 0.0);
+SET_SCALAR_PROP(GridAdaptTypeTag, GridAdaptCoarsenThreshold, 0.0);
+SET_INT_PROP(GridAdaptTypeTag, GridAdaptInterval, 1);
 //Switch initial grid adaption off per default
-SET_BOOL_PROP(GridAdaptTypeTag, EnableInitializationIndicator, false);
+SET_BOOL_PROP(GridAdaptTypeTag, GridAdaptEnableInitializationIndicator, false);
 
 // Switch of extra refinement strategy at boundaries/sources
-SET_BOOL_PROP(GridAdaptTypeTag, RefineAtDirichletBC, false);
-SET_BOOL_PROP(GridAdaptTypeTag, RefineAtFluxBC, false);
-SET_BOOL_PROP(GridAdaptTypeTag, RefineAtSource, false);
+SET_BOOL_PROP(GridAdaptTypeTag, GridAdaptRefineAtDirichletBC, false);
+SET_BOOL_PROP(GridAdaptTypeTag, GridAdaptRefineAtFluxBC, false);
+SET_BOOL_PROP(GridAdaptTypeTag, GridAdaptRefineAtSource, false);
 } // namespace Properties
 } // namespace Dumux
 

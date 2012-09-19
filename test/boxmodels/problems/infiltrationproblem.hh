@@ -105,6 +105,14 @@ public:
     typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
 
+// The default for the end time of the simulation
+SET_SCALAR_PROP(InfiltrationBaseProblem, EndTime, 6e3);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(InfiltrationBaseProblem, InitialTimeStepSize, 60);
+
+// The default DGF file to load
+SET_STRING_PROP(InfiltrationBaseProblem, GridFile, "./grids/infiltration_50x3.dgf");
 }
 
 /*!

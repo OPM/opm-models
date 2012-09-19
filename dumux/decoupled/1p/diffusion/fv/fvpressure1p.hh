@@ -112,6 +112,11 @@ public:
     void getFluxOnBoundary(Dune::FieldVector<Scalar, 2>&,
     const Intersection&, const CellData&, const bool);
 
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+    }
+
     /*! \brief Initializes the pressure model
      *
      * \copydetails ParentType::initialize()

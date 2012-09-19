@@ -69,6 +69,16 @@ public:
     }
 
     /*!
+     * \brief Register all run-time parameters for the problem.
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+    }
+
+    /*!
      * \name Problem parameters
      */
     // \{

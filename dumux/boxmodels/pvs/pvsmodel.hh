@@ -122,6 +122,25 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
+     * \brief Register all run-time parameters for the immiscible box model.
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        // register runtime parameters of the VTK output modules
+        Dumux::BoxVtkPhasePresenceModule<TypeTag>::registerParameters();
+        Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
+        Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
+        Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
+
+        if (enableEnergy)
+            Dumux::BoxVtkEnergyModule<TypeTag>::registerParameters();
+
+        REGISTER_PARAM(TypeTag, int, PvsVerbosity, "The verbosity level of the primary variable switching model");
+    }
+
+    /*!
      * \copydoc BoxModel::init
      */
     void init(Problem &problem)

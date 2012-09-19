@@ -52,36 +52,10 @@ NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridCreator);
 NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(TimeManager);
+NEW_PROP_TAG(ParameterFile);
 }
 
 //! \cond 0
-/*!
- * \ingroup Startup
- *
- * \brief Prints the runtime parameters after a SIGINT signal was retrieved
- */
-template <class TypeTag>
-void printRuntimeParameters(int signum)
-{
-    int myRank = 0;
-    int worldSize = 1;
-#if HAVE_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-#endif
-    if (myRank == worldSize - 1) {
-        // print the runtime parameters on process 0 and process 1
-        // (some MPI implementations intercept SIGINT, so we also
-        // print the parameters on process 1!)
-        std::cout << "\n"
-                  << "Program interrupted. The following list of run-time parameters might be incomplete:\n";
-        Dumux::Parameters::print<TypeTag>();
-    }
-    
-    // restore the original signal handler
-    signal(SIGINT, SIG_DFL);
-    raise(SIGINT); // and continue with that one
-}
 
 /*!
  * \ingroup Startup
@@ -97,25 +71,19 @@ void printDefaultUsage(const char *progName, const std::string &errorMsg)
     std::cout
         << 
         "Usage: " << progName << " [options]\n"
-        "Mandatory options include:\n"
-        "\t--end-time=ENDTIME                The time of the end of the simlation [s]\n"
-        "\t--initial-time-step-size=STEPSIZE The initial time step size [s]\n"
         "\n"
-        "Important optional options include:\n"
-        "\t--help,-h                        Print this usage message and exit\n"
-        "\t--print-parameters[=true|false]  Print the run-time modifiable parameters _after_ \n"
-        "\t                                 the simulation [default: true]\n"
-        "\t--print-properties[=true|false]  Print the compile-time parameters _before_ \n"
-        "\t                                 the simulation [default: false]\n"
-        "\t--parameter-file=FILENAME        File with parameter definitions\n"
-        "\t--restart-time=RESTARTTIME       Restart simulation from a restart file\n"
-        "\n"
-        "If --parameter-file is specified, parameters can also be defined there. In this case,\n"
-        "camel case is used for the parameters (e.g.: --end-time becomes EndTime). Parameters\n"
-        "specified on the command line have priority over those in the parameter file;\n"
-        "If the --parameter-file option is not specified, the program tries to load the\n"
-        "parameter file '"<<progName <<".input'\n"
-        "\n";
+        "The available options are:\n";
+
+    // print the -h/--help parameter. this is a little hack to make
+    // things more maintainable but it uses some internals of the
+    // parameter system.
+    Parameters::ParamInfo tmp;
+    tmp.paramName = "Help,-h";
+    tmp.usageString = "Print this usage message and exit";
+    Parameters::printParamUsage_(std::cout, tmp);
+
+    // print the list of available parameters
+    Parameters::printUsage(std::cout);
 }
 
 /*!
@@ -265,10 +233,34 @@ int start(int argc,
         typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
         typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
         typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
+       
         ////////////////////////////////////////////////////////////
         // parse the command line arguments
         ////////////////////////////////////////////////////////////
+        
+        REGISTER_PARAM(TypeTag, std::string,
+                       ParameterFile,
+                       "An .ini file which contains a set of run-time parameters");
+        REGISTER_PARAM(TypeTag, std::string,
+                       PrintProperties,
+                       "Print the values of the compile time properties at the start of the simulation");
+        REGISTER_PARAM(TypeTag, std::string,
+                       PrintParameters,
+                       "Print the values of the run-time parameters at the start of the simulation");
+        REGISTER_PARAM(TypeTag, Scalar,
+                       EndTime,
+                       "The time at which the simulation is finished [s]");
+        REGISTER_PARAM(TypeTag, Scalar,
+                       InitialTimeStepSize,
+                       "The size of the initial time step [s]");
+        REGISTER_PARAM(TypeTag, Scalar,
+                       RestartTime,
+                       "The time time at which a simulation restart should be attempted [s]");
+
+
+        GridCreator::registerParameters();
+        TimeManager::registerParameters();
+        END_PARAM_REGISTRATION;
 
         // check whether the user wanted to see the help message
         for (int i = 1; i < argc; ++i) {
@@ -289,72 +281,51 @@ int start(int argc,
             return 1;
         }
 
-        if (!ParameterTree::tree().hasKey("ParameterFile")) {
-            std::string paramFileName;
-            paramFileName += argv[0];
-            paramFileName += ".input";
-            
-            std::ifstream ifs(paramFileName.c_str());
-            if (ifs) {
-                ifs.close();
-                if (myRank == 0)
-                    std::cout << "Using fallback parameter file '" << paramFileName << "'\n";
-                ParameterTree::tree()["ParameterFile"] = paramFileName;
-            }
-        }
-
-        if (ParameterTree::tree().hasKey("ParameterFile")) {
-            std::string inputFileName =
-                GET_RUNTIME_PARAM(TypeTag, std::string, ParameterFile);
-
+        std::string paramFileName = GET_PARAM(TypeTag, std::string, ParameterFile);
+        if (paramFileName != "") {
             // check whether the parameter file is readable.
             std::ifstream tmp;
-            tmp.open(inputFileName.c_str());
+            tmp.open(paramFileName.c_str());
             if (!tmp.is_open()){
                 std::ostringstream oss;
                 if (myRank == 0) {
-                    oss << "Parameter file \"" << inputFileName << "\" is does not exist or is not readable.";
+                    oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
                     usage(argv[0], oss.str());
                 }
                 return 1;
             }
 
             // read the parameter file.
-            Dune::ParameterTreeParser::readINITree(inputFileName,
+            Dune::ParameterTreeParser::readINITree(paramFileName,
                                                    ParameterTree::tree(),
                                                    /*overwrite=*/false);
         }
-
-        bool printProps = true;
-        if (ParameterTree::tree().hasKey("PrintProperties"))
-            printProps = GET_RUNTIME_PARAM(TypeTag, bool, PrintProperties);
 
         // read the initial time step and the end time
         double tEnd;
         double dt;
 
-        try { tEnd = GET_RUNTIME_PARAM(TypeTag, Scalar, EndTime); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--end-time' not specified!"); throw; }
+        tEnd = GET_PARAM(TypeTag, Scalar, EndTime);
+        if (tEnd < -1e50) {
+            if (myRank == 0)
+                usage(argv[0], "Mandatory parameter '--end-time' not specified!");
+            return 1;
+        }
 
-        try { dt = GET_RUNTIME_PARAM(TypeTag, Scalar, InitialTimeStepSize); }
-        catch (...) { if (myRank == 0) usage(argv[1], "Mandatory parameter '--initial-time-step-size' not specified!"); throw; }
+        dt = GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        if (dt < -1e50) {
+            if (myRank == 0)
+                usage(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
+            return 1;
+        }
 
         // deal with the restart stuff
         bool restart = false;
-        Scalar restartTime = 0;
-        if (ParameterTree::tree().hasKey("RestartTime")) {
+        Scalar restartTime = GET_PARAM(TypeTag, Scalar, RestartTime);
+        if (restartTime != -1e100)
             restart = true;
-            restartTime = GET_RUNTIME_PARAM(TypeTag, Scalar, RestartTime);
-        }
-
-        // read the PrintParams parameter
-        bool printParams = true;
-        if (ParameterTree::tree().hasKey("PrintParameters"))
-            printParams = GET_RUNTIME_PARAM(TypeTag, bool, PrintParameters);
-        if (printParams)
-            // register the signal handler to print the runtime
-            // parameters after pressing CTRL+C
-            signal(SIGINT, printRuntimeParameters<TypeTag>);
+        else
+            restartTime = 0.0;
 
         if (myRank == 0)
             std::cout
@@ -365,11 +336,15 @@ int start(int argc,
                 <<" will now start the trip. "
                 << "Please sit back, relax and enjoy the ride.\n";
 
-        // print  parameters if requested
-        if (printProps && myRank == 0) {
+        // print the properties if requested
+        bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
+        if (printProps && myRank == 0)
             Dumux::Properties::print<TypeTag>();
-        }
 
+        // print the parameters if requested
+        bool printParams = GET_PARAM(TypeTag, Scalar, PrintParameters);
+        if (printParams && myRank == 0)
+            Dumux::Parameters::printValues<TypeTag>();
         // try to create a grid (from the given grid file)
         if (myRank ==  0) std::cout << "Creating the grid\n";
         try { GridCreator::makeGrid(); }
@@ -377,18 +352,12 @@ int start(int argc,
         if (myRank ==  0) std::cout << "Distributing the grid\n";
         GridCreator::loadBalance();
 
-
         // instantiate and run the concrete problem
         TimeManager timeManager;
         Problem problem(timeManager);
         timeManager.init(problem, restartTime, dt, tEnd, restart);
         timeManager.run();
-
-        if (printParams && myRank == 0) {
-            std::cout << "Parameters used:\n";
-            Dumux::Parameters::print<TypeTag>();
-        }
-        
+    
         if (myRank == 0) {
             std::cout
                 << "eWoms reached the destination. "

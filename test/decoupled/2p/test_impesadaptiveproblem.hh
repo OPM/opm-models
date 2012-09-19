@@ -91,7 +91,13 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 
 //SET_TYPE_PROP(TestIMPESAdaptiveProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
 
-SET_SCALAR_PROP(TestIMPESAdaptiveProblem, CFLFactor, 0.95);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, ImpetCflFactor, 0.95);
+
+SET_INT_PROP(TestIMPESAdaptiveProblem, EndTime, 2e7);
+SET_INT_PROP(TestIMPESAdaptiveProblem, GridAdaptMinLevel, 0);
+SET_INT_PROP(TestIMPESAdaptiveProblem, GridAdaptMaxLevel, 5);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridAdaptRefineTolerance, 0.05);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridAdaptCoarsenTolerance, 0.001);
 
 // define the properties required by the cube grid creator
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, DomainSizeX, 300.0);
@@ -158,7 +164,7 @@ public:
     TestIMPESAdaptiveProblem(TimeManager &timeManager) :
           ParentType(timeManager, GridCreator::grid().leafView()), eps_(1e-6)
     {
-        GridCreator::grid().globalRefine(GET_PARAM(TypeTag, int, MaxLevel));
+        GridCreator::grid().globalRefine(GET_PARAM(TypeTag, int, GridAdaptMaxLevel));
         this->setGrid(GridCreator::grid());
 
         this->setOutputInterval(10);

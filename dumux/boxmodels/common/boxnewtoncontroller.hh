@@ -119,9 +119,19 @@ public:
         enablePartialReassemble_ = GET_PARAM(TypeTag, bool, EnablePartialReassemble);
         enableJacobianRecycling_ = GET_PARAM(TypeTag, bool, EnableJacobianRecycling);
 
-        useLineSearch_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, UseLineSearch);
+        useLineSearch_ = GET_PARAM(TypeTag, bool, NewtonUseLineSearch);
     }
-        
+    
+    /*!
+     * \brief Register all run-time parameters for the Newton controller.
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, NewtonUseLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
+    }
+
     /*!
      * \brief Update the relative error of the solution compared to
      *        the previous iteration.
@@ -156,7 +166,7 @@ public:
 
         this->error_ = this->comm_.max(this->error_);
         
-        Scalar maxError = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, MaxRelError);
+        Scalar maxError = GET_PARAM(TypeTag, Scalar, NewtonMaxRelError);
         if (this->error_ > maxError)
             DUNE_THROW(NumericalProblem, 
                        "Newton: Relative error " << this->error_ 

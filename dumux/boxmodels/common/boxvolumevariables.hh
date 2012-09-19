@@ -67,6 +67,12 @@ public:
     }
 
     /*!
+     * \brief Register all run-time parameters for the volume variables.
+     */
+    static void registerParameters()
+    { }
+
+    /*!
      * \brief Sets the evaluation point used by the local jacobian.
      *
      * The evaluation point is only used by semi-smooth models.

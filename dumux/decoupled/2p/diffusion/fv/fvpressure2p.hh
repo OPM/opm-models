@@ -146,6 +146,18 @@ protected:
     //! \endcond
 
 public:
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermFactor, "The weight of the calculated error term");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermLowerBound, "The lower limit of the error term for IMPET");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermUpperBound, "The upper limit of the error term for IMPET");
+    }
+
     // Function which calculates the source entry
     void getSource(EntryType& entry, const Element& element, const CellData& cellData, const bool first);
 
@@ -462,7 +474,7 @@ public:
         viscosity_[wPhaseIdx] = 0.;
         viscosity_[nPhaseIdx] = 0.;
 
-        vtkOutputLevel_ = GET_PARAM_FROM_GROUP(TypeTag, int, Vtk, OutputLevel);
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
 private:

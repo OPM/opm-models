@@ -190,6 +190,10 @@ SET_TYPE_PROP(DecoupledModel,  PrimaryVariables, typename GET_PROP(TypeTag, Solu
 //! Set the default type for the time manager
 SET_TYPE_PROP(DecoupledModel, TimeManager, Dumux::TimeManager<TypeTag>);
 
+SET_INT_PROP(DecoupledModel, VtkOutputLevel, 0);
+
+SET_SCALAR_PROP(DecoupledModel, InitialTimeStepSize, 0.0);
+
 /*!
  * \brief Boundary types at a single degree of freedom.
  */
@@ -201,9 +205,7 @@ public:
 };
 
 //Set default class for adaptation initialization indicator
-SET_TYPE_PROP(GridAdaptTypeTag,  AdaptionInitializationIndicator, GridAdaptInitializationIndicatorDefault<TypeTag>);
-
-SET_INT_PROP(NumericModel, VtkOutputLevel, 0);
+SET_TYPE_PROP(GridAdaptTypeTag,  GridAdaptInitializationIndicator, GridAdaptInitializationIndicatorDefault<TypeTag>);
 }
 }
 

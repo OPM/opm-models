@@ -35,9 +35,6 @@
 #include <dumux/decoupled/1p/diffusion/diffusionproblem1p.hh>
 #include <dumux/decoupled/common/fv/fvvelocity.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>
@@ -56,6 +53,8 @@ class TestProblemOneP;
 namespace Properties
 {
 NEW_TYPE_TAG(TestProblemOneP, INHERITS_FROM(FVPressureOneP));
+
+NEW_PROP_TAG(Delta);
 
 // set the GridCreator property
 SET_TYPE_PROP(TestProblemOneP, GridCreator, CubeGridCreator<TypeTag>);
@@ -95,6 +94,9 @@ SET_SCALAR_PROP(TestProblemOneP, DomainSizeZ, 0.0);
 SET_INT_PROP(TestProblemOneP, CellsX, 30);
 SET_INT_PROP(TestProblemOneP, CellsY, 30);
 SET_INT_PROP(TestProblemOneP, CellsZ, 0);
+
+SET_SCALAR_PROP(TestProblemOneP, Delta, 1e-6);
+SET_SCALAR_PROP(TestProblemOneP, EndTime, 0);
 }
 
 /*!
@@ -134,26 +136,19 @@ public:
     TestProblemOneP(TimeManager &timeManager) :
         ParentType(GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), velocity_(*this)
     {
-        delta_ = 1e-3 ;
-
-        try
-        {
-            if (ParameterTree::tree().hasKey("Delta"))
-                delta_       = GET_RUNTIME_PARAM(TypeTag, Scalar, Delta);
-            int numRefine;
-            numRefine = GET_RUNTIME_PARAM(TypeTag, int, NumRefine);
-            GridCreator::grid().globalRefine(numRefine);
-        }
-        catch (Dumux::ParameterException &e) {
-            std::cerr << e << ". Abort!\n";
-            exit(1) ;
-        }
-        catch (...) {
-            std::cerr << "Unknown exception thrown!\n";
-            exit(1);
-        }
+        delta_ = GET_PARAM(TypeTag, Scalar, Delta);
 
         this->spatialParams().setDelta(delta_);
+    }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, Scalar, Delta, "The epsilon value used to calculate the derivative of the permeability.");
     }
 
     /*!

@@ -32,10 +32,8 @@
 #include <dumux/decoupled/2p2c/fvtransport2p2cmultiphysics.hh>
 #include <dumux/decoupled/2p2c/cellData2p2cmultiphysics.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/common/cubegridcreator.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>
@@ -52,6 +50,8 @@ namespace Properties
 NEW_TYPE_TAG(TestMultTwoPTwoCProblem, INHERITS_FROM(DecoupledTwoPTwoC, Test2P2CSpatialParams));
 
 SET_TYPE_PROP(TestMultTwoPTwoCProblem, CellData, Dumux::CellData2P2Cmultiphysics<TypeTag>);
+
+SET_TYPE_PROP(TestMultTwoPTwoCProblem, GridCreator, Dumux::CubeGridCreator<TypeTag>);
 
 // Set the grid type
 SET_PROP(TestMultTwoPTwoCProblem, Grid)
@@ -97,7 +97,15 @@ SET_BOOL_PROP(TestMultTwoPTwoCProblem, EnableCapillarity, true);
 SET_INT_PROP(TestMultTwoPTwoCProblem,
              BoundaryMobility,
              GET_PROP_TYPE(TypeTag, Indices)::satDependent);
-SET_SCALAR_PROP(TestMultTwoPTwoCProblem, CFLFactor, 0.8);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, ImpetCflFactor, 0.8);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, EndTime, 3000);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, InitialTimeStepSize, 200);
+SET_INT_PROP(TestMultTwoPTwoCProblem, CellsX, 10);
+SET_INT_PROP(TestMultTwoPTwoCProblem, CellsY, 10);
+SET_INT_PROP(TestMultTwoPTwoCProblem, CellsZ, 10);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, DomainSizeX, 10.0);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, DomainSizeY, 10.0);
+SET_SCALAR_PROP(TestMultTwoPTwoCProblem, DomainSizeZ, 10.0);
 }
 
 /*!
@@ -144,19 +152,19 @@ typedef typename GridView::Intersection Intersection;
 typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
-TestMultTwoPTwoCProblem(TimeManager &timeManager, const GridView &gridView, const GlobalPosition lowerLeft = 0, const GlobalPosition upperRight = 0) :
-ParentType(timeManager, gridView), lowerLeft_(lowerLeft), upperRight_(upperRight), eps_(1e-6), depthBOR_(1000.0)
+TestMultTwoPTwoCProblem(TimeManager &timeManager) :
+ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()), eps_(1e-6), depthBOR_(1000.0)
 {
     // Specifies how many time-steps are done before output will be written.
 //    this->setOutputInterval(20);
 
     // initialize the tables of the fluid system
     FluidSystem::init(/*tempMin=*/280,
-            /*tempMax=*/290,
-            /*numTemp=*/10,
-            /*pMin=*/190000,
-            /*pMax=*/280000,
-            /*numP=*/400);
+                      /*tempMax=*/290,
+                      /*numTemp=*/10,
+                      /*pMin=*/190000,
+                      /*pMax=*/280000,
+                      /*numP=*/400);
 }
 
 /*!

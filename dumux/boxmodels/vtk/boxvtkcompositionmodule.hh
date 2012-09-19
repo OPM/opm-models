@@ -95,6 +95,20 @@ public:
     { }
 
     /*!
+     * \brief Register all run-time parameters for the Vtk output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWriteMassFractions, "Include mass fractions in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions, "Include mole fractions in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions, "Include total mass fractions in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions, "Include total mole fractions in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities, "Include component molarities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities, "Include component fugacities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs, "Include component fugacity coefficients in the VTK output files");
+    }
+
+    /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
@@ -175,25 +189,25 @@ public:
 
 private:
     static bool massFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMassFractions); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteMassFractions); }
 
     static bool moleFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMoleFractions); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteMoleFractions); }
 
     static bool totalMassFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMassFractions); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteTotalMassFractions); }
 
     static bool totalMoleFracOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteTotalMoleFractions); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions); }
 
     static bool molarityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMolarities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteMolarities); }
 
     static bool fugacityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteFugacities); }
 
     static bool fugacityCoeffOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFugacityCoeffs); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs); }
 
     PhaseComponentBuffer moleFrac_;
     PhaseComponentBuffer massFrac_;

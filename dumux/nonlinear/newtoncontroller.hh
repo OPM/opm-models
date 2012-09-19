@@ -160,9 +160,9 @@ public:
         , linearSolver_(problem)
         , comm_(Dune::MPIHelper::getCommunicator())
     {
-        enableRelativeCriterion_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, EnableRelativeCriterion);
-        enableAbsoluteCriterion_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, EnableAbsoluteCriterion);
-        satisfyAbsAndRel_ = GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, SatisfyAbsAndRel);
+        enableRelativeCriterion_ = GET_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion);
+        enableAbsoluteCriterion_ = GET_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion);
+        satisfyAbsAndRel_ = GET_PARAM(TypeTag, bool, NewtonSatisfyAbsAndRel);
         if (!enableRelativeCriterion_ && !enableAbsoluteCriterion_)
         {
             DUNE_THROW(Dune::InvalidStateException,
@@ -180,10 +180,10 @@ public:
         }
 */
 
-        setRelTolerance(GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, RelTolerance));
-        setAbsTolerance(GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, AbsTolerance));
-        setTargetSteps(GET_PARAM_FROM_GROUP(TypeTag, int, Newton, TargetSteps));
-        setMaxSteps(GET_PARAM_FROM_GROUP(TypeTag, int, Newton, MaxSteps));
+        setRelTolerance(GET_PARAM(TypeTag, Scalar, NewtonRelTolerance));
+        setAbsTolerance(GET_PARAM(TypeTag, Scalar, NewtonAbsTolerance));
+        setTargetSteps(GET_PARAM(TypeTag, int, NewtonTargetSteps));
+        setMaxSteps(GET_PARAM(TypeTag, int, NewtonMaxSteps));
 
         lastError_ = 1e100;
         lastAbsoluteError_ = 1e100;
@@ -193,6 +193,24 @@ public:
 
         verbose_ = true;
         numSteps_ = 0;
+    }
+
+    /*!
+     * \brief Register all run-time parameters for the Newton method.
+     */
+    static void registerParameters()
+    {
+        LinearSolver::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, NewtonWriteConvergence, "Write the convergence behaviour of the Newton method to a VTK file");
+        REGISTER_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion, "Make the Newton method consider the relative convergence criterion");
+        REGISTER_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion, "Make the Newton method consider the absolute convergence criterion");
+        REGISTER_PARAM(TypeTag, bool, NewtonSatisfyAbsAndRel, "Let the Newton method only consider a solution to be converged if the relative _and_ the absolute criterion are fulfilled");
+        REGISTER_PARAM(TypeTag, int, NewtonTargetSteps, "The 'optimimum' number of Newton iterations per time step");
+        REGISTER_PARAM(TypeTag, int, NewtonMaxSteps, "The maximum number of Newton iterations per time step");
+        REGISTER_PARAM(TypeTag, Scalar, NewtonRelTolerance, "The maximum relative error between two iterations tolerated by the Newton method");
+        REGISTER_PARAM(TypeTag, Scalar, NewtonMaxRelError, "The maximum relative error for which the next iteration of the Newton method is executed");
+        REGISTER_PARAM(TypeTag, Scalar, NewtonAbsTolerance, "The maximum residual tolerated by the Newton method");
     }
 
     /*!
@@ -313,7 +331,7 @@ public:
         method_ = &method;
         numSteps_ = 0;
 
-        if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence))
+        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
             convergenceWriter_.beginTimestep();
     }
 
@@ -489,7 +507,7 @@ public:
      */
     void newtonEnd()
     {
-        if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence))
+        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
             convergenceWriter_.endTimestep();
     }
 
@@ -592,7 +610,7 @@ private:
     void writeConvergence_(const SolutionVector &uLastIter,
                            const GlobalEqVector &deltaU)
     {
-        if (GET_PARAM_FROM_GROUP(TypeTag, bool, Newton, WriteConvergence)) {
+        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
             convergenceWriter_.beginIteration();
             convergenceWriter_.writeFields(uLastIter, deltaU);
             convergenceWriter_.endIteration();

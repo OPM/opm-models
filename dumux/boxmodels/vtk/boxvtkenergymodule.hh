@@ -87,6 +87,17 @@ public:
     }
 
     /*!
+     * \brief Register all run-time parameters for the Vtk output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity, "Include the specific heat capacities of rock matrix in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity, "Include the lumped heat conductivity of the medium in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies, "Include the specific enthalpy of the phases in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");       
+    }
+
+    /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
@@ -137,16 +148,16 @@ public:
 
 private:
     static bool solidHeatCapacityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSolidHeatCapacity); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity); }
 
     static bool heatConductivityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteHeatConductivity); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteHeatConductivity); }
 
     static bool enthalpyOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteEnthalpies); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteEnthalpies); }
 
     static bool internalEnergyOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteInternalEnergies); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteInternalEnergies); }
 
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;

@@ -54,6 +54,12 @@ struct BoxDarcyVelocityModule
     typedef BoxDarcyVolumeVariables<TypeTag> VelocityVolumeVariables;
     typedef BoxDarcyFluxVariables<TypeTag> VelocityFluxVariables;
     typedef BoxDarcyBaseProblem<TypeTag> VelocityBaseProblem;
+
+    /*!
+     * \brief Register all run-time parameters for the velocity module.
+     */
+    static void registerParameters()
+    { }
 };
 
 /*!

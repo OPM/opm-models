@@ -134,6 +134,15 @@ SET_INT_PROP(InjectionBaseProblem, FluidSystemNumTemperature, 100);
 SET_SCALAR_PROP(InjectionBaseProblem, MaxDepth, 2500);
 SET_SCALAR_PROP(InjectionBaseProblem, Temperature, 293.15);
 SET_STRING_PROP(InjectionBaseProblem, SimulationName, "injection");
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(InjectionBaseProblem, EndTime, 1e4);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(InjectionBaseProblem, InitialTimeStepSize, 250);
+
+// The default DGF file to load
+SET_STRING_PROP(InjectionBaseProblem, GridFile, "grids/injection.dgf");
 }
 
 
@@ -210,13 +219,13 @@ public:
     {      
         eps_ = 1e-6;
 
-        temperatureLow_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureLow);
-        temperatureHigh_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, TemperatureHigh);
-        nTemperature_ = GET_PARAM_FROM_GROUP(TypeTag, int, FluidSystem, NumTemperature);
+        temperatureLow_ = GET_PARAM(TypeTag, Scalar, FluidSystemTemperatureLow);
+        temperatureHigh_ = GET_PARAM(TypeTag, Scalar, FluidSystemTemperatureHigh);
+        nTemperature_ = GET_PARAM(TypeTag, int, FluidSystemNumTemperature);
 
-        nPressure_ = GET_PARAM_FROM_GROUP(TypeTag, int, FluidSystem, NumPressure);
-        pressureLow_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureLow);
-        pressureHigh_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, FluidSystem, PressureHigh);
+        nPressure_ = GET_PARAM(TypeTag, int, FluidSystemNumPressure);
+        pressureLow_ = GET_PARAM(TypeTag, Scalar, FluidSystemPressureLow);
+        pressureHigh_ = GET_PARAM(TypeTag, Scalar, FluidSystemPressureHigh);
         
         maxDepth_ = GET_PARAM(TypeTag, Scalar, MaxDepth);
         temperature_ = GET_PARAM(TypeTag, Scalar, Temperature);
@@ -257,6 +266,26 @@ public:
         // parameters for the somerton law of heat conduction
         computeHeatCondParams_(fineHeatCondParams_, finePorosity_);
         computeHeatCondParams_(coarseHeatCondParams_, coarsePorosity_);
+    }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, Scalar, FluidSystemTemperatureLow, "The lower temperature [K] for tabulation of the fluid system");
+        REGISTER_PARAM(TypeTag, Scalar, FluidSystemTemperatureHigh, "The upper temperature [K] for tabulation of the fluid system");
+        REGISTER_PARAM(TypeTag, int, FluidSystemNumTemperature, "The number of intervals between the lower and upper temperature");
+
+        REGISTER_PARAM(TypeTag, Scalar, FluidSystemPressureLow, "The lower pressure [Pa] for tabulation of the fluid system");
+        REGISTER_PARAM(TypeTag, Scalar, FluidSystemPressureHigh, "The upper pressure [Pa] for tabulation of the fluid system");
+        REGISTER_PARAM(TypeTag, int, FluidSystemNumPressure, "The number of intervals between the lower and upper pressure");
+
+        REGISTER_PARAM(TypeTag, Scalar, Temperature, "The temperature [K] in the reservoir");
+        REGISTER_PARAM(TypeTag, Scalar, MaxDepth, "The maximum depth [m] of the reservoir");
+        REGISTER_PARAM(TypeTag, Scalar, SimulationName, "The name of the simulation used for the output files");
     }
 
     /*!

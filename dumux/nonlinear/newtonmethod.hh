@@ -72,6 +72,12 @@ public:
     { }
 
     /*!
+     * \brief Register all run-time parameters for the Newton method.
+     */
+    static void registerParameters()
+    { }
+
+    /*!
      * \brief Returns a reference to the current numeric problem.
      */
     Problem &problem()

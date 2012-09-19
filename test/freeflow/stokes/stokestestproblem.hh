@@ -63,6 +63,15 @@ SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
 
 // Enable constraints
 SET_BOOL_PROP(StokesTestProblem, EnableConstraints, true);
+
+// Default simulation end time [s]
+SET_SCALAR_PROP(StokesTestProblem, EndTime, 6e3);
+
+// Default initial time step size [s]
+SET_SCALAR_PROP(StokesTestProblem, InitialTimeStepSize, 10.0);
+
+// Default grid file to load
+SET_STRING_PROP(StokesTestProblem, GridFile, "grids/test_stokes.dgf");
 }
 
 /*!

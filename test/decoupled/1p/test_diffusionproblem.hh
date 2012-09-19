@@ -34,9 +34,6 @@
 #include <dumux/decoupled/2p/diffusion/diffusionproblem2p.hh>
 #include <dumux/decoupled/common/fv/fvvelocity.hh>
 
-#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-#endif
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>

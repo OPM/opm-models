@@ -45,7 +45,7 @@ int main(int argc, char** argv)
             {
                 typedef TTAG(FVTwoPTestProblem) ProblemTypeTag;
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
-                Dune::ParameterTree &rt = ParamTree::runTimeParams();
+                Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
                 int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
             {
                 typedef TTAG(FVAdaptiveTwoPTestProblem) ProblemTypeTag;
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
-                Dune::ParameterTree &rt = ParamTree::runTimeParams();
+                Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
                 int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
             {
                 typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
-                Dune::ParameterTree &rt = ParamTree::runTimeParams();
+                Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
                 int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
             {
                 typedef TTAG(MPFALTwoPTestProblem) ProblemTypeTag;
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
-                Dune::ParameterTree &rt = ParamTree::runTimeParams();
+                Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
                 int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
             {
                 typedef TTAG(MPFALAdaptiveTwoPTestProblem) ProblemTypeTag;
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
-                Dune::ParameterTree &rt = ParamTree::runTimeParams();
+                Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
                 int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";

@@ -117,6 +117,23 @@ public:
     {
     }
 
+    /*!
+     * \brief Register all run-time parameters for the multi-phase VTK output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWritePressures, "Include the phase pressures in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteDensities, "Include the phase densities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteSaturations, "Include the phase saturations in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteMobilities, "Include the phase mobilities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteViscosities, "Include component phase viscosities in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses, "Include the average phase mass in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWritePorosity, "Include the porosity in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWriteFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
+        REGISTER_PARAM(TypeTag, bool, VtkWritePotentialGradients, "Include the phase pressure potential gradients in the VTK output files");
+    }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
@@ -298,37 +315,37 @@ public:
 
 private:
     static bool pressureOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePressures); }
+    { return GET_PARAM(TypeTag, bool, VtkWritePressures); }
 
     static bool densityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteDensities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteDensities); }
 
     static bool saturationOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteSaturations); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteSaturations); }
 
     static bool mobilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteMobilities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteMobilities); }
 
     static bool relativePermeabilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteRelativePermeabilities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities); }
 
     static bool viscosityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteViscosities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteViscosities); }
 
     static bool averageMolarMassOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteAverageMolarMasses); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses); }
 
     static bool porosityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePorosity); }
+    { return GET_PARAM(TypeTag, bool, VtkWritePorosity); }
 
     static bool intrinsicPermeabilityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteIntrinsicPermeabilities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities); }
 
     static bool velocityOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WriteFilterVelocities); }
+    { return GET_PARAM(TypeTag, bool, VtkWriteFilterVelocities); }
 
     static bool potentialGradientOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePotentialGradients); }
+    { return GET_PARAM(TypeTag, bool, VtkWritePotentialGradients); }
 
     PhaseBuffer pressure_;
     PhaseBuffer density_;

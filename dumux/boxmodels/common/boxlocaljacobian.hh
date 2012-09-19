@@ -106,12 +106,20 @@ public:
     BoxLocalJacobian()
     {
         internalElemContext_ = 0;
-        newtonTolerance_ = GET_PARAM_FROM_GROUP(TypeTag, Scalar, Newton, RelTolerance);
+        newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelTolerance);
     }
 
     ~BoxLocalJacobian()
     {
         delete internalElemContext_;
+    }
+
+    /*!
+     * \brief Register all run-time parameters for the local jacobian.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod, "The method used for numeric differentiation (-1: backward differences, 0: central differences, 1: forward differences)");
     }
 
     /*!

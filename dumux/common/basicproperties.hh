@@ -73,8 +73,29 @@ NEW_PROP_TAG(ModelParameterGroup);
 //! Property which provides a GridCreator (manages grids)
 NEW_PROP_TAG(GridCreator);
 
+//! Property provides the name of the file from which the grid ought to be loaded from
+NEW_PROP_TAG(GridFile);
+
 //! Property which tells the GridCreator how often the grid should be refined after creation.
 NEW_PROP_TAG(GridGlobalRefinements);
+
+//! Property provides the name of the file from which the additional runtime parameters should to be loaded from
+NEW_PROP_TAG(ParameterFile);
+
+//! Print all properties on startup?
+NEW_PROP_TAG(PrintProperties);
+
+//! Print the values of all run-time parameters on startup?
+NEW_PROP_TAG(PrintParameters);
+
+//! The default value for the simulation's end time
+NEW_PROP_TAG(EndTime);
+
+//! The default value for the simulation's initial time step size
+NEW_PROP_TAG(InitialTimeStepSize);
+
+//! The default value for the simulation's restart time
+NEW_PROP_TAG(RestartTime);
 
 ///////////////////////////////////
 // Default values for properties:
@@ -95,19 +116,6 @@ SET_PROP(NumericModel, ParameterTree)
         static Dune::ParameterTree obj_;
         return obj_;
     }
-
-    static Dune::ParameterTree &compileTimeParams()
-    {
-        static Dune::ParameterTree obj_;
-        return obj_;
-    }
-
-
-    static Dune::ParameterTree &runTimeParams()
-    {
-        static Dune::ParameterTree obj_;
-        return obj_;
-    }
 };
 
 //! use the global group as default for the model's parameter group
@@ -116,9 +124,29 @@ SET_STRING_PROP(NumericModel, ModelParameterGroup, "");
 //! Use the DgfGridCreator by default
 SET_TYPE_PROP(NumericModel, GridCreator, Dumux::DgfGridCreator<TypeTag>);
 
+//! Set a value for the GridFile property
+SET_STRING_PROP(NumericModel, GridFile, "");
+
+//! Set a value for the ParameterFile property
+SET_STRING_PROP(NumericModel, ParameterFile, "");
 
 //! Set the number of refinement levels of the grid to 0. This does not belong here, strictly speaking.
 SET_INT_PROP(NumericModel, GridGlobalRefinements, 0);
+
+//! By default, do not print the properties on startup
+SET_BOOL_PROP(NumericModel, PrintProperties, false);
+
+//! By default, do not print the values of the run-time parameters on startup
+SET_BOOL_PROP(NumericModel, PrintParameters, false);
+
+//! The default value for the simulation's end time
+SET_SCALAR_PROP(NumericModel, EndTime, -1e100);
+
+//! The default value for the simulation's initial time step size
+SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e100);
+
+//! The default value for the simulation's restart time
+SET_SCALAR_PROP(NumericModel, RestartTime, -1e100);
 
 } // namespace Properties
 } // namespace Dumux

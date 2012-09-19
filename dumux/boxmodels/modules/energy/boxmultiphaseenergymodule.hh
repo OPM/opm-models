@@ -87,6 +87,12 @@ class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/false>
 
 public:
     /*!
+     * \brief Register all run-time parameters for the energy module.
+     */
+    static void registerParameters()
+    { }
+
+    /*!
      * \brief Returns the name of a primary variable or an empty
      *        string if the specified primary variable index does not belong to
      *        the energy module.
@@ -212,6 +218,12 @@ class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
     enum { temperatureIdx = Indices::temperatureIdx };
 
 public:
+    /*!
+     * \brief Register all run-time parameters for the energy module.
+     */
+    static void registerParameters()
+    { }
+
     /*!
      * \brief Returns the name of a primary variable or an empty
      *        string if the specified primary variable index does not belong to

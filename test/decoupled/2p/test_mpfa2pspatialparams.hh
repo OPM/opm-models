@@ -35,6 +35,33 @@ namespace Properties
 // The spatial parameters TypeTag
 NEW_TYPE_TAG(Test2PSpatialParams);
 
+NEW_PROP_TAG(BackgroundEntryPressure);
+NEW_PROP_TAG(LenseEntryPressure);
+NEW_PROP_TAG(BackgroundPermeabilityXX);
+NEW_PROP_TAG(BackgroundPermeabilityXY);
+NEW_PROP_TAG(BackgroundPermeabilityYX);
+NEW_PROP_TAG(BackgroundPermeabilityYY);
+NEW_PROP_TAG(LensPermeabilityXX);
+NEW_PROP_TAG(LensPermeabilityXY);
+NEW_PROP_TAG(LensPermeabilityYX);
+NEW_PROP_TAG(LensPermeabilityYY);
+NEW_PROP_TAG(LensOneLowerLeftX);
+NEW_PROP_TAG(LensOneUpperRightX);
+NEW_PROP_TAG(LensTwoLowerLeftX);
+NEW_PROP_TAG(LensTwoUpperRightX);
+NEW_PROP_TAG(LensThreeLowerLeftX);
+NEW_PROP_TAG(LensThreeUpperRightX);
+NEW_PROP_TAG(LensOneLowerLeftY);
+NEW_PROP_TAG(LensOneUpperRightY);
+NEW_PROP_TAG(LensTwoLowerLeftY);
+NEW_PROP_TAG(LensTwoUpperRightY);
+NEW_PROP_TAG(LensThreeLowerLeftY);
+NEW_PROP_TAG(LensThreeUpperRightY);
+NEW_PROP_TAG(InletWidth);
+NEW_PROP_TAG(InjectionFlux);
+NEW_PROP_TAG(OutputInterval);
+NEW_PROP_TAG(OutputTimeInterval);
+
 // Set the spatial parameters
 SET_TYPE_PROP(Test2PSpatialParams, SpatialParams, Dumux::Test2PSpatialParams<TypeTag>);
 
@@ -47,6 +74,29 @@ private:
 public:
     typedef EffToAbsLaw<RawMaterialLaw> type;
 };
+
+SET_SCALAR_PROP(Test2PSpatialParams, BackgroundEntryPressure, 500.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LenseEntryPressure, 5000.0);
+SET_SCALAR_PROP(Test2PSpatialParams, BackgroundPermeabilityXX, 1e-10);
+SET_SCALAR_PROP(Test2PSpatialParams, BackgroundPermeabilityXY, 0.0);
+SET_SCALAR_PROP(Test2PSpatialParams, BackgroundPermeabilityYX, 0.0);
+SET_SCALAR_PROP(Test2PSpatialParams, BackgroundPermeabilityYY, 1e-10);
+SET_SCALAR_PROP(Test2PSpatialParams, LensPermeabilityXX, 1e-14);
+SET_SCALAR_PROP(Test2PSpatialParams, LensPermeabilityXY, 0.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensPermeabilityYX, 0.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensPermeabilityYY, 1e-14);
+SET_SCALAR_PROP(Test2PSpatialParams, LensOneLowerLeftX, 7.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensOneUpperRightX, 13.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensTwoLowerLeftX, 2.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensTwoUpperRightX, 8.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensThreeLowerLeftX, 10.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensThreeUpperRightX, 3.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensOneLowerLeftY, 6.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensOneUpperRightY, 7.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensTwoLowerLeftY, 4.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensTwoUpperRightY, 5.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensThreeLowerLeftY, 2.0);
+SET_SCALAR_PROP(Test2PSpatialParams, LensThreeUpperRightY, 3.0);
 }
 
 /** \todo Please doc me! */
@@ -75,6 +125,32 @@ class Test2PSpatialParams: public FVSpatialParams<TypeTag>
 public:
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename MaterialLaw::Params MaterialLawParams;
+
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, Scalar, BackgroundEntryPressure, "The entry pressure of the background material [Pa]");
+        REGISTER_PARAM(TypeTag, Scalar, LenseEntryPressure, "The entry pressure of the lenses [Pa]");
+        REGISTER_PARAM(TypeTag, Scalar, BackgroundPermeabilityXX, "The xx-entry of the permebility tensor of the background medium [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, BackgroundPermeabilityXY, "The xy-entry of the permebility tensor of the background medium [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, BackgroundPermeabilityYX, "The yx-entry of the permebility tensor of the background medium [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, BackgroundPermeabilityYY, "The yy-entry of the permebility tensor of the background medium [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, LensPermeabilityXX, "The xx-entry of the permebility tensor of the lenses [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, LensPermeabilityXY, "The xy-entry of the permebility tensor of the lenses [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, LensPermeabilityYX, "The yx-entry of the permebility tensor of the lenses [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, LensPermeabilityYY, "The yy-entry of the permebility tensor of the lenses [m^2]");
+        REGISTER_PARAM(TypeTag, Scalar, LensOneLowerLeftX, "The lower-left x-coordinate of the first lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensOneUpperRightX, "The upper-right x-coordinate of the first lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensTwoLowerLeftX, "The lower-left x-coordinate of the second lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensTwoUpperRightX, "The upper-right x-coordinate of the second lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensThreeLowerLeftX, "The lower-left x-coordinate of the third lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensThreeUpperRightX, "The upper-right x-coordinate of the third lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensOneLowerLeftY, "The lower-left y-coordinate of the first lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensOneUpperRightY, "The upper-right y-coordinate of the first lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensTwoLowerLeftY, "The lower-left y-coordinate of the second lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensTwoUpperRightY, "The upper-right y-coordinate of the second lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensThreeLowerLeftY, "The lower-left y-coordinate of the third lens [m]");
+        REGISTER_PARAM(TypeTag, Scalar, LensThreeUpperRightY, "The upper-right y-coordinate of the third lens [m]");
+    }
 
     const FieldMatrix& intrinsicPermeabilityAtPos(const GlobalPosition& globalPos) const
     {
@@ -119,115 +195,33 @@ public:
 
         //parameters for Brooks-Corey law
         // entry pressures function
-        materialLawParamsBackground_.setPe(0.);
-        if (ParameterTree::tree().hasKey("SpatialParams.BackgroundEntryPressure"))
-        {
-            materialLawParamsBackground_.setPe(GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, BackgroundEntryPressure));
-        }
-
-        materialLawParamsLenses_.setPe(0.);
-        if (ParameterTree::tree().hasKey("SpatialParams.LenseEntryPressure"))
-        {
-            materialLawParamsLenses_.setPe(GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LenseEntryPressure));
-        }
+        materialLawParamsBackground_.setPe(GET_PARAM(TypeTag, Scalar, BackgroundEntryPressure));
+        materialLawParamsLenses_.setPe(GET_PARAM(TypeTag, Scalar, LenseEntryPressure));
 
         // Brooks-Corey shape parameters
         materialLawParamsBackground_.setLambda(3);
         materialLawParamsLenses_.setLambda(2);
 
-        permBackground_[0][0] = 1e-10;
-        permBackground_[1][1] = 1e-10;
-        permLenses_[0][0] = 1e-10;
-        permLenses_[1][1] = 1e-10;
-
-        if (ParameterTree::tree().hasKey("SpatialParams.BackgroundPermeabilityXX"))
-        {
-            permBackground_[0][0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, BackgroundPermeabilityXX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.BackgroundPermeabilityXY"))
-        {
-            permBackground_[0][1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, BackgroundPermeabilityXY);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.BackgroundPermeabilityYX"))
-        {
-            permBackground_[1][0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, BackgroundPermeabilityYX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.BackgroundPermeabilityYY"))
-        {
-            permBackground_[1][1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, BackgroundPermeabilityYY);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensPermeabilityXX"))
-        {
-            permLenses_[0][0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensPermeabilityXX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensPermeabilityXY"))
-        {
-            permLenses_[0][1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensPermeabilityXY);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensPermeabilityYX"))
-        {
-            permLenses_[1][0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensPermeabilityYX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensPermeabilityYY"))
-        {
-            permLenses_[1][1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensPermeabilityYY);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensOneLowerLeftX"))
-        {
-            lensOneLowerLeft_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensOneLowerLeftX);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensOneUpperRightX"))
-        {
-            lensOneUpperRight_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensOneUpperRightX);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensTwoLowerLeftX"))
-        {
-            lensTwoLowerLeft_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensTwoLowerLeftX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensTwoUpperRightX"))
-        {
-            lensTwoUpperRight_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensTwoUpperRightX);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensThreeLowerLeftX"))
-        {
-            lensThreeLowerLeft_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensThreeLowerLeftX);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensThreeUpperRightX"))
-        {
-            lensThreeUpperRight_[0] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensThreeUpperRightX);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensOneLowerLeftY"))
-        {
-            lensOneLowerLeft_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensOneLowerLeftY);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensOneUpperRightY"))
-        {
-            lensOneUpperRight_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensOneUpperRightY);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensTwoLowerLeftY"))
-        {
-            lensTwoLowerLeft_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensTwoLowerLeftY);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensTwoUpperRightY"))
-        {
-            lensTwoUpperRight_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensTwoUpperRightY);
-        }
-
-        if (ParameterTree::tree().hasKey("SpatialParams.LensThreeLowerLeftY"))
-        {
-            lensThreeLowerLeft_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensThreeLowerLeftY);
-        }
-        if (ParameterTree::tree().hasKey("SpatialParams.LensThreeUpperRightY"))
-        {
-            lensThreeUpperRight_[1] = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, SpatialParams, LensThreeUpperRightY);
-        }
+        permBackground_[0][0] = GET_PARAM(TypeTag, Scalar, BackgroundPermeabilityXX);
+        permBackground_[0][1] = GET_PARAM(TypeTag, Scalar, BackgroundPermeabilityXY);
+        permBackground_[1][0] = GET_PARAM(TypeTag, Scalar, BackgroundPermeabilityYX);
+        permBackground_[1][1] = GET_PARAM(TypeTag, Scalar, BackgroundPermeabilityYY);
+        permLenses_[0][0] = GET_PARAM(TypeTag, Scalar, LensPermeabilityXX);
+        permLenses_[0][1] = GET_PARAM(TypeTag, Scalar, LensPermeabilityXY);
+        permLenses_[1][0] = GET_PARAM(TypeTag, Scalar, LensPermeabilityYX);
+        permLenses_[1][1] = GET_PARAM(TypeTag, Scalar, LensPermeabilityYY);
+        lensOneLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensOneLowerLeftX);
+        lensOneUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensOneUpperRightX);
+        lensTwoLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensTwoLowerLeftX);
+        lensTwoUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensTwoUpperRightX);
+        lensThreeLowerLeft_[0] = GET_PARAM(TypeTag, Scalar, LensThreeLowerLeftX);
+        lensThreeUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensThreeUpperRightX);
+        lensOneLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensOneLowerLeftY);
+        lensOneUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensOneUpperRightY);
+        lensTwoLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensTwoLowerLeftY);
+        lensTwoUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensTwoUpperRightY);
+        lensThreeLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensThreeLowerLeftY);
+        lensThreeUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensThreeUpperRightY);
     }
 
 private:

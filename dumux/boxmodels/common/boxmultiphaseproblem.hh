@@ -49,6 +49,7 @@ class BoxMultiPhaseProblem
     typedef Dumux::BoxProblem<TypeTag> ParentType;
     
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -69,6 +70,16 @@ public:
     }
 
     /*!
+     * \brief Register all run-time parameters for the problem and the model.
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+    };
+
+    /*!
      * \brief Averages the intrinsic permeability Tensor.
      *
      * \param result averaged intrinsic permeability
@@ -86,7 +97,6 @@ public:
                 result[i][j] = harmonicMean(K1[i][j], K2[i][j]);
     }
 
-    
     /*!
      * \name Problem parameters
      */

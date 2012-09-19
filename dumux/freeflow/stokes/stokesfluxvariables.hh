@@ -65,6 +65,12 @@ class StokesFluxVariables
 
 public:
     /*!
+     * \brief Register all run-time parameters for the flux variables.
+     */
+    static void registerParameters()
+    { }
+
+    /*!
      * \brief Update all quantities which are required on an
      *        intersection between two finite volumes.
      *

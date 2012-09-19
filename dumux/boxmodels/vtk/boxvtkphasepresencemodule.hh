@@ -68,6 +68,14 @@ public:
     { }
 
     /*!
+     * \brief Register all run-time parameters for the Vtk output module.
+     */
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence, "Include the phase presence pseudo primary variable in the VTK output files");
+    }
+
+    /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
@@ -105,7 +113,7 @@ public:
 
 private:
     static bool phasePresenceOutput_()
-    { return GET_PARAM_FROM_GROUP(TypeTag, bool, Vtk, WritePhasePresence); }
+    { return GET_PARAM(TypeTag, bool, VtkWritePhasePresence); }
 
     ScalarBuffer phasePresence_;
 };

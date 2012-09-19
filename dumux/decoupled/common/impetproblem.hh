@@ -40,6 +40,9 @@
 
 namespace Dumux
 {
+namespace Properties {
+NEW_PROP_TAG(EnableGravity);
+}
 /*!
  * \ingroup IMPET
  * \brief base class for problems using a sequential implicit-explicit strategy
@@ -80,7 +83,7 @@ private:
     };
     enum
     {
-        adaptiveGrid = GET_PROP_VALUE(TypeTag, AdaptiveGrid)
+        adaptiveGrid = GET_PROP_VALUE(TypeTag, EnableGridAdapt)
     };
 
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
@@ -149,6 +152,16 @@ public:
         delete resultWriter_;
         if (adaptiveGrid)
             delete gridAdapt_;
+    }
+
+    static void registerParameters()
+    {
+        IMPETModel::registerParameters();
+        PressureModel::registerParameters();
+        TransportModel::registerParameters();
+        GridAdaptModel::registerParameters();
+
+        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Enable gravity.");
     }
 
     /*!

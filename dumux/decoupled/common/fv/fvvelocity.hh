@@ -67,6 +67,12 @@ template<class TypeTag, class Velocity> class FVVelocity
 
 
 public:
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+    }
 
     //!Initialize velocity implementation
     void initialize()

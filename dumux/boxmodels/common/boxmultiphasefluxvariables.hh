@@ -70,6 +70,14 @@ class BoxMultiPhaseFluxVariables
 
 public:
     /*!
+     * \brief Register all run-time parameters for the Newton method.
+     */
+    static void registerParameters()
+    {
+        VelocityModule::registerParameters();
+    }
+
+    /*!
      * \brief Update the flux variables for a given sub-control-volume-face.
      *
      * \param elemCtx Reference to the current element context.

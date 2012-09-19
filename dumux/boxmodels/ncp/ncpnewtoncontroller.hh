@@ -65,8 +65,18 @@ public:
     NcpNewtonController(Problem &problem)
         : ParentType(problem)
     {
-        choppedIterations_ = GET_PARAM_FROM_GROUP(TypeTag, int, Newton, ChoppedIterations);
+        choppedIterations_ = GET_PARAM(TypeTag, int, NewtonChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
+    }
+
+    /*!
+     * \copydoc NewtonController::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations, "The number of Newton iterations for which the update gets limited");
     }
 
     /*!

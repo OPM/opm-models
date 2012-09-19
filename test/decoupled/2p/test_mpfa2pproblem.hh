@@ -62,6 +62,8 @@ namespace Properties
 
 NEW_TYPE_TAG(MPFATwoPTestProblem, INHERITS_FROM(Test2PSpatialParams));
 
+NEW_PROP_TAG(OutputfileName);
+
 // Set the grid type
 SET_PROP(MPFATwoPTestProblem, Grid)
 {
@@ -101,8 +103,15 @@ public:
 SET_BOOL_PROP(MPFATwoPTestProblem, EnableGravity, true);
 
 SET_TYPE_PROP(MPFATwoPTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
-SET_SCALAR_PROP(MPFATwoPTestProblem, CFLFactor, 1.0);
-SET_TYPE_PROP(MPFATwoPTestProblem, AdaptionIndicator, Dumux::GridAdaptionIndicator2PLocal<TypeTag>);
+SET_SCALAR_PROP(MPFATwoPTestProblem, ImpetCflFactor, 1.0);
+SET_TYPE_PROP(MPFATwoPTestProblem, GridAdaptIndicator, Dumux::GridAdaptionIndicator2PLocal<TypeTag>);
+
+// grid adaption parameters
+SET_BOOL_PROP(MPFATwoPTestProblem, GridAdaptEnableInitializationIndicator, true);
+SET_BOOL_PROP(MPFATwoPTestProblem, GridAdaptRefineAtDirichletBC, false);
+SET_BOOL_PROP(MPFATwoPTestProblem, GridAdaptRefineAtFluxBC, true);
+SET_BOOL_PROP(MPFATwoPTestProblem, GridAdaptRefineAtSource, false);
+
 SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeX, 20.0);
 SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeY, 10.0);
 SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeZ, 1.0);
@@ -110,6 +119,12 @@ SET_SCALAR_PROP(MPFATwoPTestProblem, DomainSizeZ, 1.0);
 SET_INT_PROP(MPFATwoPTestProblem, CellsX, 10);
 SET_INT_PROP(MPFATwoPTestProblem, CellsY, 10);
 SET_INT_PROP(MPFATwoPTestProblem, CellsZ, 1);
+SET_SCALAR_PROP(MPFATwoPTestProblem, EndTime, 5e4);
+SET_SCALAR_PROP(MPFATwoPTestProblem, InletWidth, 2.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, InjectionFlux, 0.1);
+SET_SCALAR_PROP(MPFATwoPTestProblem, OutputInterval, 0.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, OutputTimeInterval, 1e4);
+SET_STRING_PROP(MPFATwoPTestProblem, OutputfileName, "test_mpfa2p");
 
 NEW_TYPE_TAG(FVTwoPTestProblem, INHERITS_FROM(FVPressureTwoP, FVTransportTwoP, IMPESTwoP, MPFATwoPTestProblem));
 NEW_TYPE_TAG(FVAdaptiveTwoPTestProblem, INHERITS_FROM(FVPressureTwoPAdaptive, FVTransportTwoP, IMPESTwoPAdaptive, MPFATwoPTestProblem));
@@ -156,6 +171,7 @@ typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
 
 typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
 
 typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
@@ -194,11 +210,7 @@ MPFATwoPTestProblem(TimeManager &timeManager)
 {
     this->setGrid(GridCreator::grid());
 
-    Scalar inletWidth = 1.0;
-    if (ParameterTree::tree().hasKey("Problem.InletWidth"))
-    {
-        inletWidth = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Problem, InletWidth);
-    }
+    Scalar inletWidth = GET_PARAM(TypeTag, Scalar, InletWidth);
     GlobalPosition inletCenter = this->bboxMax();
     inletCenter[0] *= 0.5;
 
@@ -207,25 +219,26 @@ MPFATwoPTestProblem(TimeManager &timeManager)
     inletRightCoord_ = inletCenter;
     inletRightCoord_[0] +=0.5*inletWidth;
 
-    inFlux_ = 1e-4;
-    if (ParameterTree::tree().hasKey("Problem.InjectionFlux"))
-    {
-        inFlux_ = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Problem, InjectionFlux);
-    }
+    inFlux_ = GET_PARAM(TypeTag, Scalar, InjectionFlux);
 
-    int outputInterval = 0;
-    if (ParameterTree::tree().hasKey("Problem.OutputInterval"))
-    {
-        outputInterval = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, int, Problem, OutputInterval);
-    }
+    int outputInterval = GET_PARAM(TypeTag, int, OutputInterval);
     this->setOutputInterval(outputInterval);
 
-    Scalar outputTimeInterval = 1e6;
-    if (ParameterTree::tree().hasKey("Problem.OutputTimeInterval"))
-    {
-        outputTimeInterval = GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, Scalar, Problem, OutputTimeInterval);
-    }
+    Scalar outputTimeInterval = GET_PARAM(TypeTag, Scalar, OutputTimeInterval);
     this->setOutputTimeInterval(outputTimeInterval);
+}
+
+static void registerParameters()
+{
+    ParentType::registerParameters();
+    SpatialParams::registerParameters();
+
+    REGISTER_PARAM(TypeTag, Scalar, InletWidth, "The width on which mass is injected [m]" );
+    REGISTER_PARAM(TypeTag, Scalar, InjectionFlux, "The rate of the injected mass [kg/m^2]");
+    REGISTER_PARAM(TypeTag, bool, OutputInterval, "The number of time steps between writing VTK output");
+    REGISTER_PARAM(TypeTag, bool, OutputTimeInterval, "The minumum time [s] between writing VTK output");
+    REGISTER_PARAM(TypeTag, std::string, OutputfileName, "The name of the VTK output file");
+
 }
 
 /*!
@@ -240,15 +253,7 @@ MPFATwoPTestProblem(TimeManager &timeManager)
  */
 const char *name() const
 {
-    if (ParameterTree::tree().hasKey("Problem.OutputfileName"))
-    {
-        std::string fileName(GET_RUNTIME_PARAM_FROM_GROUP(TypeTag, std::string, Problem, OutputfileName));
-        return fileName.c_str();
-    }
-    else
-    {
-        return "test_mpfa2p";
-    }
+    return GET_PARAM(TypeTag, std::string, OutputfileName).c_str();
 }
 
 bool shouldWriteRestartFile() const

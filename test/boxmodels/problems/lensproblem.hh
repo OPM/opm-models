@@ -142,6 +142,12 @@ SET_SCALAR_PROP(LensBaseProblem, DomainSizeZ, 1.0);
 SET_INT_PROP(LensBaseProblem, CellsX, 48);
 SET_INT_PROP(LensBaseProblem, CellsY, 32);
 SET_INT_PROP(LensBaseProblem, CellsZ, 16);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(LensBaseProblem, EndTime, 30e3);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(LensBaseProblem, InitialTimeStepSize, 250);
 }
 
 /*!
@@ -250,6 +256,24 @@ public:
             this->gravity_[1] = -9.81;
         }
     }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+        
+        REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftX, "The x-coordinate of the lens' lower-left corner [m].");
+        REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftY, "The y-coordinate of the lens' lower-left corner [m].");
+        REGISTER_PARAM(TypeTag, Scalar, LensUpperRightX, "The x-coordinate of the lens' upper-right corner [m].");
+        REGISTER_PARAM(TypeTag, Scalar, LensUpperRightY, "The y-coordinate of the lens' upper-right corner [m].");
+        
+        if (dimWorld == 3) {
+            REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftZ, "The z-coordinate of the lens' lower-left corner [m].");
+            REGISTER_PARAM(TypeTag, Scalar, LensUpperRightZ, "The z-coordinate of the lens' upper-right corner [m].");
+        }
+    };
 
     /*!
      * \name Soil parameters

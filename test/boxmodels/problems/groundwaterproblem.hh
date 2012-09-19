@@ -83,6 +83,16 @@ SET_INT_PROP(GroundWaterBaseProblem, LinearSolverVerbosity, 0);
 
 // Enable gravity
 SET_BOOL_PROP(GroundWaterBaseProblem, EnableGravity, true);
+
+// The default for the end time of the simulation
+SET_SCALAR_PROP(GroundWaterBaseProblem, EndTime, 1);
+
+// The default for the initial time step size of the simulation
+SET_SCALAR_PROP(GroundWaterBaseProblem, InitialTimeStepSize, 1);
+
+// The default DGF file to load
+SET_STRING_PROP(GroundWaterBaseProblem, GridFile, "./grids/groundwater_2d.dgf");
+
 }
 
 /*!
@@ -144,6 +154,31 @@ public:
         intrinsicPerm_ = this->toDimMatrix_(GET_PARAM(TypeTag, Scalar, Permeability));
         intrinsicPermLens_ = this->toDimMatrix_(GET_PARAM(TypeTag, Scalar, PermeabilityLens));
     }
+
+    /*!
+     * \copydoc BoxMultiphaseProblem::registerParameters
+     */
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftX, "The x-coordinate of the lens' lower-left corner [m].");
+        REGISTER_PARAM(TypeTag, Scalar, LensUpperRightX, "The x-coordinate of the lens' upper-right corner [m].");
+
+        if (dimWorld > 1) {
+            REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftY, "The y-coordinate of the lens' lower-left corner [m].");
+            REGISTER_PARAM(TypeTag, Scalar, LensUpperRightY, "The y-coordinate of the lens' upper-right corner [m].");
+        }
+        
+        if (dimWorld > 2) {
+            REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftZ, "The z-coordinate of the lens' lower-left corner [m].");
+            REGISTER_PARAM(TypeTag, Scalar, LensUpperRightZ, "The z-coordinate of the lens' upper-right corner [m].");
+        }
+
+        REGISTER_PARAM(TypeTag, Scalar, Permeability, "The intrinsic permeability [m^2] of the ambient material.");
+        REGISTER_PARAM(TypeTag, Scalar, PermeabilityLens, "The intrinsic permeability [m^2] of the lens.");
+    }
+
 
     /*! \brief Define the porosity.
      *
