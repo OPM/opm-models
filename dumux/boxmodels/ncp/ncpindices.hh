@@ -17,18 +17,24 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \copydoc Dumux::NcpIndices
+ */
 #ifndef DUMUX_NCP_INDICES_HH
 #define DUMUX_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup NcpModel
- * \brief The primary variable and equation indices for the Ncp
- *        model.
+ *
+ * \brief The primary variable and equation indices for the
+ *        compositional multi-phase NCP model.
  */
 template <class TypeTag, int PVOffset = 0>
 struct NcpIndices 

@@ -21,9 +21,7 @@
 /*!
  * \file
  *
- * \brief Contains the secondary variables (Quantities which are
- *        constant within a finite volume) of the M-phase, N-component
- *        model.
+ * \copydoc Dumux::NcpVolumeVariables
  */
 #ifndef DUMUX_NCP_VOLUME_VARIABLES_HH
 #define DUMUX_NCP_VOLUME_VARIABLES_HH
@@ -40,8 +38,9 @@ namespace Dumux {
 /*!
  * \ingroup NcpModel
  * \ingroup BoxVolumeVariables
+ *
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the M-phase, N-component model.
+ *        finite volume in the compositional multi-phase NCP model.
  */
 template <class TypeTag>
 class NcpVolumeVariables
@@ -83,7 +82,7 @@ public:
     { }
 
     /*!
-     * \brief Update all quantities for a given control volume.
+     * \brief BoxVolumeVariables::update
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -214,41 +213,37 @@ public:
     }
 
     /*!
-     * \brief Return the fluid configuration at the given primary
-     *        variables
+     * \brief ImmiscibleVolumeVariables::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     * \brief ImmiscibleVolumeVariables::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \brief Returns the relative permeability of a given phase within
-     *        the control volume.
+     * \brief ImmiscibleVolumeVariables::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \brief Returns the effective mobility of a given phase within
-     *        the control volume.
+     * \brief ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
     { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
 
     /*!
-     * \brief Returns the average porosity within the control volume.
+     * \brief ImmiscibleVolumeVariables::porosity
      */
     Scalar porosity() const
     { return porosity_; }
 
     /*!
-     * \brief If running in valgrind this makes sure that all
-     *        quantities in the volume variables are defined.
+     * \brief BoxVolumeVariables::checkDefined
      */
     void checkDefined() const
     {
@@ -262,7 +257,7 @@ public:
 #endif
     }
 
-protected:
+private:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;

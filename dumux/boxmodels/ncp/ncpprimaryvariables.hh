@@ -19,11 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the M-phase,
- *        N-component box model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::NcpPrimaryVariables
  */
 #ifndef DUMUX_NCP_PRIMARY_VARIABLES_HH
 #define DUMUX_NCP_PRIMARY_VARIABLES_HH
@@ -36,13 +32,13 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup NcpModel
  *
- * \brief Represents the primary variables used in the M-phase,
- *        N-component box model.
+ * \brief Represents the primary variables used by the compositional
+ *        multi-phase NCP box model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -75,46 +71,26 @@ class NcpPrimaryVariables
     typedef Dumux::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     NcpPrimaryVariables()
         : ParentType()
     { }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     NcpPrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
      */
     NcpPrimaryVariables(const NcpPrimaryVariables &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Set the primary variables from an arbitrary fluid state
-     *        in a mass conservative way.
-     *
-     * If an energy equation is included, the fluid temperatures are
-     * the same as the one given in the fluid state, *not* the
-     * enthalpy.
-     *
-     * \param fluidState The fluid state which should be represented
-     *                   by the primary variables. The temperatures,
-     *                   pressures, compositions and densities of all
-     *                   phases must be defined.
-     * \param matParams The capillary pressure law parameters
-     * \param isInEquilibrium If true, the fluid state expresses
-     *                        thermodynamic equilibrium assuming the
-     *                        relations expressed by the fluid
-     *                        system. This implies that in addition to
-     *                        the quantities mentioned above, the
-     *                        fugacities are also defined.
+     * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
@@ -161,6 +137,9 @@ public:
         assignNaive(fsFlash);
     }
 
+    /*!
+     * \copydoc ImmisciblePrimaryVariables::assignNaive
+     */
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {

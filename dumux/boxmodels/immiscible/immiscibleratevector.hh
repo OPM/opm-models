@@ -36,7 +36,7 @@ namespace Dumux
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Implements a vector representing rates of consered quantities.
+ * \brief Implements a vector representing rates of conserved quantities.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -130,8 +130,8 @@ public:
     /*!
      * \brief Set a volumetric rate of a phase.
      *
-     * The Enthalpy contained in the volume is taken into account by
-     * this method.
+     * The enthalpy transported into the domain is taken into account
+     * by this method.
      * 
      * \param fluidState The thermodynamic state of the fluids which
      *                   should be considered. The density and the

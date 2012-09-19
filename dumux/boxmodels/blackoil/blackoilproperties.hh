@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Defines the properties required for the twophase BOX model.
+ * \brief Declares the properties required by the black oil model.
  */
 #ifndef DUMUX_BLACK_OIL_PROPERTIES_HH
 #define DUMUX_BLACK_OIL_PROPERTIES_HH

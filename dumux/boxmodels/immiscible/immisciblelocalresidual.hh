@@ -44,7 +44,6 @@ namespace Dumux {
 template<class TypeTag>
 class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -128,10 +127,6 @@ public:
     /*!
      * \brief Add the advective mass flux of all components over
      *        a face of a sub-control volume.
-     *
-     *
-     * This method is called by compute flux and is mainly there for
-     * derived models to ease adding equations selectively.
      *
      * \copydetails computeFlux
      */

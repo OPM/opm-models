@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \copybrief BlackOilModel
+ * \copydoc Dumux::BlackOilModel
  */
 #ifndef DUMUX_BLACK_OIL_MODEL_HH
 #define DUMUX_BLACK_OIL_MODEL_HH
@@ -31,6 +31,7 @@
 #include <string>
 
 namespace Dumux {
+
 /*!
  * \ingroup BlackOilBoxModel
  * \brief A fully-implicit black-oil flow model using the box scheme.
@@ -49,13 +50,13 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     
 public:
     /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     const char *name() const
     { return "blackoil"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -75,7 +76,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -90,11 +91,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param pvIdx The index of the primary variable
+     * \copydoc BoxModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
@@ -106,10 +103,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydoc BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {

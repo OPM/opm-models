@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Element-wise calculation of the residual for the black-oil box model.
+ * \copydoc Dumux::BlackOilLocalResidual
  */
 #ifndef DUMUX_BLACK_OIL_LOCAL_RESIDUAL_HH
 #define DUMUX_BLACK_OIL_LOCAL_RESIDUAL_HH
@@ -30,18 +30,17 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BlackOilBoxModel
- * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the black-oil box model.
+ *
+ * \brief Calculates the local residual of the black oil
+ *        box model.
  */
 template<class TypeTag>
 class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-protected:
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -57,10 +56,7 @@ protected:
 
 public:
     /*!
-     * \brief Evaluate the amount all conservation quantities
-     *        (e.g. phase mass) within a finite sub-control volume.
-     *
-     *  \param result The phase mass within the sub-control volume
+     * \copydoc BoxLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -83,9 +79,7 @@ public:
     }
 
     /*!
-     * \brief Evaluates the mass flux over a face of a sub-control
-     *        volume.
-     *
+     * \copydoc BoxLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -111,9 +105,7 @@ public:
     }
 
     /*!
-     * \brief Calculate the source term of the equation
-     *
-     *
+     * \copydoc BoxLocalResidual::computeSource
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

@@ -17,6 +17,11 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \copydoc Dumux::NcpLocalResidual
+ */
 #ifndef DUMUX_NCP_LOCAL_RESIDUAL_HH
 #define DUMUX_NCP_LOCAL_RESIDUAL_HH
 
@@ -28,23 +33,18 @@
 
 #include <dumux/common/math.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup NcpModel
- * \brief Compositional NCP-model specific details needed to
- *        approximately calculate the local defect in the box scheme.
  *
- * This class is used to fill the gaps in BoxLocalResidual for
- * M-phase, N-component flow using NCPs as the model equations.
+ * \brief Compositional multi-phase NCP-model specific details needed
+ *        to approximately calculate the local defect in the box
+ *        scheme.
  */
 template<class TypeTag>
 class NcpLocalResidual : public BoxLocalResidual<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    friend class BoxLocalResidual<TypeTag>;
-
-protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef BoxLocalResidual<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -54,6 +54,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
@@ -72,9 +73,7 @@ protected:
 
 public:
     /*!
-     * \brief Evaluate the storage term [kg/m^3] in a single phase.
-     *
-     * \param phaseIdx The index of the fluid phase
+     * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
@@ -99,13 +98,7 @@ public:
     }
 
     /*!
-     * \brief Evaluate the amount all conservation quantities
-     *        (e.g. phase mass) within a sub-control volume.
-     *
-     * The result should be averaged over the volume (e.g. phase mass
-     * inside a sub control volume divided by the volume)
-     *
-     *  \param result The number of moles of the component within the sub-control volume
+     * \copydoc ImmiscibleLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -120,8 +113,7 @@ public:
     }
 
     /*!
-     * \brief Evaluates the total flux of all conservation quantities
-     *        over a face of a subcontrol volume.
+     * \copydoc ImmiscibleLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -129,22 +121,20 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
-        computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
     /*!
-     * \brief Evaluates the advective mass flux of all components over
-     *        a face of a subcontrol volume.
-     *
+     * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void computeAdvectiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
@@ -174,14 +164,12 @@ public:
     }
 
     /*!
-     * \brief Adds the diffusive mass flux of all components over
-     *        a face of a subcontrol volume.
-     *
+     * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void computeDiffusiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
 #if 0
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
@@ -204,7 +192,9 @@ public:
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
-protected:
+private:
+    friend class BoxLocalResidual<TypeTag>;
+
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const

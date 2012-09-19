@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing molar rates.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::NcpRateVector
  */
 #ifndef DUMUX_NCP_RATE_VECTOR_HH
 #define DUMUX_NCP_RATE_VECTOR_HH
@@ -40,7 +37,7 @@ namespace Dumux
 /*!
  * \ingroup NcpModel
  *
- * \brief Implements a vector representing molar rates.
+ * \brief Implements a vector representing mass, molar or volumetric rates.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -62,33 +59,26 @@ class NcpRateVector
 
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 public:
-    /*!
-     * \brief Default constructor
-     */
     NcpRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
     NcpRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
      */
     NcpRateVector(const NcpRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Set a mass rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType &value)
     {
@@ -102,11 +92,7 @@ public:
     }
 
     /*!
-     * \brief Set a molar rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMolarRate
      */
     void setMolarRate(const ParentType &value)
     {
@@ -114,7 +100,7 @@ public:
     }
 
     /*!
-     * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
+     * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
     void setEnthalpyRate(Scalar rate)
     {
@@ -122,9 +108,7 @@ public:
     }
 
     /*!
-     * \brief Set a volumetric rate of a phase.
-     *
-     * Enthalpy is taken into account here.
+     * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
     void setVolumetricRate(const FluidState &fluidState, 

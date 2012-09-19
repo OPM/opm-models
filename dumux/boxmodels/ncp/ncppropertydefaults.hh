@@ -19,7 +19,9 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Default properties for the compositional NCP box model.
+ *
+ * \brief Defines default values for the properties required for the
+ *        NCP compositional multi-phase box model.
  */
 #ifndef DUMUX_NCP_PROPERTY_DEFAULTS_HH
 #define DUMUX_NCP_PROPERTY_DEFAULTS_HH

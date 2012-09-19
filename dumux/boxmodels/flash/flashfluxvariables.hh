@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        all fluxes of components over a face of a finite volume for
- *        the primary variable compositional model which is based on
- *        flash calculations.
+ * \copydoc Dumux::FlashFluxVariables
  */
 #ifndef DUMUX_FLASH_FLUX_VARIABLES_HH
 #define DUMUX_FLASH_FLUX_VARIABLES_HH
@@ -35,12 +32,15 @@
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
+
 /*!
  * \ingroup FlashModel
  * \ingroup BoxFluxVariables
+ *
  * \brief This template class contains the data which is required to
  *        calculate all fluxes of components over a face of a finite
- *        volume for the primary variable switching compositional model.
+ *        volume for the compositional multi-phase model based on
+ *        flash calculations.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.
@@ -66,6 +66,9 @@ class FlashFluxVariables
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::update
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
@@ -76,7 +79,7 @@ public:
     }
 
     /*!
-     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
@@ -93,6 +96,13 @@ public:
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
     }
 
+    /*!
+     * \brief Returns the effective molecular diffusion coefficient of
+     *        a component in the porous medium at the integration point.
+     *
+     * \copydetails Doxygen::phaseIdxParam
+     * \copydetails Doxygen::compIdxParam
+     */
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
     {
         assert(0 <= compIdx && compIdx < numComponents);
@@ -101,6 +111,12 @@ public:
         return porousDiffCoeff_[phaseIdx];
     }
 
+    /*!
+     * \brief Returns the molar density of a phase at the integration
+     *        point [mol/m^3].
+     *
+     * \copydetails Doxygen::phaseIdxParam
+     */
     Scalar molarDensity(int phaseIdx) const
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
@@ -108,6 +124,13 @@ public:
         return molarDensity_[phaseIdx];
     }
 
+    /*!
+     * \brief Returns the mole fraction of a component in a phase at
+     *        the integration point [-].
+     *
+     * \copydetails Doxygen::phaseIdxParam
+     * \copydetails Doxygen::compIdxParam
+     */
     Scalar moleFraction(int phaseIdx, int compIdx) const
     {
         assert(0 <= compIdx && compIdx < numComponents);
@@ -116,10 +139,15 @@ public:
         return moleFrac_[phaseIdx][compIdx];
     }
 
+    /*!
+     * \brief Returns the gradient of the mole fraction of a component
+     *        in a phase at the integration point [1/m].
+     *
+     * \copydetails Doxygen::phaseIdxParam
+     * \copydetails Doxygen::compIdxParam
+     */
     const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
-    {
-        return moleFracGrad_[phaseIdx][compIdx];
-    }
+    { return moleFracGrad_[phaseIdx][compIdx]; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,

@@ -19,7 +19,8 @@
 /*!
  * \file
  *
- * \brief Defines the properties required for the FLASH BOX model.
+ * \brief Declares the properties required by the compositional
+ *        multi-phase model based on flash calculations.
  */
 #ifndef DUMUX_FLASH_PROPERTIES_HH
 #define DUMUX_FLASH_PROPERTIES_HH
@@ -31,11 +32,9 @@
 #include <dumux/boxmodels/vtk/boxvtkphasepresencemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+namespace Properties {
 
-namespace Properties
-{
 //////////////////////////////////////////////////////////////////
 // Type tags
 //////////////////////////////////////////////////////////////////

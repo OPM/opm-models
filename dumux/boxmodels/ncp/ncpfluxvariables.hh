@@ -20,11 +20,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        all fluxes of components over a face of a finite volume.
- *
- * This means pressure, concentration and temperature gradients, phase
- * densities at the integration point, etc.
+ * \copydoc Dumux::NcpFluxVariables
  */
 #ifndef DUMUX_NCP_FLUX_VARIABLES_HH
 #define DUMUX_NCP_FLUX_VARIABLES_HH
@@ -36,11 +32,12 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup NcpModel
  * \ingroup BoxFluxVariables
+ *
  * \brief This template class contains the data which is required to
  *        calculate all fluxes of components over a face of a finite
  *        volume for the compositional NCP model.
@@ -70,6 +67,9 @@ class NcpFluxVariables
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::update
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
@@ -82,7 +82,7 @@ public:
     }
 
     /*!
-     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
@@ -101,6 +101,7 @@ public:
 
     ////////////////////////////////////////////////
     // forward calls to the diffusion module
+    //! \cond 0
     Scalar porousDiffCoeffL(int compIdx) const
     { return diffusionVars_.porousDiffCoeffL(compIdx); }
 
@@ -113,6 +114,7 @@ public:
     const DimVector &moleFracGrad(int phaseIdx,
                                int compIdx) const
     { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); }
+    //! \endcond
     // end of forward calls to the diffusion module
     ////////////////////////////////////////////////
 

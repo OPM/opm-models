@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the Richards box model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::RichardsPrimaryVariables
  */
 #ifndef DUMUX_RICHARDS_PRIMARY_VARIABLES_HH
 #define DUMUX_RICHARDS_PRIMARY_VARIABLES_HH
@@ -34,8 +31,8 @@
 
 #include "richardsproperties.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup RichardsModel
  *
@@ -63,8 +60,8 @@ class RichardsPrimaryVariables
     enum { pwIdx = Indices::pwIdx };
 
     enum {
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx
+        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
+        nPhaseIdx = 1 - wPhaseIdx
     };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -78,9 +75,6 @@ class RichardsPrimaryVariables
     typedef Dumux::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     RichardsPrimaryVariables()
         : ParentType()
     {
@@ -88,14 +82,14 @@ public:
     }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     RichardsPrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
      */
     RichardsPrimaryVariables(const RichardsPrimaryVariables &value)
         : ParentType(value)
@@ -162,24 +156,7 @@ public:
     }
 
     /*!
-     * \brief Set the primary variables from an arbitrary fluid state
-     *        in a mass conservative way.
-     *
-     * If an energy equation is included, the fluid temperatures are
-     * the same as the one given in the fluid state, *not* the
-     * enthalpy.
-     *
-     * \param fluidState The fluid state which should be represented
-     *                   by the primary variables. The temperatures,
-     *                   pressures, compositions and densities of all
-     *                   phases must be defined.
-     * \param matParams The capillary pressure law parameters
-     * \param isInEquilibrium If true, the fluid state expresses
-     *                        thermodynamic equilibrium assuming the
-     *                        relations expressed by the fluid
-     *                        system. This implies that in addition to
-     *                        the quantities mentioned above, the
-     *                        fugacities are also defined.
+     * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
@@ -203,6 +180,9 @@ public:
         assignNaive(fsFlash);
     }
 
+    /*!
+     * \copydoc ImmisciblePrimaryVariables::assignNaive
+     */
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {

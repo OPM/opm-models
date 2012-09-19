@@ -157,8 +157,8 @@ class RichardsLensProblem
         pwIdx = Indices::pwIdx,
         contiEqIdx = Indices::contiEqIdx,
 
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx,
+        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
+        nPhaseIdx = 1 - wPhaseIdx,
 
         numPhases = FluidSystem::numPhases,
 

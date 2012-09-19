@@ -19,7 +19,8 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for all stokes problems which use the box scheme.
+ *
+ * \copydoc Dumux::StokesProblem
  */
 #ifndef DUMUX_STOKES_PROBLEM_HH
 #define DUMUX_STOKES_PROBLEM_HH
@@ -30,8 +31,8 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxStokesProblems
  * \brief Base class for all problems which use the Stokes box model.
@@ -56,6 +57,9 @@ class StokesProblem : public BoxProblem<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
+    /*!
+     * \copydoc BoxProblem::BoxProblem(TimeManager &, const GridView &)
+     */
     StokesProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView)
         , gravity_(0)
@@ -72,6 +76,8 @@ public:
     /*!
      * \brief Returns the temperature at a spatial and temporal
      *        position within the domain.
+     *
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
@@ -89,10 +95,7 @@ public:
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
      *        with no pores in the sub-control volume.
      *
-     * \param context Reference to the object which represents the
-     *                current execution context.
-     * \param spaceIdx The local index of spatial entity defined by the context
-     * \param timeIdx The index used by the time discretization.
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     Scalar heatCapacitySolid(const Context &context,
@@ -103,10 +106,7 @@ public:
      * \brief Returns the parameter object for the heat conductivity law in
      *        a sub-control volume.
      *
-     * \param context Reference to the object which represents the
-     *                current execution context.
-     * \param spaceIdx The local index of spatial entity defined by the context
-     * \param timeIdx The index used by the time discretization.
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     const HeatConductionLawParams&
@@ -120,7 +120,10 @@ public:
      * \brief Returns the acceleration due to gravity.
      *
      * If the <tt>EnableGravity</tt> property is true, this means
-     * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
+     * \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$, else
+     * \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$
+     *
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     const DimVector &gravity(const Context &context, int spaceIdx, int timeIdx) const

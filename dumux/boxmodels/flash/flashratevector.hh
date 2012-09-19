@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing molar rates for the primary variable switching compositional model.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::FlashRateVector
  */
 #ifndef DUMUX_BOX_FLASH_RATE_VECTOR_HH
 #define DUMUX_BOX_FLASH_RATE_VECTOR_HH
@@ -35,15 +32,12 @@
 
 #include "flashvolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup FlashModel
  *
- * \brief Implements a vector representing molar rates.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::ImmiscibleRateVector
  */
 template <class TypeTag>
 class FlashRateVector
@@ -63,33 +57,26 @@ class FlashRateVector
     typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     FlashRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    explicit FlashRateVector(Scalar value)
+    FlashRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
      */
     FlashRateVector(const FlashRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Set a mass rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType &value)
     {
@@ -102,25 +89,19 @@ public:
     }
 
     /*!
-     * \brief Set a molar rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMolarRate
      */
     void setMolarRate(const ParentType &value)
     { ParentType::operator=(value); }
 
     /*!
-     * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
+     * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
     void setEnthalpyRate(Scalar rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
-     * \brief Set a volumetric rate of a phase.
-     *
-     * Enthalpy is taken into account here.
+     * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
     void setVolumetricRate(const FluidState &fluidState, 
@@ -135,18 +116,6 @@ public:
         
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
-
-    /*!
-     * \brief Assign the rate vector from another rate vector
-     */
-    ThisType &operator=(const ParentType &value)
-    { ParentType::operator=(value); return *this; }
-
-    /*!
-     * \brief Set all entries of the rate vector to a scalar value.
-     */
-    ThisType &operator=(Scalar value)
-    { ParentType::operator=(value); return *this; }
 };
 
 } // end namepace

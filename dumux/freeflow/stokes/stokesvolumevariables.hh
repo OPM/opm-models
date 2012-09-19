@@ -20,8 +20,7 @@
 /*!
  * \file
  *
- * \brief Contains the quantities which are constant within a
- *        finite volume in the Stokes box model.
+ * \copydoc Dumux::StokesVolumeVariables
  */
 #ifndef DUMUX_STOKES_VOLUME_VARIABLES_HH
 #define DUMUX_STOKES_VOLUME_VARIABLES_HH
@@ -35,8 +34,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BoxStokesModel
@@ -73,7 +71,7 @@ class StokesVolumeVariables
 
 public:
     /*!
-     * \copydoc BoxVolumeVariables::update()
+     * \copydoc BoxVolumeVariables::update
      */
     void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
@@ -118,7 +116,7 @@ public:
     }
 
     /*!
-     * \brief Update the gradients for the sub-control volumes.
+     * \copydoc BoxVolumeVariables::updateScvGradients
      */
     void updateScvGradients(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
@@ -164,13 +162,18 @@ public:
 
 
     /*!
-     * \brief Returns the phase state for the control-volume.
+     * \brief Returns the thermodynamic state of the fluid for the control-volume.
      */
     const FluidState &fluidState() const
     { return fluidState_; }
     
     /*!
      * \brief Returns the porosity of the medium
+     *
+     * For the Navier-Stokes model this quantity does not make sense
+     * because there is no porous medium. The method is included here
+     * to allow the Navier-Stokes model share the energy module with
+     * the porous-media models.
      */
     Scalar porosity() const
     { return 1.0; }
@@ -200,7 +203,7 @@ public:
     const DimVector &gravity() const
     { return gravity_; } 
 
-protected:
+private:
     DimVector velocityAtPos_(const ElementContext elemCtx,
                           int timeIdx,
                           const LocalPosition &localPos) const
@@ -219,19 +222,6 @@ protected:
         }
 
         return result;
-    }
-
-    template<class ParameterCache>
-    void updateEnergy_(const ParameterCache &paramCache,
-                       const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx)
-    { }
-
-    void updateTemperature_(const ElementContext &elemCtx,
-                            int scvIdx, int timeIdx)
-    {
-        Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx);
-        this->fluidState_.setTemperature(T);
     }
 
     DimVector velocity_;

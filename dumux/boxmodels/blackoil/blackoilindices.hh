@@ -16,19 +16,20 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
  * \file
  *
- * \brief Defines the indices required for the black-oil box model.
+ * \copydoc Dumux::BlackOilIndices
  */
 #ifndef DUMUX_BOX_BLACK_OIL_INDICES_HH
 #define DUMUX_BOX_BLACK_OIL_INDICES_HH
 
 namespace Dumux {
+
 /*!
  * \ingroup BlackOilBoxModel
- * \brief The indices for the isothermal black-oil model.
+ *
+ * \brief The primary variable and equation indices for the black-oil model.
  */
 template <int PVOffset=0>
 struct BlackOilIndices

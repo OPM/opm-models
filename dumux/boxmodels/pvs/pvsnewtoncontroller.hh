@@ -20,11 +20,8 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief A PVS specific controller for the newton solver.
  *
- * This controller 'knows' what a 'physically meaningful' solution is
- * which allows the newton method to abort quicker if the solution is
- * way out of bounds.
+ * \copydoc Dumux::PvsNewtonController
  */
 #ifndef DUMUX_PVS_NEWTON_CONTROLLER_HH
 #define DUMUX_PVS_NEWTON_CONTROLLER_HH
@@ -38,7 +35,9 @@ namespace Dumux {
 /*!
  * \ingroup Newton
  * \ingroup PvsModel
- * \brief A PVS specific controller for the newton solver.
+ *
+ * \brief A controller for the newton solver which is specific to the
+ *        compositional multi-phase PVS box model.
  *
  * This controller 'knows' what a 'physically meaningful' solution is
  * which allows the newton method to abort quicker if the solution is
@@ -57,10 +56,7 @@ public:
     {}
 
     /*!
-     * \brief Called after each Newton update
-     *
-     * This method can be used for some post-processing. In the PVS
-     * model "postprocessing" means "determine new phase presence".
+     * \copydoc NewtonController::newtonEndStep
      */
     void newtonEndStep(SolutionVector &uCurrentIter,
                        const SolutionVector &uLastIter)
@@ -70,8 +66,7 @@ public:
     }
 
     /*!
-     * \brief Returns true if the current solution can be considered
-     *        to be accurate enough
+     * \copydoc NewtonController::newtonConverged
      */
     bool newtonConverged()
     {

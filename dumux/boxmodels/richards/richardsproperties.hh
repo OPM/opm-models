@@ -58,6 +58,7 @@ NEW_PROP_TAG(MaterialLawParams); //!< The type of the parameter object for the m
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(FluidSystem); //!< The fluid system to be used for the Richards model
+NEW_PROP_TAG(LiquidPhaseIndex); //!< Index of the fluid which represents the wetting phase
 NEW_PROP_TAG(WettingPhase); //!< Fluid which represents the wetting phase
 NEW_PROP_TAG(NonwettingPhase); //!< Fluid which represents the non-wetting phase
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity

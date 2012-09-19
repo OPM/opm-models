@@ -20,18 +20,16 @@
 /*!
  * \file
  *
- * \brief Index names for the Richards model.
+ * \copydoc Dumux::RichardsIndices
  */
 #ifndef DUMUX_RICHARDS_INDICES_HH
 #define DUMUX_RICHARDS_INDICES_HH
 
-namespace Dumux
-{
-// \{
+namespace Dumux {
 
 /*!
  * \ingroup RichardsModel
- * \brief Index names for the Richards model.
+ * \brief Indices for the primary variables/conservation equations of the Richards model.
  */
 struct RichardsIndices
 {
@@ -47,16 +45,7 @@ struct RichardsIndices
     //////////
     //! Equation index for the mass conservation of the wetting phase
     static const int contiEqIdx = 0;
-
-    //////////
-    // phase indices
-    //////////
-    //! Phase index for the wetting phase
-    static const int wPhaseIdx = 0;
-    //! Phase index for the wetting phase
-    static const int nPhaseIdx = 1;
 };
-// \}
 
 } // end namepace
 

@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a boundary vector for the fully implicit Stokes model.
+ * \copydoc Dumux::StokesBoundaryRateVector
  */
 #ifndef DUMUX_BOX_STOKES_BOUNDARY_RATE_VECTOR_HH
 #define DUMUX_BOX_STOKES_BOUNDARY_RATE_VECTOR_HH
@@ -31,12 +31,12 @@
 
 #include "stokesvolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup StokesModel
  *
- * \brief Implements a boundary vector for the fully implicit Stokes model.
+ * \brief Implements a boundary vector for the fully implicit (Navier-)Stokes model.
  */
 template <class TypeTag>
 class StokesBoundaryRateVector
@@ -62,43 +62,46 @@ class StokesBoundaryRateVector
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     StokesBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
     StokesBoundaryRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
      */
     StokesBoundaryRateVector(const StokesBoundaryRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Specify a free-flow boundary
+     * \param velocity The velocity vector [m/s] at the boundary.
+     *
+     * \param context The execution context for which the boundary rate should be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param timeIdx The index used by the time discretization.
+     * \param velocity The velocity vector [m/s] at the boundary.
+     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
     void setFreeFlow(const Context &context,
-                     int spaceIdx,
+                     int bfIdx,
                      int timeIdx,
                      const DimVector &velocity, 
-                     const FluidState &fs) 
+                     const FluidState &fluidState) 
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
-        const auto &scvf = fvElemGeom.boundaryFace[spaceIdx];
+        const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
 
-        int insideScvIdx = context.insideScvIndex(spaceIdx, timeIdx);
+        int insideScvIdx = context.insideScvIndex(bfIdx, timeIdx);
         //const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
-        const auto &insideVolVars = context.volVars(spaceIdx, timeIdx);
+        const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         // the outer unit normal
         auto normal = scvf.normal;
@@ -124,14 +127,14 @@ public:
         Scalar volumeFlux = velocity*normal;
 
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updatePhase(fs, phaseIdx);
-        Scalar density = FluidSystem::density(fs, paramCache, phaseIdx);
-        Scalar molarDensity = density / fs.averageMolarMass(phaseIdx);
+        paramCache.updatePhase(fluidState, phaseIdx);
+        Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
+        Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] = 
                 volumeFlux
                 * molarDensity
-                * fs.moleFraction(phaseIdx, compIdx);
+                * fluidState.moleFraction(phaseIdx, compIdx);
         }
         
         // calculate the momentum flux over the boundary
@@ -149,22 +152,28 @@ public:
                 * (tmp * normal);
         }
 
-        EnergyModule::setEnthalpyRate(*this, fs, phaseIdx, volumeFlux);
+        EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volumeFlux);
     }
 
     /*!
-     * \brief Specify an inflow boundary
+     * \brief Set a in-flow boundary in the (Navier-)Stoke model
+     *
+     * \param context The execution context for which the boundary rate should be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param timeIdx The index used by the time discretization.
+     * \param velocity The velocity vector [m/s] at the boundary.
+     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
     void setInFlow(const Context &context,
-                   int spaceIdx,
+                   int bfIdx,
                    int timeIdx,
                    const DimVector &velocity, 
-                   const FluidState &fs) 
+                   const FluidState &fluidState) 
     {
-        const auto &volVars = context.volVars(spaceIdx, timeIdx);
+        const auto &volVars = context.volVars(bfIdx, timeIdx);
 
-        setFreeFlow(context, spaceIdx, timeIdx, velocity, fs);
+        setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow out
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -176,7 +185,9 @@ public:
     }
 
     /*!
-     * \brief Specify an outflow boundary
+     * \brief Set a out-flow boundary in the (Navier-)Stoke model
+     *
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     void setOutFlow(const Context &context,
@@ -186,9 +197,9 @@ public:
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
 
         DimVector velocity = volVars.velocity();
-        const auto &fs = volVars.fluidState();
+        const auto &fluidState = volVars.fluidState();
 
-        setFreeFlow(context, spaceIdx, timeIdx, velocity, fs);
+        setFreeFlow(context, spaceIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow in
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -200,7 +211,9 @@ public:
     }
     
     /*!
-     * \brief Specify a no-flow boundary.
+     * \brief Set a no-flow boundary in the (Navier-)Stoke model
+     *
+     * \copydoc Doxygen::contextParams
      */
     template <class Context>
     void setNoFlow(const Context &context,
@@ -210,23 +223,13 @@ public:
         static DimVector v0(0.0);
 
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
-        const auto &fs = volVars.fluidState(); // don't care
+        const auto &fluidState = volVars.fluidState(); // don't care
 
         // no flow of mass and no slip for the momentum
         setFreeFlow(context, spaceIdx, timeIdx, 
                     /*velocity = */v0,
-                    fs);
+                    fluidState);
     }
-
-protected:
-    template <class FluidState>
-    void enthalpyFlux_(const DimVector &velocity,
-                       Scalar density,
-                       const DimVector &normal,
-                       const VolumeVariables &insideVolVars,
-                       const FluidState &fs,
-                       const typename FluidSystem::ParameterCache &paramCache)
-    { }
 
 private:
     Implementation &asImp_()

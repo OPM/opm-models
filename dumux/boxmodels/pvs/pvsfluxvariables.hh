@@ -22,9 +22,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        all fluxes of components over a face of a finite volume for
- *        the primary variable switching compositional model.
+ * \copydoc Dumux::PvsFluxVariables
  */
 #ifndef DUMUX_PVS_FLUX_VARIABLES_HH
 #define DUMUX_PVS_FLUX_VARIABLES_HH
@@ -37,12 +35,15 @@
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
+
 /*!
  * \ingroup PvsModel
  * \ingroup BoxFluxVariables
- * \brief This template class contains the data which is required to
- *        calculate all fluxes of components over a face of a finite
- *        volume for the primary variable switching compositional model.
+ *
+ * \brief Contains all data which is required to calculate all fluxes
+ *        of components over a face of a finite volume for the
+ *        compositional multi-phase primary variable switching box
+ *        model.
  *
  * This means pressure and concentration gradients, phase densities at
  * the integration point, etc.
@@ -73,7 +74,7 @@ class PvsFluxVariables
 
 public:
     /*!
-     * \copydoc BoxMultiPhaseFluxVariables::update()
+     * \copydoc BoxMultiPhaseFluxVariables::update
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
@@ -86,7 +87,7 @@ public:
     }
 
     /*!
-     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
@@ -103,6 +104,9 @@ public:
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
     }
 
+    /*!
+     * \copydoc FlashFluxVariables::porousDiffCoeff
+     */
     Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
     {
         assert(0 <= compIdx && compIdx < numComponents);
@@ -111,6 +115,9 @@ public:
         return porousDiffCoeff_[phaseIdx];
     }
 
+    /*!
+     * \copydoc FlashFluxVariables::molarDensity
+     */
     Scalar molarDensity(int phaseIdx) const
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
@@ -118,6 +125,9 @@ public:
         return molarDensity_[phaseIdx];
     }
 
+    /*!
+     * \copydoc FlashFluxVariables::moleFraction
+     */
     Scalar moleFraction(int phaseIdx, int compIdx) const
     {
         assert(0 <= compIdx && compIdx < numComponents);
@@ -126,10 +136,11 @@ public:
         return moleFrac_[phaseIdx][compIdx];
     }
 
+    /*!
+     * \copydoc FlashFluxVariables::moleFracGrad
+     */
     const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
-    {
-        return moleFracGrad_[phaseIdx][compIdx];
-    }
+    { return moleFracGrad_[phaseIdx][compIdx]; }
 
 private:
     void calculateGradients_(const ElementContext &elemCtx,

@@ -22,7 +22,8 @@
 /*!
  * \file
  *
- * \brief Defines the properties required for the PVS BOX model.
+ * \brief Declares the properties required for the compositional
+ *        multi-phase primary variable switching box model.
  */
 #ifndef DUMUX_PVS_PROPERTIES_HH
 #define DUMUX_PVS_PROPERTIES_HH

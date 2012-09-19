@@ -203,6 +203,9 @@ public:
      */
     const Problem &problem() const
     { return problem_; }
+    /*!
+     * \copydoc problem() const
+     */
     Problem &problem()
     { return problem_; }
 
@@ -345,7 +348,8 @@ public:
      * The relative error can be seen as a norm of the difference
      * between the current and the next iteration.
      *
-     * \param uLastIter The current iterative solution
+     * \param uCurrentIter The current iterative solution
+     * \param uLastIter The last iterative solution
      * \param deltaU The difference between the current and the next solution
      */
     void newtonUpdateRelError(const SolutionVector &uCurrentIter,

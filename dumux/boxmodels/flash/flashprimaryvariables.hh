@@ -19,11 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used by the compositional
- *        flow model based on flash calculations.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::FlashPrimaryVariables
  */
 #ifndef DUMUX_FLASH_PRIMARY_VARIABLES_HH
 #define DUMUX_FLASH_PRIMARY_VARIABLES_HH
@@ -39,8 +35,8 @@
 
 #include <iostream>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup FlashModel
  *
@@ -74,17 +70,14 @@ class FlashPrimaryVariables
     typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     FlashPrimaryVariables()
         : ParentType()
     { Valgrind::SetDefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    explicit FlashPrimaryVariables(Scalar value)
+    FlashPrimaryVariables(Scalar value)
         : ParentType(value)
     {
         Valgrind::CheckDefined(value);
@@ -92,51 +85,14 @@ public:
     }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
      */
     FlashPrimaryVariables(const FlashPrimaryVariables &value)
         : ParentType(value)
     { Valgrind::SetDefined(*this); }
 
     /*!
-     * \brief Assignment from scalars.
-     */
-    ThisType &operator=(Scalar value)
-    {
-        Valgrind::CheckDefined(value);
-        ParentType::operator=(value);
-        return *this;
-    }
-
-    /*!
-     * \brief Assignment from field vectors.
-     */
-    ThisType &operator=(const ParentType &values)
-    {
-        Valgrind::CheckDefined(values);
-        ParentType::operator=(values);
-        return *this;
-    }
-
-    /*!
-     * \brief Set the primary variables from an arbitrary fluid state
-     *        in a mass conservative way.
-     *
-     * If an energy equation is included, the fluid temperatures are
-     * the same as the one given in the fluid state, *not* the
-     * enthalpy.
-     *
-     * \param fluidState The fluid state which should be represented
-     *                   by the primary variables. The temperatures,
-     *                   pressures, compositions and densities of all
-     *                   phases must be defined.
-     * \param matParams The capillary pressure law parameters
-     * \param isInEquilibrium If true, the fluid state expresses
-     *                        thermodynamic equilibrium assuming the
-     *                        relations expressed by the fluid
-     *                        system. This implies that in addition to
-     *                        the quantities mentioned above, the
-     *                        fugacities are also defined.
+     * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
@@ -150,10 +106,7 @@ public:
     }
 
     /*!
-     * \brief Assign the primary variables "naively" from a fluid state.
-     *
-     * \attention Some mass might get lost/added if the fluid state is
-     *            not in thermodynamic equilibrium!
+     * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState> 
     void assignNaive(const FluidState &fluidState)
@@ -177,6 +130,8 @@ public:
 
     /*!
      * \brief Prints the names of the primary variables and their values.
+     *
+     * \param os The \c std::ostream which should be used for the output.
      */
     void print(std::ostream &os = std::cout) const
     {

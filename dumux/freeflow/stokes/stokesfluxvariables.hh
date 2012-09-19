@@ -20,10 +20,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        the fluxes of the Stokes model over a face of a finite volume.
- *
- * This means pressure gradients, phase densities at the integration point, etc.
+ * \copydoc Dumux::StokesFluxVariables
  */
 #ifndef DUMUX_STOKES_FLUX_VARIABLES_HH
 #define DUMUX_STOKES_FLUX_VARIABLES_HH
@@ -38,12 +35,14 @@
 #include <dune/common/fmatrix.hh>
 
 namespace Dumux {
+
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxFluxVariables
- * \brief This template class contains the data which is required to
- *        calculate the mass and momentum fluxes over the face of a
- *        sub-control volume for the Stokes box model.
+ *
+ * \brief Contains the data which is required to calculate the mass
+ *        and momentum fluxes over the face of a sub-control volume
+ *        for the Stokes box model.
  *
  * This means pressure gradients, phase densities, viscosities, etc.
  * at the integration point of the sub-control-volume face
@@ -59,13 +58,22 @@ class StokesFluxVariables
 
     enum { dimWorld = GridView::dimensionworld };
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
+    /*!
+     * \brief Update all quantities which are required on an
+     *        intersection between two finite volumes.
+     *
+     * \param elemCtx The current execution context.
+     * \param scvfIdx The local index of the sub-control volume face.
+     * \param timeIdx The index relevant for the time discretization.
+     * \param isBoundaryFace Specifies whether the sub-control-volume
+     *                       face is on the domain boundary or not.
+     */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
         const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
@@ -157,6 +165,9 @@ public:
         Valgrind::CheckDefined(velocityGrad_);
     }
 
+    /*!
+     * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
+     */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
                         int bfIdx, 
@@ -167,7 +178,6 @@ public:
         update(context, bfIdx, timeIdx, fs, paramCache, /*isOnBoundary=*/true);
     }
 
-public:
     /*!
      * \brief Return the pressure \f$\mathrm{[Pa]}\f$ at the integration
      *        point.
@@ -287,7 +297,7 @@ public:
     const DimVector &normal() const
     { return normal_; }
 
-protected:
+private:
     bool onBoundary_;
 
     // values at the integration point

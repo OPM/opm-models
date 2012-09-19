@@ -143,7 +143,7 @@ public:
 #endif
     }
 
-protected:
+private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
     Implementation &asImp_()

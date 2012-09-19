@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \copybrief PvsModel
+ * \copydoc Dumux::PvsModel
  */
 #ifndef DUMUX_PVS_MODEL_HH
 #define DUMUX_PVS_MODEL_HH
@@ -35,10 +35,11 @@
 #include <string>
 #include <vector>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup PvsModel
+ *
  * \brief Adaption of the BOX scheme to the two-phase two-component flow model.
  *
  * This model implements two-phase two-component flow of two compressible and
@@ -92,7 +93,7 @@ namespace Dumux
  * \todo implement/re-enable molecular diffusion
  */
 template<class TypeTag>
-class PvsModel: public GET_PROP_TYPE(TypeTag, BaseModel)
+class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef BoxModel<TypeTag> ParentType;
 
@@ -122,8 +123,7 @@ class PvsModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Initialize the static data with the initial solution.
-     *
+     * \copydoc BoxModel::init
      */
     void init(Problem &problem)
     {
@@ -134,13 +134,13 @@ public:
     }
 
     /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     std::string name() const
     { return "pvs"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -156,7 +156,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -172,12 +172,11 @@ public:
     }
 
     /*!
-     * \brief Compute the total storage inside one phase of all
-     *        conservation quantities.
+     * \copydoc ImmiscibleModel::globalPhaseStorage
      */
-    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &storage, int phaseIdx)
     {
-        dest = 0;
+        storage = 0;
         EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
@@ -202,16 +201,15 @@ public:
                 tmp *= 
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
-                dest += tmp;
+                storage += tmp;
             }
         };
 
-        dest = this->gridView_().comm().sum(dest);
+        storage = this->gridView_().comm().sum(storage);
     }
 
     /*!
-     * \brief Called by the update() method if applying the newton
-     *         method was unsuccessful.
+     * \copydoc BoxModel::updateFailed
      */
     void updateFailed()
     {
@@ -220,11 +218,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param globalVertexIdx The global vertex index
-     * \param pvIdx The primary variable index
+     * \copydoc BoxModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
@@ -234,10 +228,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydoc BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
@@ -249,11 +240,7 @@ public:
     }
 
     /*!
-     * \brief Called by the problem if a time integration was
-     *        successful, post processing of the solution is done and the
-     *        result has been written to disk.
-     *
-     * This should prepare the model for the next time integration.
+     * \copydoc BoxModel::advanceTimeLevel
      */
     void advanceTimeLevel()
     {
@@ -269,49 +256,46 @@ public:
     { return numSwitched_ > 0; }
 
     /*!
-     * \brief Write the current solution to a restart file.
-     *
-     * \param outStream The output stream of one vertex for the restart file
-     * \param vert The vertex
+     * \copydoc BoxModel::serializeEntity
      */
-    void serializeEntity(std::ostream &outStream, const Vertex &vert)
+    void serializeEntity(std::ostream &outstream, const Vertex &vert)
     {
         // write primary variables
-        ParentType::serializeEntity(outStream, vert);
+        ParentType::serializeEntity(outstream, vert);
 
         int vertIdx = this->dofMapper().map(vert);
-        if (!outStream.good())
+        if (!outstream.good())
             DUNE_THROW(Dune::IOError, "Could not serialize vertex " << vertIdx);
 
-        outStream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence() << " ";
+        outstream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence() << " ";
     }
 
     /*!
-     * \brief Reads the current solution for a vertex from a restart
-     *        file.
-     *
-     * \param inStream The input stream of one vertex from the restart file
-     * \param vert The vertex
+     * \copydoc BoxModel::deserializeEntity
      */
-    void deserializeEntity(std::istream &inStream, const Vertex &vert)
+    void deserializeEntity(std::istream &instream, const Vertex &vertex)
     {
         // read primary variables
-        ParentType::deserializeEntity(inStream, vert);
+        ParentType::deserializeEntity(instream, vertex);
 
         // read phase presence
-        int vertIdx = this->dofMapper().map(vert);
-        if (!inStream.good())
+        int vertIdx = this->dofMapper().map(vertex);
+        if (!instream.good())
             DUNE_THROW(Dune::IOError,
                        "Could not deserialize vertex " << vertIdx);
 
         int tmp;
-        inStream >> tmp;
+        instream >> tmp;
         this->solution(/*timeIdx=*/0)[vertIdx].setPhasePresence(tmp);
         this->solution(/*timeIdx=*/1)[vertIdx].setPhasePresence(tmp);
     }
 
     /*!
+     * \internal
      * \brief Do the primary variable switching after a Newton iteration.
+     *
+     * This is an internal method that needs to be public because it
+     * gets called by the Newton method after an update.
      */
     void switchPrimaryVars_()
     {
@@ -377,7 +361,7 @@ public:
             this->problem_().newtonController().endIterMsg() << ", num switched=" << numSwitched_;
     }
 
-protected:
+private:
     friend class BoxModel<TypeTag>;
 
     template <class FluidState>
@@ -428,7 +412,6 @@ protected:
             this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
-protected:
     // number of switches of the phase state in the last Newton
     // iteration
     int numSwitched_;

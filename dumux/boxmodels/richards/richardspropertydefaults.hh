@@ -54,6 +54,9 @@ SET_INT_PROP(BoxRichards, NumPhases, 2);
 //! Number of components considered
 SET_INT_PROP(BoxRichards, NumComponents, 2);
 
+//! By default, assume that the first phase is the liquid one
+SET_INT_PROP(BoxRichards, LiquidPhaseIndex, 0);
+
 //! The local residual operator
 SET_TYPE_PROP(BoxRichards,
               LocalResidual,

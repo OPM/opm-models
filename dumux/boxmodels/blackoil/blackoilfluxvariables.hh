@@ -19,11 +19,7 @@
 /*!
  * \file
  *
- * \brief This file contains the data which is required to calculate
- *        all fluxes of fluid phases over a face of a finite volume.
- *
- * This means pressure and temperature gradients, phase densities at
- * the integration point, etc.
+ * \copydoc Dumux::BlackOilFluxVariables
  */
 #ifndef DUMUX_BLACK_OIL_FLUX_VARIABLES_HH
 #define DUMUX_BLACK_OIL_FLUX_VARIABLES_HH
@@ -32,12 +28,12 @@
 
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup BlackOilBoxModel
  * \ingroup BoxFluxVariables
+ *
  * \brief This template class contains the data which is required to
  *        calculate the fluxes of the fluid phases over a face of a
  *        finite volume for the black-oil model.

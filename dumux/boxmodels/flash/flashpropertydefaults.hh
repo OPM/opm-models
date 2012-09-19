@@ -19,8 +19,8 @@
 /*!
  * \file
  *
- * \brief Defines default values for most properties required by the
- *        flash box model.
+ * \brief Defines default values for the properties required by the
+ *        compositional multi-phase box model based on flash calculations.
  */
 #ifndef DUMUX_FLASH_PROPERTY_DEFAULTS_HH
 #define DUMUX_FLASH_PROPERTY_DEFAULTS_HH

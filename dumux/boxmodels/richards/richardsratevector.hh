@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing mass rates.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::RichardsRateVector
  */
 #ifndef DUMUX_BOX_RICHARDS_RATE_VECTOR_HH
 #define DUMUX_BOX_RICHARDS_RATE_VECTOR_HH
@@ -34,12 +31,12 @@
 
 #include "richardsvolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup RichardsModel
  *
- * \brief Implements a vector representing mass rates.
+ * \brief Implements a vector representing mass, molar or volumetric rates.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -50,48 +47,38 @@ class RichardsRateVector
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
+    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+
+    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum { contiEqIdx = Indices::contiEqIdx };
-
-    enum { wPhaseIdx = Indices::wPhaseIdx };
-
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
-
 public:
-    /*!
-     * \brief Default constructor
-     */
     RichardsRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
     RichardsRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
      */
     RichardsRateVector(const RichardsRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Set a mass rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType &value)
     {
@@ -99,11 +86,7 @@ public:
     }
 
     /*!
-     * \brief Set a molar rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMolarRate
      */
     void setMolarRate(const ParentType &value)
     {
@@ -116,17 +99,13 @@ public:
     }
 
     /*!
-     * \brief Set an enthalpy rate [J/As] where \f$A \in \{m^2, m^3\}\f$
+     * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
     void setEnthalpyRate(Scalar rate)
-    {
-        EnergyModule::setEnthalpyRate(*this, rate);
-    }
+    { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
-     * \brief Set a volumetric rate of a phase.
-     *
-     * Enthalpy is taken into account here.
+     * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
     void setVolumetricRate(const FluidState &fluidState, 

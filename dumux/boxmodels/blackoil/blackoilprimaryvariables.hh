@@ -19,11 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the fully-implicit
- *        black-oil model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::BlackOilPrimaryVariables
  */
 #ifndef DUMUX_BLACK_OIL_PRIMARY_VARIABLES_HH
 #define DUMUX_BLACK_OIL_PRIMARY_VARIABLES_HH
@@ -35,10 +31,10 @@
 
 #include "blackoilproperties.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
- * \ingroup BlackOilModel
+ * \ingroup BlackOilBoxModel
  *
  * \brief Represents the primary variables used by the black-oil model.
  */
@@ -63,27 +59,27 @@ class BlackOilPrimaryVariables
     static_assert(numComponents == 3, "The black-oil model has three components!");
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     BlackOilPrimaryVariables()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     BlackOilPrimaryVariables(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
      */
     BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value)
         : ParentType(value)
     { }
 
+    /*!
+     * \copydoc ImmisciblePrimaryVariables::assignNaive
+     */
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {

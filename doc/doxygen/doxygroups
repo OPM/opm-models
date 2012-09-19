@@ -126,7 +126,7 @@
           */
          /*!
           * \ingroup BoxModels
-          * \defgroup NcpBoxModel NCP
+          * \defgroup NcpModel NCP
           * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
           *
           * \copydetails Dumux::NcpModel
@@ -155,19 +155,19 @@
          /*!
           * \ingroup BoxModels
           * \defgroup BoxStokesModel (Navier-)Stokes
-          * \brief Compositional/Immiscible Single-Phase Model for Turbolent Flow
+          * \brief Compositional/Immiscible Single-Phase Model for Turbulent Flow
           *
           * \copydetails Dumux::StokesModel
           */
       /*!
        * \ingroup BoxModel
        * \defgroup BoxModules Modules
-       * \brief Modules
+       * \brief Modules Used by the Box Models
        */
           /*!
            * \ingroup BoxModules
            * \defgroup BoxDarcyVelocity Darcy Velocity
-           * \brief Darcy Velocity Module
+           * \brief The Darcy Velocity Module
            *
            * \copydetails Dumux::BoxDarcyVelocityModule
            */
@@ -175,7 +175,7 @@
           /*!
            * \ingroup BoxModules
            * \defgroup BoxForchheimerVelocity Forchheimer Velocity
-           * \brief Forchheimer Velocity Module
+           * \brief The Forchheimer Velocity Module
            *
            * \copydetails Dumux::BoxForchheimerVelocityModule
            */
@@ -183,7 +183,7 @@
           /*!
            * \ingroup BoxModules
            * \defgroup BoxEnergy Energy
-           * \brief Provides the Energy Equation
+           * \brief A Module for the Energy Equation 
            *
            * \copydetails DoxyEnergyModule
            */
@@ -191,7 +191,7 @@
           /*!
            * \ingroup BoxModules
            * \defgroup BoxVtk VTK
-           * \brief Various VTK Output Modules
+           * \brief Various Modules to Write VTK Output
            */
     /*!
      * \ingroup BoxModel

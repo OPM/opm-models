@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a vector representing mass rates.
- *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * \copydoc Dumux::BlackOilRateVector
  */
 #ifndef DUMUX_BOX_BLACK_OIL_RATE_VECTOR_HH
 #define DUMUX_BOX_BLACK_OIL_RATE_VECTOR_HH
@@ -34,12 +31,12 @@
 
 #include "blackoilvolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BlackOilBoxModel
  *
- * \brief Implements a vector representing mass rates.
+ * \brief Implements a vector representing mass, molar or volumetric rates for the black oil model.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -59,33 +56,26 @@ class BlackOilRateVector
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 public:
-    /*!
-     * \brief Default constructor
-     */
     BlackOilRateVector()
         : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
     BlackOilRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
      */
     BlackOilRateVector(const BlackOilRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Set a mass rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType &value)
     {
@@ -99,19 +89,13 @@ public:
     }
 
     /*!
-     * \brief Set a molar rate of the conservation quantities.
-     *
-     * Enthalpy is _not_ taken into account seperately here. This
-     * means that it must be set to the desired value in the
-     * parameter.
+     * \copydoc ImmiscibleRateVector::setMolarRate
      */
     void setMolarRate(const ParentType &value)
     { ParentType::operator=(value); }
 
     /*!
-     * \brief Set a volumetric rate of a phase.
-     *
-     * Enthalpy is taken into account here.
+     * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
     void setVolumetricRate(const FluidState &fluidState, 

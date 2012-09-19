@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \brief Defines the indices required for the Stokes box model.
+ * \copydoc Dumux::StokesIndices
  */
 #ifndef DUMUX_STOKES_INDICES_HH
 #define DUMUX_STOKES_INDICES_HH
@@ -31,7 +31,9 @@
 namespace Dumux {
 /*!
  * \ingroup BoxStokesModel
- * \brief The common indices for the isothermal stokes model.
+ *
+ * \brief The primary variable and equation indices of the
+ *        (Navier-)Stokes model.
  *
  * \tparam PVOffset The first index in a primary variable vector.
  */

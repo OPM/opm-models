@@ -22,8 +22,7 @@
 /*!
  * \file
  *
- * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase two-component box model.
+ * \copydoc Dumux::PvsLocalResidual
  */
 #ifndef DUMUX_PVS_LOCAL_RESIDUAL_HH
 #define DUMUX_PVS_LOCAL_RESIDUAL_HH
@@ -36,19 +35,17 @@
 #include "pvsfluxvariables.hh"
 #include "pvsnewtoncontroller.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup PvsModel
- * \brief Element-wise calculation of the Jacobian matrix for problems
- *        using the two-phase two-component box model.
  *
- * This class is used to fill the gaps in BoxLocalResidual for the 2P-2C flow.
+ * \brief Element-wise calculation of the local residual for the
+ *        compositional multi-phase primary variable switching box model.
  */
 template<class TypeTag>
-class PvsLocalResidual: public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+class PvsLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-protected:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -70,9 +67,7 @@ protected:
 
 public:
     /*!
-     * \brief Evaluate the storage term [kg/m^3] in a single phase.
-     *
-     * \param phaseIdx The index of the fluid phase
+     * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
     void addPhaseStorage(EqVector &storage,
                          const ElementContext &elemCtx,
@@ -97,13 +92,7 @@ public:
     }
 
     /*!
-     * \brief Evaluate the amount all conservation quantities
-     *        (e.g. phase mass) within a sub-control volume.
-     *
-     * The result should be averaged over the volume (e.g. phase mass
-     * inside a sub control volume divided by the volume)
-     *
-     *  \param result The number of moles of the component within the sub-control volume
+     * \copydoc ImmiscibleLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -118,8 +107,7 @@ public:
     }
 
     /*!
-     * \brief Evaluates the total flux of all conservation quantities
-     *        over a face of a subcontrol volume.
+     * \copydoc ImmiscibleLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -127,22 +115,20 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        computeAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
-        computeDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
     /*!
-     * \brief Evaluates the advective mass flux of all components over
-     *        a face of a subcontrol volume.
-     *
+     * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void computeAdvectiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
@@ -177,14 +163,12 @@ public:
     }
 
     /*!
-     * \brief Adds the diffusive mass flux of all components over
-     *        a face of a subcontrol volume.
-     *
+     * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void computeDiffusiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
 #if 0
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
@@ -208,10 +192,7 @@ public:
     }
 
     /*!
-     * \brief Calculate the source term of the equation
-     *
-     * \param source The source/sink term [kg/m^3] in the sub control
-     *               volume for each component
+     * \copydoc ImmiscibleLocalResidual::computeSource
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

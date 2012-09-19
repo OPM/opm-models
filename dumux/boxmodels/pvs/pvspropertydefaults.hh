@@ -21,8 +21,9 @@
 /*!
  * \file
  *
- * \brief Defines default values for most properties required by the
- *        PVS box model.
+ * \brief Defines default values for the properties required for the
+ *        compositional multi-phase primary variable switching box
+ *        model.
  */
 #ifndef DUMUX_PVS_PROPERTY_DEFAULTS_HH
 #define DUMUX_PVS_PROPERTY_DEFAULTS_HH

@@ -20,8 +20,7 @@
 /*!
  * \file
  *
- * \brief Data which is required to calculate the flux of fluid over a
- *        face of a finite volume
+ * \copydoc Dumux::RichardsFluxVariables
  */
 #ifndef DUMUX_RICHARDS_FLUX_VARIABLES_HH
 #define DUMUX_RICHARDS_FLUX_VARIABLES_HH
@@ -30,12 +29,12 @@
 
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup RichardsModel
  * \ingroup BoxFluxVariables
+ *
  * \brief Calculates and stores the data which is required to
  *        calculate the flux of fluid over a face of a finite volume.
  */
@@ -45,10 +44,10 @@ class RichardsFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 public:
     /*!
-     * \brief Return true iff a fluid phase ought is used by the model
+     * \copydoc BoxMultiPhaseFluxVariables::usePhase
      */
     bool usePhase(int phaseIdx)
-    { return phaseIdx == Indices::wPhaseIdx; }
+    { return phaseIdx == GET_PROP_VALUE(TypeTag, LiquidPhaseIndex); }
 };
 
 } // end namepace

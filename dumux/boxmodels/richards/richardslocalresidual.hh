@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Element-wise calculation of the residual for the Richards box model.
+ * \copydoc Dumux::RichardsLocalResidual
  */
 #ifndef DUMUX_RICHARDS_LOCAL_RESIDUAL_HH
 #define DUMUX_RICHARDS_LOCAL_RESIDUAL_HH
@@ -32,8 +32,8 @@
 
 #include "richardsfluxvariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup RichardsModel
  * \brief Element-wise calculation of the residual for the Richards box model.
@@ -49,19 +49,12 @@ class RichardsLocalResidual : public BoxLocalResidual<TypeTag>
 
     enum {
         contiEqIdx = Indices::contiEqIdx,
-        wPhaseIdx = Indices::wPhaseIdx
+        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex)
     };
 
 public:
     /*!
-     * \brief Evaluate the rate of change of all conservation
-     *        quantites (e.g. phase mass) within a sub control
-     *        volume of a finite volume element for the Richards
-     *        model.
-     *
-     * This function should not include the source and sink terms.
-     *
-     * \param result Stores the average mass per unit volume for each phase \f$\mathrm{[kg/m^3]}\f$
+     * \copydoc ImmiscibleLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -78,8 +71,7 @@ public:
     }
 
     /*!
-     * \brief Evaluates the mass flux over a face of a subcontrol
-     *        volume.
+     * \copydoc ImmiscibleLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -103,7 +95,7 @@ public:
     }
 
     /*!
-     * \brief Calculate the source term of the equation
+     * \copydoc ImmiscibleLocalResidual::computeSource
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

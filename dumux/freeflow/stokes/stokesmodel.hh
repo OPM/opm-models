@@ -18,6 +18,11 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ *
+ * \copydoc Dumux::StokesModel
+ */
 #ifndef DUMUX_STOKES_MODEL_HH
 #define DUMUX_STOKES_MODEL_HH
 
@@ -31,8 +36,8 @@
 
 #include <dumux/boxmodels/common/boxmodel.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxStokesModel
  * \brief Adaption of the box scheme to the Stokes model.
@@ -79,7 +84,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -97,7 +102,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -113,11 +118,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param globalVertexIdx The global vertex index
-     * \param pvIdx The primary variable index
+     * \copydoc BoxModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {

@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \brief Defines the properties required for the Stokes box model.
+ * \brief Declares the properties required by the Stokes box model.
  */
 #ifndef DUMUX_STOKES_PROPERTIES_HH
 #define DUMUX_STOKES_PROPERTIES_HH

@@ -19,7 +19,9 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Defines the properties required for the compositional NCP box model.
+ *
+ * \brief Declares the properties required for the NCP compositional
+ *        multi-phase box model.
  */
 #ifndef DUMUX_NCP_PROPERTIES_HH
 #define DUMUX_NCP_PROPERTIES_HH

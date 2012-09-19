@@ -19,11 +19,7 @@
 /*!
  * \file
  *
- * \brief Represents the primary variables used in the primary variable switching compositional
- *         box model.
- *
- * This class is basically a Dune::FieldVector which can retrieve its
- * contents from an aribitatry fluid state.
+ * \copydoc Dumux::PvsPrimaryVariables
  */
 #ifndef DUMUX_PVS_PRIMARY_VARIABLES_HH
 #define DUMUX_PVS_PRIMARY_VARIABLES_HH
@@ -39,13 +35,13 @@
 
 #include <iostream>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup PvsModel
  *
- * \brief Represents the primary variables used in the primary variable switching compositional
- *         box model.
+ * \brief Represents the primary variables used in the primary
+ *        variable switching compositional box model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -79,9 +75,6 @@ class PvsPrimaryVariables
     typedef Dumux::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     PvsPrimaryVariables()
         : ParentType()
     {
@@ -89,7 +82,7 @@ public:
     }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     explicit PvsPrimaryVariables(Scalar value)
         : ParentType(value)
@@ -101,7 +94,7 @@ public:
     }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
      */
     PvsPrimaryVariables(const PvsPrimaryVariables &value)
         : ParentType(value)
@@ -112,24 +105,7 @@ public:
     }
 
     /*!
-     * \brief Set the primary variables from an arbitrary fluid state
-     *        in a mass conservative way.
-     *
-     * If an energy equation is included, the fluid temperatures are
-     * the same as the one given in the fluid state, *not* the
-     * enthalpy.
-     *
-     * \param fluidState The fluid state which should be represented
-     *                   by the primary variables. The temperatures,
-     *                   pressures, compositions and densities of all
-     *                   phases must be defined.
-     * \param matParams The capillary pressure law parameters
-     * \param isInEquilibrium If true, the fluid state expresses
-     *                        thermodynamic equilibrium assuming the
-     *                        relations expressed by the fluid
-     *                        system. This implies that in addition to
-     *                        the quantities mentioned above, the
-     *                        fugacities are also defined.
+     * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
     void assignMassConservative(const FluidState &fluidState,
@@ -195,6 +171,9 @@ public:
     /*!
      * \brief Set which fluid phases are present in a given control
      *        volume.
+     *
+     * \param value The new phase presence. The phase with index i is
+     *              present if the i-th bit of \c value is 1.
      */
     void setPhasePresence(short value)
     { phasePresence_ = value; }
@@ -202,6 +181,9 @@ public:
     /*!
      * \brief Set whether a given indivividual phase should be present
      *        or not.
+     *
+     * \param phaseIdx The index of the phase which's presence ought to be set or reset.
+     * \param yesno If true, the presence of the phase is set, else it is reset
      */
     void setPhasePresent(int phaseIdx, bool yesno = true)
     { 
@@ -210,20 +192,28 @@ public:
     }
 
     /*!
-     * \brief Returns the phase with is determined by the closure
-     *        condition of saturation.
+     * \brief Returns the index of the phase with's its saturation is
+     *        determined by the closure condition of saturation.
      */
     unsigned char implicitSaturationIdx() const 
     { return lowestPresentPhaseIdx(); }
     
     /*!
-     * \brief Returns true iff a phase is present for a given phase presence.
+     * \brief Returns true iff a phase is present for a given phase
+     *        presence.
+     *
+     * \param phaseIdx The index of the phase which's presence is
+     *                 queried.
+     * \param phasePresence The bit-map of present phases.
      */
     static bool phaseIsPresent(int phaseIdx, short phasePresence)
     { return phasePresence & (1 << phaseIdx); }
 
     /*!
-     * \brief Returns true iff a phase is present for the current phase presence.
+     * \brief Returns true iff a phase is present for the current
+     *        phase presence.
+     *
+     * \copydoc Doxygen::phaseIdxParam
      */
     bool phaseIsPresent(int phaseIdx) const
     { return phasePresence_ & (1 << phaseIdx); }
@@ -235,7 +225,7 @@ public:
     { return ffs(phasePresence_) - 1; }
 
     /*!
-     * \brief Assignment operator
+     * \brief Assignment operator from an other primary variables object
      */
     ThisType &operator=(const PrimaryVariables &value)
     { 
@@ -246,7 +236,7 @@ public:
     }
 
     /*!
-     * \brief Assignment operator
+     * \brief Assignment operator from a scalar value
      */
     ThisType &operator=(const Scalar value)
     { 
@@ -260,6 +250,8 @@ public:
      * \brief Returns an explcitly stored saturation for a given phase.
      * 
      * (or 0 if the saturation is not explicitly stored.)
+     *
+     * \copydoc Doxygen::phaseIdxParam
      */
     Scalar explicitSaturationValue(int phaseIdx) const
     {
@@ -271,10 +263,7 @@ public:
     }
 
     /*!
-     * \brief Assign the primary variables "naively" from a fluid state.
-     *
-     * \attention Some mass might get lost/added if the fluid state is
-     *            not in thermodynamic equilibrium!
+     * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState> 
     void assignNaive(const FluidState &fluidState)
@@ -329,7 +318,7 @@ public:
     }
 
     /*!
-     * \brief Prints the names of the primary variables and their values.
+     * \copydoc FlashPrimaryVariables::print
      */
     void print(std::ostream &os = std::cout) const
     {
@@ -357,7 +346,7 @@ public:
         os << ", phase presence: " << static_cast<int>(phasePresence_);
     }
     
-protected:
+private:
     unsigned char phasePresence_;
 };
 

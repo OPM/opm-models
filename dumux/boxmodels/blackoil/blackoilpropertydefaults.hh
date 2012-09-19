@@ -19,8 +19,8 @@
 /*!
  * \file
  *
- * \brief Defines default values for the properties required by the
- *        twophase box model.
+ * \brief Defines default values for the properties used by the
+ *        black oil box model.
  */
 #ifndef DUMUX_BLACK_OIL_PROPERTY_DEFAULTS_HH
 #define DUMUX_BLACK_OIL_PROPERTY_DEFAULTS_HH

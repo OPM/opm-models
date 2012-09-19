@@ -19,7 +19,8 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief A newton solver specific to the Richards problem.
+ *
+ * \copydoc Dumux::RichardsNewtonController
  */
 #ifndef DUMUX_RICHARDS_NEWTON_CONTROLLER_HH
 #define DUMUX_RICHARDS_NEWTON_CONTROLLER_HH
@@ -32,12 +33,11 @@
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
+
 /*!
  * \ingroup Newton
- * \brief A Richards model specific controller for the newton solver.
  *
- * This controller 'knows' what a 'physically meaningful' solution is
- * and can thus do update smarter than the plain Newton controller.
+ * \brief A Richards model specific controller for the newton solver.
  */
 template <class TypeTag>
 class RichardsNewtonController : public BoxNewtonController<TypeTag>
@@ -63,30 +63,19 @@ class RichardsNewtonController : public BoxNewtonController<TypeTag>
 
         numPhases = FluidSystem::numPhases,
 
-        wPhaseIdx = Indices::wPhaseIdx,
-        nPhaseIdx = Indices::nPhaseIdx
+        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
+        nPhaseIdx = 1 - wPhaseIdx
     };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    /*!
-     * \brief Constructor
-     */
     RichardsNewtonController(Problem &problem)
         : ParentType(problem)
     {}
 
     /*!
-     * \brief Update the current solution of the newton method
-     *
-     * This is basically the step
-     * \f[ u^{k+1} = u^k - \Delta u^k \f]
-     *
-     * \param uCurrentIter The solution after the current Newton iteration \f$ u^{k+1} \f$
-     * \param uLastIter The solution after the last Newton iteration \f$ u^k \f$
-     * \param deltaU The vector of differences between the last
-     *               iterative solution and the next one \f$ \Delta u^k \f$
+     * \copydoc BoxNewtonController::newtonUpdate
      */
     void newtonUpdate(SolutionVector &uCurrentIter,
                       const SolutionVector &uLastIter,

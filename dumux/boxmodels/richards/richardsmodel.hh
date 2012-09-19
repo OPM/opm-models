@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copybrief RichardsModel
+ * \copydoc Dumux::RichardsModel
  */
 #ifndef DUMUX_RICHARDS_MODEL_HH
 #define DUMUX_RICHARDS_MODEL_HH
@@ -34,6 +34,7 @@
 #include <string>
 
 namespace Dumux {
+
 /*!
  * \ingroup RichardsModel
  *
@@ -84,7 +85,7 @@ namespace Dumux {
  S_w = p_c^{-1}(p_n - p_w)
  \f]
  * holds, where \f$p_n\f$ is a given reference pressure. Nota bene,
- * that the last step is assumes that the capillary
+ * that the last step assumes that the capillary
  * pressure-saturation curve can be uniquely inverted, so it is not
  * possible to set the capillary pressure to zero when using the
  * Richards model!
@@ -96,22 +97,19 @@ class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum {
-        wPhaseIdx = Indices::wPhaseIdx
-    };
 
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
     /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     std::string name() const
     { return "richards"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -125,7 +123,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -139,13 +137,9 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param vertIdx The global index of the vertex in question
-     * \param pvIdx The index of the primary variable
+     * \copydoc BoxModel::primaryVarWeight
      */
-    Scalar primaryVarWeight(int vertIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
         if (Indices::pwIdx == pvIdx)
             return 1e-6;
@@ -153,10 +147,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydoc BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
@@ -168,7 +159,7 @@ public:
     }
 
 
-protected:
+private:
     friend class BoxModel<TypeTag>;
 
     void registerVtkModules_()

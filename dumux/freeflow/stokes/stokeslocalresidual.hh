@@ -1,10 +1,10 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *                                                                           *
  *   Copyright (C) 2012 by Andreas Lauser                                    *
  *   Copyright (C) 2012 by Christoph Grueninger                              *
  *   Copyright (C) 2012 by Klaus Mosthaf                                     *
+ *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
  *   the Free Software Foundation, either version 2 of the License, or       *
@@ -21,10 +21,8 @@
 /*!
  * \file
  *
- * \brief The local residual function for problems using the
- *        Stokes box model.
+ * \copydoc Dumux::StokesLocalResidual
  */
-
 #ifndef DUMUX_STOKES_LOCAL_RESIDUAL_HH
 #define DUMUX_STOKES_LOCAL_RESIDUAL_HH
 
@@ -38,11 +36,12 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxLocalResidual
+ *
  * \brief The local residual function for problems using the
  *        Stokes box model.
  */
@@ -76,15 +75,7 @@ protected:
 
  public:
     /*!
-     * \brief Evaluates the amount of all conservation quantities
-     *        (mass and momentum) within a sub-control volume.
-     *
-     * The result should be averaged over the volume (e.g. phase mass
-     * inside a sub control volume divided by the volume)
-     *
-     *  \param storage The mass of the component within the sub-control volume
-     *  \param scvIdx The SCV (sub-control-volume) index
-     *  \param usePrevSol Evaluate function with solution of current or previous time step
+     * \copydoc BoxLocalResidual::computeStorage
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -108,39 +99,29 @@ protected:
     }
 
     /*!
-     * \brief Evaluates the total flux of all conservation quantities
-     *        over a face of a sub-control volume. The face may be within
-     *        an element (SCV face) or on the boundary. The advective and
-     *        the diffusive fluxes are computed.
-     *
-     * \param flux The flux over the SCV (sub-control-volume) face
-     * \param faceIdx The index of the SCV face (may also be a boundary face)
+     * \copydoc BoxLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, 
                      const ElementContext &elemCtx,
-                     int faceIdx,
+                     int scvfIdx,
                      int timeIdx) const
     {
         flux = 0.0;
-        asImp_().computeAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
+        asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
-        asImp_().computeDiffusiveFlux(flux, elemCtx, faceIdx, timeIdx);
+        asImp_().addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
     /*!
-     * \brief Evaluates the advective fluxes over
-     *        a face of a sub-control volume.
-     *
-     * \param flux The advective flux over the sub-control-volume face for each component
-     * \param fluxVars The flux variables at the current SCV/boundary face
+     * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void computeAdvectiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int faceIdx,
-                              int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
+        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // data attached to upstream vertex
         const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
@@ -183,36 +164,23 @@ protected:
         
         flux *= faceArea;
 
-        EnergyModule::addAdvectiveFlux(flux, elemCtx, faceIdx, timeIdx);
+        EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \brief Adds the diffusive flux to the flux vector over
-     *        a SCV face or a boundary face.
-     *
-     * It doesn't do anything in the Stokes model but is used by the
-     * transport and non-isothermal models to calculate diffusive and
-     * conductive fluxes.
-     *
-     * \param flux The diffusive flux over the SCV face or boundary face for each component
-     * \param fluxVars The flux variables at the current SCV/boundary face
+     * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void computeDiffusiveFlux(RateVector &flux,
-                              const ElementContext &elemCtx,
-                              int scvfIdx,
-                              int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
         // heat conduction
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \brief Calculate the source term of all equations.
-     *        The pressure gradient at the center of a SCV is computed
-     *        and the gravity term evaluated.
-     *
-     * \param q The source/sink in the sub control volume for each component
-     * \param localVertexIdx The local index of the sub-control volume
+     * \copydoc BoxLocalResidual::computeSource
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

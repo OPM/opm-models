@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \copydoc Dumux::RichardsBoundaryRateVector
  */
 #ifndef DUMUX_BOX_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 #define DUMUX_BOX_RICHARDS_BOUNDARY_RATE_VECTOR_HH
@@ -31,12 +31,12 @@
 
 #include "richardsvolumevariables.hh"
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup RichardsModel
  *
- * \brief Implements a boundary vector for the fully implicit two-phase model.
+ * \brief Implements a boundary vector for the fully implicit Richards model.
  */
 template <class TypeTag>
 class RichardsBoundaryRateVector
@@ -51,44 +51,41 @@ class RichardsBoundaryRateVector
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { contiEqIdx = Indices::contiEqIdx };
-    enum { wPhaseIdx = Indices::wPhaseIdx };
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
-    /*!
-     * \brief Default constructor
-     */
     RichardsBoundaryRateVector()
         : ParentType()
     { }
 
     /*!
-     * \brief Constructor with assignment from scalar
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
     RichardsBoundaryRateVector(Scalar value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Copy constructor
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
      */
     RichardsBoundaryRateVector(const RichardsBoundaryRateVector &value)
         : ParentType(value)
     { }
 
     /*!
-     * \brief Specify a free-flow boundary
+     * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
      */
     template <class Context, class FluidState>
     void setFreeFlow(const Context &context, 
                      int bfIdx, 
                      int timeIdx,
-                     const FluidState &fs)
+                     const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fs);
+        paramCache.updateAll(fluidState);
 
         FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fs, paramCache);      
+        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);      
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         ////////
@@ -98,8 +95,8 @@ public:
 
         int phaseIdx = wPhaseIdx;
         Scalar density;
-        if (fs.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
-            density = FluidSystem::density(fs, paramCache, phaseIdx);
+        if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+            density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         else 
             density = insideVolVars.fluidState().density(phaseIdx);
 
@@ -118,15 +115,15 @@ public:
     }
 
     /*!
-     * \brief Specify an inflow boundary
+     * \copydoc ImmiscibleBoundaryRateVector::setInFlow
      */
     template <class Context, class FluidState>
     void setInFlow(const Context &context, 
                    int bfIdx, 
                    int timeIdx,
-                   const FluidState &fs)
+                   const FluidState &fluidState)
     {
-        this->setFreeFlow(context, bfIdx, timeIdx, fs);
+        this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
         
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
@@ -137,15 +134,15 @@ public:
     }
 
     /*!
-     * \brief Specify an outflow boundary
+     * \copydoc ImmiscibleBoundaryRateVector::setOutFlow
      */
     template <class Context, class FluidState>
     void setOutFlow(const Context &context, 
                     int bfIdx, 
                     int timeIdx,
-                    const FluidState &fs)
+                    const FluidState &fluidState)
     {
-        this->setFreeFlow(context, bfIdx, timeIdx, fs);
+        this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
         
         // we only allow fluxes in the same direction as the outer
         // unit normal
@@ -156,12 +153,12 @@ public:
     }
     
     /*!
-     * \brief Specify a no-flow boundary.
+     * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
     { (*this) = 0.0; }
 
-protected:
+private:
     Implementation &asImp_() 
     { return *static_cast<Implementation *>(this); }
 };

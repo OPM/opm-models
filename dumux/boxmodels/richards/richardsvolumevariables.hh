@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \brief Volume averaged quantities required by the Richards model.
+ * \copydoc Dumux::RichardsVolumeVariables
  */
 #ifndef DUMUX_RICHARDS_VOLUME_VARIABLES_HH
 #define DUMUX_RICHARDS_VOLUME_VARIABLES_HH
@@ -33,16 +33,13 @@
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup RichardsModel
  * \ingroup BoxVolumeVariables
- * \brief Volume averaged quantities required by the Richards model.
  *
- * This contains the quantities which are are constant within a finite
- * volume in the Richards model
+ * \brief Volume averaged quantities required by the Richards model.
  */
 template <class TypeTag>
 class RichardsVolumeVariables 
@@ -65,8 +62,8 @@ class RichardsVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { pwIdx = Indices::pwIdx };
     enum { numPhases = FluidSystem::numPhases };
-    enum { wPhaseIdx = Indices::wPhaseIdx };
-    enum { nPhaseIdx = Indices::nPhaseIdx };
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { nPhaseIdx = 1 - wPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
@@ -78,7 +75,7 @@ public:
     typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
-     * \brief Update all quantities for a given control volume.
+     * \copydoc BoxVolumeVariables::update
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -152,80 +149,36 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the fluid state for the volume
+     * \copydoc ImmiscibleVolumeVariables::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \brief Returns the average porosity [] within the control volume.
-     *
-     * The porosity is defined as the ratio of the pore space to the
-     * total volume, i.e. \f[ \Phi := \frac{V_{pore}}{V_{pore} + V_{rock}} \f]
+     * \copydoc ImmiscibleVolumeVariables::porosity
      */
     Scalar porosity() const
     { return porosity_; }
 
     /*!
-     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \brief Returns relative permeability [-] of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
+     * \copydoc ImmiscibleVolumeVariables::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \brief Returns the effective mobility of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
+     * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
     { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
-    /*!
-     * \brief Returns the effective capillary pressure \f$\mathrm{[Pa]}\f$ within the
-     *        control volume.
-     *
-     * The capillary pressure is defined as the difference in
-     * pressures of the non-wetting and the wetting phase, i.e.
-     * \f[ p_c = p_n - p_w \f]
-     */
-    Scalar capillaryPressure() const
-    { return fluidState_.pressure(nPhaseIdx) - fluidState_.pressure(wPhaseIdx); }
-
-    /*!
-     * \brief Given a fluid state, set the temperature in the primary variables
-     */
-    template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars, const FluidState &fs)
-    { }
-
-    /*!
-     * \brief Set the enthalpy rate per second of a rate vector, .
-     */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
-    {}
-    
-    /*!
-     * \brief Given a fluid state, set the enthalpy rate which emerges
-     *        from a volumetric rate.
-     */
-    template <class FluidState>
-    static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
-                                Scalar volume)
-    { }
-
-protected:
+private:
     FluidState fluidState_;
     DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];

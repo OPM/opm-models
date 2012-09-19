@@ -23,8 +23,7 @@
 /*!
  * \file
  *
- * \brief Contains the quantities which are constant within a
- *        finite volume in the primary variable switching compositional model.
+ * \copydoc Dumux::PvsVolumeVariables
  */
 #ifndef DUMUX_PVS_VOLUME_VARIABLES_HH
 #define DUMUX_PVS_VOLUME_VARIABLES_HH
@@ -42,14 +41,15 @@
 #include <dune/common/collectivecommunication.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 /*!
  * \ingroup PvsModel
  * \ingroup BoxVolumeVariables
+ *
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the primary variable switching compositional model.
+ *        finite volume in the compositional multi-phase primary
+ *        variable switching box model.
  */
 template <class TypeTag>
 class PvsVolumeVariables
@@ -93,7 +93,7 @@ public:
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
-     * \brief Update all quantities for a given control volume.
+     * \copydoc ImmiscibleVolumeVariables::update
      */
     void update(const ElementContext &elemCtx,
                 int scvIdx,
@@ -244,37 +244,31 @@ public:
     }
 
     /*!
-     * \brief Returns the phase state for the control-volume.
+     * \copydoc ImmiscibleVolumeVariables::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \brief Returns the relative permeability of a given phase
-     *        within the control volume.
-     *
-     * \param phaseIdx The phase index
+     * \copydoc ImmiscibleVolumeVariables::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \brief Returns the effective mobility of a given phase within
-     *        the control volume.
-     *
-     * \param phaseIdx The phase index
+     * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
     { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
 
     /*!
-     * \brief Returns the average porosity within the control volume.
+     * \copydoc ImmiscibleVolumeVariables::porosity
      */
     Scalar porosity() const
     { return porosity_; }
@@ -287,7 +281,7 @@ public:
     { return diffCoeff_[phaseIdx]; }
 #endif // 0
     
-protected:
+private:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;

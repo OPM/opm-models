@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \copybrief FlashModel
+ * \copydoc Dumux::FlashModel
  */
 #ifndef DUMUX_FLASH_MODEL_HH
 #define DUMUX_FLASH_MODEL_HH
@@ -37,7 +37,8 @@ namespace Dumux {
 
 /*!
  * \ingroup FlashModel
- * \brief A compositional model based on flash-calculations
+ *
+ * \brief A compositional multi-phase model based on flash-calculations
  */
 template<class TypeTag>
 class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
@@ -72,22 +73,13 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Initialize the static data with the initial solution.
-     *
-     */
-    void init(Problem &problem)
-    {
-        ParentType::init(problem);
-    }
-
-    /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     std::string name() const
     { return "flash"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     { 
@@ -105,7 +97,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -125,12 +117,11 @@ public:
     }
 
     /*!
-     * \brief Compute the total storage inside one phase of all
-     *        conservation quantities.
+     * \copydoc ImmiscibleModel::globalPhaseStorage
      */
-    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &storage, int phaseIdx)
     {
-        dest = 0;
+        storage = 0;
         EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
@@ -155,19 +146,15 @@ public:
                 tmp *= 
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
-                dest += tmp;
+                storage += tmp;
             }
         };
 
-        dest = this->gridView_().comm().sum(dest);
+        storage = this->gridView_().comm().sum(storage);
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param globalVertexIdx The global vertex index
-     * \param pvIdx The primary variable index
+     * \copydoc BoxModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
@@ -184,10 +171,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydoc BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
@@ -201,7 +185,7 @@ public:
         return FluidSystem::molarMass(compIdx);
     }
 
-protected:
+private:
     friend class BoxModel<TypeTag>;
 
     void registerVtkModules_()

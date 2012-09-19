@@ -20,12 +20,9 @@
 /*!
  * \file
  *
- * \brief Defines default properties for the Stokes box model.
- *
- * These can be overwritten at a different place or
- * may be replaced by values of the input file.
+ * \brief Defines default values for the properties required by the
+ *        Stokes box model.
  */
-
 #ifndef DUMUX_STOKES_PROPERTY_DEFAULTS_HH
 #define DUMUX_STOKES_PROPERTY_DEFAULTS_HH
 

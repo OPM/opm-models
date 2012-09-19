@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \copybrief NcpModel
+ * \copydoc Dumux::NcpModel
  */
 #ifndef DUMUX_NCP_MODEL_HH
 #define DUMUX_NCP_MODEL_HH
@@ -37,10 +37,11 @@
 #include <vector>
 #include <array>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \ingroup NcpModel
+ *
  * \brief A fully implicit model for M-phase, N-component flow using
  *        vertex centered finite volumes.
  *
@@ -154,25 +155,21 @@ class NcpModel
 
 public:
     /*!
-     * \brief Apply the initial conditions to the model.
-     *
-     * \param prob The object representing the problem which needs to
-     *             be simulated.
+     * \copydoc BoxModel::init
      */
-    void init(Problem &prob)
+    void init(Problem &problem)
     {
-        ParentType::init(prob);
+        ParentType::init(problem);
         minActivityCoeff_.resize(this->numDofs());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
     }
 
     /*!
-     * \brief Compute the total storage inside one phase of all
-     *        conservation quantities.
+     * \copydoc ImmiscibleModel::globalPhaseStorage
      */
-    void globalPhaseStorage(EqVector &dest, int phaseIdx)
+    void globalPhaseStorage(EqVector &storage, int phaseIdx)
     {
-        dest = 0;
+        storage = 0;
         EqVector tmp;
 
         ElementContext elemCtx(this->problem_());
@@ -197,21 +194,21 @@ public:
                 tmp *= 
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
-                dest += tmp;
+                storage += tmp;
             }
         };
 
-        dest = this->gridView_().comm().sum(dest);
+        storage = this->gridView_().comm().sum(storage);
     }
 
     /*!
-     * \brief Returns a string with the model's human-readable name
+     * \copydoc BoxModel::name
      */
     const char *name() const
     { return "ncp"; }
 
     /*!
-     * \brief Given an primary variable index, return a human readable name.
+     * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -233,7 +230,7 @@ public:
     }
 
     /*!
-     * \brief Given an equation index, return a human readable name.
+     * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
     { 
@@ -253,10 +250,7 @@ public:
     }
     
     /*!
-     * \brief Update the weights of all primary variables within an
-     *        element given the complete set of volume variables
-     *
-     * \param volVars All volume variables for the element
+     * \copydoc BoxModel::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
@@ -279,15 +273,11 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of a primary variable for
-     *        calculating relative errors.
-     *
-     * \param vertIdx The global index of the control volume
-     * \param pvIdx The index of the primary variable
+     * \copydoc BoxModel::primaryVarWeight
      */
-    Scalar primaryVarWeight(int vertIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(*this, vertIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -296,12 +286,12 @@ public:
             int compIdx = pvIdx - fugacity0Idx;
             assert(0 <= compIdx && compIdx <= numComponents);
 
-            Valgrind::CheckDefined(minActivityCoeff_[vertIdx][compIdx]);
-            return 1.0 / minActivityCoeff_[vertIdx][compIdx];
+            Valgrind::CheckDefined(minActivityCoeff_[globalVertexIdx][compIdx]);
+            return 1.0 / minActivityCoeff_[globalVertexIdx][compIdx];
         }
         else if (pvIdx == pressure0Idx) {
             // first phase pressure
-            return 1.0 / this->solution(/*timeIdx=*/0)[vertIdx][pressure0Idx];
+            return 1.0 / this->solution(/*timeIdx=*/0)[globalVertexIdx][pressure0Idx];
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
@@ -312,10 +302,7 @@ public:
     }
 
     /*!
-     * \brief Returns the relative weight of an equation
-     *
-     * \param globalVertexIdx The global index of the vertex
-     * \param eqIdx The index of the primary variable
+     * \copydoc BoxModel::eqWeight
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
@@ -338,13 +325,14 @@ public:
     /*!
      * \brief Returns the smallest activity coefficient of a component for the most
      *        current solution at a vertex.
+     *
+     * \param globalVertexIdx The global index of the vertex (i.e. finite volume) of interest.
+     * \param compIdx The index of the component of interest.
      */
-    Scalar minActivityCoeff(int vertIdx, int compIdx) const
-    {
-        return minActivityCoeff_[vertIdx][compIdx];
-    }
+    Scalar minActivityCoeff(int globalVertexIdx, int compIdx) const
+    { return minActivityCoeff_[globalVertexIdx][compIdx]; }
 
-protected:
+private:
     friend class BoxModel<TypeTag>;
 
     void registerVtkModules_()

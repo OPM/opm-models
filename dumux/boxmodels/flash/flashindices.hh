@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief Defines the indices required for the compositional flow model based 
- *        on flash calculations.
+ * \copydoc Dumux::FlashIndices
  */
 #ifndef DUMUX_FLASH_INDICES_HH
 #define DUMUX_FLASH_INDICES_HH
@@ -29,9 +28,12 @@
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 
 namespace Dumux {
+
 /*!
- * \brief Defines the indices required for the compositional flow model based 
- *        on flash calculations.
+ * \ingroup FlashModel
+ *
+ * \brief Defines the primary variable and equation indices for the
+ *        compositional multi-phase model based on flash calculations.
  *
  * \tparam PVOffset The first index in a primary variable vector.
  */

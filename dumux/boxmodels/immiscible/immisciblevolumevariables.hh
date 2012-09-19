@@ -41,6 +41,7 @@ namespace Dumux {
 /*!
  * \ingroup ImmiscibleBoxModel
  * \ingroup BoxVolumeVariables
+ *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the two-phase model.
  */
@@ -180,7 +181,7 @@ public:
     Scalar porosity() const
     { return porosity_; }
 
-protected:
+private:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;
