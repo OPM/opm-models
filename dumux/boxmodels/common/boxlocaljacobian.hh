@@ -107,6 +107,7 @@ public:
     {
         internalElemContext_ = 0;
         newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelTolerance);
+        baseEps_ = newtonTolerance_/10;
     }
 
     ~BoxLocalJacobian()
@@ -208,6 +209,13 @@ public:
         // restore flux variables.
         //elemCtx.restoreScvfVars(); // not necessary
     }
+    
+    /*!
+     * \brief Returns the unweighted epsilon value used to calculate
+     *        the local derivatives
+     */
+    Scalar baseEpsilon() const
+    { return baseEps_; }
 
     /*!
      * \brief Returns the epsilon value which is added and removed
@@ -224,12 +232,11 @@ public:
                           int scvIdx,
                           int pvIdx) const
     {
-        const Scalar baseEps = newtonTolerance_/1e3;
-        assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps);
+        assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps_);
 
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
-        return baseEps/pvWeight;
+        return baseEps_/(100*pvWeight);
     }
 
     /*!
@@ -478,6 +485,7 @@ protected:
     Model *modelPtr_;
 
     Scalar newtonTolerance_;
+    Scalar baseEps_;
     ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;

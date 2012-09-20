@@ -139,7 +139,7 @@ SET_STRING_PROP(InjectionBaseProblem, SimulationName, "injection");
 SET_SCALAR_PROP(InjectionBaseProblem, EndTime, 1e4);
 
 // The default for the initial time step size of the simulation
-SET_SCALAR_PROP(InjectionBaseProblem, InitialTimeStepSize, 10);
+SET_SCALAR_PROP(InjectionBaseProblem, InitialTimeStepSize, 250);
 
 // The default DGF file to load
 SET_STRING_PROP(InjectionBaseProblem, GridFile, "grids/injection.dgf");

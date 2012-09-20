@@ -36,6 +36,16 @@ NEW_TYPE_TAG(InjectionFlashProblem, INHERITS_FROM(BoxFlash, InjectionBaseProblem
 // for the flash model we want to use thermodynamic hints or it will
 // get _very_ slow.
 SET_BOOL_PROP(InjectionFlashProblem, EnableHints, true);
+
+// the flash model has serious problems with the numerical
+// precision. if quadruple precision math is available, we use it,
+// else we increase the precision of the Newton solver
+#if HAVE_QUAD
+SET_TYPE_PROP(InjectionFlashProblem, Scalar, quad);
+#else
+SET_SCALAR_PROP(InjectionFlashProblem, NewtonRelTolerance, 1e-5);
+#endif
+
 }
 }
 

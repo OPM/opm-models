@@ -182,10 +182,12 @@ public:
 
         int compIdx = pvIdx - Indices::cTot0Idx;
 
-        // make all kg equal. also, divide the weight of all primary
-        // variables by 100 to make the relative errors more
-        // comparable to the ones of the other models
-        return FluidSystem::molarMass(compIdx) / 1000.0;
+        // make all kg equal. also, divide the weight of all total
+        // compositions by 100 to make the relative errors more
+        // comparable to the ones of the other models (at 10% porosity
+        // the medium is fully saturated with water at atmospheric
+        // conditions if 100 kg/m^3 are present!)
+        return FluidSystem::molarMass(compIdx) / 100.0;
     }
 
     /*!

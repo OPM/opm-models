@@ -38,6 +38,16 @@ SET_BOOL_PROP(InjectionFlashNIProblem, EnableEnergy, true);
 // for the flash model we want to use thermodynamic hints or it will
 // get _very_ slow.
 SET_BOOL_PROP(InjectionFlashNIProblem, EnableHints, true);
+
+// the flash model has serious problems with the numerical
+// precision. if quadruple precision math is available, we use it,
+// else we increase the precision of the Newton solver
+#if HAVE_QUAD
+SET_TYPE_PROP(InjectionFlashNIProblem, Scalar, quad);
+#else
+SET_SCALAR_PROP(InjectionFlashNIProblem, NewtonRelTolerance, 1e-5);
+#endif
+
 } }
 
 int main(int argc, char** argv)
