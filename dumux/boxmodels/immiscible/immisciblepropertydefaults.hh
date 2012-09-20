@@ -69,17 +69,6 @@ SET_TYPE_PROP(BoxImmiscible, BaseProblem, BoxMultiPhaseProblem<TypeTag>);
 //! Use the Darcy relation by default
 SET_TYPE_PROP(BoxImmiscible, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
-//! the FluidState property
-SET_PROP(BoxImmiscible, FluidState)
-{ private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-public:
-    typedef Dumux::ImmiscibleFluidState<Scalar,
-                                        FluidSystem,
-                                        /*storeEnthalpy=*/GET_PROP_VALUE(TypeTag, EnableEnergy)> type;
-};
-
 //! the RateVector property
 SET_TYPE_PROP(BoxImmiscible, RateVector, ImmiscibleRateVector<TypeTag>);
 

@@ -139,17 +139,15 @@ class NcpModel
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
-
     enum { fugacity0Idx = Indices::fugacity0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
-
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { ncp0EqIdx = Indices::ncp0EqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:

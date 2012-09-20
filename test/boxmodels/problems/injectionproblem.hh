@@ -124,8 +124,8 @@ SET_BOOL_PROP(InjectionBaseProblem, EnableJacobianRecycling, true);
 SET_BOOL_PROP(InjectionBaseProblem, EnableSmoothUpwinding, false);
 
 // set the defaults for some problem specific properties
-SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureLow, 1e6);
-SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureHigh, 3e7);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureLow, 3e7);
+SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemPressureHigh, 4e7);
 SET_INT_PROP(InjectionBaseProblem, FluidSystemNumPressure, 100);
 SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemTemperatureLow, 290);
 SET_SCALAR_PROP(InjectionBaseProblem, FluidSystemTemperatureHigh, 500);
@@ -139,12 +139,11 @@ SET_STRING_PROP(InjectionBaseProblem, SimulationName, "injection");
 SET_SCALAR_PROP(InjectionBaseProblem, EndTime, 1e4);
 
 // The default for the initial time step size of the simulation
-SET_SCALAR_PROP(InjectionBaseProblem, InitialTimeStepSize, 250);
+SET_SCALAR_PROP(InjectionBaseProblem, InitialTimeStepSize, 10);
 
 // The default DGF file to load
 SET_STRING_PROP(InjectionBaseProblem, GridFile, "grids/injection.dgf");
 }
-
 
 /*!
  * \ingroup BoxTestProblems
@@ -241,7 +240,7 @@ public:
                           /*np=*/nPressure_);
 
         
-        layerBottom_ = 22.0;
+        fineLayerBottom_ = 22.0;
 
         // intrinsic permeabilities
         fineK_ = this->toDimMatrix_(1e-13);
@@ -485,8 +484,9 @@ public:
         //////
         // set the primary variables
         //////
-        const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
-        values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
+        //const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
+        //values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
+        values.assignNaive(fs);
     }
 
 private:
@@ -532,7 +532,11 @@ private:
 
         typename FluidSystem::ParameterCache paramCache;
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
-        CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/true,  /*setEnthalpy=*/true);
+        CFRP::solve(fs, 
+                    paramCache,
+                    /*refPhaseIdx=*/lPhaseIdx,
+                    /*setViscosity=*/true,
+                    /*setEnthalpy=*/true);
     }
 
     bool onLeftBoundary_(const GlobalPosition &pos) const
@@ -561,11 +565,11 @@ private:
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const
-    { return pos[dim-1] > layerBottom_; }
+    { return pos[dim-1] > fineLayerBottom_; }
 
     DimMatrix fineK_;
     DimMatrix coarseK_;
-    Scalar layerBottom_;
+    Scalar fineLayerBottom_;
 
     Scalar finePorosity_;
     Scalar coarsePorosity_;

@@ -96,16 +96,9 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        // retrieve the volume variables for the SCV at the specified
-        // point in time
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            storage[conti0EqIdx + phaseIdx] =
-                volVars.porosity()
-                * volVars.fluidState().saturation(phaseIdx)
-                * volVars.fluidState().density(phaseIdx);
-        }
+        storage = 0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
 
         EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
@@ -148,20 +141,14 @@ public:
             // solution. (although the actual secondary variables must
             // obviously come from the current solution.)
             int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
-            int dnIdx = evalPointFluxVars.downstreamIndex(phaseIdx);
 
             const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
-            const VolumeVariables &dn = elemCtx.volVars(dnIdx, /*timeIdx=*/0);
 
             // add advective flux of current component in current
             // phase
             flux[conti0EqIdx + phaseIdx] +=
                 fluxVars.volumeFlux(phaseIdx)
-                * (fluxVars.upstreamWeight(phaseIdx)
-                   * up.fluidState().density(phaseIdx)
-                   +
-                   fluxVars.downstreamWeight(phaseIdx)
-                   * dn.fluidState().density(phaseIdx));
+                * up.fluidState().density(phaseIdx);
         }
 
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);

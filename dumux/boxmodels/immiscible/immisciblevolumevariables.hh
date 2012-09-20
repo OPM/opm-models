@@ -57,7 +57,6 @@ class ImmiscibleVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
@@ -72,6 +71,7 @@ class ImmiscibleVolumeVariables
         
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
@@ -128,14 +128,14 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
-        // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
-
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
         // intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);

@@ -27,6 +27,8 @@
 #include "immiscibleproperties.hh"
 #include "immisciblelocalresidual.hh"
 
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+
 #include <sstream>
 #include <string>
 
@@ -86,7 +88,8 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+
 public:
     /*!
      * \brief Register all run-time parameters for the immiscible box model.
@@ -114,8 +117,12 @@ public:
      */
     std::string primaryVarName(int pvIdx) const
     { 
+        std::string s;
+        if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
+            return s;
+
         std::ostringstream oss;
-        
+
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
@@ -134,6 +141,10 @@ public:
      */
     std::string eqName(int eqIdx) const
     { 
+        std::string s;
+        if (!(s = EnergyModule::eqName(eqIdx)).empty())
+            return s;
+
         std::ostringstream oss;
         
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
@@ -193,6 +204,10 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        if (tmp > 0)
+            // energy related quantity
+            return tmp;
         if (pvIdx == Indices::pressure0Idx) {
             Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
             return std::min(1.0/absPv, 1.0);
@@ -205,7 +220,12 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
-        int DUNE_UNUSED compIdx = eqIdx - Indices::conti0EqIdx;
+        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        if (tmp > 0)
+            // energy related equation
+            return tmp;
+
+        DUNE_UNUSED int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
 
         // make all kg equal

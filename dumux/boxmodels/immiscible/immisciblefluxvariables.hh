@@ -71,24 +71,25 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
+        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
      * \copydoc BoxMultiPhaseFluxVariables::updateBoundary()
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, 
-                        int bfIdx, 
-                        int timeIdx, 
-                        const FluidState &fs, 
+    void updateBoundary(const Context &context,
+                        int bfIdx,
+                        int timeIdx,
+                        const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context, 
-                                                bfIdx, 
-                                                timeIdx, 
-                                                fs, 
+        MultiPhaseFluxVariables::updateBoundary(context,
+                                                bfIdx,
+                                                timeIdx,
+                                                fluidState,
                                                 paramCache);
-        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };
 

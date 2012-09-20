@@ -61,7 +61,6 @@ NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from t
 NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
 NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 

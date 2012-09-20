@@ -29,6 +29,8 @@
 #include "pvsproperties.hh"
 #include "pvslocalresidual.hh"
 
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -119,6 +121,7 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -162,6 +165,10 @@ public:
      */
     std::string primaryVarName(int pvIdx) const
     { 
+        std::string s;
+        if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
+            return s;
+
         std::ostringstream oss;
         if (pvIdx == Indices::pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
@@ -177,7 +184,11 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
+        std::string s;
+        if (!(s = EnergyModule::eqName(eqIdx)).empty())
+            return s;
+
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents) {
             int compIdx = eqIdx - Indices::conti0EqIdx;
@@ -240,9 +251,14 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        if (tmp > 0)
+            // energy related quantity
+            return tmp;
+
         if (Indices::pressure0Idx == pvIdx)
             return std::min(1.0/this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx], 1.0);
-        return 1;
+        return 1; // saturations and mole fractions have a weight of 1
     }
 
     /*!
@@ -250,6 +266,11 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
+        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        if (tmp > 0)
+            // energy related equation
+            return tmp;
+
         int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
 

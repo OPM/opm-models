@@ -81,15 +81,15 @@ public:
                          int phaseIdx) const
     {
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
+        const auto &fluidState = volVars.fluidState();
         
         // compute storage term of all components within all phases
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         {
             int eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
-                fs.molarity(phaseIdx, compIdx)
-                * fs.saturation(phaseIdx)
+                fluidState.molarity(phaseIdx, compIdx)
+                * fluidState.saturation(phaseIdx)
                 * volVars.porosity();
         }
 
@@ -152,7 +152,6 @@ public:
                 int eqIdx = conti0EqIdx + compIdx;
                 flux[eqIdx] +=
                     fluxVars.volumeFlux(phaseIdx)
-                    * fluxVars.upstreamWeight(phaseIdx)
                     * up.fluidState().molarity(phaseIdx, compIdx);
 
                 Valgrind::CheckDefined(flux[eqIdx]);
@@ -191,6 +190,23 @@ public:
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
+    /*!
+     * \copydoc BoxLocalResidual::computeSource
+     *
+     * By default, this method only asks the problem to specify a
+     * source term.
+     */
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int scvIdx,
+                       int timeIdx) const
+    {
+        Valgrind::SetUndefined(source);
+        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        Valgrind::CheckDefined(source);
+    }
+
+
 private:
     friend class BoxLocalResidual<TypeTag>;
 
@@ -227,14 +243,14 @@ private:
                      int timeIdx,
                      int phaseIdx) const
     {
-        const auto &fsEval = elemCtx.evalPointVolVars(scvIdx, timeIdx).fluidState();
-        const auto &fs = elemCtx.volVars(scvIdx, timeIdx).fluidState();
+        const auto &fluidStateEval = elemCtx.evalPointVolVars(scvIdx, timeIdx).fluidState();
+        const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
 
-        Scalar aEval = phaseNotPresentIneq_(fsEval, phaseIdx);
-        Scalar bEval = phasePresentIneq_(fsEval, phaseIdx);
+        Scalar aEval = phaseNotPresentIneq_(fluidStateEval, phaseIdx);
+        Scalar bEval = phasePresentIneq_(fluidStateEval, phaseIdx);
         if (aEval > bEval)
-            return phasePresentIneq_(fs, phaseIdx);
-        return phaseNotPresentIneq_(fs, phaseIdx);
+            return phasePresentIneq_(fluidState, phaseIdx);
+        return phaseNotPresentIneq_(fluidState, phaseIdx);
     }
 
     /*!

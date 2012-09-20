@@ -133,11 +133,11 @@ SET_STRING_PROP(NumericModel, ParameterFile, "");
 //! Set the number of refinement levels of the grid to 0. This does not belong here, strictly speaking.
 SET_INT_PROP(NumericModel, GridGlobalRefinements, 0);
 
-//! By default, do not print the properties on startup
-SET_BOOL_PROP(NumericModel, PrintProperties, false);
+//! By default, print the properties on startup
+SET_BOOL_PROP(NumericModel, PrintProperties, true);
 
-//! By default, do not print the values of the run-time parameters on startup
-SET_BOOL_PROP(NumericModel, PrintParameters, false);
+//! By default, print the values of the run-time parameters on startup
+SET_BOOL_PROP(NumericModel, PrintParameters, true);
 
 //! The default value for the simulation's end time
 SET_SCALAR_PROP(NumericModel, EndTime, -1e100);

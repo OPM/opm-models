@@ -367,17 +367,11 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // vertex data of the upstream and the downstream vertices
             const VolumeVariables &up = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
-            const VolumeVariables &dn = context.volVars(evalPointFluxVars.downstreamIndex(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
                 fluxVars.volumeFlux(phaseIdx)
-                * (fluxVars.upstreamWeight(phaseIdx)
-                   * up.fluidState().enthalpy(phaseIdx)
-                   * up.fluidState().density(phaseIdx)
-                   +
-                   fluxVars.downstreamWeight(phaseIdx)
-                   * dn.fluidState().enthalpy(phaseIdx)
-                   * dn.fluidState().density(phaseIdx));
+                * up.fluidState().enthalpy(phaseIdx)
+                * up.fluidState().density(phaseIdx);
         }
     }
 

@@ -54,7 +54,8 @@
  * \code
  * // Registers a run-time parameter "UpwindWeight" which has type
  *  // "Scalar" and the description "Relative weight of the upwind node."
- * REGISTER_PARAM(TypeTag, Scalar,
+ * REGISTER_PARAM(TypeTag,
+ *                Scalar,
  *                UpwindWeight,
  *               "Relative weight of the upwind node.");
  * \endcode
