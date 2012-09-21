@@ -27,7 +27,7 @@
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidsystems/gasphase.hh>
 #include <dumux/material/components/n2.hh>
-#include <dumux/freeflow/stokes/stokesmodel.hh>
+#include <dumux/boxmodels/stokes/stokesmodel.hh>
 
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid/2d/alugrid.hh>

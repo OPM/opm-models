@@ -19,13 +19,14 @@
  *****************************************************************************/
 /**
  * \file
- * \brief A simple problem using the isothermal Stokes model and two components.
+ * \brief  Definition of a simple Stokes problem
  */
-#ifndef DUMUX_STOKES_2C_TEST_PROBLEM_HH
-#define DUMUX_STOKES_2C_TEST_PROBLEM_HH
+#ifndef DUMUX_STOKESTESTPROBLEM_HH
+#define DUMUX_STOKESTESTPROBLEM_HH
 
-#include <dumux/freeflow/stokes/stokesmodel.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+#include <dumux/boxmodels/stokes/stokesmodel.hh>
+#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidsystems/gasphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -34,103 +35,95 @@ namespace Dumux
 {
 
 template <class TypeTag>
-class Stokes2cTestProblem;
+class StokesTestProblem;
 
 //////////
-// Specify the properties for the stokes2c problem
+// Specify the properties for the stokes problem
 //////////
 namespace Properties
 {
-NEW_TYPE_TAG(Stokes2cTestProblem, INHERITS_FROM(BoxStokes));
+NEW_TYPE_TAG(StokesTestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
-SET_TYPE_PROP(Stokes2cTestProblem, Grid, Dune::YaspGrid<2>);
+SET_TYPE_PROP(StokesTestProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(Stokes2cTestProblem, Problem, Dumux::Stokes2cTestProblem<TypeTag>);
+SET_TYPE_PROP(StokesTestProblem, Problem, Dumux::StokesTestProblem<TypeTag>);
 
-//! Select the fluid system
-SET_TYPE_PROP(Stokes2cTestProblem, 
-              FluidSystem,
-              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
-
-//! Select the phase to be considered
-SET_INT_PROP(Stokes2cTestProblem,
-             StokesPhaseIndex,
-             GET_PROP_TYPE(TypeTag, FluidSystem)::gPhaseIdx);
+SET_PROP(StokesTestProblem, Fluid)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+public:
+    typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
+};
 
 // Disable gravity
-SET_BOOL_PROP(Stokes2cTestProblem, EnableGravity, false);
+SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
 
 // Enable constraints
-SET_BOOL_PROP(Stokes2cTestProblem, EnableConstraints, true);
+SET_BOOL_PROP(StokesTestProblem, EnableConstraints, true);
 
 // Default simulation end time [s]
-SET_SCALAR_PROP(Stokes2cTestProblem, EndTime, 2.0);
+SET_SCALAR_PROP(StokesTestProblem, EndTime, 6e3);
 
 // Default initial time step size [s]
-SET_SCALAR_PROP(Stokes2cTestProblem, InitialTimeStepSize, 0.1);
+SET_SCALAR_PROP(StokesTestProblem, InitialTimeStepSize, 10.0);
 
 // Default grid file to load
-SET_STRING_PROP(Stokes2cTestProblem, GridFile, "grids/test_stokes2c.dgf");
+SET_STRING_PROP(StokesTestProblem, GridFile, "grids/test_stokes.dgf");
 }
 
 /*!
- * \ingroup BoxStokes2cModel
+ * \ingroup BoxStokesModel
  * \ingroup BoxTestProblems
- * \brief Stokes transport problem with air flowing
+ * \brief Stokes flow problem with nitrogen (N2) flowing
  *        from the left to the right.
  *
  * The domain is sized 1m times 1m. The boundary conditions for the momentum balances
- * are all set to Dirichlet. The mass balance receives
+ * are set to Dirichlet with outflow on the right boundary. The mass balance has
  * outflow bcs, which are replaced in the localresidual by the sum
  * of the two momentum balances. In the middle of the right boundary,
- * one vertex receives Dirichlet bcs, to set the pressure level.
+ * one vertex receives Dirichlet bcs to set the pressure level.
  *
- * This problem uses the \ref BoxStokes2cModel.
+ * This problem uses the \ref BoxStokesModel.
  */
 template <class TypeTag>
-class Stokes2cTestProblem
+class StokesTestProblem 
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
+    typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
 
-    enum { dimWorld = GridView::dimensionworld };
-    enum { numComponents = FluidSystem::numComponents };
     enum {
-        // copy some indices for convenience
+        // Number of equations and grid dimension
+        dimWorld = GridView::dimensionworld,
+
+        // equation indices
         conti0EqIdx = Indices::conti0EqIdx,
         momentum0EqIdx = Indices::momentum0EqIdx,
 
+        // primary variable indices
         velocity0Idx = Indices::velocity0Idx,
-        moleFrac1Idx = Indices::moleFrac1Idx,
-        pressureIdx = Indices::pressureIdx,
-
-        H2OIdx = FluidSystem::H2OIdx,
-        AirIdx = FluidSystem::AirIdx
+        pressureIdx = Indices::pressureIdx
     };
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    Stokes2cTestProblem(TimeManager &timeManager)
+    StokesTestProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
-    {
-        eps_ = 1e-6;
-
-        // initialize the tables of the fluid system
-        FluidSystem::init();
-    }
+    { eps_ = 1e-6; }
 
     /*!
      * \name Problem parameters
@@ -143,18 +136,18 @@ public:
      * This is used as a prefix for files generated by the simulation.
      */
     const char *name() const
-    { return "stokes2c"; }
+    { return "stokes"; }
 
     /*!
      * \brief Returns the temperature within the domain.
      *
-     * This problem assumes a temperature of 10 degrees Celsius.
+     * This problem assumes a constant temperature of 10 degrees Celsius.
      */
     template <class Context>   
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
-    { return 273.15 + 10; /* -> 10 deg C */ }
-
+    { return 273.15 + 10; } // -> 10 deg C
+    
     // \}
 
     /*!
@@ -170,14 +163,27 @@ public:
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
 
-        if (onLowerBoundary_(pos))
+        Scalar y = pos[1] - this->bboxMin()[1];
+        Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
+
+        // parabolic velocity profile
+        const Scalar maxVelocity = 1.0;
+
+        Scalar a = - 4*maxVelocity/(height*height);
+        Scalar b = - a*height;
+        Scalar c = 0;
+        
+        DimVector velocity(0.0);
+        velocity[0] = a * y*y + b * y + c;
+
+        if (onRightBoundary_(pos))
             values.setOutFlow(context, spaceIdx, timeIdx);
-        else if(onUpperBoundary_(pos)) {
-            // upper boundary is constraint!
+        else if(onLeftBoundary_(pos)) {
+            // left boundary is constraint!
             values = 0.0;
         }
         else {
-            // left and right boundaries
+            // top and bottom
             values.setNoFlow(context, spaceIdx, timeIdx);
         }
     }
@@ -202,12 +208,11 @@ public:
     {
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        if (onUpperBoundary_(pos)) {
+        if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             PrimaryVariables initCond;
             initial(initCond, context, spaceIdx, timeIdx);
 
             values.setConstraint(pressureIdx, conti0EqIdx, initCond[pressureIdx]);;
-            values.setConstraint(moleFrac1Idx, conti0EqIdx + 1, initCond[moleFrac1Idx]);
             for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
                 values.setConstraint(velocity0Idx + axisIdx,
                                      momentum0EqIdx + axisIdx,
@@ -216,7 +221,7 @@ public:
     }
 
     // \}
-
+    
     /*!
      * \name Volume terms
      */
@@ -234,11 +239,7 @@ public:
     void source(RateVector &values,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
-    {
-        // ATTENTION: The source term of the mass balance has to be chosen as
-        // div (q_momentum) in the problem file
-        values = Scalar(0.0);
-    }
+    { values = Scalar(0.0); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -251,42 +252,51 @@ public:
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        values = 0.0;
+        const auto &pos = context.pos(spaceIdx, timeIdx);
 
-        //parabolic profile
-        const Scalar v1 = 1.0;
-        values[velocity0Idx + 1] =
-            - v1*(globalPos[0] - this->bboxMin()[0])*(this->bboxMax()[0] - globalPos[0])
-            / (0.25*(this->bboxMax()[0] - this->bboxMin()[0])*(this->bboxMax()[0] - this->bboxMin()[0]));
+        Scalar y = pos[1] - this->bboxMin()[1];
+        Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
 
-        Scalar moleFrac[numComponents];
-        if (onUpperBoundary_(globalPos))
-            moleFrac[H2OIdx] = 0.005;
-        else
-            moleFrac[H2OIdx] = 0.007;
-        moleFrac[AirIdx] = 1.0 - moleFrac[H2OIdx];
+        // parabolic velocity profile on boundaries
+        const Scalar maxVelocity = 1.0;
 
+        Scalar a = - 4*maxVelocity/(height*height);
+        Scalar b = - a*height;
+        Scalar c = 0;
+        
+        DimVector velocity(0.0);
+        velocity[0] = a * y*y + b * y + c;
+        
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            values[velocity0Idx + axisIdx] = velocity[axisIdx];
         values[pressureIdx] = 1e5;
-        values[velocity0Idx + 0] = 0.0;
-        values[moleFrac1Idx] = moleFrac[1];
     }
+    
+    // \}
 
 private:
-    bool onLeftBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] < this->bboxMin()[0] + eps_; }
+    bool onLeftBoundary_(const GlobalPosition &pos) const
+    { return pos[0] < this->bboxMin()[0] + eps_; }
 
-    bool onRightBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[0] > this->bboxMax()[0] - eps_; }
+    bool onRightBoundary_(const GlobalPosition &pos) const
+    { return pos[0] > this->bboxMax()[0] - eps_; }
 
-    bool onLowerBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] < this->bboxMin()[1] + eps_; }
+    bool onLowerBoundary_(const GlobalPosition &pos) const
+    { return pos[1] < this->bboxMin()[1] + eps_; }
 
-    bool onUpperBoundary_(const GlobalPosition &globalPos) const
-    { return globalPos[1] > this->bboxMax()[1] - eps_; }
+    bool onUpperBoundary_(const GlobalPosition &pos) const
+    { return pos[1] > this->bboxMax()[1] - eps_; }
+
+    bool onBoundary_(const GlobalPosition &pos) const
+    {
+        return 
+            onLeftBoundary_(pos) || onRightBoundary_(pos) ||
+            onLowerBoundary_(pos) || onUpperBoundary_(pos);
+    }
 
     Scalar eps_;
 };
+
 } //end namespace
 
 #endif

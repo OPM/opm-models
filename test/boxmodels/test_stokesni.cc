@@ -21,14 +21,14 @@
 /*!
  * \file
  *
- * \brief Test for the isothermal Stokes box model.
+ * \brief Test for the non-isothermal two-component Stokes box model.
  */
 #include "config.h"
-#include "stokestestproblem.hh"
+#include "problems/stokesnitestproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(StokesTestProblem) ProblemTypeTag;
+    typedef TTAG(StokesNITestProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

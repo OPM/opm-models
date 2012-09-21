@@ -24,7 +24,7 @@
  * \brief Test for the isothermal two-component Stokes box model.
  */
 #include "config.h"
-#include "stokes2ctestproblem.hh"
+#include "problems/stokes2ctestproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)

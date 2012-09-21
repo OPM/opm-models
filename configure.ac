@@ -26,6 +26,7 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/boxmodels/ncp/diffusion/Makefile
     dumux/boxmodels/pvs/Makefile 
     dumux/boxmodels/richards/Makefile 
+    dumux/boxmodels/stokes/Makefile
     dumux/boxmodels/vtk/Makefile 
     dumux/common/Makefile 
     dumux/decoupled/Makefile
@@ -49,8 +50,6 @@ AC_CONFIG_FILES([ewoms.pc
     dumux/decoupled/common/mimetic/Makefile
     dumux/decoupled/constraintsolvers/Makefile 
     dumux/decoupled/spatialparams/Makefile 
-    dumux/freeflow/Makefile
-    dumux/freeflow/stokes/Makefile
     dumux/io/Makefile
     dumux/linear/Makefile
     dumux/material/Makefile 
@@ -73,7 +72,6 @@ AC_CONFIG_FILES([ewoms.pc
     test/boxmodels/Makefile 
     test/boxmodels/problems/Makefile 
     test/boxmodels/grids/Makefile 
-    test/boxmodels/quadrature/Makefile
     test/common/Makefile
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
@@ -81,11 +79,6 @@ AC_CONFIG_FILES([ewoms.pc
     test/decoupled/1p/Makefile
     test/decoupled/2p/Makefile
     test/decoupled/2p2c/Makefile
-    test/freeflow/Makefile
-    test/freeflow/navierstokes/Makefile
-    test/freeflow/stokes/Makefile
-    test/freeflow/stokes2c/Makefile
-    test/freeflow/stokesni/Makefile
     test/material/Makefile
     test/material/fluidsystems/Makefile
     test/material/immiscibleflash/Makefile

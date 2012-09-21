@@ -1,4 +1,4 @@
-SUBDIRS = problems grids quadrature
+SUBDIRS = problems grids
 
 EXTRA_DIST = CMakeLists.txt
 
@@ -23,6 +23,11 @@ outflow_pvs \
 powerinjection_darcy \
 powerinjection_forchheimer \
 reservoir_blackoil \
+test_navierstokes \
+test_quadrature \
+test_stokes \
+test_stokes2c \
+test_stokesni \
 waterair_pvs_ni
 
 cuvette_pvs_SOURCES=cuvette_pvs.cc
@@ -45,6 +50,11 @@ outflow_pvs_SOURCES=outflow_pvs.cc
 powerinjection_darcy_SOURCES=powerinjection_darcy.cc
 powerinjection_forchheimer_SOURCES=powerinjection_forchheimer.cc
 reservoir_blackoil_SOURCES=reservoir_blackoil.cc
+test_navierstokes_SOURCES=test_navierstokes.cc
+test_quadrature_SOURCES=test_quadrature.cc
+test_stokes_SOURCES=test_stokes.cc
+test_stokes2c_SOURCES=test_stokes2c.cc
+test_stokesni_SOURCES=test_stokesni.cc
 waterair_pvs_ni_SOURCES=waterair_pvs_ni.cc
 
 include $(top_srcdir)/am/global-rules

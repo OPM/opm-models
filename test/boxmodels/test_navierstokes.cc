@@ -1,9 +1,12 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2009-2012 by Klaus Mosthaf                                *
- *   Copyright (C) 2008-2012 by Andreas Lauser                               *
- *   Copyright (C) 2009-2012 by Bernd Flemisch                               *
+ *   Copyright (C) 2012 by Christoph Grueninger                              *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2010-2011 by Benjamin Faigle                              *
+ *   Copyright (C) 2009-2011 by Bernd Flemisch                               *
+ *   Copyright (C) 2010-2012 by Markus Wolff                                 *
+ *   Copyright (C) 2012 by Philipp Nuske                                     *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -20,15 +23,15 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Test for the non-isothermal two-component Stokes box model.
+ * \brief Test for the isothermal Navier-Stokes box model; this test case is
+ *        known as lid-driven cavity-flow in literature.
  */
 #include "config.h"
-#include "stokesnitestproblem.hh"
+#include "problems/navierstokestestproblem.hh"
 #include <dumux/common/start.hh>
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(StokesNITestProblem) ProblemTypeTag;
+    typedef TTAG(NavierStokesTestProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }
