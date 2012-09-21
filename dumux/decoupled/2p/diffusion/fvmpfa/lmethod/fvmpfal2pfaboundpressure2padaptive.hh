@@ -452,9 +452,9 @@ public:
             R_[1][0] = -1;
         }
 
-        ErrorTermFactor_ = GET_PARAM(TypeTag, Scalar, ErrorTermFactor);
-        ErrorTermLowerBound_ = GET_PARAM(TypeTag, Scalar, ErrorTermLowerBound);
-        ErrorTermUpperBound_ = GET_PARAM(TypeTag, Scalar, ErrorTermUpperBound);
+        ErrorTermFactor_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermFactor);
+        ErrorTermLowerBound_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermLowerBound);
+        ErrorTermUpperBound_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermUpperBound);
 
         density_[wPhaseIdx] = 0.;
         density_[nPhaseIdx] = 0.;

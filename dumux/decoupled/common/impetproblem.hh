@@ -113,7 +113,8 @@ public:
           timeManager_(&timeManager),
           variables_(gridView),
           outputInterval_(1),
-          outputTimeInterval_(0.0)
+          outputTimeInterval_(0.0),
+          vtkOutputLevel_(-1)
     {
         // calculate the bounding box of the grid view
         VertexIterator vIt = gridView.template begin<dim>();
@@ -141,6 +142,7 @@ public:
             gridAdapt_ = new GridAdaptModel(asImp_());
 
         resultWriter_ = NULL;
+        vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 
     //! destructor
@@ -781,6 +783,15 @@ public:
     void addOutputVtkFields()
     {
     }
+    /*!
+     * \brief Returns the vtk output verbosity level
+     *
+     * Level is set by property or input file.
+     */
+    const int vtkOutputLevel() const
+    {
+        return vtkOutputLevel_;
+    }
 
     //! Write the fields current solution into an VTK output file.
     void writeOutput(bool verbose = true)
@@ -846,6 +857,7 @@ private:
     VtkMultiWriter *resultWriter_;
     int outputInterval_;
     Scalar outputTimeInterval_;
+    int vtkOutputLevel_;
     GridAdaptModel* gridAdapt_;
 };
 }

@@ -73,7 +73,7 @@ NEW_PROP_TAG( CellData );//!< Defines data object to be stored
 NEW_PROP_TAG( TimeManager );  //!< Manages the simulation time
 NEW_PROP_TAG( BoundaryTypes ); //!< Stores the boundary types of a single degree of freedom
 NEW_PROP_TAG( MaxIntersections ); //!< Gives maximum number of intersections of an element and neighboring elements
-NEW_PROP_TAG( VtkOutputLevel); //! VtkOutputLevel is equal to zero (default) only primary variables are written, all available quantities are written if it's larger than 0.
+NEW_PROP_TAG( VtkOutputLevel); //! VtkOutputLevel is equal to zero only primary variables are written, all available quantities are written if it's larger than 0.
 }
 }
 
@@ -190,7 +190,8 @@ SET_TYPE_PROP(DecoupledModel,  PrimaryVariables, typename GET_PROP(TypeTag, Solu
 //! Set the default type for the time manager
 SET_TYPE_PROP(DecoupledModel, TimeManager, Dumux::TimeManager<TypeTag>);
 
-SET_INT_PROP(DecoupledModel, VtkOutputLevel, 0);
+//! By default, write out everything
+SET_INT_PROP(DecoupledModel, VtkOutputLevel, 2);
 
 SET_SCALAR_PROP(DecoupledModel, InitialTimeStepSize, 0.0);
 

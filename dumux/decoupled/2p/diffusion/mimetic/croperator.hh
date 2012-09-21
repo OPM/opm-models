@@ -212,9 +212,7 @@ public:
                         A_.addindex(alpha, beta);
                         //std::cout << "alpha = " << alpha << ", added beta = " << beta << std::endl;
                     }
-
             }
-
         }
 
         // now the matrix is ready for use

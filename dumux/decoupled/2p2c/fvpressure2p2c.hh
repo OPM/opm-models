@@ -167,11 +167,11 @@ public:
     FVPressure2P2C(Problem& problem) : FVPressureCompositional<TypeTag>(problem),
         problem_(problem)
     {
-        ErrorTermFactor_ = GET_PARAM(TypeTag, Scalar, ErrorTermFactor);
-        ErrorTermLowerBound_ = GET_PARAM(TypeTag, Scalar, ErrorTermLowerBound);
-        ErrorTermUpperBound_ = GET_PARAM(TypeTag, Scalar, ErrorTermUpperBound);
+        ErrorTermFactor_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermFactor);
+        ErrorTermLowerBound_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermLowerBound);
+        ErrorTermUpperBound_ = GET_PARAM(TypeTag, Scalar, ImpetErrorTermUpperBound);
 
-        enableVolumeIntegral = GET_PARAM(TypeTag,bool, EnableVolumeIntegral);
+        enableVolumeIntegral = GET_PARAM(TypeTag,bool, ImpetEnableVolumeIntegral);
 
         maxError_=0.;
         if (pressureType != pw && pressureType != pn)

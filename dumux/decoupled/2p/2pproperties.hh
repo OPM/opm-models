@@ -80,9 +80,9 @@ NEW_PROP_TAG( FluidState ); //!< Defines the fluid state
 NEW_PROP_TAG( TwoPIndices );
 //! \endcond
 
-NEW_PROP_TAG( ErrorTermFactor ); //! Scaling factor for the error term (term to damp unphysical saturation overshoots via pressure correction)
-NEW_PROP_TAG( ErrorTermLowerBound );//! Lower threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
-NEW_PROP_TAG( ErrorTermUpperBound );//!Upper threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
+NEW_PROP_TAG( ImpetErrorTermFactor ); //! Scaling factor for the error term (term to damp unphysical saturation overshoots via pressure correction)
+NEW_PROP_TAG( ImpetErrorTermLowerBound );//! Lower threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
+NEW_PROP_TAG( ImpetErrorTermUpperBound );//!Upper threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
 }
 }
 
@@ -179,11 +179,11 @@ public:
 };
 
 //! Default error term factor
-SET_SCALAR_PROP(DecoupledTwoP, ErrorTermFactor, 0.5);
+SET_SCALAR_PROP(DecoupledTwoP, ImpetErrorTermFactor, 0.5);
 //! Default lower threshold for evaluation of an error term
-SET_SCALAR_PROP(DecoupledTwoP, ErrorTermLowerBound, 0.1);
+SET_SCALAR_PROP(DecoupledTwoP, ImpetErrorTermLowerBound, 0.1);
 //! Default upper threshold for evaluation of an error term
-SET_SCALAR_PROP(DecoupledTwoP, ErrorTermUpperBound, 0.9);
+SET_SCALAR_PROP(DecoupledTwoP, ImpetErrorTermUpperBound, 0.9);
 
 // \}
 }
