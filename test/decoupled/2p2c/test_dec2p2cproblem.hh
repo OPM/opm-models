@@ -38,6 +38,7 @@
 #include <dune/grid/sgrid.hh>
 
 #include <dune/common/fvector.hh>
+#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 
 namespace Dumux
 {
@@ -83,8 +84,7 @@ SET_INT_PROP(TestDecTwoPTwoCProblem, PressureFormulation,
 // Select fluid system
 SET_TYPE_PROP(TestDecTwoPTwoCProblem, 
               FluidSystem,
-              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar),
-                                         /*complex=*/true>);
+              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //SET_TYPE_PROP(TestDecTwoPTwoCProblem, LinearSolver, IMPETBiCGStabILU0Solver<TypeTag> );
 
@@ -211,7 +211,7 @@ Scalar referencePressureAtPos(const GlobalPosition& globalPos) const
  */
 void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos) const
 {
-    if (globalPos[0] > 10-1E-6 || globalPos[0] < 1e-6)
+    if (globalPos[0] > this->bboxMax()[0]-1E-6 || globalPos[0] < 1e-6)
         bcTypes.setAllDirichlet();
     else
         // all other boundaries

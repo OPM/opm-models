@@ -138,7 +138,7 @@ public:
     }
 
     /*!
-     * \brief Returns the viscosity of a phase \f$\mathrm{[kg/m^3]}\f$.
+     * \brief Returns the viscosity of a phase \f$\mathrm{[Pa s]}\f$.
      *
      * \param phaseIdx the index of the phase
      */
@@ -265,7 +265,7 @@ public:
     }
     //\}
 
-public:
+protected:
     Scalar aveMoMass_;
     Scalar massConcentration_[numComponents];
     Scalar massFractionWater_;

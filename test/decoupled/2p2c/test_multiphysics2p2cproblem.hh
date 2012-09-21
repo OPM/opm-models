@@ -31,7 +31,7 @@
 #include <dumux/decoupled/2p2c/fvpressure2p2cmultiphysics.hh>
 #include <dumux/decoupled/2p2c/fvtransport2p2cmultiphysics.hh>
 #include <dumux/decoupled/2p2c/cellData2p2cmultiphysics.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 #include <dumux/common/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -88,7 +88,7 @@ SET_PROP(TestMultTwoPTwoCProblem,
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Dumux::FluidSystems::H2ON2<Scalar, /*complex=*/true> type;
+    typedef Dumux::FluidSystems::H2OAir<Scalar> type;
 };
 
 // Enable gravity
