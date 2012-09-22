@@ -60,9 +60,6 @@ template<class TypeTag> class IMPET
 public:
     typedef typename SolutionTypes::ScalarSolution SolutionType;
 
-    /*!
-     * \copydoc BoxMultiphaseProblem::registerParameters
-     */
     static void registerParameters()
     {
         REGISTER_PARAM(TypeTag, Scalar, ImpetErrorTermFactor, "The weight of the calculated error term");

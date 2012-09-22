@@ -141,9 +141,6 @@ public:
         this->spatialParams().setDelta(delta_);
     }
 
-    /*!
-     * \copydoc BoxMultiphaseProblem::registerParameters
-     */
     static void registerParameters()
     {
         ParentType::registerParameters();

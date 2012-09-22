@@ -9,6 +9,21 @@
  */
 class Doxygen {
 public:
+    /*
+     * \brief The constructor of the problem.
+     *
+     * The problem is the central decision hub in eWoms. It decides
+     * what model to use, how the domain looks like, the boundary and
+     * initial conditions, etc.
+     *
+     * Normally, the problem is instantiated by \c Dumux::start, but
+     * you for special applications, it might be necessary to do this
+     * on your own. Don't be suprised if things explode then, though.
+     *
+     * \param timeManager The time manager of the simulation
+     */
+    void defaultProblemConstructor(TimeManager &timeManager);
+
     /*!
      * \param timeIdx The index used by the time discretization.
      */

@@ -99,7 +99,7 @@ public:
     }
 
     /*!
-     * \brief Create the Grid
+     * \brief Create the grid for the finger problem
      */
     static void makeGrid()
     {
@@ -256,7 +256,7 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Return a reference to the grid.
      */
     static Grid &grid()
     { return *grid_; }
@@ -269,9 +269,10 @@ public:
     { grid_->loadBalance(); }
 
     /*!
-     * \brief Destroys the grid
+     * \brief Destroy the grid.
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     * MPI_Comm_free is called.
      */
     static void deleteGrid()
     { delete grid_; }
@@ -314,7 +315,7 @@ public:
     }
 
     /*!
-     * \brief Create the Grid
+     * \brief Create the grid for the finger problem
      */
     static void makeGrid()
     {
@@ -349,7 +350,7 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Return a reference to the grid.
      */
     static Grid &grid()
     { return *grid_; }
@@ -362,9 +363,10 @@ public:
     { grid_->loadBalance(); }
 
     /*!
-     * \brief Destroys the grid
+     * \brief Destroy the grid
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     * MPI_Comm_free is called.
      */
     static void deleteGrid()
     { delete grid_; }

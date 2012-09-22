@@ -123,9 +123,6 @@ protected:
     {   return pressure_;}
 
 public:
-    /*!
-     * \copydoc BoxMultiphaseProblem::registerParameters
-     */
     static void registerParameters()
     {
         typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;

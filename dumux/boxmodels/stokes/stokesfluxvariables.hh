@@ -111,20 +111,20 @@ public:
         for (int idx = 0; idx < elemCtx.numScv(); idx++)
         {
             const auto &volVars = elemCtx.volVars(idx, timeIdx);
-            const auto &fs = volVars.fluidState();
+            const auto &fluidState = volVars.fluidState();
 
             // phase density and viscosity at IP
             density_ += 
-                fs.density(phaseIdx)
+                fluidState.density(phaseIdx)
                 * scvf.shapeValue[idx];
             molarDensity_ += 
-                fs.molarDensity(phaseIdx)
+                fluidState.molarDensity(phaseIdx)
                 * scvf.shapeValue[idx];
             viscosity_ +=
-                fs.viscosity(phaseIdx) 
+                fluidState.viscosity(phaseIdx) 
                 * scvf.shapeValue[idx];
             pressure_ +=
-                fs.pressure(phaseIdx)
+                fluidState.pressure(phaseIdx)
                 * scvf.shapeValue[idx];
 
             // velocity at the IP (fluxes)
@@ -135,7 +135,7 @@ public:
 
             // the pressure gradient
             tmp = scvf.grad[idx];
-            tmp *= fs.pressure(phaseIdx);
+            tmp *= fluidState.pressure(phaseIdx);
             pressureGrad_ += tmp;
             // take gravity into account
             tmp = elemCtx.problem().gravity(elemCtx, idx, timeIdx);
@@ -178,10 +178,10 @@ public:
     void updateBoundary(const Context &context, 
                         int bfIdx, 
                         int timeIdx, 
-                        const FluidState &fs, 
+                        const FluidState &fluidState, 
                         typename FluidSystem::ParameterCache &paramCache)
     {      
-        update(context, bfIdx, timeIdx, fs, paramCache, /*isOnBoundary=*/true);
+        update(context, bfIdx, timeIdx, fluidState, paramCache, /*isOnBoundary=*/true);
     }
 
     /*!

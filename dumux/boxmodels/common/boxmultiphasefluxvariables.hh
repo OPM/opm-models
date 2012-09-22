@@ -145,14 +145,14 @@ public:
      * \param context Reference to the current execution context.
      * \param bfIdx The local index of the boundary face for which the flux variables should be calculated.
      * \param timeIdx The index used by the time discretization.
-     * \param fs The FluidState on the domain boundary.
+     * \param fluidState The FluidState on the domain boundary.
      * \param paramCache The FluidSystem's parameter cache.
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, 
                         int bfIdx, 
                         int timeIdx, 
-                        const FluidState &fs, 
+                        const FluidState &fluidState, 
                         typename FluidSystem::ParameterCache &paramCache)
     {
         int scvIdx = context.insideScvIndex(bfIdx, timeIdx);
@@ -163,8 +163,8 @@ public:
         Valgrind::CheckDefined(extrusionFactor_);
         assert(extrusionFactor_ > 0);
         
-        calculateBoundaryGradients_(context, bfIdx, timeIdx, fs, paramCache);
-        VelocityFluxVariables::calculateBoundaryVelocities_(context, bfIdx, timeIdx, fs, paramCache);
+        calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
+        VelocityFluxVariables::calculateBoundaryVelocities_(context, bfIdx, timeIdx, fluidState, paramCache);
     }
 
     /*!
@@ -251,8 +251,8 @@ private:
         const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
 
         if (useTwoPointGradients) {
-            const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
-            const auto &fsJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
+            const auto &fluidStateI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+            const auto &fluidStateJ = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
             const auto &scvI = fvElemGeom.subContVol[insideScvIdx_];
             const auto &scvJ = fvElemGeom.subContVol[outsideScvIdx_];
 
@@ -277,7 +277,7 @@ private:
                 }
 
                 potentialGrad_[phaseIdx] = n;
-                potentialGrad_[phaseIdx] *= (fsJ.pressure(phaseIdx) - fsI.pressure(phaseIdx))/dist;
+                potentialGrad_[phaseIdx] *= (fluidStateJ.pressure(phaseIdx) - fluidStateI.pressure(phaseIdx))/dist;
             }
         }
         else {
@@ -325,8 +325,8 @@ private:
             g /= 2;
             Valgrind::CheckDefined(g);
 
-            const auto &fsIn = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
-            const auto &fsOut = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
+            const auto &fluidStateIn = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+            const auto &fluidStateOut = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
                 if (!asImp_().usePhase(phaseIdx))
@@ -334,10 +334,10 @@ private:
 
                 // calculate the phase density at the integration point. we
                 // only do this if the wetting phase is present in both cells
-                Scalar SI = fsIn.saturation(phaseIdx);
-                Scalar SJ = fsOut.saturation(phaseIdx);
-                Scalar rhoI = fsIn.density(phaseIdx);
-                Scalar rhoJ = fsOut.density(phaseIdx);
+                Scalar SI = fluidStateIn.saturation(phaseIdx);
+                Scalar SJ = fluidStateOut.saturation(phaseIdx);
+                Scalar rhoI = fluidStateIn.density(phaseIdx);
+                Scalar rhoJ = fluidStateOut.density(phaseIdx);
                 Scalar fI = std::max(0.0, std::min(SI/1e-5, 0.5));
                 Scalar fJ = std::max(0.0, std::min(SJ/1e-5, 0.5));
                 if (fI + fJ == 0)
@@ -366,7 +366,7 @@ private:
     void calculateBoundaryGradients_(const Context &context,
                                      int bfIdx,
                                      int timeIdx,
-                                     const FluidState &fs,
+                                     const FluidState &fluidState,
                                      const typename FluidSystem::ParameterCache &paramCache)
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
@@ -375,8 +375,8 @@ private:
         const auto &elemCtx = context.elemContext();
         const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
 
-        const auto &fsI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
-        const auto &fsJ = fs;
+        const auto &fluidStateI = elemCtx.volVars(insideScvIdx_, timeIdx).fluidState();
+        const auto &fluidStateJ = fluidState;
 
         // the "normalized normal" of the scvf divided by the
         // distance of the centers of the two adjacent SCVs
@@ -401,10 +401,10 @@ private:
             }
             
             potentialGrad_[phaseIdx] = n;
-            potentialGrad_[phaseIdx] *= (fsJ.pressure(phaseIdx) - fsI.pressure(phaseIdx))/dist;
+            potentialGrad_[phaseIdx] *= (fluidStateJ.pressure(phaseIdx) - fluidStateI.pressure(phaseIdx))/dist;
         }
         
-        fsI.checkDefined();
+        fluidStateI.checkDefined();
         
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
@@ -422,7 +422,7 @@ private:
 
                 // calculate volumetric gravity acceleration force
                 DimVector f(g);
-                f *= fsI.density(phaseIdx);
+                f *= fluidStateI.density(phaseIdx);
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] -= f;

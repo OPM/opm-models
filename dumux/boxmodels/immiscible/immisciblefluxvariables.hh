@@ -58,7 +58,7 @@ class ImmiscibleFluxVariables
 
 public:
     /*!
-     * \brief Register all run-time parameters for the flux variables.
+     * \copydoc BoxMultiPhaseFluxVariables::registerParameters()
      */
     static void registerParameters()
     {

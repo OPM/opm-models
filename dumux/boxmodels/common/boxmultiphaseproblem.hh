@@ -61,13 +61,12 @@ class BoxMultiPhaseProblem
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
+    /*!
+     * \copydoc BoxProblem::BoxProblem(TimeManager &, const GridView &)
+     */
     BoxMultiPhaseProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView)
-    {
-        gravity_ = 0.0;
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
-            gravity_[dimWorld-1]  = -9.81;
-    }
+    { init_(); }
 
     /*!
      * \brief Register all run-time parameters for the problem and the model.
@@ -277,9 +276,10 @@ protected:
      * \brief Converts a Scalar value to an isotropic Tensor
      *
      * This is convenient e.g. for specifying intrinsic permebilities:
-\code{.cpp}
-auto permTensor = this->toDimMatrix_(1e-12);
-\endcode
+     * \code{.cpp}
+     * auto permTensor = this->toDimMatrix_(1e-12);
+     * \endcode
+     *
      * \param val The scalar value which should be expressed as a tensor
      */
     DimMatrix toDimMatrix_(Scalar val) const
@@ -299,6 +299,13 @@ private:
     //! \copydoc asImp_()
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
+
+    void init_()
+    {
+        gravity_ = 0.0;
+        if (GET_PARAM(TypeTag, bool, EnableGravity))
+            gravity_[dimWorld-1]  = -9.81;
+    }
 };
 
 } // namespace Dumux

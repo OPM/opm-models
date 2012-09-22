@@ -87,10 +87,11 @@ private:
 
 public:
     /*!
-     * \brief Constructor
+     * \copydoc Doxygen::defaultProblemConstructor
      *
-     * \param timeManager The TimeManager which is used by the simulation
-     * \param gridView The simulation's idea about physical space
+     * \param timeManager The time manager of the simulation
+     * \param gridView The view on the DUNE grid which ought to be
+     *                 used (normally the leaf grid view)
      */
     BoxProblem(TimeManager &timeManager, const GridView &gridView)
         : gridView_(gridView)
@@ -102,33 +103,15 @@ public:
         , newtonMethod_(asImp_())
         , newtonCtl_(asImp_())
     {
-        // calculate the bounding box of the local partition of the grid view
-        VertexIterator vIt = gridView.template begin<dim>();
-        const VertexIterator vEndIt = gridView.template end<dim>();
-        for (; vIt!=vEndIt; ++vIt) {
-            for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
-            }
-        }
-
-        // communicate to get the bounding box of the whole domain
-        for (int i = 0; i < dim; ++i) {
-            bboxMin_[i] = gridView.comm().min(bboxMin_[i]);
-            bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
-        }
-
-        // set a default name for the problem
-        simName_ = "sim";
-
-        resultWriter_ = NULL;
+        init_();
     }
 
     ~BoxProblem()
     { delete resultWriter_; }
 
     /*!
-     * \brief Register all run-time parameters for the problem and the model.
+     * \brief Registers all available parameters for the problem and
+     *        the model.
      */
     static void registerParameters()
     {
@@ -592,7 +575,7 @@ public:
         }
     }
 
-protected:
+private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
@@ -600,6 +583,34 @@ protected:
     //! \copydoc asImp_()
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
+
+    void init_()
+    {
+        // calculate the bounding box of the local partition of the grid view
+        VertexIterator vIt = gridView_.template begin<dim>();
+        const VertexIterator vEndIt = gridView_.template end<dim>();
+        for (; vIt!=vEndIt; ++vIt) {
+            for (int i=0; i<dim; i++) {
+                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
+                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+            }
+        }
+
+        // communicate to get the bounding box of the whole domain
+        for (int i = 0; i < dim; ++i) {
+            bboxMin_[i] = gridView_.comm().min(bboxMin_[i]);
+            bboxMax_[i] = gridView_.comm().max(bboxMax_[i]);
+        }
+
+        // set a default name for the problem
+        simName_ = "sim";
+
+        resultWriter_ = NULL;
+    }
+
+    // makes sure that the result writer exists
+    void createResultWriter_()
+    { if (!resultWriter_) resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name()); }
 
     //! Returns the applied VTK-writer for the output
     VtkMultiWriter& resultWriter()
@@ -612,11 +623,6 @@ protected:
     Scalar assembleTime_; 
     Scalar solveTime_; 
     Scalar updateTime_; 
-
-private:
-    // makes sure that the result writer exists
-    void createResultWriter_()
-    { if (!resultWriter_) resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name()); }
 
     std::string simName_;
     const GridView gridView_;

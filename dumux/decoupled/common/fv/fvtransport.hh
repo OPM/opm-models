@@ -82,9 +82,6 @@ protected:
     //! \endcond
 
 public:
-    /*!
-     * \copydoc BoxMultiphaseProblem::registerParameters
-     */
     static void registerParameters()
     {
         REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");

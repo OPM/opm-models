@@ -37,8 +37,7 @@
 
 #include <vector>
 
-namespace Dumux
-{
+namespace Dumux {
 // some hacky defines for the grid creator
 #define LENS_DIM 2
 #define LENS_CUBES 1
@@ -49,8 +48,8 @@ class LensProblem;
 //////////
 // Specify the properties for the lens problem
 //////////
-namespace Properties
-{
+namespace Properties {
+
 // declare the properties required by the for the lens grid creator
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
@@ -68,6 +67,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 
 /*!
  * \ingroup BoxTestProblems
+ *
  * \brief Helper class for grid instantiation of the lens problem.
  */
 #if HAVE_ALUGRID
@@ -104,7 +104,7 @@ public:
     }
 
     /*!
-     * \brief Create the Grid
+     * \brief Create the grid for the lens problem
      */
     static void makeGrid()
     {
@@ -259,7 +259,7 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Return a reference to the grid.
      */
     static Grid &grid()
     { return *grid_; }
@@ -272,9 +272,10 @@ public:
     { grid_->loadBalance(); }
 
     /*!
-     * \brief Destroys the grid
+     * \brief Destroy the grid
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     * MPI_Comm_free is called.
      */
     static void deleteGrid()
     { delete grid_; }
@@ -317,7 +318,7 @@ public:
     }
 
     /*!
-     * \brief Create the Grid
+     * \brief Create the grid for the lens problem
      */
     static void makeGrid()
     {
@@ -352,7 +353,7 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Return a reference to the grid.
      */
     static Grid &grid()
     { return *grid_; }
@@ -365,9 +366,10 @@ public:
     { grid_->loadBalance(); }
 
     /*!
-     * \brief Destroys the grid
+     * \brief Destroy the grid
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     * MPI_Comm_free is called.
      */
     static void deleteGrid()
     { delete grid_; }

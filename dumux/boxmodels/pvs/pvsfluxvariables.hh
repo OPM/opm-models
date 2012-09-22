@@ -90,15 +90,15 @@ public:
     void updateBoundary(const Context &context, 
                         int bfIdx, 
                         int timeIdx, 
-                        const FluidState &fs, 
+                        const FluidState &fluidState, 
                         typename FluidSystem::ParameterCache &paramCache)
     {
         MultiPhaseFluxVariables::updateBoundary(context, 
                                                 bfIdx, 
                                                 timeIdx, 
-                                                fs, 
+                                                fluidState, 
                                                 paramCache);
-        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 
     /*!
@@ -187,8 +187,8 @@ private:
 #if 0
         const auto &volVarsI = elemCtx.volVars(this->insideIdx(), timeIdx);
         const auto &volVarsJ = elemCtx.volVars(this->outsideIdx(), timeIdx);
-        const auto &fsI = volVarsI.fluidState();
-        const auto &fsJ = volVarsJ.fluidState();
+        const auto &fluidStateI = volVarsI.fluidState();
+        const auto &fluidStateJ = volVarsJ.fluidState();
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // calculate tortuosity at the nodes i and j needed
@@ -196,24 +196,24 @@ private:
             Scalar tauI =
                 1.0/(volVarsI.porosity() * volVarsI.porosity())
                 *
-                std::pow(std::max(0.0, volVarsI.porosity() * fsI.saturation(phaseIdx)),
+                std::pow(std::max(0.0, volVarsI.porosity() * fluidStateI.saturation(phaseIdx)),
                          7.0/3);
             Scalar tauJ =
                 1.0/(volVarsJ.porosity() * volVarsJ.porosity())
                 *
-                std::pow(std::max(0.0, volVarsJ.porosity() * fsJ.saturation(phaseIdx)),
+                std::pow(std::max(0.0, volVarsJ.porosity() * fluidStateJ.saturation(phaseIdx)),
                          7.0/3);
 
             // Diffusion coefficient in the porous medium
             // -> harmonic mean
             porousDiffCoeff_[phaseIdx] =
                 harmonicMean(volVarsI.porosity()
-                             * fsI.saturation(phaseIdx)
+                             * fluidStateI.saturation(phaseIdx)
                              * tauI
                              * volVarsI.diffCoeff(phaseIdx)
                              ,
                              volVarsJ.porosity()
-                             * fsJ.saturation(phaseIdx)
+                             * fluidStateJ.saturation(phaseIdx)
                              * tauJ
                              * volVarsJ.diffCoeff(phaseIdx));
         }

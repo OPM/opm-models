@@ -155,9 +155,6 @@ public:
             delete timeManager_;
     }
 
-    /*!
-     * \copydoc BoxMultiphaseProblem::registerParameters
-     */
     static void registerParameters()
     {
         Model::registerParameters();

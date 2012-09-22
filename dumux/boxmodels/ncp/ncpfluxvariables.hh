@@ -87,15 +87,15 @@ public:
     void updateBoundary(const Context &context, 
                         int bfIdx, 
                         int timeIdx, 
-                        const FluidState &fs, 
+                        const FluidState &fluidState, 
                         typename FluidSystem::ParameterCache &paramCache)
     {
         MultiPhaseFluxVariables::updateBoundary(context, 
                                                 bfIdx, 
                                                 timeIdx, 
-                                                fs, 
+                                                fluidState, 
                                                 paramCache);
-        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fs);
+        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 
     ////////////////////////////////////////////////
