@@ -278,7 +278,7 @@ public:
                 const Context &context,
                 int spaceIdx, int timeIdx) const
     {
-        values = 0;
+        rate = Scalar(0.0);
     }
 
     //! \}

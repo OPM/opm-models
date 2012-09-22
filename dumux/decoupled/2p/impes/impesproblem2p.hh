@@ -28,7 +28,6 @@
 #include <dumux/decoupled/common/impet.hh>
 #include <dumux/decoupled/common/impetproblem.hh>
 #include "impesproperties2p.hh"
-//DEPRECATED: include should be removed!!! -> Goal: Only include property files in the problem!
 #include "impesproperties2padaptive.hh"
 
 #include <dune/common/fvector.hh>
@@ -190,17 +189,10 @@ public:
     SpatialParams &spatialParams()
     { return *spatialParams_; }
 
-    DUNE_DEPRECATED_MSG("use spatialParams() method instead")
-    SpatialParams &spatialParameters()
-    { return *spatialParams_; }
     /*!
      * \brief Returns the spatial parameters object.
      */
     const SpatialParams &spatialParams() const
-    { return *spatialParams_; }
-
-    DUNE_DEPRECATED_MSG("use spatialParams() method instead")
-    const SpatialParams &spatialParameters() const
     { return *spatialParams_; }
 
     // \}

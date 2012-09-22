@@ -22,7 +22,7 @@
 
 #include "2p2cfluidstate.hh"
 #include "fluxData2p2c.hh"
-#include <dumux/decoupled/2p2c/dec2p2cfluidstate.hh>
+#include <dumux/decoupled/2p2c/2p2cfluidstate.hh>
 
 /**
  * \file
@@ -281,23 +281,23 @@ public:
 
     /*** b) from fluidstate ***/
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::setSaturation()
+    //! \copydoc Dumux::TwoPTwoCFluidState::setSaturation()
     void setSaturation(int phaseIdx, Scalar value)
     {
         fluidState_->setSaturation(phaseIdx, value);
     }
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::saturation()
+    //! \copydoc Dumux::TwoPTwoCFluidState::saturation()
     const Scalar saturation(int phaseIdx) const
     {
         return fluidState_->saturation(phaseIdx);
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::setViscosity()
+    //! \copydoc Dumux::TwoPTwoCFluidState::setViscosity()
     void setViscosity(int phaseIdx, Scalar value)
     {
         fluidState_->setViscosity(phaseIdx, value);
     }
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::viscosity()
+    //! \copydoc Dumux::TwoPTwoCFluidState::viscosity()
     const Scalar viscosity(int phaseIdx) const
     {
         return fluidState_->viscosity(phaseIdx);
@@ -311,31 +311,31 @@ public:
         return fluidState_->pressure(nPhaseIdx) - fluidState_->pressure(wPhaseIdx);
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::density()
+    //! \copydoc Dumux::TwoPTwoCFluidState::density()
     const Scalar density(int phaseIdx) const
     {
         return (fluidState_->density(phaseIdx));
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::massFraction()
+    //! \copydoc Dumux::TwoPTwoCFluidState::massFraction()
     const Scalar massFraction(int phaseIdx, int compIdx) const
     {
         return fluidState_->massFraction(phaseIdx, compIdx);
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::moleFraction()
+    //! \copydoc Dumux::TwoPTwoCFluidState::moleFraction()
     const Scalar moleFraction(int phaseIdx, int compIdx) const
     {
         return fluidState_->moleFraction(phaseIdx, compIdx);
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::temperature()
+    //! \copydoc Dumux::TwoPTwoCFluidState::temperature()
     const Scalar temperature(int phaseIdx) const
     {
         return fluidState_->temperature(phaseIdx);
     }
 
-    //! \copydoc Dumux::DecoupledTwoPTwoCFluidState::phaseMassFraction()
+    //! \copydoc Dumux::TwoPTwoCFluidState::phaseMassFraction()
     const Scalar phaseMassFraction(int phaseIdx) const
     {
         return fluidState_->phaseMassFraction(phaseIdx);
