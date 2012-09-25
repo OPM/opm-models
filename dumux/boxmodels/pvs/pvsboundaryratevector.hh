@@ -26,6 +26,7 @@
 
 #include "pvsproperties.hh"
 
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 
 #include <dune/common/fvector.hh>

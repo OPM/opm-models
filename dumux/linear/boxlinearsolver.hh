@@ -26,9 +26,6 @@
 #ifndef DUMUX_BOX_LINEAR_SOLVER_HH
 #define DUMUX_BOX_LINEAR_SOLVER_HH
 
-#include <dune/istl/solvers.hh>
-#include <dune/istl/preconditioners.hh>
-
 #include <dumux/linear/seqsolverbackend.hh>
 #include <dumux/linear/vertexborderlistfromgrid.hh>
 #include <dumux/linear/overlappingbcrsmatrix.hh>
@@ -40,6 +37,11 @@
 
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
+
+#include <dune/istl/solvers.hh>
+#include <dune/istl/preconditioners.hh>
+
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 namespace Dumux {
 namespace Properties {

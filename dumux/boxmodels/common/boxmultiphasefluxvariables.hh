@@ -38,6 +38,7 @@ namespace Properties {
 NEW_PROP_TAG(EnableSmoothUpwinding);
 NEW_PROP_TAG(MaterialLaw);
 NEW_PROP_TAG(EnableGravity);
+NEW_PROP_TAG(VelocityModule);
 }
 
 /*!
@@ -70,7 +71,7 @@ class BoxMultiPhaseFluxVariables
 
 public:
     /*!
-     * \brief Register all run-time parameters for the Newton method.
+     * \brief Register all run-time parameters for the flux variables.
      */
     static void registerParameters()
     {

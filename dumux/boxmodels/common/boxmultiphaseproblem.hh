@@ -33,6 +33,7 @@ namespace Dumux {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
+NEW_PROP_TAG(VelocityModule);
 }
 
 /*!

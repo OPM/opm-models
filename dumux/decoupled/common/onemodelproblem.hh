@@ -39,6 +39,10 @@
 namespace Dumux
 {
 
+namespace Properties {
+NEW_PROP_TAG(EnableGravity);
+}
+
 /*! \ingroup IMPET
  *
  * \brief Base class for definition of an decoupled diffusion (pressure) or transport problem

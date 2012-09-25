@@ -165,7 +165,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     // convert the CamelCase name to a command line --parameter-name.
     std::string cmdLineName = "-";
     const std::string camelCaseName = paramInfo.paramName;
-    for (int i = 0; i < camelCaseName.size(); ++ i) {
+    for (unsigned i = 0; i < camelCaseName.size(); ++ i) {
         if (isupper(camelCaseName[i]))
             cmdLineName += "-";
         cmdLineName += tolower(camelCaseName[i]);

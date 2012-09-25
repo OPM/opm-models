@@ -28,9 +28,11 @@
 #include "parameters.hh"
 #include "valgrind.hh"
 
+#include <dumux/common/parameters.hh>
+
 #include <dune/common/mpihelper.hh>
-#include <dune/common/parametertreeparser.hh>
 #include <dune/grid/io/file/dgfparser.hh>
+#include <dune/common/parametertreeparser.hh>
 
 #include <csignal>
 #include <fstream>
@@ -52,6 +54,11 @@ NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridCreator);
 NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(TimeManager);
+NEW_PROP_TAG(EndTime);
+NEW_PROP_TAG(RestartTime);
+NEW_PROP_TAG(InitialTimeStepSize);
+NEW_PROP_TAG(PrintProperties);
+NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
 }
 
