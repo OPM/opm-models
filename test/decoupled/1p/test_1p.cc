@@ -29,34 +29,6 @@
 #include "benchmarkresult.hh"
 #include <dumux/common/start.hh>
 
-/*!
- * \brief Provides an interface for customizing error messages associated with
- *        reading in parameters.
- *
- * \param progName  The name of the program, that was tried to be started.
- * \param errorMsg  The error message that was issued by the start function.
- *                  Comprises the thing that went wrong and a general help message.
- */
-void usage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::string errorMessageOut = "\nUsage: ";
-                    errorMessageOut += progName;
-                    errorMessageOut += " [options]\n";
-                    errorMessageOut += errorMsg;
-                    errorMessageOut += "\n\nThe List of Mandatory arguments for this program is:\n"
-                                        "\t-refine                        The refinement level of the grid. [-] \n"
-                                        "\t-tEnd                          The end of the simulation. [s] \n"
-                                       "\t-Grid.NumRefine        The refinement level of the grid. [-] \n";
-                    errorMessageOut += "\n\nAdditionaly the following arguments can be specified:\n"
-                                       "\t-Problem.Delta         Anisotropy of permeability tensor. Value out"
-                                       "\t                       of (0, 1], with 1 being isotrop. Default: 1e-3.\n";
-
-        std::cout << errorMessageOut
-                  << "\n";
-    }
-}
-
 ////////////////////////
 // the main function
 ////////////////////////
@@ -64,5 +36,5 @@ int main(int argc, char** argv)
 {
     typedef TTAG(TestProblemOneP) ProblemTypeTag;
 
-    return Dumux::start<ProblemTypeTag>(argc, argv, usage);
+    return Dumux::start<ProblemTypeTag>(argc, argv);
 }

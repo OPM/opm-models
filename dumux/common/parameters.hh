@@ -176,27 +176,31 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     paramMessage += cmdLineName;
 
     // add the =VALUE_TYPE part
-    paramMessage += "=";
     if (paramInfo.paramTypeName == "std::string" || paramInfo.paramTypeName == "const char *")
-        paramMessage += "STRING";
+        paramMessage += "=STRING";
     else if (paramInfo.paramTypeName == "float" || 
              paramInfo.paramTypeName == "double" || 
              paramInfo.paramTypeName == "long double" || 
              paramInfo.paramTypeName == "quad")
-        paramMessage += "SCALAR";
+        paramMessage += "=SCALAR";
     else if (paramInfo.paramTypeName == "int" || 
              paramInfo.paramTypeName == "unsigned int" ||
              paramInfo.paramTypeName == "short" ||
              paramInfo.paramTypeName == "unsigned short")
-        paramMessage += "INTEGER";
+        paramMessage += "=INTEGER";
     else if (paramInfo.paramTypeName == "bool")
-        paramMessage += "BOOLEAN";
-    else
-        paramMessage += "VALUE";
+        paramMessage += "=BOOLEAN";
+    else if (paramInfo.paramTypeName.empty()) {
+        // the parameter is a flag. Do nothing!
+    }
+    else {
+        // unknown type
+        paramMessage += "=VALUE";
+    }
 
-    // fill up the up help string to the 40th character
+    // fill up the up help string to the 50th character
     paramMessage += "  ";
-    while (paramMessage.size() < 40)
+    while (paramMessage.size() < 50)
         paramMessage += " ";
 
     // append the parameter usage string. For this we break lines after 100 characters.

@@ -62,7 +62,7 @@ NEW_PROP_TAG(ParameterFile);
  *
  * \brief Prints the default usage message for the startWithParameters() function
  */
-void printDefaultUsage(const char *progName, const std::string &errorMsg)
+void printUsage(const char *progName, const std::string &errorMsg)
 {
     if (errorMsg.size() > 0) {
         std::cout << errorMsg << "\n"
@@ -208,23 +208,17 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
  *
  * \tparam TypeTag  The type tag of the problem which needs to be solved
  *
- * \param   argc    The 'argc' argument of the main function: count of arguments (1 if there are no arguments)
- * \param   argv    The 'argv' argument of the main function: array of pointers to the argument strings
- * \param   usage   Callback function for printing the usage message
+ * \param argc The number of command line arguments
+ * \param argv The array of the command line arguments
  */
 template <class TypeTag>
 int start(int argc,
-          char **argv,
-          void (*usage)(const char *, const std::string &) = 0)
+          char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
 
     // initialize MPI, finalize is done automatically on exit
     const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
-    
-    // make sure that we always have a meaningful usage function
-    if (!usage)
-        usage = printDefaultUsage;
     
     int myRank = mpiHelper.rank();
 
@@ -267,7 +261,7 @@ int start(int argc,
             if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
             {
                 if (myRank == 0)
-                    usage(argv[0], "");
+                    printUsage(argv[0], "");
                 return 0;
             }
         }
@@ -277,7 +271,7 @@ int start(int argc,
         std::string s = readOptions_(argc, argv, ParameterTree::tree());
         if (!s.empty()) {
             if (myRank == 0)
-                usage(argv[0], s);
+                printUsage(argv[0], s);
             return 1;
         }
 
@@ -290,7 +284,7 @@ int start(int argc,
                 std::ostringstream oss;
                 if (myRank == 0) {
                     oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
-                    usage(argv[0], oss.str());
+                    printUsage(argv[0], oss.str());
                 }
                 return 1;
             }
@@ -308,14 +302,14 @@ int start(int argc,
         tEnd = GET_PARAM(TypeTag, Scalar, EndTime);
         if (tEnd < -1e50) {
             if (myRank == 0)
-                usage(argv[0], "Mandatory parameter '--end-time' not specified!");
+                printUsage(argv[0], "Mandatory parameter '--end-time' not specified!");
             return 1;
         }
 
         dt = GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         if (dt < -1e50) {
             if (myRank == 0)
-                usage(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
+                printUsage(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
             return 1;
         }
 
