@@ -36,6 +36,7 @@
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/dnapl.hh>
 #include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
+#include <dumux/linear/boxparallelamgsolver.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -111,6 +112,9 @@ private:
 public:
     typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
+
+// Use the algebraic multi-grid solver for this problem
+SET_TYPE_PROP(LensBaseProblem, LinearSolver, Dumux::Linear::BoxParallelAmgSolver<TypeTag>);
 
 // Enable partial reassembly of the jacobian matrix?
 //SET_BOOL_PROP(LensBaseProblem, EnablePartialReassemble, true);

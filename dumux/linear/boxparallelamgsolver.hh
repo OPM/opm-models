@@ -132,7 +132,7 @@ public:
     {
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0)
-            verbosity = GET_PARAM(TypeTag, int, LinearSolver, Verbosity);
+            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         /////////////
         // set-up the overlapping matrix and vector
