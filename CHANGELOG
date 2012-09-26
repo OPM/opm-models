@@ -1,22 +1,36 @@
 Notable Differences Between DuMuX 2.1 and DuMuX-eWoms 2.2
 =========================================================
 
-Most of the following items are specific to the fully-implicit models. The
-sequentially coupled models are snapshots of the ones found in Dumux
-and have only been modified if they use shared infrastructure that
-got altered or to fix issues with newly supported compilers:
+Most of the following items are specific to the fully-implicit
+models. The sequentially coupled models directly taken from Dumux 2.2
+and have only been modified if they use shared infrastructure that got
+altered:
 - The minumim required version of the Dune core modules is now
   2.2. This means that eWoms will no longer compile with Dune 2.1.
-- Support for using a fix-point convergence criterion for the linear
-  has been added and is enabled by default if it is
-  available. Currently, a patch for dune-istl is required to enable
-  this. The patch is available from the Dune bug tracking system:
+- Support for using a convergence criterion which looks at the
+  reduction of the weighted maximum of the defect in the linear has
+  been added and is enabled by default if it is available. Currently,
+  a patch for dune-istl is required to enable this. The patch is
+  available from the Dune bug tracking system:
   http://www.dune-project.org/flyspray/index.php?do=details&task_id=1018
 - eWoms now compiles with the LLVM-CLang compiler. The minimum version
   required is CLang 3.1.
 - Support for compilers that don't support the 'auto' keyword and
   initializer lists has been dropped. As a consequence eWoms will not
   compile with GCC prior to version 4.4.
+- The parameter system has received a major overhaul: “Runtime”
+  parameters have been abandoned, as have parameter groups. Runtime
+  parameters have bitten the dust because of their flawed semantics
+  (all parameters could always be specified on run-time), groups where
+  removed because they caused confusion when specifying parameters
+  from the command line (e.g. the correct way to specify the relative
+  tolerance of the Newton solver was ‘—newton.rel-tolerance’ instead
+  of ‘—newton-rel-tolerance’). Also, all parameters must now be
+  registered using the REGISTER_PARAM macro before they are
+  accessed. This allows to print a canonical list with all parameters
+  and their description when the program is run with “—help” and also
+  allows to print a comprehensive list with the values of all
+  parameters at the beginning of a simulation.
 - The fully-implicit compositional models 1p2c, 2p2c(ni) and 3p3c(ni)
   are superseeded by the 'pvs' model, a generic model based on primary
   variable switching. The model supports an arbitrary number of fluid
