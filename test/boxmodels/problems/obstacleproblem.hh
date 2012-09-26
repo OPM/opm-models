@@ -272,8 +272,12 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "obstacle"; }
+    const std::string name() const
+    { 
+        std::ostringstream oss;
+        oss << "obstacle" << "_" << this->model().name();
+        return oss.str();
+    }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::temperature

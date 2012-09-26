@@ -17,6 +17,7 @@ injection_ncp_ni \
 injection_pvs_ni \
 lens_immiscible \
 lens_richards \
+obstacle_immiscible \
 obstacle_ncp \
 obstacle_pvs \
 outflow_pvs \
@@ -44,6 +45,7 @@ injection_ncp_ni_SOURCES=injection_ncp_ni.cc
 injection_pvs_ni_SOURCES=injection_pvs_ni.cc
 lens_immiscible_SOURCES=lens_immiscible.cc
 lens_richards_SOURCES=lens_richards.cc
+obstacle_immiscible_SOURCES=obstacle_immiscible.cc
 obstacle_ncp_SOURCES=obstacle_ncp.cc
 obstacle_pvs_SOURCES=obstacle_pvs.cc
 outflow_pvs_SOURCES=outflow_pvs.cc
