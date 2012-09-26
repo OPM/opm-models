@@ -3,8 +3,8 @@
 /*****************************************************************************
  *   Copyright (C) 2011 by Markus Wolff                                      *
  *   Copyright (C) 2011 by Klaus Mosthaf                                     *
- *   Copyright (C) 2011-2012 by Bernd Flemisch                               *
  *   Copyright (C) 2011-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2011-2012 by Bernd Flemisch                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
