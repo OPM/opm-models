@@ -16,24 +16,7 @@ AC_DEFUN([EWOMS_CHECKS],
      DUNE_ADD_SUMMARY_ENTRY([Valgrind client requests],["no"])
   fi
 
-  ac_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$ac_save_CPPFLAGS $DUNE_CPPFLAGS"
-  # switch tests to c++
-  AC_LANG_PUSH([C++])
-  AC_CHECK_HEADER([dune/istl/convergencecriterion.hh], 
-                  [HAVE_ISTL_CONVERGENCE_CRITERIA="1"],
-                  AC_MSG_WARN([dune/istl/convergencecriterion.hh not found]))
-  CPPFLAGS="$ac_save_CPPFLAGS"
-  AS_IF([test "$HAVE_ISTL_CONVERGENCE_CRITERIA" = "1"],[
-    AC_DEFINE(HAVE_ISTL_CONVERGENCE_CRITERIA, 1, [Define whether ISTL provides pluggable convergence criteria.])
-    ])
-  if test "$HAVE_ISTL_CONVERGENCE_CRITERIA" == "1"; then
-     DUNE_ADD_SUMMARY_ENTRY([ISTL convergence criteria],["yes"])
-  else
-     DUNE_ADD_SUMMARY_ENTRY([ISTL convergence criteria],["no"])
-  fi
-
-  # whether the compiler supports the auto keyword
+  # whether the compiler supports the 'auto' keyword
   EWOMS_CHECK_AUTO
   if test "$HAVE_AUTO" != "yes"; then
       AC_MSG_ERROR([To use eWoms you need a compiler which supports the 'auto' keyword (e.g. GCC 4.5 or newer)])

@@ -224,7 +224,6 @@ public:
                           /*maxSteps=*/maxIterations,
                           verbosity);
 
-#if HAVE_ISTL_CONVERGENCE_CRITERIA
         // use the fixpoint convergence criterion if possible
         Vector weightVec(*overlappingx_);
 
@@ -251,7 +250,6 @@ public:
 
         typedef Dune::ConvergenceCriterion<Vector> ConvergenceCriterion;
         solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
-#endif
 
         /////////////
         // run the linear solver

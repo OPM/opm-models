@@ -38,8 +38,10 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#include <dune/istl/solvers.hh>
+#include <dumux/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
+
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -244,7 +246,6 @@ public:
         // run the linear solver and have some fun
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
 
-#if HAVE_ISTL_CONVERGENCE_CRITERIA
         // use the fixpoint convergence criterion if possible
         OverlappingVector weightVec(*overlappingx_);
 
@@ -263,17 +264,16 @@ public:
 
         // create a fixpoint convergence criterion
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        auto *convCrit = new Dune::WeightedResidReductionCriterion<OverlappingVector, 
+        auto *convCrit = new Dumux::WeightedResidReductionCriterion<OverlappingVector, 
                                                                    typename GridView::CollectiveCommunication>(problem_.gridView().comm(), 
                                                                                                                weightVec,
                                                                                                                linearSolverTolerance);
 
         // tell the linear solver to use it
-        typedef Dune::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
-#endif
+        typedef Dumux::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
-        Dune::InverseOperatorResult result;
+        Dumux::InverseOperatorResult result;
         solver.apply(*overlappingx_, *overlappingb_, result);
 
         // free the unneeded memory of the sequential preconditioner and the linear solver
@@ -418,12 +418,12 @@ private:
     ParallelSolver *solver_;                                            \
     };
 
-EWOMS_WRAP_ISTL_SOLVER(Loop, Dune::LoopSolver)
-//EWOMS_WRAP_ISTL_SOLVER(Gradient, Dune::GradientSolver)
-EWOMS_WRAP_ISTL_SOLVER(CG, Dune::CGSolver)
-EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Dune::BiCGSTABSolver)
-//EWOMS_WRAP_ISTL_SOLVER(MinRes, Dune::MINRESSolver)
-//EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Dune::RestartedGMResSolver)
+EWOMS_WRAP_ISTL_SOLVER(Loop, Dumux::LoopSolver)
+//EWOMS_WRAP_ISTL_SOLVER(Gradient, Dumux::GradientSolver)
+EWOMS_WRAP_ISTL_SOLVER(CG, Dumux::CGSolver)
+EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Dumux::BiCGSTABSolver)
+//EWOMS_WRAP_ISTL_SOLVER(MinRes, Dumux::MINRESSolver)
+//EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Dumux::RestartedGMResSolver)
 
 #undef EWOMS_WRAP_ISTL_SOLVER
 #undef EWOMS_ISTL_SOLVER_TYPDEF
