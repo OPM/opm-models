@@ -85,10 +85,10 @@ SET_SCALAR_PROP(ReservoirBaseProblem, MaxDepth, 2500);
 SET_SCALAR_PROP(ReservoirBaseProblem, Temperature, 293.15);
 SET_STRING_PROP(ReservoirBaseProblem, SimulationName, "reservoir");
 
-// The default for the end time of the simulation
-SET_SCALAR_PROP(ReservoirBaseProblem, EndTime, 1e6);
+// The default for the end time of the simulation [s]
+SET_SCALAR_PROP(ReservoirBaseProblem, EndTime, 1e5);
 
-// The default for the initial time step size of the simulation
+// The default for the initial time step size of the simulation [s]
 SET_SCALAR_PROP(ReservoirBaseProblem, InitialTimeStepSize, 10);
 
 // The default DGF file to load
@@ -244,6 +244,7 @@ public:
             FluidSystem::setReferenceVolumeFactor(phaseIdx, 1.0);
         FluidSystem::initEnd();
 
+        pReservoir_ = 20e6;
         layerBottom_ = 22.0;
 
         // intrinsic permeabilities
@@ -263,6 +264,9 @@ public:
             coarseMaterialParams_.setPcMaxSat(phaseIdx, 0.0);
             coarseMaterialParams_.setResidSat(phaseIdx, 0.0);
         }
+
+        fineMaterialParams_.setResidSat(oPhaseIdx, 0.01);
+        coarseMaterialParams_.setResidSat(oPhaseIdx, 0.01);
 
         initFluidState_();
     }
@@ -412,7 +416,7 @@ public:
             // injectors
             auto fs = initialFluidState_;
 
-            Scalar pInj = fs.pressure(wPhaseIdx)*1.5;
+            Scalar pInj = pReservoir_*1.5;
             fs.setPressure(wPhaseIdx, pInj);
             fs.setPressure(oPhaseIdx, pInj);
             fs.setPressure(gPhaseIdx, pInj);
@@ -420,16 +424,29 @@ public:
             fs.setSaturation(oPhaseIdx, 0.0);
             fs.setSaturation(gPhaseIdx, 0.0);
 
-            constraints.setConstraint(pressure0Idx, conti0EqIdx, fs.pressure(/*phaseIdx=*/0));
-            constraints.setConstraint(saturation0Idx, conti0EqIdx + 1, fs.saturation(/*phaseIdx=*/0));
-            constraints.setConstraint(saturation0Idx + 1, conti0EqIdx + 2, fs.saturation(/*phaseIdx=*/1));
+            // set the compositions to only water
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                    fs.setMoleFraction(phaseIdx, compIdx, 0.0);
+
+            // set the composition of the oil phase to the initial
+            // composition
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                fs.setMoleFraction(oPhaseIdx,
+                                   compIdx,
+                                   initialFluidState_.moleFraction(oPhaseIdx, compIdx));
+
+            fs.setMoleFraction(wPhaseIdx, wCompIdx, 1.0);
+
+            constraints.setAllConstraint();
+            constraints.assignNaive(fs);
         }
         else if (width/2 - 1 < x && x < width/2 + 1 && y > height/2)
         {
             // producer
             auto fs = initialFluidState_;
 
-            Scalar pProd = FluidSystem::bubblePressure()/1.05;
+            Scalar pProd = pReservoir_/1.5;
             fs.setPressure(wPhaseIdx, pProd);
             fs.setPressure(oPhaseIdx, pProd);
             fs.setPressure(gPhaseIdx, pProd);
@@ -437,9 +454,15 @@ public:
             fs.setSaturation(oPhaseIdx, 1.0);
             fs.setSaturation(gPhaseIdx, 0.0);
 
-            constraints.setConstraint(pressure0Idx, conti0EqIdx, fs.pressure(/*phaseIdx=*/0));
-            constraints.setConstraint(saturation0Idx, conti0EqIdx + 1, fs.saturation(/*phaseIdx=*/0));
-            constraints.setConstraint(saturation0Idx + 1, conti0EqIdx + 2, fs.saturation(/*phaseIdx=*/1));
+            // set the compositions to the initial composition
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                    fs.setMoleFraction(phaseIdx,
+                                       compIdx,
+                                       initialFluidState_.moleFraction(phaseIdx, compIdx));
+
+            constraints.setAllConstraint();
+            constraints.assignNaive(fs);
         }
     }
 
@@ -476,15 +499,15 @@ private:
         //////
         // set pressures
         //////
-        Scalar pl = 1.5 * FluidSystem::bubblePressure();
+        Scalar pw = pReservoir_;
 
         PhaseVector pC;
         const auto &matParams = fineMaterialParams_;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-        fs.setPressure(oPhaseIdx, pl + (pC[oPhaseIdx] - pC[wPhaseIdx]));
-        fs.setPressure(wPhaseIdx, pl + (pC[wPhaseIdx] - pC[wPhaseIdx]));
-        fs.setPressure(gPhaseIdx, pl + (pC[gPhaseIdx] - pC[wPhaseIdx]));
+        fs.setPressure(oPhaseIdx, pw + (pC[oPhaseIdx] - pC[wPhaseIdx]));
+        fs.setPressure(wPhaseIdx, pw + (pC[wPhaseIdx] - pC[wPhaseIdx]));
+        fs.setPressure(gPhaseIdx, pw + (pC[gPhaseIdx] - pC[wPhaseIdx]));
         
         // reset all mole fractions to 0
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -503,24 +526,24 @@ private:
         
         // retrieve the relevant black-oil parameters from the fluid
         // system.
-        Scalar Bo = FluidSystem::oilFormationVolumeFactor(fs.pressure(oPhaseIdx));
-        Scalar Rs = FluidSystem::gasFormationFactor(fs.pressure(oPhaseIdx));
+        Scalar pSat = pReservoir_; // the saturation pressure of the oil
+        Scalar Bo = FluidSystem::oilFormationVolumeFactor(pSat);
+        Scalar Rs = FluidSystem::gasFormationFactor(pSat);
         Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
         Scalar rhogref = FluidSystem::surfaceDensity(gPhaseIdx);
-        Scalar MG = FluidSystem::molarMass(gPhaseIdx);
-        Scalar MO = FluidSystem::molarMass(oPhaseIdx);
 
         // calculate composition of oil phase in terms of mass
         // fractions.
         Scalar XoG = Rs*rhogref / rhoo;
-        Scalar XoO = 1 - XoG;
 
-        // convert to mole fractions
-        Scalar avgMolarMass = MO*MG/(MG + XoO*(MO - MG));
-        Scalar xoG = XoG*avgMolarMass/MG;
-        Scalar xoO = 1 - XoG;
+        // convert mass to mole fractions
+        Scalar MG = FluidSystem::molarMass(gCompIdx);
+        Scalar MO = FluidSystem::molarMass(oCompIdx);
+
+        Scalar xoG = XoG*MO/((MO - MG)*XoG + MG);
+        Scalar xoO = 1 - xoG;
         
-        // finally set the oil-phase composition. yeah!
+        // finally set the oil-phase composition
         fs.setMoleFraction(oPhaseIdx, gCompIdx, xoG);
         fs.setMoleFraction(oPhaseIdx, oCompIdx, xoO);
     }
@@ -540,6 +563,7 @@ private:
     DimMatrix fineK_;
     DimMatrix coarseK_;
     Scalar layerBottom_;
+    Scalar pReservoir_;
 
     Scalar finePorosity_;
     Scalar coarsePorosity_;

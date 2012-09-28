@@ -44,6 +44,7 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
@@ -60,6 +61,16 @@ public:
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
         Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
+    }
+
+    /*!
+     * \copydoc BoxModel::init
+     */
+    void init(Problem &problem)
+    {
+        ParentType::init(problem);
+
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     }
 
     /*!

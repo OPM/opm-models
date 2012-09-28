@@ -107,7 +107,6 @@ public:
     {
         internalElemContext_ = 0;
         newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelTolerance);
-        baseEps_ = newtonTolerance_/10;
     }
 
     ~BoxLocalJacobian()
@@ -215,7 +214,7 @@ public:
      *        the local derivatives
      */
     Scalar baseEpsilon() const
-    { return baseEps_; }
+    { return newtonTolerance_/1e2; }
 
     /*!
      * \brief Returns the epsilon value which is added and removed
@@ -232,11 +231,11 @@ public:
                           int scvIdx,
                           int pvIdx) const
     {
-        assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEps_);
-
+        assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEpsilon());
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
-        return baseEps_/(100*pvWeight);
+
+        return baseEpsilon()/pvWeight;
     }
 
     /*!
