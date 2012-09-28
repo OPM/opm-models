@@ -38,12 +38,7 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#if HAVE_PARMETIS
-// tell the AMG to partition in parallel
-#define PARALLEL_PARTITION 1
-#endif
-
-#include <dune/istl/solvers.hh>
+#include <dumux/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/pinfo.hh>
@@ -88,7 +83,9 @@ class BoxParallelAmgSolver
  
     enum { dimWorld = GridView::dimensionworld };
 
+#if HAVE_MPI
     typedef Dune::OwnerOverlapCopyCommunication<Dumux::Linear::Index> OwnerOverlapCopyCommunication;
+#endif
 
 public:
     BoxParallelAmgSolver(const Problem &problem)
@@ -161,15 +158,25 @@ public:
         /////////////
         // set-up the AMG preconditioner
         /////////////
+#if HAVE_MPI
         typedef Dune::OverlappingSchwarzOperator<Matrix,
                                                  Vector,
                                                  Vector,
                                                  OwnerOverlapCopyCommunication> FineOperator;
         FineOperator fineOperator(*overlappingMatrix_, *istlComm_);
+#else
+        typedef Dune::MatrixAdapter<Matrix, Vector, Vector> FineOperator;
+        FineOperator fineOperator(*overlappingMatrix_);
+#endif
 
+#if HAVE_MPI
         // create the parallel scalar product and the parallel operator
         typedef Dune::OverlappingSchwarzScalarProduct<Vector,OwnerOverlapCopyCommunication> FineScalarProduct;
         FineScalarProduct scalarProduct(*istlComm_);
+#else
+        typedef Dune::SeqScalarProduct<Vector> FineScalarProduct;
+        FineScalarProduct scalarProduct;
+#endif        
 
         // define the smoother used for the AMG and specify its
         // arguments
@@ -179,10 +186,15 @@ public:
         //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
         //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
 
+#if HAVE_MPI
         typedef Dune::BlockPreconditioner<Vector,
                                           Vector,
                                           OwnerOverlapCopyCommunication,
                                           SequentialSmoother> ParallelSmoother;
+#else
+        typedef SequentialSmoother ParallelSmoother;
+#endif
+
         typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;
 
         SmootherArgs smootherArgs;
@@ -202,11 +214,18 @@ public:
         coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
     
         // instantiate the AMG preconditioner
+#if HAVE_MPI
         typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother, OwnerOverlapCopyCommunication> AMG;
         AMG amg(fineOperator, 
                 coarsenCriterion, 
                 smootherArgs,
                 *istlComm_);
+#else
+        typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother> AMG;
+        AMG amg(fineOperator, 
+                coarsenCriterion, 
+                smootherArgs);
+#endif
 
         /////////////
         // set-up the linear solver
@@ -214,7 +233,7 @@ public:
         if (verbosity > 1 && problem_.gridView().comm().rank() == 0)
             std::cout << "Creating the solver\n";
 
-        typedef Dune::BiCGSTABSolver<Vector>  SolverType;
+        typedef Dumux::BiCGSTABSolver<Vector>  SolverType;
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
         SolverType solver(fineOperator, 
@@ -242,19 +261,19 @@ public:
 
         // create a weighted residual reduction convergence criterion
         auto *convCrit = 
-            new Dune::WeightedResidReductionCriterion<Vector, 
-                                                      typename GridView::CollectiveCommunication>
+            new Dumux::WeightedResidReductionCriterion<Vector, 
+                                                       typename GridView::CollectiveCommunication>
             (problem_.gridView().comm(), 
              weightVec,
              linearSolverTolerance);
 
-        typedef Dune::ConvergenceCriterion<Vector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
+        typedef Dumux::ConvergenceCriterion<Vector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         /////////////
         // run the linear solver
         /////////////
-        Dune::InverseOperatorResult solverStatistics;
+        Dumux::InverseOperatorResult solverStatistics;
         solver.apply(*overlappingx_,*overlappingb_,solverStatistics);
 
         // copy the result back to the non-overlapping vector
@@ -310,11 +329,13 @@ private:
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
 
+#if HAVE_MPI
         // create and initialize DUNE's OwnerOverlapCopyCommunication
         // using the domestic overlap
         istlComm_ = new OwnerOverlapCopyCommunication(MPI_COMM_WORLD);
         setupAmgIndexSet(overlappingMatrix_->overlap(), istlComm_->indexSet()); 
         istlComm_->remoteIndices().template rebuild<false>();
+#endif
     }
  
     void cleanup_()
@@ -329,6 +350,7 @@ private:
         overlappingx_ = 0;
     }
     
+#if HAVE_MPI
     template <class ParallelIndexSet>
     void setupAmgIndexSet(const Overlap &overlap,
                           ParallelIndexSet &istlIndices)
@@ -354,10 +376,13 @@ private:
         }
         istlIndices.endResize();
     }
+#endif
 
     const Problem &problem_;
     
+#if HAVE_MPI
     OwnerOverlapCopyCommunication *istlComm_;
+#endif
     OverlappingMatrix *overlappingMatrix_;
     OverlappingVector *overlappingb_;
     OverlappingVector *overlappingx_;
