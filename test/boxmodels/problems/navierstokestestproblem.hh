@@ -48,7 +48,7 @@ class NavierStokesTestProblem;
 // Specify the properties for the stokes problem
 namespace Properties
 {
-NEW_TYPE_TAG(NavierStokesTestProblem, INHERITS_FROM(BoxStokes));
+NEW_TYPE_TAG(NavierStokesTestProblem, INHERITS_FROM(BoxNavierStokes));
 
 // Set the grid type
 #if HAVE_ALUGRID
@@ -59,11 +59,8 @@ SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::UGGrid<2>);
 SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::YaspGrid<2>);
 #endif
 
-// Set the problem property
+// Set the property which defines the type of the physical problem
 SET_TYPE_PROP(NavierStokesTestProblem, Problem, Dumux::NavierStokesTestProblem<TypeTag>);
-
-// Set calculation to Navier-Stokes, not Stokes
-SET_BOOL_PROP(NavierStokesTestProblem, EnableNavierTerm, true);
 
 SET_PROP(NavierStokesTestProblem, Fluid)
 {

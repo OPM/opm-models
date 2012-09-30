@@ -19,6 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxStokesModel
  *
  * \brief Declares the properties required by the Stokes box model.
  */
@@ -34,8 +35,16 @@ namespace Properties {
 // Type tags
 //////////////////////////////////////////////////////////////////
 
-//! The type tag for the stokes problems
+//! The type tag for the problems using the Stokes equations
 NEW_TYPE_TAG(BoxStokes, INHERITS_FROM(BoxModel));
+
+/*!
+ * \brief The type tag for the problems using the Navier-Stokes equations.
+ *
+ * Basically this just takes everything from the Stokes model, but
+ * sets the \c EnableNavierTerm property to true by default.
+ */
+NEW_TYPE_TAG(BoxNavierStokes, INHERITS_FROM(BoxStokes));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

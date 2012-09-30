@@ -36,57 +36,59 @@ namespace Dumux {
 /*!
  * \ingroup RichardsModel
  *
- * \brief This model which implements a variant of the Richards
- *        equation for quasi-twophase flow.
+ * \brief This model implements a variant of the Richards equation for
+ *        quasi-twophase flow.
  *
  * In the unsaturated zone, Richards' equation is frequently used to
  * approximate the water distribution above the groundwater level. It
  * can be derived from the two-phase equations, i.e.
- \f[
- \frac{\partial\;\phi S_\alpha \rho_\alpha}{\partial t}
- -
- \text{div} \left\{
- \rho_\alpha \frac{k_{r\alpha}}{\mu_\alpha}\; \mathbf{K}
- \textbf{grad}\left[
- p_\alpha - g\rho_\alpha
- \right]
- \right\}
- =
- q_\alpha,
- \f]
- * where \f$\alpha \in \{w, n\}\f$ is the fluid phase,
+ * \f[
+ * \frac{\partial\;\phi S_\alpha \rho_\alpha}{\partial t}
+ * -
+ * \text{div} \left\{
+ * \rho_\alpha \frac{k_{r\alpha}}{\mu_\alpha}\; \mathbf{K}
+ * \textbf{grad}\left[
+ * p_\alpha - g\rho_\alpha
+ * \right]
+ * \right\}
+ * =
+ * q_\alpha,
+ * \f]
+ * where \f$\alpha \in \{w, n\}\f$ is the index of the fluid phase,
  * \f$\rho_\alpha\f$ is the fluid density, \f$S_\alpha\f$ is the fluid
  * saturation, \f$\phi\f$ is the porosity of the soil,
  * \f$k_{r\alpha}\f$ is the relative permeability for the fluid,
- * \f$\mu_\alpha\f$ is the fluid's dynamic viscosity, \f$\mathbf{K}\f$ is the
- * intrinsic permeability, \f$p_\alpha\f$ is the fluid pressure and
- * \f$g\f$ is the potential of the gravity field.
+ * \f$\mu_\alpha\f$ is the fluid's dynamic viscosity, \f$\mathbf{K}\f$
+ * is the intrinsic permeability tensor, \f$p_\alpha\f$ is the fluid
+ * phase pressure and \f$g\f$ is the potential of the gravity field.
  *
- * In contrast to the full two-phase model, the Richards model assumes
- * gas as the non-wetting fluid and that it exhibits a much lower
- * viscosity than the (liquid) wetting phase. (For example at
+ * In contrast to the "full" two-phase model, the Richards model
+ * assumes that the non-wetting fluid is gas and that it thus exhibits
+ * a much lower viscosity than the (liquid) wetting phase. (This
+ * assumption is quite realistic in many applications: For example, at
  * atmospheric pressure and at room temperature, the viscosity of air
  * is only about \f$1\%\f$ of the viscosity of liquid water.) As a
  * consequence, the \f$\frac{k_{r\alpha}}{\mu_\alpha}\f$ term
  * typically is much larger for the gas phase than for the wetting
- * phase. For this reason, the Richards model assumes that
- * \f$\frac{k_{rn}}{\mu_n}\f$ is infinitly large. This implies that
- * the pressure of the gas phase is equivalent to the static pressure
- * distribution and that therefore, mass conservation only needs to be
- * considered for the wetting phase.
+ * phase. Using this reasoning, the Richards model assumes that
+ * \f$\frac{k_{rn}}{\mu_n}\f$ is infinitely large compared to the same
+ * term of the liquid phase. This implies that the pressure of the gas
+ * phase is equivalent to the static pressure distribution and that
+ * therefore, mass conservation only needs to be considered for the
+ * liquid phase.
  *
  * The model thus choses the absolute pressure of the wetting phase
  * \f$p_w\f$ as its only primary variable. The wetting phase
  * saturation is calculated using the inverse of the capillary
  * pressure, i.e.
- \f[
- S_w = p_c^{-1}(p_n - p_w)
- \f]
- * holds, where \f$p_n\f$ is a given reference pressure. Nota bene,
- * that the last step assumes that the capillary
- * pressure-saturation curve can be uniquely inverted, so it is not
- * possible to set the capillary pressure to zero when using the
- * Richards model!
+ * \f[
+ * S_w = p_c^{-1}(p_n - p_w)
+ * \f]
+ * holds, where \f$p_n\f$ is a reference pressure given by the
+ * problem's \c referencePressure() method. Nota bene, that the last
+ * step assumes that the capillary pressure-saturation curve can be
+ * uniquely inverted, i.e. it is not possible to set the capillary
+ * pressure to zero if the Richards model ought to be used!
  */
 template<class TypeTag >
 class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)

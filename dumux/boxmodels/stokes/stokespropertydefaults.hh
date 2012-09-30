@@ -19,6 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxStokesModel
  *
  * \brief Defines default values for the properties required by the
  *        Stokes box model.
@@ -139,11 +140,14 @@ SET_TYPE_PROP(BoxStokes,
 //! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
 SET_INT_PROP(BoxStokes, StokesPhaseIndex, 0);
 
-//!< Disable the energy equation by default
+//! Disable the energy equation by default
 SET_BOOL_PROP(BoxStokes, EnableEnergy, false);
 
-//!< Disable the inertial term by default
+//! Disable the inertial term for the Stokes model by default
 SET_BOOL_PROP(BoxStokes, EnableNavierTerm, false);
+
+//! Enable the inertial term for the Navier-Stokes model
+SET_BOOL_PROP(BoxNavierStokes, EnableNavierTerm, true);
 }
 
 }

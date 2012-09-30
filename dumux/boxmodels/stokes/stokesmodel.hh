@@ -39,31 +39,45 @@ namespace Dumux {
 
 /*!
  * \ingroup BoxStokesModel
- * \brief Adaption of the box scheme to the Stokes model.
  *
- * This model implements laminar Stokes flow of a single fluid, solving a momentum balance:
+ * \brief Fully-implicit discretization of the Navier-Stokes equations
+ *        using the vertex-centered finite volume (box) scheme.
+ *
+ * This model implements Navier-Stokes flow of a single fluid. By
+ * default, it solves the momentum balance of the time-dependent Stokes
+ * equations, i.e.
  * \f[
-\frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} +
-boldsymbol{\nabla} p_g
-- \boldsymbol{\nabla} \boldsymbol{\cdot} \left( 
-  \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g + \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)
- \right)
-- \varrho_g {\bf g} = 0,
+ * \frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} 
+ * + boldsymbol{\nabla} p_g
+ * - \boldsymbol{\nabla} \boldsymbol{\cdot}
+ * \left( 
+ * \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g + \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)
+ * \right)
+ * - \varrho_g {\bf g}
+ * = 0\;,
+ * \f]
+ * and the mass balance equation
+ * \f[
+ * \frac{\partial \varrho_g}{\partial t}
+ * + \boldsymbol{\nabla}\boldsymbol{\cdot}\left(\varrho_g {\boldsymbol{v}}_g\right)
+ * - q_g
+ * = 0 \;.
  * \f]
  *
- * and the mass balance equation:
- * \f[
-\frac{\partial \varrho_g}{\partial t} + \boldsymbol{\nabla}\boldsymbol{\cdot}\left(\varrho_g {\boldsymbol{v}}_g\right) - q_g = 0
- * \f]
- *
- * By setting the property <code>EnableNavierStokes</code> to <code>true</code> the Navier-Stokes
- * equation can be solved. In this case an additional term is added to the momentum balance:
+ * If the property \c EnableNavierStokes is set to \c true, an
+ * additional convective momentum flux term (Navier term) gets
+ * included into the momentum conservation equations which allows to
+ * simulate turbolent flow. This additional term is given by
  *  \f[
-\varrho_g \left(\boldsymbol{v}_g \boldsymbol{\cdot} \boldsymbol{\nabla} \right) \boldsymbol{v}_g 
+ * \varrho_g \left(\boldsymbol{v}_g \boldsymbol{\cdot} \boldsymbol{\nabla} \right) \boldsymbol{v}_g \;.
  * \f]
  *
- * This is discretized by a fully-coupled vertex-centered finite volume
- * (box) scheme in space and by the implicit Euler method in time.
+ * These equations are discretized by a fully-coupled vertex-centered
+ * finite volume (box) scheme in space and using the implicit Euler
+ * method in time. Be aware that this discretization scheme is quite
+ * unstable for the Navier-Stokes equations and quickly leads to
+ * unphysical oscillations in the calculated solution. We intend to
+ * use a more appropriate discretization scheme in the future, though.
  */
 template<class TypeTag>
 class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)

@@ -103,7 +103,7 @@
 /****************** Fully Implicit ******************/
 /*!
  * \defgroup BoxModel Box Scheme
- * \brief Fully Implicit Vertex Centered Finite Volune Scheme
+ * \brief Fully Implicit Vertex Centered Finite Volume Scheme
  */
     /*!
      * \ingroup BoxModel

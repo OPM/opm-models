@@ -43,7 +43,7 @@ namespace Dumux {
  *
  * For the ResidReductionCriterion, the error of the solution is defined 
  * as
- * \f[ e^k = \frac{\left| A x_k - b \right|}{\left| A x_0 - b \right|\}\;, \f]
+ * \f[ e^k = \frac{\left| A x_k - b \right|}{\left| A x_0 - b \right|}\;, \f]
  */
 template<class Vector>
 class ResidReductionCriterion : public ConvergenceCriterion<Vector>

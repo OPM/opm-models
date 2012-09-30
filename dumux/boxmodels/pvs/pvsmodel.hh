@@ -40,57 +40,100 @@ namespace Dumux {
 /*!
  * \ingroup PvsModel
  *
- * \brief Adaption of the BOX scheme to the two-phase two-component flow model.
+ * \brief A generic compositional multi-phase model using primary-variable switching.
  *
- * This model implements two-phase two-component flow of two compressible and
- * partially miscible fluids \f$\alpha \in \{ w, n \}\f$ composed of the two components
- * \f$\kappa \in \{ w, a \}\f$. The standard multiphase Darcy
- * approach is used as the equation for the conservation of momentum:
+ * This model assumes a flow of \f$M \geq 1\f$ fluid phases
+ * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
+ * M\f$ chemical species \f$\kappa\f$.
+ *
+ * By default, the standard multi-phase Darcy approach is used to determine
+ * the velocity, i.e.
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * although the actual approach which is used can be specified via the
+ * \c VelocityModule propery. For example, the velocity model can by
+ * changed to the Forchheimer approach by
+ * \code
+ * SET_TYPE_PROP(PowerInjectionProblem, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+ * \endcode
+ *
+ * The core of the model is the conservation mass of each component by
+ * means of the equation
  * \f[
- v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
- \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mbox{\bf g} \right)
+ * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
+ * - \sum_\alpha \text{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - q^\kappa = 0 \;.
  * \f]
  *
- * By inserting this into the equations for the conservation of the
- * components, one gets one transport equation for each component
- * \f{eqnarray*}
- && \phi \frac{\partial (\sum_\alpha \varrho_\alpha X_\alpha^\kappa S_\alpha )}
- {\partial t}
- - \sum_\alpha  \text{div} \left\{ \varrho_\alpha X_\alpha^\kappa
- \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K}
- (\text{grad}\, p_\alpha - \varrho_{\alpha}  \mbox{\bf g}) \right\}
- \nonumber \\ \nonumber \\
- &-& \sum_\alpha \text{div} \left\{{\bf D}_{\alpha, pm}^\kappa \varrho_{\alpha} \text{grad}\, X^\kappa_{\alpha} \right\}
- - \sum_\alpha q_\alpha^\kappa = 0 \qquad \kappa \in \{w, a\} \, ,
- \alpha \in \{w, g\}
- \f}
+ * To close the system mathematically, \f$M\f$ model equations are
+ * also required. This model uses the primary variable switching
+ * assumptions, which are given by:
+ * \f[
+  0 \stackrel{!}{=}
+  f_\alpha = \left\{
+  \begin{array}{cl}
+    S_\alpha & \quad \text{if phase }\alpha\text{ is not present} \\
+    1 - \sum_\kappa x_\alpha^\kappa & \quad \text{else}
+  \end{array}
+  \right.
+ * \f]
  *
- * This is discretized using a fully-coupled vertex
- * centered finite volume (box) scheme as spatial and
- * the implicit Euler method as temporal discretization.
+ * To make this approach applicable, a pseudo primary variable
+ * <em>phase presence</em> has to be introduced. Its purpose is to
+ * specify for each phase whether it is present or not. It is a
+ * <em>pseudo</em> primary variable because it is not directly considered when
+ * linearizing the system in the Newton method, but after each Newton
+ * iteration, it gets updated like the "real" primary variables.  The
+ * following rules are used for this update procedure:
  *
- * By using constitutive relations for the capillary pressure \f$p_c =
- * p_n - p_w\f$ and relative permeability \f$k_{r\alpha}\f$ and taking
- * advantage of the fact that \f$S_w + S_n = 1\f$ and \f$X^\kappa_w + X^\kappa_n = 1\f$, the number of
- * unknowns can be reduced to two.
- * The used primary variables are, like in the two-phase model, either \f$p_w\f$ and \f$S_n\f$
- * or \f$p_n\f$ and \f$S_w\f$. The formulation which ought to be used can be
- * specified by setting the <tt>Formulation</tt> property to either
- * PvsIndices::pWsN or PvsIndices::pNsW. By
- * default, the model uses \f$p_w\f$ and \f$S_n\f$.
- * Moreover, the second primary variable depends on the phase state, since a
- * primary variable switch is included. The phase state is stored for all nodes
- * of the system. Following cases can be distinguished:
  * <ul>
- *  <li> Both phases are present: The saturation is used (either \f$S_n\f$ or \f$S_w\f$, dependent on the chosen <tt>Formulation</tt>),
- *      as long as \f$ 0 < S_\alpha < 1\f$</li>.
- *  <li> Only wetting phase is present: The mass fraction of, e.g., air in the wetting phase \f$X^a_w\f$ is used,
- *      as long as the maximum mass fraction is not exceeded \f$(X^a_w<X^a_{w,max})\f$</li>
- *  <li> Only non-wetting phase is present: The mass fraction of, e.g., water in the non-wetting phase, \f$X^w_n\f$, is used,
- *      as long as the maximum mass fraction is not exceeded \f$(X^w_n<X^w_{n,max})\f$</li>
+
+ * <li>If phase \f$\alpha\f$ is present according to the pseudo
+ *     primary variable, but \f$S_\alpha < 0\f$ after the Newton
+ *     update, consider the phase \f$\alpha\f$ disappeared for the
+ *     next iteration and use the set of primary variables which
+ *     correspond to the new phase presence.</li>
+
+ * <li>If phase \f$\alpha\f$ is not present according to the pseudo
+ *     primary variable, but the sum of the component mole fractions
+ *     in the phase is larger than 1, i.e. \f$\sum_\kappa
+ *     x_\alpha^\kappa > 1\f$, consider the phase \f$\alpha\f$ present
+ *     in the the next iteration and update the set of primary
+ *     variables to make it consistent with the new phase
+ *     presence.</li>
+ * 
+ * <li>In all other cases don't modify the phase presence for phase
+ *     \f$\alpha\f$.</li>
+ * 
  * </ul>
  *
- * \todo implement/re-enable molecular diffusion
+ * The model always requires \f$N\f$ primary variables, but their
+ * interpretation is dependent on the phase presence:
+ *
+ * <ul>
+ *
+ * <li>The first primary variable is always interpreted as the
+ *      pressure of the phase with the lowest index \f$PV_0 =
+ *      p_0\f$.</li>
+ *
+ * <li>Then, \f$M - 1\f$ "switching primary variables" follow, which
+ *     are interpreted depending in the presence of the first
+ *     \f$M-1\f$ phases: If phase \f$\alpha\f$ is present, its
+ *     saturation \f$S_\alpha = PV_i\f$ is used as primary variable;
+ *     if it is not present, the mole fraction \f$PV_i =
+ *     x_{\alpha^\star}^\alpha\f$ of the component with index
+ *     \f$\alpha\f$ in the phase with the lowest index that is present
+ *     \f$\alpha^\star\f$ is used instead.</li>
+ *
+ * <li>Finally, the mole fractions of the \f$N-M\f$ components with
+ *     the largest index in the phase with the lowest index that is
+ *     present \f$x_{\alpha^\star}^\kappa\f$ are used as primary
+ *     variables.</li>
+ *
+ * </ul>
+ *
+ * This model is then discretized using a fully-coupled vertex centered
+ * finite volume (box) scheme as spatial and the implicit Euler method
+ * as temporal discretization.
  */
 template<class TypeTag>
 class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
