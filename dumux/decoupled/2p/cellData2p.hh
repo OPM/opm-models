@@ -22,7 +22,7 @@
 #include "2pproperties.hh"
 #include "fluxData2p.hh"
 
-/**
+/*!
  * \file
  * \brief  Class including data of one grid cell
  */

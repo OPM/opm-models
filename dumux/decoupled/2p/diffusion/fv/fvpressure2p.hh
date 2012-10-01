@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2010-2012 by Markus Wolff                                 *
+ *   Copyright (C) 2010-2012 by Andreas Lauser                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -26,7 +27,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of a two-phase flow pressure equation.
  */
@@ -443,7 +444,7 @@ public:
     }
 
     //! Constructs a FVPressure2P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVPressure2P(Problem& problem) :

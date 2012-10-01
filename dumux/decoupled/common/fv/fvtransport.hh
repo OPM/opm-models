@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of a  transport equation
  */
@@ -176,7 +176,7 @@ public:
 
 
     //! Constructs a FVTransport object
-    /**
+    /*!
 
      * \param problem A problem class object
      */

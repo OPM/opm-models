@@ -19,7 +19,7 @@
 #ifndef DUMUX_BOUNDARYCONDITIONS_HH
 #define DUMUX_BOUNDARYCONDITIONS_HH
 
-/**
+/*!
 * \file
 * \brief  Definition of boundary condition types, extend if necessary
 */
@@ -28,7 +28,7 @@ namespace Dumux
 /*!
  * \ingroup Sequential
  */
-/**
+/*!
 * \brief Define a class containing boundary condition flags
 *
 */

@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/**
+/*!
  * \file
  * \brief Problem where water and gas is injected by means of a
  *        dirchlet condition on the lower right of the domain which have to go

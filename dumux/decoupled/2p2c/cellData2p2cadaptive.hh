@@ -1,8 +1,8 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2011 by Markus Wolff                                      *
- *   Institute for Modelling Hydraulic and Environmental Systems             *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
+ *   Copyright (C) 2012 by Benjamin Faigle                                   *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -22,10 +22,9 @@
 
 #include <dumux/decoupled/2p2c/cellData2p2c.hh>
 #include <dumux/decoupled/2p2c/cellData2p2cmultiphysics.hh>
-/**
- * @file
- * @brief  Class including the variables and data of discretized data of the constitutive relations for one element
- * @author Benjamin Faigle, Markus Wolff
+/*!
+ * \file
+ * \brief  Class including the variables and data of discretized data of the constitutive relations for one element
  */
 namespace Dumux
 {
@@ -114,12 +113,12 @@ public:
     }
 
     //! stores leaf cell primary variables to transfer to new indexing
-    /**
+    /*!
      * Stores values to be adapted from the current CellData objects into
      * the adaptation container in order to be mapped on a new grid.
      *
-     * @param adaptedValues Container for model-specific values to be adapted
-     * @param element The element to be stored
+     * \param adaptedValues Container for model-specific values to be adapted
+     * \param element The element to be stored
      */
     void storeAdaptionValues(AdaptedValues& adaptedValues, const Element& element)
     {
@@ -136,14 +135,14 @@ public:
     }
 
     //! adds cell information to father element for possible averageing / coarsening
-    /**
+    /*!
      * Sum up the adaptedValues (sons values) into father element. We store from leaf
      * upwards, so sons are stored first, then cells on the next leaf (=fathers)
      * can be averaged.
      *
-     * @param adaptedValues Container for model-specific values to be adapted
-     * @param adaptedValuesFather Values to be adapted of father cell
-     * @param fatherElement The element of the father
+     * \param adaptedValues Container for model-specific values to be adapted
+     * \param adaptedValuesFather Values to be adapted of father cell
+     * \param fatherElement The element of the father
      */
     static void storeAdaptionValues(AdaptedValues& adaptedValues,
                                     AdaptedValues& adaptedValuesFather,
@@ -168,15 +167,15 @@ public:
         adaptedValuesFather.subdomain = std::max(adaptedValuesFather.subdomain, adaptedValues.subdomain);
     }
     //! Set adapted values in CellData
-    /**
+    /*!
      * This methods stores reconstructed values into the cellData object, by
      * this setting a newly mapped solution to the storage container of the
      * decoupled models.
      * In new cells, update estimate does not give meaningful results. We therefore
      * copy volume derivatives from old time step, and indicate that those are already availabe.
      *
-     * @param adaptedValues Container for model-specific values to be adapted
-     * @param element The element where things are stored.
+     * \param adaptedValues Container for model-specific values to be adapted
+     * \param element The element where things are stored.
      */
     void setAdaptionValues(AdaptedValues& adaptedValues, const Element& element)
     {
@@ -209,15 +208,15 @@ public:
             this->volumeDerivativesAvailable(false);  // recalculate volume derivatives
     }
     //! Reconstructs sons entries from data of father cell
-    /**
+    /*!
      * Reconstructs an new solution from a father cell into for a newly
      * generated son cell. The new cell is stored into the global
      * adaptationMap.
      *
-     * @param adaptationMap Global map storing all values to be adapted
-     * @param father Entity Pointer to the father cell
-     * @param son Entity Pointer to the newly created son cell
-     * @param problem The problem
+     * \param adaptationMap Global map storing all values to be adapted
+     * \param father Entity Pointer to the father cell
+     * \param son Entity Pointer to the newly created son cell
+     * \param problem The problem
      */
     static void reconstructAdaptionValues(Dune::PersistentContainer<Grid, AdaptedValues>& adaptationMap,
             const Element& father, const Element& son, const Problem& problem)

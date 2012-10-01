@@ -32,7 +32,7 @@
 
 #include <iostream>
 
-/**
+/*!
  * \file
  * \brief  Base Class for compositional pressure Equations
  */
@@ -319,7 +319,7 @@ public:
     //\}
 
     //! Constructs a FVPressureCompositional object
-    /**
+    /*!
      * \param problem a problem class object
      */
     FVPressureCompositional(Problem& problem) : FVPressure<TypeTag>(problem),

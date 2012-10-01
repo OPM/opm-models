@@ -2,9 +2,6 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
  *   Copyright (C) 2012 by Benjamin Faigle                                   *
- *   Institute for Modelling Hydraulic and Environmental Systems             *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
  *                                                                           *
  *   T1his program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -26,10 +23,9 @@
 // for  parallelization
 #include <dumux/decoupled/common/variableclassadaptive.hh>
 
-/**
- * @file
- * @brief  Base class holding the variables for sequential models.
- * @author Markus Wolff
+/*!
+ * \file
+ * \brief  Base class holding the variables for sequential models.
  */
 
 namespace Dumux
@@ -119,8 +115,8 @@ protected:
 
 public:
     //! Constructs a VariableClass object
-    /**
-     *  @param gridView a DUNE gridview object corresponding to diffusion and transport equation
+    /*!
+     *  \param gridView a DUNE gridview object corresponding to diffusion and transport equation
      */
     VariableClass2P2CAdaptive(const GridView& gridView) :
         ParentType(gridView), grid_(gridView.grid())
@@ -144,7 +140,7 @@ public:
      * To reconstruct the solution in father elements, problem properties might
      * need to be accessed.
      *
-     * @param problem The current problem
+     * \param problem The current problem
      */
     void reconstructPrimVars(Problem& problem)
     {
@@ -292,7 +288,7 @@ public:
         }
         return 1;
     }
-	//@}
+	//\}
 
 };
 }

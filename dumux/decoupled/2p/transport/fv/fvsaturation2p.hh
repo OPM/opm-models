@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of a saturation transport equation
  */

@@ -20,7 +20,7 @@
 #ifndef DUMUX_EVALCFLFLUX_DEFAULT_HH
 #define DUMUX_EVALCFLFLUX_DEFAULT_HH
 
-/**
+/*!
  * \file
  * \brief  Fluxes to evaluate a CFL-Condition
  */

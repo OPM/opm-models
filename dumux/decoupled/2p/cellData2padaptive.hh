@@ -25,7 +25,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Class including the data of a grid cell needed if an adaptive grid is used.
  */
@@ -69,7 +69,7 @@ private:
 
 public:
     //! Collection of variables that have to be mapped if the grid is adapted
-    /**
+    /*!
      * For an immiscible two-phase model, the following data has to be
      * transferred to a new grid.
      */
@@ -146,7 +146,7 @@ public:
     }
 
     //! Stores values to be adapted in an adaptedValues container
-    /**
+    /*!
      * Stores values to be adapted from the current CellData objects into
      * the adaptation container in order to be mapped on a new grid.
      *
@@ -162,7 +162,7 @@ public:
         adaptedValues.volCorr = this->volumeCorrection();
     }
     //! Stores sons entries into father element for averageing
-    /**
+    /*!
      * Sum up the adaptedValues (sons values) into father element. We store from leaf
      * upwards, so sons are stored first, then cells on the next leaf (=fathers)
      * can be averaged.
@@ -182,7 +182,7 @@ public:
         adaptedValuesFather.volCorr += adaptedValues.volCorr / adaptedValues.count;
     }
     //! Set adapted values in CellData
-    /**
+    /*!
      * This methods stores reconstructed values into the cellData object, by
      * this setting a newly mapped solution to the storage container of the
      * decoupled models.
@@ -200,7 +200,7 @@ public:
     }
 
     //! Reconstructs sons entries from data of father cell
-    /**
+    /*!
      * Reconstructs an new solution from a father cell into for a newly
      * generated son cell. New cell is stored into the global
      * adaptationMap.

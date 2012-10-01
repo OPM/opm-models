@@ -24,7 +24,7 @@
 #include "fluxData2p2c.hh"
 #include <dumux/decoupled/2p2c/2p2cfluidstate.hh>
 
-/**
+/*!
  * \file
  * \brief  Storage container for discretized data of the constitutive relations for one element
  */
@@ -236,7 +236,7 @@ public:
         return errorCorrection_;
     }
     //! Return the derivative of specific volume w.r.t. pressure
-    /**
+    /*!
      * For details, see description of FVPressureCompositional<TypeTag>::volumeDerivatives()
      */
     Scalar& dv_dp()
@@ -250,7 +250,7 @@ public:
     }
 
     //! Return the derivative of spec. volume w.r.t. change of mass
-    /**
+    /*!
      * For details, see description of FVPressureCompositional<TypeTag>::volumeDerivatives()
      * \param compIdx index of the Component
      */

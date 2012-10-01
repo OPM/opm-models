@@ -19,7 +19,7 @@
 #ifndef DUMUX_FVMPFAOINTERACTIONVOLUME_HH
 #define DUMUX_FVMPFAOINTERACTIONVOLUME_HH
 
-/**
+/*!
  * \file
  * \brief  Class including the information of an interaction volume of a MPFA O-method that does not change with time.
  */

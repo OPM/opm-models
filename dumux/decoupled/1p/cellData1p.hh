@@ -23,7 +23,7 @@
 #include "1pproperties.hh"
 #include "fluxData1p.hh"
 
-/**
+/*!
  * \file
  * \brief  Class including data of one grid cell
  */

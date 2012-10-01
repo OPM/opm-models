@@ -25,7 +25,7 @@
 
 #include <dune/common/dynvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Class defining a start indicator for grid adaption
  */

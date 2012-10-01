@@ -41,7 +41,7 @@ NEW_PROP_TAG(MaterialLaw);
  * \ingroup SpatialParams
  */
 
-/**
+/*!
  * \brief The base class for spatial parameters of a multi-phase problem using the
  *        fv method.
  */

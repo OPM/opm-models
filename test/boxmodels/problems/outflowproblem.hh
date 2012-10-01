@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/**
+/*!
  * \file
  * \brief Definition of a problem, for the 1p2c box problem:
  * Component transport of nitrogen dissolved in the water phase.

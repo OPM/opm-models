@@ -24,7 +24,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of the component transport equation
  */
@@ -83,7 +83,7 @@ public:
     virtual void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec, bool impet = false);
 
     //! Constructs a FVTransport2P2CMultiPhysics object
-    /**
+    /*!
      * \param problem a problem class object
      */
 

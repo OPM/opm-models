@@ -19,7 +19,7 @@
 #ifndef DUMUX_EVALCFLFLUX_COATS_HH
 #define DUMUX_EVALCFLFLUX_COATS_HH
 
-/**
+/*!
  * \file
  * \brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
  */

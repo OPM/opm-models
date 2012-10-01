@@ -77,10 +77,10 @@ namespace Dumux {
       @ingroup ISTL
   */
   /** @addtogroup ISTL_Solvers
-      @{
+      \{
   */
 
-  /**
+  /*!
       \brief Statistics about the application of an inverse operator
 
       The return value of an application of the inverse
@@ -146,7 +146,7 @@ namespace Dumux {
     /** \brief The field type of the operator. */
     typedef typename X::field_type field_type;
 
-    /**
+    /*!
         \brief Apply inverse operator,
 
         \warning Note: right hand side b may be overwritten!
@@ -264,7 +264,7 @@ namespace Dumux {
       convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
     }
 
-    /**
+    /*!
         \brief Set up loop solver
 
         \param op The operator we solve.
@@ -1336,7 +1336,7 @@ public:
     int _verbose;
   };
 
-  /**
+  /*!
      \brief implements the Generalized Minimal Residual (GMRes) method
 
      GMRes solves the unsymmetric linear system Ax = b using the
@@ -1678,7 +1678,7 @@ public:
     bool _recalc_defect;
   };
 
-  /** @} end documentation */
+  /** \} end documentation */
 
 } // end namespace
 

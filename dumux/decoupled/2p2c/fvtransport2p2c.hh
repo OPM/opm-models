@@ -30,7 +30,7 @@
 
 #include <iostream>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of the component transport equation
  */

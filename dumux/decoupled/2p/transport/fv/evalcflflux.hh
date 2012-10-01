@@ -24,7 +24,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
  */

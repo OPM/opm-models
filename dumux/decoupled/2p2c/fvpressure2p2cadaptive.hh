@@ -1,12 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010 by Benjamin Faigle                                   *
- *   Copyright (C) 2007-2009 by Bernd Flemisch                               *
- *   Copyright (C) 2008-2009 by Markus Wolff                                 *
- *   Institute for Modelling Hydraulic and Environmental Systems             *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
+ *   Copyright (C) 2012 by Benjamin Faigle                                   *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -40,10 +35,9 @@
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 #include <dumux/decoupled/2p/diffusion/fvmpfa/lmethod/fvmpfal2pfaboundpressure2padaptive.hh>
 
-/**
- * @file
- * @brief  Finite Volume Diffusion Model
- * @author Benjamin Faigle, Bernd Flemisch, Jochen Fritz, Markus Wolff
+/*!
+ * \file
+ * \brief  Finite Volume Diffusion Model
  */
 
 namespace Dumux
@@ -176,7 +170,7 @@ public:
     }
 
     //! Constructs a FVPressure2P2CAdaptive object
-    /**
+    /*!
      * \param problem a problem class object
      */
     FVPressure2P2CAdaptive(Problem& problem) : FVPressure2P2C<TypeTag>(problem),

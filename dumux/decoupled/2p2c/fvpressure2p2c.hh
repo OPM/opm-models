@@ -36,7 +36,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume 2p2c Diffusion Model
  */
@@ -162,7 +162,7 @@ public:
     void updateMaterialLawsInElement(const Element& elementI, bool postTimeStep);
 
     //! Constructs a FVPressure2P2C object
-    /**
+    /*!
      * \param problem a problem class object
      */
     FVPressure2P2C(Problem& problem) : FVPressureCompositional<TypeTag>(problem),

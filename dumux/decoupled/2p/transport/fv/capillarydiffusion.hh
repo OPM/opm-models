@@ -26,7 +26,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Class for defining the diffusive capillary pressure term of a 2p saturation equation
  */

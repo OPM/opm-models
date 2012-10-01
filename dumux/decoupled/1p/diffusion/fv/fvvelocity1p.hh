@@ -25,7 +25,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Single phase finite volume velocity reconstruction
  */
@@ -83,7 +83,7 @@ typedef typename GridView::IntersectionIterator IntersectionIterator;
 
 public:
     //! Constructs a FVVelocity1P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVVelocity1P(Problem& problem)

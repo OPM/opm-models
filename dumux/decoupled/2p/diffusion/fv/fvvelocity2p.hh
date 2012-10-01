@@ -20,7 +20,7 @@
 #ifndef DUMUX_FVVELOCITY2P_HH
 #define DUMUX_FVVELOCITY2P_HH
 
-/**
+/*!
  * \file
  * \brief  Velocity Field from a finite volume solution of a pressure equation.
  */

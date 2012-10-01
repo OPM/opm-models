@@ -24,7 +24,7 @@
 #include <dumux/decoupled/2p2c/fvpressure2p2c.hh>
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume Diffusion Model
  */
@@ -183,7 +183,7 @@ public:
     }
 
     //! Constructs a FVPressure2P2CPC object
-    /**
+    /*!
      * \param problem a problem class object
      */
     FVPressure2P2CMultiPhysics(Problem& problem) : FVPressure2P2C<TypeTag>(problem),
@@ -198,7 +198,7 @@ protected:
     Dune::Timer timer_;
 
     //! Indices of matrix and rhs entries
-    /**
+    /*!
     * During the assembling of the global system of equations get-functions are called (getSource(), getFlux(), etc.), which return global matrix or right hand side entries in a vector. These can be accessed using following indices:
     */
     enum

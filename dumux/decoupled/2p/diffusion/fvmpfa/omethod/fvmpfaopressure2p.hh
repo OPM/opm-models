@@ -27,7 +27,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume MPFA O-method discretization of a two-phase pressure equation.
  */
@@ -248,7 +248,7 @@ public:
     }
 
     //! Constructs a FVMPFAOPressure2P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVMPFAOPressure2P(Problem& problem)

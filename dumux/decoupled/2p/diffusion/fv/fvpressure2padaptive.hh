@@ -28,7 +28,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume discretization of a two-phase flow pressure equation.
  */
@@ -157,7 +157,7 @@ public:
     }
 
     //! Constructs a FVPressure2PAdaptive object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVPressure2PAdaptive(Problem& problem) :

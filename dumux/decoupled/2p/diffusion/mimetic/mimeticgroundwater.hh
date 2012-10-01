@@ -45,7 +45,7 @@ namespace Dumux
 /*!
  *  \ingroup MimeticPressure2p
  */
-/**
+/*!
  * \brief compute local stiffness matrix for conforming finite elements for diffusion equation
  *
  */

@@ -24,7 +24,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Base class for defining a convective part of the saturation transport equation
  */

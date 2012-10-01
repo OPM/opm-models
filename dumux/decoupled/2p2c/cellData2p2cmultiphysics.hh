@@ -24,7 +24,7 @@
 #include "cellData2p2c.hh"
 #include <dumux/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
-/**
+/*!
  * \file
  * \brief  Storage container for discretized data for multiphysics models
  */

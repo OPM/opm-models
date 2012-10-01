@@ -3,6 +3,7 @@
 /*****************************************************************************
  *   Copyright (C) 2012 by Markus Wolff                                      *
  *   Copyright (C) 2012 by Benjamin Faigle                                   *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -24,7 +25,7 @@
 #include "variableclass.hh"
 #include <dune/grid/utility/persistentcontainer.hh>
 
-/**
+/*!
  * \file
  * \brief  Base class holding the variables for sequential models.
  */
@@ -64,7 +65,7 @@ private:
 
 public:
     //! Constructs an adaptive VariableClass object
-    /**
+    /*!
      * In addition to providing a storage object for cell-centered Methods, this class provides
      * mapping functionality to adapt the grid.
      *

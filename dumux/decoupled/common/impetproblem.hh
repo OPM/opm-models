@@ -33,7 +33,7 @@
 #include <limits>
 #include <string>
 
-/**
+/*!
  * \file
  * \brief  Base class for defining an instance of the diffusion problem
  */

@@ -28,7 +28,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-/**
+/*!
  * \file
  * \brief  Single Phase Finite Volume Model
  */
@@ -197,7 +197,7 @@ public:
     }
 
     //! Constructs a FVPressure1P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVPressure1P(Problem& problem) :

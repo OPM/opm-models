@@ -1,10 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010 by Markus Wolff, Benjamin Faigle                     *
- *   Institute for Modelling Hydraulic and Environmental Systems             *
- *   University of Stuttgart, Germany                                        *
- *   email: <givenname>.<name>@iws.uni-stuttgart.de                          *
+ *   Copyright (C) 2012 by Benjamin Faigle                                   *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -27,10 +24,9 @@
 #include <dumux/decoupled/2p2c/fvtransport2p2c.hh>
 #include <dumux/common/math.hh>
 
-/**
- * @file
- * @brief  Finite Volume discretization of the component transport equation
- * @author Markus Wolff, Jochen Fritz, Benjamin Faigle
+/*!
+ * \file
+ * \brief  Finite Volume discretization of the component transport equation
  */
 
 namespace Dumux

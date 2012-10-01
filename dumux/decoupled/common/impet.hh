@@ -21,7 +21,7 @@
 #ifndef DUMUX_IMPET_HH
 #define DUMUX_IMPET_HH
 
-/**
+/*!
  * \file
  * \brief  IMPET scheme
  */
@@ -32,7 +32,7 @@
 
 namespace Dumux
 {
-/**
+/*!
  * \ingroup IMPET
  * \brief IMplicit Pressure Explicit Transport (IMPET) scheme for the solution of weakly coupled diffusion-transport formulations.
  *
@@ -189,7 +189,7 @@ public:
     }
 
     //! Constructs an IMPET object
-    /**
+    /*!
      * \param prob Problem
      */
     IMPET(Problem& prob) :

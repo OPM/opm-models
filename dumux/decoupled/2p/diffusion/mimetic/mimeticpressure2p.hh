@@ -290,7 +290,7 @@ public:
     }
 
     //! Constructs a MimeticPressure2P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     MimeticPressure2P(Problem& problem) :

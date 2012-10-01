@@ -19,7 +19,7 @@
 #ifndef DUMUX_VELOCITYDEFAULT_HH
 #define DUMUX_VELOCITYDEFAULT_HH
 
-/**
+/*!
  * \file
  * \brief  Default implementation of velocity class.
  */

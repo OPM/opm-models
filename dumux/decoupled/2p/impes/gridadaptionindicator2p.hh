@@ -25,7 +25,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Class defining a standard, saturation dependent indicator for grid adaption
  */

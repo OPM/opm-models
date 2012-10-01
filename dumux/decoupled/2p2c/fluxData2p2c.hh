@@ -17,7 +17,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-/**
+/*!
  * \file
  * \brief  Class including the variables and data of discretized data of the constitutive relations
  */

@@ -30,7 +30,7 @@
 #include <iostream>
 #include <string>
 
-/**
+/*!
  * \file
  * \brief  Finite Volume Diffusion Model
  */
@@ -88,7 +88,7 @@ protected:
     typedef Dune::FieldVector<Scalar, 2> EntryType;
 
     //! Indices of matrix and rhs entries
-    /**
+    /*!
     * During the assembling of the global system of equations get-functions are called (getSource(), getFlux(), etc.), which return global matrix or right hand side entries in a vector. These can be accessed using following indices:
     */
     enum

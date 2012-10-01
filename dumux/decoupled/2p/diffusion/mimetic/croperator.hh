@@ -37,7 +37,7 @@
 #include<vector>
 #include<cassert>
 
-/**
+/*!
  * \file
  * \brief  defines a class for piecewise linear finite element functions
  */
@@ -47,7 +47,7 @@ namespace Dumux
 /*!
  * \ingroup MimeticPressure2p
  */
-/**
+/*!
  * \brief defines a class for Crozieux-Raviart piecewise linear finite element functions
  *
  */

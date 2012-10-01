@@ -25,7 +25,7 @@
 #include <dumux/decoupled/2p/diffusion/diffusionproperties2p.hh>
 #include <dumux/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 
-/**
+/*!
  * \file
  * \brief Finite volume MPFA L-method discretization of a two-phase pressure equation of the sequential IMPES model.
  */
@@ -393,7 +393,7 @@ public:
     }
 
     //! Constructs a FVMPFAL2PFABoundPressure2P object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVMPFAL2PFABoundPressure2P(Problem& problem) :

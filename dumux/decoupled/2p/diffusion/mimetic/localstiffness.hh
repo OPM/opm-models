@@ -37,7 +37,7 @@
 #include <iostream>
 #include <vector>
 
-/**
+/*!
  * \file
  * \brief  defines a class for piecewise linear finite element functions
  */
@@ -48,7 +48,7 @@ namespace Dumux
    *
    * \{
    */
-  /**
+  /*!
    * \brief base class for assembling local stiffness matrices
    *
    */

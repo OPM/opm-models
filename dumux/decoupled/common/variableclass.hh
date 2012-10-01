@@ -25,7 +25,7 @@
 
 #include <vector>
 
-/**
+/*!
  * \file
  * \brief  Base class holding the variables for sequential models.
  */
@@ -74,7 +74,7 @@ private:
 
 public:
     //! Constructs a VariableClass object
-    /**
+    /*!
      *  \param gridView a DUNE gridview object corresponding to diffusion and transport equation
      */
     VariableClass(const GridView& gridView) :

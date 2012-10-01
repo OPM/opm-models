@@ -27,7 +27,7 @@
 
 #include <dune/common/fvector.hh>
 
-/**
+/*!
  * \file
  * \brief  Finite volume velocity reconstruction
  */
@@ -92,7 +92,7 @@ public:
     }
 
     //! Constructs a FVVelocity object
-    /**
+    /*!
      * \param problem A problem class object
      */
     FVVelocity(Problem& problem) :
