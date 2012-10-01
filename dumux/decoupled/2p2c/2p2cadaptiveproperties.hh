@@ -55,6 +55,7 @@ NEW_TYPE_TAG(DecoupledTwoPTwoCAdaptive, INHERITS_FROM(DecoupledTwoPTwoC));
 
 NEW_PROP_TAG( EnableMultiPointFluxApproximation); //!< HangingNode: Two-point flux approximation (false) or mpfa (true)
 NEW_PROP_TAG( MpfaEnableSecondHalfEdge ); //!< Uses second interaction volume for second half-edge in 2D
+NEW_PROP_TAG( GridTypeIndices );
 }}
 
 //Dumux includes
@@ -64,6 +65,13 @@ NEW_PROP_TAG( MpfaEnableSecondHalfEdge ); //!< Uses second interaction volume fo
 #include <dumux/decoupled/2p2c/cellData2p2cadaptive.hh>
 
 namespace Dumux {
+template <class TypeTag>
+class FVPressure2P2CAdaptive;
+template <class TypeTag>
+class FVTransport2P2CAdaptive;
+
+struct GridTypes;
+
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Properties

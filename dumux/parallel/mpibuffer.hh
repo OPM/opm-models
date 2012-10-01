@@ -27,12 +27,13 @@
 #if HAVE_MPI
 #include <mpi.h>
 #endif
+#include <stddef.h>
 
 #include <type_traits>
 #include <cassert>
 
-namespace Dumux
-{
+namespace Dumux {
+
 /*!
  * \brief Simplifies handling of buffers to be used in conjunction with MPI
  */

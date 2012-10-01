@@ -27,6 +27,8 @@
 #include <dumux/common/exceptions.hh>
 #include <dumux/common/tabulated2dfunction.hh>
 
+#include <vector>
+
 #include <assert.h>
 
 namespace Dumux {
