@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a convergence criterion which looks at the weighted
- *        maximium for the linear solvers.
+ * \copydoc Dumux::WeightedResidReductionCriterion
  */
 #ifndef DUMUX_ISTL_WEIGHTED_RESID_REDUCTION_CRITERION_HH
 #define DUMUX_ISTL_WEIGHTED_RESID_REDUCTION_CRITERION_HH

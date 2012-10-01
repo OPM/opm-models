@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a convergence criterion which looks at the
- *        reduction of the two-norm of the residual for the linear
- *        solvers.
+ * \copydoc Dumux::ResidReductionCriterion
  */
 #ifndef DUMUX_ISTL_RESID_REDUCTION_CRITERION_HH
 #define DUMUX_ISTL_RESID_REDUCTION_CRITERION_HH

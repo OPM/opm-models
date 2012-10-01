@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a convergence criterion for the linear solvers
- *        which looks at the weighted maximum of the difference
- *        between two iterations.
+ * \copydoc Dumux::FixPointCriterion
  */
 #ifndef DUMUX_ISTL_FIXPOINT_CRITERION_HH
 #define DUMUX_ISTL_FIXPOINT_CRITERION_HH

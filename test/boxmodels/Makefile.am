@@ -7,14 +7,14 @@ cuvette_pvs \
 finger_immiscible \
 groundwater_immiscible \
 infiltration_pvs \
-injection_immiscible \
-injection_flash \
-injection_ncp \
-injection_pvs \
-injection_immiscible_ni \
-injection_flash_ni \
-injection_ncp_ni \
-injection_pvs_ni \
+co2injection_immiscible \
+co2injection_flash \
+co2injection_ncp \
+co2injection_pvs \
+co2injection_immiscible_ni \
+co2injection_flash_ni \
+co2injection_ncp_ni \
+co2injection_pvs_ni \
 lens_immiscible \
 lens_richards \
 obstacle_immiscible \
@@ -35,14 +35,14 @@ cuvette_pvs_SOURCES=cuvette_pvs.cc
 finger_immiscible_SOURCES=finger_immiscible.cc
 groundwater_immiscible_SOURCES=groundwater_immiscible.cc 
 infiltration_pvs_SOURCES=infiltration_pvs.cc
-injection_immiscible_SOURCES=injection_immiscible.cc
-injection_flash_SOURCES=injection_flash.cc
-injection_ncp_SOURCES=injection_ncp.cc
-injection_pvs_SOURCES=injection_pvs.cc
-injection_immiscible_ni_SOURCES=injection_immiscible_ni.cc
-injection_flash_ni_SOURCES=injection_flash_ni.cc
-injection_ncp_ni_SOURCES=injection_ncp_ni.cc
-injection_pvs_ni_SOURCES=injection_pvs_ni.cc
+co2injection_immiscible_SOURCES=co2injection_immiscible.cc
+co2injection_flash_SOURCES=co2injection_flash.cc
+co2injection_ncp_SOURCES=co2injection_ncp.cc
+co2injection_pvs_SOURCES=co2injection_pvs.cc
+co2injection_immiscible_ni_SOURCES=co2injection_immiscible_ni.cc
+co2injection_flash_ni_SOURCES=co2injection_flash_ni.cc
+co2injection_ncp_ni_SOURCES=co2injection_ncp_ni.cc
+co2injection_pvs_ni_SOURCES=co2injection_pvs_ni.cc
 lens_immiscible_SOURCES=lens_immiscible.cc
 lens_richards_SOURCES=lens_richards.cc
 obstacle_immiscible_SOURCES=obstacle_immiscible.cc

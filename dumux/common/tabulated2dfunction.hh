@@ -18,18 +18,19 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Implements tabulation for a two-dimensional function.
+ *
+ * \copydoc Dumux::Tabulated2DFunction
  */
 #ifndef DUMUX_TABULATED_2D_FUNCTION_HH
 #define DUMUX_TABULATED_2D_FUNCTION_HH
 
-#include <vector>
-#include <cassert>
+#include <dumux/common/exceptions.hh>
 
-namespace Dumux
-{
+#include <assert.h>
+
+namespace Dumux {
 /*!
- * \brief Implements tabulation for a two-dimensional function.
+ * \brief A generic class that represents tabulated 2 dimensional functions
  *
  * This class can be used to tabulate a two dimensional function
  * \f$f(x, y)\f$ over the range \f$[x_{min}, x_{max}] \times [y_{min},
@@ -39,172 +40,104 @@ namespace Dumux
  * \f$y_j\f$ are the largest positions of the \f$i\f$-th and
  * \f$j\f$-th intervall. Between these sampling points this tabulation
  * class uses linear interpolation.
+ *
+ * If the class is queried for a value outside of the tabulated range,
+ * a \c Dumux::NumericalProblem exception is thrown.
  */
-template<class Scalar>
+template <class Scalar, class Implementation>
 class Tabulated2DFunction
 {
 public:
-    /*!
-     * \brief Default constructor.
-     */
     Tabulated2DFunction()
     { }
-
-    /*!
-     * \brief Constructor where the tabulation parameters are already
-     *        provided.
-     */
-    Tabulated2DFunction(Scalar xMin, Scalar xMax, int m,
-                        Scalar yMin, Scalar yMax, int n)
-    {
-        resize(xMin, xMax, m, yMin, yMax, n);
-    }
-
-    /*!
-     * \brief Resize the tabulation to a new range.
-     *
-     * \note _All_ previously specified sampling points become invalid
-     *       after calling this method. You have to supply new ones.
-     */
-    void resize(Scalar xMin, Scalar xMax, int m,
-                Scalar yMin, Scalar yMax, int n)
-    {
-        samples_.resize(m*n);
-
-        m_ = m;
-        n_ = n;
-
-        xMin_ = xMin;
-        xMax_ = xMax;
-
-        yMin_ = yMin;
-        yMax_ = yMax;
-    }
 
     /*!
      * \brief Return the position on the x-axis of the i-th interval.
      */
     Scalar iToX(int i) const
     {
-        assert(0 <= i && i < m_);
+        assert(0 <= i && i < asImp_().numX());
 
-        return xMin_ + i*(xMax_ - xMin_)/(m_ - 1);
+        return asImp_().xMin() + i*(asImp_().xMax() - asImp_().xMin())/(asImp_().numX() - 1);
     }
 
     /*!
      * \brief Return the position on the y-axis of the j-th interval.
-     */
+      */
     Scalar jToY(int j) const
     {
-        assert(0 <= j && j < n_);
+        assert(0 <= j && j < asImp_().numY());
 
-        return yMin_ + j*(yMax_ - yMin_)/(n_ - 1);
+        return asImp_().yMin() + j*(asImp_().yMax() - asImp_().yMin())/(asImp_().numY() - 1);
     }
 
     /*!
      * \brief Return the interval index of a given position on the x-axis.
      *
      * This method returns a *floating point* number. The integer part
-     * should be interpreted as intervall, the decimal places are the
+     * should be interpreted as interval, the decimal places are the
      * position of the x value between the i-th and the (i+1)-th
      * sample point.
-     */
+      */
     Scalar xToI(Scalar x) const
-    {
-        return (x - xMin_)/(xMax_ - xMin_)*m_;
-    }
-
+    { return (x - asImp_().xMin())/(asImp_().xMax() - asImp_().xMin())*asImp_().numX(); }
 
     /*!
      * \brief Return the interval index of a given position on the y-axis.
      *
      * This method returns a *floating point* number. The integer part
-     * should be interpreted as intervall, the decimal places are the
+     * should be interpreted as interval, the decimal places are the
      * position of the y value between the j-th and the (j+1)-th
      * sample point.
      */
     Scalar yToJ(Scalar y) const
-    {
-        return (y - yMin_)/(yMax_ - yMin_)*n_;
-    }
-
+    { return (y - asImp_().yMin())/(asImp_().yMax() - asImp_().yMin())*asImp_().numY(); }
 
     /*!
-     * \brief Get the value of the sample point which is at the
-     *         intersection of the \f$i\f$-th interval of the x-Axis
-     *         and the \f$j\f$-th of the y-Axis.
+     * \brief Returns true iff a coordinate lies in the tabulated range
      */
-    Scalar getSamplePoint(int i, int j) const
-    {
-        assert(0 <= i && i < m_);
-        assert(0 <= j && j < n_);
-
-        return samples_[j*m_ + i];
-    }
+    bool applies(Scalar x, Scalar y) const
+    { return asImp_().xMin() <= x && x <= asImp_().xMax() && asImp_().yMin() <= y && y <= asImp_().yMax(); }
 
     /*!
-     * \brief Set the value of the sample point which is at the
-     *        intersection of the \f$i\f$-th interval of the x-Axis
-     *        and the \f$j\f$-th of the y-Axis.
+     * \brief Evaluate the function at a given (x,y) position.
+     *
+     * If this method is called for a value outside of the tabulated
+     * range, a \c Dumux::NumericalProblem exception is thrown.
      */
-    void setSamplePoint(int i, int j, Scalar value)
+    Scalar eval(Scalar x, Scalar y) const
     {
-        assert(0 <= i && i < m_);
-        assert(0 <= j && j < n_);
+#ifndef NDEBUG
+        if (!applies(x,y))
+        {
+            DUNE_THROW(NumericalProblem,
+                       "Attempt to get tabulated value for ("
+                       << x << ", " << y
+                       << ") on a table of extend "
+                       << asImp_().xMin() << " to " << asImp_().xMax() << " times "
+                       << asImp_().yMin() << " to " << asImp_().yMax());
+        };
+#endif
 
-        samples_[j*m_ + i] = value;
-    }
-
-    /*!
-     * \brief Return an interpolated value.
-     */
-    Scalar get(Scalar x, Scalar y) const
-    {
         Scalar alpha = xToI(x);
         Scalar beta = yToJ(y);
-
-        int i = std::max(0, std::min(m_, static_cast<int>(alpha)));
-        int j = std::max(0, std::min(n_, static_cast<int>(beta)));
-
+ 
+        int i = std::max(0, std::min(asImp_().numX(), static_cast<int>(alpha)));
+        int j = std::max(0, std::min(asImp_().numY(), static_cast<int>(beta)));
+ 
         alpha -= i;
         beta -= j;
-
+ 
         // bi-linear interpolation
-        Scalar s1 = getSamplePoint(i, j)*(1.0 - alpha) + getSamplePoint(i + 1, j)*alpha;
-        Scalar s2 = getSamplePoint(i, j + 1)*(1.0 - alpha) + getSamplePoint(i + 1, j + 1)*alpha;
+        Scalar s1 = asImp_().getSamplePoint(i, j)*(1.0 - alpha) + asImp_().getSamplePoint(i + 1, j)*alpha;
+        Scalar s2 = asImp_().getSamplePoint(i, j + 1)*(1.0 - alpha) + asImp_().getSamplePoint(i + 1, j + 1)*alpha;
         return s1*(1.0 - beta) + s2*beta;
     }
 
-    /*!
-     * \brief The () operator
-     *
-     * This is just a convenience alias for get(x,y);
-     */
-    Scalar operator()(Scalar x, Scalar y) const
-    { return get(x, y); }
-
 private:
-    // the vector which contains the values of the sample points
-    // f(x_i, y_j). don't use this directly, use getSamplePoint(i,j)
-    // instead!
-    std::vector<Scalar> samples_;
-
-    // the number of sample points in x direction
-    int m_;
-
-    // the number of sample points in y direction
-    int n_;
-
-    // the range of the tabulation on the x axis
-    Scalar xMin_;
-    Scalar xMax_;
-
-    // the range of the tabulation on the y axis
-    Scalar yMin_;
-    Scalar yMax_;
-
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
 };
-
 }
 
 #endif
