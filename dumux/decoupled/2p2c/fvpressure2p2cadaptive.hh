@@ -36,11 +36,16 @@
 
 /*!
  * \file
- * \brief  Finite Volume Diffusion Model
+ * \brief  Finite Volume Pressure Model
  */
 
 namespace Dumux
 {
+namespace Properties
+{
+NEW_PROP_TAG(EnableMultiPointFluxApproximation);
+NEW_PROP_TAG(MpfaEnableSecondHalfEdge);
+}
 //! The finite volume model for the solution of the compositional pressure equation
 /*! \ingroup multiphase
  *  Provides a Finite Volume implementation for the pressure equation of a compressible
