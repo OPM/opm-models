@@ -337,6 +337,19 @@ int start(int argc,
                 <<" will now start the trip. "
                 << "Please sit back, relax and enjoy the ride.\n";
 
+        // try to create a grid (from the given grid file)
+        if (myRank ==  0) std::cout << "Creating the grid\n";
+        try { GridCreator::makeGrid(); }
+        catch (const Dune::Exception &e) {
+            std::cerr << __FILE__ << ":" << __LINE__ << "\n";
+            std::ostringstream oss;
+            oss << "Creation of the grid failed:" << e.what(); 
+            printUsage(argv[0], oss.str());
+            return 1;
+        }
+        if (myRank ==  0) std::cout << "Distributing the grid\n";
+        GridCreator::loadBalance();
+
         // print the properties if requested
         bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
         if (printProps && myRank == 0)
@@ -346,12 +359,6 @@ int start(int argc,
         bool printParams = GET_PARAM(TypeTag, Scalar, PrintParameters);
         if (printParams && myRank == 0)
             Dumux::Parameters::printValues<TypeTag>();
-        // try to create a grid (from the given grid file)
-        if (myRank ==  0) std::cout << "Creating the grid\n";
-        try { GridCreator::makeGrid(); }
-        catch (...) { std::cout << "Creation of the grid failed!"; throw; }
-        if (myRank ==  0) std::cout << "Distributing the grid\n";
-        GridCreator::loadBalance();
 
         // instantiate and run the concrete problem
         TimeManager timeManager;
@@ -375,7 +382,7 @@ int start(int argc,
     }
     catch (Dune::Exception &e) {
         if (myRank == 0)
-            std::cerr << "Dune reported error: " << e << std::endl;
+            std::cerr << "Dune reported an error: " << e << std::endl;
         GridCreator::deleteGrid();
         return 2;
     }
