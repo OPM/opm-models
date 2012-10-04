@@ -265,6 +265,11 @@
              * \defgroup multiphase Multiphase Models
              * \brief Compositional Multiphase Models
              */
+                /*!
+                 * \ingroup multiphase
+                 * \defgroup Adaptive2p2c h-Adaptive 2p2c Models
+                 * \brief (Grid-)Adaptive Compositional Multiphase Models
+                 */
             /*!
              * \ingroup IMPEC
              * \defgroup multiphysics Multiphysics Models

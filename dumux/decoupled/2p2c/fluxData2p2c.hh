@@ -19,23 +19,18 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Class including the variables and data of discretized data of the constitutive relations
+ * \copydoc Dumux::FluxData2P2C
  */
 #ifndef DUMUX_FLUXDATA2P2C_HH
 #define DUMUX_FLUXDATA2P2C_HH
 
-#include <dumux/common/propertysystem.hh>
+#include <dumux/decoupled/common/decoupledproperties.hh>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
-namespace Properties {
-NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(GridView);
-NEW_PROP_TAG(Indices);
-NEW_PROP_TAG(NumEq);
-}
+namespace Dumux
+{
 
 /*!
  * \ingroup IMPES

@@ -37,7 +37,7 @@
 
 namespace Dumux
 {
-//! Miscible Transport step in a Finite Volume discretization
+//! Compositional transport step in a Finite Volume discretization
 /*! \ingroup multiphase
  *  The finite volume model for the solution of the transport equation for compositional
  *  two-phase flow.
@@ -101,7 +101,9 @@ class FVTransport2P2C
     typedef Dune::FieldMatrix<Scalar,dim,dim> DimMatrix;
     typedef Dune::FieldVector<Scalar, NumPhases> PhaseVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-
+protected:
+    //! @copydoc FVPressure::EntryType
+    typedef Dune::FieldVector<Scalar, 2> EntryType;
     //! Acess function for the current problem
     Problem& problem()
     {return problem_;}
@@ -119,11 +121,11 @@ public:
     void updateTransportedQuantity(TransportSolutionType& updateVector);
 
     // Function which calculates the flux update
-    void getFlux(Dune::FieldVector<Scalar, 2>&, Dune::FieldVector<Scalar, 2>&,
+    void getFlux(EntryType&, EntryType&,
             const Intersection&, CellData&);
 
     // Function which calculates the boundary flux update
-    void getFluxOnBoundary(Dune::FieldVector<Scalar, 2>&, Dune::FieldVector<Scalar, 2>&,
+    void getFluxOnBoundary(EntryType&, EntryType&,
                             const Intersection&, const CellData&);
 
     void evalBoundary(GlobalPosition,const Intersection&,FluidState &, PhaseVector &);
@@ -138,7 +140,7 @@ public:
         totalConcentration_[nCompIdx].resize(problem_.gridView().size(0));
     }
 
-    //! \brief Write data files
+    //! \brief Write transport variables into the output files
      /*  \param writer applied VTK-writer */
     template<class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer)
@@ -171,6 +173,17 @@ public:
                  >> totalConcentration_[nCompIdx][globalIdx];
     }
 
+    /*! \name Access functions for protected variables  */
+    //@{
+    //! Return the vector of the transported quantity
+    /*! For an immiscible IMPES scheme, this is the saturation. For compositional simulations, however,
+     *  the total concentration of all components is transported.
+     */
+    TransportSolutionType& transportedQuantity() DUNE_DEPRECATED
+    {
+        return totalConcentration_;
+    }
+    //! \copydoc transportedQuantity()
     void getTransportedQuantity(TransportSolutionType& transportedQuantity)
     {
         // resize update vector and set to zero
@@ -180,6 +193,7 @@ public:
 
         transportedQuantity = totalConcentration_;
     }
+    //! \copydoc transportedQuantity()
     Scalar& totalConcentration(int compIdx, int globalIdx)
     {
         return totalConcentration_[compIdx][globalIdx][0];
@@ -187,7 +201,7 @@ public:
     //\}
     //! Constructs a FVTransport2P2C object
     /*!
-     * Currently, the miscible transport scheme can not be applied with a global pressure / total velocity
+     * Currently, the compositional transport scheme can not be applied with a global pressure / total velocity
      * formulation.
      *
      * \param problem a problem class object
@@ -207,13 +221,13 @@ public:
     }
 
 protected:
-    TransportSolutionType totalConcentration_;
+    TransportSolutionType totalConcentration_; //!< private vector of transported primary variables
     Problem& problem_;
-    bool impet_;
-    int averagedFaces_;
+    bool impet_; //!< indicating if we are in an estimate (false) or real impet (true) step.
+    int averagedFaces_; //!< number of faces were flux was restricted
 
     static const int pressureType = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w \f$, \f$ 1 = p_n \f$, \f$ 2 = p_{global} \f$)
-    int restrictFluxInTransport_;
+    int restrictFluxInTransport_; //!< Restriction of flux on new pressure field if direction reverses from the pressure equation
     bool switchNormals;
 };
 
@@ -223,12 +237,11 @@ protected:
  *  \f[
        C^{\kappa , new} = C^{\kappa , old} + u,
  *  \f]
- *  where \f$ u = \sum_{element faces} \boldsymbol{v}_{\alpha} * \varrho_{\alpha} * X^{\kappa}_{\alpha} * \boldsymbol{n} * A_{element face} \f$,
- *  \f$ \boldsymbol{n} \f$ is the face normal and \f$ A_{element face} \f$ is the face area.
+ *  where \f$ u = \sum_{\gamma} \boldsymbol{v}_{\alpha} * \varrho_{\alpha} * X^{\kappa}_{\alpha} * \boldsymbol{n} * A_{\gamma} \f$,
+ *  \f$ \boldsymbol{n} \f$ is the face normal and \f$ A_{\gamma} \f$ is the face area of face \f$ \gamma \f$.
  *
  *  In addition to the \a update vector, the recommended time step size \a dt is calculated
  *  employing a CFL condition.
- *  This method = old concentrationUpdate()
  *
  *  \param t Current simulation time \f$\mathrm{[s]}\f$
  *  \param[out] dt Time step size \f$\mathrm{[s]}\f$
@@ -338,14 +351,15 @@ void FVTransport2P2C<TypeTag>::updateTransportedQuantity(TransportSolutionType& 
 }
 
 //! Get flux at an interface between two cells
-/** The flux thorugh \f$ \gamma{ij} \f$  is calculated according to the underlying pressure field,
+/** The flux through \f$ \gamma \f$  is calculated according to the underlying pressure field,
  * calculated by the pressure model.
- *  \f[ - A_{\gamma_{ij}}  \cdot \mathbf{u} \cdot (\mathbf{n}_{\gamma_{ij}} \cdot \mathbf{u})\cdot \mathbf{K}
-      \sum_{\alpha} \varrho_{\alpha} \lambda_{\alpha} \sum_{\kappa} X^{\kappa}_{\alpha}
-    \left( \frac{p_{\alpha,j}^t - p^{t}_{\alpha,i}}{\Delta x} + \varrho_{\alpha} \mathbf{g}\right) \f]
- * Here, \f$ \mathbf{u} \f$ is the normalized vector connecting the cell centers, and \f$ \mathbf{n}_{\gamma_{ij}} \f$
- * represents the normal of the face \f$ \gamma{ij} \f$. Due to the nature of the Primay Variable, the (volume-)specific
+ *  \f[ - A_{\gamma} \mathbf{n}^T_{\gamma} \mathbf{K}  \sum_{\alpha} \varrho_{\alpha} \lambda_{\alpha}
+     \mathbf{d}_{ij}  \left( \frac{p_{\alpha,j}^t - p^{t}_{\alpha,i}}{\Delta x} + \varrho_{\alpha} \mathbf{g}^T \mathbf{d}_{ij} \right)
+                \sum_{\kappa} X^{\kappa}_{\alpha} \f]
+ * Here, \f$ \mathbf{d}_{ij} \f$ is the normalized vector connecting the cell centers, and \f$ \mathbf{n}_{\gamma} \f$
+ * represents the normal of the face \f$ \gamma \f$. Due to the nature of the primay Variable, the (volume-)specific
  * total mass concentration, this represents a mass flux per cell volume.
+ *
  * \param fluxEntries The flux entries, mass influx from cell \f$j\f$ to \f$i\f$.
  * \param timestepFlux flow velocities for timestep estimation
  * \param intersection The intersection
@@ -585,11 +599,11 @@ void FVTransport2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& fluxEntries
     return;
 }
 //! Get flux on Boundary
-/** The flux thorugh \f$ \gamma{ij} \f$  is calculated according to the underlying pressure field,
+/** The flux through \f$ \gamma \f$  is calculated according to the underlying pressure field,
  * calculated by the pressure model.
- *  \f[ - A_{\gamma_{ij}}  \cdot \mathbf{u} \cdot (\mathbf{n}_{\gamma_{ij}} \cdot \mathbf{u})\cdot \mathbf{K}
+ *  \f[ - A_{\gamma}  \mathbf{n}^T_{\gamma} \mathbf{K} \mathbf{d}_{i-Boundary}
       \sum_{\alpha} \varrho_{\alpha} \lambda_{\alpha} \sum_{\kappa} X^{\kappa}_{\alpha}
-    \left( \frac{p_{\alpha,j}^t - p^{t}_{\alpha,i}}{\Delta x} + \varrho_{\alpha} \mathbf{g}\right) \f]
+    \left( \frac{p_{\alpha,Boundary}^t - p^{t}_{\alpha,i}}{\Delta x} + \varrho_{\alpha}\mathbf{g}^T \mathbf{d}_{i-Boundary}\right) \f]
  * Here, \f$ \mathbf{u} \f$ is the normalized vector connecting the cell centers, and \f$ \mathbf{n}_{\gamma_{ij}} \f$
  * represents the normal of the face \f$ \gamma{ij} \f$.
  * \param fluxEntries The flux entries, mass influx from cell \f$j\f$ to \f$i\f$.
@@ -805,7 +819,7 @@ void FVTransport2P2C<TypeTag>::getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& f
  *  possible to define boundaries by means of a saturation. This choice determines
  *  which version of flash calculation is necessary to get to the composition at
  *  the boundary.
- *  \param globalPosFace Face of the current boundary
+ *  \param globalPosFace The global position of the face of the current boundary cell
  *  \param intersection The current intersection
  *  \param BCfluidState FluidState object that is used for the boundary
  *  \param pressBound Boundary values of phase pressures
