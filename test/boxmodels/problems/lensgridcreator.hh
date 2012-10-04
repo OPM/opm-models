@@ -339,7 +339,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
        
-        unsigned numRefinements = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinements = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         grid_ = new Dune::YaspGrid<LENS_DIM>(
 #ifdef HAVE_MPI

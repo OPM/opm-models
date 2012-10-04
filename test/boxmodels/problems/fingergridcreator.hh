@@ -120,7 +120,7 @@ public:
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
 
-        unsigned numRefinments = GET_PARAM_FROM_GROUP(TypeTag, unsigned, Grid, GlobalRefinements);
+        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         Dune::GridFactory<Grid> factory(grid_);
         
