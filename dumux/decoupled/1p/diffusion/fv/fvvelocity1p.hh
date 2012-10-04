@@ -149,7 +149,8 @@ public:
                     0);
 
             // get the transposed Jacobian of the element mapping
-            const DimMatrix& jacobianInv = eIt->geometry().jacobianInverseTransposed(localPos);
+            const auto &jacobianInv = 
+                eIt->geometry().jacobianInverseTransposed(localPos);
             DimMatrix jacobianT(jacobianInv);
             jacobianT.invert();
 
