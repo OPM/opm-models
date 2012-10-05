@@ -29,7 +29,7 @@
 #include <dumux/common/parameters.hh>
 #include <dumux/linear/linearsolverproperties.hh>
 
-#include <dune/istl/solvers.hh>
+#include <dumux/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -113,13 +113,13 @@ public:
     return result_.converged;
   }
 
-  const Dune::InverseOperatorResult& result() const
+  const Dumux::InverseOperatorResult& result() const
   {
     return result_;
   }
 
 private:
-  Dune::InverseOperatorResult result_;
+  Dumux::InverseOperatorResult result_;
 };
 
 /*!
@@ -140,7 +140,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqILUn<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::BiCGSTABSolver<Vector> Solver;
+    typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -164,7 +164,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqSOR<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::BiCGSTABSolver<Vector> Solver;
+    typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -188,7 +188,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqSSOR<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::BiCGSTABSolver<Vector> Solver;
+    typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -212,7 +212,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqGS<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::BiCGSTABSolver<Vector> Solver;
+    typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -236,7 +236,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqJac<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::BiCGSTABSolver<Vector> Solver;
+    typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -260,7 +260,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqILUn<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::CGSolver<Vector> Solver;
+    typedef Dumux::CGSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -284,7 +284,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqSOR<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::CGSolver<Vector> Solver;
+    typedef Dumux::CGSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -308,7 +308,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqSSOR<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::CGSolver<Vector> Solver;
+    typedef Dumux::CGSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -332,7 +332,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqGS<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::CGSolver<Vector> Solver;
+    typedef Dumux::CGSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -356,7 +356,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqJac<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::CGSolver<Vector> Solver;
+    typedef Dumux::CGSolver<Vector> Solver;
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -380,7 +380,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     typedef Dune::SeqSSOR<Matrix, Vector, Vector> Preconditioner;
-    typedef Dune::RestartedGMResSolver<Vector> Solver;
+    typedef Dumux::RestartedGMResSolver<Vector> Solver;
     const int restart = GET_PARAM(TypeTag, int, GMResRestart);
 
     return ParentType::template solve<Preconditioner, Solver>(A, x, b, restart);
@@ -457,13 +457,13 @@ public:
     return result_.converged;
   }
 
-  const Dune::InverseOperatorResult& result() const
+  const Dumux::InverseOperatorResult& result() const
   {
     return result_;
   }
 
 private:
-  Dune::InverseOperatorResult result_;
+  Dumux::InverseOperatorResult result_;
 };
 
 /*!
@@ -484,7 +484,7 @@ class ILU0BiCGSTABBackend : public ILU0SolverBackend<TypeTag>
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
       typedef Dune::SeqILU0<Matrix, Vector, Vector> Preconditioner;
-      typedef Dune::BiCGSTABSolver<Vector> Solver;
+      typedef Dumux::BiCGSTABSolver<Vector> Solver;
 
       return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -508,7 +508,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
       typedef Dune::SeqILU0<Matrix, Vector, Vector> Preconditioner;
-      typedef Dune::CGSolver<Vector> Solver;
+      typedef Dumux::CGSolver<Vector> Solver;
 
       return ParentType::template solve<Preconditioner, Solver>(A, x, b);
   }
@@ -538,7 +538,7 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
       typedef Dune::SeqILU0<Matrix, Vector, Vector> Preconditioner;
-      typedef Dune::RestartedGMResSolver<Vector> Solver;
+      typedef Dumux::RestartedGMResSolver<Vector> Solver;
       const int restart = GET_PARAM(TypeTag, int, GMResRestart);
 
       return ParentType::template solve<Preconditioner, Solver>(A, x, b, restart);
@@ -573,7 +573,6 @@ public:
 
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     Dune::SuperLU<ISTLMatrix> solver(A, verbosity > 0);
-
     solver.apply(x, bTmp, result_);
     
     if (result_.converged) {
