@@ -131,14 +131,17 @@ public:
     //function which assembles the system of equations to be solved
     void assemble(bool first);
 
-    void get1pSource(EntryType&, const Element&, const CellData&);
+    void get1pSource(Dune::FieldVector<Scalar, 2>& sourceEntry, const Element& elementI, const CellData& cellDataI);
 
-    void get1pStorage(EntryType&, const Element&, CellData&);
+    void get1pStorage(Dune::FieldVector<Scalar, 2>& storageEntry,
+                      const Element& elementI,
+                      CellData& cellDataI);
+        
+    void get1pFlux(Dune::FieldVector<Scalar, 2>& entries,
+                   const Intersection& intersection, const CellData& cellDataI);
 
-    void get1pFlux(EntryType&, const Intersection&, const CellData&);
-
-    void get1pFluxOnBoundary(EntryType&,
-                            const Intersection&, const CellData&);
+    void get1pFluxOnBoundary(Dune::FieldVector<Scalar, 2>& entries,
+                             const Intersection& intersection, const CellData& cellDataI);
 
     //initialize mult-physics-specific pressure model stuff
     void initialize()

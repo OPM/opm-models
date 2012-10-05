@@ -150,15 +150,21 @@ public:
         REGISTER_PARAM(TypeTag, bool, ImpetEnableVolumeIntegral, "Enable the evaluation of the volume integral");
     }
 
-    void getSource(EntryType&, const Element&, const CellData&, const bool);
+    void getSource(Dune::FieldVector<Scalar, 2>& sourceEntry,
+                   const Element& elementI,
+                   const CellData& cellDataI,
+                   const bool first);        
 
+    void getStorage(Dune::FieldVector<Scalar, 2>& storageEntry,
+                    const Element& elementI,
+                    const CellData& cellDataI,
+                    const bool first);
 
-    void getStorage(EntryType&, const Element&, const CellData&, const bool);
+    void getFlux(Dune::FieldVector<Scalar, 2>& entries,
+                 const Intersection& intersection, const CellData& cellDataI, const bool first);
 
-    void getFlux(EntryType&, const Intersection&, const CellData&, const bool);
-
-    void getFluxOnBoundary(EntryType&,
-                            const Intersection&, const CellData&, const bool);
+    void getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& entries,
+                           const Intersection& intersection, const CellData& cellDataI, const bool first);
 
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws(bool inPostTimeStep = false);
@@ -334,7 +340,7 @@ void FVPressure2P2C<TypeTag>::getStorage(Dune::FieldVector<Scalar, 2>& storageEn
 
 
 //! Get flux at an interface between two cells
-/** for first == true, the flux is calculated in traditional fractional-flow forn as in FVPressure2P.
+/*! for first == true, the flux is calculated in traditional fractional-flow forn as in FVPressure2P.
  * for first == false, the flux thorugh \f$ \gamma \f$  is calculated via a volume balance formulation
  *  \f[ - A_{\gamma} \mathbf{n}^T_{\gamma} \mathbf{K}  \sum_{\alpha} \varrho_{\alpha} \lambda_{\alpha}
      \mathbf{d}_{ij}  \left( \frac{p_{\alpha,j}^t - p^{t}_{\alpha,i}}{\Delta x} + \varrho_{\alpha} \mathbf{g}^T \mathbf{d}_{ij} \right)

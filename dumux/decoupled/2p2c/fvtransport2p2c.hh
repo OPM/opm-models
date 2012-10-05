@@ -121,15 +121,22 @@ public:
     void updateTransportedQuantity(TransportSolutionType& updateVector);
 
     // Function which calculates the flux update
-    void getFlux(EntryType&, EntryType&,
-            const Intersection&, CellData&);
+    void getFlux(Dune::FieldVector<Scalar, 2>& fluxEntries,
+                 Dune::FieldVector<Scalar, 2>& timestepFlux,
+                 const Intersection& intersection,
+                 CellData& cellDataI);
 
     // Function which calculates the boundary flux update
-    void getFluxOnBoundary(EntryType&, EntryType&,
-                            const Intersection&, const CellData&);
+    void getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& fluxEntries,
+                           Dune::FieldVector<Scalar, 2>& timestepFlux,
+                           const Intersection& intersection,
+                           const CellData& cellDataI);
 
-    void evalBoundary(GlobalPosition,const Intersection&,FluidState &, PhaseVector &);
-
+    void evalBoundary(GlobalPosition globalPosFace,
+                      const Intersection& intersection,
+                      FluidState &BCfluidState,
+                      PhaseVector &pressBound);
+ 
     //! Set the initial values before the first pressure equation
     /*!
      * This method is called before first pressure equation is solved from Dumux::IMPET.
