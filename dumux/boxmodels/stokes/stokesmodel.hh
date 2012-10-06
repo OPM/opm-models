@@ -47,34 +47,34 @@ namespace Dumux {
  * default, it solves the momentum balance of the time-dependent Stokes
  * equations, i.e.
  * \f[
- * \frac{\partial \left(\varrho_g {\boldsymbol{v}}_g\right)}{\partial t} 
- * + boldsymbol{\nabla} p_g
- * - \boldsymbol{\nabla} \boldsymbol{\cdot}
+ * \frac{\partial \left(\varrho\,\mathbf{v}\right)}{\partial t} 
+ * + \boldsymbol{\nabla} p
+ * - \nabla \cdot
  * \left( 
- * \mu_g \left(\boldsymbol{\nabla} \boldsymbol{v}_g + \boldsymbol{\nabla} \boldsymbol{v}_g^T\right)
+ * \mu \left(\boldsymbol{\nabla} \mathbf{v} + \boldsymbol{\nabla} \mathbf{v}^T\right)
  * \right)
- * - \varrho_g {\bf g}
+ * - \varrho\,\mathbf{g}
  * = 0\;,
  * \f]
  * and the mass balance equation
  * \f[
- * \frac{\partial \varrho_g}{\partial t}
- * + \boldsymbol{\nabla}\boldsymbol{\cdot}\left(\varrho_g {\boldsymbol{v}}_g\right)
- * - q_g
+ * \frac{\partial \varrho}{\partial t}
+ * + \nabla \cdot\left(\varrho\,\mathbf{v}\right)
+ * - q
  * = 0 \;.
  * \f]
  *
  * If the property \c EnableNavierStokes is set to \c true, an
  * additional convective momentum flux term (Navier term) gets
  * included into the momentum conservation equations which allows to
- * simulate turbolent flow. This additional term is given by
+ * capture turbolent flow regimes. This additional term is given by
  *  \f[
- * \varrho_g \left(\boldsymbol{v}_g \boldsymbol{\cdot} \boldsymbol{\nabla} \right) \boldsymbol{v}_g \;.
+ * \varrho \left(\mathbf{v} \cdot \boldsymbol{\nabla} \right) \mathbf{v} \;.
  * \f]
  *
  * These equations are discretized by a fully-coupled vertex-centered
  * finite volume (box) scheme in space and using the implicit Euler
- * method in time. Be aware that this discretization scheme is quite
+ * method in time. Be aware, that this discretization scheme is quite
  * unstable for the Navier-Stokes equations and quickly leads to
  * unphysical oscillations in the calculated solution. We intend to
  * use a more appropriate discretization scheme in the future, though.

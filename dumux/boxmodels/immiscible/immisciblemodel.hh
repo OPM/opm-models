@@ -35,39 +35,38 @@
 namespace Dumux {
 /*!
  * \ingroup ImmiscibleBoxModel
- * \brief A isothermal multi-phase flow model using the box scheme.
+ * \brief A fully-implicit multi-phase flow model which assumes
+ *        immiscibility of the phases.
  *
- * This model implements multi-phase flow of immiscible fluids
- * \f$\alpha \in \{ w, n \}\f$ using a standard multiphase Darcy
- * approach as the equation for the conservation of momentum, i.e.
- \f[
- v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \textbf{K}
- \left(\textbf{grad}\, p_\alpha - \varrho_{\alpha} {\textbf g} \right)
- \f]
+ * This model multi-phase flow of \f$M > 0\f$ immiscible
+ * fluids \f$\alpha\f$. By default, the standard multi-phase Darcy
+ * approach is used to determine the velocity, i.e.
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * although the actual approach which is used can be specified via the
+ * \c VelocityModule property. For example, the velocity model can by
+ * changed to the Forchheimer approach by
+ * \code
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+ * \endcode
  *
- * By inserting this into the equation for the conservation of the
- * phase mass, one gets
- \f[
- \phi \frac{\partial \varrho_\alpha S_\alpha}{\partial t}
- -
- \text{div} \left\{
- \varrho_\alpha \frac{k_{r\alpha}}{\mu_\alpha} \mbox{\bf K} \left(\textbf{grad}\, p_\alpha - \varrho_{\alpha} \mbox{\bf g} \right)
- \right\} - q_\alpha = 0 \;,
- \f]
+ * The core of the model is the conservation mass of each component by
+ * means of the equation
+ * \f[
+ * \frac{\partial\;\phi S_\alpha \rho_\alpha }{\partial t}
+ * - \text{div} \left\{ \rho_\alpha \mathbf{v}_\alpha  \right\}
+ * - q_\alpha = 0 \;.
+ * \f]
  *
- * These equations are discretized by a fully-coupled vertex centered finite volume
- * (box) scheme as spatial and the implicit Euler method as time
- * discretization.
+ * These equations are discretized by a fully-coupled vertex centered
+ * finite volume (box) scheme as spatial and the implicit Euler method
+ * as time discretization.
  *
- * By using constitutive relations for the capillary pressure \f$p_c =
- * p_n - p_w\f$ and relative permeability \f$k_{r\alpha}\f$ and taking
- * advantage of the fact that \f$S_w + S_n = 1\f$, the number of
- * unknowns can be reduced to N. Currently the model supports
- * choosing either \f$p_w\f$ and \f$S_n\f$ or \f$p_n\f$ and \f$S_w\f$
- * as primary variables. The formulation which ought to be used can be
- * specified by setting the <tt>Formulation</tt> property to either
-
- * default, the model uses \f$p_w\f$ and \f$S_n\f$.
+ * The model uses the following primary variables:
+ * - The pressure \f$p_0\f$ in Pascal of the phase with the lowest index
+ * - The saturations \f$S_\alpha\f$ of the \f$M - 1\f$ phases that
+ *   exhibit the lowest indices
+ * - The absolute temperature \f$T\f$ in Kelvin if energy is conserved
+ *   via the energy equation
  */
 template<class TypeTag >
 class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)

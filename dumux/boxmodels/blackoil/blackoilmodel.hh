@@ -35,6 +35,64 @@ namespace Dumux {
 /*!
  * \ingroup BlackOilBoxModel
  * \brief A fully-implicit black-oil flow model using the box scheme.
+ *
+ * The black-oil model is a three-phase, three-component model widely
+ * used for oil reservoir simulation.  The phases are denoted by lower
+ * index \f$\alpha \in \{ w, g, o \}\f$ ("water", "gas" and "oil") and
+ * the components by upper index \f$\kappa \in \{ W, G, O \}\f$
+ * ("Water", "Gas" and "Oil"). The model assumes partial miscibility:
+ *
+ * - Water and the gas phases are immisicible and are assumed to be
+ *   only composed of the water and gas components respectively-
+ * - The oil phase is assumed to be a mixture of the gas and the oil
+ *  components.
+ *
+ * The densities of the phases are determined by so-called
+ * <i>formation volume factors</i>:
+ *
+ * \f[
+ * B_\alpha := \frac{\varrho_\alpha(1\,\text{bar})}{\varrho_\alpha(p_\alpha)}
+ * \f]
+ *
+ * Since the gas and water phases are assumed to be immiscible, this
+ * is sufficint to calculate their density. For the formation volume
+ * factor of the the oil phase \f$B_o\f$ determines the density of
+ * *saturated* oil, i.e. the density of the oil phase if some gas
+ * phase is present.
+ * 
+ * The composition of the oil phase is given by the <i>gas formation
+ * factor</i> \f$R_s\f$, which defined as the volume of gas at
+ * atmospheric pressure that is dissolved in saturated oil at a given
+ * pressure:
+ * 
+ * \f[
+ * R_s := \frac{x_o^G(p)\,\varrho_{mol,o}(p)}{\varrho_g(1\,\text{bar})}\;.
+ * \f]
+ * 
+ * This allows to calculate all quantities required for the
+ * mass-conservation equations for each component, i.e.
+ *
+ * \f[
+ * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
+ * - \sum_\alpha \text{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - q^\kappa = 0 \;,
+ * \f]
+ * where \f$\mathrm{v}_\alpha\f$ is the filter velocity of the phase
+ * \f$\alpha\f$.
+ *
+ * By default \f$\mathrm{v}_\alpha\f$ is determined by using the
+ * standard multi-phase Darcy approach, i.e.
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * although the actual approach which is used can be specified via the
+ * \c VelocityModule property. For example, the velocity model can by
+ * changed to the Forchheimer approach by
+ * \code
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+ * \endcode
+ *
+ * The primary variables used by this model are:
+ * - The pressure of the phase with the lowest index
+ * - The two saturations of the phases with the lowest indices
  */
 template<class TypeTag >
 class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)

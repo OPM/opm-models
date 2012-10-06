@@ -39,6 +39,56 @@ namespace Dumux {
  * \ingroup FlashModel
  *
  * \brief A compositional multi-phase model based on flash-calculations
+ *
+ * \brief A generic compositional multi-phase model using primary-variable switching.
+ *
+ * This model assumes a flow of \f$M \geq 1\f$ fluid phases
+ * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
+ * M\f$ chemical species (denoted by the upper index \f$\kappa\f$).
+ *
+ * By default, the standard multi-phase Darcy approach is used to determine
+ * the velocity, i.e.
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * although the actual approach which is used can be specified via the
+ * \c VelocityModule property. For example, the velocity model can by
+ * changed to the Forchheimer approach by
+ * \code
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+ * \endcode
+ *
+ * The core of the model is the conservation mass of each component by
+ * means of the equation
+ * \f[
+ * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
+ * - \sum_\alpha \text{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - q^\kappa = 0 \;.
+ * \f]
+ *
+ * To determine the quanties that occur in the equations above, this
+ * model uses <i>flash calculations</i>. A flash solver starts with
+ * the total mass or molar mass per volume for each component and,
+ * calculates the compositions, saturations and pressures of all
+ * phases at a given temperature. For this the flash solver has to use
+ * some model assumptions internally. (Often these are the same
+ * primary variable switching or NCP assumptions as used by the other
+ * fully implicit compositional multi-phase models provided by eWoms.)
+ *
+ * Using flash calculations for the flow model has some disadvantages:
+ * - The accuracy of the flash solver needs to be sufficient to
+ *   calculate the parital derivatives using numerical differentiation
+ *   which are required for the Newton scheme.
+ * - Flash calculations tend to be quite computationally expensive and
+ *   are often numerically unstable.
+ *
+ * It is thus adviced to increase the target tolerance of the Newton
+ * scheme or a to use type for scalar values which exhibits higher
+ * precision than the standard \c double (e.g. \c quad) if this model
+ * ought to be used.
+ *
+ * The model uses the following primary variables:
+ * - The total molar concentration of each component:
+ *   \f$c^\kappa = \sum_\alpha S_\alpha x_\alpha^\kappa \rho_{mol, \alpha}\f$
+ * - The absolute temperature $T$ in Kelvins if the energy equation enabled.
  */
 template<class TypeTag>
 class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)

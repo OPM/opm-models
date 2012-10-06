@@ -46,7 +46,7 @@ namespace Dumux {
  * \frac{\partial\;\phi S_\alpha \rho_\alpha}{\partial t}
  * -
  * \text{div} \left\{
- * \rho_\alpha \frac{k_{r\alpha}}{\mu_\alpha}\; \mathbf{K}
+ * \rho_\alpha \frac{k_{r\alpha}}{\mu_\alpha}\; \mathbf{K}\;
  * \textbf{grad}\left[
  * p_\alpha - g\rho_\alpha
  * \right]

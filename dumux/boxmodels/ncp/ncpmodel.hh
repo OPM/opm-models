@@ -41,7 +41,7 @@ namespace Dumux {
 /*!
  * \ingroup NcpModel
  *
- * \brief A fully implicit model for M-phase, N-component flow using
+ * \brief A fully implicit model compositional multi-phase model using
  *        vertex centered finite volumes.
  *
  * This model implements a \f$M\f$-phase flow of a fluid mixture
@@ -50,44 +50,34 @@ namespace Dumux {
  * are mixtures of \f$N \geq M - 1\f$ chemical species which are
  * denoted by the upper index \f$\kappa \in \{ 1, \dots, N \} \f$.
  *
- * The standard multi-phase Darcy law is used as the equation for
- * the conservation of momentum:
- * \f[
-     v_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \boldsymbol{K}
-     \left(
-       \text{grad}\left(p_\alpha - \varrho_{\alpha} g\right)
-     \right)
-     \f]
  *
- * By inserting this into the equations for the conservation of the
- * mass of each component, one gets one mass-continuity equation for
- * each component \f$\kappa\f$
- * \f[
- \sum_{\kappa} \left(
-    \phi \frac{\partial \varrho_\alpha x_\alpha^\kappa S_\alpha}{\partial t}
-    -
-    \mathrm{div}\;
-    \left\{
-       \frac{\varrho_\alpha}{\overline M_\alpha} x_\alpha^\kappa
-       \frac{k_{r\alpha}}{\mu_\alpha} \boldsymbol{K}
-       \text{grad}\left( p_\alpha - \varrho_{\alpha} g\right)
-    \right\}
-    \right)
-    = q^\kappa
-    \f]
- * with \f$\overline M_\alpha\f$ being the average molar mass of the
- * phase \f$\alpha\f$: \f[ \overline M_\alpha = \sum_\kappa M^\kappa
- * \; x_\alpha^\kappa \f]
+ * By default, the standard multi-phase Darcy approach is used to determine
+ * the velocity, i.e.
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * although the actual approach which is used can be specified via the
+ * \c VelocityModule property. For example, the velocity model can by
+ * changed to the Forchheimer approach by
+ * \code
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+ * \endcode
  *
- * For the missing \f$M\f$ model assumptions, the model assumes that
- * if a fluid phase is not present, the sum of the mole fractions of
- * this fluid phase is smaller than \f$1\f$, i.e.  
+ * The core of the model is the conservation mass of each component by
+ * means of the equation
  * \f[
- * \forall \alpha: S_\alpha = 0 \implies \sum_\kappa x_\alpha^\kappa \leq 1
+ * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
+ * - \sum_\alpha \text{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - q^\kappa = 0 \;.
  * \f]
  *
+ * For the missing \f$M\f$ model assumptions, the model uses
+ * non-linear complementarity functions. These are based on the
+ * observation that if a fluid phase is not present, the sum of the
+ * mole fractions of this fluid phase is smaller than \f$1\f$, i.e.
+ * \f[ \forall \alpha: S_\alpha = 0 \implies \sum_\kappa
+ * x_\alpha^\kappa \leq 1 \f]
+ *
  * Also, if a fluid phase may be present at a given spatial location
- * its saturation must be positive:
+ * its saturation must be non-negative:
  * \f[ \forall \alpha: \sum_\kappa x_\alpha^\kappa = 1 \implies S_\alpha \geq 0 \f]
  *
  * Since at any given spatial location, a phase is always either
@@ -98,7 +88,7 @@ namespace Dumux {
  *
  * These three equations constitute a non-linear complementarity
  * problem, which can be solved using so-called non-linear
- * complementarity functions \f$\Phi(a, b)\f$ which have the property
+ * complementarity functions \f$\Phi(a, b)\f$. Such functions have the property
  * \f[\Phi(a,b) = 0 \iff a \geq0 \land b \geq0  \land a \cdot b = 0 \f]
  *
  * Several non-linear complementarity functions have been suggested,
@@ -115,8 +105,8 @@ namespace Dumux {
  *
  * The model assumes local thermodynamic equilibrium and uses the
  * following primary variables:
- * - The component fugacities \f$f^1, \dots, f^{N}\f$
  * - The pressure of the first phase \f$p_1\f$
+ * - The component fugacities \f$f^1, \dots, f^{N}\f$
  * - The saturations of the first \f$M-1\f$ phases \f$S_1, \dots, S_{M-1}\f$
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
