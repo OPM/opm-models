@@ -24,10 +24,10 @@
  */
 #include "config.h"
 
-#include "problems/obstacleproblem.hh"
-
 #include <dumux/boxmodels/ncp/ncpmodel.hh>
 #include <dumux/common/start.hh>
+
+#include "problems/obstacleproblem.hh"
 
 namespace Dumux {
 namespace Properties {

@@ -73,7 +73,7 @@
 #include <memory>
 
 namespace Dumux {
-  /** @defgroup ISTL_Solvers Iterative Solvers
+  /** @defgroup ISTL_Solvers Iterative Linear Solvers
       @ingroup ISTL
   */
   /** @addtogroup ISTL_Solvers

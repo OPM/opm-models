@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief Soil contamination problem where DNAPL infiltrates a fully
- *        water saturated medium.
+ * \copydoc Dumux::FingerProblem
  */
 #ifndef DUMUX_FINGER_PROBLEM_HH
 #define DUMUX_FINGER_PROBLEM_HH
@@ -44,10 +43,7 @@
 
 #include <iostream>
 
-#define FINGER_USE_PARKER_LENHARD 1
-
-namespace Dumux
-{
+namespace Dumux {
 
 template <class TypeTag>
 class FingerProblem;
@@ -55,26 +51,17 @@ class FingerProblem;
 //////////
 // Specify the properties for the finger problem
 //////////
-namespace Properties
-{
+namespace Properties {
 NEW_TYPE_TAG(FingerBaseProblem);
-
-// declare the properties specific for the finger problem
-NEW_PROP_TAG(DomainSizeX);
-NEW_PROP_TAG(DomainSizeY);
-NEW_PROP_TAG(DomainSizeZ);
-
-NEW_PROP_TAG(CellsX);
-NEW_PROP_TAG(CellsY);
-NEW_PROP_TAG(CellsZ);
-
-NEW_PROP_TAG(InitialWaterSaturation);
 
 // set the GridCreator property
 SET_TYPE_PROP(FingerBaseProblem, GridCreator, FingerGridCreator<TypeTag>);
 
 // Retrieve the grid type from the grid creator
 SET_TYPE_PROP(FingerBaseProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
+
+// declare the properties specific for the finger problem
+NEW_PROP_TAG(InitialWaterSaturation);
 
 // Set the problem property
 SET_TYPE_PROP(FingerBaseProblem, Problem, Dumux::FingerProblem<TypeTag>);
@@ -101,18 +88,11 @@ public:
 SET_PROP(FingerBaseProblem, MaterialLaw)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-#if FINGER_USE_PARKER_LENHARD
+
     // use the parker-lenhard hysteresis law
     typedef Dumux::ParkerLenhard<Scalar> TwoPMaterialLaw;
     typedef Dumux::ParkerLenhard<Scalar> ParkerLenhard;
-#else
-    // define the material law which is parameterized by effective
-    // saturations
-    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
-    // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-#endif
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
@@ -160,9 +140,18 @@ SET_SCALAR_PROP(FingerBaseProblem, InitialTimeStepSize, 10);
 
 /*!
  * \ingroup BoxTestProblems
- * \brief Two-phase problem might sometimes featuring a saturation overshoot.
  *
- * This problem was proposed by Rainer Helmig.
+ * \brief Two-phase problem featuring some gravity-driven saturation
+ *        fingers.
+ *
+ * The domain of this problem is sized 10cm times 1m and is initially
+ * dry. Water is then injected at three locations on the top of the
+ * domain which leads to gravity fingering. The boundary conditions
+ * used are no-flow for the left and right and top of the domain and
+ * free-flow at the bottom. This problem uses the Parker-Lenhard
+ * hystersis model which might lead to non-monotonic saturation in the
+ * fingers if the right material parameters is chosen and the spatial
+ * discretization is fine enough.
  */
 template <class TypeTag>
 class FingerProblem
@@ -202,9 +191,7 @@ class FingerProblem
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
 
-#if FINGER_USE_PARKER_LENHARD
     typedef typename GET_PROP(TypeTag, MaterialLaw)::ParkerLenhard ParkerLenhard;
-#endif
 
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -254,7 +241,7 @@ public:
      */
     void init()
     {
-#if FINGER_USE_PARKER_LENHARD
+
         // parameters for the Van Genuchten law of the main imbibition
         // and the main drainage curves.
         micParams_.setVgAlpha(0.0037);
@@ -274,14 +261,6 @@ public:
             materialParams_[i].setSnr(0.0);
             materialParams_[i].setSnre(0.0);
         }
-#else
-        // parameters for the Van Genuchten law
-        materialParams_.setVgAlpha(0.0037);
-        materialParams_.setVgN(4.7);
-
-        materialParams_.setSwr(0.02);
-        materialParams_.setSnr(0.00);
-#endif
 
         K_ = this->toDimMatrix_(4.6e-10);
 
@@ -295,7 +274,6 @@ public:
      */
     void postTimeStep()
     {
-#if FINGER_USE_PARKER_LENHARD
         // update the history of the hysteresis law
         ElementContext elemCtx(*this);
 
@@ -311,7 +289,6 @@ public:
                                       fs.saturation(wPhaseIdx));
             }
         }
-#endif
     }
 
     //! \}
@@ -350,12 +327,8 @@ public:
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-#if FINGER_USE_PARKER_LENHARD
         int globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
         return materialParams_[globalSpaceIdx];
-#else
-        return materialParams_;
-#endif
     }
 
     //! \}
@@ -493,14 +466,11 @@ private:
 
     DimMatrix K_;
 
-#if FINGER_USE_PARKER_LENHARD
     typename MaterialLawParams::VanGenuchtenParams micParams_;
     typename MaterialLawParams::VanGenuchtenParams mdcParams_;
 
     std::vector<MaterialLawParams> materialParams_;
-#else
-    MaterialLawParams materialParams_;
-#endif
+
     ImmiscibleFluidState<Scalar, FluidSystem> initialFluidState_;
 
     Scalar temperature_;

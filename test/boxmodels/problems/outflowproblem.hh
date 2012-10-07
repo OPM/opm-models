@@ -37,6 +37,7 @@ template <class TypeTag>
 class OutflowProblem;
 
 namespace Properties {
+
 NEW_TYPE_TAG(OutflowBaseProblem);
 
 // Set the grid type
@@ -45,11 +46,12 @@ SET_TYPE_PROP(OutflowBaseProblem, Grid, Dune::YaspGrid<2>);
 // Set the problem property
 SET_TYPE_PROP(OutflowBaseProblem, Problem, Dumux::OutflowProblem<TypeTag>);
 
-// Set fluid configuration
+// Set fluid system
 SET_PROP(OutflowBaseProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
+    // Two-component single phase fluid system
     typedef Dumux::FluidSystems::H2ON2LiquidPhase<Scalar> type;
 };
 
@@ -77,16 +79,16 @@ SET_STRING_PROP(OutflowBaseProblem, GridFile, "./grids/outflow.dgf");
  * \brief Problem where dissolved nitrogen is transported with the water 
  *        phase from the left side to the right.
  *
- * The model domain is 1m times 1m with a discretization length of 0.05m
- * and homogeneous soil properties (\f$ \mathrm{K=10e-10, \Phi=0.4}\f$).
- * Initially the domain is filled with pure water.
+ * The model domain is 1m times 1m and exhibits homogeneous soil
+ * properties (\f$ \mathrm{K=10e-10, \Phi=0.4}\f$).  Initially the
+ * domain is fully saturated by water without any nitrogen dissolved.
  *
- * At the left side, a Dirichlet condition defines a nitrogen mole fraction
- * of 0.3 mol/mol.
- * The water phase flows from the left side to the right due to the applied pressure
- * gradient of 1e5Pa/m. The nitrogen is transported with the water flow
- * and leaves the domain at the right boundary
- * where an outflow boundary condition is applied.
+ * At the left side, a free-flow condition defines a nitrogen mole
+ * fraction of 0.02%.  The water phase flows from the left side to the
+ * right due to the imposed pressure gradient of \f$1e5\,Pa/m\f$. The
+ * nitrogen is transported with the water flow and leaves the domain
+ * at the right boundary where an outflow boundary condition is
+ * used.
  */
 template <class TypeTag>
 class OutflowProblem
@@ -217,8 +219,9 @@ public:
             initialFluidState_(fs, context, spaceIdx, timeIdx);
             fs.setPressure(/*phaseIdx=*/0, fs.pressure(/*phaseIdx=*/0) + 1e5);
 
-            fs.setMoleFraction(/*phaseIdx=*/0, N2Idx, 2e-5);
-            fs.setMoleFraction(/*phaseIdx=*/0, H2OIdx, 1 - 2e-5);
+            Scalar xlN2 = 2e-4;
+            fs.setMoleFraction(/*phaseIdx=*/0, N2Idx, xlN2);
+            fs.setMoleFraction(/*phaseIdx=*/0, H2OIdx, 1 - xlN2);
 
             // impose an freeflow boundary condition
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);

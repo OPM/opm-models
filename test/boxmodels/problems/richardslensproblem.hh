@@ -19,9 +19,7 @@
 /*!
  * \file
  *
- * \brief A water infiltration problem with a low-permeability lens
- *        embedded into a high-permeability domain which uses the
- *        Richards box model.
+ * \copydoc Dumux::RichardsLensProblem
  */
 #ifndef DUMUX_RICHARDS_LENS_PROBLEM_HH
 #define DUMUX_RICHARDS_LENS_PROBLEM_HH
@@ -46,8 +44,8 @@ class RichardsLensProblem;
 //////////
 // Specify the properties for the lens problem
 //////////
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(RichardsLensProblem, BoxRichards);
 
 // Use 2d YaspGrid
@@ -120,24 +118,17 @@ SET_STRING_PROP(RichardsLensProblem, GridFile, "./grids/richardslens_24x16.dgf")
  * \ingroup BoxTestProblems
  *
  * \brief A water infiltration problem with a low-permeability lens
- *        embedded into a high-permeability domain which uses the
- *        Richards box model.
+ *        embedded into a high-permeability domain.
  *
- * The domain is rectangular. Left and right boundaries are Dirichlet
- * boundaries with fixed water pressure (fixed Saturation \f$S_w = 0\f$),
- * bottom boundary is closed (Neumann 0 boundary), the top boundary
- * (Neumann 0 boundary) is also closed except for infiltration
- * section, where water is infiltrating into an initially unsaturated
- * porous medium. This problem is very similar the the LensProblem
- * which uses the TwoPBoxModel, with the main difference being that
- * the domain is initally fully saturated by gas instead of water and
- * water instead of a %DNAPL infiltrates from the top.
- *
- * To run the simulation execute the following line in shell:
- * <tt>./test_richards -parameterFile test_richards.input</tt>
- *
- * where the initial time step is 100 seconds, and the end of the
- * simulation time is 10,000,000 seconds (115.7 days)
+ * The domain is rectangular. The left and right boundaries are
+ * free-flow boundaries with fixed water pressure which corrosponds to
+ * a fixed saturation of \f$S_w = 0\f$ in the Richards model, the
+ * bottom boundary is closed. The top boundary is also closed except
+ * for an infiltration section, where water is infiltrating into an
+ * initially unsaturated porous medium. This problem is very similar
+ * the the \c LensProblem, with the main difference being that the domain
+ * is initally fully saturated by gas instead of water and water
+ * instead of a \c DNAPL infiltrates from the top.
  */
 template <class TypeTag>
 class RichardsLensProblem

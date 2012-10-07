@@ -19,15 +19,7 @@
 /*!
  * \file
  *
- * \brief 1D problem with very fast injection of gas on the left.
- *
- * The velocity model is chosen in the .cc file for the problem. The
- * spatial parameters are inspired by the ones given by
- *
- * V. Jambhekar: "Forchheimer Porous-media Flow models -- Numerical
- * Investigation and Comparison with Experimental Data", Master's
- * Thesis at Institute for Modelling Hydraulic and Environmental
- * Systems, University of Stuttgart, 2011
+ * \copydoc Dumux::PowerInjectionProblem
  */
 #ifndef DUMUX_POWER_INJECTION_PROBLEM_HH
 #define DUMUX_POWER_INJECTION_PROBLEM_HH
@@ -48,6 +40,7 @@
 #include <iostream>
 
 namespace Dumux {
+
 template <class TypeTag>
 class PowerInjectionProblem;
 
@@ -55,22 +48,14 @@ class PowerInjectionProblem;
 // Specify the properties for the powerInjection problem
 //////////
 namespace Properties {
+
 NEW_TYPE_TAG(PowerInjectionBaseProblem);
 
-// declare the properties specific for the power injection problem
-NEW_PROP_TAG(DomainSizeX);
-NEW_PROP_TAG(DomainSizeY);
-NEW_PROP_TAG(DomainSizeZ);
-
-NEW_PROP_TAG(CellsX);
-NEW_PROP_TAG(CellsY);
-NEW_PROP_TAG(CellsZ);
+// Set the grid implementation to be used
+SET_TYPE_PROP(PowerInjectionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 
 // set the GridCreator property
 SET_TYPE_PROP(PowerInjectionBaseProblem, GridCreator, CubeGridCreator<TypeTag>);
-
-// Retrieve the grid type from the grid creator
-SET_TYPE_PROP(PowerInjectionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 
 // Set the problem property
 SET_TYPE_PROP(PowerInjectionBaseProblem, Problem, Dumux::PowerInjectionProblem<TypeTag>);
@@ -117,7 +102,7 @@ SET_BOOL_PROP(PowerInjectionBaseProblem, VtkWriteFilterVelocities, true);
 // Disable gravity
 SET_BOOL_PROP(PowerInjectionBaseProblem, EnableGravity, false);
 
-// define the properties specific for the powerInjection problem
+// define the properties specific for the power injection problem
 SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeX, 100.0);
 SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeY, 1.0);
 SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeZ, 1.0);
@@ -137,7 +122,7 @@ SET_SCALAR_PROP(PowerInjectionBaseProblem, InitialTimeStepSize, 1e-3);
  * \ingroup BoxTestProblems
  * \brief 1D Problem with very fast injection of gas on the left.
  *
- * The velocity model is chosen in the .cc file for the problem. The
+ * The velocity model is chosen in the .cc file in this problem. The
  * spatial parameters are inspired by the ones given by
  *
  * V. Jambhekar: "Forchheimer Porous-media Flow models -- Numerical

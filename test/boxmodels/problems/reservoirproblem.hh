@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief Some simple test problem for the black-oil box model
- *        inspired by a simple reservoir.
+ * \copydoc Dumux::ReservoirProblem
  */
 #ifndef DUMUX_RESERVOIR_PROBLEM_HH
 #define DUMUX_RESERVOIR_PROBLEM_HH
@@ -35,17 +34,22 @@
 #include <iostream>
 #include <string>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class ReservoirProblem;
 
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(ReservoirBaseProblem);
 
+// Problem specific properties:
+
+// Maximum depth of the reservoir
 NEW_PROP_TAG(MaxDepth);
+// The temperature inside the reservoir
 NEW_PROP_TAG(Temperature);
+// The name of the simulation (used for writing VTK files)
 NEW_PROP_TAG(SimulationName);
 
 // Set the grid type
@@ -100,6 +104,19 @@ SET_STRING_PROP(ReservoirBaseProblem, GridFile, "grids/reservoir.dgf");
  *
  * \brief Some simple test problem for the black-oil box model
  *        inspired by an oil reservoir.
+ *
+ * The domain is two-dimensional and exhibits a size of 6000m times
+ * 60m. Initially, the reservoir is assumed by oil with a bubble point
+ * pressure of 20 MPa, which also the initial pressure in the
+ * domain. No-flow boundaries are used for all boundaries. The
+ * permeability of the lower 10 m is reduced compared to the upper 10
+ * m of the domain witch capillary pressure always being
+ * neglected. Three wells are approximated using constraints: Two
+ * water-injector wells, one at the lower-left boundary one at the
+ * lower-right boundary and one producer well in the upper part of the
+ * center of the domain. The pressure for the producer is assumed to
+ * be 2/3 of the reservoir pressure, the injector wells use a pressure
+ * which is 50% above the reservoir pressure.
  */
 template <class TypeTag>
 class ReservoirProblem 

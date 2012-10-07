@@ -19,7 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief A simple problem using the isothermal Stokes model and two components.
+ * \copydoc Dumux::Stokes2cTestProblem
  */
 #ifndef DUMUX_STOKES_2C_TEST_PROBLEM_HH
 #define DUMUX_STOKES_2C_TEST_PROBLEM_HH
@@ -30,8 +30,7 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 template <class TypeTag>
 class Stokes2cTestProblem;
@@ -39,8 +38,8 @@ class Stokes2cTestProblem;
 //////////
 // Specify the properties for the stokes2c problem
 //////////
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(Stokes2cTestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
@@ -78,11 +77,13 @@ SET_STRING_PROP(Stokes2cTestProblem, GridFile, "grids/test_stokes2c.dgf");
 /*!
  * \ingroup BoxStokes2cModel
  * \ingroup BoxTestProblems
- * \brief Stokes transport problem with air flowing
- *        from the left to the right.
  *
- * The domain is sized 1m times 1m. The boundary conditions for the
- * momentum balances are all set to Dirichlet.
+ * \brief Stokes transport problem with humid air flowing from the
+ *        left to the right.
+ *
+ * The domain is sized 1m times 1m. The boundaries are specified using
+ * constraints, with finite volumes on the left side of the domain
+ * exhibiting slightly higher humitiy than the ones on the right.
  */
 template <class TypeTag>
 class Stokes2cTestProblem

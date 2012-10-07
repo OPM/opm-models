@@ -20,9 +20,7 @@
 /*!
  * \file
  *
- * \brief Non-isothermal gas injection problem where a gas (e.g. steam/air)
- *        is injected into a unsaturated porous medium with a residually
- *        trapped NAPL contamination.
+ * \copydoc Dumux::CuvetteProblem
  */
 #ifndef DUMUX_CUVETTE_PROBLEM_HH
 #define DUMUX_CUVETTE_PROBLEM_HH
@@ -41,13 +39,13 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class CuvetteProblem;
 
-namespace Properties
-{
+namespace Properties {
+
 // create a new type tag for the cuvette steam injection problem
 NEW_TYPE_TAG(CuvetteBaseProblem);
 
@@ -120,28 +118,30 @@ SET_STRING_PROP(CuvetteBaseProblem, GridFile, "./grids/cuvette_11x4.dgf");
 
 /*!
  * \ingroup BoxTestProblems
- * \brief Non-isothermal gas injection problem where a gas (e.g. steam/air)
+ *
+ * \brief Non-isothermal three-phase gas injection problem where a hot gas
  *        is injected into a unsaturated porous medium with a residually
  *        trapped NAPL contamination.
  *
- * The domain is a quasi-two-dimensional container (cuvette). Its dimensions
- * are 1.5 m x 0.74 m. The top and bottom boundaries are closed, the right
- * boundary is a free-flow boundary allowing fluids to escape. From the left,
- * an injection of a hot water-air mixture is applied (Inflow boundary condition
- * for the mass components and the enthalpy), aimed at remediating an initial 
- * NAPL (Non-Aquoeus Phase Liquid) contamination in the heterogeneous domain.
- * The contamination is initially placed partly into the coarse sand
- * and partly into a fine sand lense.
+ * The domain is a quasi-two-dimensional container (cuvette). Its
+ * dimensions are 1.5 m x 0.74 m. The top and bottom boundaries are
+ * closed, the right boundary is a free-flow boundary allowing fluids
+ * to escape. From the left, an injection of a hot water-air mixture
+ * is injected. The set-up is aimed at remediating an initial NAPL
+ * (Non-Aquoeus Phase Liquid) contamination in the domain.  The
+ * contamination is initially placed partly into the ambient coarse
+ * sand and partly into a fine sand lens.
  *
  * This simulation can be varied through assigning different boundary conditions
  * at the left boundary as described in Class (2001):
  * Theorie und numerische Modellierung nichtisothermer Mehrphasenprozesse in
- * NAPL-kontaminierten por"osen Medien, Dissertation, Eigenverlag des Instituts
- * f"ur Wasserbau
+ * NAPL-kontaminierten poroesen Medien, Dissertation, Eigenverlag des Instituts
+ * fuer Wasserbau
  *
- * To see the basic effect and the differences to scenarios with pure steam or
- * pure air injection, it is sufficient to simulated for about 2-3 hours (10000 s).
- * Complete remediation of the domain requires much longer (about 10 days simulated time).
+ * To see the basic effect and the differences to scenarios with pure
+ * steam or pure air injection, it is sufficient to simulate this
+ * problem to about 2-3 hours simulation time.  Complete remediation
+ * of the domain requires much longer (about 10 days simulated time).
  */
 template <class TypeTag >
 class CuvetteProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)

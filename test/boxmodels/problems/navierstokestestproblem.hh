@@ -96,12 +96,12 @@ SET_STRING_PROP(NavierStokesTestProblem, GridFile, "grids/test_navierstokes.dgf"
  * for incompressible flow using the Navier-Stokes equations and a multigrid
  * method", Journal of Computational Physics, Vol. 48, pp. 387-411.
  * 
- * The domain is two-dimensional and sized 1m times 1m. The boundary conditions 
- * for the momentum balances are Neumann zero boundary conditions except for
- * the top, which is floating from left to right with 1 m/s. The mass balance 
- * has outflow boundary conditions, which are replaced in the localresidual by 
- * the sum of the two momentum balances. All vertices at the bottom receive 
- * Dirichlet boundary conditions to set the pressure level.
+ * The domain is two-dimensional and sized 1m times 1m. The boundary
+ * conditions for the momentum balances are no-flow boundary
+ * conditions except for the top, which is floating from left to right
+ * with 1 m/s. The mass balance features outflow boundary
+ * conditions. All vertices at the bottom, left and right boundaries
+ * are constraint to a constant pressure level and zero velocity.
  */
 template <class TypeTag>
 class NavierStokesTestProblem : public StokesProblem<TypeTag>

@@ -19,10 +19,11 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Definition of a simple Stokes problem
+ *
+ * \copydoc Dumux::StokesTestProblem
  */
-#ifndef DUMUX_STOKESTESTPROBLEM_HH
-#define DUMUX_STOKESTESTPROBLEM_HH
+#ifndef DUMUX_STOKES_TEST_PROBLEM_HH
+#define DUMUX_STOKES_TEST_PROBLEM_HH
 
 #include <dumux/boxmodels/stokes/stokesmodel.hh>
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
@@ -31,8 +32,7 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
 
 template <class TypeTag>
 class StokesTestProblem;
@@ -40,8 +40,8 @@ class StokesTestProblem;
 //////////
 // Specify the properties for the stokes problem
 //////////
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(StokesTestProblem, INHERITS_FROM(BoxStokes));
 
 // Set the grid type
@@ -50,6 +50,8 @@ SET_TYPE_PROP(StokesTestProblem, Grid, Dune::YaspGrid<2>);
 // Set the problem property
 SET_TYPE_PROP(StokesTestProblem, Problem, Dumux::StokesTestProblem<TypeTag>);
 
+// Use the default fluid system of the Stokes model. It requires to
+// specify a fluid, though.
 SET_PROP(StokesTestProblem, Fluid)
 {
 private:
@@ -77,14 +79,15 @@ SET_STRING_PROP(StokesTestProblem, GridFile, "grids/test_stokes.dgf");
 /*!
  * \ingroup BoxStokesModel
  * \ingroup BoxTestProblems
- * \brief Stokes flow problem with nitrogen (N2) flowing
+ *
+ * \brief Stokes flow problem with nitrogen (\f$N_2\f$) flowing
  *        from the left to the right.
  *
- * The domain is sized 1m times 1m. The boundary conditions for the momentum balances
- * are set to Dirichlet with outflow on the right boundary. The mass balance has
- * outflow bcs, which are replaced in the localresidual by the sum
- * of the two momentum balances. In the middle of the right boundary,
- * one vertex receives Dirichlet bcs to set the pressure level.
+ * The domain is sized 1m times 1m. The boundary conditions for the
+ * momentum balances are set to outflow on the right boundary and to
+ * no-flow at the top and bottom of the domain. For the mass balance
+ * equation, outflow boundary conditions are assumed on the right,
+ * free-flow on the left and no-flow at the top and bottom boundaries.
  */
 template <class TypeTag>
 class StokesTestProblem 

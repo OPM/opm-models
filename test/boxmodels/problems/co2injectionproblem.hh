@@ -44,17 +44,19 @@
 #include <string>
 
 namespace Dumux {
+
 template <class TypeTag>
 class Co2InjectionProblem;
 
-namespace Foo {
+namespace Co2Injection {
 #include <dumux/material/components/co2tables.inc>
 }
 
 namespace Properties {
+
 NEW_TYPE_TAG(Co2InjectionBaseProblem);
 
-// declare some injection problem specific property tags
+// declare the CO2 injection problem specific property tags
 NEW_PROP_TAG(FluidSystemPressureLow);
 NEW_PROP_TAG(FluidSystemPressureHigh);
 NEW_PROP_TAG(FluidSystemNumPressure);
@@ -70,16 +72,13 @@ NEW_PROP_TAG(SimulationName);
 SET_TYPE_PROP(Co2InjectionBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_PROP(Co2InjectionBaseProblem, Problem)
-{
-    typedef Dumux::Co2InjectionProblem<TypeTag> type;
-};
+SET_TYPE_PROP(Co2InjectionBaseProblem, Problem, Dumux::Co2InjectionProblem<TypeTag>);
 
 // Set fluid configuration
 SET_PROP(Co2InjectionBaseProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dumux::Foo::CO2Tables CO2Tables;
+    typedef Dumux::Co2Injection::CO2Tables CO2Tables;
 
     //static const bool useComplexRelations = false;
 public:
@@ -128,7 +127,7 @@ SET_BOOL_PROP(Co2InjectionBaseProblem, EnableJacobianRecycling, true);
 // Smoothen the upwinding method?
 SET_BOOL_PROP(Co2InjectionBaseProblem, EnableSmoothUpwinding, false);
 
-// set the defaults for some problem specific properties
+// set the defaults for the problem specific properties
 SET_SCALAR_PROP(Co2InjectionBaseProblem, FluidSystemPressureLow, 3e7);
 SET_SCALAR_PROP(Co2InjectionBaseProblem, FluidSystemPressureHigh, 4e7);
 SET_INT_PROP(Co2InjectionBaseProblem, FluidSystemNumPressure, 100);
@@ -154,17 +153,23 @@ SET_STRING_PROP(Co2InjectionBaseProblem, GridFile, "grids/injection.dgf");
  * \ingroup BoxTestProblems
  *
  * \brief Problem where \f$CO_2\f$ is injected under a low permeable
- *         layer in a depth of 2700m.
+ *        layer at a depth of 2700m.
  *
- * The domain is sized 60m times 40m and consists of two layers, a
- * moderately permeable spatial parameters (\f$K = 10^{-12}\;m^2\f$)
- * for \f$ y > 22\; m\f$ and one with a lower intrinsic permeablility
- * (\f$ K=10^{-13}\;m^2\f$) in the rest of the domain.
+ * The domain is sized 60m times 40m and consists of two layers, one
+ * which is moderately permeable (\f$K = 10^{-12}\;m^2\f$) for \f$ y >
+ * 22\; m\f$ and one with a lower intrinsic permeablility (\f$
+ * K=10^{-13}\;m^2\f$) in the rest of the domain.
  *
- * \f$CO_2\f$ enters a water-filled aquifer, which is situated 2700m below
- * sea level, at the right boundary (\f$ 5m<y<15m\f$) and migrates
- * upwards due to buoyancy. It accumulates and partially enters the
- * lower permeable aquitard. This problem uses the \ref PvsModel.
+ * \f$CO_2\f$ gets injected by means of a forced-flow boundary
+ * condition into water-filled aquifer, which is situated 2700m below
+ * sea level, at the lower-right boundary (\f$5m<y<15m\f$) and
+ * migrates upwards due to buoyancy. It accumulates and eventually
+ * enters the lower permeable aquitard.
+ *
+ * The boundary conditions applied by this problem are no-flow
+ * conditions on the top bottom and right boundaries and a free-flow
+ * boundary condition on the left. For the free-flow condition,
+ * hydrostatic pressure is assumed.
  */
 template <class TypeTag>
 class Co2InjectionProblem 

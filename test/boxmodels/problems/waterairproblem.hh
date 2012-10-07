@@ -19,13 +19,12 @@
 /*!
  * \file
  *
- * \brief Non-isothermal gas injection problem where a gas (e.g. air)
- *        is injected into a fully water saturated medium.
+ * \copydoc Dumux::WaterAirProblem
  */
 #ifndef DUMUX_WATER_AIR_PROBLEM_HH
 #define DUMUX_WATER_AIR_PROBLEM_HH
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
@@ -41,28 +40,22 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class WaterAirProblem;
 
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(WaterAirBaseProblem);
 
 // Set the grid type
-SET_PROP(WaterAirBaseProblem, Grid)
-{
-    typedef Dune::YaspGrid<2> type;
-};
+SET_TYPE_PROP(WaterAirBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_PROP(WaterAirBaseProblem, Problem)
-{
-    typedef Dumux::WaterAirProblem<TypeTag> type;
-};
-// Set the material Law
+SET_TYPE_PROP(WaterAirBaseProblem, Problem, Dumux::WaterAirProblem<TypeTag>);
 
+// Set the material Law
 SET_PROP(WaterAirBaseProblem, MaterialLaw)
 {
 private:
@@ -72,12 +65,14 @@ private:
     typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
 
     // define the material law parameterized by absolute saturations
+    // which uses the two-phase API
     typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { lPhaseIdx = FluidSystem::lPhaseIdx };
 
 public:
+    // define the type of the generic material law
     typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
 
@@ -93,11 +88,10 @@ public:
     typedef Dumux::Somerton<FluidSystem, Scalar> type;
 };
 
-
-// Set the wetting phase
+// Set the fluid system. in this case, we use the one which describes
+// air and water
 SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem, 
-              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar),
-                                         /*complexRelations=*/true>);
+              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirBaseProblem, EnableGravity, true);
@@ -124,31 +118,31 @@ SET_STRING_PROP(WaterAirBaseProblem, GridFile, "./grids/waterair.dgf");
 
 /*!
  * \ingroup BoxTestProblems
- * \brief Non-isothermal gas injection problem where nitrogen
- *        is injected into a fully water saturated medium. 
+ * \brief Non-isothermal gas injection problem where a air
+ *        is injected into a fully water saturated medium.
  *
  * During buoyancy driven upward migration, the gas passes a
  * rectangular high temperature area. This decreases the temperature
  * of the high-temperature area and accelerates gas infiltration due
- * to the lower viscosity of the gas. (Be aware that the pressure is
- * approximately constant within the lens, so the density of the gas
- * is reduced. This more than off-sets the viscosity increase of the
- * gas at constant density.)
+ * to the lower viscosity of the gas. (Be aware that the pressure of
+ * the gas is approximately constant within the lens, so the density
+ * of the gas is reduced. This more than off-sets the viscosity
+ * increase of the gas at constant density.)
  *
  * The domain is sized 40 m times 40 m. The rectangular area with
  * increased temperature (380 K) starts at (20 m, 5 m) and ends at (30
  * m, 35 m).
  *
- * For the mass conservation equation, Neumann boundary conditions are
- * used on the top and on the bottom of the domain, while dirichlet
- * conditions apply on the left and the right boundary.
+ * For the mass conservation equation, no-flow boundary conditions are
+ * used on the top and on the bottom of the domain, while free-flow
+ * conditions apply on the left and the right boundary. Gas is
+ * injected at bottom from 15 m to 25 m at a rate of 0.001 kg/(s m^2)
+ * by means if a forced inflow boundary condition.
  *
- * Gas is injected at bottom from 15 m to 25 m at a rate of 0.001
- * kg/(s m), the remaining Neumann boundaries are no-flow boundaries.
- *
- * At the Dirichlet boundaries, hydrostatic pressure, a gas saturation
- * of zero and a geothermal temperature gradient of 0.03 K/m are
- * assumed.
+ * At the free-flow boundaries, the initial condition for the bulk
+ * part of the domain is assumed, i. e.  hydrostatic pressure, a gas
+ * saturation of zero and a geothermal temperature gradient of 0.03
+ * K/m.
  */
 template <class TypeTag >
 class WaterAirProblem 
@@ -172,7 +166,7 @@ class WaterAirProblem
 
         // component indices
         H2OIdx = FluidSystem::H2OIdx,
-        N2Idx = FluidSystem::N2Idx,
+        AirIdx = FluidSystem::AirIdx,
 
         // phase indices
         lPhaseIdx = FluidSystem::lPhaseIdx,
@@ -335,9 +329,10 @@ public:
     /*!
      * \copydoc BoxProblem::boundary
      *
-     * For this problem, we inject nitrogen at the inlet on the lower
-     * right use a no-flow condition on the right, upper and bottom
-     * and a free-flow condition on the bottom of the domain.
+     * For this problem, we inject air at the inlet on the center of
+     * the lower domain boundary and use a no-flow condition on the
+     * top boundary and a and a free-flow condition on the left and
+     * right boundaries of the domain.
      */
     template <class Context>
     void boundary(BoundaryRateVector &values,
@@ -352,8 +347,7 @@ public:
 
         if (onInlet_(pos)) {
             RateVector massRate(0.0);
-            massRate[conti0EqIdx + N2Idx] = -1e-3; // [kg/(m^2 s)]
-            //massRate[conti0EqIdx + H2OIdx] = -1e-2; // [kg/(m^2 s)]
+            massRate[conti0EqIdx + AirIdx] = -1e-3; // [kg/(m^2 s)]
 
             // impose an forced inflow boundary condition on the inlet
             values.setMassRate(massRate);
@@ -457,7 +451,7 @@ private:
         fs.setPressure(lPhaseIdx, 1e5 + (maxDepth_ - pos[1])*densityW*9.81);
         fs.setSaturation(lPhaseIdx, 1.0);
         fs.setMoleFraction(lPhaseIdx, H2OIdx, 1.0);
-        fs.setMoleFraction(lPhaseIdx, N2Idx, 0.0);
+        fs.setMoleFraction(lPhaseIdx, AirIdx, 0.0);
        
         if (inHighTemperatureRegion_(pos))
             fs.setTemperature(380);

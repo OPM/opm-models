@@ -18,18 +18,12 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Problem where water and gas is injected by means of a
- *        dirchlet condition on the lower right of the domain which have to go
- *        around an obstacle with \f$10^3\f$ lower permeability.
+ *
+ * \copydoc Dumux::ObstacleProblem
  */
 #ifndef DUMUX_OBSTACLE_PROBLEM_HH
 #define DUMUX_OBSTACLE_PROBLEM_HH
 
-#if OBSTACLE_USE_PVS
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#else
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#endif
 #include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
@@ -40,6 +34,7 @@
 #include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
 #include <dumux/material/heatconduction/somerton.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
@@ -54,6 +49,7 @@ template <class TypeTag>
 class ObstacleProblem;
 
 namespace Properties {
+
 NEW_TYPE_TAG(ObstacleBaseProblem);
 
 // Set the grid type
@@ -116,9 +112,16 @@ SET_STRING_PROP(ObstacleBaseProblem, GridFile, "./grids/obstacle_24x16.dgf");
 
 /*!
  * \ingroup BoxTestProblems
- * \brief Problem where liquid water is injected by means of a
- *        dirchlet condition on the lower right of the domain which have to go
- *        around an obstacle with \f$10^3\f$ lower permeability.
+ *
+ * \brief Problem where liquid water is first stopped by a
+ *        low-permeability lens and then seeps though it.
+ *
+ * Liquid water is injected by using of a free-flow condition on the
+ * lower right of the domain. This water level then raises until
+ * hydrostatic pressure is reached. On the left of the domain, a
+ * rectangular obstacle with \f$10^3\f$ lower permeability than the
+ * rest of the domain first stops the for a while until it seeps
+ * through it.
  *
  * The domain is sized 60m times 40m and consists of two media, a
  * moderately permeable soil (\f$ K_0=10e-12 m^2\f$) and an obstacle
@@ -126,13 +129,12 @@ SET_STRING_PROP(ObstacleBaseProblem, GridFile, "./grids/obstacle_24x16.dgf");
  * \f$ K_1=K_0/1000\f$.
  *
  * Initially the whole domain is filled by nitrogen, the temperature
- * is \f$20\symbol{23}C\f$ at the whole domain. The gas pressure at
- * the left side of the domain is 1 bar, at the right side it is 2 bar
- * with a linear gradient in between.
+ * is \f$20^\circ C\f$ for the whole domain. The gas pressure is
+ * initially 1 bar, at the inlet of the liquid water on the right side
+ * it is 2 bar.
  *
  * The boundary is no-flow except on the lower 10 meters of the left
- * and the right boundary which is a Dirichlet condition with the same
- * values as the initial condition.
+ * and the right boundary where a free flow condition is assumed.
  */
 template <class TypeTag>
 class ObstacleProblem

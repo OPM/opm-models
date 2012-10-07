@@ -19,10 +19,7 @@
 /*!
  * \file
  *
- * \brief Test for the immisicible box model with only a single phase
- *
- * This problem is inspired by groundwater flow. Don't expect it to be
- * realistic, though.
+ * \copydoc Dumux::GroundWaterProblem
  */
 #ifndef DUMUX_GROUND_WATER_PROBLEM_HH
 #define DUMUX_GROUND_WATER_PROBLEM_HH
@@ -96,10 +93,15 @@ SET_STRING_PROP(GroundWaterBaseProblem, GridFile, "./grids/groundwater_2d.dgf");
 
 /*!
  * \ingroup BoxTestProblems
+ *
  * \brief Test for the immisicible box model with only a single phase
  *
  * This problem is inspired by groundwater flow. Don't expect it to be
- * realistic, though.
+ * realistic, though: For two dimensions, the domain size is 1m times
+ * 1m. On the left and right of the domain, no-flow boundaries are
+ * used, while at the top and bottom free flow boundaries with a
+ * pressure of 2 bar and 1 bar are used. The center of the domain is
+ * occupied by a rectangular lens of lower permeability.
  */
 template <class TypeTag>
 class GroundWaterProblem 
@@ -276,9 +278,7 @@ public:
     void source(RateVector &rate,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
-    {
-        rate = Scalar(0.0);
-    }
+    { rate = Scalar(0.0); }
 
     //! \}
 

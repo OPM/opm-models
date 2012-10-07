@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief Soil contamination problem where DNAPL infiltrates a fully
- *        water saturated medium.
+ * \copydoc Dumux::LensProblem
  */
 #ifndef DUMUX_LENS_PROBLEM_HH
 #define DUMUX_LENS_PROBLEM_HH
@@ -43,6 +42,7 @@
 #include <iostream>
 
 namespace Dumux {
+
 template <class TypeTag>
 class LensProblem;
 
@@ -50,6 +50,7 @@ class LensProblem;
 // Specify the properties for the lens problem
 //////////
 namespace Properties {
+
 NEW_TYPE_TAG(LensBaseProblem);
 
 // declare the properties specific for the lens problem
@@ -59,14 +60,6 @@ NEW_PROP_TAG(LensLowerLeftZ);
 NEW_PROP_TAG(LensUpperRightX);
 NEW_PROP_TAG(LensUpperRightY);
 NEW_PROP_TAG(LensUpperRightZ);
-
-NEW_PROP_TAG(DomainSizeX);
-NEW_PROP_TAG(DomainSizeY);
-NEW_PROP_TAG(DomainSizeZ);
-
-NEW_PROP_TAG(CellsX);
-NEW_PROP_TAG(CellsY);
-NEW_PROP_TAG(CellsZ);
 
 // set the GridCreator property
 SET_TYPE_PROP(LensBaseProblem, GridCreator, LensGridCreator<TypeTag>);
@@ -156,6 +149,7 @@ SET_SCALAR_PROP(LensBaseProblem, InitialTimeStepSize, 250);
 
 /*!
  * \ingroup BoxTestProblems
+ *
  * \brief Soil contamination problem where DNAPL infiltrates a fully
  *        water saturated medium.
  *
@@ -163,18 +157,15 @@ SET_SCALAR_PROP(LensBaseProblem, InitialTimeStepSize, 250);
  * with low permeablility which spans from (1 m , 2 m) to (4 m, 3 m)
  * and is surrounded by a medium with higher permability. Note that
  * this problem is discretized using only two dimensions, so from the
- * point of view of the two-phase model, the depth of the domain
- * implicitly is 1 m everywhere.
+ * point of view of the model, the depth of the domain is implicitly
+ * assumed to be 1 m everywhere.
  *
- * On the top and the bottom of the domain neumann boundary conditions
- * are used, while dirichlet conditions apply on the left and right
- * boundaries.
+ * On the top and the bottom of the domain no-flow boundary conditions
+ * are used, while free-flow conditions apply on the left and right
+ * boundaries; DNAPL is injected at the top boundary from 3m to 4m at
+ * a rate of 0.04 kg/(s m^2).
  *
- * DNAPL is injected at the top boundary from 3m to 4m at a rate of
- * 0.04 kg/(s m^2), the remaining neumann boundaries are no-flow
- * boundaries.
- *
- * The dirichlet boundaries on the left boundary is the hydrostatic
+ * The free-floq boundaries on the left boundary is the hydrostatic
  * pressure scaled by a factor of 1.125, while on the right side it is
  * just the hydrostatic pressure. The DNAPL saturation on both sides
  * is zero.
