@@ -448,8 +448,8 @@ add_test(test_diffusion bin/runtest.sh references/diffusion-reference.vtu mimeti
 add_test(test_dec1p bin/runtest.sh references/test_1p-reference.vtu test_1p-00001.vtu test/decoupled/1p/test_dec1p)
 add_test(test_transport bin/runtest.sh references/test_transport-reference.vtu test_transport-00006.vtu test/decoupled/2p/test_transport --grid-file=test/decoupled/2p/grids/test_transport.dgf)
 add_test(test_impes bin/runtest.sh references/test_impes-reference.vtu test_impes-00013.vtu test/decoupled/2p/test_impes)
-add_test(test_mpfa2p bin/runTest.sh references/test_mpfa2p-reference.vtu test_mpfa2p-00007.v  test/decoupled/2p/test_mpfa2p)
-add_test(test_impesadaptive bin/runtest.sh references/test_2padaptive-reference.vtu test_2padaptive-00007.vtu test/decoupled/2padaptive/test_impesadaptive)
+add_test(test_mpfao2p bin/runTest.sh references/test_mpfao2p-reference.vtu test_mpfa2p-00007.vtu test/decoupled/2p/test_mpfa2p -ModelType MPFAO)
+add_test(test_mpfal2p bin/runTest.sh references/test_mpfal2p-reference.vtu test_mpfa2p-00007.vtu test/decoupled/2p/test_mpfa2p -ModelType MPFAL)
 add_test(test_adaptive2p2c bin/runTest.sh references/test_adaptive2p2c-reference.vtu test_adaptive2p2c-00008.vtu test/decoupled/2p2c/test_adaptive2p2c)
 add_test(test_multiphysics2p2c bin/runtest.sh references/test_multiphysics2p2c-reference.vtu test_multiphysics2p2c-00021.vtu test/decoupled/2p2c/test_multiphysics2p2c)
 
