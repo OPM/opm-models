@@ -127,6 +127,10 @@ altered:
   eWoms now also supports constraint degrees of freedom in the
   interior of the domain. ("Dirichlet" conditions previously where
   only possible at finite volumes at the grid boundary.)
+- A h-adaptive sequentially-coupled model using an MPFA L-method was
+  added. It simulates two-phase and two-phase, two-component flow on
+  irregular grids in two dimensions.  See test/decoupled/2p(2c) for
+  an example.
 
 Notable Differences Between DuMuX 2.0 and DuMuX 2.1
 ===================================================
