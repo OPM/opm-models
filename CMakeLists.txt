@@ -443,6 +443,7 @@ add_test(test_3p3c bin/runtest.sh references/infiltration-reference.vtu infiltra
 add_test(test_3p3cni bin/runtest.sh references/cuvettepvsni-reference.vtu cuvettepvsni-00013.vtu test/boxmodels/3p3cni/test_3p3cni --grid-file=test/boxmodels/3p3cni/grids/cuvette.dgf)
 add_test(test_mpnc bin/runtest.sh references/obstacle-reference.vtu obstacle-00010.vtu test/boxmodels/mpnc/test_mpnc --grid-file=test/boxmodels/mpnc/grids/obstacle_24x16.dgf)
 add_test(test_richards bin/runtest.sh references/richardslens-reference.vtu richardslens-00008.vtu test/boxmodels/richards/test_richards --grid-file=test/boxmodels/richards/grids/richardslens-24x16.dgf)
+add_test(test_restart  bin/runTest.sh references/co2-reference.vtu heterogeneous-00020.vtu test/boxmodels/co2/test_co2 --grid-file test/boxmodels/co2/grids/heterogeneousSmall.dgf --restart 42008.6 --initial-time-step-size 23452.1)
 
 add_test(test_diffusion bin/runtest.sh references/diffusion-reference.vtu mimeticdiffusion-00001.vtu test/decoupled/1p/test_diffusion 3)
 add_test(test_dec1p bin/runtest.sh references/test_1p-reference.vtu test_1p-00001.vtu test/decoupled/1p/test_dec1p)
