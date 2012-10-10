@@ -325,6 +325,7 @@ private:
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
         
+        writeOverlapToVTK_();
     }
 
     void cleanup_()
@@ -339,28 +340,40 @@ private:
         overlappingx_ = 0;
     }
 
-    void writeOverlapToVTK_(int lookedAtRank)
+    void writeOverlapToVTK_()
     {
-        std::cout << "writing overlap for rank " << lookedAtRank << "\n";
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > VtkField;
-        int n = problem_.gridView().size(/*codim=*/dimWorld);
-        VtkField isInOverlap(n, 0.0);
-        VtkField rankField(n, 0.0);
-        auto vIt = problem_.gridView().template begin</*codim=*/dimWorld>();
-        const auto &vEndIt = problem_.gridView().template end</*codim=*/dimWorld>();
-        const auto &overlap = overlappingMatrix_->overlap();
-        for (; vIt != vEndIt; ++vIt) {
-            int globalVertexIdx = problem_.vertexMapper().map(*vIt);
-            rankField[globalVertexIdx] = problem_.gridView().comm().rank();
-            if (overlap.peerHasIndex(lookedAtRank, globalVertexIdx))
-                isInOverlap[globalVertexIdx] = 1.0;
-        };
+        for (int lookedAtRank = 0; lookedAtRank < problem_.gridView().comm().size(); ++lookedAtRank) {
+            std::cout << "writing overlap for rank " << lookedAtRank << "\n";
+            typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > VtkField;
+            int n = problem_.gridView().size(/*codim=*/dimWorld);
+            VtkField isInOverlap(n);
+            VtkField rankField(n);
+            isInOverlap = 0.0;
+            rankField = 0.0;
+            assert(rankField.two_norm() == 0.0);
+            assert(isInOverlap.two_norm() == 0.0);
+            auto vIt = problem_.gridView().template begin</*codim=*/dimWorld>();
+            const auto &vEndIt = problem_.gridView().template end</*codim=*/dimWorld>();
+            const auto &overlap = overlappingMatrix_->overlap();
+            for (; vIt != vEndIt; ++vIt) {
+                int nativeIdx = problem_.vertexMapper().map(*vIt);
+                int localIdx = overlap.foreignOverlap().nativeToLocal(nativeIdx);
+                if (localIdx < 0)
+                    continue;
+                rankField[nativeIdx] = problem_.gridView().comm().rank();
+                if (overlap.peerHasIndex(lookedAtRank, localIdx))
+                    isInOverlap[nativeIdx] = 1.0;
+            };
         
-        typedef Dune::VTKWriter<GridView> VtkWriter;
-        VtkWriter writer(problem_.gridView(), Dune::VTK::conforming);
-        writer.addVertexData(isInOverlap, "overlap");
-        writer.addVertexData(rankField, "rank");
-        writer.write("overlap", Dune::VTK::ascii);
+            typedef Dune::VTKWriter<GridView> VtkWriter;
+            VtkWriter writer(problem_.gridView(), Dune::VTK::conforming);
+            writer.addVertexData(isInOverlap, "overlap");
+            writer.addVertexData(rankField, "rank");
+
+            std::ostringstream oss;
+            oss << "overlap_rank=" << lookedAtRank;
+            writer.write(oss.str().c_str(), Dune::VTK::ascii);
+        }
     }
     
     const Problem &problem_;
