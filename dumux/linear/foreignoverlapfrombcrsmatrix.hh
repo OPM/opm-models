@@ -281,7 +281,10 @@ public:
      * \brief Convert a local index to a native one.
      */
     int localToNative(int localIdx) const
-    { return localToNativeIndices_[localIdx]; }
+    { 
+        assert(localIdx < int(localToNativeIndices_.size()));
+        return localToNativeIndices_[localIdx];
+    }
 
     /*!
      * \brief Return the number of peer ranks for which a given local
@@ -483,7 +486,6 @@ protected:
                 borderHandle.peerIdx = peerIdx;
                 borderIndices[neighborIt->first].push_back(borderHandle);
             }
-
         }
 
         // now borderIndices contains the lists of indices which we
