@@ -35,7 +35,7 @@
 #include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/dnapl.hh>
+#include <dumux/material/components/air.hh>
 
 #include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
 
@@ -81,7 +81,7 @@ SET_PROP(FingerBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::DNAPL<Scalar> > type;
+    typedef Dumux::GasPhase<Scalar, Dumux::Air<Scalar> > type;
 };
 
 // Set the material Law
