@@ -54,7 +54,7 @@ NEW_PROP_TAG(AmgCoarsenTarget);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(BoxLinearSolverTypeTag, AmgCoarsenTarget, 10000);
+SET_INT_PROP(BoxLinearSolverTypeTag, AmgCoarsenTarget, 1000);
 }
 
 namespace Linear {
@@ -82,18 +82,43 @@ class BoxParallelAmgSolver
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
  
     enum { dimWorld = GridView::dimensionworld };
+    
+    // define the smoother used for the AMG and specify its
+    // arguments
+    typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
+    //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
+    //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
+    //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
+    //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
 
 #if HAVE_MPI
     typedef Dune::OwnerOverlapCopyCommunication<Dumux::Linear::Index> OwnerOverlapCopyCommunication;
+    typedef Dune::OverlappingSchwarzOperator<Matrix,
+                                             Vector,
+                                             Vector,
+                                             OwnerOverlapCopyCommunication> FineOperator;
+    typedef Dune::OverlappingSchwarzScalarProduct<Vector,OwnerOverlapCopyCommunication> FineScalarProduct;
+    typedef Dune::BlockPreconditioner<Vector,
+                                      Vector,
+                                      OwnerOverlapCopyCommunication,
+                                      SequentialSmoother> ParallelSmoother;
+    typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother, OwnerOverlapCopyCommunication> AMG;
+#else
+    typedef Dune::MatrixAdapter<Matrix, Vector, Vector> FineOperator;
+    typedef Dune::SeqScalarProduct<Vector> FineScalarProduct;
+    typedef SequentialSmoother ParallelSmoother;
+    typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother> AMG;
 #endif
 
 public:
     BoxParallelAmgSolver(const Problem &problem)
         : problem_(problem)
     {
-        overlappingMatrix_ = 0;
-        overlappingb_ = 0;
-        overlappingx_ = 0;
+        overlappingMatrix_ = nullptr;
+        overlappingb_ = nullptr;
+        overlappingx_ = nullptr;
+
+        amg_ = nullptr;
     }
 
     ~BoxParallelAmgSolver()
@@ -145,87 +170,30 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
+        overlappingMatrix_->resetFront();
+
         overlappingb_->assignAddBorder(b);
+        overlappingb_->resetFront();
 
         (*overlappingx_) = 0.0;
-
-        int coarsenTarget = GET_PARAM(TypeTag, int, AmgCoarsenTarget);
-        int rank = problem_.gridView().comm().rank();
-
-        if (verbosity > 1 && rank == 0)
-            std::cout << "Setting up the AMG preconditioner\n";
 
         /////////////
         // set-up the AMG preconditioner
         /////////////
+        // create the parallel scalar product and the parallel operator
 #if HAVE_MPI
-        typedef Dune::OverlappingSchwarzOperator<Matrix,
-                                                 Vector,
-                                                 Vector,
-                                                 OwnerOverlapCopyCommunication> FineOperator;
         FineOperator fineOperator(*overlappingMatrix_, *istlComm_);
 #else
-        typedef Dune::MatrixAdapter<Matrix, Vector, Vector> FineOperator;
         FineOperator fineOperator(*overlappingMatrix_);
 #endif
 
 #if HAVE_MPI
-        // create the parallel scalar product and the parallel operator
-        typedef Dune::OverlappingSchwarzScalarProduct<Vector,OwnerOverlapCopyCommunication> FineScalarProduct;
         FineScalarProduct scalarProduct(*istlComm_);
 #else
-        typedef Dune::SeqScalarProduct<Vector> FineScalarProduct;
         FineScalarProduct scalarProduct;
 #endif        
 
-        // define the smoother used for the AMG and specify its
-        // arguments
-        typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
-        //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
-        //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
-        //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
-        //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
-
-#if HAVE_MPI
-        typedef Dune::BlockPreconditioner<Vector,
-                                          Vector,
-                                          OwnerOverlapCopyCommunication,
-                                          SequentialSmoother> ParallelSmoother;
-#else
-        typedef SequentialSmoother ParallelSmoother;
-#endif
-
-        typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;
-
-        SmootherArgs smootherArgs;
-        smootherArgs.iterations = 1;
-        /*smootherArgs.relaxationFactor = 1.0;*/
-
-        // specify the coarsen criterion
-        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
-            CoarsenCriterion;
-        CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
-        if (verbosity > 0)
-            coarsenCriterion.setDebugLevel(1);
-        else
-            coarsenCriterion.setDebugLevel(0); // make the AMG shut up
-        coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
-        //coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
-        coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
-    
-        // instantiate the AMG preconditioner
-#if HAVE_MPI
-        typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother, OwnerOverlapCopyCommunication> AMG;
-        AMG amg(fineOperator, 
-                coarsenCriterion, 
-                smootherArgs,
-                *istlComm_);
-#else
-        typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother> AMG;
-        AMG amg(fineOperator, 
-                coarsenCriterion, 
-                smootherArgs);
-#endif
+        setupAmg_(fineOperator);
 
         /////////////
         // set-up the linear solver
@@ -238,7 +206,7 @@ public:
         int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
         SolverType solver(fineOperator, 
                           scalarProduct,
-                          /*preconditioner=*/amg,
+                          /*preconditioner=*/*amg_,
                           linearSolverTolerance,
                           /*maxSteps=*/maxIterations,
                           verbosity);
@@ -344,10 +312,12 @@ private:
         delete overlappingMatrix_;
         delete overlappingb_;
         delete overlappingx_;
+        delete amg_;
 
-        overlappingMatrix_ = 0;
-        overlappingb_ = 0;
-        overlappingx_ = 0;
+        overlappingMatrix_ = nullptr;
+        overlappingb_ = nullptr;
+        overlappingx_ = nullptr;
+        amg_ = nullptr;
     }
     
 #if HAVE_MPI
@@ -370,6 +340,7 @@ private:
             // domestic or in the foreign overlap.
             bool isShared = overlap.isInOverlap(curIdx);
 
+            assert(curIdx == int(overlap.globalToDomestic(overlap.domesticToGlobal(curIdx))));
             istlIndices.add(/*globalIdx=*/overlap.domesticToGlobal(curIdx),
                             Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isShared));
 
@@ -378,8 +349,57 @@ private:
     }
 #endif
 
+    void setupAmg_(FineOperator &fineOperator)
+    {
+        if (amg_)
+            return;
+
+        int verbosity = 0;
+        if (problem_.gridView().comm().rank() == 0)
+            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+
+        int rank = problem_.gridView().comm().rank();
+        if (verbosity > 1 && rank == 0)
+            std::cout << "Setting up the AMG preconditioner\n";
+
+        typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;
+        
+        SmootherArgs smootherArgs;
+        smootherArgs.iterations = 1;
+        smootherArgs.relaxationFactor = 1.0;
+        
+        // specify the coarsen criterion
+        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
+            CoarsenCriterion;
+        int coarsenTarget = GET_PARAM(TypeTag, int, AmgCoarsenTarget);
+        CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
+        coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
+        if (verbosity > 0)
+            coarsenCriterion.setDebugLevel(1);
+        else
+            coarsenCriterion.setDebugLevel(0); // make the AMG shut up
+        coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
+        //coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
+        coarsenCriterion.setAccumulate(Dune::Amg::atOnceAccu);
+        coarsenCriterion.setSkipIsolated(true);
+
+        // instantiate the AMG preconditioner
+#if HAVE_MPI
+        amg_ = new AMG(fineOperator, 
+                       coarsenCriterion, 
+                       smootherArgs,
+                       *istlComm_);
+#else
+        amg_ = new AMG(fineOperator, 
+                       coarsenCriterion, 
+                       smootherArgs);
+#endif
+    };
+
     const Problem &problem_;
     
+    AMG *amg_;
+
 #if HAVE_MPI
     OwnerOverlapCopyCommunication *istlComm_;
 #endif
