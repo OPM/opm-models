@@ -152,7 +152,7 @@ public:
     {
         // create an identity matrix
         block_type idMatrix(0.0);
-        for (int i = 0; i < idMatrix.size(); ++i)
+        for (unsigned i = 0; i < idMatrix.size(); ++i)
             idMatrix[i][i] = 1.0;
 
         int numLocal = overlap_->numLocal();
