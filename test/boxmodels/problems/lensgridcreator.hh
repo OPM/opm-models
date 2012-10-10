@@ -28,8 +28,8 @@
 #include <dumux/common/propertysystem.hh>
 #include <dumux/common/parameters.hh>
 
-#if HAVE_ALUGRID
-#include <dune/grid/alugrid.hh>
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
 #else
 #include <dune/grid/yaspgrid.hh>
 #endif
@@ -70,7 +70,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
  *
  * \brief Helper class for grid instantiation of the lens problem.
  */
-#if HAVE_ALUGRID
+#if HAVE_UG
 template <class TypeTag>
 class LensGridCreator
 {
@@ -80,9 +80,11 @@ class LensGridCreator
 
 public:
 #if LENS_CUBES
-    typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::cube, Dune::nonconforming> Grid;
+    typedef Dune::UGGrid<LENS_DIM> Grid;
+    //typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::cube, Dune::nonconforming> Grid;
 #else
-    typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::simplex, Dune::nonconforming> Grid;
+    typedef Dune::UGGrid<LENS_DIM> Grid;
+    //typedef Dune::ALUGrid<LENS_DIM, LENS_DIM, Dune::simplex, Dune::nonconforming> Grid;
 #endif
 
     /*!
@@ -287,7 +289,7 @@ private:
 template <class TypeTag>
 typename LensGridCreator<TypeTag>::Grid *LensGridCreator<TypeTag>::grid_;
 
-#else // ! HAVE_ALUGRID
+#else // ! HAVE_UG
 
 template <class TypeTag>
 class LensGridCreator
@@ -381,7 +383,7 @@ private:
 template <class TypeTag>
 Dune::YaspGrid<LENS_DIM> *LensGridCreator<TypeTag>::grid_;
 
-#endif // HAVE_ALUGRID
+#endif // HAVE_UG
 
 }
 
