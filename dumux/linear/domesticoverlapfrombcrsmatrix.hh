@@ -81,6 +81,41 @@ public:
         updateMasterRanks_();
     }
 
+    void check() const
+    {
+        // check consistency of global indices
+        for (int domIdx = 0; domIdx < numDomestic(); ++domIdx) {
+            assert(int(globalToDomestic(domesticToGlobal(domIdx))) == domIdx);
+        }
+
+        // send the foreign overlap for which we are master to the
+        // peers
+        std::map<int, MpiBuffer<int> *> sizeBufferMap;
+
+        auto peerIt = peerSet_.begin();
+        const auto &peerEndIt = peerSet_.end();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            auto &buff = *(new MpiBuffer<int>(1));
+            sizeBufferMap[*peerIt] = &buff;
+            buff[0] = foreignOverlapWithPeer(*peerIt).size();
+            buff.send(*peerIt);
+        }
+
+        peerIt = peerSet_.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            MpiBuffer<int> rcvBuff(1);
+            rcvBuff.receive(*peerIt);
+            
+            assert(rcvBuff[0] == domesticOverlapWithPeer_.find(*peerIt)->second.size());
+        }
+
+        peerIt = peerSet_.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            sizeBufferMap[*peerIt]->wait();
+            delete sizeBufferMap[*peerIt];
+        }
+    }
+
     /*!
      * \brief Returns the rank of the current process.
      */
@@ -126,7 +161,7 @@ public:
         const auto &domOverlap = domesticOverlapByIndex_[domesticIdx];
         return 
             domOverlap.size() > 0
-            && domOverlap.begin()->second == foreignOverlap_.overlapSize();
+            && int(domOverlap.begin()->second) == foreignOverlap_.overlapSize();
     }
 
     /*!
