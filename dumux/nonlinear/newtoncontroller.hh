@@ -405,12 +405,6 @@ public:
                            const GlobalEqVector &b)
     {
         try {
-            if (numSteps_ == 0)
-            {
-                Scalar norm2 = b.two_norm2();
-                norm2 = comm_.sum(norm2);
-            }
-            
             int converged = linearSolver_.solve(A, x, b);
 
             // make sure all processes converged
