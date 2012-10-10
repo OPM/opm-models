@@ -228,7 +228,9 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
+        overlappingMatrix_->resetFront();
         overlappingb_->assignAddBorder(b);
+        overlappingb_->resetFront();
 
         (*overlappingx_) = 0.0;
 
@@ -242,6 +244,7 @@ public:
         // create the parallel scalar product and the parallel operator
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
+
 
         // run the linear solver and have some fun
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
@@ -325,7 +328,7 @@ private:
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
         
-        writeOverlapToVTK_();
+        //writeOverlapToVTK_();
     }
 
     void cleanup_()
