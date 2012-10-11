@@ -168,7 +168,7 @@ SET_SCALAR_PROP(DecoupledTwoPTwoC, ImpetErrorTermUpperBound, 0.9); //!< Upper bo
  * special equation indices have to be provided for boundary conditions.
  */
 template <class TypeTag>
-struct DecoupledTwoPTwoCIndices : DecoupledTwoPCommonIndices
+struct DecoupledTwoPTwoCIndices : public DecoupledTwoPCommonIndices
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
