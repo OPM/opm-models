@@ -147,6 +147,24 @@ namespace Dumux {
     typedef typename X::field_type field_type;
 
     /*!
+     * \brief Return the criterion to be used to check for convergence of the linear solver.
+     */
+    virtual Dumux::ConvergenceCriterion<X> &convergenceCriterion()
+    { return *convergenceCriterion_; }
+
+    /*!
+     * \copydoc convergenceCriterion()
+     */
+    virtual const Dumux::ConvergenceCriterion<X> &convergenceCriterion() const
+    { return *convergenceCriterion_; }
+
+    /*!
+     * \brief Set the criterion to be used to check for convergence of the linear solver.
+     */
+    virtual void setConvergenceCriterion(Dune::shared_ptr<Dumux::ConvergenceCriterion<X> > convCrit)
+    { convergenceCriterion_ = convCrit; }
+
+    /*!
         \brief Apply inverse operator,
 
         \warning Note: right hand side b may be overwritten!
@@ -172,40 +190,8 @@ namespace Dumux {
     //! \brief Destructor
     virtual ~InverseOperator () {}
 
-  protected:
-    // spacing values
-    enum { iterationSpacing = 5 , accuracySpacing = 16 };
-
-    //! helper function for printing header of solver output
-    void printHeader(std::ostream& s) const
-    {
-      s << std::setw(iterationSpacing)  << " Iter";
-      s << std::setw(accuracySpacing) << "Accuracy";
-      s << std::setw(accuracySpacing) << "Rate" << std::endl;
-    }
-
-    //! helper function for printing solver output
-    template <class DataType>
-    void printOutput(std::ostream& s,
-      const double iter,
-      const DataType& accuracy,
-      const DataType& accuracy_old) const
-    {
-      const DataType rate = accuracy/std::max(1e-100, accuracy_old);
-      s << std::setw(iterationSpacing)  << iter << " ";
-      s << std::setw(accuracySpacing) << accuracy << " ";
-      s << std::setw(accuracySpacing) << rate << std::endl;
-    }
-
-    //! helper function for printing solver output
-    template <class DataType>
-    void printOutput(std::ostream& s,
-      const double iter,
-      const DataType& accuracy) const
-    {
-      s << std::setw(iterationSpacing)  << iter << " ";
-      s << std::setw(accuracySpacing) << accuracy << std::endl;
-    }
+  private:
+    Dune::shared_ptr<ConvergenceCriterion<X> > convergenceCriterion_;
   };
 
 
@@ -261,7 +247,7 @@ namespace Dumux {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L has to be sequential!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
 
     /*!
@@ -294,26 +280,8 @@ namespace Dumux {
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
         "L and S must have the same category!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
-
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     virtual void apply (X& x, X& b, InverseOperatorResult& res)
@@ -331,12 +299,12 @@ namespace Dumux {
       _op.applyscaleadd(-1,x,b);
 
       // compute norm, \todo parallelization
-      convergenceCriterion().setInitial(x, b);
-      if (convergenceCriterion().converged())
+      this->convergenceCriterion().setInitial(x, b);
+      if (this->convergenceCriterion().converged())
       {
         res.converged  = true;
         res.iterations = 0;               // fill statistics
-        res.reduction = convergenceCriterion().accuracy();
+        res.reduction = this->convergenceCriterion().accuracy();
         res.conv_rate  = 0;
         res.elapsed=0;
         if (_verbose>0)                 // final print
@@ -352,8 +320,7 @@ namespace Dumux {
         std::cout << "=== LoopSolver" << std::endl;
         if (_verbose>1)
         {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
+          this->convergenceCriterion().printInitial();
         }
       }
 
@@ -369,13 +336,13 @@ namespace Dumux {
         x += v;                     // update solution
         _op.applyscaleadd(-1,v,b);  // update defect
 
-        field_type lastAccuracy = convergenceCriterion().accuracy();
-        convergenceCriterion().update(x, b);
+        field_type lastAccuracy = this->convergenceCriterion().accuracy();
+        this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
-          this->printOutput(std::cout,i,convergenceCriterion().accuracy(), lastAccuracy);
+          this->convergenceCriterion().print(i);
 
-        if (convergenceCriterion().converged())
+        if (this->convergenceCriterion().converged())
         {
           res.converged  = true;
           break;
@@ -384,14 +351,14 @@ namespace Dumux {
 
       // print
       if (_verbose==1)
-        this->printOutput(std::cout,i,convergenceCriterion().accuracy());
+        this->convergenceCriterion().print(i);
 
       // postprocess preconditioner
       _prec.post(x);
 
       // fill statistics
       res.iterations = i;
-      res.reduction = convergenceCriterion().accuracy();
+      res.reduction = this->convergenceCriterion().accuracy();
       res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
 
@@ -408,10 +375,10 @@ namespace Dumux {
     //! \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
     virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
     {
-      double origTol = convergenceCriterion().tolerance();
-      convergenceCriterion().setTolerance(reduction);
+      double origTol = this->convergenceCriterion().tolerance();
+      this->convergenceCriterion().setTolerance(reduction);
       (*this).apply(x,b,res);
-      convergenceCriterion().setTolerance(origTol);
+      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -453,7 +420,7 @@ namespace Dumux {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L has to be sequential!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
       \brief Set up solver.
@@ -470,26 +437,8 @@ namespace Dumux {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
         "L and S have to have the same category!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
-
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
 
     /*!
       \brief Apply inverse operator.
@@ -506,15 +455,14 @@ namespace Dumux {
       X p(x);                     // create local vectors
       X q(b);
 
-      convergenceCriterion().setInitial(x, b);
+      this->convergenceCriterion().setInitial(x, b);
 
       if (_verbose>0)             // printing
       {
         std::cout << "=== GradientSolver" << std::endl;
         if (_verbose>1)
         {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
+          this->convergenceCriterion().printInitial();
         }
       }
 
@@ -529,13 +477,13 @@ namespace Dumux {
         x.axpy(lambda,p);           // update solution
         b.axpy(-lambda,q);          // update defect
 
-        field_type lastAccuracy = convergenceCriterion().accuracy();
-        convergenceCriterion().update(x, b);
+        field_type lastAccuracy = this->convergenceCriterion().accuracy();
+        this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
-          this->printOutput(std::cout,i,convergenceCriterion().accuracy(),lastAccuracy);
+          this->convergenceCriterion().print(i);
 
-        if (convergenceCriterion().converged())
+        if (this->convergenceCriterion().converged())
         {
           res.converged  = true;
           break;
@@ -543,11 +491,11 @@ namespace Dumux {
       }
 
       if (_verbose==1)                // printing for non verbose
-        this->printOutput(std::cout,i,convergenceCriterion().accuracy());
+        this->convergenceCriterion().print(i);
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
-      res.reduction = convergenceCriterion().accuracy();
+      res.reduction = this->convergenceCriterion().accuracy();
       res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
       if (_verbose>0)                 // final print
@@ -608,7 +556,7 @@ namespace Dumux {
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L must be sequential!");
       
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
       \brief Set up conjugate gradient solver.
@@ -624,27 +572,9 @@ namespace Dumux {
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
                           "L and S must have the same category!");
       
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
      }
  
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
-
     /*!
       \brief Apply inverse operator.
 
@@ -660,12 +590,12 @@ namespace Dumux {
       X p(x);              // the search direction
       X q(x);              // a temporary vector
 
-      convergenceCriterion().setInitial(x, b);
-      if (convergenceCriterion().converged())
+      this->convergenceCriterion().setInitial(x, b);
+      if (this->convergenceCriterion().converged())
       {
         res.converged  = true;
         res.iterations = 0;               // fill statistics
-        res.reduction = convergenceCriterion().accuracy();
+        res.reduction = this->convergenceCriterion().accuracy();
         res.conv_rate  = 0;
         res.elapsed=0;
         if (_verbose>0)                 // final print
@@ -679,8 +609,7 @@ namespace Dumux {
       {
         std::cout << "=== CGSolver" << std::endl;
         if (_verbose>1) {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
+          this->convergenceCriterion().printInitial();
         }
       }
 
@@ -704,14 +633,14 @@ namespace Dumux {
         b.axpy(-lambda,q);          // update defect
 
         // convergence test
-        field_type lastAccuracy = convergenceCriterion().accuracy();
+        field_type lastAccuracy = this->convergenceCriterion().accuracy();
 
-        convergenceCriterion().update(x, b);
+        this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
-          this->printOutput(std::cout,i,convergenceCriterion().accuracy(),lastAccuracy);
+          this->convergenceCriterion().print(i);
 
-        if (convergenceCriterion().converged())
+        if (this->convergenceCriterion().converged())
         {
           res.converged  = true;
           break;
@@ -728,11 +657,11 @@ namespace Dumux {
       }
 
       if (_verbose==1)                // printing for non verbose
-        this->printOutput(std::cout,i,convergenceCriterion().accuracy());
+        this->convergenceCriterion().print(i);
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
-      res.reduction = convergenceCriterion().accuracy();
+      res.reduction = this->convergenceCriterion().accuracy();
       res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
 
@@ -753,10 +682,10 @@ namespace Dumux {
     virtual void apply (X& x, X& b, double reduction,
       InverseOperatorResult& res)
     {
-      double origTol = convergenceCriterion().tolerance();
-      convergenceCriterion().setTolerance(reduction);
+      double origTol = this->convergenceCriterion().tolerance();
+      this->convergenceCriterion().setTolerance(reduction);
       (*this).apply(x,b,res);
-      convergenceCriterion().setTolerance(origTol);
+      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -803,7 +732,7 @@ public:
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category), "L and P must be of the same category!");
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential), "L must be sequential!");
       
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
       \brief Set up solver.
@@ -828,27 +757,9 @@ public:
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
         "L and S must have the same category!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
      }
-
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
-    
+  
     /*!
       \brief Apply inverse operator.
 
@@ -889,13 +800,13 @@ public:
       alpha = 1;
       omega = 1;
 
-      convergenceCriterion().setInitial(x, r);
-      if (convergenceCriterion().converged())
+      this->convergenceCriterion().setInitial(x, r);
+      if (this->convergenceCriterion().converged())
       {
         res.converged = 1;
         _prec.post(x);                  // postprocess preconditioner
         res.iterations = 0;             // fill statistics
-        res.reduction = convergenceCriterion().accuracy();
+        res.reduction = this->convergenceCriterion().accuracy();
         res.conv_rate  = 0;
         res.elapsed = watch.elapsed();
         return;
@@ -905,10 +816,7 @@ public:
       {
         std::cout << "=== BiCGSTABSolver" << std::endl;
         if (_verbose>1)
-        {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
-        }
+          this->convergenceCriterion().printInitial();
       }
 
       //
@@ -971,15 +879,13 @@ public:
         // test stop criteria
         //
 
-        field_type lastAccuracy = convergenceCriterion().accuracy();
-        convergenceCriterion().update(x, r);
+        field_type lastAccuracy = this->convergenceCriterion().accuracy();
+        this->convergenceCriterion().update(x, r);
 
         if (_verbose>1) // print
-        {
-          this->printOutput(std::cout,it,convergenceCriterion().accuracy(),lastAccuracy);
-        }
+          this->convergenceCriterion().print(it);
 
-        if (convergenceCriterion().converged())
+        if (this->convergenceCriterion().converged())
         {
           res.converged = 1;
           break;
@@ -1010,15 +916,13 @@ public:
         // test stop criteria
         //
 
-        lastAccuracy = convergenceCriterion().accuracy();
-        convergenceCriterion().update(x, r);
+        lastAccuracy = this->convergenceCriterion().accuracy();
+        this->convergenceCriterion().update(x, r);
 
         if (_verbose > 1)             // print
-        {
-          this->printOutput(std::cout,it,convergenceCriterion().accuracy(),lastAccuracy);
-        }
+          this->convergenceCriterion().print(it);
 
-        if (convergenceCriterion().converged())
+        if (this->convergenceCriterion().converged())
         {
           res.converged = 1;
           break;
@@ -1026,11 +930,11 @@ public:
       } // end for
 
       if (_verbose==1)                // printing for non verbose
-        this->printOutput(std::cout,it,convergenceCriterion().accuracy());
+        this->convergenceCriterion().print(it);
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = static_cast<int>(std::ceil(it));              // fill statistics
-      res.reduction = convergenceCriterion().accuracy();
+      res.reduction = this->convergenceCriterion().accuracy();
       res.conv_rate  = pow(res.reduction,1.0/it);
       res.elapsed = watch.elapsed();
       if (_verbose>0)                 // final print
@@ -1047,10 +951,10 @@ public:
     */
     virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
     {
-      double origTol = convergenceCriterion().tolerance();
-      convergenceCriterion().setTolerance(reduction);
+      double origTol = this->convergenceCriterion().tolerance();
+      this->convergenceCriterion().setTolerance(reduction);
       (*this).apply(x,b,res);
-      convergenceCriterion().setTolerance(origTol);
+      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -1096,7 +1000,7 @@ public:
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L must be sequential!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
       \brief Set up MINRES solver.
@@ -1112,27 +1016,9 @@ public:
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
         "L and S must have the same category!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
-
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
-    
+   
     /*!
       \brief Apply inverse operator.
 
@@ -1145,12 +1031,12 @@ public:
       _prec.pre(x,b);             // prepare preconditioner
       _op.applyscaleadd(-1,x,b);  // overwrite b with defect/residual
 
-      convergenceCriterion().setInitial(x, b);
-      if (convergenceCriterion().converged())
+      this->convergenceCriterion().setInitial(x, b);
+      if (this->convergenceCriterion().converged())
       {
         res.converged  = true;
         res.iterations = 0;               // fill statistics
-        res.reduction = convergenceCriterion().accuracy();
+        res.reduction = this->convergenceCriterion().accuracy();
         res.conv_rate  = 0;
         res.elapsed=0;
         if (_verbose>0)                 // final print
@@ -1162,8 +1048,7 @@ public:
       {
         std::cout << "=== MINRESSolver" << std::endl;
         if (_verbose>1) {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
+          this->convergenceCriterion().printInitial();
         }
       }
 
@@ -1280,13 +1165,13 @@ public:
 //          b.axpy(-beta0*xi[(i+1)%2],dummy);
 
 //          convergence test
-          field_type lastAccuracy = convergenceCriterion().accuracy();
-          convergenceCriterion().update(x, b);
+          field_type lastAccuracy = this->convergenceCriterion().accuracy();
+          this->convergenceCriterion().update(x, b);
 
           if (_verbose>1)             // print
-            this->printOutput(std::cout,i,convergenceCriterion().accuracy(),lastAccuracy);
+            this->convergenceCriterion().print(i);
 
-          if (convergenceCriterion().converged())
+          if (this->convergenceCriterion().converged())
           {
             res.converged  = true;
             break;
@@ -1294,11 +1179,11 @@ public:
         }
 
         if (_verbose==1)                // printing for non verbose
-          this->printOutput(std::cout,i,convergenceCriterion().accuracy());
+          this->convergenceCriterion().print(i);
 
         _prec.post(x);                  // postprocess preconditioner
         res.iterations = i;               // fill statistics
-        res.reduction = convergenceCriterion().accuracy();
+        res.reduction = this->convergenceCriterion().accuracy();
         res.conv_rate  = pow(res.reduction,1.0/i);
         res.elapsed = watch.elapsed();
 
@@ -1319,10 +1204,10 @@ public:
     */
     virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
     {
-      double origTol = convergenceCriterion().tolerance();
-      convergenceCriterion().setTolerance(reduction);
+      double origTol = this->convergenceCriterion().tolerance();
+      this->convergenceCriterion().setTolerance(reduction);
       (*this).apply(x,b,res);
-      convergenceCriterion().setTolerance(origTol);
+      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -1380,7 +1265,7 @@ public:
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L must be sequential!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
 
     /*!
@@ -1402,27 +1287,8 @@ public:
       dune_static_assert(static_cast<int>(P::category) == static_cast<int>(S::category),
         "P and S must have the same category!");
 
-      convergenceCriterion_ = Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
-    }
-
-    /*!
-     * \brief Return the criterion to be used to check for convergence of the linear solver.
-     */
-    ConvergenceCriterion &convergenceCriterion()
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \copydoc convergenceCriterion()
-     */
-    const ConvergenceCriterion &convergenceCriterion() const
-    { return *convergenceCriterion_; }
-
-    /*!
-     * \brief Set the criterion to be used to check for convergence of the linear solver.
-     */
-    void setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion> convCrit)
-    { convergenceCriterion_ = convCrit; }
-    
+      this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
+    }  
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     virtual void apply (X& x, X& b, InverseOperatorResult& res)
@@ -1483,8 +1349,8 @@ public:
       norm = norm_old = _sp.norm(v[0]);
 
       // check convergence
-      convergenceCriterion().setInitial(x, b, norm_0);
-      if (convergenceCriterion().converged()) {
+      this->convergenceCriterion().setInitial(x, b, norm_0);
+      if (this->convergenceCriterion().converged()) {
         _M.post(x);                  // postprocess preconditioner
         res.converged  = true;
         if (_verbose > 0)                 // final print
@@ -1498,8 +1364,7 @@ public:
         std::cout << "=== RestartedGMResSolver" << std::endl;
         if (_verbose > 1)
         {
-          this->printHeader(std::cout);
-          this->printOutput(std::cout,0,convergenceCriterion().accuracy());
+          this->convergenceCriterion().printInitial();
         }
       }
 
@@ -1535,14 +1400,14 @@ public:
           norm = std::abs(s[i+1]);
           norm_old = norm;
 
-          field_type lastAccuracy = convergenceCriterion().accuracy();
-          convergenceCriterion().update(x, b, norm);
+          field_type lastAccuracy = this->convergenceCriterion().accuracy();
+          this->convergenceCriterion().update(x, b, norm);
           if (_verbose > 1)             // print
           {
-            this->printOutput(std::cout,j,convergenceCriterion().accuracy(),lastAccuracy);
+            this->convergenceCriterion().print(i);
           }
 
-          if (convergenceCriterion().converged()) {
+          if (this->convergenceCriterion().converged()) {
             res.converged = true;
           }
         }
@@ -1581,15 +1446,15 @@ public:
 
         norm_old = norm;
 
-        field_type lastAccuracy = convergenceCriterion().accuracy();
-        convergenceCriterion().update(x, b, norm);
+        field_type lastAccuracy = this->convergenceCriterion().accuracy();
+        this->convergenceCriterion().update(x, b, norm);
 
         if (_verbose > 1)             // print
         {
-          this->printOutput(std::cout,j,convergenceCriterion().accuracy(),lastAccuracy);
+          this->convergenceCriterion().print(i);
         }
 
-        if (convergenceCriterion().converged()) {
+        if (this->convergenceCriterion().converged()) {
           // fill statistics
           res.converged = true;
         }
@@ -1601,7 +1466,7 @@ public:
       _M.post(x);                  // postprocess preconditioner
 
       res.iterations = j;
-      res.reduction = convergenceCriterion().accuracy();
+      res.reduction = this->convergenceCriterion().accuracy();
       res.conv_rate  = pow(res.reduction,1.0/j);
       res.elapsed = watch.elapsed();
 
@@ -1670,7 +1535,6 @@ public:
     Dune::Preconditioner<X,X>& _M;
     Dune::SeqScalarProduct<X> ssp;
     Dune::ScalarProduct<X>& _sp;
-    Dune::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
     int _restart;
     double _reduction;
     int _maxit;

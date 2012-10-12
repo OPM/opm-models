@@ -234,6 +234,10 @@ SET_TYPE_PROP(BoxModel, LinearSolver, Dumux::Linear::BoxParallelSolver<TypeTag>)
 // magnitude in the defect should be sufficient...
 SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, 1e-6);
 
+// the absolute defect of a component tolerated by the linear solver.
+// By default, looking at the absolute defect is "almost" disabled.
+SET_SCALAR_PROP(BoxModel, LinearSolverAbsTolerance, 1e-30);
+
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);
 

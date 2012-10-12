@@ -54,7 +54,7 @@ NEW_PROP_TAG(AmgCoarsenTarget);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(BoxLinearSolverTypeTag, AmgCoarsenTarget, 1000);
+SET_INT_PROP(BoxLinearSolverTypeTag, AmgCoarsenTarget, 5000);
 }
 
 namespace Linear {
@@ -228,12 +228,14 @@ public:
         }
 
         // create a weighted residual reduction convergence criterion
+        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
         auto *convCrit = 
             new Dumux::WeightedResidReductionCriterion<Vector, 
                                                        typename GridView::CollectiveCommunication>
             (problem_.gridView().comm(), 
              weightVec,
-             linearSolverTolerance);
+             linearSolverTolerance,
+             linearSolverAbsTolerance);
 
         typedef Dumux::ConvergenceCriterion<Vector> ConvergenceCriterion;
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
@@ -369,7 +371,8 @@ private:
         smootherArgs.relaxationFactor = 1.0;
         
         // specify the coarsen criterion
-        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
+        //typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
+        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FrobeniusNorm> >
             CoarsenCriterion;
         int coarsenTarget = GET_PARAM(TypeTag, int, AmgCoarsenTarget);
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
@@ -381,7 +384,7 @@ private:
         coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
         //coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
         coarsenCriterion.setAccumulate(Dune::Amg::atOnceAccu);
-        coarsenCriterion.setSkipIsolated(true);
+        coarsenCriterion.setSkipIsolated(false);
 
         // instantiate the AMG preconditioner
 #if HAVE_MPI

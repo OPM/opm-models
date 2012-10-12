@@ -78,16 +78,14 @@ NEW_PROP_TAG(LinearSolverOverlapSize);
 
 /*!
  * \brief Maximum accepted error of the solution of the linear solver.
- *
- * If fixpoint criterion was patched into DUNE-ISTL, this is the
- * maximum of the weighted difference between two iterations of the
- * linear solver (i.e. the linear solver basically uses the same
- * convergence criterion as the non-linear solver in this case). If
- * the vanilla DUNE-ISTL is used, this is the reduction of the
- * two-norm of the residual of the solution relative to the two-norm
- * of the residual of the initial solution.
  */
 NEW_PROP_TAG(LinearSolverTolerance);
+
+
+/*!
+ * \brief Maximum accepted defect of a component for the solution of the linear solver.
+ */
+NEW_PROP_TAG(LinearSolverAbsTolerance);
 
 /*!
  * \brief Specifies the verbosity of the linear solver
@@ -190,6 +188,7 @@ public:
     static void registerParameters()
     {
         REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+        REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance, "The maximum tolerance of the defect of a component for the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
@@ -228,9 +227,9 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
-        overlappingMatrix_->resetFront();
+        //overlappingMatrix_->resetFront();
         overlappingb_->assignAddBorder(b);
-        overlappingb_->resetFront();
+        //overlappingb_->resetFront();
 
         (*overlappingx_) = 0.0;
 
@@ -267,11 +266,14 @@ public:
 
         // create a fixpoint convergence criterion
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
         auto *convCrit = new Dumux::WeightedResidReductionCriterion<OverlappingVector, 
-                                                                   typename GridView::CollectiveCommunication>(problem_.gridView().comm(), 
-                                                                                                               weightVec,
-                                                                                                               linearSolverTolerance);
-
+                                                                    typename GridView::CollectiveCommunication>
+            (problem_.gridView().comm(), 
+             weightVec,
+             linearSolverTolerance,
+             linearSolverAbsTolerance);
+        
         // tell the linear solver to use it
         typedef Dumux::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));

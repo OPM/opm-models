@@ -113,6 +113,42 @@ public:
    *        met.
    */
   virtual bool converged() const = 0;
+  
+  /*!
+   * \brief Prints the initial information about the convergence behaviour.
+   *
+   * This method is called after setInitial() if the solver thinks
+   * it's a good idea to be verbose. In practice, "printing the
+   * initial information" means printing column headers and the
+   * initial state.
+   *
+   * \param os The output stream to which the message gets written.
+   */
+  virtual void printInitial(std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << "Solver tolerance: " << tolerance() << "\n";
+    os << std::setw(20) << " Iter ";
+    os << std::setw(20) << " Accuracy " << std::endl;
+
+    os << std::setw(20) << 0 << " ";
+    os << std::setw(20) << accuracy() << " ";
+    os << std::endl;
+  };
+
+  /*!
+   * \brief Prints the information about the convergence behaviour for
+   *        the current iteration.
+   *
+   * \param iter The iteration number. The semantics of this parameter
+   *             are chosen by the linear solver.
+   * \param os The output stream to which the message gets written.
+   */
+  virtual void print(Scalar iter, std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << iter << " ";
+    os << std::setw(20) << accuracy() << " ";
+    os << std::endl;
+  };
 };
 
 //! \} end documentation

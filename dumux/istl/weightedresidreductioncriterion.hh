@@ -43,6 +43,10 @@ namespace Dumux {
  * where \f$r^k = \mathbf{A} x^k - b \f$ is the residual for the
  * k-th iterative solution vector \f$x^k\f$ and \f$w_i\f$ is the
  * weight of the \f$i\f$-th linear equation.
+ *
+ * In addition, to the reduction of the maximum defect, the linear
+ * solver is also considered to be converged, if the defect goes below
+ * a given absolute limit.
  */
 template <class Vector, class CollectiveCommunication>
 class WeightedResidReductionCriterion : public ConvergenceCriterion<Vector>
@@ -55,10 +59,14 @@ public:
     : comm_(comm)
   { }
 
-  WeightedResidReductionCriterion(const CollectiveCommunication &comm, const Vector &weights, Scalar reduction)
+  WeightedResidReductionCriterion(const CollectiveCommunication &comm,
+                                  const Vector &weights,
+                                  Scalar reduction,
+                                  Scalar absTolerance = 0.0)
     : comm_(comm)
     , weightVec_(weights)
     , tolerance_(reduction)
+    , absTolerance_(absTolerance)
   { }
 
   /*!
@@ -134,7 +142,9 @@ public:
   void setInitial(const Vector &curSol,
                   const Vector &curResid)
   {
-    updateError_(curResid);
+    lastError_ = 1e100;
+    updateError_(curSol, curResid);
+
     // make sure that we don't allow an initial error of 0 to avoid
     // divisions by zero
     error_ = std::max(error_, 1e-20);
@@ -147,7 +157,8 @@ public:
   void update(const Vector &curSol, 
               const Vector &curResid)
   {
-    updateError_(curResid);
+    lastError_ = error_;
+    updateError_(curSol, curResid);
   }
 
   /*!
@@ -155,12 +166,47 @@ public:
    */
   bool converged() const
   {
-    return accuracy() <= tolerance();
+    // we're converged if difference between two iterations is either
+    // smaller than the numerical precision, or if the solution is
+    // better than the tolerance. TODO: are we actually converged in
+    // the first case?
+    return
+      accuracy() <= tolerance() || 
+      error_ <= absTolerance_;
   }
+
+  /*!
+   * \copydoc ConvergenceCriterion::printInitial()
+   */
+  void printInitial(std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << " Iter ";
+    os << std::setw(20) << " Accuracy ";
+    os << std::setw(20) << " Defect ";
+    os << std::setw(20) << " Rate " << std::endl;
+
+    os << std::setw(20) << 0 << " ";
+    os << std::setw(20) << accuracy() << " ";
+    os << std::setw(20) << error_ << " ";
+    os << std::setw(20) << 0 << " ";
+    os << std::endl;
+  }
+
+  /*!
+   * \copydoc ConvergenceCriterion::print()
+   */
+  void print(Scalar iter, std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << iter << " ";
+    os << std::setw(20) << accuracy() << " ";
+    os << std::setw(20) << error_ << " ";
+    os << std::setw(20) << lastError_/std::max(error_, 1e-80) << " ";
+    os << std::endl;
+  };
 
 private:
   // update the weighted absolute residual
-  void updateError_(const Vector &curResid)
+  void updateError_(const Vector &curSol, const Vector &curResid)
   {
     error_ = 0.0;
     for (size_t i = 0; i < curResid.size(); ++i) {
@@ -174,10 +220,13 @@ private:
 
   const CollectiveCommunication &comm_;
 
-  Vector weightVec_; // solution of the last iteration
+  Vector weightVec_; // the weights of the components of the residual
+
   Scalar error_; // the maximum of the absolute weighted difference of the last two iterations
+  Scalar lastError_; // the maximum of the absolute weighted difference of the last two iterations
   Scalar initialError_; // the maximum of the absolute weighted difference of the last two iterations
-  Scalar tolerance_; // the maximum allowed delta for the solution to be considered converged
+  Scalar tolerance_; // the maximum allowed relative tolerance for the solution to be considered converged
+  Scalar absTolerance_; // the maximum allowed absolute tolerance for the solution to be considered converged
 };
 
 //! \} end documentation
