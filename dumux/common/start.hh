@@ -380,6 +380,7 @@ int start(int argc,
         GridCreator::deleteGrid();
         return 1;
     }
+#ifndef NDEBUG
     catch (Dune::Exception &e) {
         if (myRank == 0)
             std::cerr << "Dune reported an error: " << e << std::endl;
@@ -392,6 +393,7 @@ int start(int argc,
         GridCreator::deleteGrid();
         return 3;
     }
+#endif
 }
 
 } // namespace Dumux
