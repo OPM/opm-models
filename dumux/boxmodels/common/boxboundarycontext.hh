@@ -53,9 +53,11 @@ class BoxBoundaryContext
     typedef typename GridView::Intersection Intersection;
 
     enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:
     /*!
@@ -113,6 +115,19 @@ public:
      */
     const FVElementGeometry &fvElemGeom(int timeIdx) const
     { return elemCtx_.fvElemGeom(timeIdx); }
+
+    /*!
+     * \brief Returns the outer unit normal of the boundary segment
+     *
+     * \param boundaryFaceIdx The local index of the boundary segment
+     * \param timeIdx The index of the solution used by the time discretization
+     */
+    Vector normal(int boundaryFaceIdx, int timeIdx) const
+    { 
+        auto tmp = fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].normal;
+        tmp /= tmp.two_norm();
+        return tmp;
+    }
 
     /*!
      * \brief Returns the area [m^2] of a given boudary segment.
