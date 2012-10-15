@@ -100,7 +100,13 @@ public:
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
     {
-        ctl_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
+        try {
+            ctl_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
+        }
+        catch (...) {
+            std::cout << "oops: exception thrown on rank " << ctl_.problem().gridView().comm().rank() << " while writing the convergence\n";
+        };
+           
     }
 
     /*!

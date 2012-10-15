@@ -222,8 +222,8 @@ protected:
             // update the current solution (i.e. uOld) with the delta
             // (i.e. u). The result is stored in u
             updateTimer_.start();
-            ctl.newtonUpdate(uCurrentIter, uLastIter, deltaU);
             ctl.newtonUpdateErrors(uCurrentIter, uLastIter, deltaU);
+            ctl.newtonUpdate(uCurrentIter, uLastIter, deltaU);
             updateTimer_.stop();
 
             try {
