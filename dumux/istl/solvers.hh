@@ -300,19 +300,6 @@ namespace Dumux {
 
       // compute norm, \todo parallelization
       this->convergenceCriterion().setInitial(x, b);
-      if (this->convergenceCriterion().converged())
-      {
-        res.converged  = true;
-        res.iterations = 0;               // fill statistics
-        res.reduction = this->convergenceCriterion().accuracy();
-        res.conv_rate  = 0;
-        res.elapsed=0;
-        if (_verbose>0)                 // final print
-          std::cout << "=== rate=" << res.conv_rate
-                    << ", T=" << res.elapsed << ", TIT=" << res.elapsed
-                    << ", IT=0" << std::endl;
-        return;
-      }
 
       // printing
       if (_verbose>0)
@@ -591,19 +578,6 @@ namespace Dumux {
       X q(x);              // a temporary vector
 
       this->convergenceCriterion().setInitial(x, b);
-      if (this->convergenceCriterion().converged())
-      {
-        res.converged  = true;
-        res.iterations = 0;               // fill statistics
-        res.reduction = this->convergenceCriterion().accuracy();
-        res.conv_rate  = 0;
-        res.elapsed=0;
-        if (_verbose>0)                 // final print
-          std::cout << "=== rate=" << res.conv_rate
-                    << ", T=" << res.elapsed << ", TIT=" << res.elapsed
-                    << ", IT=0" << std::endl;
-        return;
-      }
 
       if (_verbose>0)             // printing
       {
@@ -801,16 +775,6 @@ public:
       omega = 1;
 
       this->convergenceCriterion().setInitial(x, r);
-      if (this->convergenceCriterion().converged())
-      {
-        res.converged = 1;
-        _prec.post(x);                  // postprocess preconditioner
-        res.iterations = 0;             // fill statistics
-        res.reduction = this->convergenceCriterion().accuracy();
-        res.conv_rate  = 0;
-        res.elapsed = watch.elapsed();
-        return;
-      }
 
       if (_verbose>0)             // printing
       {
@@ -1032,17 +996,6 @@ public:
       _op.applyscaleadd(-1,x,b);  // overwrite b with defect/residual
 
       this->convergenceCriterion().setInitial(x, b);
-      if (this->convergenceCriterion().converged())
-      {
-        res.converged  = true;
-        res.iterations = 0;               // fill statistics
-        res.reduction = this->convergenceCriterion().accuracy();
-        res.conv_rate  = 0;
-        res.elapsed=0;
-        if (_verbose>0)                 // final print
-          std::cout << "=== rate=" << res.conv_rate << ", T=" << res.elapsed << ", TIT=" << res.elapsed << ", IT=0" << std::endl;
-        return;
-      }
 
       if (_verbose>0)             // printing
       {
@@ -1350,13 +1303,6 @@ public:
 
       // check convergence
       this->convergenceCriterion().setInitial(x, b, norm_0);
-      if (this->convergenceCriterion().converged()) {
-        _M.post(x);                  // postprocess preconditioner
-        res.converged  = true;
-        if (_verbose > 0)                 // final print
-          print_result(res);
-        return;
-      }
 
       // print header
       if (_verbose > 0)
