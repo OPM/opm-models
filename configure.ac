@@ -7,8 +7,7 @@ AM_CONFIG_HEADER([config.h])
 DUNE_CHECK_ALL
 EWOMS_CHECKS_PRIVATE
 
-AC_CONFIG_FILES([ewoms.pc
-    Makefile
+AC_CONFIG_FILES([Makefile
     doc/Makefile 
     doc/doxygen/Makefile 
     doc/doxygen/Doxyfile
@@ -86,6 +85,7 @@ AC_CONFIG_FILES([ewoms.pc
     test/material/pengrobinson/Makefile
     test/material/tabulation/Makefile
     tutorial/Makefile
+    ewoms.pc
 ])
 
 # implicitly set the Dune-flags everywhere

@@ -323,7 +323,6 @@ namespace Dumux {
         x += v;                     // update solution
         _op.applyscaleadd(-1,v,b);  // update defect
 
-        field_type lastAccuracy = this->convergenceCriterion().accuracy();
         this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
@@ -464,7 +463,6 @@ namespace Dumux {
         x.axpy(lambda,p);           // update solution
         b.axpy(-lambda,q);          // update defect
 
-        field_type lastAccuracy = this->convergenceCriterion().accuracy();
         this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
@@ -607,8 +605,6 @@ namespace Dumux {
         b.axpy(-lambda,q);          // update defect
 
         // convergence test
-        field_type lastAccuracy = this->convergenceCriterion().accuracy();
-
         this->convergenceCriterion().update(x, b);
 
         if (_verbose>1)             // print
@@ -842,8 +838,6 @@ public:
         //
         // test stop criteria
         //
-
-        field_type lastAccuracy = this->convergenceCriterion().accuracy();
         this->convergenceCriterion().update(x, r);
 
         if (_verbose>1) // print
@@ -879,8 +873,6 @@ public:
         //
         // test stop criteria
         //
-
-        lastAccuracy = this->convergenceCriterion().accuracy();
         this->convergenceCriterion().update(x, r);
 
         if (_verbose > 1)             // print
@@ -1118,7 +1110,6 @@ public:
 //          b.axpy(-beta0*xi[(i+1)%2],dummy);
 
 //          convergence test
-          field_type lastAccuracy = this->convergenceCriterion().accuracy();
           this->convergenceCriterion().update(x, b);
 
           if (_verbose>1)             // print
@@ -1346,7 +1337,6 @@ public:
           norm = std::abs(s[i+1]);
           norm_old = norm;
 
-          field_type lastAccuracy = this->convergenceCriterion().accuracy();
           this->convergenceCriterion().update(x, b, norm);
           if (_verbose > 1)             // print
           {
@@ -1392,7 +1382,6 @@ public:
 
         norm_old = norm;
 
-        field_type lastAccuracy = this->convergenceCriterion().accuracy();
         this->convergenceCriterion().update(x, b, norm);
 
         if (_verbose > 1)             // print
