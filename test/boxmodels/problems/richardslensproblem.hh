@@ -214,7 +214,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const char *name() const
-    { return "richardslens"; }
+    { return "lens_richards"; }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::temperature

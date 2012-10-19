@@ -140,7 +140,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const char *name() const
-    { return "stokes2c"; }
+    { return "stokes2ctest"; }
 
     /*!
      * \brief StokesProblem::temperature

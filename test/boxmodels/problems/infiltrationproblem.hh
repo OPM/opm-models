@@ -40,13 +40,13 @@
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
-{
+namespace Dumux {
+
 template <class TypeTag>
 class InfiltrationProblem;
 
-namespace Properties
-{
+namespace Properties {
+
 NEW_TYPE_TAG(InfiltrationBaseProblem);
 
 // Set the grid type
@@ -237,8 +237,12 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "infiltration"; }
+    const std::string name() const
+    { 
+        std::ostringstream oss;
+        oss << "infiltration_" << this->model().name();
+        return oss.str();
+    }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::temperature

@@ -151,7 +151,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const char *name() const
-    { return "stokesni"; }
+    { return "stokestest_ni"; }
 
     //! \}
 

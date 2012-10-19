@@ -77,10 +77,10 @@ SET_BOOL_PROP(NavierStokesTestProblem, EnableGravity, false);
 SET_BOOL_PROP(NavierStokesTestProblem, EnableConstraints, true);
 
 // Default simulation end time [s]
-SET_SCALAR_PROP(NavierStokesTestProblem, EndTime, 1.0);
+SET_SCALAR_PROP(NavierStokesTestProblem, EndTime, 1e-2);
 
 // Default initial time step size [s]
-SET_SCALAR_PROP(NavierStokesTestProblem, InitialTimeStepSize, 1.0);
+SET_SCALAR_PROP(NavierStokesTestProblem, InitialTimeStepSize, 1e-2);
 
 // Default grid file to load
 SET_STRING_PROP(NavierStokesTestProblem, GridFile, "grids/test_navierstokes.dgf");

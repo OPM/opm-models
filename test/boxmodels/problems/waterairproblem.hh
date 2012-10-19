@@ -249,6 +249,9 @@ public:
     { 
         std::ostringstream oss;
         oss << "waterair_" << this->model().name();
+        if (GET_PROP_VALUE(TypeTag, EnableEnergy))
+            oss << "_ni";
+        
         return oss.str().c_str();
     }
 

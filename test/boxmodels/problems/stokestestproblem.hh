@@ -138,7 +138,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const char *name() const
-    { return "stokes"; }
+    { return "stokestest"; }
 
     /*!
      * \brief StokesProblem::temperature

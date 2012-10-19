@@ -191,8 +191,12 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "1ptest"; }
+    const std::string name() const
+    { 
+        std::ostringstream oss;
+        oss << "groundwater_" << this->model().name();
+        return oss.str();
+    }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::temperature

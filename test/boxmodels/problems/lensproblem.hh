@@ -323,8 +323,12 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "lens"; }
+    const std::string name() const
+    { 
+        std::ostringstream oss;
+        oss << "lens_" << this->model().name();
+        return oss.str();
+    }
 
     /*!
      * \copydoc BoxProblem::postTimeStep

@@ -32,11 +32,12 @@
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dumux/material/components/simpleh2o.hh>
 #include <dumux/material/components/air.hh>
-#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
+#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
 #include <dumux/common/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 
+#include <type_traits>
 #include <iostream>
 
 namespace Dumux {
@@ -202,8 +203,17 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "powerinjection"; }
+    const std::string name() const
+    { 
+        std::ostringstream oss;
+        oss << "powerinjection_";
+        if (std::is_same<typename GET_PROP_TYPE(TypeTag, VelocityModule),
+                         Dumux::BoxDarcyVelocityModule<TypeTag> >::value)
+            oss << "darcy";
+        else
+            oss << "forchheimer";
+        return oss.str();
+    }
 
     /*!
      * \copydoc BoxProblem::postTimeStep
