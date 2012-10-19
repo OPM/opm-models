@@ -261,7 +261,7 @@ if(("${CMAKE_BUILD_TYPE}" STREQUAL "release") OR (NOT (DEFINED "CMAKE_BUILD_TYPE
   add_definitions("-O3 -march=native")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "ctest")
   # CTest debug mode
-  add_definitions(-DDEBUG=1 -DDUNE_ISTL_WITH_CHECKING=1)
+  add_definitions(-DDEBUG=1)
   add_definitions("-g -fprofile-arcs -ftest-coverage")
   set(EwomsLinkLibraries "${EwomsLinkLibraries}" "-lm -fprofile-arcs -ftest-coverage")
 else()

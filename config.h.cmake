@@ -45,6 +45,9 @@
 #cmakedefine EWOMS_CODENAME "${EWOMS_CODENAME}"
 
 #cmakedefine HAVE_MPI 1
+#if HAVE_MPI
+#define ENABLE_MPI 1
+#endif
 
 #define HAVE_UG ${HAVE_UG}
 #if HAVE_MPI && HAVE_UG
