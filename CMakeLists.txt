@@ -483,7 +483,7 @@ add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
 add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
 
 add_test(test_diffusion bin/runtest.sh --simulation test_diffusion 3)
-add_test(test_dec1p bin/runtest.sh --simulation test_dec1p)
+add_test(test_1p bin/runtest.sh --simulation test_1p)
 add_test(test_transport bin/runtest.sh --simulation test_transport)
 add_test(test_impes bin/runtest.sh --simulation test_impes)
 add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
