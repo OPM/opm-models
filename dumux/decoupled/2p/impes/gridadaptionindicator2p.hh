@@ -66,6 +66,9 @@ private:
 
 
 public:
+    static void registerParameters()
+    { }
+
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
      *
      * This standard indicator is based on the saturation gradient.

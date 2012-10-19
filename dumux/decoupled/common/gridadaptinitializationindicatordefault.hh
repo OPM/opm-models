@@ -49,6 +49,9 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridAdaptIndicator) GridAdaptIndicator;
 
 public:
+    static void registerParameters()
+    { }
+
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
      *
      */
