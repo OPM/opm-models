@@ -341,7 +341,7 @@ int start(int argc,
         if (myRank ==  0) std::cout << "Creating the grid\n";
         try { GridCreator::makeGrid(); }
         catch (const Dune::Exception &e) {
-            std::cerr << __FILE__ << ":" << __LINE__ << "\n";
+            std::cout << __FILE__ << ":" << __LINE__ << "\n";
             std::ostringstream oss;
             oss << "Creation of the grid failed:" << e.what(); 
             printUsage(argv[0], oss.str());
@@ -376,20 +376,20 @@ int start(int argc,
     }
     catch (Dumux::ParameterException &e) {
         if (myRank == 0)
-            std::cerr << e << ". Abort!\n";
+            std::cout << e << ". Abort!\n";
         GridCreator::deleteGrid();
         return 1;
     }
 #ifndef NDEBUG
     catch (Dune::Exception &e) {
         if (myRank == 0)
-            std::cerr << "Dune reported an error: " << e << std::endl;
+            std::cout << "Dune reported an error: " << e << std::endl;
         GridCreator::deleteGrid();
         return 2;
     }
     catch (...) {
         if (myRank == 0)
-            std::cerr << "Unknown exception thrown!\n";
+            std::cout << "Unknown exception thrown!\n";
         GridCreator::deleteGrid();
         return 3;
     }

@@ -110,8 +110,8 @@ public:
                     mono = (dy_dx>0)?1:-1;
                 }
                 else {
-                    std::cerr << "ooops: " << x << "\n";
-                    exit(1);
+                    DUNE_THROW(Dune::InvalidStateException,
+                               "The sampling points given to a spline must be sorted by their x value!");
                 }
             }
             else {
