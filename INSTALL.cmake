@@ -20,7 +20,7 @@ But alas, it comes with a cost:
    those picked by DUNE's build system. This might sometimes lead to
    problems.
  - Dependencies between DUNE modules are not yet handled, i.e. all
-   DUNE modules on which DuMuX depends (-> common, grid, istl, 
+   DUNE modules on which eWoms depends (-> common, grid, istl, 
    geometry, localfunctions) need to be installed already.
 
 Preparing the installation
@@ -32,7 +32,7 @@ new empty directory which will be used to store the files from
 the build process and run
 
 cd path/to/empty/build/directory
-cmake path/to/DUMUX/source/directory
+cmake path/to/ewoms/source/directory
 
 You might want to set a few parameters if you didn't install the
 required libraries system wide. CMake cache variables can be set using
@@ -56,7 +56,7 @@ CMAKE_BUILD_TYPE  Type of build. Either 'debug' or 'release', default is
                   'release'.
 
 
-If this was successfull, the project can be build by 
+If this was successful, the project can be build by 
 
 make
 
@@ -73,9 +73,8 @@ cmake -DCMAKE_BUILD_TYPE=debug \
       -DUG_DIR=/usr/local/ug \
       -DALUGrid_DIR=/usr/local/alugrid \
       -DMETIS_DIR=/usr/local/metis \
-      path/to/DUMUX/source/directory
+      path/to/ewoms/source/directory
 
-With gcc 4.5.x, compilation might fail due to an internal compiler 
-error. In this case, you might want to specify the compiler explicitly 
-by using the cmake options -DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER. 
+You can also specify the compiler explicitly using the cmake options
+-DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER.
 
