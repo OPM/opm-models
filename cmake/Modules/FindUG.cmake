@@ -4,10 +4,10 @@
 #  UG_FOUND        - system has dune-grid
 #  UG_INCLUDE_DIR  - incude paths to use dune-grid
 #  UG_LIBRARIES    - Link these to use dune-grid
-Include(DumuxMacros)
+Include(EwomsMacros)
 
 
-DumuxSetup("UG" "UG" "UG")
+EwomsSetup("UG" "UG" "UG")
 
 set(MyIncludeSuffixes 
     "gm"
@@ -47,14 +47,14 @@ set(MyUgLibs
   "devS"
 )
 
-DumuxAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}" )
+EwomsAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}" )
 
-DumuxFindIncludeDir("ugm.h")
+EwomsFindIncludeDir("ugm.h")
 
 foreach(tmp ${MyUgLibs})
-  DumuxFindLibrary(${tmp})
+  EwomsFindLibrary(${tmp})
 endforeach(tmp)
 
-DumuxRequiredLibsFound(${MyUgLibs})
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound(${MyUgLibs})
+EwomsIncludeDirsFound()
+EwomsCheckFound()

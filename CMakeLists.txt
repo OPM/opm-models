@@ -22,17 +22,19 @@ if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
+# set required compiler flags for C++11 (former C++0x)
+find_package(CXX11Features)
+
 ##############
 # Find the required packages
 find_package(DUNE_grid REQUIRED)
 find_package(DUNE_istl REQUIRED)
 find_package(DUNE_localfunctions REQUIRED)
+find_package(DUNE_geometry REQUIRED)
 find_package(DUNE_common REQUIRED)
 
 ##############
 # Find the optional packages
-find_package(DUNE_geometry)
-find_package(DUNE_pdelab)
 find_package(MPI)
 find_package(Boost)
 find_package(Alberta)
@@ -48,7 +50,6 @@ include(CheckIncludeFileCXX)
 check_include_file("malloc.h" HAVE_MALLOC_H)
 check_include_file("valgrind/memcheck.h" HAVE_VALGRIND)
 check_include_file_cxx("memory" HAVE_MEMORY)
-check_include_file_cxx("tr1/array" HAVE_TR1_ARRAY)
 check_include_file_cxx("tr1/memory" HAVE_TR1_MEMORY)
 
 ##############
@@ -222,16 +223,15 @@ find_package(SharedPtr)
 # use this macros in the CMakelists of the subdirectories. 
 
 # -> for TARGET_LINK_LIBRARIES
-set(DumuxLinkLibraries 
-#    "dumux" # the DUMUX library. CMake replaces this by the proper file location
+set(EwomsLinkLibraries 
     ${DUNE_common_LIBRARIES}
     ${DUNE_geometry_LIBRARIES}
     ${DUNE_grid_LIBRARIES}
-    ${DUNE_mux_LIBRARIES}
-    "-lm -fprofile-arcs -ftest-coverage")
+    ${DUNE_mux_LIBRARIES})
+
 
 # -> for INCLUDE_DIRECTORIES
-set(DumuxIncludeDirectories 
+set(EwomsIncludeDirectories 
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_SOURCE_DIR}
     ${DUNE_grid_INCLUDE_DIRS}
@@ -242,32 +242,35 @@ set(DumuxIncludeDirectories
     ${DUNE_pdelab_INCLUDE_DIRS})
 
 if(BOOST_FOUND)
-  set(DumuxLinkDirectories "${DumuxLinkDirectories} ${Boost_LIBRARY_DIRS}")
-  set(DumuxLinkLibraries "${DumuxLinkLibraries} ${Boost_LIBRARIES}")
-  set(DumuxIncludeDirectories "${DumuxIncludeDirectories} ${Boost_INCLUDE_DIR}")
+  set(EwomsLinkDirectories "${EwomsLinkDirectories} ${Boost_LIBRARY_DIRS}")
+  set(EwomsLinkLibraries "${EwomsLinkLibraries} ${Boost_LIBRARIES}")
+  set(EwomsIncludeDirectories "${EwomsIncludeDirectories} ${Boost_INCLUDE_DIR}")
 endif(BOOST_FOUND)
 
 if(SUPERLU_FOUND)
-  set(DumuxLinkLibraries ${DumuxLinkLibraries} ${SUPERLU_LIBS})
-  set(DumuxIncludeDirectories ${DumuxIncludeDirectories} ${SUPERLU_INCLUDE_DIRS})
+  set(EwomsLinkLibraries ${EwomsLinkLibraries} ${SUPERLU_LIBS})
+  set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${SUPERLU_INCLUDE_DIRS})
 endif(SUPERLU_FOUND)
 
 ##############
 # set appropriate compiler flags for debug/release compilation modes
 add_definitions("-std=c++0x -Wall -Wno-sign-compare -fno-strict-aliasing")
 
-if(("${CMAKE_BUILD_TYPE}" STREQUAL "debug") OR (NOT (DEFINED "${CMAKE_BUILD_TYPE}")))
-  add_definitions(-DNDEBUG)
-  # debug mode
-  add_definitions("-g -O0 -fprofile-arcs -ftest-coverage")
-#  add_definitions(-DDEBUG -DDUNE_DEVEL_MODE=1 -DDUNE_ISTL_WITH_CHECKING)
-else()
-  # Release mode
+if(("${CMAKE_BUILD_TYPE}" STREQUAL "release") OR (NOT (DEFINED "${CMAKE_BUILD_TYPE}")))
+  # release mode
   add_definitions("-O3 -march=native")
+elseif("${CMAKE_BUILD_TYPE}" STREQUAL "ctest")
+  # CTest debug mode
+  add_definitions(-DDEBUG=1 -DDUNE_ISTL_WITH_CHECKING=1)
+  add_definitions("-g -fprofile-arcs -ftest-coverage")
+  set(EwomsLinkLibraries "${EwomsLinkLibraries}" "-lm -fprofile-arcs -ftest-coverage")
+else()
+  # CTest debug mode
+  add_definitions(-DDEBUG=1)
+  add_definitions("-g")
 endif( )
 
-##############
-# deal with the config.h include file...
+# with the config.h include file...
 macro(SetConfigHVar ConfigHName CMakeName)
   if(${CMakeName})
     set(${ConfigHName} ${${CMakeName}})
@@ -300,6 +303,22 @@ SetConfigHVar(PROJECT_NAME             ProjectName)
 SetConfigHVar(PROJECT_VERSION          ProjectVersion)
 SetConfigHVar(PROJECT_MAINTAINER       ProjectMaintainer)
 SetConfigHVar(PROJECT_MAINTAINER_EMAIL ProjectMaintainerEmail)
+
+# c++ 2011 features
+SetConfigHVar(HAVE_NULLPTR HAVE_NULLPTR)
+SetConfigHVar(HAVE_ARRAY HAVE_ARRAY)
+SetConfigHVar(HAVE_ATTRIBUTE_ALWAYS_INLINE HAVE_ATTRIBUTE_ALWAYS_INLINE)
+SetConfigHVar(HAS_ATTRIBUTE_UNUSED HAS_ATTRIBUTE_UNUSED)
+SetConfigHVar(HAS_ATTRIBUTE_DEPRECATED HAS_ATTRIBUTE_DEPRECATED)
+SetConfigHVar(HAS_ATTRIBUTE_DEPRECATED_MSG HAS_ATTRIBUTE_DEPRECATED_MSG)
+SetConfigHVar(HAVE_INTEGRAL_CONSTANT HAVE_INTEGRAL_CONSTANT)
+SetConfigHVar(HAVE_STATIC_ASSERT HAVE_STATIC_ASSERT)
+SetConfigHVar(HAVE_VARIADIC_TEMPLATES HAVE_VARIADIC_TEMPLATES)
+SetConfigHVar(HAVE_VARIADIC_CONSTRUCTOR_SFINAE HAVE_VARIADIC_CONSTRUCTOR_SFINAE)
+SetConfigHVar(HAVE_RVALUE_REFERENCES HAVE_RVALUE_REFERENCES)
+SetConfigHVar(HAVE_TUPLE HAVE_TUPLE)
+SetConfigHVar(HAVE_TR1_TUPLE HAVE_TR1_TUPLE)
+
 ##############
 
 ##############
@@ -368,22 +387,22 @@ endif(UG_FOUND)
 # deal with ALUGrid
 if(ALUGrid_FOUND)
   add_definitions(-DENABLE_ALUGRID=1)
-  set(DumuxIncludeDirectories ${DumuxIncludeDirectories} ${ALUGrid_INCLUDE_DIRS})
-  set(DumuxLinkLibraries ${DumuxLinkLibraries} ${ALUGrid_LIBRARIES})
+  set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${ALUGrid_INCLUDE_DIRS})
+  set(EwomsLinkLibraries ${EwomsLinkLibraries} ${ALUGrid_LIBRARIES})
 endif(ALUGrid_FOUND)
 SetConfigHVar(HAVE_ALUGRID ALUGrid_FOUND)
 
 # deal with Alberta
 if(Alberta_FOUND)
- set(DumuxIncludeDirectories ${DumuxIncludeDirectories} ${Alberta_INCLUDE_DIRS})
- set(DumuxLinkLibraries ${DumuxLinkLibraries} ${Alberta_LIBRARIES})
+ set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${Alberta_INCLUDE_DIRS})
+ set(EwomsLinkLibraries ${EwomsLinkLibraries} ${Alberta_LIBRARIES})
 endif(Alberta_FOUND)
 SetConfigHVar(HAVE_ALBERTA Alberta_FOUND)
 
 # deal with METIS
 if(METIS_FOUND)
- set(DumuxIncludeDirectories ${DumuxIncludeDirectories} ${METIS_INCLUDE_DIRS})
- set(DumuxLinkLibraries ${DumuxLinkLibraries} ${METIS_LIBRARIES})
+ set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${METIS_INCLUDE_DIRS})
+ set(EwomsLinkLibraries ${EwomsLinkLibraries} ${METIS_LIBRARIES})
 endif(METIS_FOUND)
 SetConfigHVar(HAVE_METIS METIS_FOUND)
 ##############
@@ -394,8 +413,8 @@ if(MPI_FOUND)
    add_definitions(${TMP})
    add_definitions(-DENABLE_MPI=1)
 # add_definitions(-DModelP) # tell UG that the model is parallelized
-   set(DumuxLinkLibraries ${DumuxLinkLibraries} ${MPI_LIBRARIES})
-   set(DumuxIncludeDirectories ${DumuxIncludeDirectories} ${MPI_INCLUDE_PATH})
+   set(EwomsLinkLibraries ${EwomsLinkLibraries} ${MPI_LIBRARIES})
+   set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${MPI_INCLUDE_PATH})
 endif(MPI_FOUND)
 
 # actually write the config.h file to disk 
@@ -410,57 +429,75 @@ add_subdirectory("tutorial")
 
 # copy the testing script
 make_directory(bin)
-make_directory(references)
-make_directory(parameters)
+make_directory(referencesolutions)
+make_directory(grids)
 file(COPY bin/runtest.sh DESTINATION bin)
 file(COPY bin/fuzzycomparevtu.py DESTINATION bin)
-file(GLOB vtus "test/referencesolutions/*.vtu")
+file(GLOB vtus "test/referencesolutions/*.vtu" "test/referencesolutions/*.vtp")
 foreach(file ${vtus})
-    file(COPY ${file} DESTINATION references)
+    file(COPY ${file} DESTINATION referencesolutions)
+endforeach(file)
+
+file(GLOB dgfs "test/boxmodels/grids/*.dgf" "test/decoupled/*/grids/*.dgf")
+foreach(file ${dgfs})
+    file(COPY ${file} DESTINATION grids)
 endforeach(file)
 
 # set up CTest 
 enable_testing()
 include(CTest)
-add_test(test_propertysystem test/common/propertysystem/test_propertysystem)
-add_test(test_general_box bin/runtest.sh references/generallens_box-reference.vtu generallens_box-00003.vtu test/common/generalproblem/test_generalproblem_2p --box 1e2 2e1)
-add_test(test_general_dec bin/runtest.sh references/generallens_decoupled-reference.vtu generallens_decoupled-00003.vtu test/common/generalproblem/test_generalproblem_2p --decoupled 1e2 2e1)
-add_test(test_spline test/common/spline/test_spline)
+add_test(test_propertysystem bin/runtest.sh --plain test_propertysystem)
+add_test(test_spline bin/runtest.sh --plain test_spline)
+add_test(test_fluidsystems bin/runtest.sh --plain test_fluidsystems)
+add_test(test_immiscibleflash bin/runtest.sh --plain test_immiscibleflash)
+add_test(test_ncpflash bin/runtest.sh --plain test_ncpflash)
+add_test(test_pengrobinson bin/runtest.sh --plain test_pengrobinson)
+add_test(test_tabulation bin/runtest.sh --plain test_tabulation)
 
-add_test(test_fluidsystems test/material/fluidsystems/test_fluidsystems)
-add_test(test_immiscibleflash test/material/immiscibleflash/test_immiscibleflash)
-add_test(test_ncpflash test/material/ncpflash/test_ncpflash)
-add_test(test_pengrobinson test/material/pengrobinson/test_pengrobinson)
-add_test(test_tabulation test/material/tabulation/test_tabulation)
+add_test(co2injection_ncp bin/runtest.sh --simulation co2injection_ncp)
+add_test(co2injection_ncp_ni bin/runtest.sh --simulation co2injection_ncp_ni)
+add_test(groundwater_immiscible bin/runtest.sh --simulation groundwater_immiscible)
+add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
+add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
+add_test(reservoir_blackoil bin/runtest.sh --simulation reservoir_blackoil)
+add_test(cuvette_pvs bin/runtest.sh --simulation cuvette_pvs)
+add_test(powerinjection_darcy bin/runtest.sh --simulation powerinjection_darcy)
+add_test(powerinjection_forchheimer bin/runtest.sh --simulation powerinjection_forchheimer)
+add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
+add_test(test_quadrature bin/runtest.sh --plain test_quadrature)
+add_test(obstacle_immiscible bin/runtest.sh --simulation obstacle_immiscible)
+add_test(test_stokes bin/runtest.sh --simulation test_stokes)
+add_test(co2injection_immiscible_ni bin/runtest.sh --simulation co2injection_immiscible_ni)
+add_test(lens_richards bin/runtest.sh --simulation lens_richards)
+add_test(outflow_pvs bin/runtest.sh --simulation outflow_pvs)
+add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
+add_test(infiltration_pvs bin/runtest.sh --simulation infiltration_pvs)
+add_test(co2injection_immiscible bin/runtest.sh --simulation co2injection_immiscible)
+add_test(co2injection_flash bin/runtest.sh --simulation co2injection_flash)
+add_test(co2injection_pvs bin/runtest.sh --simulation co2injection_pvs)
+add_test(obstacle_pvs bin/runtest.sh --simulation obstacle_pvs)
+add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
+add_test(co2injection_flash_ni bin/runtest.sh --simulation co2injection_flash_ni)
+add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
+add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
+add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
 
-add_test(test_1p bin/runtest.sh references/1ptest-reference.vtu 1ptest-00002.vtu test/boxmodels/1p/test_1p --grid-file=test/boxmodels/1p/grids/test_1p_2d.dgf)
-add_test(test_1p2c bin/runtest.sh references/outflow-reference.vtu outflow-00010.vtu test/boxmodels/1p2c/test_1p2c --grid-file=test/boxmodels/1p2c/grids/test_1p2c.dgf)
-add_test(test_2p bin/runtest.sh references/lens-reference.vtu lens-00009.vtu test/boxmodels/2p/test_2p --grid-file=test/boxmodels/2p/grids/test_2p.dgf)
-add_test(test_2pni bin/runtest.sh references/injection2pni-reference.vtu injection2pni-00011.vtu test/boxmodels/2pni/test_2pni)
-add_test(test_2p2c bin/runtest.sh references/injection-reference.vtu injection-00009.vtu test/boxmodels/2p2c/test_2p2c --grid-file=test/boxmodels/2p2c/grids/test_2p2c.dgf)
-add_test(test_2p2cni bin/runtest.sh references/waterair-reference.vtu waterair-00010.vtu test/boxmodels/2p2cni/test_2p2cni --grid-file=test/boxmodels/2p2cni/grids/test_2p2cni.dgf)
-add_test(test_3p3c bin/runtest.sh references/infiltration-reference.vtu infiltration-00011.vtu test/boxmodels/3p3c/test_3p3c --grid-file=test/boxmodels/3p3c/grids/test_3p3c.dgf)
-add_test(test_3p3cni bin/runtest.sh references/cuvettepvsni-reference.vtu cuvettepvsni-00013.vtu test/boxmodels/3p3cni/test_3p3cni --grid-file=test/boxmodels/3p3cni/grids/cuvette.dgf)
-add_test(test_mpnc bin/runtest.sh references/obstacle-reference.vtu obstacle-00010.vtu test/boxmodels/mpnc/test_mpnc --grid-file=test/boxmodels/mpnc/grids/obstacle_24x16.dgf)
-add_test(test_richards bin/runtest.sh references/richardslens-reference.vtu richardslens-00008.vtu test/boxmodels/richards/test_richards --grid-file=test/boxmodels/richards/grids/richardslens-24x16.dgf)
-add_test(test_restart  bin/runTest.sh references/co2-reference.vtu heterogeneous-00020.vtu test/boxmodels/co2/test_co2 --grid-file test/boxmodels/co2/grids/heterogeneousSmall.dgf --restart 42008.6 --initial-time-step-size 23452.1)
+add_test(test_diffusion bin/runtest.sh --simulation test_diffusion 3)
+add_test(test_dec1p bin/runtest.sh --simulation test_dec1p)
+add_test(test_transport bin/runtest.sh --simulation test_transport)
+add_test(test_impes bin/runtest.sh --simulation test_impes)
+add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
+add_test(test_mpfal2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAL)
+add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
+add_test(test_adaptive2p2c bin/runtest.sh --simulation test_adaptive2p2c)
+add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c)
 
-add_test(test_diffusion bin/runtest.sh references/diffusion-reference.vtu mimeticdiffusion-00001.vtu test/decoupled/1p/test_diffusion 3)
-add_test(test_dec1p bin/runtest.sh references/test_1p-reference.vtu test_1p-00001.vtu test/decoupled/1p/test_dec1p)
-add_test(test_transport bin/runtest.sh references/test_transport-reference.vtu test_transport-00006.vtu test/decoupled/2p/test_transport --grid-file=test/decoupled/2p/grids/test_transport.dgf)
-add_test(test_impes bin/runtest.sh references/test_impes-reference.vtu test_impes-00013.vtu test/decoupled/2p/test_impes)
-add_test(test_mpfao2p bin/runTest.sh references/test_mpfao2p-reference.vtu test_mpfa2p-00007.vtu test/decoupled/2p/test_mpfa2p -ModelType MPFAO)
-add_test(test_mpfal2p bin/runTest.sh references/test_mpfal2p-reference.vtu test_mpfa2p-00007.vtu test/decoupled/2p/test_mpfa2p -ModelType MPFAL)
-add_test(test_mpfal2padaptive  bin/runTest.sh references/test_mpfal2padaptive-reference.vtu  test_mpfa2p-00004.vtu           test/decoupled/2p/test_mpfa2p -ModelType MPFALAdaptive -TimeManager.TEnd 2e4)
-add_test(test_adaptive2p2c bin/runTest.sh references/test_adaptive2p2c-reference.vtu test_adaptive2p2c-00008.vtu test/decoupled/2p2c/test_adaptive2p2c)
-add_test(test_multiphysics2p2c bin/runtest.sh references/test_multiphysics2p2c-reference.vtu test_multiphysics2p2c-00021.vtu test/decoupled/2p2c/test_multiphysics2p2c)
-
-add_test(tutorial_coupled tutorial/tutorial_coupled)
-add_test(tutorial_decoupled tutorial/tutorial_decoupled)
+add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled)
+add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
 
 if(SUPERLU_FOUND)
- add_test(test_stokes bin/runtest.sh references/stokes-reference.vtu stokes-00014.vtu test/freeflow/stokes/test_stokes --grid-file=test/freeflow/stokes/grids/test_stokes.dgf)
- add_test(test_stokes2c bin/runtest.sh references/stokes2c-reference.vtu stokes2c-00007.vtu test/freeflow/stokes2c/test_stokes2c --grid-file=test/freeflow/stokes2c/grids/test_stokes2c.dgf)
- add_test(test_stokesni bin/runtest.sh references/stokesni-reference.vtu stokesni-00008.vtu test/freeflow/stokes2cni/test_stokes2cni --grid-file=test/freeflow/stokes2cni/grids/test_stokesni.dgf)
- add_test(test_navierstokes bin/runtest.sh references/navierstokes-reference.vtu navierstokes-00002.vtu test/freeflow/navierstokes/test_navierstokes --grid-file=test/freeflow/navierstokes/grids/test_navierstokes.dgf)
+ add_test(test_stokes bin/runtest.sh --simulation test_stokes)
+ add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
+ add_test(test_stokesni bin/runtest.sh --simulation test_stokes2cni)
+ add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
 endif(SUPERLU_FOUND)

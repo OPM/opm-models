@@ -4,14 +4,15 @@
 #  DUNE_geometry_FOUND        - system has dune-geometry
 #  DUNE_geometry_INCLUDE_DIR  - incude paths to use dune-geometry
 #  DUNE_geometry_LIBRARIES    - Link these to use dune-geometry
-INCLUDE(DumuxMacros)
+INCLUDE(EwomsMacros)
 
-DumuxSetup("DUNE_geometry" "dune-geometry" "DUNE")
+EwomsSetup("DUNE_geometry" "dune-geometry" "DUNE")
 
-DumuxFindIncludeDir("dune/geometry/type.hh")
+EwomsFindIncludeDir("dune/geometry/type.hh")
+EwomsFindLibrary("dunegeometry")
 
-DumuxRequiredLibsFound()
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound("dunegeometry")
+EwomsIncludeDirsFound()
+EwomsCheckFound()
 
 

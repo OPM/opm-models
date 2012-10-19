@@ -4,21 +4,21 @@
 #  METIS_FOUND        - system has the libMETIS graph partioning library
 #  METIS_INCLUDE_DIR  - incude paths to use libMETIS
 #  METIS_LIBRARIES    - Link these to use libMETIS
-Include(DumuxMacros)
+Include(EwomsMacros)
 
-DumuxSetup("METIS" "METIS" "METIS")
+EwomsSetup("METIS" "METIS" "METIS")
 
 set(MyIncludeSuffixes "METISLib")
 #set(MyLibSuffixes "build/Linux-x86_64/" "build/Linux-i686/" "GKlib/builds/Linux-x86_64/" "GKlib/builds/Linux-i686/")
 
-DumuxAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}")
-#DumuxAddPathSuffixes("${MyIncludeSuffixes}" "")
+EwomsAddPathSuffixes("${MyIncludeSuffixes}" "${MyLibSuffixes}")
+#EwomsAddPathSuffixes("${MyIncludeSuffixes}" "")
 
-DumuxFindIncludeDir("metis.h")
-DumuxFindLibrary("metis")
-#DumuxFindLibrary("GKlib")
+EwomsFindIncludeDir("metis.h")
+EwomsFindLibrary("metis")
+#EwomsFindLibrary("GKlib")
 
-#DumuxRequiredLibsFound("metis" "GKlib")
-DumuxRequiredLibsFound("metis")
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+#EwomsRequiredLibsFound("metis" "GKlib")
+EwomsRequiredLibsFound("metis")
+EwomsIncludeDirsFound()
+EwomsCheckFound()

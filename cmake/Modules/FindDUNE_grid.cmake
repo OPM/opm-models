@@ -4,13 +4,13 @@
 #  Dune_grid_FOUND        - system has dune-grid
 #  Dune_grid_INCLUDE_DIR  - incude paths to use dune-grid
 #  Dune_grid_LIBRARIES    - Link these to use dune-grid
-INCLUDE(DumuxMacros)
+INCLUDE(EwomsMacros)
 
-DumuxSetup("DUNE_grid" "dune-grid" "DUNE")
+EwomsSetup("DUNE_grid" "dune-grid" "DUNE")
 
-DumuxFindIncludeDir("dune/grid/sgrid.hh")
-DumuxFindLibrary("dunegrid")
+EwomsFindIncludeDir("dune/grid/sgrid.hh")
+EwomsFindLibrary("dunegrid")
 
-DumuxRequiredLibsFound("dunegrid")
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound("dunegrid")
+EwomsIncludeDirsFound()
+EwomsCheckFound()

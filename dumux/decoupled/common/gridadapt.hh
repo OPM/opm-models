@@ -81,12 +81,14 @@ public:
     
     static void registerParameters()
     {
+        GridAdaptIndicator::registerParameters();
+        GridAdaptInitializationIndicator::registerParameters();
+
         REGISTER_PARAM(TypeTag, int, GridAdaptMinLevel, "The minimum number of times an element gets refined");
         REGISTER_PARAM(TypeTag, int, GridAdaptMaxLevel, "The maximum number of times an element gets refined");
         REGISTER_PARAM(TypeTag, int, GridAdaptInterval, "The number of time steps between grid adaption");
         REGISTER_PARAM(TypeTag, Scalar, GridAdaptRefineTolerance, "The maximum value of the grid adaption indicator before an element gets refined");
         REGISTER_PARAM(TypeTag, Scalar, GridAdaptCoarsenTolerance, "The minimum value of the grid adaption indicator before an element gets coarsened");
-        REGISTER_PARAM(TypeTag, int, GridAdaptEnableInitializationIndicator, "Adapt the grid for the initial solution");
     }
     
     void init()

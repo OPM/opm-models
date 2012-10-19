@@ -4,14 +4,14 @@
 #  DUNE_pdelab_FOUND        - system has dune-pdelab
 #  DUNE_pdelab_INCLUDE_DIR  - incude paths to use dune-pdelab
 #  DUNE_pdelab_LIBRARIES    - Link these to use dune-pdelab
-INCLUDE(DumuxMacros)
+INCLUDE(EwomsMacros)
 
-DumuxSetup("DUNE_pdelab" "dune-pdelab" "DUNE")
+EwomsSetup("DUNE_pdelab" "dune-pdelab" "DUNE")
 
-DumuxFindIncludeDir("dune/pdelab/common/function.hh")
+EwomsFindIncludeDir("dune/pdelab/common/function.hh")
 
-DumuxRequiredLibsFound()
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound()
+EwomsIncludeDirsFound()
+EwomsCheckFound()
 
 

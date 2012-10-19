@@ -4,17 +4,17 @@
 #  Alberta_FOUND        - system has dune-grid
 #  Alberta_INCLUDE_DIR  - incude paths to use dune-grid
 #  Alberta_LIBRARIES    - Link these to use dune-grid
-Include(DumuxMacros)
+Include(EwomsMacros)
 
-DumuxSetup("Alberta" "Alberta" "Alberta")
+EwomsSetup("Alberta" "Alberta" "Alberta")
 
-#DumuxAddPathSuffixes("${MyIncludeSuffixes}" "")
+#EwomsAddPathSuffixes("${MyIncludeSuffixes}" "")
 
-DumuxFindIncludeDir("alberta.h")
-DumuxFindLibrary("ALBERTA22_0")
-DumuxFindLibrary("ALBERTA22_1")
-DumuxFindLibrary("alberta_util")
+EwomsFindIncludeDir("alberta.h")
+EwomsFindLibrary("ALBERTA22_0")
+EwomsFindLibrary("ALBERTA22_1")
+EwomsFindLibrary("alberta_util")
 
-DumuxRequiredLibsFound("ALBERTA22_0" "ALBERTA22_1" "alberta_util")
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound("ALBERTA22_0" "ALBERTA22_1" "alberta_util")
+EwomsIncludeDirsFound()
+EwomsCheckFound()

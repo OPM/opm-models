@@ -4,14 +4,14 @@
 #  DUNE_localfunctions_FOUND        - system has dune-localfunctions
 #  DUNE_localfunctions_INCLUDE_DIR  - incude paths to use dune-localfunctions
 #  DUNE_localfunctions_LIBRARIES    - Link these to use dune-localfunctions
-INCLUDE(DumuxMacros)
+INCLUDE(EwomsMacros)
 
-DumuxSetup("DUNE_localfunctions" "dune-localfunctions" "DUNE")
+EwomsSetup("DUNE_localfunctions" "dune-localfunctions" "DUNE")
 
-DumuxFindIncludeDir("dune/localfunctions/lagrange.hh")
+EwomsFindIncludeDir("dune/localfunctions/lagrange.hh")
 
-DumuxRequiredLibsFound()
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound()
+EwomsIncludeDirsFound()
+EwomsCheckFound()
 
 

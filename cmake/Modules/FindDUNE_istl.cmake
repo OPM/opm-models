@@ -4,14 +4,14 @@
 #  DUNE_istl_FOUND        - system has dune-istl
 #  DUNE_istl_INCLUDE_DIR  - incude paths to use dune-istl
 #  DUNE_istl_LIBRARIES    - Link these to use dune-istl
-INCLUDE(DumuxMacros)
+INCLUDE(EwomsMacros)
 
-DumuxSetup("DUNE_istl" "dune-istl" "DUNE")
+EwomsSetup("DUNE_istl" "dune-istl" "DUNE")
 
-DumuxFindIncludeDir("dune/istl/io.hh")
+EwomsFindIncludeDir("dune/istl/io.hh")
 
-DumuxRequiredLibsFound()
-DumuxIncludeDirsFound()
-DumuxCheckFound()
+EwomsRequiredLibsFound()
+EwomsIncludeDirsFound()
+EwomsCheckFound()
 
 

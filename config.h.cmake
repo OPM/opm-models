@@ -75,12 +75,6 @@
 #cmakedefine SUPERLU_MIN_VERSION_4_3
 #endif
 
-/* tr1/array. */
-/*#cmakedefine HAVE_TR1_ARRAY 1*/
-
-/* Define to 1 if the <array> C++0x is available and support array::fill */
-/*#cmakedefine HAVE_ARRAY 1*/
-
 /* Define to 1 if you have the <memory> header file. */
 #cmakedefine HAVE_MEMORY 1
 
@@ -96,24 +90,21 @@
 /* Define to 1 if you have <boost/make_shared.hpp> */
 #cmakedefine HAVE_BOOST_MAKE_SHARED_HPP 1
 
-/* Define to 1 if you have __attribute__((unused)) */
-#cmakedefine HAS_ATTRIBUTE_UNUSED ${HAS_ATTRIBUTE_UNUSED}
-
+/* C++-2011 features */
 #cmakedefine HAVE_NULLPTR 1
+#cmakedefine HAVE_ARRAY 1
+#cmakedefine HAVE_ATTRIBUTE_ALWAYS_INLINE 1
+#cmakedefine HAS_ATTRIBUTE_UNUSED 1
+#cmakedefine HAS_ATTRIBUTE_DEPRECATED 1
+#cmakedefine HAS_ATTRIBUTE_DEPRECATED_MSG 1
+#cmakedefine HAVE_INTEGRAL_CONSTANT 1
 #cmakedefine HAVE_STATIC_ASSERT 1
 #cmakedefine HAVE_VARIADIC_TEMPLATES 1
 #cmakedefine HAVE_VARIADIC_CONSTRUCTOR_SFINAE 1
 #cmakedefine HAVE_RVALUE_REFERENCES 1
-#cmakedefine HAVE_MALLOC_H 1
-#cmakedefine HAVE_VALGRIND 1
+#cmakedefine HAVE_TUPLE 1
+#cmakedefine HAVE_TR1_TUPLE 1
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/unused.hh>
-
-#cmakedefine HAVE_ATTRIBUTE_ALWAYS_INLINE 1
-#if HAVE_ATTRIBUTE_ALWAYS_INLINE
-#  define DUMUX_ALWAYS_INLINE __attribute__((always_inline))
-#else
-#  define DUMUX_ALWAYS_INLINE
-#endif
 

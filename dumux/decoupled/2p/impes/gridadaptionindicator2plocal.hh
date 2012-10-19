@@ -73,6 +73,15 @@ private:
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
+    static void registerParameters()
+    {
+        REGISTER_PARAM(TypeTag, bool, GridAdaptEnableInitializationIndicator, "Enable the initialization indicator for grid adaption");
+
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtDirichletBC, "Refine the grid at Dirichlet boundaries");
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtFluxBC, "Refine the grid at flux boundaries");
+        REGISTER_PARAM(TypeTag, bool, GridAdaptRefineAtSource, "Refine the grid at regions with a source term");
+    }
+
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
      *
      * This standard indicator is based on the saturation gradient.
