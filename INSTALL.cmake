@@ -78,3 +78,20 @@ cmake -DCMAKE_BUILD_TYPE=debug \
 You can also specify the compiler explicitly using the cmake options
 -DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER.
 
+
+Testing
+=======
+
+eWoms uses CTest for regression testing [0]. We encourage you to
+participate - it's easy: If you set up an build directory for eWoms
+using cmake as described above, just run
+
+   ctest -D Experimental
+
+After a while, your results should appear on the eWoms CDash 
+dashboard [0].
+
+References
+==========
+
+[0] The eWoms CDash board: http://opm-project.org/CDash/index.php?project=eWoms
