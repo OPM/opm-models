@@ -476,7 +476,6 @@ add_test(co2injection_immiscible bin/runtest.sh --simulation co2injection_immisc
 add_test(co2injection_flash bin/runtest.sh --simulation co2injection_flash)
 add_test(co2injection_pvs bin/runtest.sh --simulation co2injection_pvs)
 add_test(obstacle_pvs bin/runtest.sh --simulation obstacle_pvs)
-add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
 add_test(co2injection_flash_ni bin/runtest.sh --simulation co2injection_flash_ni)
 add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
 add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
@@ -486,18 +485,28 @@ add_test(test_diffusion bin/runtest.sh --simulation test_diffusion 3)
 add_test(test_1p bin/runtest.sh --simulation test_1p)
 add_test(test_transport bin/runtest.sh --simulation test_transport)
 add_test(test_impes bin/runtest.sh --simulation test_impes)
-add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
-add_test(test_mpfal2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAL)
-add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
-add_test(test_adaptive2p2c bin/runtest.sh --simulation test_adaptive2p2c)
 add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c)
 
 add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled)
 add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
 
-if(SUPERLU_FOUND)
+# conditionally add the tests that depend on superLU and ALUGrid
+if(${SUPERLU_FOUND} AND ${ALUGrid_FOUND})
+  add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
+endif()
+
+# conditionally add the tests that depend on ALUGrid
+if(${ALUGrid_FOUND})
+  add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
+  add_test(test_mpfal2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAL)
+  add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
+  add_test(test_adaptive2p2c bin/runtest.sh --simulation test_adaptive2p2c)
+  add_test(test_impesadaptive bin/runtest.sh --simulation test_impesadaptive)
+endif()
+
+# conditionally add the tests that depend on superLU
+if(${SUPERLU_FOUND})
  add_test(test_stokes bin/runtest.sh --simulation test_stokes)
  add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
  add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
- add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
-endif(SUPERLU_FOUND)
+endif()
