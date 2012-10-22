@@ -19,7 +19,8 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Simplifies writing multi-file VTK datasets.
+ *
+ * \copydoc Dumux::VtkMultiWriter
  */
 #ifndef DUMUX_VTK_MULTI_WRITER_HH
 #define DUMUX_VTK_MULTI_WRITER_HH
@@ -225,32 +226,26 @@ public:
     void endWrite(bool onlyDiscard = false)
     {
         if (!onlyDiscard) {
-            curWriter_->write(curOutFileName_.c_str(), Dune::VTK::ascii);
+
+            std::string fileName;
+
+            // write the actual data as vtu or vtp
+            fileName = curWriter_->write(/*name=*/curOutFileName_.c_str(),
+                                         /*outputType=*/Dune::VTK::ascii);
+
+            // for the parallel case, write the pieces file
+            if (commSize_ > 1)
+                fileName = curWriter_->pwrite(/*name=*/curOutFileName_.c_str(),
+                                              /*path=*/".",
+                                              /*extendpath=*/".",
+                                              /*outputType=*/Dune::VTK::ascii);
 
             // determine name to write into the multi-file for the
             // current time step
-            std::string fileName;
-            std::string suffix = fileSuffix_();
-            if (commSize_ == 1) {
-                fileName = curOutFileName_;
-                multiFile_.precision(16);
-                multiFile_ << "   <DataSet timestep=\""
-                           << curTime_
-                           << "\" file=\""
-                           << fileName << "." << suffix << "\"/>\n";
-            }
-            if (commSize_ > 1 && commRank_ == 0) {
-                // only the first process updates the multi-file
-                for (int part=0; part < commSize_; ++part) {
-                    fileName = fileName_(part);
-                    multiFile_.precision(16);
-                    multiFile_ << "   <DataSet "
-                               << " part=\"" << part << "\""
-                               << " timestep=\"" << curTime_ << "\""
-                               << " file=\"" << fileName << "." << suffix << "\"/>\n";
-                }
-            }
-
+            multiFile_.precision(16);
+            multiFile_ << "   <DataSet timestep=\""
+                       << curTime_
+                       << "\" file=\"" << fileName << "\"/>\n";
         }
         else
             -- curWriterNum_;
