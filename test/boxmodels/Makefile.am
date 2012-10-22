@@ -1,6 +1,6 @@
 SUBDIRS = problems grids
 
-EXTRA_DIST = CMakeLists.txt
+EXTRA_DIST = CMakeLists.txt grids/*.dgf
 
 check_PROGRAMS = \
 co2injection_immiscible \

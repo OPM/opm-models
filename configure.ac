@@ -50,6 +50,7 @@ AC_CONFIG_FILES([Makefile
     dumux/decoupled/constraintsolvers/Makefile 
     dumux/decoupled/spatialparams/Makefile 
     dumux/io/Makefile
+    dumux/istl/Makefile
     dumux/linear/Makefile
     dumux/material/Makefile 
     dumux/material/binarycoefficients/Makefile 
