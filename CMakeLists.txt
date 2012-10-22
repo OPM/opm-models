@@ -431,16 +431,20 @@ add_subdirectory("tutorial")
 make_directory(bin)
 make_directory(referencesolutions)
 make_directory(grids)
-file(COPY bin/runtest.sh DESTINATION bin)
-file(COPY bin/fuzzycomparevtu.py DESTINATION bin)
-file(GLOB vtus "test/referencesolutions/*.vtu" "test/referencesolutions/*.vtp")
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/bin/runtest.sh
+           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/bin/fuzzycomparevtu.py
+           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
+file(GLOB vtus
+           "${CMAKE_CURRENT_SOURCE_DIR}/test/referencesolutions/*.vtu" 
+           "${CMAKE_CURRENT_SOURCE_DIR/}test/referencesolutions/*.vtp")
 foreach(file ${vtus})
-    file(COPY ${file} DESTINATION referencesolutions)
+    file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/referencesolutions)
 endforeach(file)
 
 file(GLOB dgfs "test/boxmodels/grids/*.dgf" "test/decoupled/*/grids/*.dgf")
 foreach(file ${dgfs})
-    file(COPY ${file} DESTINATION grids)
+    file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach(file)
 
 # set up CTest 
