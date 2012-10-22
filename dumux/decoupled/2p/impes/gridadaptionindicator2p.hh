@@ -67,7 +67,12 @@ private:
 
 public:
     static void registerParameters()
-    { }
+    {
+        REGISTER_PARAM(TypeTag, bool, GridAdaptEnableInitializationIndicator, "Enable the initialization indicator for grid adaption");
+
+        REGISTER_PARAM(TypeTag, Scalar, GridAdaptRefineTolerance, "The maximum value of the grid adaption indicator before an element gets refined");
+        REGISTER_PARAM(TypeTag, Scalar, GridAdaptCoarsenTolerance, "The minimum value of the grid adaption indicator before an element gets coarsened");
+    }
 
     /*! \brief Calculates the indicator used for refinement/coarsening for each grid cell.
      *
