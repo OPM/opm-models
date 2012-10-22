@@ -175,8 +175,8 @@ macro(EwomsCheckFound)
       "Include directory: ${${EwomsModule}_INCLUDE_DIR}\n"
       "Library directory: ${EwomsLibraries}\n\n")
   endif(EwomsLibsFound AND ${EwomsModule}_INCLUDE_DIR)
-  set(${EwomsModule}_FOUND ${EwomsFound})
-  set(${EwomsModule}_LIBRARIES ${EwomsLibraries})
+  set(${EwomsModule}_FOUND ${EwomsFound} CACHE BOOL INTERNAL)
+  set(${EwomsModule}_LIBRARIES ${EwomsLibraries} CACHE STRING INTERNAL)
 
   # print status message if requested
   if(NOT ${EwomsModule}_FIND_QUIETLY)
