@@ -254,7 +254,7 @@ endif(SUPERLU_FOUND)
 
 ##############
 # set appropriate compiler flags for debug/release compilation modes
-add_definitions("-std=c++0x -Wall -Wno-sign-compare -fno-strict-aliasing")
+add_definitions("-std=c++0x -Wall -Wno-sign-compare -fno-strict-aliasing -Wno-tautological-compare -Wno-mismatched-tags")
 
 if(("${CMAKE_BUILD_TYPE}" STREQUAL "release") OR (NOT (DEFINED "CMAKE_BUILD_TYPE")))
   # release mode
