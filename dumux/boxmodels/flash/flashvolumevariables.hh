@@ -30,7 +30,6 @@
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/common/math.hh>
 
 #include <dune/common/collectivecommunication.hh>
@@ -72,8 +71,8 @@ class FlashVolumeVariables
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, FlashSolver) FlashSolver;
 
-    typedef Dumux::NcpFlash<Scalar, FluidSystem> Flash;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -126,12 +125,12 @@ public:
             fluidState_.setTemperature(T);
         }
         else
-            Flash::guessInitial(fluidState_, paramCache, cTotal);
+            FlashSolver::guessInitial(fluidState_, paramCache, cTotal);
         
         // compute the phase compositions, densities and pressures
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        Flash::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
+        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {

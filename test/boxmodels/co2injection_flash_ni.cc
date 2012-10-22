@@ -24,6 +24,7 @@
  */
 #include "config.h"
 
+#include "problems/co2injectionflash.hh"
 #include "problems/co2injectionproblem.hh"
 
 #include <dumux/boxmodels/flash/flashmodel.hh>
@@ -39,9 +40,15 @@ SET_BOOL_PROP(Co2InjectionFlashNIProblem, EnableEnergy, true);
 // get _very_ slow.
 SET_BOOL_PROP(Co2InjectionFlashNIProblem, EnableHints, true);
 
+// use the CO2 injection problem adapted flash solver
+SET_TYPE_PROP(Co2InjectionFlashNIProblem,
+              FlashSolver,
+              Dumux::Co2InjectionFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
+              typename GET_PROP_TYPE(TypeTag, FluidSystem)> );
+
 // the flash model has serious problems with the numerical
 // precision. if quadruple precision math is available, we use it,
-// else we increase the precision of the Newton solver
+// else we increase the tolerance of the Newton solver
 #if HAVE_QUAD
 SET_TYPE_PROP(Co2InjectionFlashNIProblem, Scalar, quad);
 #else

@@ -38,6 +38,7 @@
 #include <dumux/boxmodels/common/boxmultiphaseproblem.hh>
 #include <dumux/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <dumux/material/heatconduction/dummyheatconductionlaw.hh>
+#include <dumux/material/constraintsolvers/ncpflash.hh>
 
 namespace Dumux {
 namespace Properties {
@@ -92,6 +93,12 @@ SET_TYPE_PROP(BoxFlash,
 SET_TYPE_PROP(BoxFlash,
               LocalResidual,
               FlashLocalResidual<TypeTag>);
+
+//! Use the NCP flash solver by default
+SET_TYPE_PROP(BoxFlash,
+              FlashSolver,
+              Dumux::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
+                              typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 //! Let the flash solver choose its tolerance by default
 SET_SCALAR_PROP(BoxFlash, FlashTolerance, 0.0);

@@ -24,6 +24,7 @@
 #ifndef DUMUX_CO2_INJECTION_PROBLEM_HH
 #define DUMUX_CO2_INJECTION_PROBLEM_HH
 
+#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
 #include <dumux/material/fluidsystems/brineco2fluidsystem.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
@@ -80,9 +81,10 @@ SET_PROP(Co2InjectionBaseProblem, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dumux::Co2Injection::CO2Tables CO2Tables;
 
-    //static const bool useComplexRelations = false;
+    static const bool useComplexRelations = false;
 public:
     typedef Dumux::FluidSystems::BrineCO2<Scalar, CO2Tables> type;
+    //typedef Dumux::FluidSystems::H2ON2<Scalar, useComplexRelations> type;
 };
 
 // Set the material Law
@@ -211,14 +213,9 @@ class Co2InjectionProblem
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename HeatConductionLaw::Params HeatConductionLawParams;
 
-    typedef typename FluidSystem::BinaryCoeffBrineCO2 BinaryCoeffBrineCO2;
-
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
     /*!
@@ -512,7 +509,7 @@ private:
         Scalar depth = maxDepth_ - pos[dim -1];
         Scalar pl = 1e5 - densityL*this->gravity()[dim - 1]*depth;
 
-        PhaseVector pC;
+        Scalar pC[numPhases];
         const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
@@ -522,7 +519,7 @@ private:
         //////
         // set composition of the liquid phase
         //////
-        fs.setMoleFraction(lPhaseIdx, CO2Idx, 0);
+        fs.setMoleFraction(lPhaseIdx, CO2Idx, 0.005);
         fs.setMoleFraction(lPhaseIdx, BrineIdx,
                            1.0 - fs.moleFraction(lPhaseIdx, CO2Idx));
 
