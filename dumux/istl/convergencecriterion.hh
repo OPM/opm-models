@@ -24,6 +24,8 @@
 #define DUMUX_ISTL_CONVERGENCE_CRITERION_HH
 
 #include <cmath>
+#include <iostream>
+#include <iomanip>
 
 namespace Dumux {
 /*! \addtogroup ISTL_Solvers
