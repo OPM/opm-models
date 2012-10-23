@@ -104,39 +104,6 @@ NEW_PROP_TAG(ModelParameterGroup);
 
 namespace Parameters {
 
-template <class TypeTag>
-void findUnusedKeys_(std::list<std::string> &unusedParams,
-                     const Dune::ParameterTree &tree,
-                     const std::string prefix="")
-{
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
-    const Dune::ParameterTree &rt = Params::runTimeParams();
-
-    // loop over all keys of the current tree
-    const Dune::ParameterTree::KeyVector &keys =
-        tree.getValueKeys();
-    for (unsigned i = 0; i < keys.size(); ++i) {
-        std::string canonicalName = prefix + keys[i];
-
-        // check whether the key was accessed
-        if (rt.hasKey(canonicalName))
-            continue;
-        unusedParams.push_back(canonicalName);
-    }
-
-    // loop over all subtrees
-    const Dune::ParameterTree::KeyVector &subKeys =
-        tree.getSubKeys();
-    for (unsigned i = 0; i < subKeys.size(); ++i) {
-        std::string newPrefix = prefix + subKeys[i] + ".";
-
-        findUnusedKeys_<TypeTag>(unusedParams,
-                                 tree.sub(subKeys[i]),
-                                 newPrefix);
-    }
-
-}
-
 struct ParamInfo
 {
     std::string paramName;
