@@ -20,6 +20,7 @@ find_library(SUPERLU_LIBRARY
 
 # check if version is 4.3
 include(CheckCSourceCompiles)
+include(CheckIncludeFiles)
 set(CMAKE_REQUIRED_INCLUDES ${SUPERLU_INCLUDE_DIR})
 set(CMAKE_REQUIRED_LIBRARIES ${SUPERLU_LIBRARY})
 CHECK_C_SOURCE_COMPILES("
@@ -29,14 +30,37 @@ int main(void)
   return SLU_DOUBLE;
 }"
 SUPERLU_MIN_VERSION_4_3)
-set(CMAKE_REQUIRED_INCLUDES "")
-set(CMAKE_REQUIRED_LIBRARIES "")
 
 if(SUPERLU_MIN_VERSION_4_3)
   set(SUPERLU_WITH_VERSION "SuperLU >= 4.3")
 else()
   set(SUPERLU_WITH_VERSION "SuperLU <= 4.2, post 2005")
 endif(SUPERLU_MIN_VERSION_4_3)
+
+# check if slu_ddefs.h is available
+CHECK_INCLUDE_FILES("slu_ddefs.h" HAVE_SLU_DDEFS)
+if(HAVE_SLU_DDEFS)
+  set(my_slu_hdr "slu_ddefs.h")
+else(HAVE_SLU_DDEFS)
+  set(my_slu_hdr "dsp_defs.h")
+endif(HAVE_SLU_DDEFS)
+
+# check if the expansions member is available
+CHECK_C_SOURCE_COMPILES("
+#include <${my_slu_hdr}>
+int main()
+{
+   static mem_usage_t tmp;
+   if (sizeof(tmp.expansions))
+      return 0;
+  return 0;
+}
+"
+HAVE_MEM_USAGE_T_EXPANSIONS)
+
+# reset include paths
+set(CMAKE_REQUIRED_INCLUDES "")
+set(CMAKE_REQUIRED_LIBRARIES "")
 
 # behave like a CMake module is supposed to behave
 include(FindPackageHandleStandardArgs)

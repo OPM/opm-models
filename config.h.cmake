@@ -76,6 +76,7 @@
 #ifdef HAVE_SUPERLU
 #define SUPERLU_POST_2005_VERSION 1
 #cmakedefine SUPERLU_MIN_VERSION_4_3
+#cmakedefine HAVE_MEM_USAGE_T_EXPANSIONS
 #endif
 
 /* Define to 1 if you have the <memory> header file. */
