@@ -190,7 +190,7 @@ CHECK_CXX_SOURCE_COMPILES("
 
   int main(void)
   {
-    return (A<int>().i + A<int>(2).i + A<int>("foo",3.4).i + A<int>(8,'a',A<int>()).i == 0 ? 0 : 1);
+    return (A<int>().i + A<int>(2).i + A<int>(\"foo\",3.4).i + A<int>(8,'a',A<int>()).i == 0 ? 0 : 1);
   }
 " HAVE_VARIADIC_CONSTRUCTOR_SFINAE
 )
