@@ -254,7 +254,7 @@ endif(SUPERLU_FOUND)
 
 ##############
 # set appropriate compiler flags for debug/release compilation modes
-add_definitions("-std=c++0x -Wall -Wno-sign-compare -fno-strict-aliasing -Wno-tautological-compare -Wno-mismatched-tags")
+add_definitions("-std=c++0x -Wall -Wno-sign-compare -fno-strict-aliasing")
 
 if(("${CMAKE_BUILD_TYPE}" STREQUAL "release") OR (NOT (DEFINED "CMAKE_BUILD_TYPE")))
   # release mode
@@ -269,6 +269,8 @@ else()
   add_definitions(-DDEBUG=1)
   add_definitions("-g")
 endif( )
+
+add_definitions(${CUSTOM_CXX_FLAGS}) 
 
 # with the config.h include file...
 macro(SetConfigHVar ConfigHName CMakeName)
@@ -458,32 +460,32 @@ add_test(test_ncpflash bin/runtest.sh --plain test_ncpflash)
 add_test(test_pengrobinson bin/runtest.sh --plain test_pengrobinson)
 add_test(test_tabulation bin/runtest.sh --plain test_tabulation)
 
+add_test(co2injection_immiscible bin/runtest.sh --simulation co2injection_immiscible)
+add_test(co2injection_immiscible_ni bin/runtest.sh --simulation co2injection_immiscible_ni)
+add_test(co2injection_flash bin/runtest.sh --simulation co2injection_flash)
+add_test(co2injection_flash_ni bin/runtest.sh --simulation co2injection_flash_ni)
 add_test(co2injection_ncp bin/runtest.sh --simulation co2injection_ncp)
 add_test(co2injection_ncp_ni bin/runtest.sh --simulation co2injection_ncp_ni)
-add_test(groundwater_immiscible bin/runtest.sh --simulation groundwater_immiscible)
-add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
-add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
-add_test(reservoir_blackoil bin/runtest.sh --simulation reservoir_blackoil)
+add_test(co2injection_pvs bin/runtest.sh --simulation co2injection_pvs)
+add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
 add_test(cuvette_pvs bin/runtest.sh --simulation cuvette_pvs)
+add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
+add_test(groundwater_immiscible bin/runtest.sh --simulation groundwater_immiscible)
+add_test(infiltration_pvs bin/runtest.sh --simulation infiltration_pvs)
+add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
+add_test(lens_richards bin/runtest.sh --simulation lens_richards)
+add_test(obstacle_immiscible bin/runtest.sh --simulation obstacle_immiscible)
+add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
+add_test(obstacle_pvs bin/runtest.sh --simulation obstacle_pvs)
+add_test(outflow_pvs bin/runtest.sh --simulation outflow_pvs)
 add_test(powerinjection_darcy bin/runtest.sh --simulation powerinjection_darcy)
 add_test(powerinjection_forchheimer bin/runtest.sh --simulation powerinjection_forchheimer)
-add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
+add_test(reservoir_blackoil bin/runtest.sh --simulation reservoir_blackoil)
 add_test(test_quadrature bin/runtest.sh --plain test_quadrature)
-add_test(obstacle_immiscible bin/runtest.sh --simulation obstacle_immiscible)
 add_test(test_stokes bin/runtest.sh --simulation test_stokes)
-add_test(co2injection_immiscible_ni bin/runtest.sh --simulation co2injection_immiscible_ni)
-add_test(lens_richards bin/runtest.sh --simulation lens_richards)
-add_test(outflow_pvs bin/runtest.sh --simulation outflow_pvs)
+add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
 add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
-add_test(infiltration_pvs bin/runtest.sh --simulation infiltration_pvs)
-add_test(co2injection_immiscible bin/runtest.sh --simulation co2injection_immiscible)
-add_test(co2injection_flash bin/runtest.sh --simulation co2injection_flash)
-add_test(co2injection_pvs bin/runtest.sh --simulation co2injection_pvs)
-add_test(obstacle_pvs bin/runtest.sh --simulation obstacle_pvs)
-add_test(co2injection_flash_ni bin/runtest.sh --simulation co2injection_flash_ni)
-add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
-add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
-add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
+add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
 
 add_test(test_diffusion bin/runtest.sh --simulation test_diffusion 3)
 add_test(test_1p bin/runtest.sh --simulation test_1p)
@@ -493,6 +495,8 @@ add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c
 
 add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled)
 add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
+
+add_test(obstacle_immiscible_parameters bin/runtest.sh --parameters obstacle_immiscible)
 
 # conditionally add the tests that depend on superLU and ALUGrid
 if(${SUPERLU_FOUND} AND ${ALUGrid_FOUND})
@@ -506,6 +510,11 @@ if(${ALUGrid_FOUND})
   add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
   add_test(test_adaptive2p2c bin/runtest.sh --simulation test_adaptive2p2c)
   add_test(test_impesadaptive bin/runtest.sh --simulation test_impesadaptive)
+endif()
+
+# run a test in parallel
+if(${MPI_FOUND})
+  add_test(obstacle_immiscible_parallel bin/runtest.sh --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
 endif()
 
 # conditionally add the tests that depend on superLU
