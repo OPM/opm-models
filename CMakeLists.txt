@@ -190,7 +190,7 @@ CHECK_CXX_SOURCE_COMPILES("
 
   int main(void)
   {
-    return (A<int>().i + A<int>(2).i + A<int>("foo",3.4).i + A<int>(8,'a',A<int>()).i == 0 ? 0 : 1);
+    return (A<int>().i + A<int>(2).i + A<int>(\"foo\",3.4).i + A<int>(8,'a',A<int>()).i == 0 ? 0 : 1);
   }
 " HAVE_VARIADIC_CONSTRUCTOR_SFINAE
 )
@@ -322,12 +322,19 @@ SetConfigHVar(HAVE_TUPLE HAVE_TUPLE)
 SetConfigHVar(HAVE_TR1_TUPLE HAVE_TR1_TUPLE)
 
 ##############
+# default directory to find control files if installed by package
+if (UNIX)
+  set (DUNE_DIR "/usr/lib/dunecontrol" CACHE PATH "Parent directory of DUNE modules")
+endif (UNIX)
 
-##############
 # add dune-common version from dune.module to config.h
 if(DUNE_common_DIR)
   file(READ "${DUNE_common_DIR}/dune.module" DUNE_COMMON_MODULE)
 else()
+  # note that forward slash works on WIN32 too
+  if(NOT EXISTS "${DUNE_DIR}/dune-common/dune.module")
+    message(FATAL_ERROR "No dune-common directory found")
+  endif(NOT EXISTS "${DUNE_DIR}/dune-common/dune.module")
   file(READ "${DUNE_DIR}/dune-common/dune.module" DUNE_COMMON_MODULE)
 endif(DUNE_common_DIR)
 
