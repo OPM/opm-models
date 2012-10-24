@@ -80,7 +80,7 @@ public:
      * sample point.
       */
     Scalar xToI(Scalar x) const
-    { return (x - asImp_().xMin())/(asImp_().xMax() - asImp_().xMin())*asImp_().numX(); }
+    { return (x - asImp_().xMin())/(asImp_().xMax() - asImp_().xMin())*(asImp_().numX() - 1); }
 
     /*!
      * \brief Return the interval index of a given position on the y-axis.
@@ -91,7 +91,7 @@ public:
      * sample point.
      */
     Scalar yToJ(Scalar y) const
-    { return (y - asImp_().yMin())/(asImp_().yMax() - asImp_().yMin())*asImp_().numY(); }
+    { return (y - asImp_().yMin())/(asImp_().yMax() - asImp_().yMin())*(asImp_().numY() - 1); }
 
     /*!
      * \brief Returns true iff a coordinate lies in the tabulated range
