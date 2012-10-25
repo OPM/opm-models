@@ -149,13 +149,13 @@ namespace Dumux {
     /*!
      * \brief Return the criterion to be used to check for convergence of the linear solver.
      */
-    virtual Dumux::ConvergenceCriterion<X> &convergenceCriterion()
+    virtual const Dumux::ConvergenceCriterion<X> &convergenceCriterion() const
     { return *convergenceCriterion_; }
 
     /*!
-     * \copydoc convergenceCriterion()
+     * \brief Return the criterion to be used to check for convergence of the linear solver.
      */
-    virtual const Dumux::ConvergenceCriterion<X> &convergenceCriterion() const
+    virtual Dumux::ConvergenceCriterion<X> &convergenceCriterion()
     { return *convergenceCriterion_; }
 
     /*!

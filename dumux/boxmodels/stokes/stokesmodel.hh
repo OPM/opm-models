@@ -97,7 +97,9 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \copydoc BoxModel::phaseIsConsidered
+     * \brief Returns true iff a fluid phase is used by the model.
+     *
+     * \param phaseIdxQueried The index of the fluid phase in question
      */
     bool phaseIsConsidered(int phaseIdxQueried) const
     { return phaseIdxQueried == phaseIdx; }

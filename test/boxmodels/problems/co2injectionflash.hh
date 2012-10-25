@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \Dumux::Co2InjectionFlash
+ * \copydoc Dumux::Co2InjectionFlash
  */
 #ifndef DUMUX_CO2_INJECTION_FLASH_HH
 #define DUMUX_CO2_INJECTION_FLASH_HH
