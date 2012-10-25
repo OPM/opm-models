@@ -23,6 +23,7 @@
 #include <dune/grid/common/gridenums.hh>
 #include <ewoms/decoupled/common/transportproperties.hh>
 #include <ewoms/decoupled/common/decoupledproperties.hh>
+#include <ewoms/parallel/gridcommhandles.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -285,6 +286,18 @@ void FVTransport<TypeTag>::update(const Scalar t, Scalar& dt, TransportSolutionT
         //store update
         cellDataI.setUpdate(updateVec[globalIdxI]);
     } // end grid traversal
+
+#if HAVE_MPI
+    // communicate updated values
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
+    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper> DataHandle;
+    DataHandle dataHandle(updateVec, problem_.variables().elementMapper());
+    problem_.gridView().template communicate<DataHandle>(dataHandle,
+                                                         Dune::InteriorBorder_All_Interface,
+                                                         Dune::ForwardCommunication);
+    dt = problem_.gridView().comm().min(dt);
+#endif
 }
 
 }
