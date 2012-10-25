@@ -24,7 +24,7 @@
 #include <ewoms/decoupled/constraintsolvers/impetflash.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <ewoms/common/math.hh>
-#include <ewoms/linear/vectorexchange.hh>
+#include <ewoms/parallel/gridcommhandles.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -332,10 +332,10 @@ void FVTransport2P2C<TypeTag>::update(const Scalar t, Scalar& dt,
     // communicate updated values
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
-    typedef VectorExchange<ElementMapper, Dune::BlockVector<Dune::FieldVector<Scalar, 1> > > DataHandle;
+    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper> DataHandle;
     for (int i = 0; i < updateVec.size(); i++)
     {
-        DataHandle dataHandle(problem_.variables().elementMapper(), updateVec[i]);
+        DataHandle dataHandle(updateVec[i], problem_.variables().elementMapper());
         problem_.gridView().template communicate<DataHandle>(dataHandle,
                                                             Dune::InteriorBorder_All_Interface,
                                                             Dune::ForwardCommunication);

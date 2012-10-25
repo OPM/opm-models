@@ -21,6 +21,7 @@
 #define EWOMS_FVTRANSPORT2P2C_MULTIPHYSICS_HH
 
 #include <ewoms/decoupled/2p2c/fvtransport2p2c.hh>
+#include <ewoms/parallel/gridcommhandles.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -184,6 +185,22 @@ void FVTransport2P2CMultiPhysics<TypeTag>::update(const Scalar t, Scalar& dt, Tr
             }
         }
     } // end grid traversal
+
+#if HAVE_MPI
+    // communicate updated values
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
+    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper> DataHandle;
+    for (int i = 0; i < updateVec.size(); i++)
+    {
+        DataHandle dataHandle(updateVec[i], problem().variables().elementMapper());
+        problem().gridView().template communicate<DataHandle>(dataHandle,
+                                                            Dune::InteriorBorder_All_Interface,
+                                                            Dune::ForwardCommunication);
+    }
+    dt = problem().gridView().comm().min(dt);
+#endif
+
     if(impet)
     {
         Dune::dinfo << "Timestep restricted by CellIdx " << restrictingCell << " leads to dt = "<<dt * GET_PARAM(TypeTag, Scalar, ImpetCflFactor)<< std::endl;
