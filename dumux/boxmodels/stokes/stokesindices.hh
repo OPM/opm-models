@@ -40,13 +40,15 @@ namespace Dumux {
 template <class TypeTag, int PVOffset>
 class StokesIndices
     : public BoxMultiPhaseEnergyIndices<PVOffset 
-                                        + GET_PROP_VALUE(TypeTag, NumComponents)
-                                        + GET_PROP_VALUE(TypeTag, NumPhases), 
+                                        + GET_PROP_VALUE(TypeTag, NumComponents) 
+                                        + GET_PROP_TYPE(TypeTag, GridView)::dimensionworld,
                                         GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { numComponents = FluidSystem::numComponents };
+    enum { dimWorld = GridView::dimensionworld };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;

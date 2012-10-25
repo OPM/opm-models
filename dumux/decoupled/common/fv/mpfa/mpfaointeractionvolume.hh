@@ -254,7 +254,7 @@ public:
      *
      * \return Dune::EntityPointer to the interaction volume sub-element.
      */
-    ElementPointer& getSubVolumeElement(int subVolumeIdx)
+    ElementPointer getSubVolumeElement(int subVolumeIdx)
     {
         return elements_[subVolumeIdx][0];
     }

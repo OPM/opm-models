@@ -98,13 +98,16 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             storage[conti0EqIdx + compIdx] = 
                 fs.molarity(phaseIdx, compIdx);
+        Valgrind::CheckDefined(storage);
 
         // momentum balance
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
             storage[momentum0EqIdx + axisIdx] =
                 fs.density(phaseIdx) * volVars.velocity()[axisIdx];
+        Valgrind::CheckDefined(storage);
 
         EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
+        Valgrind::CheckDefined(storage);
     }
 
     /*!

@@ -110,7 +110,7 @@ public:
             // pressure potential is in the same direction as the face
             // normal or in the opposite one
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!asImp_().usePhase(phaseIdx)) {
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                     upstreamScvIdx_[phaseIdx] = insideScvIdx_;
                     downstreamScvIdx_[phaseIdx] = outsideScvIdx_;
                     continue;
@@ -167,14 +167,6 @@ public:
         calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
         VelocityFluxVariables::calculateBoundaryVelocities_(context, bfIdx, timeIdx, fluidState, paramCache);
     }
-
-    /*!
-     * \brief Return true iff a fluid phase ought is used by the model
-     *
-     * \param phaseIdx The index of the phase in question
-     */
-    bool usePhase(int phaseIdx)
-    { return true; }
 
     /*!
      * \brief Returns th extrusion factor for the sub-control volume face
@@ -272,7 +264,7 @@ private:
             
             // calculate the pressure gradient
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!asImp_().usePhase(phaseIdx)) {
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                     potentialGrad_[phaseIdx] = 0;
                     continue;
                 }
@@ -301,7 +293,7 @@ private:
                 // compute sum of pressure gradients for each phase
                 for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
                 {
-                    if (!asImp_().usePhase(phaseIdx))
+                    if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                         continue;
                     
                     // the pressure gradient
@@ -330,7 +322,7 @@ private:
             const auto &fluidStateOut = elemCtx.volVars(outsideScvIdx_, timeIdx).fluidState();
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
-                if (!asImp_().usePhase(phaseIdx))
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                     continue;
 
                 // calculate the phase density at the integration point. we
@@ -396,7 +388,7 @@ private:
         // calculate the pressure gradient using two-point gradient
         // appoximation
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!asImp_().usePhase(phaseIdx)) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 potentialGrad_[phaseIdx] = 0;
                 continue;
             }
@@ -418,7 +410,7 @@ private:
 
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
-                if (!asImp_().usePhase(phaseIdx))
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                     continue;
 
                 // calculate volumetric gravity acceleration force

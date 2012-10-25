@@ -365,6 +365,9 @@ public:
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!context.model().phaseIsConsidered(phaseIdx))
+                continue;
+
             // vertex data of the upstream and the downstream vertices
             const VolumeVariables &up = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
 
@@ -486,9 +489,13 @@ protected:
                  int timeIdx)
     {
         // set the specific enthalpies of the fluids
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                continue;
+
             fs.setEnthalpy(phaseIdx, 
                            FluidSystem::enthalpy(fs, paramCache, phaseIdx));
+        }
 
         // compute and set the heat capacity of the solid phase
         const auto &problem = elemCtx.problem();

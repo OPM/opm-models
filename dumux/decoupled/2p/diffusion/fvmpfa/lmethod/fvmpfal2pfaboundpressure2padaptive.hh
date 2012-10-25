@@ -1837,9 +1837,9 @@ void FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::printInteractionVolumes()
             std::cout << "global vertex index: " << globalVertIdx << "\n";
             if (interactionVolume.getElementNumber() == 3)
             {
-                ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-                ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-                ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+                ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+                ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+                ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
                 int globalIdx1 = problem_.variables().index(*elementPointer1);
                 int globalIdx2 = problem_.variables().index(*elementPointer2);
@@ -1851,10 +1851,10 @@ void FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::printInteractionVolumes()
             }
             if (interactionVolume.getElementNumber() == 4)
             {
-                ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-                ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-                ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(2);
-                ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+                ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+                ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+                ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(2);
+                ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
                 int globalIdx1 = problem_.variables().index(*elementPointer1);
                 int globalIdx2 = problem_.variables().index(*elementPointer2);
@@ -1890,10 +1890,10 @@ void FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::assemble()
         {
             if (interactionVolume.getElementNumber() == 4)
             {
-                ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-                ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-                ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(2);
-                ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+                ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+                ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+                ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(2);
+                ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos1 = elementPointer1->geometry().center();
@@ -2273,9 +2273,9 @@ void FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::assemble()
             }
             else if (interactionVolume.getElementNumber() == 3)
             {
-                ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-                ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-                ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+                ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+                ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+                ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos1 = elementPointer1->geometry().center();
@@ -2565,7 +2565,7 @@ void FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::assemble()
                     continue;
                 }
 
-                ElementPointer& elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
+                ElementPointer elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos = elementPointer->geometry().center();
@@ -2807,10 +2807,10 @@ int FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::calculateTransmissibility(
         std::vector<DimVector >& lambda,
         int idx1, int idx2, int idx3, int idx4)
 {
-    ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
-    ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
-    ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
-    ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(idx4);
+    ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
+    ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
+    ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
+    ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(idx4);
 
     if (elementPointer3 == elementPointer4 && elementPointer1->level() != elementPointer2->level())
     {
@@ -3061,9 +3061,9 @@ int FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::calculateLeftHNTransmissibility
         std::vector<DimVector >& lambda,
         int idx1, int idx2, int idx3)
 {
-    ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
-    ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
-    ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
+    ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
+    ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
+    ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
 
     if (elementPointer1->level() != elementPointer3->level())
     {
@@ -3210,9 +3210,9 @@ int FVMPFAL2PFABoundPressure2PAdaptive<TypeTag>::calculateRightHNTransmissibilit
         std::vector<DimVector >& lambda,
         int idx1, int idx2, int idx3)
 {
-    ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
-    ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
-    ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
+    ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
+    ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
+    ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
 
     if (elementPointer2->level() != elementPointer3->level())
     {

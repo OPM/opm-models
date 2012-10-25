@@ -39,15 +39,7 @@ namespace Dumux {
  */
 template <class TypeTag>
 class RichardsFluxVariables : public BoxMultiPhaseFluxVariables<TypeTag>
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-public:
-    /*!
-     * \copydoc BoxMultiPhaseFluxVariables::usePhase
-     */
-    bool usePhase(int phaseIdx)
-    { return phaseIdx == GET_PROP_VALUE(TypeTag, LiquidPhaseIndex); }
-};
+{ };
 
 } // end namepace
 

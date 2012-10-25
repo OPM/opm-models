@@ -1359,10 +1359,10 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
         if (interactionVolume.isInnerVolume())
         {
 
-            ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-            ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-            ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(2);
-            ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+            ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+            ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+            ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(2);
+            ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
             // get global coordinate of cell centers
             const GlobalPosition& globalPos1 = elementPointer1->geometry().center();
@@ -1766,7 +1766,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
                     continue;
                 }
 
-                ElementPointer& elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
+                ElementPointer elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos = elementPointer->geometry().center();
@@ -2008,10 +2008,10 @@ bool FVMPFAL2PFABoundPressure2P<TypeTag>::calculateTransmissibility(
         std::vector<DimVector >& lambda,
         int idx1, int idx2, int idx3, int idx4)
 {
-    ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
-    ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
-    ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
-    ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(idx4);
+    ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(idx1);
+    ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(idx2);
+    ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(idx3);
+    ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(idx4);
 
     // get global coordinate of cell centers
     const GlobalPosition& globalPos1 = elementPointer1->geometry().center();

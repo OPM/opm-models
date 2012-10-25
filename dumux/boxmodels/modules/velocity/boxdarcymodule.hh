@@ -186,7 +186,7 @@ protected:
         ///////////////
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
-            if (!asImp_().usePhase(phaseIdx)) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;
@@ -232,7 +232,7 @@ protected:
         ///////////////
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
         {
-            if (!asImp_().usePhase(phaseIdx)) {
+            if (!context.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;

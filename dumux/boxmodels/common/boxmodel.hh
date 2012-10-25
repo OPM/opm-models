@@ -115,6 +115,14 @@ public:
     }
 
     /*!
+     * \brief Returns true iff a fluid phase is used by the model.
+     *
+     * \param phaseIdx The index of the fluid phase in question
+     */
+    bool phaseIsConsidered(int phaseIdx) const
+    { return true; }
+
+    /*!
      * \brief Register all run-time parameters for the model.
      */
     static void registerParameters()

@@ -140,7 +140,7 @@ void writeSubControlVolumes(const Grid &grid)
 void testTetrahedron()
 {
 #if HAVE_ALUGRID
-    typedef Dune::ALUGrid<2, 2, Dune::simplex, Dune::nonconforming> Grid;
+    typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::nonconforming> Grid;
     typedef Grid::LeafGridView GridView;
     typedef Dune::GridFactory<Grid> GridFactory;
     GridFactory gf;

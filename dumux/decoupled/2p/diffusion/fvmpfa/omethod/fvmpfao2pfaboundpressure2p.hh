@@ -1424,10 +1424,10 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::assemble()
         if (interactionVolume.isInnerVolume())
         {
 
-            ElementPointer& elementPointer1 = interactionVolume.getSubVolumeElement(0);
-            ElementPointer& elementPointer2 = interactionVolume.getSubVolumeElement(1);
-            ElementPointer& elementPointer3 = interactionVolume.getSubVolumeElement(2);
-            ElementPointer& elementPointer4 = interactionVolume.getSubVolumeElement(3);
+            ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+            ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+            ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(2);
+            ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
             // get global coordinate of cell centers
             const GlobalPosition& globalPos1 = elementPointer1->geometry().center();
@@ -1838,7 +1838,7 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::assemble()
                     continue;
                 }
 
-                ElementPointer& elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
+                ElementPointer elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos = elementPointer->geometry().center();

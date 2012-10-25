@@ -90,7 +90,7 @@ SET_SCALAR_PROP(ReservoirBaseProblem, Temperature, 293.15);
 SET_STRING_PROP(ReservoirBaseProblem, SimulationName, "reservoir");
 
 // The default for the end time of the simulation [s]
-SET_SCALAR_PROP(ReservoirBaseProblem, EndTime, 1e5);
+SET_SCALAR_PROP(ReservoirBaseProblem, EndTime, 100);
 
 // The default for the initial time step size of the simulation [s]
 SET_SCALAR_PROP(ReservoirBaseProblem, InitialTimeStepSize, 10);

@@ -81,7 +81,14 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
+        Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
 
+        // set the saturation of the phase to 1. for the stokes model,
+        // saturation is not a meaningful quanity, but it allows us to
+        // reuse infrastructure written for the porous media models
+        // more easily (e.g. the energy module)
+        fluidState_.setSaturation(phaseIdx, 1.0);
+        
         // set the phase composition
         Scalar sumx = 0;
         for (int compIdx = 1; compIdx < numComponents; ++compIdx) {

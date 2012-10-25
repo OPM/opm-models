@@ -236,14 +236,14 @@ public:
      * if the end time is reached.
      */
     bool finished() const
-    { return finished_ || time()*(1 + 1e-8) >= endTime(); }
+    { return finished_ || time() + timeStepSize_*1e-8 >= endTime(); }
 
     /*!
      * \brief Returns true if the simulation is finished after the
      *        time level is incremented by the current time step size.
      */
     bool willBeFinished() const
-    { return finished_ || (time() + timeStepSize_)*(1 + 1e-8) >= endTime(); }
+    { return finished_ || time() + timeStepSize_*(1 + 1e-8) >= endTime(); }
 
     /*!
      * \brief Aligns dt to the episode boundary or the end time of the

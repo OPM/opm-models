@@ -103,7 +103,7 @@ class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible box model.
+     * \copydoc BoxModel::registerParameters
      */
     static void registerParameters()
     {
@@ -170,6 +170,11 @@ public:
         return 1.0;
     }
 
+    /*!
+     * \copydoc BoxModel::phaseIsConsidered
+     */
+    bool phaseIsConsidered(int phaseIdx) const
+    { return phaseIdx == wPhaseIdx; }
 
 private:
     friend class BoxModel<TypeTag>;

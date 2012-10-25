@@ -97,6 +97,12 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
+     * \copydoc BoxModel::phaseIsConsidered
+     */
+    bool phaseIsConsidered(int phaseIdxQueried) const
+    { return phaseIdxQueried == phaseIdx; }
+
+    /*!
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const

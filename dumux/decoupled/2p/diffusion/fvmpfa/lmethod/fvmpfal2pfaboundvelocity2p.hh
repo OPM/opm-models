@@ -307,10 +307,10 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
         if (interactionVolume.isInnerVolume())
         {
-            ElementPointer & elementPointer1 = interactionVolume.getSubVolumeElement(0);
-            ElementPointer & elementPointer2 = interactionVolume.getSubVolumeElement(1);
-            ElementPointer & elementPointer3 = interactionVolume.getSubVolumeElement(2);
-            ElementPointer & elementPointer4 = interactionVolume.getSubVolumeElement(3);
+            ElementPointer elementPointer1 = interactionVolume.getSubVolumeElement(0);
+            ElementPointer elementPointer2 = interactionVolume.getSubVolumeElement(1);
+            ElementPointer elementPointer3 = interactionVolume.getSubVolumeElement(2);
+            ElementPointer elementPointer4 = interactionVolume.getSubVolumeElement(3);
 
             // cell index
             int globalIdx1 = problem_.variables().index(*elementPointer1);
@@ -733,7 +733,7 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
                     continue;
                 }
 
-                ElementPointer & elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
+                ElementPointer elementPointer = interactionVolume.getSubVolumeElement(elemIdx);
 
                 // get global coordinate of cell centers
                 const GlobalPosition& globalPos = elementPointer->geometry().center();

@@ -67,7 +67,7 @@ SET_BOOL_PROP(StokesTestProblem, EnableGravity, false);
 SET_BOOL_PROP(StokesTestProblem, EnableConstraints, true);
 
 // Default simulation end time [s]
-SET_SCALAR_PROP(StokesTestProblem, EndTime, 6e3);
+SET_SCALAR_PROP(StokesTestProblem, EndTime, 10.0);
 
 // Default initial time step size [s]
 SET_SCALAR_PROP(StokesTestProblem, InitialTimeStepSize, 10.0);
