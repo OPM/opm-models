@@ -12,6 +12,9 @@ co2injection_flash_ni \
 co2injection_ncp_ni \
 co2injection_pvs_ni \
 cuvette_pvs \
+diffusion_ncp \
+diffusion_pvs \
+diffusion_flash \
 finger_immiscible \
 groundwater_immiscible \
 infiltration_pvs \
@@ -40,6 +43,9 @@ co2injection_flash_ni_SOURCES=co2injection_flash_ni.cc
 co2injection_ncp_ni_SOURCES=co2injection_ncp_ni.cc
 co2injection_pvs_ni_SOURCES=co2injection_pvs_ni.cc
 cuvette_pvs_SOURCES=cuvette_pvs.cc
+diffusion_flash_SOURCES=diffusion_flash.cc
+diffusion_ncp_SOURCES=diffusion_ncp.cc
+diffusion_pvs_SOURCES=diffusion_pvs.cc
 finger_immiscible_SOURCES=finger_immiscible.cc
 groundwater_immiscible_SOURCES=groundwater_immiscible.cc 
 infiltration_pvs_SOURCES=infiltration_pvs.cc

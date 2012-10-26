@@ -27,6 +27,7 @@
 
 #include "flashmodel.hh"
 #include "flashprimaryvariables.hh"
+#include "flashlocalresidual.hh"
 #include "flashratevector.hh"
 #include "flashboundaryratevector.hh"
 #include "flashvolumevariables.hh"
@@ -130,11 +131,15 @@ SET_TYPE_PROP(BoxFlash, FluxVariables, FlashFluxVariables<TypeTag>);
 //! The indices required by the flash-baseed isothermal compositional model
 SET_TYPE_PROP(BoxFlash, Indices, FlashIndices<TypeTag, /*PVIdx=*/0>);
 
-// use an isothermal model by default
-SET_BOOL_PROP(BoxFlash, EnableEnergy, false);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxFlash, EnableSmoothUpwinding, false);
+
+// use an isothermal model by default
+SET_BOOL_PROP(BoxFlash, EnableEnergy, false);
+
+// disable molecular diffusion by default
+SET_BOOL_PROP(BoxFlash, EnableDiffusion, false);
 
 } // end namespace Properties
 } // end namespace Dumux

@@ -25,16 +25,14 @@
 #define DUMUX_PVS_VOLUME_VARIABLES_HH
 
 #include "pvsproperties.hh"
-#include "pvsindices.hh"
 
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
-#include <dumux/boxmodels/common/boxmodel.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/common/math.hh>
 
-#include <dune/common/collectivecommunication.hh>
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
@@ -50,12 +48,11 @@ namespace Dumux {
 template <class TypeTag>
 class PvsVolumeVariables
     : public BoxVolumeVariables<TypeTag>
+    , public BoxDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
-
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -72,6 +69,7 @@ class PvsVolumeVariables
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
@@ -82,6 +80,7 @@ class PvsVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
@@ -212,22 +211,6 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
-        // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
-
-#if 0
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // binary diffusion coefficents
-            diffCoeff_[phaseIdx] =
-                FluidSystem::binaryDiffusionCoefficient(fluidState_,
-                                                        paramCache,
-                                                        phaseIdx,
-                                                        /*compIdx=*/0,
-                                                        /*compIdx=*/1);
-            Valgrind::CheckDefined(diffCoeff_[phaseIdx]);
-        }
-#endif
-
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
@@ -237,6 +220,12 @@ public:
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+
+        // update the diffusion specific quantities of the volume variables
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -268,21 +257,12 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
-
-#if 0
-    /*!
-     * \brief Returns the binary diffusion coefficients for a phase
-     */
-    Scalar diffCoeff(int phaseIdx) const
-    { return diffCoeff_[phaseIdx]; }
-#endif // 0
-    
+  
 private:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];
-    //Scalar diffCoeff_[numPhases];
 };
 
 } // end namepace

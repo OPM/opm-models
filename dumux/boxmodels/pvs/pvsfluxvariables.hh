@@ -27,6 +27,7 @@
 #include "pvsproperties.hh"
 
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -49,6 +50,7 @@ template <class TypeTag>
 class PvsFluxVariables
     : public BoxMultiPhaseFluxVariables<TypeTag>
     , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxDiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -58,13 +60,13 @@ class PvsFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dimWorld = GridView::dimensionworld };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents =  GET_PROP_VALUE(TypeTag, NumComponents)
-    };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
+    typedef BoxDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
@@ -76,10 +78,7 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
-
-        // update the PVS specific gradients
-        calculateGradients_(elemCtx, scvfIdx, timeIdx);
-
+        DiffusionFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
@@ -98,132 +97,9 @@ public:
                                                 timeIdx, 
                                                 fluidState, 
                                                 paramCache);
+        DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
-
-    /*!
-     * \copydoc FlashFluxVariables::porousDiffCoeff
-     */
-    Scalar porousDiffCoeff(int phaseIdx, int compIdx) const
-    {
-        assert(0 <= compIdx && compIdx < numComponents);
-        assert(0 <= phaseIdx && phaseIdx < numPhases);
-
-        return porousDiffCoeff_[phaseIdx];
-    }
-
-    /*!
-     * \copydoc FlashFluxVariables::molarDensity
-     */
-    Scalar molarDensity(int phaseIdx) const
-    {
-        assert(0 <= phaseIdx && phaseIdx < numPhases);
-
-        return molarDensity_[phaseIdx];
-    }
-
-    /*!
-     * \copydoc FlashFluxVariables::moleFraction
-     */
-    Scalar moleFraction(int phaseIdx, int compIdx) const
-    {
-        assert(0 <= compIdx && compIdx < numComponents);
-        assert(0 <= phaseIdx && phaseIdx < numPhases);
-
-        return moleFrac_[phaseIdx][compIdx];
-    }
-
-    /*!
-     * \copydoc FlashFluxVariables::moleFracGrad
-     */
-    const DimVector &moleFracGrad(int phaseIdx, int compIdx) const
-    { return moleFracGrad_[phaseIdx][compIdx]; }
-
-private:
-    void calculateGradients_(const ElementContext &elemCtx,
-                             int scvfIdx,
-                             int timeIdx)
-    {
-        // reset all quantities to 0
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            molarDensity_[phaseIdx] = Scalar(0);
-            porousDiffCoeff_[phaseIdx] = Scalar(0);
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                moleFracGrad_[phaseIdx][compIdx] = Scalar(0);
-                moleFrac_[phaseIdx][compIdx] = Scalar(0);
-            }
-        }
-
-        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
-
-        // calculate gradients
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx)
-        {
-            // FE gradient at vertex
-            const DimVector &feGrad = scvf.grad[scvIdx];
-            Scalar shapeValue = scvf.shapeValue[scvIdx];
-            const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
-            const auto &fluidState = volVars.fluidState();
-            DimVector tmp;
-
-            // compute sum of pressure gradients for each phase
-            for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++)
-            {
-                molarDensity_[phaseIdx] += shapeValue * fluidState.molarDensity(phaseIdx);
-
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    tmp = feGrad;
-                    tmp *= fluidState.moleFraction(phaseIdx, compIdx);
-                    moleFracGrad_[phaseIdx][compIdx] += tmp;
-
-                    moleFrac_[phaseIdx][compIdx] +=
-                        shapeValue * fluidState.moleFraction(phaseIdx, compIdx);
-                }
-            }
-
-            tmp = feGrad;
-        }
-
-#if 0
-        const auto &volVarsI = elemCtx.volVars(this->insideIdx(), timeIdx);
-        const auto &volVarsJ = elemCtx.volVars(this->outsideIdx(), timeIdx);
-        const auto &fluidStateI = volVarsI.fluidState();
-        const auto &fluidStateJ = volVarsJ.fluidState();
-
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // calculate tortuosity at the nodes i and j needed
-            // for porous media diffusion coefficient
-            Scalar tauI =
-                1.0/(volVarsI.porosity() * volVarsI.porosity())
-                *
-                std::pow(std::max(0.0, volVarsI.porosity() * fluidStateI.saturation(phaseIdx)),
-                         7.0/3);
-            Scalar tauJ =
-                1.0/(volVarsJ.porosity() * volVarsJ.porosity())
-                *
-                std::pow(std::max(0.0, volVarsJ.porosity() * fluidStateJ.saturation(phaseIdx)),
-                         7.0/3);
-
-            // Diffusion coefficient in the porous medium
-            // -> harmonic mean
-            porousDiffCoeff_[phaseIdx] =
-                harmonicMean(volVarsI.porosity()
-                             * fluidStateI.saturation(phaseIdx)
-                             * tauI
-                             * volVarsI.diffCoeff(phaseIdx)
-                             ,
-                             volVarsJ.porosity()
-                             * fluidStateJ.saturation(phaseIdx)
-                             * tauJ
-                             * volVarsJ.diffCoeff(phaseIdx));
-        }
-#endif
-    }
-
-    Scalar porousDiffCoeff_[numPhases];
-    Scalar molarDensity_[numPhases];
-    Scalar moleFrac_[numPhases][numComponents];
-    DimVector moleFracGrad_[numPhases][numComponents];
 };
 
 } // end namepace

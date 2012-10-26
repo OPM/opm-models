@@ -19,120 +19,98 @@
 /*!
  * \file
  *
- * \copydoc Dumux::PowerInjectionProblem
+ * \copydoc Dumux::DiffusionProblem
  */
 #ifndef DUMUX_POWER_INJECTION_PROBLEM_HH
 #define DUMUX_POWER_INJECTION_PROBLEM_HH
 
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/air.hh>
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
+#include <dumux/boxmodels/ncp/ncpproperties.hh>
+#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <dumux/material/fluidstates/compositionalfluidstate.hh>
+#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
 #include <dumux/common/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 
-#include <type_traits>
 #include <iostream>
 
 namespace Dumux {
 
 template <class TypeTag>
-class PowerInjectionProblem;
+class DiffusionProblem;
 
 //////////
 // Specify the properties for the powerInjection problem
 //////////
 namespace Properties {
 
-NEW_TYPE_TAG(PowerInjectionBaseProblem);
+NEW_TYPE_TAG(DiffusionBaseProblem);
 
 // Set the grid implementation to be used
-SET_TYPE_PROP(PowerInjectionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
+SET_TYPE_PROP(DiffusionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 
 // set the GridCreator property
-SET_TYPE_PROP(PowerInjectionBaseProblem, GridCreator, CubeGridCreator<TypeTag>);
+SET_TYPE_PROP(DiffusionBaseProblem, GridCreator, CubeGridCreator<TypeTag>);
 
 // Set the problem property
-SET_TYPE_PROP(PowerInjectionBaseProblem, Problem, Dumux::PowerInjectionProblem<TypeTag>);
+SET_TYPE_PROP(DiffusionBaseProblem, Problem, Dumux::DiffusionProblem<TypeTag>);
 
-// Set the wetting phase
-SET_PROP(PowerInjectionBaseProblem, WettingPhase)
+// Set the fluid system
+SET_PROP(DiffusionBaseProblem, FluidSystem)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
-};
 
-// Set the non-wetting phase
-SET_PROP(PowerInjectionBaseProblem, NonwettingPhase)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::Air<Scalar> > type;
+    typedef Dumux::FluidSystems::H2ON2<Scalar> type;
 };
 
 // Set the material Law
-SET_PROP(PowerInjectionBaseProblem, MaterialLaw)
+SET_PROP(DiffusionBaseProblem, MaterialLaw)
 {
 private:
-    // define the material law which is parameterized by effective
-    // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
-    // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-    
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
 public:
-    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
 };
 
-// Write out the filter velocities for this problem
-SET_BOOL_PROP(PowerInjectionBaseProblem, VtkWriteFilterVelocities, true);
+// Enable molecular diffusion for this problem
+SET_BOOL_PROP(DiffusionBaseProblem, EnableDiffusion, true);
 
 // Disable gravity
-SET_BOOL_PROP(PowerInjectionBaseProblem, EnableGravity, false);
+SET_BOOL_PROP(DiffusionBaseProblem, EnableGravity, false);
 
-// define the properties specific for the power injection problem
-SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeX, 100.0);
-SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeY, 1.0);
-SET_SCALAR_PROP(PowerInjectionBaseProblem, DomainSizeZ, 1.0);
+// define the properties specific for the diffusion problem
+SET_SCALAR_PROP(DiffusionBaseProblem, DomainSizeX, 1.0);
+SET_SCALAR_PROP(DiffusionBaseProblem, DomainSizeY, 1.0);
+SET_SCALAR_PROP(DiffusionBaseProblem, DomainSizeZ, 1.0);
 
-SET_INT_PROP(PowerInjectionBaseProblem, CellsX, 250);
-SET_INT_PROP(PowerInjectionBaseProblem, CellsY, 1);
-SET_INT_PROP(PowerInjectionBaseProblem, CellsZ, 1);
+SET_INT_PROP(DiffusionBaseProblem, CellsX, 250);
+SET_INT_PROP(DiffusionBaseProblem, CellsY, 1);
+SET_INT_PROP(DiffusionBaseProblem, CellsZ, 1);
 
 // The default for the end time of the simulation
-SET_SCALAR_PROP(PowerInjectionBaseProblem, EndTime, 100);
+SET_SCALAR_PROP(DiffusionBaseProblem, EndTime, 1e6);
 
 // The default for the initial time step size of the simulation
-SET_SCALAR_PROP(PowerInjectionBaseProblem, InitialTimeStepSize, 1e-3);
+SET_SCALAR_PROP(DiffusionBaseProblem, InitialTimeStepSize, 1000);
 }
 
 /*!
  * \ingroup BoxTestProblems
- * \brief 1D Problem with very fast injection of gas on the left.
+ * \brief 1D problem which is driven by molecular diffusion.
  *
- * The velocity model is chosen in the .cc file in this problem. The
- * spatial parameters are inspired by the ones given by
- *
- * V. Jambhekar: "Forchheimer Porous-media Flow models -- Numerical
- * Investigation and Comparison with Experimental Data", Master's
- * Thesis at Institute for Modelling Hydraulic and Environmental
- * Systems, University of Stuttgart, 2011
+ * The domain is one meter long and completely filled with gas and
+ * closed on all boundaries. Its left half exhibits a slightly higher
+ * water concentration than the right one. After a while, the
+ * concentration of water will be equilibrate due to molecular
+ * diffusion.
  */
 template <class TypeTag>
-class PowerInjectionProblem
+class DiffusionProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -141,8 +119,6 @@ class PowerInjectionProblem
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
@@ -151,11 +127,12 @@ class PowerInjectionProblem
         numPhases = FluidSystem::numPhases,
 
         // phase indices
-        wPhaseIdx = FluidSystem::wPhaseIdx,
-        nPhaseIdx = FluidSystem::nPhaseIdx,
+        lPhaseIdx = FluidSystem::lPhaseIdx,
+        gPhaseIdx = FluidSystem::gPhaseIdx,
 
-        // equation indices
-        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
+        // component indices
+        H2OIdx = FluidSystem::H2OIdx,
+        N2Idx = FluidSystem::N2Idx,
 
         // Grid and world dimension
         dim = GridView::dimension,
@@ -177,22 +154,16 @@ public:
     /*!
      * \copydoc Doxygen::defaultProblemConstructor
      */
-    PowerInjectionProblem(TimeManager &timeManager)
+    DiffusionProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
-        eps_ = 3e-6;
         FluidSystem::init();
 
-        temperature_ = 273.15 + 26.6;
-        
-        // parameters for the Van Genuchten law
-        // alpha and n
-        materialParams_.setVgAlpha(0.00045);
-        materialParams_.setVgN(7.3);
+        temperature_ = 273.15 + 20.0;
 
-        K_ = this->toDimMatrix_(5.73e-08); // [m^2]
+        K_ = this->toDimMatrix_(1e-12); // [m^2]
 
-        setupInitialFluidState_();
+        setupInitialFluidStates_();
     }
 
     /*!
@@ -206,29 +177,10 @@ public:
     const std::string name() const
     { 
         std::ostringstream oss;
-        oss << "powerinjection_";
-        if (std::is_same<typename GET_PROP_TYPE(TypeTag, VelocityModule),
-                         Dumux::BoxDarcyVelocityModule<TypeTag> >::value)
-            oss << "darcy";
-        else
-            oss << "forchheimer";
+        oss << "diffusion_" << this->model().name();
         return oss.str();
     }
 
-    /*!
-     * \copydoc BoxProblem::postTimeStep
-     */
-    void postTimeStep()
-    {
-        // Calculate storage terms
-        PrimaryVariables storage;
-        this->model().globalStorage(storage);
-
-        // Write mass balance information for rank 0
-        if (this->gridView().comm().rank() == 0) {
-            std::cout<<"Storage: " << storage << std::endl;
-        }
-    }
     //! \}
 
     /*!
@@ -244,18 +196,11 @@ public:
     { return K_; }
 
     /*!
-     * \copydoc BoxForchheimerBaseProblem::ergunCoefficient
-     */
-    template <class Context>
-    Scalar ergunCoefficient(const Context &context, int spaceIdx, int timeIdx) const
-    { return 0.3866; }
-
-    /*!
      * \copydoc BoxMultiPhaseProblem::porosity
      */
     template <class Context>
     Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
-    { return 0.558; }
+    { return 0.35; }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::materialLawParams
@@ -282,30 +227,13 @@ public:
     /*!
      * \copydoc BoxProblem::boundary
      *
-     * This problem sets a very high injection rate of nitrogen on the
-     * left and a free-flow boundary on the right.
+     * This problem sets no-flow boundaries everywhere.
      */
     template <class Context>
     void boundary(BoundaryRateVector &values,
                   const Context &context,
                   int spaceIdx, int timeIdx) const
-    {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
-
-        if (onLeftBoundary_(pos)) {
-            RateVector massRate(0.0);
-            massRate = 0.0;
-            massRate[contiNEqIdx] = -1.00; // kg / (m^2 * s)
-
-            // impose a forced flow boundary
-            values.setMassRate(massRate);
-        }
-        else  {
-            // free flow boundary with initial condition on the right
-            values.setFreeFlow(context, spaceIdx, timeIdx, initialFluidState_);
-        }
-            
-    }
+    { values.setNoFlow(); }
 
     //! \}
 
@@ -322,8 +250,11 @@ public:
                  const Context &context,
                  int spaceIdx, int timeIdx) const
     {
-        // assign the primary variables
-        values.assignNaive(initialFluidState_);
+        const auto &pos = context.pos(spaceIdx, timeIdx);
+        if (onLeftSide_(pos))
+            values.assignNaive(leftInitialFluidState_);
+        else
+            values.assignNaive(rightInitialFluidState_);
     }
 
 
@@ -342,31 +273,45 @@ public:
     //! \}
 
 private:   
-    bool onLeftBoundary_(const GlobalPosition &pos) const
-    { return pos[0] < this->bboxMin()[0] + eps_; }
+    bool onLeftSide_(const GlobalPosition &pos) const
+    { return pos[0] < (this->bboxMin()[0] + this->bboxMax()[0])/2; }
 
-    bool onRightBoundary_(const GlobalPosition &pos) const
-    { return pos[0] > this->bboxMax()[0] - eps_; }
-
-    void setupInitialFluidState_()
+    void setupInitialFluidStates_()
     {
-        initialFluidState_.setTemperature(temperature_);
+        // create the initial fluid state for the left half of the domain
+        leftInitialFluidState_.setTemperature(temperature_);
 
-        Scalar Sw = 1.0;
-        initialFluidState_.setSaturation(wPhaseIdx, Sw);
-        initialFluidState_.setSaturation(nPhaseIdx, 1 - Sw);
+        Scalar Sl = 0.0;
+        leftInitialFluidState_.setSaturation(lPhaseIdx, Sl);
+        leftInitialFluidState_.setSaturation(gPhaseIdx, 1 - Sl);
 
         Scalar p = 1e5;
-        initialFluidState_.setPressure(wPhaseIdx, p);
-        initialFluidState_.setPressure(nPhaseIdx, p);
+        leftInitialFluidState_.setPressure(lPhaseIdx, p);
+        leftInitialFluidState_.setPressure(gPhaseIdx, p);
+
+        Scalar xH2O = 0.01;
+        leftInitialFluidState_.setMoleFraction(gPhaseIdx, H2OIdx, xH2O);
+        leftInitialFluidState_.setMoleFraction(gPhaseIdx, N2Idx, 1 - xH2O);
+
+        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typename FluidSystem::ParameterCache paramCache;
+        CFRP::solve(leftInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false); 
+
+        // create the initial fluid state for the right half of the domain
+        rightInitialFluidState_.assign(leftInitialFluidState_);
+        xH2O = 0.0;
+        rightInitialFluidState_.setMoleFraction(gPhaseIdx, H2OIdx, xH2O);
+        rightInitialFluidState_.setMoleFraction(gPhaseIdx, N2Idx, 1 - xH2O);
+        CFRP::solve(rightInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false); 
+        
     }
 
     DimMatrix K_;
     MaterialLawParams materialParams_;
 
-    ImmiscibleFluidState<Scalar, FluidSystem> initialFluidState_;
+    CompositionalFluidState<Scalar, FluidSystem> leftInitialFluidState_;
+    CompositionalFluidState<Scalar, FluidSystem> rightInitialFluidState_;
     Scalar temperature_;
-    Scalar eps_;
 };
 
 } //end namespace

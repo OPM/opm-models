@@ -24,10 +24,8 @@
 #ifndef DUMUX_NCP_VOLUME_VARIABLES_HH
 #define DUMUX_NCP_VOLUME_VARIABLES_HH
 
-#include "diffusion/ncpvolumevariables.hh"
-
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
-#include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
@@ -43,7 +41,7 @@ namespace Dumux {
 template <class TypeTag>
 class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public NcpVolumeVariablesDiffusion<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+    , public BoxDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
@@ -71,7 +69,7 @@ class NcpVolumeVariables
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef NcpVolumeVariablesDiffusion<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
@@ -95,9 +93,7 @@ public:
         typename FluidSystem::ParameterCache paramCache;
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
-        /////////////
         // set the phase saturations
-        /////////////
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
             sumSat += priVars[saturation0Idx + phaseIdx];
@@ -107,14 +103,8 @@ public:
         Valgrind::CheckDefined(sumSat);
 
 
-        /////////////
-        // set the fluid phase temperatures
-        /////////////
+        // set the fluid phase temperature
         EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
-
-        /////////////
-        // set the phase pressures
-        /////////////
 
         // retrieve capillary pressure parameters
         const auto &problem = elemCtx.problem();
@@ -128,12 +118,8 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
             fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
 
-        /////////////
-        // set the fluid compositions
-        /////////////
-        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
-
         // calculate phase compositions
+        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -156,17 +142,9 @@ public:
             CompositionFromFugacitiesSolver::solve(fluidState_, paramCache, phaseIdx, fug);
         }
 
-        /////////////
-        // Porosity
-        /////////////
-
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
-
-        /////////////
-        // Phase mobilities
-        /////////////
 
         // relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_,
@@ -180,32 +158,17 @@ public:
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
-        /////////////
-        // diffusion
-        /////////////
-
-        // update the diffusion part of the volume data
-        DiffusionVolumeVariables::update(fluidState_,
-                                         paramCache,
-                                         elemCtx,
-                                         scvIdx,
-                                         timeIdx);
-        DiffusionVolumeVariables::checkDefined();
-
-        /////////////
-        // energy
-        /////////////
-
-        // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
-
-        fluidState_.checkDefined();
-
         // intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+
+        // update the diffusion specific quantities of the volume variables
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
         checkDefined();
     }

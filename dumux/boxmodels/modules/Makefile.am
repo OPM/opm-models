@@ -1,4 +1,4 @@
-SUBDIRS = energy velocity
+SUBDIRS = diffusion energy velocity
 
 boxmodulesdir = $(includedir)/dumux/boxmodels/modules
 

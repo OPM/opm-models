@@ -20,9 +20,9 @@ AC_CONFIG_FILES([Makefile
     dumux/boxmodels/immiscible/Makefile 
     dumux/boxmodels/modules/Makefile 
     dumux/boxmodels/modules/energy/Makefile 
+    dumux/boxmodels/modules/diffusion/Makefile 
     dumux/boxmodels/modules/velocity/Makefile 
     dumux/boxmodels/ncp/Makefile 
-    dumux/boxmodels/ncp/diffusion/Makefile
     dumux/boxmodels/pvs/Makefile 
     dumux/boxmodels/richards/Makefile 
     dumux/boxmodels/stokes/Makefile

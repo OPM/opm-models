@@ -26,6 +26,7 @@
 #ifndef DUMUX_PVS_PROPERTY_DEFAULTS_HH
 #define DUMUX_PVS_PROPERTY_DEFAULTS_HH
 
+#include "pvslocalresidual.hh"
 #include "pvsmodel.hh"
 #include "pvsnewtoncontroller.hh"
 #include "pvsprimaryvariables.hh"
@@ -133,6 +134,9 @@ SET_INT_PROP(BoxPvs, PvsVerbosity, 1);
 
 // disable the energy equation by default
 SET_BOOL_PROP(BoxPvs, EnableEnergy, false);
+
+// disable molecular diffusion by default
+SET_BOOL_PROP(BoxPvs, EnableDiffusion, false);
 }
 
 }

@@ -24,12 +24,11 @@
 #ifndef DUMUX_NCP_LOCAL_RESIDUAL_HH
 #define DUMUX_NCP_LOCAL_RESIDUAL_HH
 
-#include "ncpfluxvariables.hh"
-#include "diffusion/ncpdiffusion.hh"
+#include "ncpproperties.hh"
 
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
+#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
-#include <dumux/boxmodels/common/boxmodel.hh>
-
 #include <dumux/common/math.hh>
 
 namespace Dumux {
@@ -44,7 +43,6 @@ namespace Dumux {
 template<class TypeTag>
 class NcpLocalResidual : public BoxLocalResidual<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef BoxLocalResidual<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -55,20 +53,19 @@ class NcpLocalResidual : public BoxLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    enum { ncp0EqIdx = Indices::ncp0EqIdx };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
 
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
+    typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy),
-        ncp0EqIdx = Indices::ncp0EqIdx,
-        conti0EqIdx = Indices::conti0EqIdx
-    };
-
-    typedef Dumux::BoxConstraintsContext<TypeTag> ConstraintsContext;
-    typedef Dune::BlockVector<EqVector> LocalBlockVector;
+    enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+
+    typedef Dune::BlockVector<EqVector> LocalBlockVector;
 
 public:
     /*!
@@ -169,24 +166,7 @@ public:
                           int scvfIdx,
                           int timeIdx) const
     {
-#if 0
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
-
-        // add diffusive flux of gas component in liquid phase
-        Scalar tmp = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            int compIdx = 1; // HACK
-            tmp = - (fluxVars.moleFracGrad(phaseIdx, compIdx)*normal);
-            tmp *=
-                fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
-                fluxVars.molarDensity(phaseIdx);
-
-            flux[conti0EqIdx + compIdx] += tmp;
-            flux[conti0EqIdx + (1 - compIdx)] -= tmp;
-        }
-#endif
-
+        DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
@@ -209,11 +189,6 @@ public:
 
 private:
     friend class BoxLocalResidual<TypeTag>;
-
-    Implementation &asImp_()
-    { return *static_cast<Implementation *>(this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation *>(this); }
 
     /*!
      * \brief Set the values of the constraint volumes of the current element.

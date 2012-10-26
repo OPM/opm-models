@@ -236,7 +236,7 @@ public:
      * if the end time is reached.
      */
     bool finished() const
-    { return finished_ || time() + timeStepSize_*1e-8 >= endTime(); }
+    { return finished_ || time() + std::max(std::abs(time()), timeStepSize_)*1e-8 >= endTime(); }
 
     /*!
      * \brief Returns true if the simulation is finished after the

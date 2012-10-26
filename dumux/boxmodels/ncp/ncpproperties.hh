@@ -30,6 +30,7 @@
 #include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkdiffusionmodule.hh>
 
 namespace Dumux {
 namespace Properties {
@@ -40,7 +41,7 @@ namespace Properties {
 /*!
  * \brief Define the type tag for the compositional NCP model.
  */
-NEW_TYPE_TAG(BoxNcp, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
+NEW_TYPE_TAG(BoxNcp, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy, VtkDiffusion));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

@@ -28,11 +28,10 @@
 #include "flashindices.hh"
 
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
-#include <dumux/boxmodels/common/boxmodel.hh>
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/common/math.hh>
 
-#include <dune/common/collectivecommunication.hh>
 #include <dune/common/fvector.hh>
 
 namespace Dumux {
@@ -47,12 +46,12 @@ namespace Dumux {
 template <class TypeTag>
 class FlashVolumeVariables
     : public BoxVolumeVariables<TypeTag>
+    , public BoxDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -66,6 +65,7 @@ class FlashVolumeVariables
     enum { cTot0Idx = Indices::cTot0Idx };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
@@ -78,6 +78,7 @@ class FlashVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     
 public:
@@ -115,7 +116,7 @@ public:
             cTotal[compIdx] = priVars[cTot0Idx + compIdx];
         
         typename FluidSystem::ParameterCache paramCache;
-        const Implementation *hint = elemCtx.hint(scvIdx, timeIdx);
+        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
         if (hint) {
             // use the same fluid state as the one of the hint, but
             // make sure that we don't overwrite the temperature
@@ -146,9 +147,6 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
-        // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
-
         // porosity
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
@@ -158,6 +156,12 @@ public:
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+
+        // energy related quantities
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+
+        // update the diffusion specific quantities of the volume variables
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -165,7 +169,6 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-
 
     /*!
      * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
@@ -190,21 +193,12 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
-
-#if 0
-    /*!
-     * \brief Returns the binary diffusion coefficients for a phase
-     */
-    Scalar diffCoeff(int phaseIdx) const
-    { return diffCoeff_[phaseIdx]; }
-#endif // 0
   
 private:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;
     Scalar relativePermeability_[numPhases];
-    //Scalar diffCoeff_[numPhases];
 };
 
 } // end namepace

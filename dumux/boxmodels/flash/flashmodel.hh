@@ -25,8 +25,10 @@
 #define DUMUX_FLASH_MODEL_HH
 
 #include "flashproperties.hh"
-#include "flashlocalresidual.hh"
+
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <iostream>
 #include <sstream>
@@ -106,19 +108,15 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum {
-        dim = GridView::dimension,
-
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
-    };
-
+    enum { dim = GridView::dimension };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
-    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
+    typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
@@ -133,6 +131,9 @@ public:
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
         Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
+
+        if (enableDiffusion)
+            Dumux::BoxVtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
             Dumux::BoxVtkEnergyModule<TypeTag>::registerParameters();
@@ -266,7 +267,8 @@ private:
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Dumux::BoxVtkTemperatureModule<TypeTag>(this->problem_()));
-
+        if (enableDiffusion)
+            this->vtkOutputModules_.push_back(new Dumux::BoxVtkDiffusionModule<TypeTag>(this->problem_()));
         if (enableEnergy)
             this->vtkOutputModules_.push_back(new Dumux::BoxVtkEnergyModule<TypeTag>(this->problem_()));
     }

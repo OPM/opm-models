@@ -25,9 +25,8 @@
 #define DUMUX_FLASH_LOCAL_RESIDUAL_HH
 
 #include "flashproperties.hh"
-#include "flashvolumevariables.hh"
-#include "flashfluxvariables.hh"
 
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/common/math.hh>
@@ -43,20 +42,19 @@ namespace Dumux {
 template<class TypeTag>
 class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-
-    enum {
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents),
-        conti0EqIdx = Indices::conti0EqIdx
-    };
-
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
+
+    enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
+    typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
@@ -166,24 +164,7 @@ public:
                           int scvfIdx,
                           int timeIdx) const
     {
-#if 0
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
-
-        // add diffusive flux of gas component in liquid phase
-        Scalar tmp = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            int compIdx = 1; // HACK
-            tmp = - (fluxVars.moleFracGrad(phaseIdx, compIdx)*normal);
-            tmp *=
-                fluxVars.porousDiffCoeff(phaseIdx, compIdx) *
-                fluxVars.molarDensity(phaseIdx);
-
-            flux[conti0EqIdx + compIdx] += tmp;
-            flux[conti0EqIdx + (1 - compIdx)] -= tmp;
-        }
-#endif
-
+        DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 

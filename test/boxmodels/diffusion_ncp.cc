@@ -19,45 +19,22 @@
 /*!
  * \file
  *
- * \brief Test for the isothermal compositional model based on flash
- *        calculations.
+ * \brief Test for the Forchheimer velocity model
  */
 #include "config.h"
 
-#include "problems/co2injectionflash.hh"
-#include "problems/co2injectionproblem.hh"
+#include "problems/diffusionproblem.hh"
 
-#include <dumux/boxmodels/flash/flashmodel.hh>
+#include <dumux/boxmodels/ncp/ncpmodel.hh>
 #include <dumux/common/start.hh>
 
 namespace Dumux {
 namespace Properties {
-NEW_TYPE_TAG(Co2InjectionFlashProblem, INHERITS_FROM(BoxFlash, Co2InjectionBaseProblem));
-
-// for the flash model we want to use thermodynamic hints or it will
-// get _very_ slow.
-SET_BOOL_PROP(Co2InjectionFlashProblem, EnableHints, true);
-
-// use the flash solver adapted to the CO2 injection problem
-SET_TYPE_PROP(Co2InjectionFlashProblem,
-              FlashSolver,
-              Dumux::Co2InjectionFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
-              typename GET_PROP_TYPE(TypeTag, FluidSystem)> );
-
-// the flash model has serious problems with the numerical
-// precision. if quadruple precision math is available, we use it,
-// else we increase the tolerance of the Newton solver
-#if HAVE_QUAD
-SET_TYPE_PROP(Co2InjectionFlashProblem, Scalar, quad);
-#else
-SET_SCALAR_PROP(Co2InjectionFlashProblem, NewtonRelTolerance, 1e-5);
-#endif
-
-}
-}
+NEW_TYPE_TAG(DiffusionProblem, INHERITS_FROM(BoxNcp, DiffusionBaseProblem));
+} }
 
 int main(int argc, char** argv)
 {
-    typedef TTAG(Co2InjectionFlashProblem) ProblemTypeTag;
+    typedef TTAG(DiffusionProblem) ProblemTypeTag;
     return Dumux::start<ProblemTypeTag>(argc, argv);
 }

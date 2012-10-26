@@ -24,9 +24,8 @@
 #ifndef DUMUX_NCP_FLUX_VARIABLES_HH
 #define DUMUX_NCP_FLUX_VARIABLES_HH
 
-#include "diffusion/ncpfluxvariables.hh"
-
 #include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -48,6 +47,7 @@ template <class TypeTag>
 class NcpFluxVariables
     : public BoxMultiPhaseFluxVariables<TypeTag>
     , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxDiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -60,7 +60,7 @@ class NcpFluxVariables
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef NcpFluxVariablesDiffusion<TypeTag, enableDiffusion> FluxVariablesDiffusion;
+    typedef BoxDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
@@ -72,11 +72,7 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
-
-        // update the flux data of the diffusion module (i.e. with or
-        // without diffusion)
-        diffusionVars_.update(elemCtx, scvfIdx, timeIdx);
-        
+        DiffusionFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
@@ -95,31 +91,9 @@ public:
                                                 timeIdx, 
                                                 fluidState, 
                                                 paramCache);
+        DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
-
-    ////////////////////////////////////////////////
-    // forward calls to the diffusion module
-    //! \cond 0
-    Scalar porousDiffCoeffL(int compIdx) const
-    { return diffusionVars_.porousDiffCoeffL(compIdx); }
-
-    Scalar porousDiffCoeffG(int compIIdx, int compJIdx) const
-    { return diffusionVars_.porousDiffCoeffG(compIIdx, compJIdx); }
-
-    const Scalar moleFraction(int phaseIdx, int compIdx) const
-    { return diffusionVars_.moleFraction(phaseIdx, compIdx); }
-
-    const DimVector &moleFracGrad(int phaseIdx,
-                               int compIdx) const
-    { return diffusionVars_.moleFracGrad(phaseIdx, compIdx); }
-    //! \endcond
-    // end of forward calls to the diffusion module
-    ////////////////////////////////////////////////
-
-private:
-    // data for the diffusion and the energy modules
-    FluxVariablesDiffusion diffusionVars_;
 };
 
 } // end namepace

@@ -30,6 +30,7 @@
 #include <dumux/boxmodels/vtk/boxvtktemperaturemodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkcompositionmodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkphasepresencemodule.hh>
+#include <dumux/boxmodels/vtk/boxvtkdiffusionmodule.hh>
 #include <dumux/boxmodels/vtk/boxvtkenergymodule.hh>
 
 namespace Dumux {
@@ -40,7 +41,7 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(BoxFlash, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy));
+NEW_TYPE_TAG(BoxFlash, INHERITS_FROM(BoxModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy, VtkDiffusion));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -63,6 +64,7 @@ NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conductio
 NEW_PROP_TAG(VelocityModule);
 
 NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered as a conservation quantity or not
+NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
 NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 }

@@ -499,7 +499,7 @@ private:
             // compute the phase compositions
             typedef MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
             typename FluidSystem::ParameterCache paramCache;
-            MMPC::solve(fs, paramCache, /*setViscosity=*/false, /*setEnthalpy=*/false);
+            MMPC::solve(fs, paramCache, /*setViscosity=*/true, /*setEnthalpy=*/true);
         }
         else {         
             fs.setSaturation(wPhaseIdx, 0.12);
@@ -517,7 +517,7 @@ private:
             // compute the phase compositions
             typedef MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
             typename FluidSystem::ParameterCache paramCache;
-            MMPC::solve(fs, paramCache, /*setViscosity=*/false, /*setEnthalpy=*/false);
+            MMPC::solve(fs, paramCache, /*setViscosity=*/true, /*setEnthalpy=*/true);
             
             // set the contaminant mole fractions to zero. this is a
             // little bit hacky...
