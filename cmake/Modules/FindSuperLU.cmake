@@ -23,8 +23,18 @@ include(CheckCSourceCompiles)
 include(CheckIncludeFiles)
 set(CMAKE_REQUIRED_INCLUDES ${SUPERLU_INCLUDE_DIR})
 set(CMAKE_REQUIRED_LIBRARIES ${SUPERLU_LIBRARY})
+set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARY})
+
+# check if slu_ddefs.h is available
+CHECK_INCLUDE_FILES("slu_ddefs.h" HAVE_SLU_DDEFS)
+if(HAVE_SLU_DDEFS)
+  set(my_slu_hdr "slu_ddefs.h")
+else(HAVE_SLU_DDEFS)
+  set(my_slu_hdr "dsp_defs.h")
+endif(HAVE_SLU_DDEFS)
+
 CHECK_C_SOURCE_COMPILES("
-#include <slu_ddefs.h>
+#include <${my_slu_hdr}>
 int main(void)
 {
   return SLU_DOUBLE;
@@ -36,14 +46,6 @@ if(SUPERLU_MIN_VERSION_4_3)
 else()
   set(SUPERLU_WITH_VERSION "SuperLU <= 4.2, post 2005")
 endif(SUPERLU_MIN_VERSION_4_3)
-
-# check if slu_ddefs.h is available
-CHECK_INCLUDE_FILES("slu_ddefs.h" HAVE_SLU_DDEFS)
-if(HAVE_SLU_DDEFS)
-  set(my_slu_hdr "slu_ddefs.h")
-else(HAVE_SLU_DDEFS)
-  set(my_slu_hdr "dsp_defs.h")
-endif(HAVE_SLU_DDEFS)
 
 # check if the expansions member is available
 CHECK_C_SOURCE_COMPILES("

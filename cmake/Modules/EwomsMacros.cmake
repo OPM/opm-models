@@ -32,12 +32,11 @@ the ${EwomsFramework}_DIR entry where all ${EwomsFramework} sub-modules have bee
   endif(${EwomsFramework}_DIR)
 
   # Path to look for includes (->EwomsIncludePath) and libraries (-> EwomsLibraryPath)
+  set(EwomsIncludePath "")
   foreach(tmp ${EwomsModulePath})
     list(APPEND EwomsIncludePath "${tmp}" "${tmp}/include")
     list(APPEND EwomsLibraryPath "${tmp}" "${tmp}/lib" "${tmp}/lib64")
   endforeach(tmp)
-  list(APPEND EwomsIncludePath "/usr/include" "/usr/local/include")
-  list(APPEND EwomsLibraryPath "/usr/lib" "/usr/lib64" "/usr/local/lib" "/usr/local/lib64")
 
   set(EwomsLibraries)
   set(EwomsFailedLibraries)
@@ -74,7 +73,14 @@ macro(EwomsFindLibrary LibName)
   find_library(${Lib}
                ${LibName}
                PATHS ${EwomsLibraryPath}
-               PATH_SUFFIXES ".libs")
+               PATH_SUFFIXES ".libs"  "lib" "lib32" "lib64"
+               NO_DEFAULT_PATH)
+  if(NOT ${Lib})
+    find_library(${Lib}
+                 ${LibName}
+                 PATHS ${EwomsLibraryPath}
+                 PATH_SUFFIXES ".libs" "lib" "lib32" "lib64")
+  endif()
 
   if(${Lib})
     list(APPEND EwomsLibraries ${${Lib}})
@@ -88,24 +94,21 @@ endmacro(EwomsFindLibrary)
 # Find a given header file using some reasonable default 
 # search paths.
 #############################################################
-macro(EwomsFindExtraIncludeDir VarName HeaderName)
-  set(Inc ${EwomsModule}_${VarName}_INCLUDE_DIR)
-  find_path(${Inc}
-      ${HeaderName}
-      PATHS ${EwomsIncludePath})
-    if(${Inc})
-      list(APPEND ${EwomsModule}_INCLUDE_DIRS ${${Inc}})
-      list(APPEND EwomsIncludes ${Inc})
-    else(${Inc})
-      list(APPEND EwomsFailedIncludes ${HeaderName})
-  endif(${Inc})
-endmacro(EwomsFindExtraIncludeDir)
-
 macro(EwomsFindIncludeDir HeaderName)
   set(Inc ${EwomsModule}_INCLUDE_DIR)
   find_path(${Inc}
             ${HeaderName}
-            PATHS ${EwomsIncludePath})
+            PATHS ${EwomsIncludePath} NO_DEFAULT_PATH)
+  message("INCLUDE_PATHS: ${EwomsIncludePath}")
+  message("${Inc}: ${${Inc}}")
+  
+  if (NOT ${Inc})
+    find_path(${Inc}
+              ${HeaderName}
+              PATHS ${EwomsIncludePath})
+  endif()
+  message("${Inc}: ${${Inc}}")
+
   if(${Inc})
     list(APPEND ${EwomsModule}_INCLUDE_DIRS "${${Inc}}")
     list(APPEND EwomsIncludes ${Inc})
@@ -118,7 +121,13 @@ macro(EwomsFindIncludeBaseDir HeaderName DirSuffix)
   set(Inc ${EwomsModule}_INCLUDE_DIR)
   find_path(${Inc}
             ${HeaderName}
-            PATHS ${EwomsIncludePath})
+            PATHS ${EwomsIncludePath} NO_DEFAULT_PATH)
+  if (NOT ${Inc})
+    find_path(${Inc}
+              ${HeaderName}
+              PATHS ${EwomsIncludePath})
+  endif()
+
   if(${Inc})
     list(APPEND ${EwomsModule}_INCLUDE_DIRS "${${Inc}}/${DirSuffix}")
     list(APPEND EwomsIncludes ${Inc})

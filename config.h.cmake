@@ -49,22 +49,28 @@
 #define ENABLE_MPI 1
 #endif
 
-#define HAVE_UG ${HAVE_UG}
-#if HAVE_MPI && HAVE_UG
-/* use parallel UG if both UG and MPI are available */
-#   define ModelP
+#cmakedefine HAVE_UG 1
+#if HAVE_UG
+#define ENABLE_UG 1
+#if HAVE_MPI
+/* only use parallel UG if both UG and MPI are available */
+#define ModelP
+#endif
 #endif
 
-#ifdef ENABLE_ALUGRID
 #cmakedefine HAVE_ALUGRID 1
+#if HAVE_ALUGRID
+#define ENABLE_ALUGRID 1
 #endif
 
-#ifdef ENABLE_METIS
 #cmakedefine HAVE_METIS 1
+#if HAVE_METIS
+#define ENABLE_METIS
 #endif
 
-#ifdef ENABLE_ALBERTA
 #cmakedefine HAVE_ALBERTA 1
+#if HAVE_ALBERTA
+#define ENABLE_ALBERTA
 #endif
 
 #cmakedefine PROJECT_NAME             "${PROJECT_NAME}"
