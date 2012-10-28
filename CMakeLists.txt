@@ -502,12 +502,12 @@ add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
 add_test(obstacle_immiscible_parameters bin/runtest.sh --parameters obstacle_immiscible)
 
 # conditionally add the tests that depend on superLU and ALUGrid
-if($SUPERLU_FOUND} AND ${ALUGRID_FOUND})
+if(SUPERLU_FOUND AND ALUGRID_FOUND)
   add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
 endif()
 
 # conditionally add the tests that depend on ALUGrid
-if(${ALUGRID_FOUND})
+if(ALUGRID_FOUND)
   add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
   add_test(test_mpfal2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAL)
   add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
@@ -516,12 +516,12 @@ if(${ALUGRID_FOUND})
 endif()
 
 # run a test in parallel
-if(${MPI_FOUND})
+if(MPI_FOUND)
   add_test(obstacle_immiscible_parallel bin/runtest.sh --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
 endif()
 
 # conditionally add the tests that depend on superLU
-if(${SUPERLU_FOUND})
+if(SUPERLU_FOUND)
  add_test(test_stokes bin/runtest.sh --simulation test_stokes)
  add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
  add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
