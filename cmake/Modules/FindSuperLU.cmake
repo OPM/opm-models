@@ -70,8 +70,7 @@ find_package_handle_standard_args(
   "SuperLU"
   DEFAULT_MSG
   SUPERLU_INCLUDE_DIR
-  SUPERLU_LIBRARY
-)
+  SUPERLU_LIBRARY)
 
 mark_as_advanced(SUPERLU_INCLUDE_DIRS SUPERLU_LIBRARIES)
 
@@ -86,10 +85,10 @@ if(SUPERLU_FOUND)
     "Library directory: ${SUPERLU_LIBRARY}\n\n")
   set(SUPERLU_CPPFLAGS "-I${SUPERLU_INCLUDE_DIRS} -DENABLE_SUPERLU=1")
   set(SUPERLU_LIBS "-L. ${SUPERLU_LIBRARIES} ${BLAS_LIBRARIES}")
-else(SUPERLU_FOUND)
+else()
   # log errornous result
   file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
     "Determing location of SuperLU failed:\n"
     "Include directory: ${SUPERLU_INCLUDE_DIR}\n"
     "Library directory: ${SUPERLU_LIBRARY}\n\n")
-endif(SUPERLU_FOUND)
+endif()

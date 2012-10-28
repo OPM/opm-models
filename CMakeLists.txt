@@ -299,6 +299,7 @@ EwomsSetBoolConfigHVar(HAVE_DUNE_GRID           DUNE_grid_FOUND)
 EwomsSetBoolConfigHVar(HAVE_DUNE_ISTL           DUNE_istl_FOUND)
 EwomsSetBoolConfigHVar(HAVE_DUNE_LOCALFUNCTIONS DUNE_localfunctions_FOUND)
 EwomsSetBoolConfigHVar(HAVE_DUNE_PDELAB         DUNE_pdelab_FOUND)
+EwomsSetBoolConfigHVar(HAVE_SUPERLU             SUPERLU_FOUND)
 
 EwomsSetConfigHVar(PROJECT_NAME             ProjectName)
 EwomsSetConfigHVar(PROJECT_VERSION          ProjectVersion)
