@@ -99,15 +99,12 @@ macro(EwomsFindIncludeDir HeaderName)
   find_path(${Inc}
             ${HeaderName}
             PATHS ${EwomsIncludePath} NO_DEFAULT_PATH)
-  message("INCLUDE_PATHS: ${EwomsIncludePath}")
-  message("${Inc}: ${${Inc}}")
   
   if (NOT ${Inc})
     find_path(${Inc}
               ${HeaderName}
               PATHS ${EwomsIncludePath})
   endif()
-  message("${Inc}: ${${Inc}}")
 
   if(${Inc})
     list(APPEND ${EwomsModule}_INCLUDE_DIRS "${${Inc}}")

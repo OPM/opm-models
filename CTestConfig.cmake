@@ -7,7 +7,7 @@
 # in the build directory of the eWoms module. (You must use the CMake
 # build system to make this work.)
 set(CTEST_PROJECT_NAME "eWoms")
-set(CTEST_NIGHTLY_START_TIME "00:01:00 CEDT")
+set(CTEST_NIGHTLY_START_TIME "00:01:00 UTC")
 
 set(CTEST_DROP_METHOD "http")
 set(CTEST_DROP_SITE "opm-project.org")
