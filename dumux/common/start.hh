@@ -34,11 +34,11 @@
 #include <dune/grid/io/file/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>
 
-#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <locale>
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -116,18 +116,20 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
         std::string paramName, paramValue;
 
         // read a --my-opt=abc option. This gets transformed
-        // into the parameter "myOpt" with the value being
+        // into the parameter "MyOpt" with the value being
         // "abc"
         if (argv[i][1] == '-') {
-            std::string s(argv[i] + 2);
             // There is nothing after the '-'
-            if (s.size() == 0 || s[0] == '=')
+            if (argv[i][2] == 0 || !std::isalpha(argv[i][2]))
             {
                 std::ostringstream oss;
                 oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                    << " is empty.";
+                    << " is invalid because it does not start with a letter.";
                 return oss.str();
             }
+
+            // copy everything after the "--" into a separate string
+            std::string s(argv[i] + 2);
 
             // parse argument
             unsigned j = 0;
@@ -161,30 +163,26 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
                     else if (s[j] == '-')
                     {
                         std::ostringstream oss;
-                        oss << "Malformed parameter name name in argument " << i << " ('" << argv[i] << "'): "
+                        oss << "Malformed parameter name in argument " << i << " ('" << argv[i] << "'): "
                             << "'--' in parameter name.";
                         return oss.str();
                     }
                     s[j] = std::toupper(s[j]);
                 }
-                else if (s[j] == '.') {
-                    if (j + 1 >= s.size() ||
-                        !std::isalpha(s[j+1]))
-                    {
-                        std::ostringstream oss;
-                        oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                            << " is invalid (character after '.' is not a letter).";
-                        return oss.str();
-                    }
-
-                    s[j + 1] = std::toupper(s[j + 1]);
+                else if (!std::isalnum(s[j]))
+                {
+                    std::ostringstream oss;
+                    oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
+                        << " is invalid (character '"<<s[j]<<"' is not a letter or digit).";
+                    return oss.str();
                 }
 
                 ++j;
             }
         }
         else {
-            // read a -myOpt abc option
+            // read a -myOpt abc option for the parameter "MyOpt" with
+            // a value of "abc"
             paramName = argv[i] + 1;
 
             if (argc == i + 1 || argv[i+1][0] == '-') {
@@ -257,7 +255,6 @@ int start(int argc,
         REGISTER_PARAM(TypeTag, Scalar,
                        RestartTime,
                        "The time time at which a simulation restart should be attempted [s]");
-
 
         GridCreator::registerParameters();
         TimeManager::registerParameters();
