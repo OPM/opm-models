@@ -208,7 +208,7 @@ typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
 public:
-MPFATwoPTestProblem(TimeManager &timeManager) 
+MPFATwoPTestProblem(TimeManager &timeManager)
     : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
 {
     this->setGrid(GridCreator::grid());

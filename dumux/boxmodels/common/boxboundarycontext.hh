@@ -123,7 +123,7 @@ public:
      * \param timeIdx The index of the solution used by the time discretization
      */
     Vector normal(int boundaryFaceIdx, int timeIdx) const
-    { 
+    {
         auto tmp = fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].normal;
         tmp /= tmp.two_norm();
         return tmp;

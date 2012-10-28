@@ -44,7 +44,7 @@ namespace Dumux {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class ImmisciblePrimaryVariables 
+class ImmisciblePrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -125,17 +125,17 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                globalMolarities[compIdx] += 
+                globalMolarities[compIdx] +=
                     fluidState.molarity(phaseIdx, compIdx)
                     * fluidState.saturation(phaseIdx);
             }
         }
-        
+
         ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
         ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
-        
+
         assignNaive(fsFlash);
     }
 
@@ -161,7 +161,7 @@ public:
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
-        
+
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++ phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);

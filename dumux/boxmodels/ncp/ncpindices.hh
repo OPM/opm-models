@@ -36,10 +36,10 @@ namespace Dumux {
  *        compositional multi-phase NCP model.
  */
 template <class TypeTag, int PVOffset = 0>
-struct NcpIndices 
-    : public BoxMultiPhaseEnergyIndices<PVOffset 
+struct NcpIndices
+    : public BoxMultiPhaseEnergyIndices<PVOffset
                                         + GET_PROP_VALUE(TypeTag, NumComponents)
-                                        + GET_PROP_VALUE(TypeTag, NumPhases), 
+                                        + GET_PROP_VALUE(TypeTag, NumPhases),
                                         GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:

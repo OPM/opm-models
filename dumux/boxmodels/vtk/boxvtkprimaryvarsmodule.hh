@@ -97,7 +97,7 @@ public:
         const auto &elementMapper = elemCtx.problem().elementMapper();
         const auto &vertexMapper = elemCtx.problem().vertexMapper();
         const auto &elem = elemCtx.element();
-        
+
         auto elemIdx = elementMapper.map(elemCtx.element());
         if (processRankOutput_()) processRank_[elemIdx] = this->problem_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numScv(); ++i) {

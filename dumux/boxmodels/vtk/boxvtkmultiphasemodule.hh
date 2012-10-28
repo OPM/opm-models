@@ -217,7 +217,7 @@ public:
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = normal.two_norm();
                     weight *= fluxVars.extrusionFactor();
-                    
+
                     Dune::FieldVector<Scalar, dim> pGrad(fluxVars.potentialGrad(phaseIdx));
                     pGrad *= weight;
 
@@ -278,14 +278,14 @@ public:
 
         if (velocityOutput_()) {
             int nVerts = this->problem_.gridView().size(dim);
-            
+
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int i = 0; i < nVerts; ++i)
                     velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
                 // commit the phase velocity
-                char name[512];       
+                char name[512];
                 snprintf(name, 512, "filterVelocity_%s", FluidSystem::phaseName(phaseIdx));
 
                 writer.attachVertexData(velocity_[phaseIdx],
@@ -296,14 +296,14 @@ public:
 
         if (potentialGradientOutput_()) {
             int nVerts = this->problem_.gridView().size(dim);
-            
+
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int i = 0; i < nVerts; ++i)
                     potentialGradient_[phaseIdx][i] /= potentialWeight_[phaseIdx][i];
                 // commit the phase velocity
-                char name[512];       
+                char name[512];
                 snprintf(name, 512, "gradP_%s", FluidSystem::phaseName(phaseIdx));
 
                 writer.attachVertexData(potentialGradient_[phaseIdx],

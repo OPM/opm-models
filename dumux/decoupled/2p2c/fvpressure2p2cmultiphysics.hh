@@ -136,7 +136,7 @@ public:
     void get1pStorage(Dune::FieldVector<Scalar, 2>& storageEntry,
                       const Element& elementI,
                       CellData& cellDataI);
-        
+
     void get1pFlux(Dune::FieldVector<Scalar, 2>& entries,
                    const Intersection& intersection, const CellData& cellDataI);
 
@@ -809,7 +809,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
         else if(oldSubdomainI != 2
                     && nextSubdomain[globalIdx] != 2)    // will be simple and was simple
         {
-			// perform simple update
+            // perform simple update
             this->update1pMaterialLawsInElement(*eIt, cellData, postTimeStep);
         }
         //else
@@ -822,9 +822,9 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
     this->maxError_ = maxError/problem().timeManager().timeStepSize();
 
     timer_.stop();
-    
+
     if(problem().timeManager().willBeFinished() or problem().timeManager().episodeWillBeOver())
-    	Dune::dinfo << "Subdomain routines took " << timer_.elapsed() << " seconds" << std::endl;
+        Dune::dinfo << "Subdomain routines took " << timer_.elapsed() << " seconds" << std::endl;
 
     return;
 }

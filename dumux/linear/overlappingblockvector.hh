@@ -121,7 +121,7 @@ public:
             int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
             (*this)[localRowIdx] = nbv[nativeRowIdx];
         };
-        
+
         // set the remote indices to 0 (strictly speaking, that's not
         // necessary because they will be overwritten by the values
         // from their respective master process, but setting them to 0
@@ -145,7 +145,7 @@ public:
         int numNative = foreignOverlap.numNative();
         for (int nativeRowIdx = 0; nativeRowIdx < numNative; ++nativeRowIdx) {
             int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
-            
+
             if (localRowIdx < 0)
                 nbv[nativeRowIdx] = 0.0;
             else
@@ -161,7 +161,7 @@ public:
     {
         typename PeerSet::const_iterator peerIt;
         typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-        
+
         // send all entries to all peers
         peerIt = overlap_->peerSet().begin();
         for (; peerIt != peerEndIt; ++peerIt) {
@@ -175,7 +175,7 @@ public:
             int peerRank = *peerIt;
             receiveFromMaster_(peerRank);
         }
-        
+
         // wait until we have send everything
         waitSendFinished_();
     }
@@ -233,7 +233,7 @@ public:
         // wait until we have send everything
         waitSendFinished_();
     }
-    
+
     /*!
      * \brief Syncronize all values of the block vector from the
      *        master rank, but add up the entries on the border.
@@ -448,7 +448,7 @@ private:
         for (unsigned i = 0; i < indices.size(); ++ i) {
             values[i] = (*this)[indices[i]];
         }
-        
+
         values.send(peerRank);
     }
 

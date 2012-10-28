@@ -91,7 +91,7 @@ SET_TYPE_PROP(BoxImmiscible, Indices, ImmiscibleIndices<TypeTag, /*PVOffset=*/0>
  * \brief Set the material law to the null law by default.
  */
 SET_TYPE_PROP(BoxImmiscible,
-              MaterialLaw, 
+              MaterialLaw,
               Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!

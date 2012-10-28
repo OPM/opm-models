@@ -157,7 +157,7 @@ public:
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
         Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
-        
+
         if (enableDiffusion)
             Dumux::BoxVtkDiffusionModule<TypeTag>::registerParameters();
 
@@ -194,15 +194,15 @@ public:
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
             const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
-            
+
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, 
+                this->localResidual().addPhaseStorage(tmp,
                                                       elemCtx,
                                                       scvIdx,
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
-                tmp *= 
+                tmp *=
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
@@ -236,7 +236,7 @@ public:
             oss << "fugacity^" << FluidSystem::componentName(pvIdx - fugacity0Idx);
         else
             assert(false);
-        
+
         return oss.str();
     }
 
@@ -244,7 +244,7 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
             return s;
@@ -256,10 +256,10 @@ public:
             oss << "ncp_" << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - ncp0EqIdx);
         else
             assert(false);
-        
+
         return oss.str();
     }
-    
+
     /*!
      * \copydoc BoxModel::updatePVWeights
      */
@@ -324,7 +324,7 @@ public:
         // an NCP
         else if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
             return 1.0;
-        
+
         // mass conservation equation
         int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numComponents);
@@ -332,7 +332,7 @@ public:
         // make all kg equal
         return FluidSystem::molarMass(compIdx);
     }
-    
+
     /*!
      * \brief Returns the smallest activity coefficient of a component for the most
      *        current solution at a vertex.

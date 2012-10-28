@@ -89,8 +89,8 @@ public:
      * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, 
-                     int bfIdx, 
+    void setFreeFlow(const Context &context,
+                     int bfIdx,
                      int timeIdx,
                      const FluidState &fluidState)
     {
@@ -98,7 +98,7 @@ public:
         paramCache.updateAll(fluidState);
 
         FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);      
+        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         ////////
@@ -110,7 +110,7 @@ public:
             Scalar density;
             if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            else 
+            else
                 density = insideVolVars.fluidState().density(phaseIdx);
 
             // add advective flux of current component in current
@@ -123,11 +123,11 @@ public:
                 Scalar specificEnthalpy;
                 if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
                     specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
-                else 
+                else
                     specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate = 
+                Scalar enthalpyRate =
                     density
                     * fluxVars.volumeFlux(phaseIdx)
                     * specificEnthalpy;
@@ -147,7 +147,7 @@ public:
 
     /*!
      * \brief Specify an inflow boundary
-     * 
+     *
      * An inflow boundary condition is basically a free flow boundary
      * condition that is not prevented from specifying a flow out of
      * the domain.
@@ -155,13 +155,13 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context, 
-                   int bfIdx, 
+    void setInFlow(const Context &context,
+                   int bfIdx,
                    int timeIdx,
                    const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
-        
+
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
@@ -172,7 +172,7 @@ public:
 
     /*!
      * \brief Specify an outflow boundary
-     * 
+     *
      * An outflow boundary condition is basically a free flow boundary
      * condition that is not prevented from specifying a flow into
      * the domain.
@@ -180,13 +180,13 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context, 
-                    int bfIdx, 
+    void setOutFlow(const Context &context,
+                    int bfIdx,
                     int timeIdx,
                     const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
-        
+
         // we only allow fluxes in the same direction as the outer
         // unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
@@ -194,7 +194,7 @@ public:
             val = std::max<Scalar>(0.0, val);
         };
     }
-    
+
     /*!
      * \brief Specify a no-flow boundary for all conserved quantities.
      */

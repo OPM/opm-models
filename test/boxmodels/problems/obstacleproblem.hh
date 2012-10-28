@@ -79,7 +79,7 @@ private:
     //    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
     typedef RegularizedLinearMaterial<Scalar> EffMaterialLaw;
     typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
-    
+
 public:
     typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
@@ -178,7 +178,7 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     ObstacleProblem(TimeManager &timeManager)
-        : ParentType(timeManager, 
+        : ParentType(timeManager,
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
     {
         eps_ = 1e-6;
@@ -275,7 +275,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "obstacle" << "_" << this->model().name();
         return oss.str();
@@ -434,13 +434,13 @@ private:
         return x < eps_ && y <= 10;
     }
 
-    
+
     void initFluidStates_()
     {
         initFluidState_(inletFluidState_, coarseMaterialParams_, /*isInlet=*/true);
         initFluidState_(outletFluidState_, coarseMaterialParams_, /*isInlet=*/false);
     }
-    
+
     template <class FluidState>
     void initFluidState_(FluidState &fs, const MaterialLawParams &matParams, bool isInlet)
     {
@@ -530,7 +530,7 @@ private:
 
     CompositionalFluidState<Scalar, FluidSystem> inletFluidState_;
     CompositionalFluidState<Scalar, FluidSystem> outletFluidState_;
-    
+
     Scalar temperature_;
     Scalar eps_;
 };

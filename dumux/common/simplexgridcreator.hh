@@ -65,7 +65,7 @@ class SimplexGridCreator
     typedef typename Grid::ctype CoordScalar;
     enum { dimWorld = Grid::dimensionworld };
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
-    
+
 public:
     /*!
      * \brief Register all run-time parameters for the grid creator.

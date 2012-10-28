@@ -106,7 +106,7 @@ public:
         catch (...) {
             std::cout << "oops: exception thrown on rank " << ctl_.problem().gridView().comm().rank() << " while writing the convergence\n";
         };
-           
+
     }
 
     /*!

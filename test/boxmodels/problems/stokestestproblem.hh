@@ -90,7 +90,7 @@ SET_STRING_PROP(StokesTestProblem, GridFile, "grids/test_stokes.dgf");
  * free-flow on the left and no-flow at the top and bottom boundaries.
  */
 template <class TypeTag>
-class StokesTestProblem 
+class StokesTestProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -145,11 +145,11 @@ public:
      *
      * This problem assumes a constant temperature of 10 degrees Celsius.
      */
-    template <class Context>   
+    template <class Context>
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
     { return 273.15 + 10; } // -> 10 deg C
-    
+
 
     //! \}
 
@@ -168,7 +168,7 @@ public:
     template <class Context>
     void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
         Scalar y = pos[1] - this->bboxMin()[1];
         Scalar height = this->bboxMax()[1] - this->bboxMin()[1];
@@ -179,7 +179,7 @@ public:
         Scalar a = - 4*maxVelocity/(height*height);
         Scalar b = - a*height;
         Scalar c = 0;
-        
+
         DimVector velocity(0.0);
         velocity[0] = a * y*y + b * y + c;
 
@@ -222,15 +222,15 @@ public:
         Scalar a = - 4*maxVelocity/(height*height);
         Scalar b = - a*height;
         Scalar c = 0;
-        
+
         DimVector velocity(0.0);
         velocity[0] = a * y*y + b * y + c;
-        
+
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
             values[velocity0Idx + axisIdx] = velocity[axisIdx];
         values[pressureIdx] = 1e5;
     }
-    
+
     /*!
      * \copydoc BoxProblem::source
      *
@@ -285,7 +285,7 @@ private:
 
     bool onBoundary_(const GlobalPosition &pos) const
     {
-        return 
+        return
             onLeftBoundary_(pos) || onRightBoundary_(pos) ||
             onLowerBoundary_(pos) || onUpperBoundary_(pos);
     }

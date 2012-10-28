@@ -89,7 +89,7 @@ private:
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
     // define the material law parameterized by absolute saturations
     typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
@@ -184,7 +184,7 @@ public:
         FluidSystem::init();
 
         temperature_ = 273.15 + 26.6;
-        
+
         // parameters for the Van Genuchten law
         // alpha and n
         materialParams_.setVgAlpha(0.00045);
@@ -204,7 +204,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "powerinjection_";
         if (std::is_same<typename GET_PROP_TYPE(TypeTag, VelocityModule),
@@ -304,7 +304,7 @@ public:
             // free flow boundary with initial condition on the right
             values.setFreeFlow(context, spaceIdx, timeIdx, initialFluidState_);
         }
-            
+
     }
 
     //! \}
@@ -341,7 +341,7 @@ public:
 
     //! \}
 
-private:   
+private:
     bool onLeftBoundary_(const GlobalPosition &pos) const
     { return pos[0] < this->bboxMin()[0] + eps_; }
 

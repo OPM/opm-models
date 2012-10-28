@@ -20,7 +20,7 @@
 /*!
  * \file
  *
- * \brief Source file for a test of the diffusion model 
+ * \brief Source file for a test of the diffusion model
  */
 #include "config.h"
 #include <iostream>

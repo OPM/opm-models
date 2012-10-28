@@ -40,17 +40,17 @@ NEW_PROP_TAG(NumEq);
 template <class TypeTag>
 class BoxConstraints : public GET_PROP_TYPE(TypeTag, PrimaryVariables)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) ParentType;   
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    
+
 public:
     BoxConstraints()
     { reset(); }
 
     using ParentType::operator=;
-    
+
     /*!
      * \brief Reset the constraints types.
      *
@@ -72,7 +72,7 @@ public:
      *        specified.
      */
     bool isConstraint() const
-    { 
+    {
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
             if (constraintInfo_[eqIdx].isConstraint)
                 return true;
@@ -89,7 +89,7 @@ public:
     { return constraintInfo_[eqIdx].isConstraint; }
 
     /*!
-     * \brief Set all to be constraint 
+     * \brief Set all to be constraint
      *
      * (with equation index == primary variable index)
      */
@@ -104,7 +104,7 @@ public:
             Valgrind::SetDefined(constraintInfo_[eqIdx]);
         }
     }
-    
+
     /*!
      * \brief Set a constraint for single equation
      *

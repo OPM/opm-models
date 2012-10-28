@@ -59,16 +59,16 @@ namespace Dumux {
  * factor of the the oil phase \f$B_o\f$ determines the density of
  * *saturated* oil, i.e. the density of the oil phase if some gas
  * phase is present.
- * 
+ *
  * The composition of the oil phase is given by the <i>gas formation
  * factor</i> \f$R_s\f$, which defined as the volume of gas at
  * atmospheric pressure that is dissolved in saturated oil at a given
  * pressure:
- * 
+ *
  * \f[
  * R_s := \frac{x_o^G(p)\,\varrho_{mol,o}(p)}{\varrho_g(1\,\text{bar})}\;.
  * \f]
- * 
+ *
  * This allows to calculate all quantities required for the
  * mass-conservation equations for each component, i.e.
  *
@@ -106,7 +106,7 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
-    
+
 public:
     /*!
      * \brief Register all run-time parameters for the immiscible box model.
@@ -114,7 +114,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
@@ -141,9 +141,9 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::ostringstream oss;
-        
+
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
@@ -153,7 +153,7 @@ public:
         }
         else
             assert(false);
-        
+
         return oss.str();
     }
 
@@ -161,14 +161,14 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         std::ostringstream oss;
-        
+
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
             oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
-        
+
         return oss.str();
     }
 

@@ -139,12 +139,12 @@ public:
      * \brief Returns true iff a local index is a border index shared with a given peer process.
      */
     bool isBorderWith(int localIdx, int peerRank) const
-    { 
+    {
         const auto &indexOverlap = foreignOverlapByIndex_[localIdx];
         const auto &borderDistIt = indexOverlap.find(peerRank);
         if (borderDistIt == indexOverlap.end())
             return false;
-                
+
         // border distance of the index needs to be 0
         return borderDistIt->second == 0;
     }
@@ -198,7 +198,7 @@ public:
      * \brief Returns true iff a local index is seen by a peer rank.
      */
     bool peerHasIndex(int peerRank, int localIdx) const
-    { 
+    {
         const auto &idxOverlap = foreignOverlapByIndex_[localIdx];
         return idxOverlap.find(peerRank) != idxOverlap.end();
     }
@@ -208,7 +208,7 @@ public:
      *        the local partition.
      */
     int numFront(int peerRank) const
-    { 
+    {
         const auto &peerOverlap = foreignOverlapByRank_.find(peerRank)->second;
 
         int n = 0;
@@ -226,7 +226,7 @@ public:
      *        given peer rank.
      */
     bool isFrontFor(int peerRank, int localIdx) const
-    { 
+    {
         const auto &idxOverlap = foreignOverlapByIndex_[localIdx];
 
         auto it = idxOverlap.find(peerRank);
@@ -281,7 +281,7 @@ public:
      * \brief Convert a local index to a native one.
      */
     int localToNative(int localIdx) const
-    { 
+    {
         assert(localIdx < int(localToNativeIndices_.size()));
         return localToNativeIndices_[localIdx];
     }
@@ -367,7 +367,7 @@ protected:
             for (; colIt != colEndIt; ++colIt) {
                 Index nativeColIdx = colIt.index();
                 int localColIdx = nativeToLocal(nativeColIdx);
-                
+
                 // ignore if the native index is not a local one
                 if (localColIdx < 0)
                     continue;
@@ -465,7 +465,7 @@ protected:
             borderHandle.localIdx = localIdx;
             borderHandle.peerRank = it->peerRank;
             borderHandle.borderDistance = it->borderDistance;
-            
+
             // add the border index to all the neighboring peers
             auto neighborIt = foreignOverlapByIndex_[localIdx].begin();
             const auto &neighborEndIt = foreignOverlapByIndex_[localIdx].end();
@@ -482,7 +482,7 @@ protected:
                 if (peerIdx < 0)
                     // the index is on the border, but is not on the border
                     // with the considered neighboring process. Ignore it!
-                    continue; 
+                    continue;
                 borderHandle.peerIdx = peerIdx;
                 borderIndices[neighborIt->first].push_back(borderHandle);
             }
@@ -519,7 +519,7 @@ protected:
             numIndicesSendBufs[neighborPeer].send(neighborPeer);
             indicesSendBufs[neighborPeer].send(neighborPeer);
         }
-        
+
         // receive all data from the neighbors
         std::map<ProcessRank, MpiBuffer<int>> numIndicesRcvBufs;
         std::map<ProcessRank, MpiBuffer<BorderIndex>> indicesRcvBufs;
@@ -546,19 +546,19 @@ protected:
                 ProcessRank peerRank = indicesRcvBuf[i].peerRank;
                 //Index peerIdx = indicesRcvBuf[i].peerIdx;
                 Index localIdx = indicesRcvBuf[i].localIdx;
-                
+
                 // check if the index is already in the overlap for
                 // the peer
                 const auto &distIt = foreignOverlapByIndex_[localIdx].find(peerRank);
                 if (distIt != foreignOverlapByIndex_[localIdx].end())
                     continue;
-                
+
                 // make sure the index is not already in the seed list
                 bool inSeedList = false;
                 auto seedIt = seedList.begin();
                 const auto &seedEndIt = seedList.end();
                 for (; seedIt != seedEndIt; ++seedIt) {
-                    if (seedIt->index == localIdx && 
+                    if (seedIt->index == localIdx &&
                         seedIt->peerRank == peerRank)
                     {
                         inSeedList = true;
@@ -578,9 +578,9 @@ protected:
                 peerSet_.insert(peerRank);
             }
         }
-        
 
-        // make sure all data was send      
+
+        // make sure all data was send
         peerIt = neighborPeerSet().begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             ProcessRank neighborPeer = *peerIt;

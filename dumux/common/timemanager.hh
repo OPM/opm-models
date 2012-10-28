@@ -195,7 +195,7 @@ public:
      * \param dt The new value for the time step size \f$\mathrm{[s]}\f$
      */
     void setTimeStepSize(Scalar dt)
-    { 
+    {
         timeStepSize_ = dt;
     }
 
@@ -205,7 +205,7 @@ public:
      *        the end of the simlation.
      */
     Scalar timeStepSize() const
-    { 
+    {
         Scalar dtMax = std::max(1e-9, maxTimeStepSize());
         Scalar dt = std::max(1e-9, timeStepSize_);
 
@@ -425,9 +425,9 @@ public:
                 setTimeStepSize(problem_->nextTimeStepSize());
             }
         }
-        
+
         problem_->finalize();
-    }    
+    }
 
     /*!
      * \name Saving/restoring the object state

@@ -39,8 +39,8 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset>
 class StokesIndices
-    : public BoxMultiPhaseEnergyIndices<PVOffset 
-                                        + GET_PROP_VALUE(TypeTag, NumComponents) 
+    : public BoxMultiPhaseEnergyIndices<PVOffset
+                                        + GET_PROP_VALUE(TypeTag, NumComponents)
                                         + GET_PROP_TYPE(TypeTag, GridView)::dimensionworld,
                                         GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {

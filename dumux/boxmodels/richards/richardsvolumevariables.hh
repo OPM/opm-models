@@ -40,7 +40,7 @@ namespace Dumux {
  * \brief Volume averaged quantities required by the Richards model.
  */
 template <class TypeTag>
-class RichardsVolumeVariables 
+class RichardsVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
@@ -95,20 +95,20 @@ public:
         /////////
         // calculate the pressures
         /////////
-                    
+
         // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
         fluidState_.setSaturation(wPhaseIdx, 1.0);
         fluidState_.setSaturation(nPhaseIdx, 0.0);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-                    
+
         // non-wetting pressure can be larger than the
         // reference pressure if the medium is fully
         // saturated by the wetting phase
         Scalar pW = priVars[pwIdx];
         Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                              pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
-                    
+
         /////////
         // calculate the saturations
         /////////
@@ -141,7 +141,7 @@ public:
 
         // intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
-        
+
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
     }

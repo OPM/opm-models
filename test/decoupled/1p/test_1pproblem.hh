@@ -143,7 +143,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, Scalar, Delta, "The epsilon value used to calculate the derivative of the permeability.");
     }
 

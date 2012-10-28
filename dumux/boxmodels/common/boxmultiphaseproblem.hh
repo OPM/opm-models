@@ -43,19 +43,19 @@ NEW_PROP_TAG(VelocityModule);
  *        with a multi-phase flow through a porous medium.
  */
 template<class TypeTag>
-class BoxMultiPhaseProblem 
+class BoxMultiPhaseProblem
     : public BoxProblem<TypeTag>
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityBaseProblem
 {
     typedef Dumux::BoxProblem<TypeTag> ParentType;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-    typedef typename Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), 
+    typedef typename Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases),
                                             typename GET_PROP_TYPE(TypeTag, Scalar)>::Params MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
@@ -104,7 +104,7 @@ public:
 
     /*!
      * \brief Returns the intrinsic permeability tensor \f$[m^2]\f$ at a given position
-     * 
+     *
      * \param context Reference to the object which represents the
      *                current execution context.
      * \param spaceIdx The local index of spatial entity defined by the context
@@ -214,7 +214,7 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const MaterialLawParams & 
+    const MaterialLawParams &
     materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
     {
         static MaterialLawParams dummy;
@@ -247,7 +247,7 @@ public:
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
-     *   
+     *
      * \param context Reference to the object which represents the
      *                current execution context.
      * \param spaceIdx The local index of spatial entity defined by the context

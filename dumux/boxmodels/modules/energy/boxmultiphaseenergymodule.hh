@@ -17,7 +17,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Contains the classes required to consider energy as a
  *        conservation quantity in a multi-phase module.
@@ -50,7 +50,7 @@ protected:
 
 template <int PVOffset>
 struct BoxMultiPhaseEnergyIndices<PVOffset, /*enableEnergy=*/true>
-{  
+{
     //! The index of the primary variable representing temperature
     enum { temperatureIdx = PVOffset };
 
@@ -134,8 +134,8 @@ public:
      */
     template <class FluidState>
     static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
+                                const FluidState &fluidState,
+                                int phaseIdx,
                                 Scalar volume)
     { }
 
@@ -201,7 +201,7 @@ public:
  */
 template <class TypeTag>
 class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
-{ 
+{
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -230,7 +230,7 @@ public:
      *        the energy module.
      */
     static std::string primaryVarName(int pvIdx)
-    { 
+    {
         if (pvIdx == temperatureIdx)
             return "temperature";
         return "";
@@ -242,7 +242,7 @@ public:
      *        the energy module.
      */
     static std::string eqName(int eqIdx)
-    { 
+    {
         if (eqIdx == energyEqIdx)
             return "energy";
         return "";
@@ -289,8 +289,8 @@ public:
      * \brief Add the rate of the conductive heat flux to a rate vector.
      */
     static Scalar heatConductionRate(const FluxVariables &fluxVars)
-    { 
-        return 
+    {
+        return
             - fluxVars.temperatureGradNormal()
             * fluxVars.heatConductivity();
     }
@@ -301,11 +301,11 @@ public:
      */
     template <class FluidState>
     static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState, 
-                                int phaseIdx, 
+                                const FluidState &fluidState,
+                                int phaseIdx,
                                 Scalar volume)
     {
-        rateVec[energyEqIdx] = 
+        rateVec[energyEqIdx] =
             volume
             * fluidState.density(phaseIdx)
             * fluidState.enthalpy(phaseIdx);
@@ -324,7 +324,7 @@ public:
         }
 #endif
     }
-    
+
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
@@ -472,7 +472,7 @@ protected:
      */
     template <class FluidState, class Context>
     static void updateTemperatures_(FluidState &fluidState, const Context &context, int spaceIdx, int timeIdx)
-    { 
+    {
         fluidState.setTemperature(context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]);
     }
 
@@ -493,7 +493,7 @@ protected:
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            fs.setEnthalpy(phaseIdx, 
+            fs.setEnthalpy(phaseIdx,
                            FluidSystem::enthalpy(fs, paramCache, phaseIdx));
         }
 
@@ -577,7 +577,7 @@ class BoxMultiPhaseEnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    
+
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
@@ -627,7 +627,7 @@ protected:
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
-        
+
         const auto &elemCtx = context.elemContext();
         int insideScvIdx = scvf.i;
         const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx];
@@ -635,7 +635,7 @@ protected:
         const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
         const auto &fsInside = volVarsInside.fluidState();
 
-            
+
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = scvf.ipGlobal;
         distVec -= context.element().geometry().global(insideScv.localGeometry->center());
@@ -645,8 +645,8 @@ protected:
 
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
-        assert(dist > 0); 
-        
+        assert(dist > 0);
+
         // calculate the temperature gradient using two-point gradient
         // appoximation
         temperatureGradNormal_ =

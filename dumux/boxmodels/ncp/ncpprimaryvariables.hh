@@ -44,7 +44,7 @@ namespace Dumux {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class NcpPrimaryVariables 
+class NcpPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -115,8 +115,8 @@ public:
         // thermodynamic equilibrium
         typename FluidSystem::ParameterCache paramCache;
         Dumux::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
-             
-        // calculate the "global molarities" 
+
+        // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -128,11 +128,11 @@ public:
         // use the externally given fluid state as initial value for
         // the flash calculation
         fsFlash.assign(fluidState);
-        //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);       
+        //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
 
         // run the flash calculation
         NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
-        
+
         // use the result to assign the primary variables
         assignNaive(fsFlash);
     }
@@ -146,16 +146,16 @@ public:
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
-        
+
         // assign fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[fugacity0Idx + compIdx] =
                 fluidState.fugacity(/*phaseIdx=*/0, compIdx);
         }
-        
+
         // assign pressure of first phase
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
-        
+
         // assign first M - 1 saturations
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);

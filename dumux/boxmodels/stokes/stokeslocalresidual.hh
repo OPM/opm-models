@@ -79,7 +79,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, bool, EnableNavierTerm, "Enable the Navier term (convective flux term).");
     }
 
@@ -96,7 +96,7 @@ public:
 
         // mass storage
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            storage[conti0EqIdx + compIdx] = 
+            storage[conti0EqIdx + compIdx] =
                 fs.molarity(phaseIdx, compIdx);
         Valgrind::CheckDefined(storage);
 
@@ -113,7 +113,7 @@ public:
     /*!
      * \copydoc BoxLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, 
+    void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
                      int scvfIdx,
                      int timeIdx) const
@@ -145,10 +145,10 @@ public:
         // mass fluxes
         Scalar vTimesN = fluxVars.velocity() * normal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            flux[conti0EqIdx + compIdx] = 
+            flux[conti0EqIdx + compIdx] =
                 up.fluidState().molarity(phaseIdx, compIdx)
                 * vTimesN;
-        
+
         // momentum flux
         Scalar mu = up.fluidState().viscosity(phaseIdx) + fluxVars.eddyViscosity();
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
@@ -161,9 +161,9 @@ public:
                 tmp[j] = fluxVars.velocityGrad(/*velocityComp=*/axisIdx)[j];
                 tmp[j] += fluxVars.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
-            
+
             flux[momentum0EqIdx + axisIdx] = - mu * (tmp * normal);
-            
+
             // this adds the convective momentum flux term $rho v
             // div[v]$ to the Stokes equation, transforming it to
             // Navier-Stokes.
@@ -173,7 +173,7 @@ public:
                     * (up.velocity() * normal);
             }
         }
-        
+
         flux *= faceArea;
 
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);

@@ -380,7 +380,7 @@ namespace Properties {
  * \ingroup PropertySystem
  * \brief Access the \c value attribute of a property for a type tag.
  *
- * This is just for convenience and equivalent to 
+ * This is just for convenience and equivalent to
  * <tt>GET_PROP(TypeTag, PropTag)::</tt><tt>value</tt> .  If the property doesn't
  * have an attribute named \c value, this yields a compiler error.
  */
@@ -1067,7 +1067,7 @@ inline void print_(const std::string &typeTagName,
             myReplaceAll_(s, "::Dumux::Properties::GetProperty<", "GET_PROP(");
             myReplaceAll_(s, ">::p::", ")::");
             myReplaceAll_(s, "GET_PROP(TypeTag, Scalar)::type", "Scalar");
-            
+
             os << " = '" << s << "'";
         }
         os << " defined at " << key.fileDefined()

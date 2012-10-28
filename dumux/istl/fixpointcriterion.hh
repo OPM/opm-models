@@ -38,7 +38,7 @@ namespace Dumux {
  *        which looks at the weighted maximum of the difference
  *        between two iterations.
  *
- * For the FixPointCriterion, the error of the solution is defined 
+ * For the FixPointCriterion, the error of the solution is defined
  * as
  * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
  *
@@ -69,7 +69,7 @@ public:
   /*!
    * \brief Sets the relative weight of a primary variable
    *
-   * For the FixPointCriterion, the error of the solution is defined 
+   * For the FixPointCriterion, the error of the solution is defined
    * as
    * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
    *
@@ -86,11 +86,11 @@ public:
   {
     weightVec_ = weightVec;
   }
-  
+
   /*!
    * \brief Return the relative weight of a primary variable
    *
-   * For the FixPointCriterion, the error of the solution is defined 
+   * For the FixPointCriterion, the error of the solution is defined
    * as
    * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
    *
@@ -112,7 +112,7 @@ public:
    * \copydoc ConvergenceCriterion::setTolerance(Scalar)
    */
   void setTolerance(Scalar tol)
-  { 
+  {
     tolerance_ = tol;
   }
 
@@ -120,7 +120,7 @@ public:
    * \copydoc ConvergenceCriterion::tolerance()
    */
   Scalar tolerance() const
-  { 
+  {
     return tolerance_;
   }
 
@@ -128,7 +128,7 @@ public:
    * \copydoc ConvergenceCriterion::accuracy()
    */
   Scalar accuracy() const
-  { 
+  {
     return delta_;
   }
 
@@ -145,11 +145,11 @@ public:
   /*!
    * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
    */
-  void update(const Vector &curSol, 
+  void update(const Vector &curSol,
               const Vector &curResid)
   {
     assert(curSol.size() == lastSol_.size());
-        
+
     delta_ = 0.0;
     for (size_t i = 0; i < curSol.size(); ++i) {
       for (size_t j = 0; j < BlockType::dimension; ++j) {

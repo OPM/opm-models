@@ -99,7 +99,7 @@ public:
             sumSat += priVars[saturation0Idx + phaseIdx];
         }
         fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
-        
+
         // update the pressures
         Scalar p0 = priVars[0];
         Scalar pC[numPhases];
@@ -107,7 +107,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
         }
-        
+
         // update phase compositions. first, set everything to 0, then
         // make the gas/water phases consist of only the gas/water
         // components and calculate the composition of the liquid oil
@@ -131,12 +131,12 @@ public:
         Scalar rhog = rhorefg/Bg;
         Scalar MG = FluidSystem::molarMass(gPhaseIdx);
         Scalar MO = FluidSystem::molarMass(oPhaseIdx);
-        
+
         // calculate composition of oil phase in terms of mass
         // fractions.
         Scalar XoG = Rs*rhorefg / rhoo;
         Scalar XoO = 1 - XoG;
-        
+
         if (XoG < 0 || XoO < 0) {
             DUNE_THROW(NumericalProblem,
                        "Only positive values are allowed for the mass fractions "
@@ -193,7 +193,7 @@ public:
         Scalar avgMolarMass = MO*MG/(MG + XoO*(MO - MG));
         Scalar xoG = XoG*avgMolarMass/MG;
         Scalar xoO = 1 - XoG;
-        
+
         // set the oil-phase composition
         fluidState_.setMoleFraction(oPhaseIdx, gCompIdx, xoG);
         fluidState_.setMoleFraction(oPhaseIdx, oCompIdx, xoO);
@@ -212,7 +212,7 @@ public:
             Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
-        
+
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);

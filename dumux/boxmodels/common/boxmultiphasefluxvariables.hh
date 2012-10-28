@@ -135,7 +135,7 @@ public:
                 downstreamScvIdx_[phaseIdx] = evalFluxVars.downstreamIndex(phaseIdx);
             }
         }
-        
+
         VelocityFluxVariables::calculateVelocities_(elemCtx, scvfIdx, timeIdx);
     }
 
@@ -150,10 +150,10 @@ public:
      * \param paramCache The FluidSystem's parameter cache.
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, 
-                        int bfIdx, 
-                        int timeIdx, 
-                        const FluidState &fluidState, 
+    void updateBoundary(const Context &context,
+                        int bfIdx,
+                        int timeIdx,
+                        const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
         int scvIdx = context.insideScvIndex(bfIdx, timeIdx);
@@ -163,7 +163,7 @@ public:
         extrusionFactor_ = context.volVars(bfIdx, timeIdx).extrusionFactor();
         Valgrind::CheckDefined(extrusionFactor_);
         assert(extrusionFactor_ > 0);
-        
+
         calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
         VelocityFluxVariables::calculateBoundaryVelocities_(context, bfIdx, timeIdx, fluidState, paramCache);
     }
@@ -253,7 +253,7 @@ private:
             // distance of the centers of the two adjacent SCVs
             DimVector n = scvf.normal;
             n /= scvf.normal.two_norm();
-            
+
             // distance between the centers of the two SCVs
             Scalar dist = 0;
             for (int i = 0; i < dimWorld; ++ i) {
@@ -261,7 +261,7 @@ private:
                 dist += tmp*tmp;
             }
             dist = std::sqrt(dist);
-            
+
             // calculate the pressure gradient
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
@@ -295,7 +295,7 @@ private:
                 {
                     if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                         continue;
-                    
+
                     // the pressure gradient
                     DimVector tmp(feGrad);
                     tmp *= fluidState.pressure(phaseIdx);
@@ -354,7 +354,7 @@ private:
             }
         }
     }
-    
+
     template <class Context, class FluidState>
     void calculateBoundaryGradients_(const Context &context,
                                      int bfIdx,
@@ -364,7 +364,7 @@ private:
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
-        
+
         const auto &elemCtx = context.elemContext();
         const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx_];
 
@@ -375,7 +375,7 @@ private:
         // distance of the centers of the two adjacent SCVs
         DimVector n = scvf.normal;
         n /= scvf.normal.two_norm();
-            
+
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = scvf.ipGlobal;
         distVec -= context.element().geometry().global(insideScv.localGeometry->center());
@@ -384,7 +384,7 @@ private:
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
         assert(dist > 0);
-        
+
         // calculate the pressure gradient using two-point gradient
         // appoximation
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -392,13 +392,13 @@ private:
                 potentialGrad_[phaseIdx] = 0;
                 continue;
             }
-            
+
             potentialGrad_[phaseIdx] = n;
             potentialGrad_[phaseIdx] *= (fluidStateJ.pressure(phaseIdx) - fluidStateI.pressure(phaseIdx))/dist;
         }
-        
+
         fluidStateI.checkDefined();
-        
+
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
         ///////////////
@@ -432,7 +432,7 @@ private:
     {
         const VolumeVariables &up = elemCtx.volVars(upstreamIndex(phaseIdx), timeIdx);
         const VolumeVariables &dn = elemCtx.volVars(downstreamIndex(phaseIdx), timeIdx);
-        
+
         // first, calculate the component of the "prelimary velocity"
         // which is parallel to the normal of the sub-control volume
         // face
@@ -451,7 +451,7 @@ private:
         Scalar mUp = up.mobility(phaseIdx);
         Scalar mDn = dn.mobility(phaseIdx);
         Scalar m0 = Dumux::harmonicMean(mUp, mDn);
-        
+
         Scalar maxMob = std::max(mUp, mDn);
         if (maxMob < 1e-8) {
             filterVelocity_[phaseIdx] = 0.0;
@@ -485,7 +485,7 @@ private:
                                      /*y1=*/mUp*eps,
                                      /*m0=*/m0,
                                      /*m1=*/mUp);
-            
+
             // set the length of the velocity component which is
             // parallel to the face normal to the one from the spline,
             // and do not modify the perpendicular part

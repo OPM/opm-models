@@ -71,7 +71,7 @@ public:
     {
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
-        
+
         // compute storage term of all components within all phases
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
         {
@@ -152,7 +152,7 @@ public:
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
         }
-        
+
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 

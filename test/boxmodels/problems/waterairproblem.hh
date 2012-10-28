@@ -90,7 +90,7 @@ public:
 
 // Set the fluid system. in this case, we use the one which describes
 // air and water
-SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem, 
+SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem,
               Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
@@ -145,7 +145,7 @@ SET_STRING_PROP(WaterAirBaseProblem, GridFile, "./grids/waterair.dgf");
  * K/m.
  */
 template <class TypeTag >
-class WaterAirProblem 
+class WaterAirProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -246,12 +246,12 @@ public:
      * \copydoc BoxProblem::name
      */
     const char *name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "waterair_" << this->model().name();
         if (GET_PROP_VALUE(TypeTag, EnableEnergy))
             oss << "_ni";
-        
+
         return oss.str().c_str();
     }
 
@@ -298,7 +298,7 @@ public:
 
     /*!
      * \copydoc BoxMultiPhaseProblem::heatCapacitySolid
-     * 
+     *
      * In this case, we assume the rock-matrix to be granite.
      */
     template <class Context>
@@ -343,9 +343,9 @@ public:
                   int spaceIdx, int timeIdx) const
     {
         const auto &pos = context.cvCenter(spaceIdx, timeIdx);
-        assert(onLeftBoundary_(pos) || 
-               onLowerBoundary_(pos) || 
-               onRightBoundary_(pos) || 
+        assert(onLeftBoundary_(pos) ||
+               onLowerBoundary_(pos) ||
+               onRightBoundary_(pos) ||
                onUpperBoundary_(pos));
 
         if (onInlet_(pos)) {
@@ -355,7 +355,7 @@ public:
             // impose an forced inflow boundary condition on the inlet
             values.setMassRate(massRate);
         }
-        else if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {                 
+        else if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             //int globalIdx = context.elemContext().globalSpaceIndex(context.insideScvIndex(spaceIdx,timeIdx), timeIdx);
 
             Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
@@ -363,7 +363,7 @@ public:
 
             // impose an freeflow boundary condition
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
-        } 
+        }
         else
             // no flow on top and bottom
             values.setNoFlow();
@@ -389,7 +389,7 @@ public:
 
         Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
-        
+
         const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
         values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
     }
@@ -422,7 +422,7 @@ public:
     void source(RateVector &rate,
                 const Context &context, int spaceIdx, int timeIdx) const
     { rate = 0; }
-    
+
     //! \}
 
 
@@ -455,7 +455,7 @@ private:
         fs.setSaturation(lPhaseIdx, 1.0);
         fs.setMoleFraction(lPhaseIdx, H2OIdx, 1.0);
         fs.setMoleFraction(lPhaseIdx, AirIdx, 0.0);
-       
+
         if (inHighTemperatureRegion_(pos))
             fs.setTemperature(380);
         else
@@ -474,7 +474,7 @@ private:
     }
 
     void computeHeatCondParams_(HeatConductionLawParams &params, Scalar poro)
-    {            
+    {
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
@@ -500,7 +500,7 @@ private:
             }
             else
                 lambdaSaturated = std::pow(lambdaGranite, (1-poro));
-            
+
             params.setFullySaturatedLambda(phaseIdx, lambdaSaturated);
             if (!FluidSystem::isLiquid(phaseIdx))
                 params.setVacuumLambda(lambdaSaturated);

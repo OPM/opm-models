@@ -82,7 +82,7 @@ SET_INT_PROP(TestMultTwoPTwoCProblem, PressureFormulation,
 
 
 //// Select fluid system
-SET_PROP(TestMultTwoPTwoCProblem, 
+SET_PROP(TestMultTwoPTwoCProblem,
          FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

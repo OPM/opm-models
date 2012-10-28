@@ -105,7 +105,7 @@ public:
         for (; peerIt != peerEndIt; ++peerIt) {
             MpiBuffer<int> rcvBuff(1);
             rcvBuff.receive(*peerIt);
-            
+
             assert(rcvBuff[0] == domesticOverlapWithPeer_.find(*peerIt)->second.size());
         }
 
@@ -159,7 +159,7 @@ public:
         // check wether the border distance of the domestic overlap is
         // maximal for the index
         const auto &domOverlap = domesticOverlapByIndex_[domesticIdx];
-        return 
+        return
             domOverlap.size() > 0
             && int(domOverlap.begin()->second) == foreignOverlap_.overlapSize();
     }
@@ -320,7 +320,7 @@ protected:
         unsigned nLocal = numLocal();
         unsigned nDomestic = numDomestic();
         masterRank_.resize(nDomestic);
-        
+
         // take the master ranks for the local indices from the
         // foreign overlap
         for (size_t i = 0; i < nLocal; ++i)
@@ -343,7 +343,7 @@ protected:
             for (; idxIt != idxEndIt; ++idxIt) {
                 if (isLocal(*idxIt))
                     continue; // ignore border indices
-                
+
                 masterRank_[*idxIt] = std::min(masterRank_[*idxIt], *peerIt);
             }
         }
@@ -379,7 +379,7 @@ protected:
             tmp.index = globalIndices_.domesticToGlobal(localIdx);
             tmp.borderDistance = borderDistance;
             tmp.numPeers = numPeers;
-                    
+
             (*indicesSendBuff_[peerRank])[i] = tmp;
         };
 
@@ -412,22 +412,22 @@ protected:
         for (Index i = 0; i < numIndices; ++i) {
             Index globalIdx = recvBuff[i].index;
             BorderDistance borderDistance = recvBuff[i].borderDistance;
-            
+
             // if the index is not already known, add it to the
             // domestic indices
             if (!globalIndices_.hasGlobalIndex(globalIdx)) {
                 Index newDomesticIdx = globalIndices_.numDomestic();
                 globalIndices_.addIndex(newDomesticIdx, globalIdx);
-                
+
                 size_t newSize = globalIndices_.numDomestic();
                 borderDistance_.resize(newSize, std::numeric_limits<int>::max());
                 domesticOverlapByIndex_.resize(newSize);
             }
-            
+
             // convert the global index into a domestic one
             Index domesticIdx = globalIndices_.globalToDomestic(globalIdx);
 
-            // extend the domestic overlap               
+            // extend the domestic overlap
             domesticOverlapByIndex_[domesticIdx][peerRank] = borderDistance;
             domesticOverlapWithPeer_[peerRank].push_back(domesticIdx);
 
@@ -436,7 +436,7 @@ protected:
             assert(domesticIdx >= 0);
             assert(!(borderDistance == 0 && !isLocal(domesticIdx)));
             assert(!(borderDistance > 0 && isLocal(domesticIdx)));
-            
+
             borderDistance_[domesticIdx] = std::min(borderDistance, borderDistance_[domesticIdx]);
         }
 #endif // HAVE_MPI

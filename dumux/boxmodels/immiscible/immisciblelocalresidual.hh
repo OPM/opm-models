@@ -84,7 +84,7 @@ public:
             volVars.porosity()
             * volVars.fluidState().saturation(phaseIdx)
             * volVars.fluidState().density(phaseIdx);
-        
+
         EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
     }
 
@@ -170,7 +170,7 @@ public:
                           int timeIdx) const
     {
         // no diffusive mass fluxes for the immiscible model
-        
+
         // heat conduction
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }

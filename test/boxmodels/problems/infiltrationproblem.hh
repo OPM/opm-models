@@ -85,7 +85,7 @@ private:
 
     // define the three-phase material law
     typedef Dumux::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
-    
+
 public:
     // wrap the three-phase law in an adaptor to make use the generic
     // material law API
@@ -156,7 +156,7 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     enum {
         // equation indices
         conti0EqIdx = Indices::conti0EqIdx,
-        
+
         // number of phases/components
         numPhases = FluidSystem::numPhases,
 
@@ -174,7 +174,7 @@ class InfiltrationProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
         dim = GridView::dimension,
         dimWorld = GridView::dimensionworld
     };
-    
+
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -184,7 +184,7 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     InfiltrationProblem(TimeManager &timeManager)
-        : ParentType(timeManager, 
+        : ParentType(timeManager,
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , eps_(1e-6)
     {
@@ -225,7 +225,7 @@ public:
      * \name Problem parameters
      */
     //! \{
-    
+
     /*!
      * \copydoc BoxProblem::shouldWriteRestartFile
      *
@@ -238,7 +238,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "infiltration_" << this->model().name();
         return oss.str();
@@ -287,7 +287,7 @@ public:
 
     /*!
      * \copydoc BoxMultiPhaseProblem::heatCapacitySolid
-     * 
+     *
      * In this case, we assume the rock-matrix to be quartz.
      */
     template <class Context>
@@ -317,13 +317,13 @@ public:
             CompositionalFluidState<Scalar, FluidSystem> fs;
 
             initialFluidState_(fs, context, spaceIdx, timeIdx);
-            
+
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
         else if (onInlet_(pos)) {
             RateVector molarRate(0.0);
             molarRate[conti0EqIdx + NAPLIdx] = -0.001;
-            
+
             values.setMolarRate(molarRate);
             Valgrind::CheckDefined(values);
         }
@@ -345,9 +345,9 @@ public:
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
         CompositionalFluidState<Scalar, FluidSystem> fs;
-        
+
         initialFluidState_(fs, context, spaceIdx, timeIdx);
-        
+
         const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
         values.assignMassConservative(fs, matParams, /*inEquilibrium=*/true);
         Valgrind::CheckDefined(values);
@@ -380,7 +380,7 @@ private:
 
     bool onInlet_(const GlobalPosition &pos) const
     { return onUpperBoundary_(pos) && 50 < pos[0] && pos[0] < 75; }
-    
+
     template <class FluidState, class Context>
     void initialFluidState_(FluidState &fs, const Context &context, int spaceIdx, int timeIdx) const
     {
@@ -405,7 +405,7 @@ private:
 
         Valgrind::CheckDefined(Sw);
         Valgrind::CheckDefined(Sg);
-           
+
         fs.setSaturation(wPhaseIdx, Sw);
         fs.setSaturation(gPhaseIdx, Sg);
         fs.setSaturation(nPhaseIdx, 0);
@@ -429,7 +429,7 @@ private:
 
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
-        CFRP::solve(fs, 
+        CFRP::solve(fs,
                     paramCache,
                     gPhaseIdx,
                     /*setViscosity=*/false,

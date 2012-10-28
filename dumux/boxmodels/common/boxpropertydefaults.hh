@@ -261,7 +261,7 @@ SET_INT_PROP(BoxModel, TimeDiscHistorySize, 2);
  * - \c SolverWrapperMinRes: A solver based on the  minimized residual algorithm
  * - \c SolverWrapperGMRes: A restarted GMRES solver
  */
-SET_TYPE_PROP(BoxModel, 
+SET_TYPE_PROP(BoxModel,
               LinearSolverWrapper,
               Dumux::Linear::SolverWrapperBiCGStab<TypeTag>);
 
@@ -275,7 +275,7 @@ SET_TYPE_PROP(BoxModel,
  * - \c PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
  * - \c PreconditionerWrapperILU: An ILU(n) preconditioner
  */
-SET_TYPE_PROP(BoxModel, 
+SET_TYPE_PROP(BoxModel,
               PreconditionerWrapper,
               Dumux::Linear::PreconditionerWrapperILU<TypeTag>);
 

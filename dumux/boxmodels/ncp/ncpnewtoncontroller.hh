@@ -75,7 +75,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations, "The number of Newton iterations for which the update gets limited");
     }
 
@@ -109,7 +109,7 @@ public:
                     uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
                 }
             }
-           
+
             if (this->numSteps_ < choppedIterations_) {
                 // put crash barriers along the update path at the
                 // beginning...
@@ -126,9 +126,9 @@ private:
             for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
                 saturationChop_(uCurrentIter[i][saturation0Idx + phaseIdx],
                                 uLastIter[i][saturation0Idx + phaseIdx]);
-            pressureChop_(uCurrentIter[i][pressure0Idx], 
+            pressureChop_(uCurrentIter[i][pressure0Idx],
                           uLastIter[i][pressure0Idx]);
-            
+
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar &val = uCurrentIter[i][fugacity0Idx + compIdx];

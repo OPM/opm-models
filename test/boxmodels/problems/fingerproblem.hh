@@ -359,7 +359,7 @@ public:
 
         // override the value for the liquid phase by forced
         // imbibition of water on inlet boundary segments
-        if (onInlet_(pos)) { 
+        if (onInlet_(pos)) {
             values[contiWEqIdx] = - 0.001; // [kg/(m^2 s)]
         }
     }
@@ -417,7 +417,7 @@ public:
     { rate = Scalar(0.0); }
     //! \}
 
-private:   
+private:
     bool onLeftBoundary_(const GlobalPosition &pos) const
     { return pos[0] < this->bboxMin()[0] + eps_; }
 
@@ -434,10 +434,10 @@ private:
     {
         Scalar width = this->bboxMax()[0] - this->bboxMin()[0];
         Scalar lambda = (this->bboxMax()[0] - pos[0])/width;
-        
+
         if (!onUpperBoundary_(pos))
             return false;
-        
+
         Scalar xInject[] = { 0.25, 0.75 };
         Scalar injectLen[] = { 0.1, 0.1 };
         for (unsigned i = 0; i < sizeof(xInject)/sizeof(Scalar); ++ i) {

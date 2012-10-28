@@ -45,7 +45,7 @@ public:
     {
         data_ = nullptr;
         dataSize_ = 0;
-        
+
         setMpiDataType_();
         updateMpiDataSize_();
     }

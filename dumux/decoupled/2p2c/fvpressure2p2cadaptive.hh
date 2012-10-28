@@ -581,7 +581,7 @@ void FVPressure2P2CAdaptive<TypeTag>::getMpfaFlux(const IntersectionIterator& in
         int halfedgesStored = problem().variables().getMpfaData(*intersectionIterator,
                                             additionalIsIt, T, additionalT,
                                             globalPos3, globalIdx3 );
-	    if (halfedgesStored == 0)
+        if (halfedgesStored == 0)
             halfedgesStored = problem().pressureModel().computeTransmissibilities(intersectionIterator,
                                                                     additionalIsIt, T, additionalT,
                                                                     globalPos3, globalIdx3 );

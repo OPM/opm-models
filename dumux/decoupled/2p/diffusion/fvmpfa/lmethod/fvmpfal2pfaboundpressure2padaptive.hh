@@ -439,7 +439,7 @@ public:
         {
             DUNE_THROW(Dune::NotImplemented, "Compressibility not supported!");
         }
-		#endif
+        #endif
         if (dim != 2)
         {
             DUNE_THROW(Dune::NotImplemented, "Dimension not supported!");

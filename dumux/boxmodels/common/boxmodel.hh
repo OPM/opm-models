@@ -178,7 +178,7 @@ public:
         // also set the solution of the "previous" time step to the
         // initial solution.
         solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
-      
+
         asImp_().registerVtkModules_();
     }
 
@@ -191,7 +191,7 @@ public:
      * non-linear solvers when having to solve non-linear relations
      * while updating the VolumeVariable. (This may yield a major
      * performance boost depending on how the physical models
-     * require.) 
+     * require.)
      *
      * \attention If no hint is available, this method will return 0.
      *
@@ -302,7 +302,7 @@ public:
         // process. As often in life: shit happens (, we don't care)...
         Scalar result2 = dest.two_norm2();
         result2 = gridView().comm().sum(result2);
-    
+
         return std::sqrt(result2);
     }
 
@@ -458,9 +458,9 @@ public:
         for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i)
             Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
 #endif // HAVE_VALGRIND
-        
+
         asImp_().updateBegin();
-            
+
         bool converged = solver.execute(controller);
 
         int succeeded;
@@ -472,7 +472,7 @@ public:
 
             succeeded = 1;
             succeeded = gridView_().comm().min(succeeded);
-            
+
 #if HAVE_VALGRIND
             for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
                 Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
@@ -672,7 +672,7 @@ public:
      * \param pvIdx The index of the primary variable of interest.
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::ostringstream oss;
         oss << pvIdx;
         return oss.str();
@@ -684,7 +684,7 @@ public:
      * \param eqIdx The index of the conservation equation of interest.
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         std::ostringstream oss;
         oss << eqIdx;
         return oss.str();
@@ -955,7 +955,7 @@ protected:
                                    /*timeIdx=*/0);
                 Valgrind::CheckDefined(uCur[globalIdx]);
 
-                boxVolume_[globalIdx] += 
+                boxVolume_[globalIdx] +=
                     elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
             }
         }

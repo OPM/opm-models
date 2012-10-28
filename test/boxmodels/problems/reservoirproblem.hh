@@ -119,11 +119,11 @@ SET_STRING_PROP(ReservoirBaseProblem, GridFile, "grids/reservoir.dgf");
  * which is 50% above the reservoir pressure.
  */
 template <class TypeTag>
-class ReservoirProblem 
+class ReservoirProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -173,7 +173,7 @@ public:
      */
     ReservoirProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
-    {      
+    {
         eps_ = 1e-6;
 
         temperature_ = GET_PARAM(TypeTag, Scalar, Temperature);
@@ -294,7 +294,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, Scalar, Temperature, "The temperature [K] in the reservoir");
         REGISTER_PARAM(TypeTag, Scalar, MaxDepth, "The maximum depth [m] of the reservoir");
         REGISTER_PARAM(TypeTag, Scalar, SimulationName, "The name of the simulation used for the output files");
@@ -383,7 +383,7 @@ public:
         // no flow on top and bottom
         values.setNoFlow();
     }
-    
+
     //! \}
 
     /*!
@@ -505,7 +505,7 @@ private:
         // set temperatures
         //////
         fs.setTemperature(temperature_);
-        
+
         //////
         // set saturations
         //////
@@ -525,12 +525,12 @@ private:
         fs.setPressure(oPhaseIdx, pw + (pC[oPhaseIdx] - pC[wPhaseIdx]));
         fs.setPressure(wPhaseIdx, pw + (pC[wPhaseIdx] - pC[wPhaseIdx]));
         fs.setPressure(gPhaseIdx, pw + (pC[gPhaseIdx] - pC[wPhaseIdx]));
-        
+
         // reset all mole fractions to 0
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fs.setMoleFraction(phaseIdx, compIdx, 0.0);
-        
+
         //////
         // set composition of the gas and water phases
         //////
@@ -540,7 +540,7 @@ private:
         //////
         // set composition of the oil phase
         //////
-        
+
         // retrieve the relevant black-oil parameters from the fluid
         // system.
         Scalar pSat = pReservoir_; // the saturation pressure of the oil
@@ -559,7 +559,7 @@ private:
 
         Scalar xoG = XoG*MO/((MO - MG)*XoG + MG);
         Scalar xoO = 1 - xoG;
-        
+
         // finally set the oil-phase composition
         fs.setMoleFraction(oPhaseIdx, gCompIdx, xoG);
         fs.setMoleFraction(oPhaseIdx, oCompIdx, xoO);

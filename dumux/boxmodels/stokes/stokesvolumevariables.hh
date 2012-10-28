@@ -88,7 +88,7 @@ public:
         // reuse infrastructure written for the porous media models
         // more easily (e.g. the energy module)
         fluidState_.setSaturation(phaseIdx, 1.0);
-        
+
         // set the phase composition
         Scalar sumx = 0;
         for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
@@ -96,7 +96,7 @@ public:
             sumx += priVars[moleFrac1Idx + compIdx - 1];
         }
         fluidState_.setMoleFraction(phaseIdx, 0, 1 - sumx);
-                
+
         // create NullParameterCache and do dummy update
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
@@ -109,7 +109,7 @@ public:
                                  FluidSystem::viscosity(fluidState_,
                                                         paramCache,
                                                         phaseIdx));
-        
+
         // energy related quantities
         EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
 
@@ -134,26 +134,26 @@ public:
             const auto &feGrad = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
             DimVector tmp(feGrad);
             tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
-            
+
             pressureGrad_ += tmp;
-        }            
+        }
 
         // integrate the velocity over the sub-control volume
         //const auto &elemGeom = elemCtx.element().geometry();
         const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
-        
+
         Dune::GeometryType geomType = scvLocalGeom.type();
         static const int quadratureOrder = 2;
         const auto &rule = Dune::QuadratureRules<Scalar,dimWorld>::rule(geomType, quadratureOrder);
-        
+
         // integrate the veloc over the sub-control volume
         velocity_ = 0.0;
         for (auto it = rule.begin(); it != rule.end(); ++ it)
         {
             const auto &posScvLocal = it->position();
             const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
-            
+
             DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
             Scalar detjac = 1.0;
@@ -173,7 +173,7 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-    
+
     /*!
      * \brief Returns the porosity of the medium
      *
@@ -208,19 +208,19 @@ public:
      *        sub-control volume.
      */
     const DimVector &gravity() const
-    { return gravity_; } 
+    { return gravity_; }
 
 private:
     DimVector velocityAtPos_(const ElementContext elemCtx,
                           int timeIdx,
                           const LocalPosition &localPos) const
     {
-        const auto &localFiniteElement = 
+        const auto &localFiniteElement =
             elemCtx.fvElemGeom(timeIdx).localFiniteElement();
 
         typedef Dune::FieldVector<Scalar, 1> ShapeValue;
         std::vector<ShapeValue> shapeValue;
-        
+
         localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
 
         DimVector result(0.0);

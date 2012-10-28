@@ -17,7 +17,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
 /*!
- * \file 
+ * \file
  *
  * \brief Classes required for molecular diffusion.
  */
@@ -76,7 +76,7 @@ public:
  */
 template <class TypeTag>
 class BoxDiffusionModule<TypeTag, /*enableDiffusion=*/true>
-{ 
+{
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -346,11 +346,11 @@ protected:
                     tmp *= volVars.fluidState().moleFraction(phaseIdx, compIdx);
                     moleFractionGradient += tmp;
                 }
-                
-                moleFractionGradientNormal_[phaseIdx][compIdx] = 
+
+                moleFractionGradientNormal_[phaseIdx][compIdx] =
                     scvf.normal*moleFractionGradient;
                 Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
-                
+
                 // use the arithmetic average for the effective
                 // diffusion coefficients.
                 effectiveDiffusionCoefficient_[phaseIdx][compIdx] =
@@ -370,7 +370,7 @@ protected:
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
-        
+
         const auto &elemCtx = context.elemContext();
         int insideScvIdx = scvf.i;
         const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx];
@@ -378,7 +378,7 @@ protected:
         const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
         const auto &fluidStateInside = volVarsInside.fluidState();
 
-            
+
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = scvf.ipGlobal;
         distVec -= context.element().geometry().global(insideScv.localGeometry->center());
@@ -388,7 +388,7 @@ protected:
 
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
-        assert(dist > 0); 
+        assert(dist > 0);
 
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -400,11 +400,11 @@ protected:
 
                 // calculate mole fraction gradient using two-point
                 // gradients
-                moleFractionGradientNormal_[phaseIdx][compIdx] = 
-                    (fluidState.moleFraction(phaseIdx, compIdx) - 
+                moleFractionGradientNormal_[phaseIdx][compIdx] =
+                    (fluidState.moleFraction(phaseIdx, compIdx) -
                      fluidStateInside.moleFraction(phaseIdx, compIdx))/dist;
                 Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
-                
+
                 // use effective diffusion coefficients of the interior finite volume.
                 effectiveDiffusionCoefficient_[phaseIdx][compIdx] =
                     volVarsInside.effectiveDiffusionCoefficient(phaseIdx, compIdx);

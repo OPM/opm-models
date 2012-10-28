@@ -67,7 +67,7 @@ public:
 #else
         sumGlobal = sum;
 #endif // HAVE_MPI
-        
+
         return sumGlobal;
     }
 

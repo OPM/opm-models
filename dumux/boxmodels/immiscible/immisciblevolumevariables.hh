@@ -42,7 +42,7 @@ namespace Dumux {
  *        finite volume in the two-phase model.
  */
 template <class TypeTag>
-class ImmiscibleVolumeVariables 
+class ImmiscibleVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
@@ -68,7 +68,7 @@ class ImmiscibleVolumeVariables
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
-        
+
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
@@ -101,7 +101,7 @@ public:
             sumSat += priVars[saturation0Idx + phaseIdx];
         }
         fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
-        
+
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         Valgrind::CheckDefined(pC);

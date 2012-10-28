@@ -86,7 +86,7 @@ public:
         ParentType molarRate(value);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
-        
+
         // set the molar rate
         setMolarRate(molarRate);
     }
@@ -111,17 +111,17 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, 
-                           int phaseIdx, 
+    void setVolumetricRate(const FluidState &fluidState,
+                           int phaseIdx,
                            Scalar volume)
     {
         *this = 0.0;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx] = 
+            (*this)[conti0EqIdx + compIdx] =
                 fluidState.molarity(phaseIdx, compIdx)
                 * volume;
         }
-        
+
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
         Valgrind::CheckDefined(*this);
     }

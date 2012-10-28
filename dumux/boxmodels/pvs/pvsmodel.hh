@@ -101,10 +101,10 @@ namespace Dumux {
  *     in the the next iteration and update the set of primary
  *     variables to make it consistent with the new phase
  *     presence.</li>
- * 
+ *
  * <li>In all other cases don't modify the phase presence for phase
  *     \f$\alpha\f$.</li>
- * 
+ *
  * </ul>
  *
  * The model always requires \f$N\f$ primary variables, but their
@@ -171,7 +171,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkPhasePresenceModule<TypeTag>::registerParameters();
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
@@ -208,7 +208,7 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
             return s;
@@ -263,15 +263,15 @@ public:
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
             const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
-            
+
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, 
+                this->localResidual().addPhaseStorage(tmp,
                                                       elemCtx,
                                                       scvIdx,
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
-                tmp *= 
+                tmp *=
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
@@ -455,15 +455,15 @@ private:
                               const PrimaryVariables &newPv) const
     {
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            bool oldPhasePresent = (oldPhasePresence & (1 << phaseIdx)) > 0; 
-            bool newPhasePresent = newPv.phaseIsPresent(phaseIdx); 
+            bool oldPhasePresent = (oldPhasePresence & (1 << phaseIdx)) > 0;
+            bool newPhasePresent = newPv.phaseIsPresent(phaseIdx);
             if (oldPhasePresent == newPhasePresent)
                 continue;
-            
+
             const auto &pos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
             if (oldPhasePresent && !newPhasePresent) {
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
-                          << "' phase disappears at position " << pos 
+                          << "' phase disappears at position " << pos
                           << ". saturation=" << fs.saturation(phaseIdx);
             }
             else {
@@ -472,11 +472,11 @@ private:
                     sumx += fs.moleFraction(phaseIdx, compIdx);
 
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
-                          << "' phase appears at position " << pos 
+                          << "' phase appears at position " << pos
                           << " sum x = " << sumx;
             }
         };
-        
+
         std::cout << ", new primary variables: ";
         newPv.print();
         std::cout << "\n";
@@ -500,7 +500,7 @@ private:
     // number of switches of the phase state in the last Newton
     // iteration
     int numSwitched_;
-    
+
     // verbosity of the model
     int verbosity_;
 };

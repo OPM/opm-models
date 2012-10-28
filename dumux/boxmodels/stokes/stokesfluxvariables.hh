@@ -83,7 +83,7 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
     {
         const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
-        const auto &scvf = 
+        const auto &scvf =
             isBoundaryFace?
             fvGeom.boundaryFace[scvfIdx]:
             fvGeom.subContVolFace[scvfIdx];
@@ -104,7 +104,7 @@ public:
         volumeFlux_ = Scalar(0);
         velocity_ = Scalar(0);
         pressureGrad_ = Scalar(0);
-        
+
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             velocityGrad_[dimIdx] = 0.0;
 
@@ -114,14 +114,14 @@ public:
             const auto &fluidState = volVars.fluidState();
 
             // phase density and viscosity at IP
-            density_ += 
+            density_ +=
                 fluidState.density(phaseIdx)
                 * scvf.shapeValue[idx];
-            molarDensity_ += 
+            molarDensity_ +=
                 fluidState.molarDensity(phaseIdx)
                 * scvf.shapeValue[idx];
             viscosity_ +=
-                fluidState.viscosity(phaseIdx) 
+                fluidState.viscosity(phaseIdx)
                 * scvf.shapeValue[idx];
             pressure_ +=
                 fluidState.pressure(phaseIdx)
@@ -175,12 +175,12 @@ public:
      * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, 
-                        int bfIdx, 
-                        int timeIdx, 
-                        const FluidState &fluidState, 
+    void updateBoundary(const Context &context,
+                        int bfIdx,
+                        int timeIdx,
+                        const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
-    {      
+    {
         update(context, bfIdx, timeIdx, fluidState, paramCache, /*isOnBoundary=*/true);
     }
 
@@ -290,7 +290,7 @@ public:
      */
     bool onBoundary() const
     { return onBoundary_; }
-    
+
     /*!
      * \brief Returns the extrusionFactor of the face.
      */

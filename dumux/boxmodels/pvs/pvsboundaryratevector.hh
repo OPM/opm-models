@@ -82,8 +82,8 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, 
-                     int bfIdx, 
+    void setFreeFlow(const Context &context,
+                     int bfIdx,
                      int timeIdx,
                      const FluidState &fluidState)
     {
@@ -91,7 +91,7 @@ public:
         paramCache.updateAll(fluidState);
 
         FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);      
+        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         ////////
@@ -113,8 +113,8 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             {
                 Scalar molarity;
-                if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx)) {                   
-                    molarity = 
+                if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx)) {
+                    molarity =
                         fluidState.moleFraction(phaseIdx, compIdx)
                         * density / meanMBoundary;
                 }
@@ -129,16 +129,16 @@ public:
                     fluxVars.volumeFlux(phaseIdx)
                     * molarity;
             }
-            
+
             if (enableEnergy) {
                 Scalar specificEnthalpy;
                 if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
                     specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
-                else 
+                else
                     specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate = 
+                Scalar enthalpyRate =
                     density
                     * fluxVars.volumeFlux(phaseIdx)
                     * specificEnthalpy;
@@ -159,13 +159,13 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setInFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context, 
-                   int bfIdx, 
+    void setInFlow(const Context &context,
+                   int bfIdx,
                    int timeIdx,
                    const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
-        
+
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
@@ -178,13 +178,13 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setOutFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context, 
-                    int bfIdx, 
+    void setOutFlow(const Context &context,
+                    int bfIdx,
                     int timeIdx,
                     const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
-        
+
         // we only allow fluxes in the same direction as the outer
         // unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
@@ -192,7 +192,7 @@ public:
             val = std::max<Scalar>(0.0, val);
         };
     }
-    
+
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */

@@ -104,7 +104,7 @@ public:
     static void makeGrid()
     {
         grid_ = new Grid;
-        
+
         Dune::FieldVector<int, dim> cellRes;
         Dune::FieldVector<Scalar, dim> upperRight;
         Dune::FieldVector<Scalar, dim> lowerLeft;
@@ -112,7 +112,7 @@ public:
         lowerLeft = 0.0;
         upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
         upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
-        
+
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         if (dim == 3) {
@@ -123,12 +123,12 @@ public:
         unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         Dune::GridFactory<Grid> factory(grid_);
-        
+
         if (dim == 3) {
             Dune::FieldVector<double,dim> pos;
             for (int k = 0; k <= cellRes[0]; k++) {
                 pos[2] = upperRight[2]*double(k)/cellRes[2];
-                
+
                 for (int j = 0; j <= cellRes[1]; j++) {
                     pos[1] = upperRight[1]*double(j)/cellRes[1];
 
@@ -144,7 +144,7 @@ public:
             Dune::FieldVector<double,dim> pos;
             for (int j = 0; j <= cellRes[1]; j++) {
                 pos[1] = upperRight[1]*double(j)/cellRes[1];
-                
+
                 for (int i = 0; i <= cellRes[0]; i++) {
                     pos[0] = upperRight[0]*double(i)/cellRes[0];
                     factory.insertVertex(pos);
@@ -171,7 +171,7 @@ public:
                         int i5 = (k+1)*m*n + j*m + (i+1);
                         int i6 = (k+1)*m*n + (j+1)*m + i;
                         int i7 = (k+1)*m*n + (j+1)*m + (i+1);
-                        
+
 #if FINGER_CUBES
                         v[0] = i0;
                         v[1] = i1;
@@ -189,7 +189,7 @@ public:
                         v[2] = i2;
                         v[3] = i4;
                         factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,3), v);
-                        
+
                         v[0] = i4;
                         v[1] = i5;
                         v[2] = i6;
@@ -224,7 +224,7 @@ public:
                 }
                 else {
                     assert(dim == 2);
-                    
+
                     int m = cellRes[0] + 1;
                     int i0 = j*m + i;
                     int i1 = j*m + (i+1);
@@ -241,7 +241,7 @@ public:
                     v[1] = i1;
                     v[2] = i2;
                     factory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), v);
-                   
+
                     v[0] = i1;
                     v[1] = i3;
                     v[2] = i2;
@@ -328,14 +328,14 @@ public:
         lowerLeft[1] = 0.0;
         upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
         upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
-        
+
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
         cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
         if (dim == 3) {
             upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
-       
+
         unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         grid_ = new Dune::YaspGrid<FINGER_DIM>(

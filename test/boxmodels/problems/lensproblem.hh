@@ -98,7 +98,7 @@ private:
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
     // define the material law parameterized by absolute saturations
     typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
@@ -227,7 +227,7 @@ public:
         lensLowerLeft_[1] = GET_PARAM(TypeTag, Scalar, LensLowerLeftY);
         lensUpperRight_[0] = GET_PARAM(TypeTag, Scalar, LensUpperRightX);
         lensUpperRight_[1] = GET_PARAM(TypeTag, Scalar, LensUpperRightY);
-        
+
         if (dimWorld == 3) {
             lensLowerLeft_[2] = GET_PARAM(TypeTag, Scalar, LensLowerLeftZ);
             lensUpperRight_[2] = GET_PARAM(TypeTag, Scalar, LensUpperRightZ);
@@ -255,12 +255,12 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftX, "The x-coordinate of the lens' lower-left corner [m].");
         REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftY, "The y-coordinate of the lens' lower-left corner [m].");
         REGISTER_PARAM(TypeTag, Scalar, LensUpperRightX, "The x-coordinate of the lens' upper-right corner [m].");
         REGISTER_PARAM(TypeTag, Scalar, LensUpperRightY, "The y-coordinate of the lens' upper-right corner [m].");
-        
+
         if (dimWorld == 3) {
             REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftZ, "The z-coordinate of the lens' lower-left corner [m].");
             REGISTER_PARAM(TypeTag, Scalar, LensUpperRightZ, "The z-coordinate of the lens' upper-right corner [m].");
@@ -324,7 +324,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "lens_" << this->model().name();
         return oss.str();
@@ -368,7 +368,7 @@ public:
 
             Scalar T = temperature(context, spaceIdx, timeIdx);
             Scalar pw, Sw;
-        
+
             // set wetting phase pressure and saturation
             if (onLeftBoundary_(pos))
             {
@@ -391,11 +391,11 @@ public:
                 pw = 1e5 - densityW*this->gravity()[1]*depth;
                 Sw = 1.0;
             }
-        
+
             // specify a full fluid state using pw and Sw
             const MaterialLawParams &matParams =
                 this->materialLawParams(context, spaceIdx, timeIdx);
-            
+
             Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             fs.setSaturation(wPhaseIdx, Sw);
             fs.setSaturation(nPhaseIdx, 1 - Sw);
@@ -421,7 +421,7 @@ public:
             // no flow boundary
             values.setNoFlow();
         }
-            
+
     }
 
     //! \}
@@ -441,7 +441,7 @@ public:
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         Scalar depth = this->bboxMax()[1] - pos[1];
-        
+
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
 
@@ -463,7 +463,7 @@ public:
             this->materialLawParams(context, spaceIdx, timeIdx);
         Scalar pC[numPhases];
         MaterialLaw::capillaryPressures(pC, matParams, fs);
-        
+
         // make a full fluid state
         fs.setPressure(wPhaseIdx, pw);
         fs.setPressure(nPhaseIdx, pw + (pC[wPhaseIdx] - pC[nPhaseIdx]));
@@ -486,7 +486,7 @@ public:
 
     //! \}
 
-private:   
+private:
     bool isInLens_(const GlobalPosition &pos) const
     {
         for (int i = 0; i < dim; ++i) {

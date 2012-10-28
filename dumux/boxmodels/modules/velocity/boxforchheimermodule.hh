@@ -73,7 +73,7 @@ class BoxForchheimerBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-  
+
     /*!
      * \brief Returns the Ergun coefficient.
      *
@@ -166,10 +166,10 @@ private:
  * For Reynolds numbers above \f$\approx 500\f$ the standard Forchheimer
  * relation also looses it's validity.
  *
- * The Forchheimer equation is given by the following relation: 
+ * The Forchheimer equation is given by the following relation:
  *
- * \f[ 
-  \nabla p_\alpha - \rho_\alpha \vec{g} = 
+ * \f[
+  \nabla p_\alpha - \rho_\alpha \vec{g} =
   - \frac{\mu_\alpha}{k_{r,\alpha}} K^{-1}\vec{v}_\alpha
   - \frac{\rho_\alpha C_E}{\eta_{r,\alpha}} \sqrt{K}^{-1}
   \left| \vec{v}_\alpha \right| \vec{v}_\alpha
@@ -182,13 +182,13 @@ private:
  * implemented by this class multiplies both sides with
  * \f$\frac{k_{r_alpha}}{mu} K\f$, so we get
  *
- * \f[ 
+ * \f[
   \frac{k_{r_alpha}}{mu} K \left( \nabla p_\alpha - \rho_\alpha \vec{g}\right) =
   - \vec{v}_\alpha
   - \frac{\rho_\alpha C_E}{\eta_{r,\alpha}}  \frac{k_{r_alpha}}{mu} \sqrt{K}
   \left| \vec{v}_\alpha \right| \vec{v}_\alpha
  \f]
- 
+
  */
 template <class TypeTag>
 class BoxForchheimerFluxVariables
@@ -239,7 +239,7 @@ public:
      */
     const DimVector &filterVelocity(int phaseIdx) const
     { return filterVelocity_[phaseIdx]; }
-    
+
     /*!
      * \brief Return the volume flux of a fluid phase at the
      *        face's integration point \f$[m^3/s]\f$
@@ -249,7 +249,7 @@ public:
     Scalar volumeFlux(int phaseIdx) const
     { return volumeFlux_[phaseIdx]; }
 
-    
+
 protected:
     /*!
      * \brief Calculate the filter velocities of all phases
@@ -268,7 +268,7 @@ protected:
         const auto &Ki = volVarsI.intrinsicPermeability();
         const auto &Kj = volVarsJ.intrinsicPermeability();
         problem.meanK(K_, Ki, Kj);
-        Valgrind::CheckDefined(K_);        
+        Valgrind::CheckDefined(K_);
 
         assert(isDiagonal_(K_));
         sqrtK_ = 0.0;
@@ -282,7 +282,7 @@ protected:
         // variables. Until a better method comes along, we use
         // arithmetic averaging.
         ergunCoefficient_ =
-            (volVarsI.ergunCoefficient() 
+            (volVarsI.ergunCoefficient()
              + volVarsJ.ergunCoefficient())
             / 2;
 
@@ -331,11 +331,11 @@ protected:
         sqrtK_ = 0.0;
         for (int i = 0; i < dimWorld; ++i)
             sqrtK_[i][i] = std::sqrt(K_[i][i]);
-        
+
         DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
-        
+
         const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
-        
+
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
 
@@ -343,7 +343,7 @@ protected:
         // boundary here, we will take the Ergun coefficient of
         // the interior sub-control volume
         ergunCoefficient_ = volVarsInside.ergunCoefficient();
-        
+
         ///////////////
         // calculate the weights of the upstream and the downstream
         // control volumes
@@ -382,29 +382,29 @@ protected:
         // initial guess: filter velocity is zero
         DimVector &velocity = filterVelocity_[phaseIdx];
         velocity = 0;
-        
+
         DimVector deltaV(1e5); // the change of velocity between two consecutive Newton iterations
         DimVector residual; // the residual (function value that is to be minimized ) of the equation that is to be fulfilled
         DimMatrix gradResid; // slope of equation that is to be solved
-        
+
         // search by means of the Newton method for a root of Forchheimer equation
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-10) {
             if (newtonIter >= 30)
-                DUNE_THROW(NumericalProblem, 
-                           "Could not determine Forchheimer velocity within " 
+                DUNE_THROW(NumericalProblem,
+                           "Could not determine Forchheimer velocity within "
                            << newtonIter <<" iterations");
             ++newtonIter;
-            
+
             // calculate the residual and its Jacobian matrix
             gradForchheimerResid_(residual, gradResid, phaseIdx);
-            
+
             // newton method
             gradResid.solve(deltaV, residual);
             velocity -= deltaV;
         }
-        
-    };  
+
+    };
 
     void forchheimerResid_(DimVector &residual,
                            int phaseIdx) const
@@ -417,7 +417,7 @@ protected:
         Scalar mobility = mobility_[phaseIdx];
         Scalar density = density_[phaseIdx];
         Scalar mobilityPassabilityRatio = mobilityPassabilityRatio_[phaseIdx];
-        
+
         // optain the quantites for the integration point
         const auto &pGrad = imp.potentialGrad(phaseIdx);
 
@@ -460,7 +460,7 @@ protected:
             velocity[i] -= coordEps;
         }
     }
-    
+
     /*!
      * \brief Check whether all off-diagonal entries of a tensor are zero.
      *
@@ -493,7 +493,7 @@ protected:
     // intrinsic permeability tensor and its square root
     DimMatrix K_;
     DimMatrix sqrtK_;
-    
+
     // Ergun coefficient of all phases at the integration point
     Scalar ergunCoefficient_;
 

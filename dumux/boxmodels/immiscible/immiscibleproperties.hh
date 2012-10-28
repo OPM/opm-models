@@ -43,7 +43,7 @@ namespace Properties {
 
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(BoxImmiscible, INHERITS_FROM(BoxModel, VtkMultiPhase, VtkTemperature, VtkEnergy));
-//! The type tag for single-phase immiscible problems 
+//! The type tag for single-phase immiscible problems
 NEW_TYPE_TAG(BoxImmiscibleOnePhase, INHERITS_FROM(BoxImmiscible));
 //! The type tag for two-phase immiscible problems
 NEW_TYPE_TAG(BoxImmiscibleTwoPhase, INHERITS_FROM(BoxImmiscible));

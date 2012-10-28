@@ -39,7 +39,7 @@ namespace Dumux {
  *        reduction of the two-norm of the residual for the linear
  *        solvers.
  *
- * For the ResidReductionCriterion, the error of the solution is defined 
+ * For the ResidReductionCriterion, the error of the solution is defined
  * as
  * \f[ e^k = \frac{\left| A x_k - b \right|}{\left| A x_0 - b \right|}\;, \f]
  */
@@ -47,7 +47,7 @@ template<class Vector>
 class ResidReductionCriterion : public ConvergenceCriterion<Vector>
 {
   typedef typename Vector::field_type Scalar;
-  
+
 public:
   ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct)
     : scalarProduct_(scalarProduct)
@@ -70,7 +70,7 @@ public:
    * \copydoc ConvergenceCriterion::tolerance()
    */
   Scalar tolerance() const
-  { 
+  {
     return defectReduction_;
   }
 
@@ -97,7 +97,7 @@ public:
   /*!
    * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
    */
-  void update(const Vector &curSol, 
+  void update(const Vector &curSol,
               const Vector &curResid)
   {
     curDefect_ = scalarProduct_.norm(curResid);

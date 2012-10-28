@@ -126,7 +126,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkCompositionModule<TypeTag>::registerParameters();
@@ -151,7 +151,7 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         const std::string &tmp = EnergyModule::primaryVarName(pvIdx);
         if (tmp != "")
             return tmp;
@@ -169,7 +169,7 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         const std::string &tmp = EnergyModule::eqName(eqIdx);
         if (tmp != "")
             return tmp;
@@ -201,18 +201,18 @@ public:
             elemCtx.updateScvVars(/*timeIdx=*/0);
 
             const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
-            
+
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 if (elemIt->partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
 
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, 
+                this->localResidual().addPhaseStorage(tmp,
                                                       elemCtx,
                                                       scvIdx,
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
-                tmp *= 
+                tmp *=
                     fvElemGeom.subContVol[scvIdx].volume
                     * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;

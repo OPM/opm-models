@@ -540,7 +540,7 @@ namespace Dumux {
         "L and P must have the same category!");
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
         "L must be sequential!");
-      
+
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
@@ -556,10 +556,10 @@ namespace Dumux {
                           "L and P must have the same category!");
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
                           "L and S must have the same category!");
-      
+
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
      }
- 
+
     /*!
       \brief Apply inverse operator.
 
@@ -687,11 +687,11 @@ public:
       \copydoc LoopSolver::LoopSolver(L&,P&,double,int,int)
     */
     template<class L, class P>
-    BiCGSTABSolver(L& op, 
+    BiCGSTABSolver(L& op,
                    P& prec,
                    double reduction,
-                   int maxit, 
-                   int verbose) 
+                   int maxit,
+                   int verbose)
       : ssp()
       , _op(op)
       , _prec(prec)
@@ -701,7 +701,7 @@ public:
     {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category), "L and P must be of the same category!");
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential), "L must be sequential!");
-      
+
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
     /*!
@@ -710,12 +710,12 @@ public:
       \copydoc LoopSolver::LoopSolver(L&,S&,P&,double,int,int)
     */
     template<class L, class S, class P>
-    BiCGSTABSolver(L& op, 
+    BiCGSTABSolver(L& op,
                    S& sp,
                    P& prec,
                    double reduction,
                    int maxit,
-                   int verbose) 
+                   int verbose)
       : _op(op)
       , _prec(prec)
       , _sp(sp)
@@ -729,7 +729,7 @@ public:
 
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
      }
-  
+
     /*!
       \brief Apply inverse operator.
 
@@ -974,7 +974,7 @@ public:
 
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
-   
+
     /*!
       \brief Apply inverse operator.
 
@@ -1232,7 +1232,7 @@ public:
         "P and S must have the same category!");
 
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
-    }  
+    }
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     virtual void apply (X& x, X& b, InverseOperatorResult& res)

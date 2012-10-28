@@ -70,9 +70,9 @@ public:
       int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
       const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
       const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
-      
+
       Vector bTmp(b);
-      
+
       const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
       const int precondOrder = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
@@ -574,18 +574,18 @@ public:
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     Dune::SuperLU<ISTLMatrix> solver(A, verbosity > 0);
     solver.apply(x, bTmp, result_);
-    
+
     if (result_.converged) {
         // make sure that the result only contains finite values.
         Scalar tmp = 0;
         for (unsigned i = 0; i < x.size(); ++i) {
             const auto &xi = x[i];
-            for (int j = 0; j < Vector::block_type::dimension; ++j) 
+            for (int j = 0; j < Vector::block_type::dimension; ++j)
                 tmp += xi[j];
         }
         result_.converged = std::isfinite(tmp);
-    }    
-    
+    }
+
     return result_.converged;
   }
 

@@ -36,14 +36,14 @@ template <class Scalar, int dim>
 class QuadrialteralQuadratureGeometry
 {
 public:
-    enum { numCorners = (1 << dim) }; 
+    enum { numCorners = (1 << dim) };
 
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
     Dune::GeometryType type() const
     { return Dune::GeometryType(Dune::GeometryType::cube, dim); }
-    
+
     template <class CornerContainer>
     void setCorners(const CornerContainer &corners, unsigned numCorners)
     {
@@ -65,7 +65,7 @@ public:
      */
     const GlobalPosition &center() const
     { return center_; }
-    
+
     /*!
      * \brief Convert a local coordinate into a global one.
      */
@@ -98,7 +98,7 @@ public:
                     }
                 }
 
-                jac[k].axpy(dWeight_dk, corners_[cornerIdx]); 
+                jac[k].axpy(dWeight_dk, corners_[cornerIdx]);
             }
         }
     }
@@ -137,7 +137,7 @@ public:
 
         return weight;
     }
-    
+
 private:
     GlobalPosition corners_[numCorners];
     GlobalPosition center_;

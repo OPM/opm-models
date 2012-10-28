@@ -121,13 +121,13 @@ public:
 
         Scalar alpha = xToI(x);
         Scalar beta = yToJ(y);
- 
+
         int i = std::max(0, std::min(asImp_().numX(), static_cast<int>(alpha)));
         int j = std::max(0, std::min(asImp_().numY(), static_cast<int>(beta)));
- 
+
         alpha -= i;
         beta -= j;
- 
+
         // bi-linear interpolation
         Scalar s1 = asImp_().getSamplePoint(i, j)*(1.0 - alpha) + asImp_().getSamplePoint(i + 1, j)*alpha;
         Scalar s2 = asImp_().getSamplePoint(i, j + 1)*(1.0 - alpha) + asImp_().getSamplePoint(i + 1, j + 1)*alpha;

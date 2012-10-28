@@ -96,7 +96,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
@@ -115,7 +115,7 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
             return s;
@@ -131,7 +131,7 @@ public:
         }
         else
             assert(false);
-        
+
         return oss.str();
     }
 
@@ -139,18 +139,18 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
             return s;
 
         std::ostringstream oss;
-        
+
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
             oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
-        
+
         return oss.str();
     }
 
@@ -177,9 +177,9 @@ public:
 
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
-            
+
             const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
-            
+
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 const auto &scv = fvElemGeom.subContVol[scvIdx];
                 const auto &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);

@@ -107,7 +107,7 @@ public:
    * \param curResid The residual vector of the current iterative
    *                 solution of the linear system of equations
    */
-  virtual void update(const Vector &curSol, 
+  virtual void update(const Vector &curSol,
                       const Vector &curResid) = 0;
 
   /*!
@@ -115,7 +115,7 @@ public:
    *        met.
    */
   virtual bool converged() const = 0;
-  
+
   /*!
    * \brief Prints the initial information about the convergence behaviour.
    *

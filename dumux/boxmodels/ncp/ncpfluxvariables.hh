@@ -56,7 +56,7 @@ class NcpFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum { dimWorld = GridView::dimensionworld };   
+    enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
@@ -80,16 +80,16 @@ public:
      * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, 
-                        int bfIdx, 
-                        int timeIdx, 
-                        const FluidState &fluidState, 
+    void updateBoundary(const Context &context,
+                        int bfIdx,
+                        int timeIdx,
+                        const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context, 
-                                                bfIdx, 
-                                                timeIdx, 
-                                                fluidState, 
+        MultiPhaseFluxVariables::updateBoundary(context,
+                                                bfIdx,
+                                                timeIdx,
+                                                fluidState,
                                                 paramCache);
         DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);

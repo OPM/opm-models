@@ -64,7 +64,7 @@ public:
                 { 0.0 },
                 { 0.5 }
             },
-        
+
             { // corners of the second sub control volume
                 { 0.5 },
                 { 1.0 }
@@ -72,7 +72,7 @@ public:
         };
         for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvGeometry::numCorners);
-        
+
         return 0;
     }
 
@@ -121,7 +121,7 @@ public:
     static int init()
     {
         // 2D SIMPLEX
-        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] =
         {
             { // SCV 0 corners
                 { 0.0,   0.0 },
@@ -177,7 +177,7 @@ public:
     static int init()
     {
         // 2D CUBE
-        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] =
         {
             { // SCV 0 corners
                 { 0.0, 0.0 },
@@ -241,7 +241,7 @@ public:
     static int init()
     {
         // 3D SIMPLEX
-        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] =
         {
             { // SCV 0 corners
                 { 0.0,   0.0,   0.0 },
@@ -289,7 +289,7 @@ public:
                 { 1.0/2, 0.0,   1.0/2 },
                 { 0.0,   1.0/2, 1.0/2 },
                 { 1.0/3, 1.0/3, 1.0/3 },
-            }          
+            }
         };
 
         for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
@@ -323,7 +323,7 @@ public:
     static int init()
     {
         // 3D CUBE
-        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] = 
+        Scalar scvCorners[numScv][ScvGeometry::numCorners][dim] =
         {
             { // SCV 0 corners
                 { 0.0,   0.0,   0.0 },
@@ -749,7 +749,7 @@ public:
         static bool localGeometriesInitialized = false;
         if (!localGeometriesInitialized) {
             localGeometriesInitialized = true;
-            
+
             BoxScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::init();
             BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::init();
             BoxScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::init();
@@ -853,7 +853,7 @@ public:
 
             // get the global integration point and the Jacobian inverse
             subContVolFace[k].ipGlobal = geometry.global(ipLocal);
-            
+
             typedef Dune::FieldVector< Scalar, 1 > ShapeValue;
             std::vector<ShapeValue>  shapeVal;
             localFiniteElement.localBasis().evaluateFunction(subContVolFace[k].ipLocal, shapeVal);
@@ -868,7 +868,7 @@ public:
         for (IntersectionIterator it = gridView.ibegin(e); it != endit; ++it) {
             if (!it->boundary())
                 continue;
-          
+
             int face = it->indexInInside();
             int numVerticesOfFace = referenceElement.size(face, 1, dim);
             for (int vertInFace = 0; vertInFace < numVerticesOfFace; vertInFace++)
@@ -897,7 +897,7 @@ public:
                     boundaryFace[bfIdx].ipLocal *= 0.25;
                     boundaryFace[bfIdx].area = quadrilateralArea3D(subContVol[vertInElement].global,
                                                                    edgeCoord[rightEdge], faceCoord[face], edgeCoord[leftEdge]);
-                } 
+                }
                 else
                     DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry for dim = " << dim);
 
@@ -907,7 +907,7 @@ public:
 
                 // ASSUME constant normal
                 Dune::FieldVector<CoordScalar, dim-1> localDimM1(0);
-                for (int i = 0; i < dimWorld; ++i) 
+                for (int i = 0; i < dimWorld; ++i)
                     boundaryFace[bfIdx].normal[i] = Scalar(it->unitOuterNormal(localDimM1)[i]);
                 boundaryFace[bfIdx].normal *= boundaryFace[bfIdx].area;
 
@@ -932,7 +932,7 @@ public:
     void updateScvLocalGeometry(const Element &element)
     {
         auto geomType = element.geometry().type();
-      
+
         // get the local geometries of the sub control volumes
         if (geomType.isTriangle() || geomType.isTetrahedron()) {
             for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx)
@@ -942,8 +942,8 @@ public:
             for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx)
                 subContVol[vertIdx].localGeometry = &BoxScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
         }
-        else 
-            DUNE_THROW(Dune::NotImplemented, 
+        else
+            DUNE_THROW(Dune::NotImplemented,
                        "SCV geometries for non hexahedron elements");
     }
 
@@ -958,7 +958,7 @@ public:
 
         for (int scvfIdx = 0; scvfIdx < numEdges; ++ scvfIdx) {
             localFiniteElement.localBasis().evaluateJacobian(subContVolFace[scvfIdx].ipLocal, localJac);
-            
+
             const auto jacInvT =
                 geom.jacobianInverseTransposed(subContVolFace[scvfIdx].ipLocal);
             for (int vert = 0; vert < numVertices; vert++)
@@ -978,7 +978,7 @@ public:
 
         for (int scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
             localFiniteElement.localBasis().evaluateJacobian(subContVol[scvIdx].local, localJac);
-            
+
             const auto jacInvT =
                 geom.jacobianInverseTransposed(subContVol[scvIdx].local);
             for (int vert = 0; vert < numVertices; vert++)
@@ -986,7 +986,7 @@ public:
         }
 
     }
-    
+
     /*!
      * \brief Update the finite element gradients at the centers of
      *        the sub-control volumes vertices.
@@ -999,7 +999,7 @@ public:
         for (int scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
             const auto &localCenter = subContVol[scvIdx].localGeometry->center();
             localFiniteElement.localBasis().evaluateJacobian(localCenter, localJac);
-            
+
             const auto jacInvT =
                 geom.jacobianInverseTransposed(localCenter);
             for (int vert = 0; vert < numVertices; vert++) {
@@ -1198,7 +1198,7 @@ private:
                 DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry for dim = " << dim << ", numVertices = " << numVertices);
             }
         }
-        else 
+        else
             DUNE_THROW(Dune::NotImplemented, "BoxFVElementGeometry for dim = " << dim);
     }
 

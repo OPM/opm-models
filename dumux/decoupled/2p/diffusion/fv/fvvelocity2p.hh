@@ -221,7 +221,7 @@ public:
                 ReferenceElementContainer::general(eIt->geometry().type()).position(0, 0);
 
                 // get the transposed Jacobian of the element mapping
-                const auto &jacobianT = 
+                const auto &jacobianT =
                     eIt->geometry().jacobianTransposed(localPos);
 
                 // calculate the element velocity by the Piola transformation

@@ -51,14 +51,14 @@ public:
     static void guessInitial(FluidState &fluidState,
                              ParameterCache &paramCache,
                              const ComponentVector &globalMolarities)
-    { 
+    {
         ParentType::guessInitial(fluidState, paramCache, globalMolarities);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             // pressure. something close to the reservoid pressure as initial guess
             fluidState.setPressure(phaseIdx, 1.0135e6);
         }
-        
+
         paramCache.updateAllPressures(fluidState);
     }
 

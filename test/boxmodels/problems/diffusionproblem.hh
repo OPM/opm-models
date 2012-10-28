@@ -175,7 +175,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "diffusion_" << this->model().name();
         return oss.str();
@@ -272,7 +272,7 @@ public:
 
     //! \}
 
-private:   
+private:
     bool onLeftSide_(const GlobalPosition &pos) const
     { return pos[0] < (this->bboxMin()[0] + this->bboxMax()[0])/2; }
 
@@ -295,15 +295,15 @@ private:
 
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
-        CFRP::solve(leftInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false); 
+        CFRP::solve(leftInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false);
 
         // create the initial fluid state for the right half of the domain
         rightInitialFluidState_.assign(leftInitialFluidState_);
         xH2O = 0.0;
         rightInitialFluidState_.setMoleFraction(gPhaseIdx, H2OIdx, xH2O);
         rightInitialFluidState_.setMoleFraction(gPhaseIdx, N2Idx, 1 - xH2O);
-        CFRP::solve(rightInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false); 
-        
+        CFRP::solve(rightInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false);
+
     }
 
     DimMatrix K_;

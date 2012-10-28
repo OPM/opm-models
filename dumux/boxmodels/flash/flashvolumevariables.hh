@@ -80,7 +80,7 @@ class FlashVolumeVariables
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
     typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
-    
+
 public:
     //! The type of the object returned by the fluidState() method
     typedef Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
@@ -114,7 +114,7 @@ public:
         ComponentVector cTotal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             cTotal[compIdx] = priVars[cTot0Idx + compIdx];
-        
+
         typename FluidSystem::ParameterCache paramCache;
         const auto *hint = elemCtx.hint(scvIdx, timeIdx);
         if (hint) {
@@ -127,7 +127,7 @@ public:
         }
         else
             FlashSolver::guessInitial(fluidState_, paramCache, cTotal);
-        
+
         // compute the phase compositions, densities and pressures
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, scvIdx, timeIdx);
@@ -138,7 +138,7 @@ public:
             Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
-        
+
         /////////////
         // calculate the remaining quantities
         /////////////
@@ -193,7 +193,7 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
-  
+
 private:
     FluidState fluidState_;
     Scalar porosity_;

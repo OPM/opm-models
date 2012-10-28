@@ -117,7 +117,7 @@ public:
      */
     const LocalBlockVector &storageTerm() const
     { return internalStorageTerm_; }
-  
+
     /*!
      * \brief Return the storage term calculated using the last call
      *        to eval() using internal storage.
@@ -321,8 +321,8 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented, 
-                   "The local residual " << Dune::className<Implementation>() 
+        DUNE_THROW(Dune::NotImplemented,
+                   "The local residual " << Dune::className<Implementation>()
                    << " does not implement the required method 'computeStorage()'");
     };
 
@@ -338,8 +338,8 @@ public:
                      int scvfIdx,
                      int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented, 
-                   "The local residual " << Dune::className<Implementation>() 
+        DUNE_THROW(Dune::NotImplemented,
+                   "The local residual " << Dune::className<Implementation>()
                    << " does not implement the required method 'computeFlux()'");
     }
 
@@ -354,8 +354,8 @@ public:
                        int scvIdx,
                        int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented, 
-                   "The local residual " << Dune::className<Implementation>() 
+        DUNE_THROW(Dune::NotImplemented,
+                   "The local residual " << Dune::className<Implementation>()
                    << " does not implement the required method 'computeSource()'");
     }
 
@@ -428,7 +428,7 @@ protected:
         values *=
             boundaryCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
             * boundaryCtx.elemContext().volVars(scvIdx, timeIdx).extrusionFactor();
-        
+
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             residual[scvIdx][eqIdx] += values[eqIdx];
         }
@@ -490,7 +490,7 @@ protected:
         {
             Scalar extrusionFactor =
                 elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
-            Scalar scvVolume = 
+            Scalar scvVolume =
                 elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume * extrusionFactor;
 
             // mass balance within the element. this is the

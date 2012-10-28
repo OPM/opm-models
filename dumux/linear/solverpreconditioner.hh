@@ -31,7 +31,7 @@ namespace Dumux {
 namespace Linear {
 
 template <class Matrix, class DomainVector, class RangeVector>
-class SolverPreconditioner 
+class SolverPreconditioner
     : public Dune::Preconditioner<DomainVector, RangeVector>
 {
     typedef Dune::MatrixAdapter<Matrix, DomainVector, RangeVector> InnerOperator;
@@ -50,7 +50,7 @@ public:
     {
         innerOperator_ = new InnerOperator(matrix);
         innerScalarProduct_ = new InnerScalarProduct;
-        innerPreCond_ = new InnerPreConditioner(matrix, 
+        innerPreCond_ = new InnerPreConditioner(matrix,
                                                 /*relaxation=*/1.0);
 
         Scalar tolerance = 1e-6;
@@ -63,8 +63,8 @@ public:
                                        maxIter,
                                        verbosity);
     }
-    
-    ~SolverPreconditioner() 
+
+    ~SolverPreconditioner()
     {
         delete innerSolver_;
         delete innerOperator_;

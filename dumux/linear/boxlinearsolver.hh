@@ -122,7 +122,7 @@ namespace Linear {
  * grids and is generic in the sense that it allows to combine any
  * linear solver implemented by Dune-ISTL with any preconditioner
  * (except the algebraic multigrid preconditioner). To set the linear
- * solver, use 
+ * solver, use
  * \code SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,Dumux::Linear::DesiredLinearSolver<TypeTag>); \endcode
  *
  * The possible choices for '\c DesiredLinearSolver' are:
@@ -135,7 +135,7 @@ namespace Linear {
  *
  * Chosing the preconditioner works analogous: \code
  * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,Dumux::Linear::DesiredPreconditioner<TypeTag>); \endcode
- * 
+ *
  * Where the choices possible for '\c DesiredPreconditioner' are:
  * - \c PreconditionerWrapperJacobi: A Jacobi preconditioner
  * - \c PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
@@ -267,13 +267,13 @@ public:
         // create a fixpoint convergence criterion
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
-        auto *convCrit = new Dumux::WeightedResidReductionCriterion<OverlappingVector, 
+        auto *convCrit = new Dumux::WeightedResidReductionCriterion<OverlappingVector,
                                                                     typename GridView::CollectiveCommunication>
-            (problem_.gridView().comm(), 
+            (problem_.gridView().comm(),
              weightVec,
              linearSolverTolerance,
              linearSolverAbsTolerance);
-        
+
         // tell the linear solver to use it
         typedef Dumux::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
@@ -303,7 +303,7 @@ private:
     {
         Linear::VertexBorderListFromGrid<GridView, VertexMapper>
             borderListCreator(problem_.gridView(), problem_.vertexMapper());
-        
+
         // blacklist all ghost and overlap entries
         std::set<Dumux::Linear::Index> blackList;
         auto vIt = problem_.gridView().template begin<dimWorld>();
@@ -329,7 +329,7 @@ private:
         // solution
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
-        
+
         //writeOverlapToVTK_();
     }
 
@@ -369,7 +369,7 @@ private:
                 if (overlap.peerHasIndex(lookedAtRank, localIdx))
                     isInOverlap[nativeIdx] = 1.0;
             };
-        
+
             typedef Dune::VTKWriter<GridView> VtkWriter;
             VtkWriter writer(problem_.gridView(), Dune::VTK::conforming);
             writer.addVertexData(isInOverlap, "overlap");
@@ -380,7 +380,7 @@ private:
             writer.write(oss.str().c_str(), Dune::VTK::ascii);
         }
     }
-    
+
     const Problem &problem_;
 
     OverlappingMatrix *overlappingMatrix_;
@@ -500,27 +500,27 @@ SET_INT_PROP(BoxLinearSolverTypeTag, PreconditionerOrder, 0);
 //! set the GMRes restart parameter to 10 by default
 SET_INT_PROP(BoxLinearSolverTypeTag, GMResRestart, 10);
 
-SET_TYPE_PROP(BoxLinearSolverTypeTag, 
+SET_TYPE_PROP(BoxLinearSolverTypeTag,
               OverlappingMatrix,
               Dumux::Linear::OverlappingBCRSMatrix<typename GET_PROP_TYPE(TypeTag, JacobianMatrix)>);
-SET_TYPE_PROP(BoxLinearSolverTypeTag, 
+SET_TYPE_PROP(BoxLinearSolverTypeTag,
               Overlap,
               typename GET_PROP_TYPE(TypeTag, OverlappingMatrix)::Overlap);
-SET_PROP(BoxLinearSolverTypeTag, 
+SET_PROP(BoxLinearSolverTypeTag,
          OverlappingVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Dumux::Linear::OverlappingBlockVector<typename Vector::block_type, Overlap> type;
 };
-SET_PROP(BoxLinearSolverTypeTag, 
+SET_PROP(BoxLinearSolverTypeTag,
          OverlappingScalarProduct)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Dumux::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> type;
 };
-SET_PROP(BoxLinearSolverTypeTag, 
+SET_PROP(BoxLinearSolverTypeTag,
          OverlappingLinearOperator)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;

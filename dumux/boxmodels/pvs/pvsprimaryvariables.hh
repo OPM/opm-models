@@ -47,7 +47,7 @@ namespace Dumux {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class PvsPrimaryVariables 
+class PvsPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -130,21 +130,21 @@ public:
         // thermodynamic equilibrium
         typename FluidSystem::ParameterCache paramCache;
         Dumux::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
-             
+
         // use the externally given fluid state as initial value for
         // the flash calculation
         fsFlash.assign(fluidState);
-        
+
         // calculate the phase densities
         paramCache.updateAll(fsFlash);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fsFlash.setDensity(phaseIdx, 
+            fsFlash.setDensity(phaseIdx,
                                FluidSystem::density(fsFlash,
                                                     paramCache,
                                                     phaseIdx));
         }
 
-        // calculate the "global molarities" 
+        // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -154,9 +154,9 @@ public:
         }
 
         // run the flash calculation
-        //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);       
+        //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
         NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
-        
+
         // use the result to assign the primary variables
         assignNaive(fsFlash);
     }
@@ -186,7 +186,7 @@ public:
      * \param yesno If true, the presence of the phase is set, else it is reset
      */
     void setPhasePresent(int phaseIdx, bool yesno = true)
-    { 
+    {
         if (yesno) setPhasePresence(phasePresence_ | (1 << phaseIdx));
         else setPhasePresence(phasePresence_ & ~(1 << phaseIdx));
     }
@@ -195,9 +195,9 @@ public:
      * \brief Returns the index of the phase with's its saturation is
      *        determined by the closure condition of saturation.
      */
-    unsigned char implicitSaturationIdx() const 
+    unsigned char implicitSaturationIdx() const
     { return lowestPresentPhaseIdx(); }
-    
+
     /*!
      * \brief Returns true iff a phase is present for a given phase
      *        presence.
@@ -228,7 +228,7 @@ public:
      * \brief Assignment operator from an other primary variables object
      */
     ThisType &operator=(const PrimaryVariables &value)
-    { 
+    {
         ParentType::operator=(value);
         phasePresence_ = value.phasePresence_;
 
@@ -239,7 +239,7 @@ public:
      * \brief Assignment operator from a scalar value
      */
     ThisType &operator=(const Scalar value)
-    { 
+    {
         ParentType::operator=(value);
 
         phasePresence_ = 0;
@@ -248,14 +248,14 @@ public:
 
     /*!
      * \brief Returns an explcitly stored saturation for a given phase.
-     * 
+     *
      * (or 0 if the saturation is not explicitly stored.)
      *
      * \copydoc Doxygen::phaseIdxParam
      */
     Scalar explicitSaturationValue(int phaseIdx) const
     {
-        if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx()) 
+        if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx())
             // non-present phases have saturation 0
             return 0.0;
 
@@ -265,7 +265,7 @@ public:
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
-    template <class FluidState> 
+    template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
         // assign the phase temperatures. this is out-sourced to
@@ -286,11 +286,11 @@ public:
                 a -= fluidState.moleFraction(phaseIdx, compIdx);
             }
             Scalar b = fluidState.saturation(phaseIdx);
-            
+
             if (b > a)
                 phasePresence_ |= (1 << phaseIdx);
         }
-        
+
         // assert that some phase is present
         assert(phasePresence_ != 0);
 
@@ -305,12 +305,12 @@ public:
 
             if (phaseIsPresent(phaseIdx))
             {
-                (*this)[switch0Idx + switchIdx] = 
+                (*this)[switch0Idx + switchIdx] =
                     fluidState.saturation(phaseIdx);
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
             else {
-                (*this)[switch0Idx + switchIdx] = 
+                (*this)[switch0Idx + switchIdx] =
                     fluidState.moleFraction(lowestPhaseIdx, compIdx);
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
@@ -345,7 +345,7 @@ public:
         os << ")";
         os << ", phase presence: " << static_cast<int>(phasePresence_);
     }
-    
+
 private:
     unsigned char phasePresence_;
 };

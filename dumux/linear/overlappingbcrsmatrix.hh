@@ -159,7 +159,7 @@ public:
         int numDomestic = overlap_->numDomestic();
         for (int domRowIdx = numLocal; domRowIdx < numDomestic; ++ domRowIdx) {
             if (overlap_->isFront(domRowIdx)) {
-                // set the front rows to a diagonal 1 
+                // set the front rows to a diagonal 1
                 (*this)[domRowIdx] = 0.0;
                 (*this)[domRowIdx][domRowIdx] = idMatrix;
             }
@@ -208,7 +208,7 @@ private:
             int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
             if (localRowIdx < 0)
                 continue; // black-listed entry
-                        
+
             ConstColIterator colIt = M[nativeRowIdx].begin();
             ConstColIterator colEndIt = M[nativeRowIdx].end();
             ColIterator myColIt = (*this)[localRowIdx].begin();
@@ -368,7 +368,7 @@ private:
         for (; it != endIt; ++it) {
             int localRowIdx = it->index;
             int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
-            
+
             typedef typename BCRSMatrix::ConstColIterator ColIt;
             ColIt colIt = M[nativeRowIdx].begin();
             ColIt colEndIt = M[nativeRowIdx].end();

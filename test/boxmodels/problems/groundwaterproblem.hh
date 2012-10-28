@@ -104,7 +104,7 @@ SET_STRING_PROP(GroundWaterBaseProblem, GridFile, "./grids/groundwater_2d.dgf");
  * occupied by a rectangular lens of lower permeability.
  */
 template <class TypeTag>
-class GroundWaterProblem 
+class GroundWaterProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -173,7 +173,7 @@ public:
             REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftY, "The y-coordinate of the lens' lower-left corner [m].");
             REGISTER_PARAM(TypeTag, Scalar, LensUpperRightY, "The y-coordinate of the lens' upper-right corner [m].");
         }
-        
+
         if (dimWorld > 2) {
             REGISTER_PARAM(TypeTag, Scalar, LensLowerLeftZ, "The z-coordinate of the lens' lower-left corner [m].");
             REGISTER_PARAM(TypeTag, Scalar, LensUpperRightZ, "The z-coordinate of the lens' upper-right corner [m].");
@@ -192,7 +192,7 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << "groundwater_" << this->model().name();
         return oss.str();
@@ -255,7 +255,7 @@ public:
             // no flow boundary
             values.setNoFlow();
         }
-            
+
     }
 
     //! \}
@@ -295,14 +295,14 @@ private:
 
     bool isInLens_(const GlobalPosition &pos) const
     {
-        return 
+        return
             lensLowerLeft_[0] <= pos[0] && pos[0] <= lensUpperRight_[0] &&
             lensLowerLeft_[1] <= pos[1] && pos[1] <= lensUpperRight_[1];
     }
 
     GlobalPosition lensLowerLeft_;
     GlobalPosition lensUpperRight_;
-    
+
     DimMatrix intrinsicPerm_;
     DimMatrix intrinsicPermLens_;
 

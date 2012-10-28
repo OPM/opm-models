@@ -74,7 +74,7 @@ private:
     typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
     // define the material law parameterized by absolute saturations
     typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
@@ -174,10 +174,10 @@ public:
      * \copydoc Doxygen::defaultProblemConstructor
      */
     RichardsLensProblem(TimeManager &timeManager)
-        : ParentType(timeManager, 
+        : ParentType(timeManager,
                      GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
         , pnRef_(1e5)
-    {      
+    {
         eps_ = 3e-6;
         pnRef_ = 1e5;
 
@@ -282,12 +282,12 @@ public:
             onRightBoundary_(pos))
         {
             const auto &materialParams = this->materialLawParams(context, spaceIdx, timeIdx);
-            
+
             Scalar Sw = 0.0;
             ImmiscibleFluidState<Scalar, FluidSystem> fs;
             fs.setSaturation(wPhaseIdx, Sw);
             fs.setSaturation(nPhaseIdx, 1.0 - Sw);
-            
+
             PhaseVector pC;
             MaterialLaw::capillaryPressures(pC, materialParams, fs);
             fs.setPressure(wPhaseIdx, pnRef_ + pC[wPhaseIdx] - pC[nPhaseIdx]);
@@ -300,7 +300,7 @@ public:
 
             // inflow of water
             massRate[contiEqIdx] = -0.04; // kg / (m * s)
-            
+
             values.setMassRate(massRate);
         }
         else

@@ -108,7 +108,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkMultiPhaseModule<TypeTag>::registerParameters();
         Dumux::BoxVtkTemperatureModule<TypeTag>::registerParameters();
@@ -124,13 +124,13 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::ostringstream oss;
         if (pvIdx == Indices::pwIdx)
             oss << "pressure_" << FluidSystem::phaseName(wPhaseIdx);
         else
             assert(0);
-       
+
         return oss.str();
     }
 
@@ -138,7 +138,7 @@ public:
      * \copydoc BoxModel::eqName
      */
     std::string eqName(int eqIdx) const
-    { 
+    {
         std::ostringstream oss;
         if (eqIdx == Indices::contiEqIdx)
             oss << "continuity_" << FluidSystem::phaseName(wPhaseIdx);

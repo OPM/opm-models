@@ -131,9 +131,9 @@ public:
         // set the initial condition of the model
         model().init(asImp_());
 
-        assembleTime_ = 0.0; 
-        solveTime_ = 0.0; 
-        updateTime_ = 0.0; 
+        assembleTime_ = 0.0;
+        solveTime_ = 0.0;
+        updateTime_ = 0.0;
     }
 
 
@@ -142,9 +142,9 @@ public:
      *        sucessfully.
      */
     void finalize()
-    { 
+    {
         if (gridView().comm().rank() == 0) {
-            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_); 
+            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
             int numCores = this->gridView().comm().size();
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "Timing receipt [s] (solve total/assemble/linear solve/update): "
@@ -155,7 +155,7 @@ public:
                       << "\n";
         }
     }
-            
+
     /*!
      * \brief Returns the total wall time spend on solving the
      *        system [s].
@@ -271,14 +271,14 @@ public:
                 assembleTime_ += newtonMethod_.assembleTime();
                 solveTime_ += newtonMethod_.solveTime();
                 updateTime_ += newtonMethod_.updateTime();
-                
+
                 return;
             }
 
             assembleTime_ += newtonMethod_.assembleTime();
             solveTime_ += newtonMethod_.solveTime();
             updateTime_ += newtonMethod_.updateTime();
-            
+
             Scalar dt = timeManager().timeStepSize();
             Scalar nextDt = dt / 2;
             timeManager().setTimeStepSize(nextDt);
@@ -620,9 +620,9 @@ private:
     }
 
     // CPU time keeping
-    Scalar assembleTime_; 
-    Scalar solveTime_; 
-    Scalar updateTime_; 
+    Scalar assembleTime_;
+    Scalar solveTime_;
+    Scalar updateTime_;
 
     std::string simName_;
     const GridView gridView_;

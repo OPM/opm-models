@@ -86,16 +86,16 @@ public:
      * \copydoc BoxMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, 
-                        int bfIdx, 
-                        int timeIdx, 
-                        const FluidState &fluidState, 
+    void updateBoundary(const Context &context,
+                        int bfIdx,
+                        int timeIdx,
+                        const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context, 
-                                                bfIdx, 
-                                                timeIdx, 
-                                                fluidState, 
+        MultiPhaseFluxVariables::updateBoundary(context,
+                                                bfIdx,
+                                                timeIdx,
+                                                fluidState,
                                                 paramCache);
         DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);

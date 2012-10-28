@@ -80,9 +80,9 @@ class BoxParallelAmgSolver
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
- 
+
     enum { dimWorld = GridView::dimensionworld };
-    
+
     // define the smoother used for the AMG and specify its
     // arguments
     typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
@@ -159,7 +159,7 @@ public:
         /////////////
         // set-up the overlapping matrix and vector
         /////////////
-        
+
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
             // have been created
@@ -191,7 +191,7 @@ public:
         FineScalarProduct scalarProduct(*istlComm_);
 #else
         FineScalarProduct scalarProduct;
-#endif        
+#endif
 
         setupAmg_(fineOperator);
 
@@ -204,7 +204,7 @@ public:
         typedef Dumux::BiCGSTABSolver<Vector>  SolverType;
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
-        SolverType solver(fineOperator, 
+        SolverType solver(fineOperator,
                           scalarProduct,
                           /*preconditioner=*/*amg_,
                           linearSolverTolerance,
@@ -229,10 +229,10 @@ public:
 
         // create a weighted residual reduction convergence criterion
         Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
-        auto *convCrit = 
-            new Dumux::WeightedResidReductionCriterion<Vector, 
+        auto *convCrit =
+            new Dumux::WeightedResidReductionCriterion<Vector,
                                                        typename GridView::CollectiveCommunication>
-            (problem_.gridView().comm(), 
+            (problem_.gridView().comm(),
              weightVec,
              linearSolverTolerance,
              linearSolverAbsTolerance);
@@ -273,7 +273,7 @@ private:
 
         Linear::VertexBorderListFromGrid<GridView, VertexMapper>
             borderListCreator(problem_.gridView(), problem_.vertexMapper());
-        
+
         // blacklist all entries that belong to ghost and overlap vertices
         std::set<Dumux::Linear::Index> blackList;
         auto vIt = problem_.gridView().template begin<dimWorld>();
@@ -303,11 +303,11 @@ private:
         // create and initialize DUNE's OwnerOverlapCopyCommunication
         // using the domestic overlap
         istlComm_ = new OwnerOverlapCopyCommunication(MPI_COMM_WORLD);
-        setupAmgIndexSet(overlappingMatrix_->overlap(), istlComm_->indexSet()); 
+        setupAmgIndexSet(overlappingMatrix_->overlap(), istlComm_->indexSet());
         istlComm_->remoteIndices().template rebuild<false>();
 #endif
     }
- 
+
     void cleanup_()
     {
         // create the overlapping Jacobian matrix and vectors
@@ -321,7 +321,7 @@ private:
         overlappingx_ = nullptr;
         amg_ = nullptr;
     }
-    
+
 #if HAVE_MPI
     template <class ParallelIndexSet>
     void setupAmgIndexSet(const Overlap &overlap,
@@ -332,8 +332,8 @@ private:
 
         // create DUNE's ParallelIndexSet from a domestic overlap
         istlIndices.beginResize();
-        for (int curIdx = 0; curIdx < overlap.numDomestic(); ++curIdx) { 
-            GridAttributeSet gridFlag = 
+        for (int curIdx = 0; curIdx < overlap.numDomestic(); ++curIdx) {
+            GridAttributeSet gridFlag =
                 overlap.iAmMasterOf(curIdx)
                 ? GridAttributes::owner
                 : GridAttributes::copy;
@@ -365,11 +365,11 @@ private:
             std::cout << "Setting up the AMG preconditioner\n";
 
         typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;
-        
+
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1.0;
-        
+
         // specify the coarsen criterion
         //typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FrobeniusNorm> >
@@ -388,19 +388,19 @@ private:
 
         // instantiate the AMG preconditioner
 #if HAVE_MPI
-        amg_ = new AMG(fineOperator, 
-                       coarsenCriterion, 
+        amg_ = new AMG(fineOperator,
+                       coarsenCriterion,
                        smootherArgs,
                        *istlComm_);
 #else
-        amg_ = new AMG(fineOperator, 
-                       coarsenCriterion, 
+        amg_ = new AMG(fineOperator,
+                       coarsenCriterion,
                        smootherArgs);
 #endif
     };
 
     const Problem &problem_;
-    
+
     AMG *amg_;
 
 #if HAVE_MPI

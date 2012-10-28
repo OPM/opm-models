@@ -67,7 +67,7 @@
  *
  * \brief Indicate that all parameters are registered.
  *
- * If \c REGISTER_PARAM is called after the invokation of 
+ * If \c REGISTER_PARAM is called after the invokation of
  * \c END_PARAM_REGISTRATION, a <tt>Dune::InvalidState</tt> exception
  * will be thrown.
  */
@@ -85,7 +85,7 @@
  *
  * \code
  * // Retrieves scalar value UpwindWeight, default
- * // is taken from the property UpwindWeight 
+ * // is taken from the property UpwindWeight
  * GET_PARAM(TypeTag, Scalar, UpwindWeight);
  * \endcode
  */
@@ -110,14 +110,14 @@ struct ParamInfo
     std::string paramTypeName;
     std::string usageString;
     std::string compileTimeValue;
-    
+
     bool operator==(const ParamInfo &other)
     {
         return
             other.paramName == paramName &&
             other.paramTypeName == paramTypeName &&
-            other.usageString == usageString && 
-            other.compileTimeValue == compileTimeValue; 
+            other.usageString == usageString &&
+            other.compileTimeValue == compileTimeValue;
     }
 };
 
@@ -136,7 +136,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
             cmdLineName += "-";
         cmdLineName += tolower(camelCaseName[i]);
     }
-    
+
     // assemble the printed output
     paramMessage = "    ";
     paramMessage += cmdLineName;
@@ -144,12 +144,12 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     // add the =VALUE_TYPE part
     if (paramInfo.paramTypeName == "std::string" || paramInfo.paramTypeName == "const char *")
         paramMessage += "=STRING";
-    else if (paramInfo.paramTypeName == "float" || 
-             paramInfo.paramTypeName == "double" || 
-             paramInfo.paramTypeName == "long double" || 
+    else if (paramInfo.paramTypeName == "float" ||
+             paramInfo.paramTypeName == "double" ||
+             paramInfo.paramTypeName == "long double" ||
              paramInfo.paramTypeName == "quad")
         paramMessage += "=SCALAR";
-    else if (paramInfo.paramTypeName == "int" || 
+    else if (paramInfo.paramTypeName == "int" ||
              paramInfo.paramTypeName == "unsigned int" ||
              paramInfo.paramTypeName == "short" ||
              paramInfo.paramTypeName == "unsigned short")
@@ -268,7 +268,7 @@ void printValues(std::ostream &os = std::cout)
             runTimeKeyList.push_back(*keyIt);
         }
     }
-    
+
     // loop over all registered parameters
     std::list<std::string> compileTimeKeyList;
     auto paramInfoIt = paramRegistry_.begin();
@@ -306,7 +306,7 @@ void printValues(std::ostream &os = std::cout)
         const auto &keyEndIt = unknownKeyList.end();
         for (; keyIt != keyEndIt; ++keyIt) {
             os << *keyIt << "=\"" << tree.get(*keyIt, "") << "\"\n";
-        } 
+        }
     }
 }
 
@@ -317,7 +317,7 @@ void registerParam(const char *paramName, const char *usageString)
     if (!paramRegistrationOpen_)
         DUNE_THROW(Dune::InvalidStateException,
                    "Parameter registration was already closed before the parameter " << paramName << " was registered.");
-        
+
 
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;

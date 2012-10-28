@@ -82,7 +82,7 @@ SET_INT_PROP(TestDecTwoPTwoCProblem, PressureFormulation,
         GET_PROP_TYPE(TypeTag, Indices)::pressureNW);
 
 // Select fluid system
-SET_TYPE_PROP(TestDecTwoPTwoCProblem, 
+SET_TYPE_PROP(TestDecTwoPTwoCProblem,
               FluidSystem,
               Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 

@@ -224,7 +224,7 @@ protected:
                               EqBuffer &buffer,
                               bool vertexCentered = true)
     {
-        char name[512];       
+        char name[512];
         for (int i = 0; i < numEq; ++i) {
             std::string eqName = problem_.model().primaryVarName(i);
             snprintf(name, 512, pattern, eqName.c_str());
@@ -245,7 +245,7 @@ protected:
                          EqBuffer &buffer,
                          bool vertexCentered = true)
     {
-        char name[512];       
+        char name[512];
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
             oss << i;

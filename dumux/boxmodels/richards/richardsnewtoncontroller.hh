@@ -114,7 +114,7 @@ public:
 
                     // calculate the old wetting phase saturation
                     const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
-                    
+
                     ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
                     // set the temperatures
@@ -124,20 +124,20 @@ public:
                     /////////
                     // calculate the phase pressures of the previous iteration
                     /////////
-                    
+
                     // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
                     fs.setSaturation(wPhaseIdx, 1.0);
                     fs.setSaturation(nPhaseIdx, 0.0);
                     PhaseVector pC;
                     MaterialLaw::capillaryPressures(pC, matParams, fs);
-                    
+
                     // non-wetting pressure can be larger than the
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
                     Scalar pWOld = uLastIter[globI][pwIdx];
                     Scalar pNOld = std::max(problem.referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                                             pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
-                    
+
                     /////////
                     // find the saturations of the previous iteration
                     /////////
@@ -157,7 +157,7 @@ public:
                     fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
                     MaterialLaw::capillaryPressures(pC, matParams, fs);
                     Scalar pwMin = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
-                    
+
                     fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] + 0.2);
                     fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
                     MaterialLaw::capillaryPressures(pC, matParams, fs);

@@ -153,7 +153,7 @@ public:
     void getSource(Dune::FieldVector<Scalar, 2>& sourceEntry,
                    const Element& elementI,
                    const CellData& cellDataI,
-                   const bool first);        
+                   const bool first);
 
     void getStorage(Dune::FieldVector<Scalar, 2>& storageEntry,
                     const Element& elementI,

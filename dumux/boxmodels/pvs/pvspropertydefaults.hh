@@ -61,7 +61,7 @@ SET_INT_PROP(BoxPvs, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(BoxPvs, 
+SET_INT_PROP(BoxPvs,
              NumEq,
              GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
@@ -69,7 +69,7 @@ SET_INT_PROP(BoxPvs,
  * \brief Set the property for the material law to the dummy law.
  */
 SET_TYPE_PROP(BoxPvs,
-              MaterialLaw, 
+              MaterialLaw,
               Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
@@ -77,7 +77,7 @@ SET_TYPE_PROP(BoxPvs,
  *        it from the material law.
  */
 SET_TYPE_PROP(BoxPvs,
-              MaterialLawParams, 
+              MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default

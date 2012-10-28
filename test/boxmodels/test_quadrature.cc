@@ -48,7 +48,7 @@ GlobalPosition::field_type f(const GlobalPosition &pos)
 void testIdenityMapping()
 {
     QuadratureGeom foo;
-    
+
     Scalar corners[][3] = {
         { 0, 0, 0 },
         { 1, 0, 0 },
@@ -67,13 +67,13 @@ void testIdenityMapping()
         for (int j = 0; j < n; ++j) {
             for (int k = 0; k < n; ++k) {
                 LocalPosition localPos;
-                
+
                 localPos[0] = Scalar(i)/(n - 1);
                 localPos[1] = Scalar(j)/(n - 1);
                 localPos[2] = Scalar(k)/(n - 1);
-                
+
                 GlobalPosition globalPos = foo.global(localPos);
-                
+
                 GlobalPosition diff(localPos);
                 diff -= globalPos;
                 assert(diff.two_norm() < 1e-10);
@@ -91,7 +91,7 @@ void writeSubControlVolumes(const Grid &grid)
     typedef Dune::ALUCubeGrid<dim, dim> Grid2;
     typedef typename Grid2::LeafGridView GridView2;
     typedef Dune::GridFactory<Grid2> GridFactory2;
-    
+
     // instanciate a FVElementGeometry
     typedef Dumux::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
     FVElementGeometry fvElemGeom;
@@ -102,7 +102,7 @@ void writeSubControlVolumes(const Grid &grid)
     const auto &eEndIt = gridView.template end<0>();
     for (; eIt != eEndIt; ++eIt) {
         fvElemGeom.update(gridView, *eIt);
-        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {      
+        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
             const auto &scvLocalGeom = *(fvElemGeom.subContVol[scvIdx].localGeometry);
 
             for (int i = 0; i < scvLocalGeom.numCorners; ++ i) {
@@ -116,9 +116,9 @@ void writeSubControlVolumes(const Grid &grid)
     eIt = gridView.template begin<0>();
     for (; eIt != eEndIt; ++eIt) {
         fvElemGeom.update(gridView, *eIt);
-        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {      
+        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
             const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
-            
+
             std::vector<unsigned int> vertexIndices;
             for (int i = 0; i < scvLocalGeom.numCorners; ++ i) {
                 vertexIndices.push_back(cornerOffset);
@@ -199,33 +199,33 @@ void testQuadrature()
 
         // loop over all sub-control volumes
         for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
-            const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;               
-            
+            const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
+
             Dune::GeometryType geomType = scvLocalGeom.type();
             static const int quadratureOrder = 2;
             const auto &rule = Dune::QuadratureRules<Scalar,dim>::rule(geomType, quadratureOrder);
-            
+
             // integrate f over the sub-control volume
             for (auto it = rule.begin(); it != rule.end(); ++ it)
             {
                 auto posScvLocal = it->position();
                 auto posElemLocal = scvLocalGeom.global(posScvLocal);
                 auto posGlobal = elemGeom.global(posScvLocal);
-            
+
                 Scalar fval = f(posGlobal);
                 Scalar weight = it->weight();
-                Scalar detjac = 
-                    scvLocalGeom.integrationElement(posScvLocal) * 
+                Scalar detjac =
+                    scvLocalGeom.integrationElement(posScvLocal) *
                     elemGeom.integrationElement(posElemLocal);
-                
+
                 result += fval * weight * detjac;
             }
         }
     }
-    
+
     std::cout << "result: " << result << " (expected value: " << 1.0/(1 << dim) << ")\n";
 }
-    
+
 int main(int argc, char** argv)
 {
     // initialize MPI, finalize is done automatically on exit

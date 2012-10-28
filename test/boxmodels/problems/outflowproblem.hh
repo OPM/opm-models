@@ -76,7 +76,7 @@ SET_STRING_PROP(OutflowBaseProblem, GridFile, "./grids/outflow.dgf");
 /*!
  * \ingroup BoxTestProblems
  *
- * \brief Problem where dissolved nitrogen is transported with the water 
+ * \brief Problem where dissolved nitrogen is transported with the water
  *        phase from the left side to the right.
  *
  * The model domain is 1m times 1m and exhibits homogeneous soil
@@ -133,7 +133,7 @@ public:
         temperature_ = 273.15 + 20;
         FluidSystem::init(/*minT=*/temperature_ - 1, /*maxT=*/temperature_ + 2, /*numT=*/3,
                           /*minp=*/0.8e5, /*maxp=*/2.5e5, /*nump=*/500);
-        
+
         // set parameters of porous medium
         perm_ = this->toDimMatrix_(1e-10);
         porosity_ = 0.4;
@@ -213,7 +213,7 @@ public:
                   int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
-        
+
         if (onLeftBoundary_(globalPos)) {
             Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
@@ -279,7 +279,7 @@ private:
     { return pos[0] > this->bboxMax()[0] - eps_; }
 
     template <class FluidState, class Context>
-    void initialFluidState_(FluidState &fs, 
+    void initialFluidState_(FluidState &fs,
                             const Context &context,
                             int spaceIdx, int timeIdx) const
     {
@@ -302,7 +302,7 @@ private:
     Scalar temperature_;
     Scalar porosity_;
     Scalar tortuosity_;
-}; 
+};
 } //end namespace
 
 #endif

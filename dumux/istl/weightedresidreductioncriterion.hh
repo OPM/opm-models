@@ -36,7 +36,7 @@ namespace Dumux {
  * \brief Convergence criterion which looks at the weighted absolute
  *        value of the residual
  *
- * For the WeightedResidReductionCriterion, the error of the solution is defined 
+ * For the WeightedResidReductionCriterion, the error of the solution is defined
  * as
  * \f[ e^k = \max_i\{ \left| w_i r^k_i \right| \}\;, \f]
  *
@@ -72,7 +72,7 @@ public:
   /*!
    * \brief Sets the relative weight of each equation.
    *
-   * For the WeightedResidReductionCriterion, the error of the solution is defined 
+   * For the WeightedResidReductionCriterion, the error of the solution is defined
    * as
    * \f[ e^k = \max_i\{ \left| w_i r^k_i \right| \}\;, \f]
    *
@@ -89,11 +89,11 @@ public:
   {
     weightVec_ = weightVec;
   }
-  
+
   /*!
    * \brief Return the relative weight of a primary variable
    *
-   * For the FixPointCriterion, the error of the solution is defined 
+   * For the FixPointCriterion, the error of the solution is defined
    * as
    * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
    *
@@ -115,7 +115,7 @@ public:
    * \copydoc ConvergenceCriterion::setTolerance(Scalar)
    */
   void setTolerance(Scalar tol)
-  { 
+  {
     tolerance_ = tol;
   }
 
@@ -124,7 +124,7 @@ public:
    *        met.
    */
   Scalar tolerance() const
-  { 
+  {
     return tolerance_;
   }
 
@@ -132,7 +132,7 @@ public:
    * \copydoc ConvergenceCriterion::accuracy()
    */
   Scalar accuracy() const
-  { 
+  {
     return error_/initialError_;
   }
 
@@ -150,11 +150,11 @@ public:
     error_ = std::max(error_, 1e-20);
     initialError_ = error_;
   }
-  
+
   /*!
    * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
    */
-  void update(const Vector &curSol, 
+  void update(const Vector &curSol,
               const Vector &curResid)
   {
     lastError_ = error_;
@@ -171,7 +171,7 @@ public:
     // better than the tolerance. TODO: are we actually converged in
     // the first case?
     return
-      accuracy() <= tolerance() || 
+      accuracy() <= tolerance() ||
       error_ <= absTolerance_;
   }
 

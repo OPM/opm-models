@@ -50,7 +50,7 @@ SET_TYPE_PROP(StokesNITestProblem, Grid, Dune::YaspGrid<2>);
 SET_TYPE_PROP(StokesNITestProblem, Problem, StokesNITestProblem<TypeTag>);
 
 //! Select the fluid system
-SET_TYPE_PROP(StokesNITestProblem, 
+SET_TYPE_PROP(StokesNITestProblem,
               FluidSystem,
               Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
@@ -90,7 +90,7 @@ SET_STRING_PROP(StokesNITestProblem, GridFile, "grids/test_stokes2cni.dgf");
  * conditions.
  */
 template <class TypeTag>
-class StokesNITestProblem 
+class StokesNITestProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
@@ -169,7 +169,7 @@ public:
                   int spaceIdx,
                   int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
         if (onUpperBoundary_(pos))
             values.setOutFlow(context, spaceIdx, timeIdx);
@@ -199,7 +199,7 @@ public:
                  int spaceIdx, int timeIdx) const
     {
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
-        
+
         Scalar moleFrac[numComponents];
 
         moleFrac[H2OIdx] = 1e-4;
@@ -209,8 +209,8 @@ public:
             temperature = 284.15;
         };
         moleFrac[AirIdx] = 1 - moleFrac[H2OIdx];
-        
-        
+
+
         // parabolic velocity profile
         Scalar y = this->bboxMax()[1] - pos[1];
         Scalar x = pos[0] - this->bboxMin()[0];
@@ -222,7 +222,7 @@ public:
         Scalar a = - 4*maxVelocity/(width*width);
         Scalar b = - a*width;
         Scalar c = 0;
-        
+
         DimVector velocity(0.0);
         velocity[1] = a * x*x + b * x + c;
 
@@ -303,7 +303,7 @@ private:
 
     bool inLens_(const GlobalPosition &pos) const
     {
-        return 
+        return
             pos[0]<0.75 && pos[0]>0.25 &&
             pos[1]<0.75 && pos[1]>0.25;
     }

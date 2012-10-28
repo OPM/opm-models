@@ -47,10 +47,10 @@ namespace Dumux {
  * default, it solves the momentum balance of the time-dependent Stokes
  * equations, i.e.
  * \f[
- * \frac{\partial \left(\varrho\,\mathbf{v}\right)}{\partial t} 
+ * \frac{\partial \left(\varrho\,\mathbf{v}\right)}{\partial t}
  * + \boldsymbol{\nabla} p
  * - \nabla \cdot
- * \left( 
+ * \left(
  * \mu \left(\boldsymbol{\nabla} \mathbf{v} + \boldsymbol{\nabla} \mathbf{v}^T\right)
  * \right)
  * - \varrho\,\mathbf{g}
@@ -108,7 +108,7 @@ public:
      * \copydoc BoxModel::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
-    { 
+    {
         std::ostringstream oss;
         if (pvIdx == Indices::pressureIdx)
             oss << "pressure";
@@ -187,7 +187,7 @@ public:
                 int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
                 const auto &volVars = elemCtx.volVars(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
                 const auto &fluidState = volVars.fluidState();
-                
+
                 pressure[globalIdx] = fluidState.pressure(phaseIdx);
                 density[globalIdx] = fluidState.density(phaseIdx);
                 temperature[globalIdx] = fluidState.temperature(phaseIdx);

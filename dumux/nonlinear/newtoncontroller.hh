@@ -307,7 +307,7 @@ public:
             return absoluteError_ <= absoluteTolerance_;
         else if (satisfyAbsAndRel_)
             // both, the absolute and the relative tolerances must be attained
-            return 
+            return
                 error_ <= tolerance_
                 && absoluteError_ <= absoluteTolerance_;
         else
@@ -467,7 +467,7 @@ public:
         lastError_ = error_;
         lastAbsoluteError_ = absoluteError_;
         asImp_().newtonUpdateRelError(uCurrentIter, uLastIter, deltaU);
-        asImp_().newtonUpdateAbsError(uCurrentIter, uLastIter, deltaU);       
+        asImp_().newtonUpdateAbsError(uCurrentIter, uLastIter, deltaU);
         writeConvergence_(uLastIter, deltaU);
     }
 
@@ -540,7 +540,7 @@ public:
             Scalar percent = Scalar(numSteps_ - targetSteps_)/targetSteps_;
             return oldTimeStep/(1.0 + percent);
         }
-        
+
         Scalar percent = Scalar(targetSteps_ - numSteps_)/targetSteps_;
         return oldTimeStep*(1.0 + percent/1.2);
     }
@@ -577,7 +577,7 @@ protected:
     Scalar absoluteError_;
     Scalar lastAbsoluteError_;
     Scalar absoluteTolerance_;
-    
+
     // which criteria do we have to satisfy in order to be converged?
     bool enableRelativeCriterion_;
     bool enableAbsoluteCriterion_;

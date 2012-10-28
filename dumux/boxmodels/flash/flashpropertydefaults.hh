@@ -60,7 +60,7 @@ SET_INT_PROP(BoxFlash, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(BoxFlash, 
+SET_INT_PROP(BoxFlash,
              NumEq,
              GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
@@ -68,7 +68,7 @@ SET_INT_PROP(BoxFlash,
  * \brief Set the property for the material law to the dummy law.
  */
 SET_TYPE_PROP(BoxFlash,
-              MaterialLaw, 
+              MaterialLaw,
               Dumux::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
@@ -76,7 +76,7 @@ SET_TYPE_PROP(BoxFlash,
  *        it from the material law.
  */
 SET_TYPE_PROP(BoxFlash,
-              MaterialLawParams, 
+              MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default

@@ -121,7 +121,7 @@ public:
 
         useLineSearch_ = GET_PARAM(TypeTag, bool, NewtonUseLineSearch);
     }
-    
+
     /*!
      * \brief Register all run-time parameters for the Newton controller.
      */
@@ -165,11 +165,11 @@ public:
         }
 
         this->error_ = this->comm_.max(this->error_);
-        
+
         Scalar maxError = GET_PARAM(TypeTag, Scalar, NewtonMaxRelError);
         if (this->error_ > maxError)
-            DUNE_THROW(NumericalProblem, 
-                       "Newton: Relative error " << this->error_ 
+            DUNE_THROW(NumericalProblem,
+                       "Newton: Relative error " << this->error_
                        << " is larger than maximum allowed error of " << maxError);
     }
 
@@ -312,7 +312,7 @@ protected:
                    uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
                }
            }
-           
+
            // calculate the residual of the current solution
            newtonUpdateAbsError_(uCurrentIter, uLastIter, deltaU);
            if (this->absoluteError_ < this->lastAbsoluteError_ || lambda <= 1.0/8) {

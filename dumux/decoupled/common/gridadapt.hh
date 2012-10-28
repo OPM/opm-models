@@ -78,7 +78,7 @@ public:
             Dune::dgrave <<  __FILE__<< ":" <<__LINE__
             << " :  Dune cannot coarsen to gridlevels smaller 0! "<< std::endl;
     }
-    
+
     static void registerParameters()
     {
         GridAdaptIndicator::registerParameters();
@@ -90,7 +90,7 @@ public:
         REGISTER_PARAM(TypeTag, Scalar, GridAdaptRefineTolerance, "The maximum value of the grid adaption indicator before an element gets refined");
         REGISTER_PARAM(TypeTag, Scalar, GridAdaptCoarsenTolerance, "The minimum value of the grid adaption indicator before an element gets coarsened");
     }
-    
+
     void init()
     {
         adaptionIndicator_.init();

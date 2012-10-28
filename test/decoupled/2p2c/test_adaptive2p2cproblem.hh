@@ -61,7 +61,7 @@ SET_PROP(Adaptive2p2c, Grid)
 // #elif HAVE_UG
 //     typedef Dune::UGGrid<2> type;
 #endif
-    
+
 };
 // set the GridCreator property
 SET_TYPE_PROP(Adaptive2p2c, GridCreator, CubeGridCreator<TypeTag>);

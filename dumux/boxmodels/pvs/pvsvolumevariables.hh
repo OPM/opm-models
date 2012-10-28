@@ -124,7 +124,7 @@ public:
 
         // set the absolute phase pressures in the fluid state
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx, 
+            fluidState_.setPressure(phaseIdx,
                                    priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
 
         /////////////
@@ -257,7 +257,7 @@ public:
      */
     Scalar porosity() const
     { return porosity_; }
-  
+
 private:
     FluidState fluidState_;
     Scalar porosity_;

@@ -93,8 +93,8 @@ public:
     void setFreeFlow(const Context &context,
                      int bfIdx,
                      int timeIdx,
-                     const DimVector &velocity, 
-                     const FluidState &fluidState) 
+                     const DimVector &velocity,
+                     const FluidState &fluidState)
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
@@ -106,7 +106,7 @@ public:
         // the outer unit normal
         auto normal = scvf.normal;
         normal /= normal.two_norm();
-      
+
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec
             = context.element().geometry().global(fvElemGeom.subContVol[insideScvIdx].localGeometry->center());
@@ -131,12 +131,12 @@ public:
         Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx] = 
+            (*this)[conti0EqIdx + compIdx] =
                 volumeFlux
                 * molarDensity
                 * fluidState.moleFraction(phaseIdx, compIdx);
         }
-        
+
         // calculate the momentum flux over the boundary
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // calculate a row of grad v + (grad v)^T
@@ -168,8 +168,8 @@ public:
     void setInFlow(const Context &context,
                    int bfIdx,
                    int timeIdx,
-                   const DimVector &velocity, 
-                   const FluidState &fluidState) 
+                   const DimVector &velocity,
+                   const FluidState &fluidState)
     {
         const auto &volVars = context.volVars(bfIdx, timeIdx);
 
@@ -204,12 +204,12 @@ public:
         // don't let mass flow in
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
-        
+
         // don't let momentum flow in
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
             (*this)[momentum0EqIdx + axisIdx] = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
-    
+
     /*!
      * \brief Set a no-flow boundary in the (Navier-)Stoke model
      *
@@ -219,14 +219,14 @@ public:
     void setNoFlow(const Context &context,
                    int spaceIdx,
                    int timeIdx)
-    { 
+    {
         static DimVector v0(0.0);
 
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
         const auto &fluidState = volVars.fluidState(); // don't care
 
         // no flow of mass and no slip for the momentum
-        setFreeFlow(context, spaceIdx, timeIdx, 
+        setFreeFlow(context, spaceIdx, timeIdx,
                     /*velocity = */v0,
                     fluidState);
     }

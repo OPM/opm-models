@@ -39,7 +39,7 @@ namespace Dumux {
  * \brief Represents the primary variables used by the black-oil model.
  */
 template <class TypeTag>
-class BlackOilPrimaryVariables 
+class BlackOilPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -94,11 +94,11 @@ public:
     void assignNaive(const FluidState &fluidState)
     {
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
-        
+
         Scalar saturation[numPhases];
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             saturation[phaseIdx] = fluidState.saturation(phaseIdx);
-        
+
         // check whether the oil is undersaturated
         Scalar po = fluidState.pressure(oPhaseIdx);
         Scalar poSat = FluidSystem::oilSaturationPressure(fluidState.massFraction(oPhaseIdx, gCompIdx));
@@ -115,7 +115,7 @@ public:
             Scalar RsSat = FluidSystem::gasFormationFactor(po);
             Scalar XoGSat = RsSat*rhorefg / rhoo;
 
-            Scalar rhogDef = 
+            Scalar rhogDef =
                 fluidState.saturation(oPhaseIdx)
                 * rhoo
                 * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));

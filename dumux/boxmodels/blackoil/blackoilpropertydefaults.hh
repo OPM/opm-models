@@ -112,8 +112,8 @@ SET_TYPE_PROP(BoxBlackOil,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Set the fluid system to the black-oil fluid system by default
-SET_TYPE_PROP(BoxBlackOil, 
-              FluidSystem, 
+SET_TYPE_PROP(BoxBlackOil,
+              FluidSystem,
               Dumux::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // disable the smooth upwinding method by default

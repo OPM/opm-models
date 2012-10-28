@@ -120,7 +120,7 @@ public:
     {
         assert(0 <= i && i < m_);
         assert(0 <= j && j < n_);
-        
+
         return samples_[j*m_ + i];
     }
 

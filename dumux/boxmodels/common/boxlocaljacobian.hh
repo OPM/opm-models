@@ -208,7 +208,7 @@ public:
         // restore flux variables.
         //elemCtx.restoreScvfVars(); // not necessary
     }
-    
+
     /*!
      * \brief Returns the unweighted epsilon value used to calculate
      *        the local derivatives

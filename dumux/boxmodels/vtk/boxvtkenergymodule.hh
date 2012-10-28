@@ -94,7 +94,7 @@ public:
         REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity, "Include the specific heat capacities of rock matrix in the VTK output files");
         REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity, "Include the lumped heat conductivity of the medium in the VTK output files");
         REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies, "Include the specific enthalpy of the phases in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");       
+        REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");
     }
 
     /*!

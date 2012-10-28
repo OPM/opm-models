@@ -92,10 +92,10 @@ SET_STRING_PROP(NavierStokesTestProblem, GridFile, "grids/test_navierstokes.dgf"
  * \brief Stokes flow problem with modified nitrogen (N2) circulating in
  *        a cavity. (lid-driven cavity-flow)
  *
- * The example is taken from Ghia, Ghia, and Shin (1982), "High-Re solutions 
+ * The example is taken from Ghia, Ghia, and Shin (1982), "High-Re solutions
  * for incompressible flow using the Navier-Stokes equations and a multigrid
  * method", Journal of Computational Physics, Vol. 48, pp. 387-411.
- * 
+ *
  * The domain is two-dimensional and sized 1m times 1m. The boundary
  * conditions for the momentum balances are no-flow boundary
  * conditions except for the top, which is floating from left to right
@@ -122,7 +122,7 @@ class NavierStokesTestProblem : public StokesProblem<TypeTag>
         dimWorld = GridView::dimensionworld,
 
         // copy some indices for convenience
-        pressureIdx = Indices::pressureIdx, 
+        pressureIdx = Indices::pressureIdx,
         velocity0Idx = Indices::velocity0Idx,
         conti0EqIdx = Indices::conti0EqIdx,
         momentum0EqIdx = Indices::momentum0EqIdx
@@ -155,7 +155,7 @@ public:
      *
      * This problem assumes a constant temperature of 10 degrees Celsius.
      */
-    template <class Context>   
+    template <class Context>
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
     { return 273.15 + 10; }
@@ -173,8 +173,8 @@ public:
     template <class Context>
     void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-/*        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
-        
+/*        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
+
         values.setOutflow(massBalanceIdx);
         values.setDirichlet(momentumXIdx);
         values.setDirichlet(momentumYIdx);

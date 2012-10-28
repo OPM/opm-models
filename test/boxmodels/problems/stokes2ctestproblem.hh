@@ -49,7 +49,7 @@ SET_TYPE_PROP(Stokes2cTestProblem, Grid, Dune::YaspGrid<2>);
 SET_TYPE_PROP(Stokes2cTestProblem, Problem, Dumux::Stokes2cTestProblem<TypeTag>);
 
 //! Select the fluid system
-SET_TYPE_PROP(Stokes2cTestProblem, 
+SET_TYPE_PROP(Stokes2cTestProblem,
               FluidSystem,
               Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
@@ -147,7 +147,7 @@ public:
      *
      * This problem assumes a temperature of 10 degrees Celsius.
      */
-    template <class Context>   
+    template <class Context>
     Scalar temperature(const Context &context,
                        int spaceIdx, int timeIdx) const
     { return 273.15 + 10; /* -> 10 deg C */ }
@@ -169,7 +169,7 @@ public:
     template <class Context>
     void boundary(BoundaryRateVector &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);      
+        const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
 
         if (onLowerBoundary_(pos))
             values.setOutFlow(context, spaceIdx, timeIdx);

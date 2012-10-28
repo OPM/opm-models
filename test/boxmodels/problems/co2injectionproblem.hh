@@ -174,11 +174,11 @@ SET_STRING_PROP(Co2InjectionBaseProblem, GridFile, "grids/co2injection.dgf");
  * hydrostatic pressure is assumed.
  */
 template <class TypeTag>
-class Co2InjectionProblem 
+class Co2InjectionProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
-    
+
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -223,7 +223,7 @@ public:
      */
     Co2InjectionProblem(TimeManager &timeManager)
         : ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView())
-    {      
+    {
         eps_ = 1e-6;
 
         temperatureLow_ = GET_PARAM(TypeTag, Scalar, FluidSystemTemperatureLow);
@@ -233,7 +233,7 @@ public:
         nPressure_ = GET_PARAM(TypeTag, int, FluidSystemNumPressure);
         pressureLow_ = GET_PARAM(TypeTag, Scalar, FluidSystemPressureLow);
         pressureHigh_ = GET_PARAM(TypeTag, Scalar, FluidSystemPressureHigh);
-        
+
         maxDepth_ = GET_PARAM(TypeTag, Scalar, MaxDepth);
         temperature_ = GET_PARAM(TypeTag, Scalar, Temperature);
         name_ = GET_PARAM(TypeTag, std::string, SimulationName);
@@ -247,7 +247,7 @@ public:
                           /*pmax=*/pressureHigh_,
                           /*np=*/nPressure_);
 
-        
+
         fineLayerBottom_ = 22.0;
 
         // intrinsic permeabilities
@@ -281,7 +281,7 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-        
+
         REGISTER_PARAM(TypeTag, Scalar, FluidSystemTemperatureLow, "The lower temperature [K] for tabulation of the fluid system");
         REGISTER_PARAM(TypeTag, Scalar, FluidSystemTemperatureHigh, "The upper temperature [K] for tabulation of the fluid system");
         REGISTER_PARAM(TypeTag, int, FluidSystemNumTemperature, "The number of intervals between the lower and upper temperature");
@@ -305,11 +305,11 @@ public:
      * \copydoc BoxProblem::name
      */
     const std::string name() const
-    { 
+    {
         std::ostringstream oss;
         oss << name_ << "_" << this->model().name();
         if (GET_PROP_VALUE(TypeTag, EnableEnergy))
-            oss << "_ni";          
+            oss << "_ni";
         return oss.str();
     }
 
@@ -335,7 +335,7 @@ public:
      */
     template <class Context>
     Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
-    { 
+    {
         const auto &pos = context.pos(spaceIdx, timeIdx);
         if (inHighTemperatureRegion_(pos))
             return temperature_ + 100;
@@ -403,7 +403,7 @@ public:
             return fineHeatCondParams_;
         return coarseHeatCondParams_;
     }
-    
+
     //! \}
 
     /*!
@@ -440,7 +440,7 @@ public:
             typename FluidSystem::ParameterCache paramCache;
             paramCache.updatePhase(fs, gPhaseIdx);
             Scalar h = FluidSystem::enthalpy(fs, paramCache, gPhaseIdx);
-            
+
             // impose an forced inflow boundary condition
             values.setMassRate(massRate);
             values.setEnthalpyRate(massRate[contiCO2EqIdx] * h);
@@ -449,7 +449,7 @@ public:
             // no flow on top and bottom
             values.setNoFlow();
     }
-    
+
     // \}
 
     /*!
@@ -495,7 +495,7 @@ private:
         // set temperature
         //////
         fs.setTemperature(temperature(context, spaceIdx, timeIdx));
-        
+
         //////
         // set saturations
         //////
@@ -525,7 +525,7 @@ private:
 
         typename FluidSystem::ParameterCache paramCache;
         typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
-        CFRP::solve(fs, 
+        CFRP::solve(fs,
                     paramCache,
                     /*refPhaseIdx=*/lPhaseIdx,
                     /*setViscosity=*/true,

@@ -130,7 +130,7 @@ public:
             ird.index = it->localIdx;
             ird.peerRank = it->peerRank;
             ird.borderDistance = it->borderDistance;
-            
+
             this->push_back(ird);
         };
     }

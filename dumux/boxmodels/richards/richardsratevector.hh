@@ -93,7 +93,7 @@ public:
         // convert to mass rates
         ParentType massRate(value);
         massRate[contiEqIdx] *= FluidSystem::molarMass(/*compIdx=*/wPhaseIdx);
-        
+
         // set the mass rate
         setMassRate(massRate);
     }
@@ -108,16 +108,16 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, 
-                           int phaseIdx, 
+    void setVolumetricRate(const FluidState &fluidState,
+                           int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[contiEqIdx + compIdx] = 
+            (*this)[contiEqIdx + compIdx] =
                 fluidState.density(phaseIdx)
                 * fluidState.massFraction(phaseIdx, /*compIdx=*/wPhaseIdx)
                 * volume;
-        
+
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
 };

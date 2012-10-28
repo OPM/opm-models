@@ -112,7 +112,7 @@ public:
         ParentType massRate(value);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             massRate[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
-        
+
         // set the mass rate
         setMassRate(massRate);
     }
@@ -132,7 +132,7 @@ public:
      *
      * The enthalpy transported into the domain is taken into account
      * by this method.
-     * 
+     *
      * \param fluidState The thermodynamic state of the fluids which
      *                   should be considered. The density and the
      *                   composition of the considered phase must be
@@ -143,16 +143,16 @@ public:
      *               \f$[m^3/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, 
-                           int phaseIdx, 
+    void setVolumetricRate(const FluidState &fluidState,
+                           int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = 
+            (*this)[conti0EqIdx + compIdx] =
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
                 * volume;
-        
+
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
 };

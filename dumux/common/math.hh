@@ -379,7 +379,7 @@ Dune::FieldVector<Scalar, 3> crossProduct(const Dune::FieldVector<Scalar, 3> &ve
                                           const Dune::FieldVector<Scalar, 3> &vec2)
 {
     Dune::FieldVector<Scalar, 3> result;
-    
+
     result[0] = vec1[1]*vec2[2] - vec1[2]*vec2[1];
     result[1] = vec1[2]*vec2[0] - vec1[0]*vec2[2];
     result[2] = vec1[0]*vec2[1] - vec1[1]*vec2[0];

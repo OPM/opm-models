@@ -76,7 +76,7 @@ void printUsage(const char *progName, const std::string &errorMsg)
                   << "\n";
     }
     std::cout
-        << 
+        <<
         "Usage: " << progName << " [options]\n"
         "\n"
         "The available options are:\n";
@@ -168,7 +168,7 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
                     s[j] = std::toupper(s[j]);
                 }
                 else if (s[j] == '.') {
-                    if (j + 1 >= s.size() || 
+                    if (j + 1 >= s.size() ||
                         !std::isalpha(s[j+1]))
                     {
                         std::ostringstream oss;
@@ -176,10 +176,10 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
                             << " is invalid (character after '.' is not a letter).";
                         return oss.str();
                     }
-                        
+
                     s[j + 1] = std::toupper(s[j + 1]);
                 }
-                
+
                 ++j;
             }
         }
@@ -226,7 +226,7 @@ int start(int argc,
 
     // initialize MPI, finalize is done automatically on exit
     const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
-    
+
     int myRank = mpiHelper.rank();
 
     try {
@@ -234,11 +234,11 @@ int start(int argc,
         typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
         typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
         typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-       
+
         ////////////////////////////////////////////////////////////
         // parse the command line arguments
         ////////////////////////////////////////////////////////////
-        
+
         REGISTER_PARAM(TypeTag, std::string,
                        ParameterFile,
                        "An .ini file which contains a set of run-time parameters");
@@ -330,7 +330,7 @@ int start(int argc,
 
         if (myRank == 0)
             std::cout
-                << "eWoms " << EWOMS_VERSION 
+                << "eWoms " << EWOMS_VERSION
 #ifdef EWOMS_CODENAME
                 << " (\"" << EWOMS_CODENAME << "\")"
 #endif
@@ -343,7 +343,7 @@ int start(int argc,
         catch (const Dune::Exception &e) {
             std::cout << __FILE__ << ":" << __LINE__ << "\n";
             std::ostringstream oss;
-            oss << "Creation of the grid failed:" << e.what(); 
+            oss << "Creation of the grid failed:" << e.what();
             printUsage(argv[0], oss.str());
             return 1;
         }
@@ -365,7 +365,7 @@ int start(int argc,
         Problem problem(timeManager);
         timeManager.init(problem, restartTime, dt, tEnd, restart);
         timeManager.run();
-    
+
         if (myRank == 0) {
             std::cout
                 << "eWoms reached the destination. "

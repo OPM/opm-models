@@ -42,7 +42,7 @@ namespace Dumux {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class RichardsPrimaryVariables 
+class RichardsPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -110,7 +110,7 @@ public:
                                      const MaterialLawParams &matParams)
     {
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
-        
+
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, Sw);
         fs.setSaturation(nPhaseIdx, 1 - Sw);
@@ -121,7 +121,7 @@ public:
 
         fs.setPressure(wPhaseIdx, pw);
         fs.setPressure(nPhaseIdx, pw + (pC[nPhaseIdx] - pC[wPhaseIdx]));
-        
+
         assignNaive(fs);
     }
 
@@ -140,7 +140,7 @@ public:
                                         const MaterialLawParams &matParams)
     {
         ImmiscibleFluidState<Scalar, FluidSystem> fs;
-        
+
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, 1 - Sn);
         fs.setSaturation(nPhaseIdx, Sn);
@@ -151,7 +151,7 @@ public:
 
         fs.setPressure(nPhaseIdx, pn);
         fs.setPressure(nPhaseIdx, pn + (pC[wPhaseIdx] - pC[nPhaseIdx]));
-        
+
         assignNaive(fs);
     }
 
@@ -166,17 +166,17 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                globalMolarities[compIdx] += 
+                globalMolarities[compIdx] +=
                     fluidState.molarity(phaseIdx, compIdx)
                     * fluidState.saturation(phaseIdx);
             }
         }
-        
+
         ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
         ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
-        
+
         assignNaive(fsFlash);
     }
 
@@ -189,7 +189,7 @@ public:
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
-        
+
         (*this)[pwIdx] = fluidState.pressure(wPhaseIdx);
     }
 };

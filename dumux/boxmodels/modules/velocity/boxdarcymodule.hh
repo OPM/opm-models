@@ -102,12 +102,12 @@ protected:
  * For Reynolds numbers above \f$\approx 500\f$ the standard Darcy
  * relation also looses it's validity.
  *
- * The Darcy equation is given by the following relation: 
+ * The Darcy equation is given by the following relation:
  *
- * \f[ 
-  \nabla p_\alpha - \rho_\alpha \vec{g} = 
+ * \f[
+  \nabla p_\alpha - \rho_\alpha \vec{g} =
   - \frac{\mu_\alpha}{k_{r,\alpha} K}\vec{v}_\alpha
-  - \frac{\rho_\alpha C_E}{\eta_{r,\alpha} \sqrt{K}} 
+  - \frac{\rho_\alpha C_E}{\eta_{r,\alpha} \sqrt{K}}
   \left| \vec{v}_\alpha \right| \vec{v}_\alpha
  \f]
  *
@@ -147,7 +147,7 @@ public:
      */
     const DimVector &filterVelocity(int phaseIdx) const
     { return filterVelocity_[phaseIdx]; }
-    
+
     /*!
      * \brief Return the volume flux of a fluid phase at the
      *        face's integration point \f$[m^3/s]\f$
@@ -156,7 +156,7 @@ public:
      */
     Scalar volumeFlux(int phaseIdx) const
     { return volumeFlux_[phaseIdx]; }
-    
+
 protected:
     /*!
      * \brief Calculate the filter velocities of all phases
@@ -175,7 +175,7 @@ protected:
         const auto &Ki = volVarsI.intrinsicPermeability();
         const auto &Kj = volVarsJ.intrinsicPermeability();
         problem.meanK(K_, Ki, Kj);
-        Valgrind::CheckDefined(K_);        
+        Valgrind::CheckDefined(K_);
 
         const DimVector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Valgrind::CheckDefined(normal);
@@ -218,11 +218,11 @@ protected:
 
         // calculate the intrinsic permeability
         K_ = volVarsInside.intrinsicPermeability();
-        
+
         DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
-        
+
         const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
-        
+
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
 

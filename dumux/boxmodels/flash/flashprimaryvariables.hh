@@ -47,7 +47,7 @@ namespace Dumux {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class FlashPrimaryVariables 
+class FlashPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                GET_PROP_VALUE(TypeTag, NumEq) >
 {
@@ -108,7 +108,7 @@ public:
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
-    template <class FluidState> 
+    template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
         // reset everything
