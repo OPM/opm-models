@@ -82,6 +82,13 @@ macro(EwomsFindLibrary LibName)
                  PATH_SUFFIXES ".libs" "lib" "lib32" "lib64")
   endif()
 
+  # unset the ${Lib} variable. since there does not seem to be a way
+  # to only remove it from the cache without destroying it in the
+  # local scope, we restore it immediately afterwards.
+  set(TMP ${${Lib}})
+  unset(${Lib} CACHE)
+  set(${Lib} ${TMP})
+
   if(${Lib})
     list(APPEND EwomsLibraries ${${Lib}})
     list(APPEND EwomsLibraryNames ${LibName})
@@ -181,8 +188,10 @@ macro(EwomsCheckFound)
       "Include directory: ${${EwomsModule}_INCLUDE_DIR}\n"
       "Library directory: ${EwomsLibraries}\n\n")
   endif(EwomsLibsFound AND ${EwomsModule}_INCLUDE_DIR)
-  set(${EwomsModule}_FOUND ${EwomsFound} CACHE BOOL INTERNAL)
+  set(${EwomsModule}_FOUND ${EwomsFound})
   set(${EwomsModule}_LIBRARIES ${EwomsLibraries} CACHE STRING INTERNAL)
+  mark_as_advanced(${EwomsModule}_LIBRARIES)
+  mark_as_advanced(${EwomsModule}_INCLUDE_DIR)
 
   # print status message if requested
   if(NOT ${EwomsModule}_FIND_QUIETLY)

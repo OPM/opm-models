@@ -48,6 +48,7 @@ else()
     endif(ALUGRID_VERSION)
   endif(ALUGRID_VERSION)
 endif()
+unset(ALUGRID_PKGCONFIG_DIR CACHE)
 
 set(ALUGRID_VERSION_REQUIRED 1.50)
 
@@ -61,19 +62,22 @@ execute_process(COMMAND ${ALUGRID_VERSION} -c ${ALUGRID_VERSION_REQUIRED} OUTPUT
 if(ALUGRID_VERSION LESS 0)
   message(STATUS "ALUGrid version is less than ${ALUGRID_VERSION_REQUIRED}")
   _dune_set_alugrid(0)
+  unset(ALUGRID_VERSION CACHE)
   return()
 else()
   message(STATUS "ALUGrid version is compatible")
 endif()
+unset(ALUGRID_VERSION CACHE)
 
-find_path(ALUGRID_INCLUDE_PATH "alugrid_serial.h"
+find_path(ALUGRID_INCLUDE_DIR "alugrid_serial.h"
   PATHS "${ALUGRID_DIR}" PATH_SUFFIXES "include" "include/serial"
   NO_DEFAULT_PATH DOC "Include path of serial alugrid headers.")
-if (NOT ALUGRID_INCLUDE_PATH)
+if (NOT ALUGRID_INCLUDE_DIR)
   message(STATUS "Could not deterimine ALUGrid include directory")
   _dune_set_alugrid(0)
   return()  
 endif()
+mark_as_advanced(ALUGRID_INCLUDE_DIR)
 
 find_library(ALUGRID_LIB alugrid 
   PATHS "${ALUGRID_DIR}" 
@@ -85,11 +89,13 @@ if (NOT ALUGRID_LIB)
   _dune_set_alugrid(0)
   return()  
 endif()
+mark_as_advanced(ALUGRID_LIB)
+
 
 set(ALUGRID_INCLUDES
-  ${ALUGRID_INCLUDE_PATH}
-  ${ALUGRID_INCLUDE_PATH}/serial
-  ${ALUGRID_INCLUDE_PATH}/duneinterface)
+  ${ALUGRID_INCLUDE_DIR}
+  ${ALUGRID_INCLUDE_DIR}/serial
+  ${ALUGRID_INCLUDE_DIR}/duneinterface)
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${ALUGRID_INCLUDES})
 set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${ALUGRID_LIB})
@@ -111,7 +117,7 @@ endif()
 if(ALUGRID_PARALLEL_FOUND AND MPI_FOUND)
   # check for parallel ALUGrid
   find_path(ALUGRID_PARALLEL_INCLUDE_PATH "alumetis.hh"
-    PATHS ${ALUGRID_INCLUDE_PATH} 
+    PATHS ${ALUGRID_INCLUDE_DIR} 
     PATH_SUFFIXES "parallel"
     NO_DEFAULT_PATH)
 
@@ -121,6 +127,7 @@ if(ALUGRID_PARALLEL_FOUND AND MPI_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${ALUGRID_LIB})
     #set(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS} -DSOME_MORE_DEF)
     check_include_file_cxx(alugrid_parallel.h ALUGRID_PARALLEL_FOUND)
+    unset(ALUGRID_PARALLEL_INCLUDE_PATH CACHE)
     
     if(NOT ALUGRID_PARALLEL_FOUND)
       message(STATUS "alumetis.hh not found  in ${ALUGRID_PARALLEL_INCLUDE_PATH}")

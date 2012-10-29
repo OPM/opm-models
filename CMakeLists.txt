@@ -36,7 +36,7 @@ find_package(DUNE_common REQUIRED)
 ##############
 # Find the optional packages
 find_package(MPI)
-find_package(Boost)
+#find_package(Boost)
 find_package(Alberta)
 find_package(UG)
 find_package(ALUGrid)
@@ -500,6 +500,10 @@ add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c
 add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled --end-time=8000)
 add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
 
+# test the restart capability
+add_test(obstacle_pvs_restart bin/runtest.sh --restart obstacle_pvs --pvs-verbosity=2)
+
+# test the parameter system
 add_test(obstacle_immiscible_parameters bin/runtest.sh --parameters obstacle_immiscible)
 
 # conditionally add the tests that depend on superLU and ALUGrid

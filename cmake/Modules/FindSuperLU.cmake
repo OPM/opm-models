@@ -72,7 +72,7 @@ find_package_handle_standard_args(
   SUPERLU_INCLUDE_DIR
   SUPERLU_LIBRARY)
 
-mark_as_advanced(SUPERLU_INCLUDE_DIRS SUPERLU_LIBRARIES)
+mark_as_advanced(SUPERLU_INCLUDE_DIR SUPERLU_LIBRARY)
 
 # if both headers and library are found, store results
 if(SUPERLU_FOUND)

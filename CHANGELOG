@@ -21,7 +21,7 @@ altered:
 - The parameter system has received a major overhaul: “Runtime”
   parameters have been abandoned, as have parameter groups. Runtime
   parameters have bitten the dust because of their flawed semantics
-  (all parameters could always be specified on run-time), groups where
+  (all parameters are always specified on run-time), groups where
   removed because they caused confusion when specifying parameters
   from the command line (e.g. the correct way to specify the relative
   tolerance of the Newton solver was ‘—newton.rel-tolerance’ instead
