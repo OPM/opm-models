@@ -3,7 +3,7 @@
 ################################
 
 Module: ewoms
-Version: 2.2-git
-Codename: Captain Koons
+Version: 2.3-git
+Codename: Marsellus
 Maintainer: andreas.lauser@iws.uni-stuttgart.de
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2)
