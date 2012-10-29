@@ -169,8 +169,6 @@ typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
 typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
 
 typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -179,7 +177,6 @@ typedef typename GET_PROP_TYPE(TypeTag, SpatialParams) SpatialParams;
 typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
 typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
 typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
-typedef typename SolutionTypes::ScalarSolution ScalarSolutionType;
 
 typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
 typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
@@ -191,7 +188,6 @@ enum
 
 enum
 {
-    wPhaseIdx = Indices::wPhaseIdx,
     nPhaseIdx = Indices::nPhaseIdx,
     pWIdx = Indices::pwIdx,
     SwIdx = Indices::SwIdx,

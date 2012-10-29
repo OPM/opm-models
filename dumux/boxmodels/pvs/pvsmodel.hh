@@ -161,7 +161,6 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:

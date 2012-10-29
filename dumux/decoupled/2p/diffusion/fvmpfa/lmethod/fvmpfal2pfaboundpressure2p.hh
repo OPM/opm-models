@@ -93,11 +93,8 @@ class FVMPFAL2PFABoundPressure2P: public FVPressure<TypeTag>
     {
         pw = Indices::pressureW,
         pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        vw = Indices::velocityW,
-        vn = Indices::velocityNW,
         vt = Indices::velocityTotal
     };
     enum
@@ -110,20 +107,10 @@ class FVMPFAL2PFABoundPressure2P: public FVPressure<TypeTag>
         satEqIdx = Indices::satEqIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
-    enum
-    {
-        globalCorner = 2,
-        globalEdge = 3,
-        neumannNeumann = 0,
-        dirichletDirichlet = 1,
-        dirichletNeumann = 2,
-        neumannDirichlet = 3
-    };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
-    typedef typename GridView::Grid Grid;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
@@ -470,7 +457,6 @@ private:
     static constexpr Scalar threshold_ = 1e-15;
     static constexpr int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
     static constexpr int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
-    static constexpr int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
 
     /* Volume correction term to correct for unphysical saturation overshoots/undershoots.
      * These can occur if the estimated time step for the explicit transport was too large. Correction by an artificial source term allows to correct

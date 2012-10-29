@@ -52,7 +52,6 @@ class FlashRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
-    typedef FlashRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
     typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 

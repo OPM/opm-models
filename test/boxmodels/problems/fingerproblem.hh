@@ -172,7 +172,6 @@ class FingerProblem
 
     enum {
         // number of phases
-        numPhases = FluidSystem::numPhases,
 
         // phase indices
         wPhaseIdx = FluidSystem::wPhaseIdx,
@@ -180,7 +179,6 @@ class FingerProblem
 
         // equation indices
         contiWEqIdx = Indices::conti0EqIdx + wPhaseIdx,
-        contiNEqIdx = Indices::conti0EqIdx + nPhaseIdx,
 
         // Grid and world dimension
         dim = GridView::dimension,

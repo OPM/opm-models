@@ -46,7 +46,6 @@ template<class TypeTag>
 class FluxData2P2C
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     enum
@@ -54,7 +53,6 @@ private:
         dim = GridView::dimension, dimWorld = GridView::dimensionworld
     };
 
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum
     {

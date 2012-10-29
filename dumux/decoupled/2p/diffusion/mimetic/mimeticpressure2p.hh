@@ -104,7 +104,6 @@ template<class TypeTag> class MimeticPressure2P
 
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalStiffness) LocalStiffness;
-    typedef Dune::BlockVector< Dune::FieldVector<Scalar, 1> > TraceType;
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 2*dim> > NormalVelType;
     typedef MimeticOperatorAssembler<Scalar,GridView> OperatorAssembler;
 

@@ -45,7 +45,6 @@ template <class TypeTag>
 class PseudoOnePTwoCFluidState
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar)      Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
 public:

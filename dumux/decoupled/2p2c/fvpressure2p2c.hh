@@ -131,7 +131,6 @@ template<class TypeTag> class FVPressure2P2C
 
 protected:
     //! @copydoc FVPressure::EntryType
-    typedef Dune::FieldVector<Scalar, 2> EntryType;
 
     Problem& problem()
     {

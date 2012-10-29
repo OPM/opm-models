@@ -39,7 +39,7 @@ class GridAdaptionIndicator2PLocal
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Traits::template Codim<0>::EntityPointer ElementPointer;
@@ -55,11 +55,6 @@ private:
 
     enum
     {
-        dim = GridView::dimension, dimWorld = GridView::dimensionworld
-    };
-
-    enum
-    {
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW
     };
@@ -67,10 +62,8 @@ private:
     {
         wPhaseIdx = Indices::wPhaseIdx,
         nPhaseIdx = Indices::nPhaseIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
     };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
 
 public:
     static void registerParameters()

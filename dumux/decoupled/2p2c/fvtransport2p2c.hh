@@ -103,7 +103,6 @@ class FVTransport2P2C
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 protected:
     //! @copydoc FVPressure::EntryType
-    typedef Dune::FieldVector<Scalar, 2> EntryType;
     //! Acess function for the current problem
     Problem& problem()
     {return problem_;}

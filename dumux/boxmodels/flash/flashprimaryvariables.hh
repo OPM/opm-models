@@ -54,7 +54,6 @@ class FlashPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-    typedef FlashPrimaryVariables<TypeTag> ThisType;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -66,7 +65,6 @@ class FlashPrimaryVariables
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef BoxMultiPhaseEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:

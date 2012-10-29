@@ -48,10 +48,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { numComponents = FluidSystem::numComponents };
-    enum { dimWorld = GridView::dimensionworld };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
     // Primary variable indices

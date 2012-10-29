@@ -148,7 +148,6 @@ class PowerInjectionProblem
 
     enum {
         // number of phases
-        numPhases = FluidSystem::numPhases,
 
         // phase indices
         wPhaseIdx = FluidSystem::wPhaseIdx,

@@ -41,7 +41,6 @@ class StaticTabulated2DFunction
     : public Tabulated2DFunction<typename Traits::Scalar, StaticTabulated2DFunction<Traits> >
 {
     typedef typename Traits::Scalar Scalar;
-    enum { numXSteps = Traits::numX, numYSteps = Traits::numY };
 
 public:
     StaticTabulated2DFunction()

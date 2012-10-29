@@ -75,20 +75,17 @@ template<class TypeTag> class FVMPFAO2PFABoundVelocity2P: public FVMPFAO2PFABoun
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryTypes) BoundaryTypes;
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
     typedef typename GridView::Grid Grid;
-    typedef typename GridView::IndexSet IndexSet;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
     typedef typename Grid::template Codim<0>::EntityPointer ElementPointer;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridTypeIndices) GridTypeIndices;
 
     typedef Dumux::FVMPFAOInteractionVolume<TypeTag> InteractionVolume;
 
@@ -96,11 +93,8 @@ template<class TypeTag> class FVMPFAO2PFABoundVelocity2P: public FVMPFAO2PFABoun
     {
         pw = Indices::pressureW,
         pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
         Sn = Indices::saturationNW,
-        vw = Indices::velocityW,
-        vn = Indices::velocityNW,
         vt = Indices::velocityTotal
     };
     enum
@@ -112,16 +106,6 @@ template<class TypeTag> class FVMPFAO2PFABoundVelocity2P: public FVMPFAO2PFABoun
         pressEqIdx = Indices::pressEqIdx,
         satEqIdx = Indices::satEqIdx,
         numPhases = GET_PROP_VALUE(TypeTag, NumPhases)
-    };
-
-    enum
-    {
-        globalCorner = 2,
-        globalEdge = 3,
-        neumannNeumann = 0,
-        dirichletDirichlet = 1,
-        dirichletNeumann = 2,
-        neumannDirichlet = 3
     };
 
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
@@ -283,7 +267,6 @@ private:
     int vtkOutputLevel_;
 
     static constexpr Scalar threshold_ = 1e-15;
-    static constexpr int velocityType_ = GET_PROP_VALUE(TypeTag, VelocityFormulation); //!< gives kind of velocity used (\f$ 0 = v_w\f$, \f$ 1 = v_n\f$, \f$ 2 = v_t\f$)
     static constexpr int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
     static constexpr int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
 };

@@ -127,7 +127,6 @@ class TestProblemOneP: public DiffusionProblem1P<TypeTag >
     typedef typename GridView::Intersection Intersection;
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim> LocalPosition;
-    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
 
 

@@ -56,7 +56,6 @@ class PvsRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef PvsRateVector<TypeTag> ThisType;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
     typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
 

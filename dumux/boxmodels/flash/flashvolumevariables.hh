@@ -52,8 +52,6 @@ class FlashVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -73,7 +71,6 @@ class FlashVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FlashSolver) FlashSolver;
 
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 

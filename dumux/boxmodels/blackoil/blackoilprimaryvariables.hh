@@ -62,8 +62,6 @@ class BlackOilPrimaryVariables
 
     // component indices from the fluid system
     enum { gCompIdx = FluidSystem::gCompIdx };
-    enum { wCompIdx = FluidSystem::wCompIdx };
-    enum { oCompIdx = FluidSystem::oCompIdx };
 
     static_assert(numPhases == 3, "The black-oil model has three phases!");
     static_assert(numComponents == 3, "The black-oil model has three components!");

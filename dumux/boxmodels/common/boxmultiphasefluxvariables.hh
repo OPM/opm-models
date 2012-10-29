@@ -64,7 +64,6 @@ class BoxMultiPhaseFluxVariables
     enum { useTwoPointGradients = GET_PROP_VALUE(TypeTag, UseTwoPointGradients) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
     typedef typename VelocityModule::VelocityFluxVariables VelocityFluxVariables;

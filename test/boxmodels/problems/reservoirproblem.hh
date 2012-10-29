@@ -135,7 +135,6 @@ class ReservoirProblem
     };
 
     // copy some indices for convenience
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         numPhases = FluidSystem::numPhases,
         numComponents = FluidSystem::numComponents,
@@ -148,9 +147,6 @@ class ReservoirProblem
         oCompIdx = FluidSystem::oCompIdx,
         wCompIdx = FluidSystem::wCompIdx,
 
-        conti0EqIdx = Indices::conti0EqIdx,
-        pressure0Idx = Indices::pressure0Idx,
-        saturation0Idx = Indices::saturation0Idx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

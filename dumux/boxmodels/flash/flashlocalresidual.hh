@@ -42,7 +42,6 @@ namespace Dumux {
 template<class TypeTag>
 class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;

@@ -134,7 +134,6 @@ typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
 typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-typedef typename GET_PROP_TYPE(TypeTag, SpatialParams)    SpatialParams;
 
 
 // boundary typedefs
@@ -143,12 +142,8 @@ typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
 enum
 {
-    dim = GridView::dimension, dimWorld = GridView::dimensionworld
-};
-
-enum
-{
-    wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx
+    dim = GridView::dimension,
+    dimWorld = GridView::dimensionworld
 };
 
 typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

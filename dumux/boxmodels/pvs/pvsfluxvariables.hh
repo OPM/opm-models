@@ -54,16 +54,12 @@ class PvsFluxVariables
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dimWorld = GridView::dimensionworld };
-    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-    enum { numComponents =  GET_PROP_VALUE(TypeTag, NumComponents) };
 
-    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     typedef BoxDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
