@@ -4,6 +4,19 @@ include(CheckLibraryExists)
 
 macro(_dune_set_alugrid val)
   set(ALUGRID_FOUND ${val})
+
+  if(NOT ALUGRID_FOUND AND ALUGRID_FIND_REQUIRED)
+    message(FATAL_ERROR "Could not find required libary ALUGrid")
+  endif()
+
+  # print status message if requested
+  if(NOT ALUGRID_FIND_QUIETLY)
+    if(EwomsFound)
+      message(STATUS "Found ALUGrid")
+    else()
+      message(STATUS "Could not find ALUGrid")
+    endif()
+  endif()
 endmacro()
 
 find_package(METIS)
