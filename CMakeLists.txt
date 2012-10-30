@@ -492,10 +492,10 @@ add_test(test_quadrature bin/runtest.sh --plain test_quadrature)
 add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
 
 add_test(test_diffusion bin/runtest.sh --simulation-diffusion test_diffusion 3)
-add_test(test_1p bin/runtest.sh --simulation test_1p)
+add_test(test_1p bin/runtest.sh --plain test_1p)
 add_test(test_transport bin/runtest.sh --simulation test_transport)
 add_test(test_impes bin/runtest.sh --simulation test_impes)
-add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c)
+add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c --end-time=2000)
 
 add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled --end-time=8000)
 add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
