@@ -87,6 +87,7 @@ AC_CONFIG_FILES([Makefile
     test/material/tabulation/Makefile
     tutorial/Makefile
     ewoms.pc
+    EwomsConfig.cmake
 ])
 
 # implicitly set the Dune-flags everywhere
