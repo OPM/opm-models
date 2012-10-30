@@ -1,5 +1,5 @@
-Notable Differences Between DuMuX 2.1 and DuMuX-eWoms 2.2
-=========================================================
+Notable Differences Between DuMuX 2.1 and eWoms 2.2
+===================================================
 
 - The minumim required version of the Dune core modules is now
   2.2. This means that eWoms will no longer compile with Dune 2.1.
