@@ -26,7 +26,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
@@ -44,7 +44,7 @@ namespace Dumux {
 template <class TypeTag>
 class ImmiscibleVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
@@ -67,7 +67,7 @@ class ImmiscibleVolumeVariables
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef BoxEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:

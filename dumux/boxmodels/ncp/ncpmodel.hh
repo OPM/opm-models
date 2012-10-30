@@ -27,7 +27,7 @@
 #include "ncpproperties.hh"
 
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <dune/common/fvector.hh>
@@ -139,7 +139,7 @@ class NcpModel
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:

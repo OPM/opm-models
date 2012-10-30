@@ -27,7 +27,7 @@
 
 #include "stokesproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/common/valgrind.hh>
 #include <dumux/common/math.hh>
 
@@ -49,7 +49,7 @@ namespace Dumux {
  */
 template <class TypeTag>
 class StokesFluxVariables
-    : public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public BoxEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -61,7 +61,7 @@ class StokesFluxVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef BoxEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!

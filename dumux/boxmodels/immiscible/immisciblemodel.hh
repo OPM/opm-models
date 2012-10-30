@@ -27,7 +27,7 @@
 #include "immiscibleproperties.hh"
 #include "immisciblelocalresidual.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 #include <sstream>
 #include <string>
@@ -87,7 +87,7 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

@@ -25,7 +25,7 @@
 #define DUMUX_BOX_IMMISCIBLE_INDICES_HH
 
 #include "immiscibleproperties.hh"
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 namespace Dumux {
 
@@ -36,12 +36,12 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices
-    : public BoxMultiPhaseEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public BoxEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
+    typedef BoxEnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
 
 public:
     // number of equations/primary variables

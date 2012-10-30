@@ -30,14 +30,14 @@ namespace Dumux {
 
 /*!
  * \ingroup BoxDiffusion
- * \class DoxyDiffusionModule
+ * \class Dumux::BoxDiffusionModule
  * \brief Provides the auxiliary methods required for consideration of the diffusion equation.
  */
 template <class TypeTag, bool enableDiffusion>
 class BoxDiffusionModule;
 
 /*!
- * \copydoc DoxyDiffusionModule
+ * \copydoc Dumux::BoxDiffusionModule
  */
 template <class TypeTag>
 class BoxDiffusionModule<TypeTag, /*enableDiffusion=*/false>
@@ -67,7 +67,7 @@ public:
 };
 
 /*!
- * \copydoc DoxyDiffusionModule
+ * \copydoc Dumux::BoxDiffusionModule
  */
 template <class TypeTag>
 class BoxDiffusionModule<TypeTag, /*enableDiffusion=*/true>
@@ -124,11 +124,17 @@ public:
 
 /*!
  * \ingroup BoxDiffusion
- * \brief Provides the volumetric quantities required for the diffusion equation.
+ * \class Dumux::BoxDiffusionVolumeVariables
+ *
+ * \brief Provides the volumetric quantities required for the
+ *        calculation of molecular diffusive fluxes.
  */
 template <class TypeTag, bool enableDiffusion>
 class BoxDiffusionVolumeVariables;
 
+/*!
+ * \copydoc Dumux::BoxDiffusionVolumeVariables
+ */
 template <class TypeTag>
 class BoxDiffusionVolumeVariables<TypeTag, /*enableDiffusion=*/false>
 {
@@ -174,6 +180,9 @@ protected:
     { }
 };
 
+/*!
+ * \copydoc Dumux::BoxDiffusionVolumeVariables
+ */
 template <class TypeTag>
 class BoxDiffusionVolumeVariables<TypeTag, /*enableDiffusion=*/true>
 {
@@ -248,11 +257,16 @@ private:
 
 /*!
  * \ingroup BoxDiffusion
+ * \class Dumux::BoxDiffusionFluxVariables
+ *
  * \brief Provides the quantities required to calculate diffusive mass fluxes.
  */
 template <class TypeTag, bool enableDiffusion>
 class BoxDiffusionFluxVariables;
 
+/*!
+ * \copydoc Dumux::BoxDiffusionFluxVariables
+ */
 template <class TypeTag>
 class BoxDiffusionFluxVariables<TypeTag, /*enableDiffusion=*/false>
 {
@@ -295,7 +309,9 @@ public:
     { DUNE_THROW(Dune::InvalidStateException, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled."); }
 };
 
-
+/*!
+ * \copydoc Dumux::BoxDiffusionFluxVariables
+ */
 template <class TypeTag>
 class BoxDiffusionFluxVariables<TypeTag, /*enableDiffusion=*/true>
 {

@@ -28,7 +28,7 @@
 #include "stokesproperties.hh"
 
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 #include <dune/geometry/quadraturerules.hh>
 
@@ -45,7 +45,7 @@ namespace Dumux {
 template <class TypeTag>
 class StokesVolumeVariables
     : public BoxVolumeVariables<TypeTag>
-    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public BoxEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -66,7 +66,7 @@ class StokesVolumeVariables
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
-    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef BoxEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     /*!

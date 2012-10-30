@@ -27,7 +27,7 @@
 #include "flashproperties.hh"
 
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 #include <dumux/common/math.hh>
 
@@ -56,7 +56,7 @@ class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

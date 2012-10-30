@@ -28,7 +28,7 @@
 
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -66,7 +66,7 @@ class NcpPrimaryVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dumux::NcpFlash<Scalar, FluidSystem> NcpFlash;
 

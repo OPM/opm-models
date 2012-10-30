@@ -26,7 +26,7 @@
 
 #include "pvsindices.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
 #include <dumux/common/valgrind.hh>
 
@@ -57,7 +57,7 @@ class PvsRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsRateVector()

@@ -27,7 +27,7 @@
 #include "flashproperties.hh"
 #include "flashindices.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/material/fluidstates/compositionalfluidstate.hh>
 #include <dumux/common/math.hh>
@@ -47,7 +47,7 @@ template <class TypeTag>
 class FlashVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public BoxDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public BoxEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
@@ -76,7 +76,7 @@ class FlashVolumeVariables
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef BoxEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     //! The type of the object returned by the fluidState() method

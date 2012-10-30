@@ -27,7 +27,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
 namespace Dumux {
@@ -46,7 +46,7 @@ namespace Dumux {
 template <class TypeTag>
 class ImmiscibleFluxVariables
     : public BoxMultiPhaseFluxVariables<TypeTag>
-    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -54,7 +54,7 @@ class ImmiscibleFluxVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
-    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef BoxEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!

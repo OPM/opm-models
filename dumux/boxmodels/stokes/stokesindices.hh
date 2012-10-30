@@ -26,7 +26,7 @@
 #define DUMUX_STOKES_INDICES_HH
 
 #include "stokesproperties.hh"
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 namespace Dumux {
 /*!
@@ -39,7 +39,7 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset>
 class StokesIndices
-    : public BoxMultiPhaseEnergyIndices<PVOffset
+    : public BoxEnergyIndices<PVOffset
                                         + GET_PROP_VALUE(TypeTag, NumComponents)
                                         + GET_PROP_TYPE(TypeTag, GridView)::dimensionworld,
                                         GET_PROP_VALUE(TypeTag, EnableEnergy)>

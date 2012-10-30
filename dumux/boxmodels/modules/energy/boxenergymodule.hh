@@ -22,8 +22,8 @@
  * \brief Contains the classes required to consider energy as a
  *        conservation quantity in a multi-phase module.
  */
-#ifndef DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
-#define DUMUX_BOX_MULTIPHASE_ENERGY_MODULE_HH
+#ifndef DUMUX_BOX_ENERGY_MODULE_HH
+#define DUMUX_BOX_ENERGY_MODULE_HH
 
 #include <dumux/boxmodels/common/boxproperties.hh>
 
@@ -36,44 +36,17 @@ NEW_PROP_TAG(HeatConductionLawParams);
 
 /*!
  * \ingroup BoxEnergy
- * \brief Provides the indices required for consideration of the energy equation.
- */
-template <int PVOffset, bool enableEnergy>
-struct BoxMultiPhaseEnergyIndices;
-
-template <int PVOffset>
-struct BoxMultiPhaseEnergyIndices<PVOffset, /*enableEnergy=*/false>
-{
-protected:
-    enum { numEq_ = 0 };
-};
-
-template <int PVOffset>
-struct BoxMultiPhaseEnergyIndices<PVOffset, /*enableEnergy=*/true>
-{
-    //! The index of the primary variable representing temperature
-    enum { temperatureIdx = PVOffset };
-
-    //! The index of the equation representing the conservation of energy
-    enum { energyEqIdx = PVOffset };
-
-protected:
-    enum { numEq_ = 1 };
-};
-
-/*!
- * \ingroup BoxEnergy
- * \class DoxyEnergyModule
+ * \class Dumux::BoxEnergyModule
  * \brief Provides the auxiliary methods required for consideration of the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
-class BoxMultiPhaseEnergyModule;
+class BoxEnergyModule;
 
 /*!
- * \copydoc DoxyEnergyModule
+ * \copydoc Dumux::BoxEnergyModule
  */
 template <class TypeTag>
-class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/false>
+class BoxEnergyModule<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -197,10 +170,10 @@ public:
 };
 
 /*!
- * \copydoc DoxyEnergyModule
+ * \copydoc Dumux::BoxEnergyModule
  */
 template <class TypeTag>
-class BoxMultiPhaseEnergyModule<TypeTag, /*enableEnergy=*/true>
+class BoxEnergyModule<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -401,13 +374,53 @@ public:
 
 /*!
  * \ingroup BoxEnergy
+ * \class Dumux::BoxEnergyIndices
+ *
+ * \brief Provides the indices required for consideration of the energy equation.
+ */
+template <int PVOffset, bool enableEnergy>
+struct BoxEnergyIndices;
+
+/*!
+ * \copydoc Dumux::BoxEnergyIndices
+ */
+template <int PVOffset>
+struct BoxEnergyIndices<PVOffset, /*enableEnergy=*/false>
+{
+protected:
+    enum { numEq_ = 0 };
+};
+
+/*!
+ * \copydoc Dumux::BoxEnergyIndices
+ */
+template <int PVOffset>
+struct BoxEnergyIndices<PVOffset, /*enableEnergy=*/true>
+{
+    //! The index of the primary variable representing temperature
+    enum { temperatureIdx = PVOffset };
+
+    //! The index of the equation representing the conservation of energy
+    enum { energyEqIdx = PVOffset };
+
+protected:
+    enum { numEq_ = 1 };
+};
+
+/*!
+ * \ingroup BoxEnergy
+ * \class Dumux::BoxEnergyVolumeVariables
+ *
  * \brief Provides the volumetric quantities required for the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
-class BoxMultiPhaseEnergyVolumeVariables;
+class BoxEnergyVolumeVariables;
 
+/*!
+ * \copydoc Dumux::BoxEnergyVolumeVariables
+ */
 template <class TypeTag>
-class BoxMultiPhaseEnergyVolumeVariables<TypeTag, /*enableEnergy=*/false>
+class BoxEnergyVolumeVariables<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -452,8 +465,11 @@ protected:
     { }
 };
 
+/*!
+ * \copydoc Dumux::BoxEnergyVolumeVariables
+ */
 template <class TypeTag>
-class BoxMultiPhaseEnergyVolumeVariables<TypeTag, /*enableEnergy=*/true>
+class BoxEnergyVolumeVariables<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -531,13 +547,18 @@ private:
 
 /*!
  * \ingroup BoxEnergy
+ * \class Dumux::BoxEnergyFluxVariables
+ *
  * \brief Provides the quantities required to calculate energy fluxes.
  */
 template <class TypeTag, bool enableEnergy>
-class BoxMultiPhaseEnergyFluxVariables;
+class BoxEnergyFluxVariables;
 
+/*!
+ * \copydoc Dumux::BoxEnergyFluxVariables
+ */
 template <class TypeTag>
-class BoxMultiPhaseEnergyFluxVariables<TypeTag, /*enableEnergy=*/false>
+class BoxEnergyFluxVariables<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -571,8 +592,11 @@ public:
     { DUNE_THROW(Dune::InvalidStateException, "Method heatConductivity() does not make sense for isothermal models"); }
 };
 
+/*!
+ * \copydoc Dumux::BoxEnergyFluxVariables
+ */
 template <class TypeTag>
-class BoxMultiPhaseEnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
+class BoxEnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

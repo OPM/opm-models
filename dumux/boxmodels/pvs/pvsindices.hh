@@ -25,7 +25,7 @@
 #define DUMUX_PVS_INDICES_HH
 
 #include "pvsproperties.hh"
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 namespace Dumux {
 
@@ -39,11 +39,11 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset>
 class PvsIndices
-    : public BoxMultiPhaseEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public BoxEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
+    typedef BoxEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 public:
     //! Number of partial differential equations or primary variables respectively
     static const int numEq = numComponents + EnergyIndices::numEq_;
