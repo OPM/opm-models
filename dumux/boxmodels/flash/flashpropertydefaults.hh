@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup FlashModel
  *
  * \brief Defines default values for the properties required by the
  *        compositional multi-phase box model based on flash calculations.

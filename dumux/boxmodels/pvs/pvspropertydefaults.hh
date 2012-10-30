@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup PvsModel
  *
  * \brief Defines default values for the properties required for the
  *        compositional multi-phase primary variable switching box

@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup PvsModel
  *
  * \brief Declares the properties required for the compositional
  *        multi-phase primary variable switching box model.

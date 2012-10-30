@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup ImmiscibleBoxModel
  *
  * \brief Defines default values for the properties required by the
  *        immiscible multi-phase model.

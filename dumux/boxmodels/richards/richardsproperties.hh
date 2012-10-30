@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup RichardsModel
  *
  * \brief Contains the property declarations for the Richards box
  *        model.
