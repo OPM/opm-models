@@ -27,7 +27,7 @@
 #include "ncpproperties.hh"
 
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 #include <dumux/common/math.hh>
 
@@ -60,7 +60,7 @@ class NcpLocalResidual : public BoxLocalResidual<TypeTag>
     typedef BoxDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 

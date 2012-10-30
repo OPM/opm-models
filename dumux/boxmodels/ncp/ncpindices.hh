@@ -25,7 +25,7 @@
 #define DUMUX_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 
 namespace Dumux {
 
@@ -37,7 +37,7 @@ namespace Dumux {
  */
 template <class TypeTag, int PVOffset = 0>
 struct NcpIndices
-    : public BoxMultiPhaseEnergyIndices<PVOffset
+    : public BoxEnergyIndices<PVOffset
                                         + GET_PROP_VALUE(TypeTag, NumComponents)
                                         + GET_PROP_VALUE(TypeTag, NumPhases),
                                         GET_PROP_VALUE(TypeTag, EnableEnergy)>
@@ -48,7 +48,7 @@ private:
     enum { numComponents = FluidSystem::numComponents };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef BoxMultiPhaseEnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
+    typedef BoxEnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
 
 public:
     /*!

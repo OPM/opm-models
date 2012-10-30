@@ -182,10 +182,18 @@
 
           /*!
            * \ingroup BoxModules
+           * \defgroup BoxDiffusion Molecular Diffusion
+           * \brief A Module for to include molecular diffusion
+           *
+           * \copydetails Dumux::BoxDiffusionModule
+           */
+
+          /*!
+           * \ingroup BoxModules
            * \defgroup BoxEnergy Energy
            * \brief A Module for the Energy Equation 
            *
-           * \copydetails DoxyEnergyModule
+           * \copydetails Dumux::BoxEnergyModule
            */
 
           /*!

@@ -24,7 +24,7 @@
 #ifndef DUMUX_NCP_FLUX_VARIABLES_HH
 #define DUMUX_NCP_FLUX_VARIABLES_HH
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/common/boxmultiphasefluxvariables.hh>
 
@@ -46,7 +46,7 @@ namespace Dumux {
 template <class TypeTag>
 class NcpFluxVariables
     : public BoxMultiPhaseFluxVariables<TypeTag>
-    , public BoxMultiPhaseEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public BoxEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
     , public BoxDiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
     typedef BoxMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
@@ -61,7 +61,7 @@ class NcpFluxVariables
     typedef BoxDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef BoxMultiPhaseEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef BoxEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!

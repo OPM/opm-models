@@ -1,23 +1,44 @@
 Notable Differences Between DuMuX 2.1 and DuMuX-eWoms 2.2
 =========================================================
 
-Most of the following items are specific to the fully-implicit
-models. The sequentially coupled models directly taken from Dumux 2.2
-and have only been modified if they use shared infrastructure that got
-altered:
 - The minumim required version of the Dune core modules is now
   2.2. This means that eWoms will no longer compile with Dune 2.1.
-- Support for using a convergence criterion which looks at the
-  reduction of the weighted maximum of the defect in the linear has
-  been added and is enabled by default if it is available. Currently,
-  a patch for dune-istl is required to enable this. The patch is
-  available from the Dune bug tracking system:
-  http://www.dune-project.org/flyspray/index.php?do=details&task_id=1018
 - eWoms now compiles with the LLVM-CLang compiler. The minimum version
   required is CLang 3.1.
 - Support for compilers that don't support the 'auto' keyword and
   initializer lists has been dropped. As a consequence eWoms will not
   compile with GCC prior to version 4.4.
+- The abstractions between problems, flow models, discretization
+  schemes and solvers have been overhauled for the fully-implicit models:
+  - Problems only specify a given set-up. This means that problems
+    usually do not manipulate primary variables or fluxes directly.
+  - All "spatial parameters" classes have been merged with their
+    respecitve problems. This was done because most methods of the
+    problems already specified spatially dependent parameters.
+- The API of the problems is not specific to any flow model or spatial
+  or temporal discretization anymore. This is achived by passing
+  so-called "context objects" and a space and time index to all of the
+  problem's methods which are potentially dependent on space or
+  time. All context objects provide a generic set of methods
+  (e.g. pos() and globalSpaceIdx()), and some discreization specific
+  ones. The problems and the physical models are not supposed to know
+  what a given space and a time index means.
+- The boundary conditions for fully-implicit models are now weakly
+  imposed. For this reason, the problem's methods boundaryTypes(),
+  dirichlet(), and neumann() are superseded by the method
+  boundary(). This method gets an object of the new BoundaryRateVector
+  class, which can be used to specify fluxes for a given boundary
+  segment. It also provides methods to specify in-flow, out-flow and
+  free-flow boundary conditions called setInFlow(), setOutFlow() and
+  setFreeFlow() given a fluid state for the boundary segment.
+- As a consequence of the previous item, Dirichlet boundary conditions
+  are now not implemented as constraint degrees of freedom anymore. If
+  the problem requires constraints, the "EnableConstraints" property
+  needs to be set to "true" and the problem needs to overload the
+  constraints() method. In contrast to the previous implementation,
+  eWoms now also supports constraint degrees of freedom in the
+  interior of the domain. ("Dirichlet" conditions previously where
+  only possible at finite volumes adjacent to the grid boundary.)
 - The parameter system has received a major overhaul: “Runtime”
   parameters have been abandoned, as have parameter groups. Runtime
   parameters have bitten the dust because of their flawed semantics
@@ -34,71 +55,62 @@ altered:
 - The fully-implicit compositional models 1p2c, 2p2c(ni) and 3p3c(ni)
   are superseeded by the 'pvs' model, a generic model based on primary
   variable switching. The model supports an arbitrary number of fluid
-  phases and chemical components, but it still assumes that all fluid
+  phases and chemical components, but it still requires that all fluid
   phases are ideal mixtures.
-- The fully implicit non-isothermal models (2pni, 2p2cni, 3p3cni,
-  stokes2cni) have been removed. They have been replaced by a generic
-  implementation of the energy equation. As a consequence you have to
-  derive your problem's type tag from the one of the isothermal model
-  (i.e. BoxNcp, BoxPvs, BoxImmisicible or BoxStokes) and set the
-  property ‘EnableEnergy’ to true. The latter can be done by adding
-  the following line to the problem file:
-
-    SET_BOOL_PROP(YourProblemTypeTag, EnableEnergy, true);
-
 - The fully-implicit multi-phase models which assume immiscibility --
-  i.e. 1p and 2p(ni) are superseeded by 'immiscible' model which
-  supports an arbitrary number of fluid phases.
-- A black-oil model and the corresponding fluid system has been
-  added. The black-oil model is a three-phase three-component
+  i.e. 1p and 2p are superseeded by 'immiscible' model which supports
+  an arbitrary number of fluid phases.
+- A fully-implicit black-oil model and the corresponding fluid system
+  has been added. The black-oil model is a three-phase three-component
   paritially miscible model that is widely used in petrolium
   engineering. The black-oil fluid system also allows to use
   full-fledged compositional models (Mp-Nc, 3p3c) to be used with
   black-oil parameters.
-- Many bugs have been shaken out of the code for MPI
-  parallelization. As a result, the fully-implicit models should work
-  much better for parallel computations. Also, the parallelization is
-  no longer considered experimental.
-- A back end for the parallel algebraic multi-grid linear solver
-  provided by DUNE-ISTL has been added for the fully implicit finite
-  volume models. It is still considered to be slightly experimental,
-  but it can be used by specifying the property
+- The fully-implicit non-isothermal models (2pni, 2p2cni, 3p3cni,
+  stokes2cni) have been replaced by a generic implementation of the
+  energy equation. As a consequence, you have to derive your problem's
+  type tag from the one of the isothermal model (i.e. BoxNcp, BoxPvs,
+  BoxImmisicible or BoxStokes) and set the property ‘EnableEnergy’ to
+  true. The latter can be done by adding the following line to the
+  problem file:
 
-    SET_TYPE_PROP(ProblemTypeTag, LinearSolver, Dumux::BoxParallelAmgSolver<TypeTag>
+    SET_BOOL_PROP(YourProblemTypeTag, EnableEnergy, true);
+
+- Many bugs have been shaken out of the code for MPI parallelization
+  code. As a result, the fully-implicit models should work much better
+  for parallel computations. As a consequence, the parallelization is
+  no longer considered experimental.
+- Support for using pluggable convergence criteria has been added to
+  the linear solvers. The eWoms default criterion now consideres the
+  reduction of the weighted maximum defect of the linear system of
+  equations instead of the reduction of the two norm of the
+  defect. This leads to major performance and stability improvements
+  in many cases.
+- A back-end for the parallel algebraic multi-grid linear solver
+  provided by DUNE-ISTL has been added for the fully implicit finite
+  volume models. It is still considered to be slightly experimental
+  and it can be used by specifying the property
+
+    SET_TYPE_PROP(ProblemTypeTag, LinearSolver, Dumux::BoxParallelAmgSolver<TypeTag>);
 
   in the problem file.
 - All fully-implicit models now use the generic M-phase material laws
   which (in principle) allow to implement capillary pressure and
   relative permeability relations depending on absolute pressure,
-  temperature and phase composition. Also, these material law does not
-  require the flow model to know the wettability of the fluids.
+  temperature and phase composition. Also, these material laws do not
+  require the flow model to make assumptions on the wettability of
+  fluids.
 - Heat conduction laws have been introduced. They work analogous to
-  the capillary pressure laws.
-- The primary variables are not "dumb" vectors anymore but can also
+  the capillary pressure/relative permeability laws.
+- The primary variables are not "dumb" vectors anymore, but can also
   store "pseudo primary variables" like the phase state.
 - 'Rate vectors' have been introduced. They allow to specify fluxes
-  and source terms independent of the underlying flow model and also support
-  using volumetric rates
-- The API to the problems is not specific to any flow model or spatial
-  as well as temporal discretization anymore. This is achived by
-  passing so called "context objects" and a space and time index to
-  all of the problem's methods which are potentially dependent on
-  space or time. All context objects provide a generic set of methods
-  (e.g. pos() and globalSpaceIdx()), and some discreization specific
-  ones. The problems and the physical models are not supposed to know
-  what a given space and a time index means.
-- The abstractions between problems, flow models, discretization
-  schemes and solvers have been overhauled:
-  - Problems only specify the physics of a given set-up. This means
-    that problems usually do not manipulate primary variables or
-    fluxes directly.
-  - All "spatial parameters" classes have been merged with their
-    respecitve problems. This was done because all methods of the
-    problems already specified spatially dependent parameters.
+  and source terms independent of the underlying flow model and also
+  support specifying volumetric rates.
 - Writing VTK output files has been centralized. This allows to
   simplify the flow models, and allows much finer granularity over
   what quantities get written to disk. Writing a quantity can be
-  enabled by passing e.g. the "--vtk.write-temperature=1" parameter to
+  enabled by passing e.g. the "--vtk-write-temperature=1" parameter to
   the executable.
 - Flow models now specify names for the conservation equations and
   primary variables which they use. This significantly improves the
@@ -110,26 +122,9 @@ altered:
   motivated by the fact that, since problems can easily be specified
   independent of the flow model, supporting multiple formulations does
   not really make sense anymore.
-- The boundary conditions are now weakly imposed for all fully
-  implicit models. For this reason the problem's methods
-  boundaryTypes(), dirichlet(), and neumann() are superseded by the
-  method boundary(). This method gets an object of the new
-  BoundaryRateVector class, which can be used to specify fluxes for a
-  given boundary segment. It also provides methods to specify in-flow,
-  out-flow and free-flow boundary conditions called setInFlow(),
-  setOutFlow() and setFreeFlow() given a fluid state for the boundary
-  segment.
-- As a consequence of the previous item, Dirichlet boundary conditions
-  are now not implemented as constraint degrees of freedom anymore. If
-  the problem requires constraints, the "EnableConstraints" property
-  needs to be set to "true" and the problem needs to overload the
-  constraints() method. In contrast to the previous implementation,
-  eWoms now also supports constraint degrees of freedom in the
-  interior of the domain. ("Dirichlet" conditions previously where
-  only possible at finite volumes at the grid boundary.)
-- A h-adaptive sequentially-coupled model using an MPFA L-method was
+- A h-adaptive semi-implicit model using an MPFA L-method was
   added. It simulates two-phase and two-phase, two-component flow on
-  irregular grids in two dimensions.  See test/decoupled/2p(2c) for
+  unstructured grids in two dimensions.  See test/decoupled/2p(2c) for
   an example.
 
 Notable Differences Between DuMuX 2.0 and DuMuX 2.1

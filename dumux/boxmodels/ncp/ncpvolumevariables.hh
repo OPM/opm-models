@@ -24,7 +24,7 @@
 #ifndef DUMUX_NCP_VOLUME_VARIABLES_HH
 #define DUMUX_NCP_VOLUME_VARIABLES_HH
 
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
 #include <dumux/boxmodels/common/boxvolumevariables.hh>
 #include <dumux/material/constraintsolvers/ncpflash.hh>
@@ -42,7 +42,7 @@ template <class TypeTag>
 class NcpVolumeVariables
     : public BoxVolumeVariables<TypeTag>
     , public BoxDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public BoxMultiPhaseEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public BoxEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
     , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef BoxVolumeVariables<TypeTag> ParentType;
@@ -70,7 +70,7 @@ class NcpVolumeVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef BoxDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-    typedef BoxMultiPhaseEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef BoxEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
 public:

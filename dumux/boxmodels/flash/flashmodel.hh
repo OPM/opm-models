@@ -27,7 +27,7 @@
 #include "flashproperties.hh"
 
 #include <dumux/boxmodels/modules/diffusion/boxdiffusionmodule.hh>
-#include <dumux/boxmodels/modules/energy/boxmultiphaseenergymodule.hh>
+#include <dumux/boxmodels/modules/energy/boxenergymodule.hh>
 #include <dumux/boxmodels/common/boxmodel.hh>
 
 #include <iostream>
@@ -111,7 +111,7 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef BoxMultiPhaseEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BoxEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
