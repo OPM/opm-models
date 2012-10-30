@@ -229,13 +229,6 @@ public:
                     /*velocity = */v0,
                     fluidState);
     }
-
-private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation *>(this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation *>(this); }
-
 };
 
 } // end namepace

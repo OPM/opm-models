@@ -119,9 +119,9 @@ public:
                      int timeIdx) const
     {
         flux = 0.0;
-        asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
-        asImp_().addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
     }
 
@@ -219,11 +219,6 @@ public:
     }
 
 private:
-    Implementation &asImp_()
-    { return *static_cast<Implementation *>(this); }
-    const Implementation &asImp_() const
-    { return *static_cast<const Implementation *>(this); }
-
     static bool enableNavierTerm_()
     { return GET_PARAM(TypeTag, bool, EnableNavierTerm); }
 };
