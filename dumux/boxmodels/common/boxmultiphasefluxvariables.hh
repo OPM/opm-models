@@ -500,9 +500,6 @@ private:
     }
 #endif
 
-    Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
-
     // extrusion factor for the sub-control volume face
     Scalar extrusionFactor_;
 

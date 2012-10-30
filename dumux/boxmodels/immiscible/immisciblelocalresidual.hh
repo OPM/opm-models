@@ -112,8 +112,8 @@ public:
                      int timeIdx) const
     {
         flux = 0;
-        asImp_()->addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        asImp_()->addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -190,12 +190,6 @@ public:
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
-
-protected:
-    Implementation *asImp_()
-    { return static_cast<Implementation *> (this);  }
-    const Implementation *asImp_() const
-    { return static_cast<const Implementation *> (this); }
 };
 
 }

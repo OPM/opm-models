@@ -202,10 +202,6 @@ public:
      */
     void setNoFlow()
     { (*this) = 0.0; }
-
-protected:
-    Implementation &asImp_()
-    { return *static_cast<Implementation *>(this); }
 };
 
 } // end namepace
