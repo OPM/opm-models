@@ -118,24 +118,26 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
             fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
 
+        ComponentVector fug;
+        // retrieve component fugacities
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            fug[compIdx] = priVars[fugacity0Idx + compIdx];
+
         // calculate phase compositions
         const auto *hint = elemCtx.hint(scvIdx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar xIJ = 1.0/numComponents;
-                if (hint)
+            if (hint) {
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
-                    xIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
+                    Scalar moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
-                // set initial guess of the component's mole fraction
-                fluidState_.setMoleFraction(phaseIdx, compIdx, xIJ);
+                    // set initial guess of the component's mole fraction
+                    fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
+                }
             }
-
-            ComponentVector fug;
-            // retrieve component fugacities
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fug[compIdx] = priVars[fugacity0Idx + compIdx];
+            else // !hint
+                CompositionFromFugacitiesSolver::guessInitial(fluidState_, paramCache, phaseIdx, fug);
 
             // calculate the phase composition from the component
             // fugacities
