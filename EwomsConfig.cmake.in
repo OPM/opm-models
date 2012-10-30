@@ -1,0 +1,22 @@
+# - eWoms config mode
+#
+# Defines the following variables:
+#  Ewoms_FOUND        - true
+#  Ewoms_VERSION      - version of the eWoms library found, e.g. 2.2
+#  Ewoms_DEFINITIONS  - defines to be made on the command line
+#  Ewoms_INCLUDE_DIRS - header directories with which to compile
+#  Ewoms_LIBRARY_DIRS - directories to search for libraries
+#  Ewoms_LIBRARIES    - names of the libraries with which to link
+
+# get include files from the source tree at this location
+set(Ewoms_INCLUDE_DIRS "@abs_top_srcdir@")
+
+# configure process thinks that you should compile with these options
+#set(Ewoms_DEFINITIONS "@ALL_PKG_CPPFLAGS@")
+
+# instead, use the defines of the client's config.h
+set(Ewoms_DEFINITIONS "")
+
+# all code in headers!
+set(Ewoms_LIBRARY_DIRS "")
+set(Ewoms_LIBRARIES "")
