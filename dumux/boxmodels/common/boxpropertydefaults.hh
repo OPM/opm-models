@@ -19,6 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Defines defaults for the common properties of the box models.
  */

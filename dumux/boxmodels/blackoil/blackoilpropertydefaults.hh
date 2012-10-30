@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BlackOilBoxModel
  *
  * \brief Defines default values for the properties used by the
  *        black oil box model.

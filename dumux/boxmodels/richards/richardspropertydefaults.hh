@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup RichardsModel
  *
  * \brief Contains the default definitions for the properties required
  *        by the Richards box model.

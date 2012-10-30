@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup FlashModel
  *
  * \brief Declares the properties required by the compositional
  *        multi-phase model based on flash calculations.

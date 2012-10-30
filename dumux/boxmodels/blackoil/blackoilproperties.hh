@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BlackOilBoxModel
  *
  * \brief Declares the properties required by the black oil model.
  */

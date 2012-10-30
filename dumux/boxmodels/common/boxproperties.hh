@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup BoxModel
  *
  * \brief Declare the basic properties used by the common infrastructure of
  *        the box discretization.

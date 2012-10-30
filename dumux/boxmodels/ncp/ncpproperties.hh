@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup NcpModel
  *
  * \brief Declares the properties required for the NCP compositional
  *        multi-phase box model.

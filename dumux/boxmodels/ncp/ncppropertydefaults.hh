@@ -18,6 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup NcpModel
  *
  * \brief Defines default values for the properties required for the
  *        NCP compositional multi-phase box model.
