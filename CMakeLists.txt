@@ -531,3 +531,16 @@ if(SUPERLU_FOUND)
  add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
  add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
 endif()
+
+# use the same name for the source tree as AutoTools so that we can
+# share the config file template between the two systems
+get_filename_component(abs_top_srcdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# extract the definitions that various modules have added
+get_directory_property (EWOMS_COMP_DEFS COMPILE_DEFINITIONS)
+foreach(d ${EWOMS_COMP_DEFS})
+  set(ALL_PKG_CPPFLAGS "${ALL_PKG_CPPFLAGS}-D${d} ")
+endforeach()
+
+# make variable substitution and write config mode file
+configure_file(EwomsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/EwomsConfig.cmake @ONLY)
