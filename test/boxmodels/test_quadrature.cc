@@ -231,8 +231,8 @@ int main(int argc, char** argv)
     // initialize MPI, finalize is done automatically on exit
     Dune::MPIHelper::instance(argc, argv);
 
-    //testIdenityMapping();
-    //testTetrahedron();
+    testIdenityMapping();
+    testTetrahedron();
     testQuadrature();
 
     return 0;
