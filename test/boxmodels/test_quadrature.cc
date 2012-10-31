@@ -160,9 +160,11 @@ void testTetrahedron()
     std::vector<unsigned int> v = { 0, 1, 2, 3 };
     gf.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,dim),
                      v);
-    const auto &grid = *gf.createGrid();
+    auto *grid = gf.createGrid();
 
-    writeSubControlVolumes(grid);
+    writeSubControlVolumes(*grid);
+
+    delete grid;
 #endif // HAVE_ALUGRID
 }
 
