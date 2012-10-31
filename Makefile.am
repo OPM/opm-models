@@ -7,6 +7,7 @@ EXTRA_DIST = dune.module \
              bin/runtest.sh bin/fuzzycomparevtu.py \
              CMakeLists.txt CTestConfig.cmake config.h.cmake \
              CHANGELOG COPYING FAQ INSTALL.cmake README \
+             EwomsConfig.cmake.in \
              *.opts 
 
 SUBDIRS = doc dumux m4 test tutorial
