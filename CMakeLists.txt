@@ -15,15 +15,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 ##############
 # Set the policy how CMake resolves library paths to the
-# policy introduced by CMake 2.6 (this does not apply for
-# CMake 2.4 and below, of course). For details, see
+# policy introduced by CMake 2.6. For details, see
 # http://www.cmake.org/cmake/help/cmake-2.6.html#policy:CMP0003
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
+cmake_policy(SET CMP0003 NEW)
 
 # set required compiler flags for C++11 (former C++0x)
 find_package(CXX11Features)
+find_package(SharedPtr)
 
 ##############
 # Find the required packages
@@ -44,190 +42,13 @@ find_package(METIS)
 find_package(SuperLU)
 
 ##############
-# Find the required include files
-include(CheckIncludeFile)
-include(CheckIncludeFileCXX)
-check_include_file("malloc.h" HAVE_MALLOC_H)
-check_include_file("valgrind/memcheck.h" HAVE_VALGRIND)
-check_include_file_cxx("memory" HAVE_MEMORY)
-check_include_file_cxx("tr1/memory" HAVE_TR1_MEMORY)
-
-##############
-# determine C++11 (former C++0x) feature support
-set(CMAKE_REQUIRED_FLAGS "-std=c++0x")
-
-include(CheckCXXSourceCompiles)
-
-# nullptr
-CHECK_CXX_SOURCE_COMPILES(
-"   int main(void) {
-    char* ch = nullptr;
-    return 0; }
-"  HAVE_NULLPTR
-)
-
-# array and fill
-# CHECK_CXX_SOURCE_COMPILES("
-#     #include <array>
-#     
-#     int main(void)
-#     {
-#       std::array<int,2> a;
-#       a.fill(9);
-#       return 0;
-#     }
-#     " HAVE_ARRAY
-# ) # commented out due to a bug in dune-common <= 2.1.1
-
-# __attribute__((always_inline))
-CHECK_CXX_SOURCE_COMPILES(
-"
-   void __attribute__((always_inline)) foo(void) {}
-   int main(void) { foo(); return 0; };
-"  HAVE_ATTRIBUTE_ALWAYS_INLINE
-)
-
-# __attribute__((unused))
-CHECK_CXX_SOURCE_COMPILES(
-"
-   int main(void) { int __attribute__((unused)) foo; return 0; };
-"  HAS_ATTRIBUTE_UNUSED
-)
-
-# __attribute__((deprecated))
-CHECK_CXX_SOURCE_COMPILES(
-"
-#define DEP __attribute__((deprecated))
-   class bar { bar() DEP; };
-   class peng { } DEP;
-   template <class T>
-   class t_bar { t_bar() DEP; };
-   template <class T>
-   class t_peng { t_peng() {}; } DEP;
-   void foo() DEP;
-   void foo() {};
-   int main(void) { return 0; };
-"  HAS_ATTRIBUTE_DEPRECATED
-)
-
-# __attribute__((deprecated("msg")))
-CHECK_CXX_SOURCE_COMPILES("
-#define DEP __attribute__((deprecated(\"message\")))
-   class bar { bar() DEP; };
-   class peng { } DEP;
-   template <class T>
-   class t_bar { t_bar() DEP; };
-   template <class T>
-   class t_peng { t_peng() {}; } DEP;
-   void foo() DEP;
-   void foo() {};
-   int main(void) { return 0; };
-"  HAS_ATTRIBUTE_DEPRECATED_MSG
-)
-
-# static assert
-CHECK_CXX_SOURCE_COMPILES("
-   int main(void) {
-      static_assert(true,\"MSG\");
-    return 0; }
-"  HAVE_STATIC_ASSERT
-)
-
-# variadic template support
-CHECK_CXX_SOURCE_COMPILES("
-   #include <cassert>
-
-   template<typename... T>
-   int addints(T... x);
-
-   int add_ints()
-   {
-     return 0;
-   }
-
-   template<typename T1, typename... T>
-   int add_ints(T1 t1, T... t)
-   {
-     return t1 + add_ints(t...);
-   }
-
-   int main(void)
-   {
-     assert( 5 == add_ints(9,3,-5,-2) );
-     return 0;
-   }
-" HAVE_VARIADIC_TEMPLATES
-)
-
-# SFINAE on variadic template constructors within template classes
-CHECK_CXX_SOURCE_COMPILES("
-  #include <functional>
-
-  template<typename... U>
-  struct A
-  {
-    template<typename... T,
-             typename = typename std::enable_if<(sizeof...(T) < 2)>::type
-            >
-    A(T... t)
-    : i(1)
-    {}
-
-    template<typename... T,
-             typename = typename std::enable_if<(sizeof...(T) >= 2)>::type,
-             typename = void
-            >
-    A(T... t)
-    : i(-1)
-    {}
-
-    A()
-    : i(1)
-    {}
-
-    int i;
-  };
-
-  int main(void)
-  {
-    return (A<int>().i + A<int>(2).i + A<int>(\"foo\",3.4).i + A<int>(8,'a',A<int>()).i == 0 ? 0 : 1);
-  }
-" HAVE_VARIADIC_CONSTRUCTOR_SFINAE
-)
-
-# rvalue references
-CHECK_CXX_SOURCE_COMPILES("
-  #include <cassert>
-  #include <utility>
-  int foo(int&& x) { return 1; }
-  int foo(const int& x) { return -1; }
-
-  template<typename T>
-  int forward(T&& x)
-  {
-    return foo(std::forward<T>(x));
-  }
-
-  int main(void)
-  {
-    int i = 0;
-    assert( forward(i) + forward(int(2)) == 0);
-    return 0;
-  }
-" HAVE_RVALUE_REFERENCES
-)
-
-find_package(SharedPtr)
-
-##############
 # use this macros in the CMakelists of the subdirectories. 
 
 # -> for TARGET_LINK_LIBRARIES
 set(EwomsLinkLibraries 
     ${DUNE_common_LIBRARIES}
     ${DUNE_geometry_LIBRARIES}
-    ${DUNE_grid_LIBRARIES}
-    ${DUNE_mux_LIBRARIES})
+    ${DUNE_grid_LIBRARIES})
 
 
 # -> for INCLUDE_DIRECTORIES
@@ -238,8 +59,7 @@ set(EwomsIncludeDirectories
     ${DUNE_geometry_INCLUDE_DIRS}
     ${DUNE_common_INCLUDE_DIRS}
     ${DUNE_istl_INCLUDE_DIRS}
-    ${DUNE_localfunctions_INCLUDE_DIRS}
-    ${DUNE_pdelab_INCLUDE_DIRS})
+    ${DUNE_localfunctions_INCLUDE_DIRS})
 
 if(BOOST_FOUND)
   set(EwomsLinkDirectories "${EwomsLinkDirectories} ${Boost_LIBRARY_DIRS}")
