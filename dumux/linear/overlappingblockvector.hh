@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A block vector which creates an algebraic overlap of
- *        arbitrary size.
+ * \copydoc Dumux::Linear::OverlappingBlockVector
  */
 #ifndef DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
 #define DUMUX_OVERLAPPING_BLOCK_VECTOR_HH
@@ -40,6 +38,10 @@
 
 namespace Dumux {
 namespace Linear {
+
+/*!
+ * \brief An overlap aware block vector.
+ */
 template <class FieldVector, class Overlap>
 class OverlappingBlockVector
     : public Dune::BlockVector<FieldVector>

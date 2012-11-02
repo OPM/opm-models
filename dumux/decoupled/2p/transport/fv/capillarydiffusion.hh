@@ -28,7 +28,7 @@
 
 /*!
  * \file
- * \brief  Class for defining the diffusive capillary pressure term of a 2p saturation equation
+ * \copydoc Dumux::CapillaryDiffusion
  */
 namespace Dumux
 {

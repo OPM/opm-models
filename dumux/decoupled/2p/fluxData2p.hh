@@ -25,7 +25,7 @@
 
 /*!
  * \file
- * \brief  Class storing data assigned to a cell-cell interfaces, so-called flux-data
+ * \copydoc Dumux::FluxData2P
  */
 
 namespace Dumux

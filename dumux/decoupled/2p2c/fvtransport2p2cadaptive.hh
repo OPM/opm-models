@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume discretization of the component transport equation
+ * \copydoc Dumux::FVTransport2P2CAdaptive
  */
 
 namespace Dumux

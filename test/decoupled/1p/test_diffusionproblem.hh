@@ -19,8 +19,7 @@
 *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for diffusion models from the FVCA5 benchmark.
+ * \copydoc Dumux::TestDiffusionProblem
  */
 #ifndef DUMUX_TEST_2P_PROBLEM_HH
 #define DUMUX_TEST_2P_PROBLEM_HH

@@ -21,13 +21,12 @@
 #ifndef DUMUX_VARIABLECLASS_ADAPTIVE_HH
 #define DUMUX_VARIABLECLASS_ADAPTIVE_HH
 
-
 #include "variableclass.hh"
 #include <dune/grid/utility/persistentcontainer.hh>
 
 /*!
  * \file
- * \brief  Base class holding the variables for sequential models.
+ * \copydoc Dumux::VariableClassAdaptive
  */
 
 namespace Dumux

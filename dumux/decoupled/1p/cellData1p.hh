@@ -25,7 +25,7 @@
 
 /*!
  * \file
- * \brief  Class including data of one grid cell
+ * \copydoc Dumux::CellData1P
  */
 
 namespace Dumux

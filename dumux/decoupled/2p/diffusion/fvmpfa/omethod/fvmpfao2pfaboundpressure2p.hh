@@ -27,7 +27,7 @@
 
 /*!
  * \file
- * \brief  Finite volume MPFA O-method discretization of a two-phase pressure equation of the sequential IMPES model.
+ * \copydoc Dumux::FVMPFAO2PFABoundPressure2P
  */
 
 namespace Dumux

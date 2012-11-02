@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Storage container for discretized data of the constitutive relations for one element
+ * \copydoc Dumux::CellData2P2C
  */
 
 namespace Dumux

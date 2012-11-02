@@ -28,7 +28,7 @@
 
 /*!
  * \file
- * \brief  Velocity Field from a finite volume MPFA O-method solution of a pressure equation.
+ * \copydoc Dumux::FVMPFAOVelocity2P
  */
 
 namespace Dumux
@@ -38,6 +38,7 @@ class FVMPFAOPressure2P;
 
 //! \ingroup FVPressure2p
 /*! \brief Determines the velocity from a finite volume solution of the  pressure equation of a sequential model (IMPES).
+ *
  *  Calculates the total velocity from a known pressure field applying a finite volume discretization and a MPFA O-method.
  * The global pressure has to be given as piecewise constant cell values.
  * The velocities are calculated as

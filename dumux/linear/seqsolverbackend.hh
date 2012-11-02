@@ -21,7 +21,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Dumux solver backend
+ * \brief Sequential linear solver backends
  */
 #ifndef DUMUX_SEQUENTIAL_SOLVER_BACKENDS_HH
 #define DUMUX_SEQUENTIAL_SOLVER_BACKENDS_HH

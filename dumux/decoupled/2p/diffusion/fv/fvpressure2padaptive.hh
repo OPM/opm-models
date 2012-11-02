@@ -30,7 +30,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume discretization of a two-phase flow pressure equation.
+ * \copydoc Dumux::FVPressure2PAdaptive
  */
 
 namespace Dumux

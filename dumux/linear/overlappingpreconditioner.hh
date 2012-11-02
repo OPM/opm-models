@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A preconditioner for overlapping matrices and vectors
+ * \copydoc Dumux::Linear::OverlappingPreconditioner
  */
 #ifndef DUMUX_OVERLAPPING_PRECONDITIONER_HH
 #define DUMUX_OVERLAPPING_PRECONDITIONER_HH
@@ -35,6 +34,9 @@
 namespace Dumux {
 namespace Linear {
 
+/*!
+ * \brief An overlap aware preconditioner for any ISTL linear solver.
+ */
 template <class SeqPreCond, class Overlap>
 class OverlappingPreconditioner :
     public Dune::Preconditioner<typename SeqPreCond::domain_type,

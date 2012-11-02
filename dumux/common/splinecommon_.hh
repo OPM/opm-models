@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief The common code for all 3rd order polynomial splines.
+ * \copydoc Dumux::SplineCommon_
  */
 #ifndef DUMUX_SPLINE_COMMON__HH
 #define DUMUX_SPLINE_COMMON__HH

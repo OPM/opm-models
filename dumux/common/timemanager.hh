@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Simplify the handling of time dependent problems
+ * \copydoc Dumux::TimeManager
  */
 #ifndef DUMUX_TIME_MANAGER_HH
 #define DUMUX_TIME_MANAGER_HH

@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Storage container for discretized data for multiphysics models
+ * \copydoc Dumux::CellData2P2Cmultiphysics
  */
 
 namespace Dumux

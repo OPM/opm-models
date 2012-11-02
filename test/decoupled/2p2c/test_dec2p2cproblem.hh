@@ -19,8 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for the sequential 2p2c model
+ * \copydoc Dumux::TestDecTwoPTwoCProblem
  */
 #ifndef DUMUX_TEST_2P2C_PROBLEM_HH
 #define DUMUX_TEST_2P2C_PROBLEM_HH

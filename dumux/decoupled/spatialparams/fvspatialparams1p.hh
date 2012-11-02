@@ -19,9 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief The base class for spatial parameters of problems using the
- *        fv method.
+ * \copydoc Dumux::FVSpatialParamsOneP
  */
 #ifndef DUMUX_FV_SPATIAL_PARAMS_ONE_P_HH
 #define DUMUX_FV_SPATIAL_PARAMS_ONE_P_HH

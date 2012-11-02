@@ -17,6 +17,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \copydoc Dumux::Test2PSpatialParams
+ */
 #ifndef TEST_2P_SPATIALPARAMETERS_HH
 #define TEST_2P_SPATIALPARAMETERS_HH
 
@@ -100,8 +104,11 @@ SET_SCALAR_PROP(Test2PSpatialParams, LensThreeLowerLeftY, 2.0);
 SET_SCALAR_PROP(Test2PSpatialParams, LensThreeUpperRightY, 3.0);
 }
 
-/** \todo Please doc me! */
-
+/*!
+ * \brief The spatial parameters for the semi-implicit two-phase MPFA test.
+ *
+ * \todo Please doc me!
+ */
 template<class TypeTag>
 class Test2PSpatialParams: public FVSpatialParams<TypeTag>
 {

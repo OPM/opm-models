@@ -19,8 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A scalar product for overlapping vectors
+ * \copydoc Dumux::Linear::OverlappingScalarProduct
  */
 #ifndef DUMUX_OVERLAPPING_SCALAR_PRODUCT_HH
 #define DUMUX_OVERLAPPING_SCALAR_PRODUCT_HH
@@ -34,6 +33,9 @@
 namespace Dumux {
 namespace Linear {
 
+/*!
+ * \brief An overlap aware ISTL scalar product.
+ */
 template <class OverlappingBlockVector, class Overlap>
 class OverlappingScalarProduct : public Dune::ScalarProduct<OverlappingBlockVector>
 {

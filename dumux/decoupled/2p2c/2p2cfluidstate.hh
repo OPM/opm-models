@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Calculates the 2p2c phase state for compositional models.
+ * \copydoc Dumux::TwoPTwoCFluidState
  */
 #ifndef DUMUX_2P2C_FLUID_STATE_HH
 #define DUMUX_2P2C_FLUID_STATE_HH

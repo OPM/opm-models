@@ -38,7 +38,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume 2p2c Pressure Model
+ * \copydoc Dumux::FVPressure2P2C
  */
 
 namespace Dumux

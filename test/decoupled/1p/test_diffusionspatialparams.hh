@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief spatial parameters for the test problem for diffusion models.
+ * \copydoc Dumux::TestDiffusionSpatialParams
  */
 #ifndef TEST_DIFFUSION_SPATIAL_PARAMS_HH
 #define TEST_DIFFUSION_SPATIAL_PARAMS_HH

@@ -19,8 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief spatial parameters for the sequential 2p test
+ * \copydoc Dumux::TestIMPESAdaptiveSpatialParams
  */
 #ifndef TEST_IMPES_ADAPTIVE_SPATIAL_PARAMS_HH
 #define TEST_IMPES_ADAPTIVE_SPATIAL_PARAMS_HH

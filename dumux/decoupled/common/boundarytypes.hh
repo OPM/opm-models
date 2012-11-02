@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Class to specify the type of a boundary.
+ * \copydoc Dumux::BoundaryTypes
  */
 #ifndef BOUNDARY_TYPES_HH
 #define BOUNDARY_TYPES_HH

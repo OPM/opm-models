@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Determines the pressures and saturations of all fluid phases
- *        given the total mass of all components.
+ * \copydoc Dumux::ImpetFlash
  */
 #ifndef DUMUX_IMPET_FLASH_HH
 #define DUMUX_IMPET_FLASH_HH

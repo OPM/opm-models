@@ -22,7 +22,7 @@
 
 /*!
  * \file
- * \brief  Fluxes to evaluate a CFL-Condition
+ * \copydoc Dumux::EvalCflFluxDefault
  */
 
 #include "evalcflflux.hh"

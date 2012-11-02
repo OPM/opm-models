@@ -20,7 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for all single phase diffusion problem
+ * \copydoc Dumux::DiffusionProblem1P
  */
 #ifndef DUMUX_DIFFUSIONPROBLEM_1P_HH
 #define DUMUX_DIFFUSIONPROBLEM_1P_HH

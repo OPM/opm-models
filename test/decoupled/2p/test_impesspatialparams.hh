@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief spatial parameters for the sequential 2p test
+ * \copydoc Dumux::TestIMPESSpatialParams
  */
 #ifndef TEST_IMPES_SPATIAL_PARAMS_HH
 #define TEST_IMPES_SPATIAL_PARAMS_HH

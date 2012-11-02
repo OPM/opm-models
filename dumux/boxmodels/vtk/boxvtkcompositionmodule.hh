@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief VTK output module for the fluid composition for models assuming
- *        chemical equilibrium.
+ * \copydoc Dumux::BoxVtkCompositionModule
  */
 #ifndef DUMUX_BOX_VTK_COMPOSITION_MODULE_HH
 #define DUMUX_BOX_VTK_COMPOSITION_MODULE_HH

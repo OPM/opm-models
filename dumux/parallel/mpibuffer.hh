@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Simplifies handling of buffers to be used in conjunction with MPI
+ * \copydoc Dumux::MpiBuffer
  */
 #ifndef DUMUX_MPI_BUFFER_HH
 #define DUMUX_MPI_BUFFER_HH

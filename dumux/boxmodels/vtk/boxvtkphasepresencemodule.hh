@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief VTK output module for the phase presence of the 2p2c and 3p3c models
+ * \copydoc Dumux::BoxVtkPhasePresenceModule
  */
 #ifndef DUMUX_BOX_VTK_PHASE_PRESENCE_MODULE_HH
 #define DUMUX_BOX_VTK_PHASE_PRESENCE_MODULE_HH

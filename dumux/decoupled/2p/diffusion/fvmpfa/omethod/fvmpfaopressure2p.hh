@@ -29,7 +29,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume MPFA O-method discretization of a two-phase pressure equation.
+ * \copydoc Dumux::FVMPFAOPressure2P
  */
 
 namespace Dumux

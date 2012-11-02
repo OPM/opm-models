@@ -21,7 +21,7 @@
 
 /*!
 * \file
-* \brief  Definition of boundary condition types, extend if necessary
+* \copydoc Dumux::BoundaryConditions
 */
 namespace Dumux
 {

@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides 3rd order polynomial splines.
+ * \copydoc Dumux::Spline
  */
 #ifndef DUMUX_SPLINE_HH
 #define DUMUX_SPLINE_HH

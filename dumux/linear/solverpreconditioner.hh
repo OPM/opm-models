@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A preconditioner which solves the local system of equations.
+ * \copydoc Dumux::Linear::SolverPreconditioner
  */
 #ifndef DUMUX_SOLVER_PRECONDITIONER_HH
 #define DUMUX_SOLVER_PRECONDITIONER_HH
@@ -30,6 +29,10 @@
 namespace Dumux {
 namespace Linear {
 
+/*!
+ * \brief An ISTL preconditioner that solves the linear system of
+ *        equations locally on each rank.
+ */
 template <class Matrix, class DomainVector, class RangeVector>
 class SolverPreconditioner
     : public Dune::Preconditioner<DomainVector, RangeVector>

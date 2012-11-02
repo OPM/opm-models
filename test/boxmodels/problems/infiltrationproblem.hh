@@ -19,9 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Isothermal NAPL infiltration problem: LNAPL contaminates
- *        the unsaturated and the saturated groundwater zone.
+ * \copydoc Dumux::InfiltrationProblem
  */
 #ifndef DUMUX_INFILTRATION_PROBLEM_HH
 #define DUMUX_INFILTRATION_PROBLEM_HH

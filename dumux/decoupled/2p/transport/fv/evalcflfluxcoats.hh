@@ -21,7 +21,7 @@
 
 /*!
  * \file
- * \brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
+ * \copydoc Dumux::EvalCflFluxCoats
  */
 
 #include "evalcflfluxdefault.hh"

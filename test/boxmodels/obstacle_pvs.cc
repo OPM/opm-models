@@ -20,7 +20,7 @@
 /**
  * \file
  *
- * \brief Test for the MpNc box model.
+ * \brief Test for the isothermal primary variable switching box model.
  */
 #include "config.h"
 

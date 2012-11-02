@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief spatial parameters for the explicit transport test
+ * \copydoc Dumux::TestTransportSpatialParams
  */
 #ifndef TEST_TRANSPORT_SPATIAL_PARAMS_HH
 #define TEST_TRANSPORT_SPATIAL_PARAMS_HH

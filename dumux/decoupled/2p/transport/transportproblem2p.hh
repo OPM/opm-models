@@ -19,7 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for two-phase transport problems
+ * \copydoc Dumux::TransportProblem2P
  */
 #ifndef DUMUX_TRANSPORTPROBLEM_2P_HH
 #define DUMUX_TRANSPORTPROBLEM_2P_HH

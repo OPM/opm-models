@@ -27,7 +27,7 @@
 
 /*!
  * \file
- * \brief  Single phase finite volume velocity reconstruction
+ * \copydoc Dumux::FVVelocity1P
  */
 
 

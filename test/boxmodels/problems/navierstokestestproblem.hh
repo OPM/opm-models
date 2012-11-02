@@ -19,7 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Definition of a simple Navier-Stokes problem
+ * \copydoc Dumux::NavierStokesTestProblem
  */
 #ifndef DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH
 #define DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH

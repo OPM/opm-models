@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for the sequential 2p model
+ * \copydoc Dumux::IMPESTestProblem
  */
 #ifndef DUMUX_TEST_IMPES_PROBLEM_HH
 #define DUMUX_TEST_IMPES_PROBLEM_HH

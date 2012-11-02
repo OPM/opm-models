@@ -21,7 +21,7 @@
 
 /*!
  * \file
- * \brief  Default implementation of velocity class.
+ * \copydoc Dumux::FVVelocityDefault
  */
 
 #include <dune/grid/common/gridenums.hh>

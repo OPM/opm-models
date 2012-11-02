@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Grid creator for the lens problem used for testing the fully
- *        implicit two-phase model.
+ * \copydoc Dumux::LensGridCreator
  */
 #ifndef DUMUX_LENS_GRID_CREATOR_HH
 #define DUMUX_LENS_GRID_CREATOR_HH

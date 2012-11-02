@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief Test for the isothermal compositional model based on flash
+ * \brief Test for the non-isothermal compositional model based on flash
  *        calculations.
  */
 #include "config.h"

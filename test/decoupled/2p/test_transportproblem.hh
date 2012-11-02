@@ -21,8 +21,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for the explicit transport model
+ * \copydoc Dumux::TestTransportProblem
  */
 #ifndef DUMUX_TEST_TRANSPORT_PROBLEM_HH
 #define DUMUX_TEST_TRANSPORT_PROBLEM_HH

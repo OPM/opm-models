@@ -19,8 +19,7 @@
 *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for the decoupled one-phase model.
+ * \copydoc Dumux::TestProblemOneP
  */
 #ifndef DUMUX_TEST_1P_PROBLEM_HH
 #define DUMUX_TEST_1P_PROBLEM_HH

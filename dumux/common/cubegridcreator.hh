@@ -19,9 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Provides a grid creator which a regular grid made of
- *        quadrilaterals.
+ * \copydoc Dumux::CubeGridCreator
  */
 #ifndef DUMUX_CUBE_GRID_CREATOR_HH
 #define DUMUX_CUBE_GRID_CREATOR_HH

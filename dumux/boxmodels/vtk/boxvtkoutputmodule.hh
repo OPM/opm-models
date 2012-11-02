@@ -16,6 +16,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \copydoc Dumux::BoxVtkOutputModule
+ */
 #ifndef DUMUX_BOX_VTK_OUTPUT_MODULE_HH
 #define DUMUX_BOX_VTK_OUTPUT_MODULE_HH
 
@@ -33,10 +37,9 @@
 
 #include <cstdio>
 
-namespace Dumux
-{
-namespace Properties
-{
+namespace Dumux {
+namespace Properties {
+
 // forward definition of property tags
 NEW_PROP_TAG(NumPhases);
 NEW_PROP_TAG(NumComponents);
@@ -51,8 +54,7 @@ NEW_PROP_TAG(FluidSystem);
 }
 
 /*!
- * \brief A VTK writer module which adheres to the required API but
- *        does nothing.
+ * \brief A the base class for VTK writer modules.
  *
  * This class also provides some convenience methods for buffer
  * management and is the base class for all other VTK writer modules.

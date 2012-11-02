@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Implements a spline with a variable number of sampling points
+ * \copydoc Dumux::VariableLengthSpline_
  */
 #ifndef DUMUX_VARIABLE_LENGTH_SPLINE_HH
 #define DUMUX_VARIABLE_LENGTH_SPLINE_HH

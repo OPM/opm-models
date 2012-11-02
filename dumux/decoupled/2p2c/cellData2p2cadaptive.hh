@@ -24,7 +24,7 @@
 #include <dumux/decoupled/2p2c/cellData2p2cmultiphysics.hh>
 /*!
  * \file
- * \brief  Class including the variables and data of discretized data of the constitutive relations for one element
+ * \copydoc Dumux::CellData2P2CAdaptive
  */
 namespace Dumux
 {

@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \brief Calculate errors for a benchmark problem.
+ * \copydoc Dumux::BenchmarkResult
  */
 #ifndef DUMUX_BENCHMARK_RESULT_HH
 #define DUMUX_BENCHMARK_RESULT_HH

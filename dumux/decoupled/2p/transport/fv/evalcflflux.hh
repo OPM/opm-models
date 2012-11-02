@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Base class for implementations of different kinds of fluxes to evaluate a CFL-Condition
+ * \copydoc Dumux::EvalCflFlux
  */
 namespace Dumux
 {

@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief  Definition of a simple Stokes problem
+ * \copydoc Dumux::StokesNITestProblem
  */
 #ifndef DUMUX_STOKES_NI_TEST_PROBLEM_HH
 #define DUMUX_STOKES_NI_TEST_PROBLEM_HH

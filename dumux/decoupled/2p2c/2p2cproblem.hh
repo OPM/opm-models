@@ -19,7 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for sequential 2p2c compositional problems
+ * \copydoc Dumux::IMPETProblem2P2C
  */
 #ifndef DUMUX_IMPETPROBLEM_2P2C_HH
 #define DUMUX_IMPETPROBLEM_2P2C_HH
