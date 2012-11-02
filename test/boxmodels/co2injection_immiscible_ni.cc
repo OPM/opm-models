@@ -19,8 +19,8 @@
 /*!
  * \file
  *
- * \brief The injection problem using the box model assuming
- *        immisicibility and energy enabled.
+ * \brief Simulation of the injection problem using the box model
+ *        assuming immisicibility and with energy enabled.
  */
 #include "config.h"
 

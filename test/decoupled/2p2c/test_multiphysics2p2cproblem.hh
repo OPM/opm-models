@@ -19,8 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief test problem for the multiphysics 2p2c model
+ * \copydoc Dumux::TestMultTwoPTwoCProblem
  */
 #ifndef DUMUX_TEST_2P2C_PROBLEM_HH
 #define DUMUX_TEST_2P2C_PROBLEM_HH

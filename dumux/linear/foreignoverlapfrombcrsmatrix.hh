@@ -18,12 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief This class creates and manages the foreign overlap given an
- *        initial list of border indices and a BCRS matrix.
- *
- * The foreign overlap are all (row) indices which overlap with the
- * some of the current process's local indices.
+ * \copydoc Dumux::Linear::ForeignOverlapFromBCRSMatrix
  */
 #ifndef DUMUX_FOREIGN_OVERLAP_FROM_BCRS_MATRIX_HH
 #define DUMUX_FOREIGN_OVERLAP_FROM_BCRS_MATRIX_HH

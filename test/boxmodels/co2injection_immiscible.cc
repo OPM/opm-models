@@ -19,7 +19,7 @@
 /*!
  * \file
  *
- * \brief test for the 2pni box model
+ * \brief Test for the isothermal immiscible box model
  */
 #include "config.h"
 

@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Local stiffness matrix for the diffusion equation discretized by mimetic FD
+ * \copydoc Dumux::MimeticGroundwaterEquationLocalStiffness
  */
 #ifndef DUMUX_MIMETICGROUNDWATER_HH
 #define DUMUX_MIMETICGROUNDWATER_HH

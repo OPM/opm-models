@@ -19,9 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Provides the linear solvers for the vertex-centered finite
- *        volume ("box") method.
+ * \copydoc Dumux::Linear::BoxParallelSolver
  */
 #ifndef DUMUX_BOX_LINEAR_SOLVER_HH
 #define DUMUX_BOX_LINEAR_SOLVER_HH

@@ -30,7 +30,7 @@
 
 /*!
  * \file
- * \brief  Single Phase Finite Volume Model
+ * \copydoc Dumux::FVPressure1P
  */
 
 namespace Dumux

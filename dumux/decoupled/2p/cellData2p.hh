@@ -24,7 +24,7 @@
 
 /*!
  * \file
- * \brief  Class including data of one grid cell
+ * \brief Class including data of one grid cell.
  */
 
 namespace Dumux

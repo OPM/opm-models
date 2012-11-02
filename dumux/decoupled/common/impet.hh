@@ -23,7 +23,7 @@
 
 /*!
  * \file
- * \brief  IMPET scheme
+ * \copydoc Dumux::IMPET
  */
 
 #include "impetproperties.hh"

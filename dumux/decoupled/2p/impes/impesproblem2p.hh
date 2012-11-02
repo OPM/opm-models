@@ -20,7 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for all 2-phase problems which use an impes algorithm
+ * \copydoc Dumux::IMPESProblem2P
  */
 #ifndef DUMUX_IMPESPROBLEM_2P_HH
 #define DUMUX_IMPESPROBLEM_2P_HH

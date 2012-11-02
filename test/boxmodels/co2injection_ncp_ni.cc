@@ -19,7 +19,8 @@
 /*!
  * \file
  *
- * \brief Test for the isothermal primary variable switching box model.
+ * \brief Test for the non-isothermal box model based on non-linear
+ *        complementarity problems.
  */
 #include "config.h"
 

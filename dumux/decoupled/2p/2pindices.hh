@@ -19,8 +19,7 @@
 
 /*!
  * \file
- *
- * \brief Defines the indices required for the two-phase box model.
+ * \copydoc Dumux::DecoupledTwoPCommonIndices
  */
 #ifndef DUMUX_DECOUPLED_2P_INDICES_HH
 #define DUMUX_DECOUPLED_2P_INDICES_HH

@@ -30,13 +30,14 @@
 
 /*!
  * \file
- * \brief  Finite Volume discretization of a  transport equation
+ * \copydoc Dumux::FVTransport
  */
 
 namespace Dumux
 {
 //! \ingroup IMPET
 /*!\brief The finite volume discretization of a transport equation
+ *
  *  Base class for finite volume (FV) implementations of an explicitly treated transport equation.
  *  The class provides a method to calculate the explicit update to get a new solution of the transported quantity:
  *  \f[

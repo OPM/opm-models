@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a vector-valued function using Dune::FieldVectors
- *        as elements.
+ * \copydoc Dumux::VtkNestedFunction
  */
 #ifndef VTK_NESTED_FUNCTION_HH
 #define VTK_NESTED_FUNCTION_HH

@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Generic class to read/write restart files.
+ * \copydoc Dumux::Restart
  */
 #ifndef DUMUX_RESTART_HH
 #define DUMUX_RESTART_HH

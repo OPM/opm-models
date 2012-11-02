@@ -32,7 +32,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume Diffusion Model
+ * \copydoc Dumux::FVPressure
  */
 
 namespace Dumux

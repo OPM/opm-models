@@ -18,10 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Provides a parallel algebraic multi-grid (AMG) linear solver
- *        from DUNE-ISTL for the vertex-centered finite volume ("box")
- *        method.
+ * \copydoc Dumux::Linear::BoxParallelAmgSolver
  */
 #ifndef DUMUX_BOX_PARALLEL_AMG_SOLVER_HH
 #define DUMUX_BOX_PARALLEL_AMG_SOLVER_HH

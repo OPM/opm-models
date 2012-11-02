@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Grid creator for the finger problem used for testing the fully
- *        implicit two-phase model.
+ * \copydoc Dumux::FingerGridCreator
  */
 #ifndef DUMUX_FINGER_GRID_CREATOR_HH
 #define DUMUX_FINGER_GRID_CREATOR_HH

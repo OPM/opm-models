@@ -18,10 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief VTK output module for quantities which make sense for all
- *        models which deal with multiple fluid phases in porous media
- *        that don't use flashy concepts like interfacial area.
+ * \copydoc Dumux::BoxVtkMultiPhaseModule
  */
 #ifndef DUMUX_BOX_VTK_MULTI_PHASE_MODULE_HH
 #define DUMUX_BOX_VTK_MULTI_PHASE_MODULE_HH

@@ -16,8 +16,7 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
-/**
+/*!
  * \file
  *
  * \brief Test for the compositional NCP box model.
@@ -32,9 +31,6 @@
 namespace Dumux {
 namespace Properties {
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp, ObstacleBaseProblem));
-
-// Enable molecular diffusion of the components?
-SET_BOOL_PROP(ObstacleProblem, EnableDiffusion, false);
 }}
 
 int main(int argc, char** argv)

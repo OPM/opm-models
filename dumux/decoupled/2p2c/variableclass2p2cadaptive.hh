@@ -25,7 +25,7 @@
 
 /*!
  * \file
- * \brief  Base class holding the variables for sequential models.
+ * \copydoc Dumux::VariableClass2P2CAdaptive
  */
 
 namespace Dumux

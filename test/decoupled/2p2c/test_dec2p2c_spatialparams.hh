@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief spatial parameters for the sequential 2p2c test
+ * \copydoc Dumux::Test2P2CSpatialParams
  */
 #ifndef TEST_2P2C_SPATIAL_PARAMS_HH
 #define TEST_2P2C_SPATIAL_PARAMS_HH

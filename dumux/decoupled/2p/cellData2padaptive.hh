@@ -27,7 +27,7 @@
 
 /*!
  * \file
- * \brief  Class including the data of a grid cell needed if an adaptive grid is used.
+ * \copydoc Dumux::CellData2PAdaptive
  */
 
 namespace Dumux

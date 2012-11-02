@@ -20,8 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Model for the pressure equation discretized by mimetic FD.
+ * \copydoc Dumux::MimeticPressure2P
  */
 #ifndef DUMUX_MIMETICPRESSURE2P_HH
 #define DUMUX_MIMETICPRESSURE2P_HH

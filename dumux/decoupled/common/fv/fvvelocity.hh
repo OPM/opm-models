@@ -29,7 +29,7 @@
 
 /*!
  * \file
- * \brief  Finite volume velocity reconstruction
+ * \copydoc Dumux::FVVelocity
  */
 
 namespace Dumux

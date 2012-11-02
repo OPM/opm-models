@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Base class for defining a diffusive part of the saturation transport equation
+ * \copydoc Dumux::DiffusivePart
  */
 namespace Dumux
 {

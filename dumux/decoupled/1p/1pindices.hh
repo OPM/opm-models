@@ -19,8 +19,7 @@
 
 /*!
  * \file
- *
- * \brief Defines the indices required for the decoupled one-phase model.
+ * \copydoc Dumux::DecoupledOnePCommonIndices
  */
 #ifndef DUMUX_DECOUPLED_1P_INDICES_HH
 #define DUMUX_DECOUPLED_1P_INDICES_HH

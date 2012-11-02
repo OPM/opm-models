@@ -36,7 +36,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume Pressure Model
+ * \copydoc Dumux::FVPressure2P2CAdaptive
  */
 
 namespace Dumux

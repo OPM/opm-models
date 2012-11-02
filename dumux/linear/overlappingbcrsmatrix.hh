@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A BCRS matrix which creates an algebraic overlap of
- *        arbitrary size.
+ * \copydoc Dumux::Linear::OverlappingBCRSMatrix
  */
 #ifndef DUMUX_OVERLAPPING_BCRS_MATRIX_HH
 #define DUMUX_OVERLAPPING_BCRS_MATRIX_HH
@@ -42,6 +40,9 @@
 namespace Dumux {
 namespace Linear {
 
+/*!
+ * \brief An overlap aware block-compressed row storage (BCRS) matrix.
+ */
 template <class BCRSMatrix>
 class OverlappingBCRSMatrix : public BCRSMatrix
 {

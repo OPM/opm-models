@@ -19,9 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Provides a grid creator which a regular grid made of
- *        simplices.
+ * \copydoc Dumux::SimplexGridCreator
  */
 #ifndef DUMUX_SIMPLEX_GRID_CREATOR_HH
 #define DUMUX_SIMPLEX_GRID_CREATOR_HH

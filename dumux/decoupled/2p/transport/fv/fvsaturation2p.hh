@@ -29,7 +29,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume discretization of a saturation transport equation
+ * \copydoc Dumux::FVSaturation2P
  */
 
 namespace Dumux

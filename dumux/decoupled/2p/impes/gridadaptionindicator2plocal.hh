@@ -24,7 +24,7 @@
 
 /*!
  * \file
- * \brief  Class defining a standard, saturation dependent indicator for grid adaption
+ * \copydoc Dumux::GridAdaptionIndicator2PLocal
  */
 namespace Dumux
 {

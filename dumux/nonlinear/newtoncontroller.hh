@@ -19,11 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base controller class for the Newton solver.
- *
- * The actual discretizations are supposed to provide a more
- * specialized class which handles stuff like actually updating the
- * solution, etc.
+ * \copydoc Dumux::NewtonController
  */
 #ifndef DUMUX_NEWTON_CONTROLLER_HH
 #define DUMUX_NEWTON_CONTROLLER_HH

@@ -39,7 +39,7 @@
 
 /*!
  * \file
- * \brief  defines a class for piecewise linear finite element functions
+ * \copydoc Dumux::CROperatorAssembler
  */
 
 namespace Dumux

@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Definition of a problem, for the 1p2c box problem:
- * Component transport of nitrogen dissolved in the water phase.
+ * \copydoc Dumux::OutflowProblem
  */
 #ifndef DUMUX_OUTFLOW_PROBLEM_HH
 #define DUMUX_OUTFLOW_PROBLEM_HH

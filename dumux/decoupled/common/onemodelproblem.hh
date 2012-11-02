@@ -17,7 +17,6 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 #ifndef DUMUX_ONE_MODEL_PROBLEM_HH
 #define DUMUX_ONE_MODEL_PROBLEM_HH
 
@@ -33,7 +32,7 @@
 
 /*!
  * \file
- * \brief  Base class for definition of an decoupled diffusion (pressure) or transport problem
+ * \copydoc Dumux::OneModelProblem
  */
 
 namespace Dumux

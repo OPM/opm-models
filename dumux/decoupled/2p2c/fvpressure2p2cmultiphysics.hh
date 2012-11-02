@@ -26,7 +26,7 @@
 
 /*!
  * \file
- * \brief  Finite Volume 2p2c Pressure Model with MultiPhysics
+ * \copydoc Dumux::FVPressure2P2CMultiPhysics
  */
 
 namespace Dumux

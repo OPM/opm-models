@@ -20,7 +20,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Base class for h-adaptive sequential models.
+ * \copydoc Dumux::GridAdapt
  */
 #ifndef DUMUX_GIRDADAPT_HH
 #define DUMUX_GIRDADAPT_HH

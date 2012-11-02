@@ -22,7 +22,7 @@
 
 /*!
  * \file
- * \brief  Velocity Field from a finite volume solution of a pressure equation.
+ * \copydoc Dumux::FVVelocity2P
  */
 
 #include <dune/grid/common/gridenums.hh>

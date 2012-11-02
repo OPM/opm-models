@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Test problem for the adaptive sequential 2p2c model
+ * \copydoc Dumux::Adaptive2p2c
  */
 #ifndef DUMUX_TEST_ADAPTIVE_2P2C_PROBLEM_HH
 #define DUMUX_TEST_ADAPTIVE_2P2C_PROBLEM_HH
@@ -122,6 +121,8 @@ SET_SCALAR_PROP(Adaptive2p2c, CellsZ, 0);
 /*!
  * \ingroup Adaptive2p2cs
  * \ingroup IMPETtests
+ *
+ * \brief The problem file for the semi-implicit two-phase two-component test with grid-adaption.
  */
 template<class TypeTag = TTAG(Adaptive2p2c)>
 class Adaptive2p2c: public IMPETProblem2P2C<TypeTag>

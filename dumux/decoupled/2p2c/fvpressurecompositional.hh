@@ -34,7 +34,7 @@
 
 /*!
  * \file
- * \brief  Base Class for compositional pressure Equations
+ * \copydoc Dumux::FVPressureCompositional
  */
 namespace Dumux
 {

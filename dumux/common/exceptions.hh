@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Some exceptions thrown in DUMUX
+ * \brief Some exceptions thrown by eWoms.
  */
 #ifndef DUMUX_EXCEPTIONS_HH
 #define DUMUX_EXCEPTIONS_HH

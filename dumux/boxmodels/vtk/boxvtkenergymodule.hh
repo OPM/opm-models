@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief VTK output module for quantities which make sense for models which
- *        assume thermal equilibrium.
+ * \copydoc Dumux::BoxVtkEnergyModule
  */
 #ifndef DUMUX_BOX_VTK_ENERGY_MODULE_HH
 #define DUMUX_BOX_VTK_ENERGY_MODULE_HH

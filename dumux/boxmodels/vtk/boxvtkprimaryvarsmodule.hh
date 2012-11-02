@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief VTK output module for the primary variables and boundary conditions
+ * \copydoc Dumux::BoxVtkPrimaryVarsModule
  */
 #ifndef DUMUX_BOX_VTK_PRIMARY_VARS_MODULE_HH
 #define DUMUX_BOX_VTK_PRIMARY_VARS_MODULE_HH

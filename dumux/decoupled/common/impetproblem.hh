@@ -35,7 +35,7 @@
 
 /*!
  * \file
- * \brief  Base class for defining an instance of the diffusion problem
+ * \copydoc Dumux::IMPETProblem
  */
 
 namespace Dumux

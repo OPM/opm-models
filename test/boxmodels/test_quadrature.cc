@@ -16,6 +16,10 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
+/*!
+ * \file
+ * \brief A test for numerical integration using the box finite volume geometries.
+ */
 #include "config.h"
 
 #include <dune/common/exceptions.hh>

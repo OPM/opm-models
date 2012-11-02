@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief A overlapping linear operator for use with ISTL
+ * \copydoc Dumux::Linear::OverlappingOperator
  */
 #ifndef DUMUX_OVERLAPPING_OPERATOR_HH
 #define DUMUX_OVERLAPPING_OPERATOR_HH
@@ -29,7 +28,9 @@
 namespace Dumux {
 namespace Linear {
 
-// operator that resets result to zero at constrained DOFS
+/*!
+ * \brief An overlap aware linear operator usable by ISTL.
+ */
 template<class OverlappingMatrix, class DomainVector, class RangeVector>
 class OverlappingOperator :
     public Dune::AssembledLinearOperator<OverlappingMatrix,

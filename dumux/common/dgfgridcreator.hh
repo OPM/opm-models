@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
+ * \copydoc Dumux::DgfGridCreator
  */
 #ifndef DUMUX_DGF_GRID_CREATOR_HH
 #define DUMUX_DGF_GRID_CREATOR_HH

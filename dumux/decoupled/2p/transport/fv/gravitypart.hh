@@ -28,7 +28,7 @@
 
 /*!
  * \file
- * \brief  Class for defining the gravity term of a two-phase flow saturation equation
+ * \copydoc Dumux::GravityPart
  */
 
 namespace Dumux

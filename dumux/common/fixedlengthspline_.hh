@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Implements a spline with a fixed number of sampling points
+ * \copydoc Dumux::FixedLengthSpline_
  */
 #ifndef DUMUX_FIXED_LENGTH_SPLINE_HH
 #define DUMUX_FIXED_LENGTH_SPLINE_HH

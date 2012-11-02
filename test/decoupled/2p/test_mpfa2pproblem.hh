@@ -20,8 +20,7 @@
 
 /*!
  * \file
- *
- * \brief test problem for sequential 2p models
+ * \copydoc Dumux::MPFATwoPTestProblem
  */
 
 #ifndef DUMUX_TEST_MPFA2P_PROBLEM_HH

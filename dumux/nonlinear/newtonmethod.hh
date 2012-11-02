@@ -18,10 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief The algorithmic part of the multi dimensional newton method.
- *
- * In order to use the method you need a NewtonController.
+ * \copydoc Dumux::NewtonMethod
  */
 #ifndef DUMUX_NEWTONMETHOD_HH
 #define DUMUX_NEWTONMETHOD_HH

@@ -19,8 +19,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Calculates phase state for a single phase but two-component state.
+ * \copydoc Dumux::PseudoOnePTwoCFluidState
  */
 #ifndef DUMUX_PSEUDO1P2C_FLUID_STATE_HH
 #define DUMUX_PSEUDO1P2C_FLUID_STATE_HH

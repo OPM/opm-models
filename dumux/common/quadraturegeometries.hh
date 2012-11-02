@@ -18,8 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Geometries for quadrature which allow to specify all corners.
+ * \copydoc Dumux::QuadrialteralQuadratureGeometry
  */
 #ifndef DUMUX_QUADRATURE_GEOMETRIES_HH
 #define DUMUX_QUADRATURE_GEOMETRIES_HH
@@ -30,7 +29,7 @@
 
 namespace Dumux {
 /*!
- * \brief Quadrilateral quadrature geometry.
+ * \brief Quadrature geometry for quadrilaterals.
  */
 template <class Scalar, int dim>
 class QuadrialteralQuadratureGeometry

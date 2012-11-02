@@ -18,9 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- *
- * \brief Creates a list of vertex indices on the process border which
- *        can be used to construct the foreign overlap.
+ * \copydoc Dumux::Linear::VertexBorderListFromGrid
  */
 #ifndef DUMUX_VERTEX_BORDER_LIST_FROM_GRID_HH
 #define DUMUX_VERTEX_BORDER_LIST_FROM_GRID_HH
