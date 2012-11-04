@@ -149,10 +149,10 @@ void testTetrahedron()
     typedef Dune::GridFactory<Grid> GridFactory;
     GridFactory gf;
     Scalar corners[][3] = {
-        { 25, 25, 25 },
-        { 50, 25, 25 },
-        { 25, 75, 25 },
-        { 25, 25, 50 }
+        { 0, 0, 0 },
+        { 1, 0, 0 },
+        { 0, 1, 0 },
+        { 0, 0, 1 }
     };
 
     for (unsigned i = 0; i < sizeof(corners)/sizeof(corners[0]); ++i) {
@@ -166,7 +166,7 @@ void testTetrahedron()
                      v);
     auto *grid = gf.createGrid();
 
-    writeSubControlVolumes(*grid);
+    //writeSubControlVolumes(*grid);
 
     delete grid;
 #endif // HAVE_ALUGRID

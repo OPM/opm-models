@@ -400,42 +400,11 @@ public:
                            GlobalEqVector &x,
                            const GlobalEqVector &b)
     {
-        try {
-            int converged = linearSolver_.solve(A, x, b);
+        int converged = linearSolver_.solve(A, x, b);
 
-            // make sure all processes converged
-            int convergedRemote = converged;
-            convergedRemote = comm_.min(converged);
-
-            if (!converged) {
-                DUNE_THROW(NumericalProblem,
-                           "Linear solver did not converge");
-            }
-            else if (!convergedRemote) {
-                DUNE_THROW(NumericalProblem,
-                           "Linear solver did not converge on a remote process");
-            }
-        }
-        catch (Dune::MatrixBlockError e) {
-            // make sure all processes converged
-            int converged = 0;
-            converged = comm_.min(converged);
-
-            Dumux::NumericalProblem p;
-            std::string msg;
-            std::ostringstream ms(msg);
-            ms << e.what() << "M=" << A[e.r][e.c];
-            p.message(ms.str());
-            throw p;
-        }
-        catch (const Dune::Exception &e) {
-            // make sure all processes converged
-            int converged = 0;
-            converged = comm_.min(converged);
-
-            Dumux::NumericalProblem p;
-            p.message(e.what());
-            throw p;
+        if (!converged) {
+            DUNE_THROW(NumericalProblem,
+                       "Linear solver did not converge");
         }
     }
 
