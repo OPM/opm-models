@@ -26,13 +26,13 @@
 
 #include "boxnewtonconvergencewriter.hh"
 
-#include <dumux/nonlinear/newtoncontroller.hh>
+#include <dumux/nonlinear/newtonmethod.hh>
 #include <dumux/common/propertysystem.hh>
 
 namespace Dumux {
 
 template <class TypeTag>
-class BoxNewtonController;
+class BoxNewtonMethod;
 
 template <class TypeTag>
 class BoxNewtonConvergenceWriter;
@@ -63,9 +63,9 @@ NEW_PROP_TAG(EnablePartialReassemble);
  *
  * Whether this property has any effect depends on whether the line
  * search method is implemented for the actual model's Newton
- * controller's update() method. By default line search is not used.
+ * method's update_() method. By default line search is not used.
  */
-NEW_PROP_TAG(NewtonUseLineSearch);
+NEW_PROP_TAG(NewtonEnableLineSearch);
 
 //! Enable Jacobian recycling?
 NEW_PROP_TAG(EnableJacobianRecycling);
@@ -74,32 +74,23 @@ NEW_PROP_TAG(EnableJacobianRecycling);
 NEW_PROP_TAG(EnablePartialReassemble);
 
 // set default values
-SET_TYPE_PROP(BoxNewtonMethod, NewtonController, Dumux::BoxNewtonController<TypeTag>);
+SET_TYPE_PROP(BoxNewtonMethod, NewtonMethod, Dumux::BoxNewtonMethod<TypeTag>);
 SET_TYPE_PROP(BoxNewtonMethod, NewtonConvergenceWriter, Dumux::BoxNewtonConvergenceWriter<TypeTag>);
-SET_SCALAR_PROP(BoxNewtonMethod, NewtonRelTolerance, 1e-8);
-SET_SCALAR_PROP(BoxNewtonMethod, NewtonAbsTolerance, 1e-5);
-SET_INT_PROP(BoxNewtonMethod, NewtonTargetSteps, 10);
-SET_INT_PROP(BoxNewtonMethod, NewtonMaxSteps, 18);
-SET_BOOL_PROP(NewtonMethod, NewtonUseLineSearch, false);
+SET_BOOL_PROP(NewtonMethod, NewtonEnableLineSearch, false);
 }
 
 /*!
  * \ingroup BoxModel
  * \ingroup Newton
  *
- * \brief A Newton controller for models using the box scheme.
+ * \brief A Newton method for models using the box scheme.
  *
- * If you want to specialize only some methods but are happy with the
- * defaults of the reference controller, derive your controller from
- * this class and simply overload the required methods.
- *
- * Usually, this controller should be sufficient for models using the
- * box scheme.
+ * This class is sufficient for most models which use the box scheme.
  */
 template <class TypeTag>
-class BoxNewtonController : public NewtonController<TypeTag>
+class BoxNewtonMethod : public NewtonMethod<TypeTag>
 {
-    typedef Dumux::NewtonController<TypeTag> ParentType;
+    typedef Dumux::NewtonMethod<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -113,46 +104,46 @@ class BoxNewtonController : public NewtonController<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    BoxNewtonController(Problem &problem)
+    BoxNewtonMethod(Problem &problem)
         : ParentType(problem)
-    {
-        enablePartialReassemble_ = GET_PARAM(TypeTag, bool, EnablePartialReassemble);
-        enableJacobianRecycling_ = GET_PARAM(TypeTag, bool, EnableJacobianRecycling);
-
-        useLineSearch_ = GET_PARAM(TypeTag, bool, NewtonUseLineSearch);
-    }
+    { }
 
     /*!
-     * \brief Register all run-time parameters for the Newton controller.
+     * \brief Register all run-time parameters of the Newton method.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, NewtonUseLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
+        REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
     }
+
+protected:
+    friend class Dumux::NewtonMethod<TypeTag>;
 
     /*!
      * \brief Update the relative error of the solution compared to
      *        the previous iteration.
      *
      * The relative error can be seen as a norm of the difference
-     * between the current and the next iteration.
+     * between the current and the next iteration. For the box Newton
+     * method, this is the maxiumum of the difference weighted by the
+     * primary variable weight.
      *
      * \param uCurrentIter The current iterative solution
      * \param uLastIter The solution of the last iteration
      * \param deltaU The difference between the current and the next solution
      */
-    void newtonUpdateRelError(const SolutionVector &uCurrentIter,
-                              const SolutionVector &uLastIter,
-                              const GlobalEqVector &deltaU)
+    void updateRelError_(const SolutionVector &uCurrentIter,
+                         const SolutionVector &uLastIter,
+                         const GlobalEqVector &deltaU)
     {
-        if (!this->enableRelativeCriterion_ && !enablePartialReassemble_)
+        if (!this->enableRelativeCriterion_() && !enablePartialReassemble_())
             return;
 
         // calculate the relative error as the maximum relative
         // deflection in any degree of freedom.
-        this->error_ = 0;
+        this->relError_ = 0;
         for (int i = 0; i < int(uLastIter.size()); ++i) {
             PrimaryVariables uNewI = uLastIter[i];
             uNewI -= deltaU[i];
@@ -160,16 +151,17 @@ public:
             Scalar vertError = model_().relativeErrorVertex(i,
                                                             uLastIter[i],
                                                             uNewI);
-            this->error_ = std::max(this->error_, vertError);
+            this->relError_ = std::max(this->relError_, vertError);
 
         }
 
-        this->error_ = this->comm_.max(this->error_);
+        // take the other processes into account
+        this->relError_ = this->comm_.max(this->relError_);
 
-        Scalar maxError = GET_PARAM(TypeTag, Scalar, NewtonMaxRelError);
-        if (this->error_ > maxError)
+        Scalar maxError = GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
+        if (this->relError_ > maxError)
             DUNE_THROW(NumericalProblem,
-                       "Newton: Relative error " << this->error_
+                       "Newton: Relative error " << this->relError_
                        << " is larger than maximum allowed error of " << maxError);
     }
 
@@ -181,19 +173,20 @@ public:
      * \param uLastIter The solution of the last iteration
      * \param deltaU The difference between the current and the next solution
      */
-    void newtonUpdateAbsError(const SolutionVector &uCurrentIter,
-                              const SolutionVector &uLastIter,
-                              const GlobalEqVector &deltaU)
+    void updateAbsError_(const SolutionVector &uCurrentIter,
+                         const SolutionVector &uLastIter,
+                         const GlobalEqVector &deltaU)
     {
-        if (!this->enableAbsoluteCriterion_)
+        if (!this->enableAbsoluteCriterion_())
             return;
-        if (useLineSearch_)
+        if (enableLineSearch_())
             // the absolute error has already been calculated by
             // updateLineSearch()
             return;
 
         // we actually have to do the heavy lifting...
-        newtonUpdateAbsError_(uCurrentIter, uLastIter, deltaU);
+        GlobalEqVector tmp(uLastIter.size());
+        this->absError_ = model_().globalResidual(tmp, uCurrentIter);
     }
 
     /*!
@@ -213,29 +206,29 @@ public:
      *               system of equations. This parameter also stores
      *               the updated solution.
      */
-    void newtonUpdate(SolutionVector &uCurrentIter,
-                      const SolutionVector &uLastIter,
-                      const GlobalEqVector &deltaU)
+    void update_(SolutionVector &uCurrentIter,
+                 const SolutionVector &uLastIter,
+                 const GlobalEqVector &deltaU)
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
             DUNE_THROW(NumericalProblem, "Non-finite update!");
 
         // compute the vertex and element colors for partial reassembly
-        if (enablePartialReassemble_) {
-            Scalar minReasmTol = 10*this->tolerance_;
+        if (enablePartialReassemble_()) {
+            Scalar minReasmTol = 10*this->relTolerance_();
             Scalar maxReasmTol = 1e-4;
 
             // rationale: the newton method has quadratic convergene1
-            Scalar reassembleTol = this->error_*this->error_;
+            Scalar reassembleTol = this->relError_*this->relError_;
             reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
             //Scalar reassembleTol = minReasmTol;
 
-            this->model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
-            this->model_().jacobianAssembler().computeColors(reassembleTol);
+            model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
+            model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
-        if (useLineSearch_)
+        if (enableLineSearch_())
             lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
         else {
             for (unsigned i = 0; i < uLastIter.size(); ++i) {
@@ -243,57 +236,6 @@ public:
                 uCurrentIter[i] -= deltaU[i];
             }
         }
-    }
-
-    /*!
-     * \brief Called if the Newton method broke down.
-     *
-     * This method is called _after_ newtonEnd()
-     */
-    void newtonFail()
-    {
-        ParentType::newtonFail();
-
-        model_().jacobianAssembler().reassembleAll();
-    }
-
-    /*!
-     * \brief Called when the Newton method was successful.
-     *
-     * This method is called _after_ newtonEnd()
-     */
-    void newtonSucceed()
-    {
-        ParentType::newtonSucceed();
-
-        if (enableJacobianRecycling_)
-            model_().jacobianAssembler().setMatrixReuseable(true);
-        else
-            model_().jacobianAssembler().reassembleAll();
-    }
-
-protected:
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    Model &model_()
-    { return this->method_->problem().model(); }
-
-    /*!
-     * \brief Returns a reference to the problem.
-     */
-    const Model &model_() const
-    { return this->method_->problem().model(); }
-
-    /*!
-     * \brief Update the absolute error for a given solution.
-     */
-    void newtonUpdateAbsError_(const SolutionVector &uCurrentIter,
-                               const SolutionVector &uLastIter,
-                               const GlobalEqVector &deltaU)
-    {
-        GlobalEqVector tmp(uLastIter.size());
-        this->absoluteError_ = this->problem().model().globalResidual(tmp, uCurrentIter);
     }
 
     /*!
@@ -314,9 +256,9 @@ protected:
            }
 
            // calculate the residual of the current solution
-           newtonUpdateAbsError_(uCurrentIter, uLastIter, deltaU);
-           if (this->absoluteError_ < this->lastAbsoluteError_ || lambda <= 1.0/8) {
-               this->endIterMsg() << ", defect " << this->lastAbsoluteError_ << "->"  << this->absoluteError_ << "@lambda=" << lambda;
+           updateAbsError_(uCurrentIter, uLastIter, deltaU);
+           if (this->absError_ < this->lastAbsError_ || lambda <= 1.0/8) {
+               this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"  << this->absError_ << "@lambda=" << lambda;
                return;
            }
 
@@ -325,10 +267,65 @@ protected:
        }
     }
 
-    bool enablePartialReassemble_;
-    bool enableJacobianRecycling_;
+    /*!
+     * \brief Called if the Newton method broke down.
+     *
+     * This method is called _after_ end_()
+     */
+    void failed_()
+    {
+        ParentType::failed_();
 
-    bool useLineSearch_;
+        model_().jacobianAssembler().reassembleAll();
+    }
+
+    /*!
+     * \brief Called when the Newton method was successful.
+     *
+     * This method is called _after_ end_()
+     */
+    void succeeded_()
+    {
+        ParentType::succeeded_();
+
+        if (enableJacobianRecycling_())
+            model_().jacobianAssembler().setMatrixReuseable(true);
+        else
+            model_().jacobianAssembler().reassembleAll();
+    }
+
+    /*!
+     * \brief Returns a reference to the problem.
+     */
+    Model &model_()
+    { return ParentType::model(); }
+
+    /*!
+     * \brief Returns a reference to the problem.
+     */
+    const Model &model_() const
+    { return ParentType::model(); }
+
+    /*!
+     * \brief Returns true iff the Jacobian assembler uses partial
+     *        reassembly.
+     */
+    bool enablePartialReassemble_() const
+    { return GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
+
+    /*!
+     * \brief Returns true iff the Jacobian assembler recycles the matrix
+     *        possible.
+     */
+    bool enableJacobianRecycling_() const
+    { return GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
+
+    /*!
+     * \brief Returns true iff line search update proceedure should be
+     *        used instead of the normal one.
+     */
+    bool enableLineSearch_() const
+    { return GET_PARAM(TypeTag, bool, NewtonEnableLineSearch); }
 };
 } // namespace Dumux
 

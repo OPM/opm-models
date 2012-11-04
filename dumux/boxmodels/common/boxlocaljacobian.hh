@@ -106,7 +106,7 @@ public:
     BoxLocalJacobian()
     {
         internalElemContext_ = 0;
-        newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelTolerance);
+        newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
     }
 
     ~BoxLocalJacobian()
@@ -484,7 +484,6 @@ protected:
     Model *modelPtr_;
 
     Scalar newtonTolerance_;
-    Scalar baseEps_;
     ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;

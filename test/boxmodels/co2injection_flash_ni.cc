@@ -52,7 +52,7 @@ SET_TYPE_PROP(Co2InjectionFlashNIProblem,
 #if HAVE_QUAD
 SET_TYPE_PROP(Co2InjectionFlashNIProblem, Scalar, quad);
 #else
-SET_SCALAR_PROP(Co2InjectionFlashNIProblem, NewtonRelTolerance, 1e-5);
+SET_SCALAR_PROP(Co2InjectionFlashNIProblem, NewtonRelativeTolerance, 1e-5);
 #endif
 
 } }

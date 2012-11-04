@@ -56,7 +56,6 @@ private:
     typedef Dumux::VtkMultiWriter<GridView> VtkMultiWriter;
 
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonController) NewtonController;
 
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -101,7 +100,6 @@ public:
         , vertexMapper_(gridView)
         , timeManager_(&timeManager)
         , newtonMethod_(asImp_())
-        , newtonCtl_(asImp_())
     {
         init_();
     }
@@ -267,7 +265,7 @@ public:
     {
         const int maxFails = 10;
         for (int i = 0; i < maxFails; ++i) {
-            if (model_.update(newtonMethod_, newtonCtl_)) {
+            if (model_.update(newtonMethod_)) {
                 assembleTime_ += newtonMethod_.assembleTime();
                 solveTime_ += newtonMethod_.solveTime();
                 updateTime_ += newtonMethod_.updateTime();
@@ -310,18 +308,6 @@ public:
     { return newtonMethod_; }
 
     /*!
-     * \brief Returns the newton contoller object
-     */
-    NewtonController &newtonController()
-    { return newtonCtl_; }
-
-    /*!
-     * \copydoc newtonController()
-     */
-    const NewtonController &newtonController() const
-    { return newtonCtl_; }
-
-    /*!
      * \brief Called by Dumux::TimeManager whenever a solution for a
      *        time step has been computed and the simulation time has
      *        been updated.
@@ -329,7 +315,7 @@ public:
     Scalar nextTimeStepSize()
     {
         return std::min(GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
-                        newtonCtl_.suggestTimeStepSize(timeManager().timeStepSize()));
+                        newtonMethod_.suggestTimeStepSize(timeManager().timeStepSize()));
     }
 
     /*!
@@ -638,7 +624,6 @@ private:
     Model model_;
 
     NewtonMethod newtonMethod_;
-    NewtonController newtonCtl_;
 
     VtkMultiWriter *resultWriter_;
 };

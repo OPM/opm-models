@@ -19,14 +19,14 @@
 /*!
  * \file
  *
- * \copydoc Dumux::RichardsNewtonController
+ * \copydoc Dumux::RichardsNewtonMethod
  */
-#ifndef DUMUX_RICHARDS_NEWTON_CONTROLLER_HH
-#define DUMUX_RICHARDS_NEWTON_CONTROLLER_HH
+#ifndef DUMUX_RICHARDS_NEWTON_METHOD_HH
+#define DUMUX_RICHARDS_NEWTON_METHOD_HH
 
 #include "richardsproperties.hh"
 
-#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtonmethod.hh>
 #include <dumux/material/fluidstates/immisciblefluidstate.hh>
 
 #include <dune/common/fvector.hh>
@@ -36,12 +36,12 @@ namespace Dumux {
 /*!
  * \ingroup Newton
  *
- * \brief A Richards model specific controller for the newton solver.
+ * \brief A Richards model specific Newton method.
  */
 template <class TypeTag>
-class RichardsNewtonController : public BoxNewtonController<TypeTag>
+class RichardsNewtonMethod : public BoxNewtonMethod<TypeTag>
 {
-    typedef BoxNewtonController<TypeTag> ParentType;
+    typedef BoxNewtonMethod<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -69,26 +69,30 @@ class RichardsNewtonController : public BoxNewtonController<TypeTag>
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    RichardsNewtonController(Problem &problem)
+    RichardsNewtonMethod(Problem &problem)
         : ParentType(problem)
     {}
 
+protected:
+    friend class NewtonMethod<TypeTag>;
+    friend class BoxNewtonMethod<TypeTag>;
+
     /*!
-     * \copydoc BoxNewtonController::newtonUpdate
+     * \copydoc BoxNewtonMethod::newtonUpdate
      */
-    void newtonUpdate(SolutionVector &uCurrentIter,
-                      const SolutionVector &uLastIter,
-                      const GlobalEqVector &deltaU)
+    void update_(SolutionVector &uCurrentIter,
+                 const SolutionVector &uLastIter,
+                 const GlobalEqVector &deltaU)
     {
         const auto &assembler = this->problem().model().jacobianAssembler();
         const auto &problem = this->problem();
 
-        ParentType::newtonUpdate(uCurrentIter, uLastIter, deltaU);
+        ParentType::update_(uCurrentIter, uLastIter, deltaU);
 
-        if (!this->useLineSearch_)
+        if (!this->enableLineSearch_())
         {
             // do not clamp anything after 5 iterations
-            if (this->numSteps_ > 4)
+            if (this->numIterations_ > 4)
                 return;
 
             // clamp saturation change to at most 20% per iteration

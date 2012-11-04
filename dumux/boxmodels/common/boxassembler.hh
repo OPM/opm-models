@@ -212,7 +212,7 @@ public:
             greenElems_ = gridView_().comm().sum(greenElems_);
             reassembleAccuracy_ = gridView_().comm().max(nextReassembleAccuracy_);
 
-            problem_().newtonController().endIterMsg()
+            problem_().newtonMethod().endIterMsg()
                 << ", reassembled "
                 << totalElems_ - greenElems_ << "/" << totalElems_
                 << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%) elems @accuracy="

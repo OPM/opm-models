@@ -96,10 +96,10 @@ SET_BOOL_PROP(RichardsLensProblem, EnableJacobianRecycling, true);
 SET_INT_PROP(RichardsLensProblem, NumericDifferenceMethod, +1);
 
 // Set the maximum number of newton iterations of a time step
-SET_INT_PROP(RichardsLensProblem, NewtonMaxSteps, 28);
+SET_INT_PROP(RichardsLensProblem, NewtonMaxIterations, 28);
 
 // Set the "desireable" number of newton iterations of a time step
-SET_INT_PROP(RichardsLensProblem, NewtonTargetSteps, 18);
+SET_INT_PROP(RichardsLensProblem, NewtonTargetIterations, 18);
 
 // Do not write the intermediate results of the newton method
 SET_BOOL_PROP(RichardsLensProblem, NewtonWriteConvergence, false);

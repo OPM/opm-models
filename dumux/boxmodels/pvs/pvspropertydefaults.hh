@@ -29,7 +29,7 @@
 
 #include "pvslocalresidual.hh"
 #include "pvsmodel.hh"
-#include "pvsnewtoncontroller.hh"
+#include "pvsnewtonmethod.hh"
 #include "pvsprimaryvariables.hh"
 #include "pvsratevector.hh"
 #include "pvsboundaryratevector.hh"
@@ -100,8 +100,8 @@ SET_TYPE_PROP(BoxPvs,
 //! Use the Darcy relation by default
 SET_TYPE_PROP(BoxPvs, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
-//! Use the PVS specific newton controller for the PVS model
-SET_TYPE_PROP(BoxPvs, NewtonController, PvsNewtonController<TypeTag>);
+//! Use the PVS specific newton method for the PVS model
+SET_TYPE_PROP(BoxPvs, NewtonMethod, PvsNewtonMethod<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxPvs, Model, PvsModel<TypeTag>);

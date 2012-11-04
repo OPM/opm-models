@@ -36,7 +36,7 @@
 #include "boxvolumevariables.hh"
 #include "boxconstraints.hh"
 #include "boxconstraintscontext.hh"
-#include "boxnewtoncontroller.hh"
+#include "boxnewtonmethod.hh"
 
 #include <dumux/linear/boxlinearsolver.hh>
 //#include <dumux/linear/boxparallelamgsolver.hh>
@@ -81,12 +81,6 @@ private:
 public:
     typedef Dumux::BoxFVElementGeometry<Scalar, GridView> type;
 };
-
-//! use the plain newton method for the box scheme by default
-SET_TYPE_PROP(BoxModel, NewtonMethod, Dumux::NewtonMethod<TypeTag>);
-
-//! use the plain newton controller for the box scheme by default
-SET_TYPE_PROP(BoxModel, NewtonController, Dumux::BoxNewtonController<TypeTag>);
 
 //! Mapper for the grid view's vertices.
 SET_TYPE_PROP(BoxModel,

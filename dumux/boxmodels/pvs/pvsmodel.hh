@@ -440,7 +440,7 @@ public:
         numSwitched_ = this->gridView_().comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
-            this->problem_().newtonController().endIterMsg() << ", num switched=" << numSwitched_;
+            this->problem_().newtonMethod().endIterMsg() << ", num switched=" << numSwitched_;
     }
 
 private:

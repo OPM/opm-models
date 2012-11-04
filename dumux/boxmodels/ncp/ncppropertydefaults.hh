@@ -33,7 +33,7 @@
 #include "ncpboundaryratevector.hh"
 #include "ncpratevector.hh"
 #include "ncpvolumevariables.hh"
-#include "ncpnewtoncontroller.hh"
+#include "ncpnewtonmethod.hh"
 #include "ncpindices.hh"
 #include "ncpproperties.hh"
 
@@ -108,8 +108,8 @@ SET_TYPE_PROP(BoxNcp,
 //! Use the Darcy relation by default
 SET_TYPE_PROP(BoxNcp, VelocityModule, Dumux::BoxDarcyVelocityModule<TypeTag>);
 
-//! Use the Ncp specific newton controller for the compositional NCP model
-SET_TYPE_PROP(BoxNcp, NewtonController, NcpNewtonController<TypeTag>);
+//! Use the Ncp specific newton method for the compositional NCP model
+SET_TYPE_PROP(BoxNcp, NewtonMethod, NcpNewtonMethod<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(BoxNcp, Model, NcpModel<TypeTag>);

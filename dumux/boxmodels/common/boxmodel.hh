@@ -78,7 +78,6 @@ class BoxModel
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonController) NewtonController;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -133,7 +132,6 @@ public:
         VolumeVariables::registerParameters();
         FluxVariables::registerParameters();
         NewtonMethod::registerParameters();
-        NewtonController::registerParameters();
 
         // register runtime parameters of the VTK output modules
         Dumux::BoxVtkPrimaryVarsModule<TypeTag>::registerParameters();
@@ -451,8 +449,7 @@ public:
      * \param controller The controller which specifies the behaviour
      *                   of the non-linear solver
      */
-    bool update(NewtonMethod &solver,
-                NewtonController &controller)
+    bool update(NewtonMethod &solver)
     {
 #if HAVE_VALGRIND
         for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i)
@@ -461,34 +458,20 @@ public:
 
         asImp_().updateBegin();
 
-        bool converged = solver.execute(controller);
+        bool converged = solver.apply();
+        if (converged)
+            asImp_().updateSuccessful();
+        else
+            asImp_().updateFailed();
 
-        int succeeded;
-        try {
-            if (converged)
-                asImp_().updateSuccessful();
-            else
-                asImp_().updateFailed();
-
-            succeeded = 1;
-            succeeded = gridView_().comm().min(succeeded);
 
 #if HAVE_VALGRIND
-            for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
-                Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
-            }
+        for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
+            Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
+        }
 #endif // HAVE_VALGRIND
-        }
-        catch (const Dune::Exception &e)
-        {
-            std::cout << "rank " << problem_().gridView().comm().rank()
-                      << " caught an exception while assembling:" << e.what()
-                      << "\n";
-            succeeded = 0;
-            succeeded = gridView_().comm().min(succeeded);
-        }
 
-        return converged && succeeded;
+        return converged;
     }
 
     /*!

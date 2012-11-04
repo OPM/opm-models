@@ -76,7 +76,7 @@ SET_TYPE_PROP(BoxStokes,
               StokesProblem<TypeTag>);
 
 //! Increase the relative tolerance of the newton method to 10^-7
-SET_SCALAR_PROP(BoxStokes, NewtonRelTolerance, 1e-7);
+SET_SCALAR_PROP(BoxStokes, NewtonRelativeTolerance, 1e-7);
 
 #if HAVE_SUPERLU
 SET_TYPE_PROP(BoxStokes, LinearSolver, SuperLUBackend<TypeTag>);

@@ -20,14 +20,14 @@
 /*!
  * \file
  *
- * \copydoc Dumux::PvsNewtonController
+ * \copydoc Dumux::PvsNewtonMethod
  */
-#ifndef DUMUX_PVS_NEWTON_CONTROLLER_HH
-#define DUMUX_PVS_NEWTON_CONTROLLER_HH
+#ifndef DUMUX_PVS_NEWTON_METHOD_HH
+#define DUMUX_PVS_NEWTON_METHOD_HH
 
 #include "pvsproperties.hh"
 
-#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtonmethod.hh>
 
 namespace Dumux {
 
@@ -35,39 +35,39 @@ namespace Dumux {
  * \ingroup Newton
  * \ingroup PvsModel
  *
- * \brief A controller for the newton solver which is specific to the
- *        compositional multi-phase PVS box model.
- *
- * This controller 'knows' what a 'physically meaningful' solution is
- * which allows the newton method to abort quicker if the solution is
- * way out of bounds.
+ * \brief A newton solver which is specific to the compositional
+ *        multi-phase PVS box model.
  */
 template <class TypeTag>
-class PvsNewtonController : public BoxNewtonController<TypeTag>
+class PvsNewtonMethod : public BoxNewtonMethod<TypeTag>
 {
-    typedef BoxNewtonController<TypeTag> ParentType;
+    typedef BoxNewtonMethod<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    PvsNewtonController(Problem &problem)
+    PvsNewtonMethod(Problem &problem)
         : ParentType(problem)
     {}
 
+protected:
+    friend class NewtonMethod<TypeTag>;
+    friend class BoxNewtonMethod<TypeTag>;
+
     /*!
-     * \copydoc NewtonController::newtonEndStep
+     * \copydoc NewtonMethod::endIteration
      */
-    void newtonEndStep(SolutionVector &uCurrentIter,
+    void endIteration_(SolutionVector &uCurrentIter,
                        const SolutionVector &uLastIter)
     {
-        ParentType::newtonEndStep(uCurrentIter, uLastIter);
+        ParentType::endIteration_(uCurrentIter, uLastIter);
         this->problem().model().switchPrimaryVars_();
     }
 
     /*!
-     * \copydoc NewtonController::newtonConverged
+     * \copydoc NewtonMethod::converged_
      */
-    bool newtonConverged()
+    bool converged_()
     {
         if (this->problem().model().switched())
             return false;

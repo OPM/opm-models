@@ -83,8 +83,8 @@ SET_TYPE_PROP(BoxRichards, VolumeVariables, RichardsVolumeVariables<TypeTag>);
 //! The class for the quantities required for the flux calculation
 SET_TYPE_PROP(BoxRichards, FluxVariables, RichardsFluxVariables<TypeTag>);
 
-//! The class of the newton controller
-SET_TYPE_PROP(BoxRichards, NewtonController, RichardsNewtonController<TypeTag>);
+//! The class of the Newton method
+SET_TYPE_PROP(BoxRichards, NewtonMethod, RichardsNewtonMethod<TypeTag>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(BoxRichards, EnableSmoothUpwinding, false);

@@ -19,74 +19,52 @@
 /*!
  * \file
  *
- * \copydoc Dumux::BoxNewtonConvergenceWriter
+ * \copydoc Dumux::NullConvergenceWriter
  */
-#ifndef DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
-#define DUMUX_BOX_NEWTON_CONVERGENCE_WRITER_HH
+#ifndef DUMUX_NULL_CONVERGENCE_WRITER_HH
+#define DUMUX_NULL_CONVERGENCE_WRITER_HH
 
-#include <dumux/io/vtkmultiwriter.hh>
 #include <dumux/common/propertysystem.hh>
 
 namespace Dumux {
+
 namespace Properties {
-// forward declaration of the required property tags
-NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(NewtonMethod);
+
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-}
+};
 
 /*!
- * \ingroup BoxModel
  * \ingroup Newton
  *
- * \brief Writes the intermediate solutions during the Newton scheme
- *        for models using the box scheme
+ * \brief A convergence writer for the Newton method which does nothing
  */
 template <class TypeTag>
-class BoxNewtonConvergenceWriter
+class NullConvergenceWriter
 {
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-
-    typedef Dumux::VtkMultiWriter<GridView>  VtkMultiWriter;
 
 public:
-    BoxNewtonConvergenceWriter(NewtonMethod &nm)
-        : newtonMethod_(nm)
-    {
-        timeStepIdx_ = 0;
-        iteration_ = 0;
-        vtkMultiWriter_ = 0;
-    }
-
-    ~BoxNewtonConvergenceWriter()
-    { delete vtkMultiWriter_; }
+    NullConvergenceWriter(NewtonMethod &method)
+    { }
 
     /*!
      * \brief Called by the Newton method before the actual algorithm
      *        is started for any given timestep.
      */
     void beginTimeStep()
-    {
-        ++timeStepIdx_;
-        iteration_ = 0;
-    }
+    { }
 
     /*!
      * \brief Called by the Newton method before an iteration of the
      *        Newton algorithm is started.
      */
     void beginIteration()
-    {
-        ++ iteration_;
-        if (!vtkMultiWriter_)
-            vtkMultiWriter_ = new VtkMultiWriter(newtonMethod_.problem().gridView(), "convergence");
-        vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
-    }
+    { }
 
     /*!
      * \brief Write the Newton update to disk.
@@ -99,22 +77,14 @@ public:
      */
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
-    {
-        try {
-            newtonMethod_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
-        }
-        catch (...) {
-            std::cout << "oops: exception thrown on rank " << newtonMethod_.problem().gridView().comm().rank() << " while writing the convergence\n";
-        };
-
-    }
+    { }
 
     /*!
      * \brief Called by the Newton method after an iteration of the
      *        Newton algorithm has been completed.
      */
     void endIteration()
-    { vtkMultiWriter_->endWrite(); }
+    { }
 
     /*!
      * \brief Called by the Newton method after Newton algorithm
@@ -124,13 +94,7 @@ public:
      * converged or not.
      */
     void endTimeStep()
-    { iteration_ = 0; }
-
-private:
-    int timeStepIdx_;
-    int iteration_;
-    VtkMultiWriter *vtkMultiWriter_;
-    NewtonMethod &newtonMethod_;
+    { }
 };
 
 } // namespace Dumux

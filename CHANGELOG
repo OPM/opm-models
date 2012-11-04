@@ -1,3 +1,16 @@
+Notable Differences Between eWoms 2.2 and eWoms 2.3
+===================================================
+
+- The concept of Newton controllers has been abandoned. The
+  functionality previously implemented has been folded into the
+  NewtonMethod classes which now use static polymorphism. The reason
+  for this change is that this makes the Newton solver use the same
+  design as used by the rest of eWoms, and that the original reason to
+  split the policy from the algorithmic part of the Newton method was
+  not required. (The reason was to be able to implement different
+  policies with zero overhead, but all implemented Newton controllers
+  were just derived from NewtonController.)
+
 Notable Differences Between DuMuX 2.1 and eWoms 2.2
 ===================================================
 

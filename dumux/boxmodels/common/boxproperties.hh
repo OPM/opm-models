@@ -26,7 +26,7 @@
 #ifndef DUMUX_BOX_PROPERTIES_HH
 #define DUMUX_BOX_PROPERTIES_HH
 
-#include "boxnewtoncontroller.hh"
+#include "boxnewtonmethod.hh"
 
 #include <dumux/boxmodels/vtk/boxvtkprimaryvarsmodule.hh>
 #include <dumux/linear/boxlinearsolver.hh>
@@ -34,7 +34,6 @@
 #include <dumux/common/propertysystem.hh>
 
 namespace Dumux {
-
 namespace Properties {
 
 /*!
@@ -90,8 +89,6 @@ NEW_PROP_TAG(FluxVariables); //!< Data required to calculate a flux over a face
 
 // high level simulation control
 NEW_PROP_TAG(TimeManager);  //!< Manages the simulation time
-NEW_PROP_TAG(NewtonMethod);     //!< The type of the newton method
-NEW_PROP_TAG(NewtonController); //!< The type of the newton controller
 
 //! Specify whether the jacobian matrix of the last iteration of a
 //! time step should be re-used as the jacobian of the first iteration

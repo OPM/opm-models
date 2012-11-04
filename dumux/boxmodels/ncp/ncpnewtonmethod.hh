@@ -19,14 +19,14 @@
 /*!
  * \file
  *
- * \copydoc Dumux::NcpNewtonController
+ * \copydoc Dumux::NcpNewtonMethod
  */
-#ifndef DUMUX_NCP_NEWTON_CONTROLLER_HH
-#define DUMUX_NCP_NEWTON_CONTROLLER_HH
+#ifndef DUMUX_NCP_NEWTON_METHOD_HH
+#define DUMUX_NCP_NEWTON_METHOD_HH
 
 #include "ncpproperties.hh"
 
-#include <dumux/boxmodels/common/boxnewtoncontroller.hh>
+#include <dumux/boxmodels/common/boxnewtonmethod.hh>
 
 #include <algorithm>
 
@@ -34,16 +34,16 @@ namespace Dumux {
 
 /*!
  * \ingroup Newton
- * \brief A Ncp specific controller for the newton solver.
+ * \brief A Ncp specific method for the newton solver.
  *
- * This controller 'knows' what a 'physically meaningful' solution is
+ * This method 'knows' what a 'physically meaningful' solution is
  * which allows the newton method to abort quicker if the solution is
  * way out of bounds.
  */
 template <class TypeTag>
-class NcpNewtonController : public BoxNewtonController<TypeTag>
+class NcpNewtonMethod : public BoxNewtonMethod<TypeTag>
 {
-    typedef BoxNewtonController<TypeTag> ParentType;
+    typedef BoxNewtonMethod<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
@@ -60,9 +60,9 @@ class NcpNewtonController : public BoxNewtonController<TypeTag>
 
 public:
     /*!
-     * \copydoc BoxNewtonController::BoxNewtonController(Problem &)
+     * \copydoc BoxNewtonMethod::BoxNewtonMethod(Problem &)
      */
-    NcpNewtonController(Problem &problem)
+    NcpNewtonMethod(Problem &problem)
         : ParentType(problem)
     {
         choppedIterations_ = GET_PARAM(TypeTag, int, NewtonChoppedIterations);
@@ -70,7 +70,7 @@ public:
     }
 
     /*!
-     * \copydoc NewtonController::registerParameters
+     * \copydoc NewtonMethod::registerParameters
      */
     static void registerParameters()
     {
@@ -79,12 +79,16 @@ public:
         REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations, "The number of Newton iterations for which the update gets limited");
     }
 
+private:
+    friend class NewtonMethod<TypeTag>;
+    friend class BoxNewtonMethod<TypeTag>;
+
     /*!
-     * \copydoc BoxNewtonController::newtonUpdate
+     * \copydoc BoxNewtonMethod::update_
      */
-    void newtonUpdate(SolutionVector &uCurrentIter,
-                      const SolutionVector &uLastIter,
-                      const GlobalEqVector &deltaU)
+    void update_(SolutionVector &uCurrentIter,
+                 const SolutionVector &uLastIter,
+                 const GlobalEqVector &deltaU)
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
@@ -92,16 +96,16 @@ public:
 
         // compute the vertex and element colors for partial
         // reassembly
-        if (this->enablePartialReassemble_) {
-            const Scalar minReasmTol = 1e-2*this->tolerance_;
-            const Scalar maxReasmTol = 1e1*this->tolerance_;
-            Scalar reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, this->error_/1e4));
+        if (this->enablePartialReassemble_()) {
+            const Scalar minReasmTol = 1e-2*this->relTolerance_();
+            const Scalar maxReasmTol = 1e1*this->relTolerance_();
+            Scalar reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, this->relError_/1e4));
 
             this->model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
             this->model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
-        if (this->useLineSearch_)
+        if (this->enableLineSearch_())
             this->lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
         else {
             for (size_t i = 0; i < uLastIter.size(); ++i) {
@@ -110,7 +114,7 @@ public:
                 }
             }
 
-            if (this->numSteps_ < choppedIterations_) {
+            if (this->numIterations_ < choppedIterations_) {
                 // put crash barriers along the update path at the
                 // beginning...
                 chopUpdate_(uCurrentIter, uLastIter);
@@ -118,7 +122,6 @@ public:
         }
     }
 
-private:
     void chopUpdate_(SolutionVector &uCurrentIter,
                      const SolutionVector &uLastIter)
     {
