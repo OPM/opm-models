@@ -231,9 +231,20 @@ public:
 
         (*overlappingx_) = 0.0;
 
-        // run the solver
-        // update sequential preconditioner
-        precWrapper_.prepare(*overlappingMatrix_);
+        int preconditionerIsReady = 1;
+        try {
+            // run the solver
+            // update sequential preconditioner
+            precWrapper_.prepare(*overlappingMatrix_);
+        }
+        catch (const Dune::Exception &e) {
+            std::cout << "Preconditioner threw exception \"" << e.what() << " on rank " << overlappingMatrix_->overlap().myRank() << "\n";
+            preconditionerIsReady = 0;
+        }
+
+        preconditionerIsReady = problem_.gridView().comm().min(preconditionerIsReady);
+        if (!preconditionerIsReady)
+            return false;
 
         // create the parallel preconditioner
         ParallelPreconditioner parPreCond(precWrapper_.get(), overlappingMatrix_->overlap());
@@ -241,7 +252,6 @@ public:
         // create the parallel scalar product and the parallel operator
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
-
 
         // run the linear solver and have some fun
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);

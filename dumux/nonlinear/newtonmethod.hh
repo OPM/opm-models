@@ -323,7 +323,7 @@ public:
             }
             catch (const Dune::Exception &e) {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught during linearization: \"" << e.what() << "\"\n";
+                    std::cout << "Newton: Caught exception during linearization: \"" << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             };
@@ -349,9 +349,16 @@ public:
             // set the delta vector to zero before solving the linear system!
             deltaU = 0;
             // ask the implementation to solve the linearized system
-            asImp_().solveLinear_(jacobianAsm.matrix(),
-                                  deltaU,
-                                  jacobianAsm.residual());
+            if (!asImp_().solveLinear_(jacobianAsm.matrix(),
+                                       deltaU,
+                                       jacobianAsm.residual()))
+            {
+                if (asImp_().verbose_())
+                    std::cout << "Newton: Linear solver did not converge\n";
+                solveTimer_.stop();
+                asImp_().failed_();
+                return false;
+            }
             solveTimer_.stop();
 
             ///////////////
@@ -363,16 +370,26 @@ public:
                 std::cout.flush();
             }
 
-            // update the current solution (i.e. uOld) with the delta
-            // (i.e. u). The result is stored in u
-            updateTimer_.start();
-            asImp_().updateErrors_(uCurrentIter, uLastIter, deltaU);
-            asImp_().update_(uCurrentIter, uLastIter, deltaU);
-            updateTimer_.stop();
+            try {
+                // update the current solution (i.e. uOld) with the delta
+                // (i.e. u). The result is stored in u
+                updateTimer_.start();
+                asImp_().updateErrors_(uCurrentIter, uLastIter, deltaU);
+                asImp_().update_(uCurrentIter, uLastIter, deltaU);
+                updateTimer_.stop();
 
-            // tell the implementation that we're done with this
-            // iteration
-            asImp_().endIteration_(uCurrentIter, uLastIter);
+                // tell the implementation that we're done with this
+                // iteration
+                asImp_().endIteration_(uCurrentIter, uLastIter);
+            }
+            catch (const Dune::Exception &e) {
+                updateTimer_.stop();
+                if (asImp_().verbose_())
+                    std::cout << "Newton: Caught exception during update: \"" << e.what() << "\"\n";
+                asImp_().failed_();
+                return false;
+            };
+
         }
 
         // tell the implementation that we're done
@@ -496,17 +513,10 @@ protected:
      * \param x The vector which solves the linear system
      * \param b The right hand side of the linear system
      */
-    void solveLinear_(const JacobianMatrix &A,
+    bool solveLinear_(const JacobianMatrix &A,
                       GlobalEqVector &x,
                       const GlobalEqVector &b)
-    {
-        int converged = linearSolver_.solve(A, x, b);
-
-        if (!converged) {
-            DUNE_THROW(NumericalProblem,
-                       "Linear solver did not converge");
-        }
-    }
+    { return linearSolver_.solve(A, x, b);  }
 
     /*!
      * \brief Update the relative and absolute errors given delta vector.

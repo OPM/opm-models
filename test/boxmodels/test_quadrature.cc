@@ -166,7 +166,7 @@ void testTetrahedron()
                      v);
     auto *grid = gf.createGrid();
 
-    //writeSubControlVolumes(*grid);
+    writeSubControlVolumes(*grid);
 
     delete grid;
 #endif // HAVE_ALUGRID
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     testIdenityMapping();
-    testTetrahedron();
+    //testTetrahedron();
     testQuadrature();
 
     return 0;
