@@ -470,7 +470,8 @@ public:
         Restarter res;
         res.serializeBegin(asImp_());
         if (gridView().comm().rank() == 0)
-            std::cout << "Serialize to file '" << res.fileName() << "'\n";
+            std::cout << "Serialize to file '" << res.fileName() << "'"
+                      << ", time step size: " << asImp_().timeManager().timeStepSize() << "\n";
 
         timeManager().serialize(res);
         asImp_().serialize(res);
