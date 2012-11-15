@@ -674,7 +674,7 @@ protected:
         // calculate the temperature gradient using two-point gradient
         // appoximation
         temperatureGradNormal_ =
-            (fsInside.temperature(/*phaseIdx=*/0) - fs.temperature(/*phaseIdx=*/0))
+            (fs.temperature(/*phaseIdx=*/0) - fsInside.temperature(/*phaseIdx=*/0))
             / dist;
 
         // take the value for heat conductivity from the interior finite volume
