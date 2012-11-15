@@ -215,6 +215,9 @@ public:
      */
     bool solve(const Matrix &M, Vector &x, const Vector &b)
     {
+        Scalar oldSingularLimit = Dune::FMatrixPrecision<Scalar>::singular_limit();
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-50);
+
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
             // have been created
@@ -242,9 +245,14 @@ public:
             preconditionerIsReady = 0;
         }
 
-        preconditionerIsReady = problem_.gridView().comm().min(preconditionerIsReady);
-        if (!preconditionerIsReady)
+        // make sure that the preconditioner is also ready on all peer
+        // ranks.
+        preconditionerIsReady =
+            problem_.gridView().comm().min(preconditionerIsReady);
+        if (!preconditionerIsReady) {
+            Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
             return false;
+        }
 
         // create the parallel preconditioner
         ParallelPreconditioner parPreCond(precWrapper_.get(), overlappingMatrix_->overlap());
@@ -289,12 +297,17 @@ public:
         Dumux::InverseOperatorResult result;
         solver.apply(*overlappingx_, *overlappingb_, result);
 
-        // free the unneeded memory of the sequential preconditioner and the linear solver
+        // free the unneeded memory of the sequential preconditioner
+        // and the linear solver
         solverWrapper_.cleanup();
         precWrapper_.cleanup();
 
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);
+
+        // reset the singularity limit to the same value as before the
+        // linear solver was invoked.
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
 
         // return the result of the solver
         return result.converged;
