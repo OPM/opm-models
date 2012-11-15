@@ -44,11 +44,9 @@
 #include <mpi.h>
 #endif
 
-namespace Dumux
-{
+namespace Dumux {
 // forward declaration of property tags
-namespace Properties
-{
+namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridCreator);
@@ -293,10 +291,23 @@ int start(int argc,
                 return 1;
             }
 
-            // read the parameter file.
-            Dune::ParameterTreeParser::readINITree(paramFileName,
-                                                   ParameterTree::tree(),
-                                                   /*overwrite=*/false);
+            try {
+                // read the parameter file.
+                Dune::ParameterTreeParser::readINITree(paramFileName,
+                                                       ParameterTree::tree(),
+                                                       /*overwrite=*/false);
+            }
+            catch (const Dune::Exception &e) {
+                if (myRank == 0) {
+                    std::ostringstream oss;
+                    oss << "Error while parsing parameter file: \""
+                        << paramFileName
+                        << "\": "
+                        << e.what();
+                    printUsage(argv[0], oss.str());
+                }
+                return 1;
+            }
         }
 
         // read the initial time step and the end time
