@@ -25,10 +25,10 @@
 
 #include "problems/reservoirproblem.hh"
 
-#include <dumux/common/start.hh>
-#include <dumux/boxmodels/blackoil/blackoilmodel.hh>
+#include <ewoms/common/start.hh>
+#include <ewoms/boxmodels/blackoil/blackoilmodel.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(BoxBlackOil, ReservoirBaseProblem));
 }}
@@ -36,5 +36,5 @@ NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(BoxBlackOil, ReservoirBaseProblem))
 int main(int argc, char** argv)
 {
     typedef TTAG(ReservoirProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

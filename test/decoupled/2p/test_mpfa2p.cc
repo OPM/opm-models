@@ -29,7 +29,7 @@
 #if HAVE_ALUGRID
 
 #include "test_mpfa2pproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 ////////////////////////
 // the main function
@@ -37,7 +37,7 @@
 int main(int argc, char** argv)
 {
     Dune::ParameterTree paramTree;
-    std::string s(Dumux::readOptions_(argc, argv, paramTree));
+    std::string s(Ewoms::readOptions_(argc, argv, paramTree));
     if (s.empty())
     {
         if (paramTree.hasKey("ModelType"))
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used standard finite volume model\n";
                 return startReturn;
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used adaptive finite volume model\n";
                 return startReturn;
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used finite volume MPFA o-method model\n";
                 return startReturn;
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used finite volume MPFA l-method model\n";
                 return startReturn;
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
                 typedef GET_PROP(ProblemTypeTag, ParameterTree) ParamTree;
                 Dune::ParameterTree &rt = ParamTree::tree();
                 rt["ModelType"]=modelType;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Used adaptive finite volume MPFA l-method model\n";
                 return startReturn;
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
             else
             {
                 typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-                int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+                int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
                 std::cout<<"######################################################\n";
                 std::cout<<"Unknwon model type "<<modelType<<" specified\n";
                 std::cout<<"Default to finite volume MPFA o-method model\n";
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
         else
         {
             typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-            int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+            int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
             std::cout<<"######################################################\n";
             std::cout<<"No model type specified\n";
             std::cout<<"Default to finite volume MPFA o-method model\n";
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     else
     {
         typedef TTAG(MPFAOTwoPTestProblem) ProblemTypeTag;
-        int startReturn =  Dumux::start<ProblemTypeTag>(argc, argv);
+        int startReturn =  Ewoms::start<ProblemTypeTag>(argc, argv);
         std::cout<<"######################################################\n";
         std::cout<<s<<" is not a valid model type specification!\n";
         std::cout<<"Default to finite volume MPFA o-method model\n";

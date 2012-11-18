@@ -25,10 +25,10 @@
 
 #include "problems/richardslensproblem.hh"
 
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 int main(int argc, char** argv)
 {
     typedef TTAG(RichardsLensProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

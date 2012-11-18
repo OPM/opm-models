@@ -1,0 +1,126 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
+/*****************************************************************************
+ *   Copyright (C) 2010-2012 by Markus Wolff                                 *
+ *                                                                           *
+ *   This program is free software: you can redistribute it and/or modify    *
+ *   it under the terms of the GNU General Public License as published by    *
+ *   the Free Software Foundation, either version 2 of the License, or       *
+ *   (at your option) any later version.                                     *
+ *                                                                           *
+ *   This program is distributed in the hope that it will be useful,         *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of          *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
+ *   GNU General Public License for more details.                            *
+ *                                                                           *
+ *   You should have received a copy of the GNU General Public License       *
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
+ *****************************************************************************/
+/*!
+ * \file
+ *
+ * \brief Properties for a MPFA method.
+ */
+#ifndef EWOMS_FVMPFAPROPERTIES_HH
+#define EWOMS_FVMPFAPROPERTIES_HH
+
+// eWoms includes
+#include <ewoms/decoupled/common/decoupledproperties.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/sgrid.hh>
+#if HAVE_ALUGRID
+#include <dune/grid/alugrid/2d/alugrid.hh>
+#endif
+
+namespace Ewoms
+{
+/*!
+ *
+ *
+ * \brief Indices denoting the different grid types.
+ */
+struct GridTypes
+{
+public:
+    //
+    static const int any = 0;
+    //SGrid
+    static const int sGrid = 1;
+    //YaspGrid
+    static const int yaspGrid = 2;
+    //UGGrid
+    static const int ugGrid = 3;
+    //ALUGrid
+    static const int aluGrid = 4;
+};
+//! \cond \private
+template<class Grid, int dim>
+struct GridImp
+{
+    static const int imp = GridTypes::any;
+};
+
+template<int dim>
+struct GridImp<Dune::YaspGrid<dim>, dim>
+{
+    static const int imp = GridTypes::yaspGrid;
+};
+
+template<int dim>
+struct GridImp<Dune::SGrid<dim, dim>, dim>
+{
+    static const int imp = GridTypes::sGrid;
+};
+
+#if HAVE_ALUGRID
+template<int dim>
+struct GridImp<Dune::ALUGrid<dim, dim, Dune::cube, Dune::nonconforming>, dim>
+{
+    static const int imp = GridTypes::aluGrid;
+};
+#endif
+
+//! \endcond
+
+namespace Properties
+{
+//! Basic Type tag for MFPA models
+NEW_TYPE_TAG(MPFAProperties);
+
+NEW_PROP_TAG( GridTypeIndices );//!< The grid type indices to decide which grid is used
+NEW_PROP_TAG( GridImplementation ); //!< Gives kind of grid implementation in form of a GridType
+NEW_PROP_TAG( EnableComplexLStencil ); //!< Enable use of four different L-shapes instead of 2 (3-d)
+NEW_PROP_TAG( TransmissibilityCriterionThreshold ); //!< Threshold for transmissibility choice
+NEW_PROP_TAG( TransmissibilityCriterion ); //!< Choose transmissibility criterion
+}
+}
+
+namespace Ewoms
+{
+namespace Properties
+{
+
+//! \cond \private
+SET_PROP(MPFAProperties, GridImplementation)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+public:
+    static const int value = GridImp<Grid, Grid::dimension>::imp;
+};
+//! \endcond
+
+//! Set grid type indices
+SET_TYPE_PROP(MPFAProperties, GridTypeIndices, GridTypes);
+
+//! Allow use of all available L-shapes
+SET_BOOL_PROP(MPFAProperties, EnableComplexLStencil, true);
+
+//! Allow use of all available L-shapes
+SET_SCALAR_PROP(MPFAProperties, TransmissibilityCriterionThreshold, 1e-8);
+
+//! Set standard criterion
+SET_INT_PROP(MPFAProperties, TransmissibilityCriterion, 0);
+}
+}// end of Dune namespace
+#endif

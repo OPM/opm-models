@@ -18,13 +18,13 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::LensGridCreator
+ * \copydoc Ewoms::LensGridCreator
  */
-#ifndef DUMUX_LENS_GRID_CREATOR_HH
-#define DUMUX_LENS_GRID_CREATOR_HH
+#ifndef EWOMS_LENS_GRID_CREATOR_HH
+#define EWOMS_LENS_GRID_CREATOR_HH
 
-#include <dumux/common/propertysystem.hh>
-#include <dumux/common/parameters.hh>
+#include <ewoms/common/propertysystem.hh>
+#include <ewoms/common/parameters.hh>
 
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -35,7 +35,7 @@
 
 #include <vector>
 
-namespace Dumux {
+namespace Ewoms {
 // some hacky defines for the grid creator
 #define LENS_DIM 2
 #define LENS_CUBES 1

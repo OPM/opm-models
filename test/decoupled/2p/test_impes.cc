@@ -24,7 +24,7 @@
 #include "config.h"
 
 #include "test_impesproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 ////////////////////////
 // the main function
@@ -32,5 +32,5 @@
 int main(int argc, char** argv)
 {
     typedef TTAG(IMPESTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

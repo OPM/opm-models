@@ -1,7 +1,7 @@
 # -*- Autoconf -*-
 DUNE_AC_INIT
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([dumux/common/spline.hh])
+AC_CONFIG_SRCDIR([ewoms/common/spline.hh])
 AM_CONFIG_HEADER([config.h])
 
 DUNE_CHECK_ALL
@@ -12,61 +12,61 @@ AC_CONFIG_FILES([Makefile
     doc/doxygen/Makefile 
     doc/doxygen/Doxyfile
     doc/handbook/Makefile
-    dumux/Makefile 
-    dumux/boxmodels/Makefile 
-    dumux/boxmodels/blackoil/Makefile 
-    dumux/boxmodels/common/Makefile 
-    dumux/boxmodels/flash/Makefile 
-    dumux/boxmodels/immiscible/Makefile 
-    dumux/boxmodels/modules/Makefile 
-    dumux/boxmodels/modules/energy/Makefile 
-    dumux/boxmodels/modules/diffusion/Makefile 
-    dumux/boxmodels/modules/velocity/Makefile 
-    dumux/boxmodels/ncp/Makefile 
-    dumux/boxmodels/pvs/Makefile 
-    dumux/boxmodels/richards/Makefile 
-    dumux/boxmodels/stokes/Makefile
-    dumux/boxmodels/vtk/Makefile 
-    dumux/common/Makefile 
-    dumux/decoupled/Makefile
-    dumux/decoupled/1p/Makefile
-    dumux/decoupled/1p/diffusion/Makefile
-    dumux/decoupled/1p/diffusion/fv/Makefile 
-    dumux/decoupled/2p/Makefile 
-    dumux/decoupled/2p/diffusion/Makefile 
-    dumux/decoupled/2p/diffusion/fv/Makefile 
-    dumux/decoupled/2p/diffusion/fvmpfa/Makefile
-    dumux/decoupled/2p/diffusion/fvmpfa/lmethod/Makefile
-    dumux/decoupled/2p/diffusion/fvmpfa/omethod/Makefile 
-    dumux/decoupled/2p/diffusion/mimetic/Makefile 
-    dumux/decoupled/2p/impes/Makefile 
-    dumux/decoupled/2p/transport/Makefile 
-    dumux/decoupled/2p/transport/fv/Makefile
-    dumux/decoupled/2p2c/Makefile 
-    dumux/decoupled/common/Makefile
-    dumux/decoupled/common/fv/Makefile
-    dumux/decoupled/common/fv/mpfa/Makefile
-    dumux/decoupled/common/mimetic/Makefile
-    dumux/decoupled/constraintsolvers/Makefile 
-    dumux/decoupled/spatialparams/Makefile 
-    dumux/io/Makefile
-    dumux/istl/Makefile
-    dumux/linear/Makefile
-    dumux/material/Makefile 
-    dumux/material/binarycoefficients/Makefile 
-    dumux/material/components/Makefile 
-    dumux/material/components/iapws/Makefile 
-    dumux/material/constraintsolvers/Makefile 
-    dumux/material/eos/Makefile 
-    dumux/material/fluidmatrixinteractions/Makefile 
-    dumux/material/fluidmatrixinteractions/2p/Makefile 
-    dumux/material/fluidmatrixinteractions/3p/Makefile 
-    dumux/material/fluidmatrixinteractions/mp/Makefile 
-    dumux/material/fluidstates/Makefile 
-    dumux/material/fluidsystems/Makefile 
-    dumux/material/heatconduction/Makefile 
-    dumux/nonlinear/Makefile
-    dumux/parallel/Makefile 
+    ewoms/Makefile 
+    ewoms/boxmodels/Makefile 
+    ewoms/boxmodels/blackoil/Makefile 
+    ewoms/boxmodels/common/Makefile 
+    ewoms/boxmodels/flash/Makefile 
+    ewoms/boxmodels/immiscible/Makefile 
+    ewoms/boxmodels/modules/Makefile 
+    ewoms/boxmodels/modules/energy/Makefile 
+    ewoms/boxmodels/modules/diffusion/Makefile 
+    ewoms/boxmodels/modules/velocity/Makefile 
+    ewoms/boxmodels/ncp/Makefile 
+    ewoms/boxmodels/pvs/Makefile 
+    ewoms/boxmodels/richards/Makefile 
+    ewoms/boxmodels/stokes/Makefile
+    ewoms/boxmodels/vtk/Makefile 
+    ewoms/common/Makefile 
+    ewoms/decoupled/Makefile
+    ewoms/decoupled/1p/Makefile
+    ewoms/decoupled/1p/diffusion/Makefile
+    ewoms/decoupled/1p/diffusion/fv/Makefile 
+    ewoms/decoupled/2p/Makefile 
+    ewoms/decoupled/2p/diffusion/Makefile 
+    ewoms/decoupled/2p/diffusion/fv/Makefile 
+    ewoms/decoupled/2p/diffusion/fvmpfa/Makefile
+    ewoms/decoupled/2p/diffusion/fvmpfa/lmethod/Makefile
+    ewoms/decoupled/2p/diffusion/fvmpfa/omethod/Makefile 
+    ewoms/decoupled/2p/diffusion/mimetic/Makefile 
+    ewoms/decoupled/2p/impes/Makefile 
+    ewoms/decoupled/2p/transport/Makefile 
+    ewoms/decoupled/2p/transport/fv/Makefile
+    ewoms/decoupled/2p2c/Makefile 
+    ewoms/decoupled/common/Makefile
+    ewoms/decoupled/common/fv/Makefile
+    ewoms/decoupled/common/fv/mpfa/Makefile
+    ewoms/decoupled/common/mimetic/Makefile
+    ewoms/decoupled/constraintsolvers/Makefile 
+    ewoms/decoupled/spatialparams/Makefile 
+    ewoms/io/Makefile
+    ewoms/istl/Makefile
+    ewoms/linear/Makefile
+    ewoms/material/Makefile 
+    ewoms/material/binarycoefficients/Makefile 
+    ewoms/material/components/Makefile 
+    ewoms/material/components/iapws/Makefile 
+    ewoms/material/constraintsolvers/Makefile 
+    ewoms/material/eos/Makefile 
+    ewoms/material/fluidmatrixinteractions/Makefile 
+    ewoms/material/fluidmatrixinteractions/2p/Makefile 
+    ewoms/material/fluidmatrixinteractions/3p/Makefile 
+    ewoms/material/fluidmatrixinteractions/mp/Makefile 
+    ewoms/material/fluidstates/Makefile 
+    ewoms/material/fluidsystems/Makefile 
+    ewoms/material/heatconduction/Makefile 
+    ewoms/nonlinear/Makefile
+    ewoms/parallel/Makefile 
     m4/Makefile
     test/Makefile
     test/boxmodels/Makefile 

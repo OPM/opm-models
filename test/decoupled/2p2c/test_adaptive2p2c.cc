@@ -24,14 +24,14 @@
 #include "config.h"
 
 #include "test_adaptive2p2cproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 // The main function using the standard start procedure
 int main(int argc, char** argv)
 {
 #if HAVE_ALUGRID
     typedef TTAG(Adaptive2p2c) TypeTag;
-    return Dumux::start<TypeTag>(argc, argv);
+    return Ewoms::start<TypeTag>(argc, argv);
 #else
 #warning ALUGrid needed for this test.
     std::cout << "ALUGrid needed for this test. Aborting." << std::endl;

@@ -19,22 +19,22 @@
 /*!
  * \file
  *
- * \copydoc Dumux::ObstacleProblem
+ * \copydoc Ewoms::ObstacleProblem
  */
-#ifndef DUMUX_OBSTACLE_PROBLEM_HH
-#define DUMUX_OBSTACLE_PROBLEM_HH
+#ifndef EWOMS_OBSTACLE_PROBLEM_HH
+#define EWOMS_OBSTACLE_PROBLEM_HH
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/boxmodels/ncp/ncpproperties.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/heatconduction/somerton.hh>
+#include <ewoms/boxmodels/ncp/ncpproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
@@ -43,7 +43,7 @@
 
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class ObstacleProblem;
@@ -58,12 +58,12 @@ SET_TYPE_PROP(ObstacleBaseProblem, Grid, Dune::YaspGrid<2>);
 // Set the problem property
 SET_TYPE_PROP(ObstacleBaseProblem,
               Problem,
-              Dumux::ObstacleProblem<TypeTag>);
+              Ewoms::ObstacleProblem<TypeTag>);
 
 // Set fluid configuration
 SET_TYPE_PROP(ObstacleBaseProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Set the material Law
 SET_PROP(ObstacleBaseProblem, MaterialLaw)
@@ -93,7 +93,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
 };
 
 // Enable gravity
@@ -493,7 +493,7 @@ private:
 
         // make the fluid state consistent with local thermodynamic
         // equilibrium
-        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
 
         typename FluidSystem::ParameterCache paramCache;
         ComputeFromReferencePhase::solve(fs,

@@ -19,17 +19,17 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::Test2PSpatialParams
+ * \copydoc Ewoms::Test2PSpatialParams
  */
 #ifndef TEST_2P_SPATIALPARAMETERS_HH
 #define TEST_2P_SPATIALPARAMETERS_HH
 
-#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -68,7 +68,7 @@ NEW_PROP_TAG(OutputInterval);
 NEW_PROP_TAG(OutputTimeInterval);
 
 // Set the spatial parameters
-SET_TYPE_PROP(Test2PSpatialParams, SpatialParams, Dumux::Test2PSpatialParams<TypeTag>);
+SET_TYPE_PROP(Test2PSpatialParams, SpatialParams, Ewoms::Test2PSpatialParams<TypeTag>);
 
 // Set the material law
 SET_PROP(Test2PSpatialParams, MaterialLaw)

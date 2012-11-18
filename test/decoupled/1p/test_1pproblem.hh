@@ -19,19 +19,19 @@
 *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestProblemOneP
+ * \copydoc Ewoms::TestProblemOneP
  */
-#ifndef DUMUX_TEST_1P_PROBLEM_HH
-#define DUMUX_TEST_1P_PROBLEM_HH
+#ifndef EWOMS_TEST_1P_PROBLEM_HH
+#define EWOMS_TEST_1P_PROBLEM_HH
 
 #include "test_1pspatialparams.hh"
 
-#include <dumux/common/cubegridcreator.hh>
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/unit.hh>
-#include <dumux/decoupled/1p/diffusion/fv/fvpressureproperties1p.hh>
-#include <dumux/decoupled/1p/diffusion/diffusionproblem1p.hh>
-#include <dumux/decoupled/common/fv/fvvelocity.hh>
+#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <ewoms/material/components/unit.hh>
+#include <ewoms/decoupled/1p/diffusion/fv/fvpressureproperties1p.hh>
+#include <ewoms/decoupled/1p/diffusion/diffusionproblem1p.hh>
+#include <ewoms/decoupled/common/fv/fvvelocity.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
@@ -39,7 +39,7 @@
 
 #include <iostream>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -70,17 +70,17 @@ SET_PROP(TestProblemOneP, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::Unit<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::Unit<Scalar> > type;
 };
 
 // Set the spatial parameters
-SET_TYPE_PROP(TestProblemOneP, SpatialParams, Dumux::TestOnePSpatialParams<TypeTag>);
+SET_TYPE_PROP(TestProblemOneP, SpatialParams, Ewoms::TestOnePSpatialParams<TypeTag>);
 
 // Enable gravity
 SET_BOOL_PROP(TestProblemOneP, EnableGravity, false);
 
 //Set the problem
-SET_TYPE_PROP(TestProblemOneP, Problem, Dumux::TestProblemOneP<TypeTag>);
+SET_TYPE_PROP(TestProblemOneP, Problem, Ewoms::TestProblemOneP<TypeTag>);
 
 SET_INT_PROP(TestProblemOneP, LinearSolverVerbosity, 1);
 
@@ -288,7 +288,7 @@ private:
     }
 
     double delta_;
-    Dumux::FVVelocity<TypeTag, typename GET_PROP_TYPE(TypeTag, Velocity) > velocity_;
+    Ewoms::FVVelocity<TypeTag, typename GET_PROP_TYPE(TypeTag, Velocity) > velocity_;
 };
 } //end namespace
 

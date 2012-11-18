@@ -18,28 +18,28 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::Adaptive2p2c
+ * \copydoc Ewoms::Adaptive2p2c
  */
-#ifndef DUMUX_TEST_ADAPTIVE_2P2C_PROBLEM_HH
-#define DUMUX_TEST_ADAPTIVE_2P2C_PROBLEM_HH
+#ifndef EWOMS_TEST_ADAPTIVE_2P2C_PROBLEM_HH
+#define EWOMS_TEST_ADAPTIVE_2P2C_PROBLEM_HH
 
 #include <dune/grid/alugrid.hh>
 // #include <dune/grid/uggrid.hh>
 
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
-#include <dumux/common/math.hh>
-#include <dumux/decoupled/2p2c/2p2cadaptiveproperties.hh>
-#include <dumux/decoupled/2p2c/2p2cproblem.hh>
-#include <dumux/decoupled/2p/impes/gridadaptionindicator2p.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/common/math.hh>
+#include <ewoms/decoupled/2p2c/2p2cadaptiveproperties.hh>
+#include <ewoms/decoupled/2p2c/2p2cproblem.hh>
+#include <ewoms/decoupled/2p/impes/gridadaptionindicator2p.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
 
 #include "test_dec2p2c_spatialparams.hh"
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -68,7 +68,7 @@ SET_TYPE_PROP(Adaptive2p2c, GridCreator, CubeGridCreator<TypeTag>);
 // Set the problem property
 SET_PROP(Adaptive2p2c, Problem)
 {
-    typedef Dumux::Adaptive2p2c<TTAG(Adaptive2p2c)> type;
+    typedef Ewoms::Adaptive2p2c<TTAG(Adaptive2p2c)> type;
 };
 
 SET_SCALAR_PROP(Adaptive2p2c, EndTime, 3e3);
@@ -82,7 +82,7 @@ SET_PROP(Adaptive2p2c, FluidSystem)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::FluidSystems::H2OAir<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::FluidSystems::H2OAir<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Specify indicator
@@ -227,14 +227,14 @@ Scalar temperatureAtPos(const GlobalPosition& globalPos) const
 
 // \}
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::referencePressureAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::referencePressureAtPos()
  */
 Scalar referencePressureAtPos(const GlobalPosition& globalPos) const
 {
     return 1e6;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::boundaryTypesAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::boundaryTypesAtPos()
  */
 void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos) const
 {
@@ -246,14 +246,14 @@ void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos)
 }
 
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::boundaryFormulation()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::boundaryFormulation()
  */
 const void boundaryFormulation(typename Indices::BoundaryFormulation &bcFormulation, const Intersection& intersection) const
 {
     bcFormulation = Indices::concentration;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::dirichletAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::dirichletAtPos()
  */
 void dirichletAtPos(PrimaryVariables &bcValues, const GlobalPosition& globalPos) const
 {
@@ -270,14 +270,14 @@ void dirichletAtPos(PrimaryVariables &bcValues, const GlobalPosition& globalPos)
 
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::neumannAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::neumannAtPos()
  */
 void neumannAtPos(PrimaryVariables &neumannValues, const GlobalPosition& globalPos) const
 {
     this->setZero(neumannValues, Indices::contiWEqIdx);
 }
 /*!
- * \copydoc Dumux::IMPETProblem::source()
+ * \copydoc Ewoms::IMPETProblem::source()
  */
 void source(PrimaryVariables &values, const Element &element)
 {
@@ -293,14 +293,14 @@ void source(PrimaryVariables &values, const Element &element)
         values[Indices::contiNEqIdx] = 0.0001;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::initialFormulation()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::initialFormulation()
  */
 const void initialFormulation(typename Indices::BoundaryFormulation &initialFormulation, const Element& element) const
 {
     initialFormulation = Indices::concentration;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::initConcentrationAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::initConcentrationAtPos()
  */
 Scalar initConcentrationAtPos(const GlobalPosition& globalPos) const
 {
@@ -309,7 +309,7 @@ Scalar initConcentrationAtPos(const GlobalPosition& globalPos) const
 
 private:
 Grid grid_;
-Dumux::VtkMultiWriter<GridView> debugWriter_;
+Ewoms::VtkMultiWriter<GridView> debugWriter_;
 };
 } //end namespace
 

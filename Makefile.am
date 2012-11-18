@@ -10,7 +10,7 @@ EXTRA_DIST = dune.module \
              EwomsConfig.cmake.in \
              *.opts 
 
-SUBDIRS = doc dumux m4 test tutorial
+SUBDIRS = doc ewoms m4 test tutorial
 
 # don't follow the full GNU-standard
 # we need automake 1.9 or later

@@ -19,28 +19,28 @@
 /*!
  * \file
  *
- * \copydoc Dumux::PowerInjectionProblem
+ * \copydoc Ewoms::PowerInjectionProblem
  */
-#ifndef DUMUX_POWER_INJECTION_PROBLEM_HH
-#define DUMUX_POWER_INJECTION_PROBLEM_HH
+#ifndef EWOMS_POWER_INJECTION_PROBLEM_HH
+#define EWOMS_POWER_INJECTION_PROBLEM_HH
 
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/air.hh>
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/components/air.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <type_traits>
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class PowerInjectionProblem;
@@ -59,7 +59,7 @@ SET_TYPE_PROP(PowerInjectionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 SET_TYPE_PROP(PowerInjectionBaseProblem, GridCreator, CubeGridCreator<TypeTag>);
 
 // Set the problem property
-SET_TYPE_PROP(PowerInjectionBaseProblem, Problem, Dumux::PowerInjectionProblem<TypeTag>);
+SET_TYPE_PROP(PowerInjectionBaseProblem, Problem, Ewoms::PowerInjectionProblem<TypeTag>);
 
 // Set the wetting phase
 SET_PROP(PowerInjectionBaseProblem, WettingPhase)
@@ -67,7 +67,7 @@ SET_PROP(PowerInjectionBaseProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -76,7 +76,7 @@ SET_PROP(PowerInjectionBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::Air<Scalar> > type;
+    typedef Ewoms::GasPhase<Scalar, Ewoms::Air<Scalar> > type;
 };
 
 // Set the material Law
@@ -207,7 +207,7 @@ public:
         std::ostringstream oss;
         oss << "powerinjection_";
         if (std::is_same<typename GET_PROP_TYPE(TypeTag, VelocityModule),
-                         Dumux::BoxDarcyVelocityModule<TypeTag> >::value)
+                         Ewoms::BoxDarcyVelocityModule<TypeTag> >::value)
             oss << "darcy";
         else
             oss << "forchheimer";

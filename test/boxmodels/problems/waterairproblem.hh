@@ -19,28 +19,28 @@
 /*!
  * \file
  *
- * \copydoc Dumux::WaterAirProblem
+ * \copydoc Ewoms::WaterAirProblem
  */
-#ifndef DUMUX_WATER_AIR_PROBLEM_HH
-#define DUMUX_WATER_AIR_PROBLEM_HH
+#ifndef EWOMS_WATER_AIR_PROBLEM_HH
+#define EWOMS_WATER_AIR_PROBLEM_HH
 
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/boxmodels/pvs/pvsproperties.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/heatconduction/somerton.hh>
+#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <ewoms/boxmodels/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class WaterAirProblem;
@@ -53,7 +53,7 @@ NEW_TYPE_TAG(WaterAirBaseProblem);
 SET_TYPE_PROP(WaterAirBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(WaterAirBaseProblem, Problem, Dumux::WaterAirProblem<TypeTag>);
+SET_TYPE_PROP(WaterAirBaseProblem, Problem, Ewoms::WaterAirProblem<TypeTag>);
 
 // Set the material Law
 SET_PROP(WaterAirBaseProblem, MaterialLaw)
@@ -85,13 +85,13 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
 };
 
 // Set the fluid system. in this case, we use the one which describes
 // air and water
 SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem,
-              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirBaseProblem, EnableGravity, true);
@@ -358,7 +358,7 @@ public:
         else if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             //int globalIdx = context.elemContext().globalSpaceIndex(context.insideScvIndex(spaceIdx,timeIdx), timeIdx);
 
-            Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+            Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
             // impose an freeflow boundary condition
@@ -387,7 +387,7 @@ public:
     {
         //int globalIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
 
-        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+        Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
@@ -469,7 +469,7 @@ private:
         fs.setPressure(gPhaseIdx, fs.pressure(lPhaseIdx) + (pc[gPhaseIdx] - pc[lPhaseIdx]));
 
         typename FluidSystem::ParameterCache paramCache;
-        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/false,  /*setEnthalpy=*/true);
     }
 
@@ -478,7 +478,7 @@ private:
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
-        Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setTemperature(293.15);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fs.setPressure(phaseIdx, 1.0135e5);

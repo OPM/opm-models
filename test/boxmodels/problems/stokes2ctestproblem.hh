@@ -19,18 +19,18 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::Stokes2cTestProblem
+ * \copydoc Ewoms::Stokes2cTestProblem
  */
-#ifndef DUMUX_STOKES_2C_TEST_PROBLEM_HH
-#define DUMUX_STOKES_2C_TEST_PROBLEM_HH
+#ifndef EWOMS_STOKES_2C_TEST_PROBLEM_HH
+#define EWOMS_STOKES_2C_TEST_PROBLEM_HH
 
-#include <dumux/boxmodels/stokes/stokesmodel.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/boxmodels/stokes/stokesmodel.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class Stokes2cTestProblem;
@@ -46,12 +46,12 @@ NEW_TYPE_TAG(Stokes2cTestProblem, INHERITS_FROM(BoxStokes));
 SET_TYPE_PROP(Stokes2cTestProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(Stokes2cTestProblem, Problem, Dumux::Stokes2cTestProblem<TypeTag>);
+SET_TYPE_PROP(Stokes2cTestProblem, Problem, Ewoms::Stokes2cTestProblem<TypeTag>);
 
 //! Select the fluid system
 SET_TYPE_PROP(Stokes2cTestProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! Select the phase to be considered
 SET_INT_PROP(Stokes2cTestProblem,

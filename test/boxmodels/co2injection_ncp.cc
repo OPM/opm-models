@@ -26,10 +26,10 @@
 
 #include "problems/co2injectionproblem.hh"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/ncp/ncpmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(Co2InjectionNcpProblem, INHERITS_FROM(BoxNcp, Co2InjectionBaseProblem));
 } }
@@ -37,5 +37,5 @@ NEW_TYPE_TAG(Co2InjectionNcpProblem, INHERITS_FROM(BoxNcp, Co2InjectionBaseProbl
 int main(int argc, char** argv)
 {
     typedef TTAG(Co2InjectionNcpProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

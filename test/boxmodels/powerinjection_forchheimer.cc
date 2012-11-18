@@ -25,18 +25,18 @@
 
 #include "problems/powerinjectionproblem.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(PowerInjectionProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, PowerInjectionBaseProblem));
 
-SET_TYPE_PROP(PowerInjectionProblem, VelocityModule, Dumux::BoxForchheimerVelocityModule<TypeTag>);
+SET_TYPE_PROP(PowerInjectionProblem, VelocityModule, Ewoms::BoxForchheimerVelocityModule<TypeTag>);
 } }
 
 int main(int argc, char** argv)
 {
     typedef TTAG(PowerInjectionProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

@@ -44,7 +44,7 @@ AC_DEFUN([EWOMS_CHECK_QUAD],
 
     if test "$HAVE_LIBQUAD" == "1" && test "$HAVE_QUADMATH_H" == "1"; then
        AC_DEFINE([HAVE_QUAD],1,[Are quad-precision floating point values usable?])
-       AH_BOTTOM([#include <dumux/common/quad.hh>])
+       AH_BOTTOM([#include <ewoms/common/quad.hh>])
        with_quad="yes"
     else
        with_quad="no"

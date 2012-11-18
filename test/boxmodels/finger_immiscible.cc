@@ -25,10 +25,10 @@
 
 #include "problems/fingerproblem.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(FingerProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, FingerBaseProblem));
 }}
@@ -36,5 +36,5 @@ NEW_TYPE_TAG(FingerProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, FingerBaseProbl
 int main(int argc, char** argv)
 {
     typedef TTAG(FingerProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

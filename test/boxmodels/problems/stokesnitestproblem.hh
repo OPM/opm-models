@@ -18,19 +18,19 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::StokesNITestProblem
+ * \copydoc Ewoms::StokesNITestProblem
  */
-#ifndef DUMUX_STOKES_NI_TEST_PROBLEM_HH
-#define DUMUX_STOKES_NI_TEST_PROBLEM_HH
+#ifndef EWOMS_STOKES_NI_TEST_PROBLEM_HH
+#define EWOMS_STOKES_NI_TEST_PROBLEM_HH
 
-#include <dumux/boxmodels/stokes/stokesmodel.hh>
-#include <dumux/common/simplexgridcreator.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/boxmodels/stokes/stokesmodel.hh>
+#include <ewoms/common/simplexgridcreator.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template <class TypeTag>
@@ -52,7 +52,7 @@ SET_TYPE_PROP(StokesNITestProblem, Problem, StokesNITestProblem<TypeTag>);
 //! Select the fluid system
 SET_TYPE_PROP(StokesNITestProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! Select the phase to be considered
 SET_INT_PROP(StokesNITestProblem,

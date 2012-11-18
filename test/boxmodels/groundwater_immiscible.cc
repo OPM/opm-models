@@ -25,10 +25,10 @@
 
 #include "problems/groundwaterproblem.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(GroundWaterProblem, INHERITS_FROM(BoxImmiscibleOnePhase, GroundWaterBaseProblem));
 }}
@@ -36,5 +36,5 @@ NEW_TYPE_TAG(GroundWaterProblem, INHERITS_FROM(BoxImmiscibleOnePhase, GroundWate
 int main(int argc, char** argv)
 {
     typedef TTAG(GroundWaterProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

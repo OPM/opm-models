@@ -25,10 +25,10 @@
 
 #include "problems/co2injectionproblem.hh"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(Co2InjectionPvsNIProblem, INHERITS_FROM(BoxPvs, Co2InjectionBaseProblem));
 
@@ -38,5 +38,5 @@ SET_BOOL_PROP(Co2InjectionPvsNIProblem, EnableEnergy, true);
 int main(int argc, char** argv)
 {
     typedef TTAG(Co2InjectionPvsNIProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

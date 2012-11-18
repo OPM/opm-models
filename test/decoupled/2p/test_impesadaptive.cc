@@ -26,12 +26,12 @@
 
 #if HAVE_ALUGRID
 #include "test_impesadaptiveproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 int main(int argc, char** argv)
 {
         typedef TTAG(TestIMPESAdaptiveProblem) ProblemTypeTag;
-        return Dumux::start<ProblemTypeTag>(argc, argv);
+        return Ewoms::start<ProblemTypeTag>(argc, argv);
 }
 #else
 #warning You need to have ALUGrid installed to run this test

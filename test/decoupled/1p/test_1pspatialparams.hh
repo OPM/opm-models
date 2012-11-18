@@ -19,17 +19,17 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestOnePSpatialParams
+ * \copydoc Ewoms::TestOnePSpatialParams
  */
 #ifndef TEST_1P_SPATIAL_PARAMS_HH
 #define TEST_1P_SPATIAL_PARAMS_HH
 
-#include <dumux/decoupled/spatialparams/fvspatialparams1p.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams1p.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 /*!

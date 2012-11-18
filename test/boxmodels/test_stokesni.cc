@@ -23,10 +23,10 @@
  */
 #include "config.h"
 #include "problems/stokesnitestproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 int main(int argc, char** argv)
 {
     typedef TTAG(StokesNITestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

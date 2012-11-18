@@ -19,25 +19,25 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestMultTwoPTwoCProblem
+ * \copydoc Ewoms::TestMultTwoPTwoCProblem
  */
-#ifndef DUMUX_TEST_2P2C_PROBLEM_HH
-#define DUMUX_TEST_2P2C_PROBLEM_HH
+#ifndef EWOMS_TEST_2P2C_PROBLEM_HH
+#define EWOMS_TEST_2P2C_PROBLEM_HH
 
 #include "test_dec2p2c_spatialparams.hh"
 
-#include <dumux/decoupled/2p2c/2p2cproblem.hh>
-#include <dumux/decoupled/2p2c/fvpressure2p2cmultiphysics.hh>
-#include <dumux/decoupled/2p2c/fvtransport2p2cmultiphysics.hh>
-#include <dumux/decoupled/2p2c/cellData2p2cmultiphysics.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/decoupled/2p2c/2p2cproblem.hh>
+#include <ewoms/decoupled/2p2c/fvpressure2p2cmultiphysics.hh>
+#include <ewoms/decoupled/2p2c/fvtransport2p2cmultiphysics.hh>
+#include <ewoms/decoupled/2p2c/cellData2p2cmultiphysics.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -48,9 +48,9 @@ namespace Properties
 {
 NEW_TYPE_TAG(TestMultTwoPTwoCProblem, INHERITS_FROM(DecoupledTwoPTwoC, Test2P2CSpatialParams));
 
-SET_TYPE_PROP(TestMultTwoPTwoCProblem, CellData, Dumux::CellData2P2Cmultiphysics<TypeTag>);
+SET_TYPE_PROP(TestMultTwoPTwoCProblem, CellData, Ewoms::CellData2P2Cmultiphysics<TypeTag>);
 
-SET_TYPE_PROP(TestMultTwoPTwoCProblem, GridCreator, Dumux::CubeGridCreator<TypeTag>);
+SET_TYPE_PROP(TestMultTwoPTwoCProblem, GridCreator, Ewoms::CubeGridCreator<TypeTag>);
 
 // Set the grid type
 SET_PROP(TestMultTwoPTwoCProblem, Grid)
@@ -62,18 +62,18 @@ SET_PROP(TestMultTwoPTwoCProblem, Grid)
 // Set the problem property
 SET_PROP(TestMultTwoPTwoCProblem, Problem)
 {
-    typedef Dumux::TestMultTwoPTwoCProblem<TypeTag> type;
+    typedef Ewoms::TestMultTwoPTwoCProblem<TypeTag> type;
 };
 
 // Set the model properties
 SET_PROP(TestMultTwoPTwoCProblem, TransportModel)
 {
-    typedef Dumux::FVTransport2P2CMultiPhysics<TypeTag> type;
+    typedef Ewoms::FVTransport2P2CMultiPhysics<TypeTag> type;
 };
 
 SET_PROP(TestMultTwoPTwoCProblem, PressureModel)
 {
-    typedef Dumux::FVPressure2P2CMultiPhysics<TypeTag> type;
+    typedef Ewoms::FVPressure2P2CMultiPhysics<TypeTag> type;
 };
 
 SET_INT_PROP(TestMultTwoPTwoCProblem, PressureFormulation,
@@ -87,7 +87,7 @@ SET_PROP(TestMultTwoPTwoCProblem,
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Dumux::FluidSystems::H2OAir<Scalar> type;
+    typedef Ewoms::FluidSystems::H2OAir<Scalar> type;
 };
 
 // Enable gravity
@@ -197,14 +197,14 @@ Scalar temperatureAtPos(const GlobalPosition& globalPos) const
 
 // \}
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::referencePressureAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::referencePressureAtPos()
  */
 Scalar referencePressureAtPos(const GlobalPosition& globalPos) const
 {
     return 1e6;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::boundaryTypesAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::boundaryTypesAtPos()
  */
 void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos) const
 {
@@ -216,14 +216,14 @@ void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos)
 }
 
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::boundaryFormulation()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::boundaryFormulation()
  */
 const void boundaryFormulation(typename Indices::BoundaryFormulation &bcFormulation, const Intersection& intersection) const
 {
     bcFormulation = Indices::concentration;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::dirichletAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::dirichletAtPos()
  */
 void dirichletAtPos(PrimaryVariables &bcValues ,const GlobalPosition& globalPos) const
 {
@@ -240,7 +240,7 @@ void dirichletAtPos(PrimaryVariables &bcValues ,const GlobalPosition& globalPos)
 
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::neumannAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::neumannAtPos()
  */
 void neumannAtPos(PrimaryVariables &neumannValues, const GlobalPosition& globalPos) const
 {
@@ -252,7 +252,7 @@ void neumannAtPos(PrimaryVariables &neumannValues, const GlobalPosition& globalP
 //    }
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::sourceAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::sourceAtPos()
  */
 void sourceAtPos(PrimaryVariables &sourceValues, const GlobalPosition& globalPos) const
 {
@@ -261,14 +261,14 @@ void sourceAtPos(PrimaryVariables &sourceValues, const GlobalPosition& globalPos
         sourceValues[Indices::contiNEqIdx] = 0.0001;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::initialFormulation()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::initialFormulation()
  */
 const void initialFormulation(typename Indices::BoundaryFormulation &initialFormulation, const Element& element) const
 {
     initialFormulation = Indices::concentration;
 }
 /*!
- * \copydoc Dumux::TestDecTwoPTwoCProblem::initConcentrationAtPos()
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem::initConcentrationAtPos()
  */
 Scalar initConcentrationAtPos(const GlobalPosition& globalPos) const
 {

@@ -18,19 +18,19 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::OutflowProblem
+ * \copydoc Ewoms::OutflowProblem
  */
-#ifndef DUMUX_OUTFLOW_PROBLEM_HH
-#define DUMUX_OUTFLOW_PROBLEM_HH
+#ifndef EWOMS_OUTFLOW_PROBLEM_HH
+#define EWOMS_OUTFLOW_PROBLEM_HH
 
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/boxmodels/pvs/pvsproperties.hh>
-#include <dumux/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/boxmodels/pvs/pvsproperties.hh>
+#include <ewoms/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class OutflowProblem;
@@ -43,7 +43,7 @@ NEW_TYPE_TAG(OutflowBaseProblem);
 SET_TYPE_PROP(OutflowBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(OutflowBaseProblem, Problem, Dumux::OutflowProblem<TypeTag>);
+SET_TYPE_PROP(OutflowBaseProblem, Problem, Ewoms::OutflowProblem<TypeTag>);
 
 // Set fluid system
 SET_PROP(OutflowBaseProblem, FluidSystem)
@@ -51,7 +51,7 @@ SET_PROP(OutflowBaseProblem, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
     // Two-component single phase fluid system
-    typedef Dumux::FluidSystems::H2ON2LiquidPhase<Scalar> type;
+    typedef Ewoms::FluidSystems::H2ON2LiquidPhase<Scalar> type;
 };
 
 // Disable gravity
@@ -214,7 +214,7 @@ public:
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(globalPos)) {
-            Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
             fs.setPressure(/*phaseIdx=*/0, fs.pressure(/*phaseIdx=*/0) + 1e5);
 
@@ -226,7 +226,7 @@ public:
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
         else if (onRightBoundary_(globalPos)) {
-            Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
             // impose an outflow boundary condition
@@ -250,7 +250,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        Dumux::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+        Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         values.assignNaive(fs);

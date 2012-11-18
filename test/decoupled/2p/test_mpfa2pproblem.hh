@@ -20,35 +20,35 @@
 
 /*!
  * \file
- * \copydoc Dumux::MPFATwoPTestProblem
+ * \copydoc Ewoms::MPFATwoPTestProblem
  */
 
-#ifndef DUMUX_TEST_MPFA2P_PROBLEM_HH
-#define DUMUX_TEST_MPFA2P_PROBLEM_HH
+#ifndef EWOMS_TEST_MPFA2P_PROBLEM_HH
+#define EWOMS_TEST_MPFA2P_PROBLEM_HH
 
 #include <dune/grid/alugrid/2d/alugrid.hh>
 
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/dnapl.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/components/dnapl.hh>
 
-#include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
-#include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2padaptive.hh>
-#include <dumux/decoupled/2p/diffusion/fvmpfa/omethod/fvmpfaopressureproperties2p.hh>
-#include <dumux/decoupled/2p/diffusion/fvmpfa/lmethod/fvmpfalpressureproperties2p.hh>
-#include <dumux/decoupled/2p/diffusion/fvmpfa/lmethod/fvmpfalpressureproperties2padaptive.hh>
-#include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
-#include <dumux/decoupled/2p/impes/impesproblem2p.hh>
+#include <ewoms/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>
+#include <ewoms/decoupled/2p/diffusion/fv/fvpressureproperties2padaptive.hh>
+#include <ewoms/decoupled/2p/diffusion/fvmpfa/omethod/fvmpfaopressureproperties2p.hh>
+#include <ewoms/decoupled/2p/diffusion/fvmpfa/lmethod/fvmpfalpressureproperties2p.hh>
+#include <ewoms/decoupled/2p/diffusion/fvmpfa/lmethod/fvmpfalpressureproperties2padaptive.hh>
+#include <ewoms/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
+#include <ewoms/decoupled/2p/impes/impesproblem2p.hh>
 
 
-#include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
-#include<dumux/decoupled/2p/impes/gridadaptionindicator2plocal.hh>
+#include<ewoms/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#include<ewoms/decoupled/2p/impes/gridadaptionindicator2plocal.hh>
 
 #include "test_mpfa2pspatialparams.hh"
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -79,7 +79,7 @@ SET_TYPE_PROP(MPFATwoPTestProblem, GridCreator, CubeGridCreator<TypeTag>);
 SET_PROP(MPFATwoPTestProblem, Problem)
 {
 public:
-    typedef Dumux::MPFATwoPTestProblem<TypeTag> type;
+    typedef Ewoms::MPFATwoPTestProblem<TypeTag> type;
 };
 
 // Set the wetting phase
@@ -88,7 +88,7 @@ SET_PROP(MPFATwoPTestProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -97,15 +97,15 @@ SET_PROP(MPFATwoPTestProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::DNAPL<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::DNAPL<Scalar> > type;
 };
 
 // Enable gravity
 SET_BOOL_PROP(MPFATwoPTestProblem, EnableGravity, true);
 
-SET_TYPE_PROP(MPFATwoPTestProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
+SET_TYPE_PROP(MPFATwoPTestProblem, EvalCflFluxFunction, Ewoms::EvalCflFluxCoats<TypeTag>);
 SET_SCALAR_PROP(MPFATwoPTestProblem, ImpetCflFactor, 1.0);
-SET_TYPE_PROP(MPFATwoPTestProblem, GridAdaptIndicator, Dumux::GridAdaptionIndicator2PLocal<TypeTag>);
+SET_TYPE_PROP(MPFATwoPTestProblem, GridAdaptIndicator, Ewoms::GridAdaptionIndicator2PLocal<TypeTag>);
 
 // grid adaption parameters
 SET_BOOL_PROP(MPFATwoPTestProblem, GridAdaptEnableInitializationIndicator, true);

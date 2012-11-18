@@ -19,23 +19,23 @@
 /*!
  * \file
  *
- * \copydoc Dumux::DiffusionProblem
+ * \copydoc Ewoms::DiffusionProblem
  */
-#ifndef DUMUX_POWER_INJECTION_PROBLEM_HH
-#define DUMUX_POWER_INJECTION_PROBLEM_HH
+#ifndef EWOMS_POWER_INJECTION_PROBLEM_HH
+#define EWOMS_POWER_INJECTION_PROBLEM_HH
 
-#include <dumux/boxmodels/ncp/ncpproperties.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/boxmodels/ncp/ncpproperties.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class DiffusionProblem;
@@ -54,7 +54,7 @@ SET_TYPE_PROP(DiffusionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 SET_TYPE_PROP(DiffusionBaseProblem, GridCreator, CubeGridCreator<TypeTag>);
 
 // Set the problem property
-SET_TYPE_PROP(DiffusionBaseProblem, Problem, Dumux::DiffusionProblem<TypeTag>);
+SET_TYPE_PROP(DiffusionBaseProblem, Problem, Ewoms::DiffusionProblem<TypeTag>);
 
 // Set the fluid system
 SET_PROP(DiffusionBaseProblem, FluidSystem)
@@ -63,7 +63,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Dumux::FluidSystems::H2ON2<Scalar> type;
+    typedef Ewoms::FluidSystems::H2ON2<Scalar> type;
 };
 
 // Set the material Law
@@ -292,7 +292,7 @@ private:
         leftInitialFluidState_.setMoleFraction(gPhaseIdx, H2OIdx, xH2O);
         leftInitialFluidState_.setMoleFraction(gPhaseIdx, N2Idx, 1 - xH2O);
 
-        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
         CFRP::solve(leftInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false);
 

@@ -20,17 +20,17 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestTransportSpatialParams
+ * \copydoc Ewoms::TestTransportSpatialParams
  */
 #ifndef TEST_TRANSPORT_SPATIAL_PARAMS_HH
 #define TEST_TRANSPORT_SPATIAL_PARAMS_HH
 
-#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 //forward declaration
@@ -43,7 +43,7 @@ namespace Properties
 NEW_TYPE_TAG(TestTransportSpatialParams);
 
 // Set the spatial parameters
-SET_TYPE_PROP(TestTransportSpatialParams, SpatialParams, Dumux::TestTransportSpatialParams<TypeTag>);
+SET_TYPE_PROP(TestTransportSpatialParams, SpatialParams, Ewoms::TestTransportSpatialParams<TypeTag>);
 
 // Set the material law
 SET_PROP(TestTransportSpatialParams, MaterialLaw)

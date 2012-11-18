@@ -25,7 +25,7 @@
 #include "config.h"
 
 #include "test_transportproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 
 #include <dune/grid/common/gridinfo.hh>
@@ -39,6 +39,6 @@
 int main(int argc, char** argv)
 {
     typedef TTAG(TransportTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }
 

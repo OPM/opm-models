@@ -21,22 +21,22 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestTransportProblem
+ * \copydoc Ewoms::TestTransportProblem
  */
-#ifndef DUMUX_TEST_TRANSPORT_PROBLEM_HH
-#define DUMUX_TEST_TRANSPORT_PROBLEM_HH
+#ifndef EWOMS_TEST_TRANSPORT_PROBLEM_HH
+#define EWOMS_TEST_TRANSPORT_PROBLEM_HH
 
 #include "test_transportspatialparams.hh"
 
-#include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
-#include <dumux/decoupled/2p/transport/transportproblem2p.hh>
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/unit.hh>
+#include <ewoms/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
+#include <ewoms/decoupled/2p/transport/transportproblem2p.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <ewoms/material/components/unit.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -60,7 +60,7 @@ SET_PROP(TransportTestProblem, Grid)
 SET_PROP(TransportTestProblem, Problem)
 {
 public:
-    typedef Dumux::TestTransportProblem<TypeTag> type;
+    typedef Ewoms::TestTransportProblem<TypeTag> type;
 };
 
 // Set the wetting phase
@@ -69,7 +69,7 @@ SET_PROP(TransportTestProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::Unit<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::Unit<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -78,7 +78,7 @@ SET_PROP(TransportTestProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::Unit<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::Unit<Scalar> > type;
 };
 
 SET_INT_PROP(TransportTestProblem, VelocityFormulation,

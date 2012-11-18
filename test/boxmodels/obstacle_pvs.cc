@@ -24,12 +24,12 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/common/start.hh>
 
 #include "problems/obstacleproblem.hh"
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxPvs, ObstacleBaseProblem));
 
@@ -40,5 +40,5 @@ SET_INT_PROP(ObstacleProblem, PvsVerbosity, 1);
 int main(int argc, char** argv)
 {
     typedef TTAG(ObstacleProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

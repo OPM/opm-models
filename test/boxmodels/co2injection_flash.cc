@@ -27,10 +27,10 @@
 #include "problems/co2injectionflash.hh"
 #include "problems/co2injectionproblem.hh"
 
-#include <dumux/boxmodels/flash/flashmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/flash/flashmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(Co2InjectionFlashProblem, INHERITS_FROM(BoxFlash, Co2InjectionBaseProblem));
 
@@ -41,7 +41,7 @@ SET_BOOL_PROP(Co2InjectionFlashProblem, EnableHints, true);
 // use the flash solver adapted to the CO2 injection problem
 SET_TYPE_PROP(Co2InjectionFlashProblem,
               FlashSolver,
-              Dumux::Co2InjectionFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
+              Ewoms::Co2InjectionFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
               typename GET_PROP_TYPE(TypeTag, FluidSystem)> );
 
 // the flash model has serious problems with the numerical
@@ -59,5 +59,5 @@ SET_SCALAR_PROP(Co2InjectionFlashProblem, NewtonRelativeTolerance, 1e-5);
 int main(int argc, char** argv)
 {
     typedef TTAG(Co2InjectionFlashProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

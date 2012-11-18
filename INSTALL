@@ -36,10 +36,10 @@ A mandatory option to be included in CONFIGURE_FLAGS is:
 
 Now compile everything with
 
-  ./dune-common/bin/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=dumux all
+  ./dune-common/bin/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=ewoms all
 
 A more comprehensive introduction to the DUNE build system can be
-found in [2].
+found at [2].
 
 Links
 -----

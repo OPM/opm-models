@@ -23,12 +23,12 @@
  */
 #include "config.h"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/ncp/ncpmodel.hh>
+#include <ewoms/common/start.hh>
 
 #include "problems/obstacleproblem.hh"
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp, ObstacleBaseProblem));
 }}
@@ -36,5 +36,5 @@ NEW_TYPE_TAG(ObstacleProblem, INHERITS_FROM(BoxNcp, ObstacleBaseProblem));
 int main(int argc, char** argv)
 {
     typedef TTAG(ObstacleProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

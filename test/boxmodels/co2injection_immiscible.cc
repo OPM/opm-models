@@ -25,10 +25,10 @@
 
 #include "problems/co2injectionproblem.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(Co2InjectionImmiscibleProblem, INHERITS_FROM(BoxImmiscible, Co2InjectionBaseProblem));
 } }
@@ -39,5 +39,5 @@ NEW_TYPE_TAG(Co2InjectionImmiscibleProblem, INHERITS_FROM(BoxImmiscible, Co2Inje
 int main(int argc, char** argv)
 {
     typedef TTAG(Co2InjectionImmiscibleProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

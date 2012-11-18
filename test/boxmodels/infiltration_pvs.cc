@@ -25,10 +25,10 @@
 #include "config.h"
 
 #include "problems/infiltrationproblem.hh"
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxPvs, InfiltrationBaseProblem));
 }}
@@ -36,6 +36,6 @@ NEW_TYPE_TAG(InfiltrationProblem, INHERITS_FROM(BoxPvs, InfiltrationBaseProblem)
 int main(int argc, char** argv)
 {
     typedef TTAG(InfiltrationProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }
 

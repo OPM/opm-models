@@ -72,7 +72,7 @@
          * \defgroup IAPWS IAPWS'97 Water
          * \brief IAPWS'97 Water
          *
-         * \copydetails Dumux::H2O
+         * \copydetails Ewoms::H2O
          */
     /*!
      * \ingroup Material
@@ -115,49 +115,49 @@
          * \defgroup ImmiscibleBoxModel Immiscible
          * \brief Immiscible Multi-Phase Model
          *
-         * \copydetails Dumux::ImmiscibleModel
+         * \copydetails Ewoms::ImmiscibleModel
          */
          /*!
           * \ingroup BoxModels
           * \defgroup PvsBoxModel PVS
           * \brief Compositional Multi-Phase Model Using Primary Variable Switching
           *
-          * \copydetails Dumux::PvsModel
+          * \copydetails Ewoms::PvsModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup NcpModel NCP
           * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
           *
-          * \copydetails Dumux::NcpModel
+          * \copydetails Ewoms::NcpModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup FlashModel Flash
           * \brief Compositional Multi-Phase Model Based on Flash Calculations
           *
-          * \copydetails Dumux::FlashModel
+          * \copydetails Ewoms::FlashModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup BlackOilBoxModel Black Oil
           * \brief Partially Miscible Three-Phase Model Based on the Black Oil Assumptions
           *
-          * \copydetails Dumux::BlackOilModel
+          * \copydetails Ewoms::BlackOilModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup RichardsModel Richards
           * \brief Immiscible Two-Phase Model Using the Richards Equation
           *
-          * \copydetails Dumux::RichardsModel
+          * \copydetails Ewoms::RichardsModel
           */
          /*!
           * \ingroup BoxModels
           * \defgroup BoxStokesModel (Navier-)Stokes
           * \brief Compositional/Immiscible Single-Phase Model for Turbulent Flow
           *
-          * \copydetails Dumux::StokesModel
+          * \copydetails Ewoms::StokesModel
           */
       /*!
        * \ingroup BoxModel
@@ -169,7 +169,7 @@
            * \defgroup BoxDarcyVelocity Darcy Velocity
            * \brief The Darcy Velocity Module
            *
-           * \copydetails Dumux::BoxDarcyVelocityModule
+           * \copydetails Ewoms::BoxDarcyVelocityModule
            */
 
           /*!
@@ -177,7 +177,7 @@
            * \defgroup BoxForchheimerVelocity Forchheimer Velocity
            * \brief The Forchheimer Velocity Module
            *
-           * \copydetails Dumux::BoxForchheimerVelocityModule
+           * \copydetails Ewoms::BoxForchheimerVelocityModule
            */
 
           /*!
@@ -185,7 +185,7 @@
            * \defgroup BoxDiffusion Molecular Diffusion
            * \brief A Module for to include molecular diffusion
            *
-           * \copydetails Dumux::BoxDiffusionModule
+           * \copydetails Ewoms::BoxDiffusionModule
            */
 
           /*!
@@ -193,7 +193,7 @@
            * \defgroup BoxEnergy Energy
            * \brief A Module for the Energy Equation 
            *
-           * \copydetails Dumux::BoxEnergyModule
+           * \copydetails Ewoms::BoxEnergyModule
            */
 
           /*!

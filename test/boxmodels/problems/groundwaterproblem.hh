@@ -19,20 +19,20 @@
 /*!
  * \file
  *
- * \copydoc Dumux::GroundWaterProblem
+ * \copydoc Ewoms::GroundWaterProblem
  */
-#ifndef DUMUX_GROUND_WATER_PROBLEM_HH
-#define DUMUX_GROUND_WATER_PROBLEM_HH
+#ifndef EWOMS_GROUND_WATER_PROBLEM_HH
+#define EWOMS_GROUND_WATER_PROBLEM_HH
 
-#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/fluidsystems/liquidphase.hh>
+#include <ewoms/boxmodels/immiscible/immiscibleproperties.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 template <class TypeTag>
 class GroundWaterProblem;
@@ -55,14 +55,14 @@ SET_PROP(GroundWaterBaseProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the grid type
 SET_TYPE_PROP(GroundWaterBaseProblem, Grid, Dune::YaspGrid<2>);
 //SET_TYPE_PROP(GroundWaterBaseProblem, Grid, Dune::SGrid<2, 2>);
 
-SET_TYPE_PROP(GroundWaterBaseProblem, Problem, Dumux::GroundWaterProblem<TypeTag>);
+SET_TYPE_PROP(GroundWaterBaseProblem, Problem, Ewoms::GroundWaterProblem<TypeTag>);
 
 SET_SCALAR_PROP(GroundWaterBaseProblem, LensLowerLeftX, 0.25);
 SET_SCALAR_PROP(GroundWaterBaseProblem, LensLowerLeftY, 0.25);
@@ -73,8 +73,8 @@ SET_SCALAR_PROP(GroundWaterBaseProblem, LensUpperRightZ, 0.75);
 SET_SCALAR_PROP(GroundWaterBaseProblem, Permeability, 1e-10);
 SET_SCALAR_PROP(GroundWaterBaseProblem, PermeabilityLens, 1e-12);
 // Linear solver settings
-SET_TYPE_PROP(GroundWaterBaseProblem, LinearSolverWrapper, Dumux::Linear::SolverWrapperCG<TypeTag> );
-SET_TYPE_PROP(GroundWaterBaseProblem, PreconditionerWrapper, Dumux::Linear::PreconditionerWrapperILU<TypeTag> );
+SET_TYPE_PROP(GroundWaterBaseProblem, LinearSolverWrapper, Ewoms::Linear::SolverWrapperCG<TypeTag> );
+SET_TYPE_PROP(GroundWaterBaseProblem, PreconditionerWrapper, Ewoms::Linear::PreconditionerWrapperILU<TypeTag> );
 SET_INT_PROP(GroundWaterBaseProblem, LinearSolverVerbosity, 0);
 
 // Enable gravity
@@ -243,7 +243,7 @@ public:
             else // on upper boundary
                 pressure = 1e5;
 
-            Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             fs.setSaturation(/*phaseIdx=*/0, 1.0);
             fs.setPressure(/*phaseIdx=*/0, pressure);
             fs.setTemperature(T);

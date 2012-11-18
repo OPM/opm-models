@@ -19,26 +19,26 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::InfiltrationProblem
+ * \copydoc Ewoms::InfiltrationProblem
  */
-#ifndef DUMUX_INFILTRATION_PROBLEM_HH
-#define DUMUX_INFILTRATION_PROBLEM_HH
+#ifndef EWOMS_INFILTRATION_PROBLEM_HH
+#define EWOMS_INFILTRATION_PROBLEM_HH
 
-#include <dumux/boxmodels/pvs/pvsproperties.hh>
+#include <ewoms/boxmodels/pvs/pvsproperties.hh>
 
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/material/heatconduction/somerton.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
+#include <ewoms/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <ewoms/material/heatconduction/somerton.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class InfiltrationProblem;
@@ -51,12 +51,12 @@ NEW_TYPE_TAG(InfiltrationBaseProblem);
 SET_TYPE_PROP(InfiltrationBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(InfiltrationBaseProblem, Problem, Dumux::InfiltrationProblem<TypeTag>);
+SET_TYPE_PROP(InfiltrationBaseProblem, Problem, Ewoms::InfiltrationProblem<TypeTag>);
 
 // Set the fluid system
 SET_TYPE_PROP(InfiltrationBaseProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity?
 SET_BOOL_PROP(InfiltrationBaseProblem, EnableGravity, true);
@@ -82,12 +82,12 @@ private:
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
     // define the three-phase material law
-    typedef Dumux::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
+    typedef Ewoms::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
 
 public:
     // wrap the three-phase law in an adaptor to make use the generic
     // material law API
-    typedef Dumux::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
+    typedef Ewoms::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
 };
 
 // Set the heat conduction law
@@ -99,7 +99,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
 };
 
 // The default for the end time of the simulation
@@ -425,7 +425,7 @@ private:
         fs.setMoleFraction(gPhaseIdx, airIdx, 1 - fs.moleFraction(gPhaseIdx, H2OIdx));
         fs.setMoleFraction(gPhaseIdx, NAPLIdx, 0);
 
-        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
         CFRP::solve(fs,
                     paramCache,

@@ -19,31 +19,31 @@
 /*!
  * \file
  *
- * \copydoc Dumux::FingerProblem
+ * \copydoc Ewoms::FingerProblem
  */
-#ifndef DUMUX_FINGER_PROBLEM_HH
-#define DUMUX_FINGER_PROBLEM_HH
+#ifndef EWOMS_FINGER_PROBLEM_HH
+#define EWOMS_FINGER_PROBLEM_HH
 
 #include "fingergridcreator.hh"
 
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/parkerlenhard.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/parkerlenhard.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
 
-#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/air.hh>
+#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/components/air.hh>
 
-#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
+#include <ewoms/boxmodels/immiscible/immiscibleproperties.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class FingerProblem;
@@ -64,7 +64,7 @@ SET_TYPE_PROP(FingerBaseProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreat
 NEW_PROP_TAG(InitialWaterSaturation);
 
 // Set the problem property
-SET_TYPE_PROP(FingerBaseProblem, Problem, Dumux::FingerProblem<TypeTag>);
+SET_TYPE_PROP(FingerBaseProblem, Problem, Ewoms::FingerProblem<TypeTag>);
 
 // Set the wetting phase
 SET_PROP(FingerBaseProblem, WettingPhase)
@@ -72,7 +72,7 @@ SET_PROP(FingerBaseProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -81,7 +81,7 @@ SET_PROP(FingerBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::Air<Scalar> > type;
+    typedef Ewoms::GasPhase<Scalar, Ewoms::Air<Scalar> > type;
 };
 
 // Set the material Law
@@ -90,8 +90,8 @@ SET_PROP(FingerBaseProblem, MaterialLaw)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     // use the parker-lenhard hysteresis law
-    typedef Dumux::ParkerLenhard<Scalar> TwoPMaterialLaw;
-    typedef Dumux::ParkerLenhard<Scalar> ParkerLenhard;
+    typedef Ewoms::ParkerLenhard<Scalar> TwoPMaterialLaw;
+    typedef Ewoms::ParkerLenhard<Scalar> ParkerLenhard;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };

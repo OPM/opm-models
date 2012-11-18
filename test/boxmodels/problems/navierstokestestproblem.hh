@@ -19,15 +19,15 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::NavierStokesTestProblem
+ * \copydoc Ewoms::NavierStokesTestProblem
  */
-#ifndef DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH
-#define DUMUX_NAVIER_STOKES_TEST_PROBLEM_HH
+#ifndef EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
+#define EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidsystems/gasphase.hh>
-#include <dumux/material/components/n2.hh>
-#include <dumux/boxmodels/stokes/stokesmodel.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/fluidsystems/gasphase.hh>
+#include <ewoms/material/components/n2.hh>
+#include <ewoms/boxmodels/stokes/stokesmodel.hh>
 
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid/2d/alugrid.hh>
@@ -40,7 +40,7 @@
 
 #include <dune/grid/io/file/dgfparser.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class NavierStokesTestProblem;
@@ -60,14 +60,14 @@ SET_TYPE_PROP(NavierStokesTestProblem, Grid, Dune::YaspGrid<2>);
 #endif
 
 // Set the property which defines the type of the physical problem
-SET_TYPE_PROP(NavierStokesTestProblem, Problem, Dumux::NavierStokesTestProblem<TypeTag>);
+SET_TYPE_PROP(NavierStokesTestProblem, Problem, Ewoms::NavierStokesTestProblem<TypeTag>);
 
 SET_PROP(NavierStokesTestProblem, Fluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
+    typedef Ewoms::GasPhase<Scalar, Ewoms::N2<Scalar> > type;
 };
 
 // Disable gravity

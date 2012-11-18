@@ -21,17 +21,17 @@
 /*!
  * \file
  *
- * \copydoc Dumux::BenchmarkResult
+ * \copydoc Ewoms::BenchmarkResult
  */
-#ifndef DUMUX_BENCHMARK_RESULT_HH
-#define DUMUX_BENCHMARK_RESULT_HH
+#ifndef EWOMS_BENCHMARK_RESULT_HH
+#define EWOMS_BENCHMARK_RESULT_HH
 
-#include <dumux/decoupled/common/onemodelproblem.hh>
+#include <ewoms/decoupled/common/onemodelproblem.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 /*!
  * \brief calculate errors for a benchmark problem

@@ -25,10 +25,10 @@
 
 #include "problems/diffusionproblem.hh"
 
-#include <dumux/boxmodels/ncp/ncpmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/ncp/ncpmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(DiffusionProblem, INHERITS_FROM(BoxNcp, DiffusionBaseProblem));
 } }
@@ -36,5 +36,5 @@ NEW_TYPE_TAG(DiffusionProblem, INHERITS_FROM(BoxNcp, DiffusionBaseProblem));
 int main(int argc, char** argv)
 {
     typedef TTAG(DiffusionProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

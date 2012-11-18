@@ -20,27 +20,27 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestIMPESAdaptiveProblem
+ * \copydoc Ewoms::TestIMPESAdaptiveProblem
  */
-#ifndef DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
-#define DUMUX_TEST_IMPES_ADAPTIVE_PROBLEM_HH
+#ifndef EWOMS_TEST_IMPES_ADAPTIVE_PROBLEM_HH
+#define EWOMS_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 
 #include <dune/grid/alugrid/2d/alugrid.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/lnapl.hh>
-#include <dumux/decoupled/2p/impes/impesproblem2p.hh>
-#include <dumux/decoupled/2p/diffusion/fv/fvpressureproperties2padaptive.hh>
-#include <dumux/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
-#include<dumux/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/components/lnapl.hh>
+#include <ewoms/decoupled/2p/impes/impesproblem2p.hh>
+#include <ewoms/decoupled/2p/diffusion/fv/fvpressureproperties2padaptive.hh>
+#include <ewoms/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
+#include<ewoms/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 
 #include "test_impesadaptivespatialparams.hh"
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -63,7 +63,7 @@ SET_PROP(TestIMPESAdaptiveProblem, Grid)
 SET_TYPE_PROP(TestIMPESAdaptiveProblem, GridCreator, CubeGridCreator<TypeTag>);
 
 // Set the problem property
-SET_TYPE_PROP(TestIMPESAdaptiveProblem, Problem, Dumux::TestIMPESAdaptiveProblem<TypeTag>);
+SET_TYPE_PROP(TestIMPESAdaptiveProblem, Problem, Ewoms::TestIMPESAdaptiveProblem<TypeTag>);
 
 // Set the wetting phase
 SET_PROP(TestIMPESAdaptiveProblem, WettingPhase)
@@ -71,7 +71,7 @@ SET_PROP(TestIMPESAdaptiveProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -80,7 +80,7 @@ SET_PROP(TestIMPESAdaptiveProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Enable gravity
@@ -88,7 +88,7 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 
 //SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableCompressibility, true);
 
-//SET_TYPE_PROP(TestIMPESAdaptiveProblem, EvalCflFluxFunction, Dumux::EvalCflFluxCoats<TypeTag>);
+//SET_TYPE_PROP(TestIMPESAdaptiveProblem, EvalCflFluxFunction, Ewoms::EvalCflFluxCoats<TypeTag>);
 
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, ImpetCflFactor, 0.95);
 

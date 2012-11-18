@@ -20,20 +20,20 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::Test2P2CSpatialParams
+ * \copydoc Ewoms::Test2P2CSpatialParams
  */
 #ifndef TEST_2P2C_SPATIAL_PARAMS_HH
 #define TEST_2P2C_SPATIAL_PARAMS_HH
 
-#include <dumux/decoupled/2p2c/2p2cproperties.hh>
-#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/decoupled/2p2c/2p2cproperties.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 //forward declaration
 template<class TypeTag>
@@ -45,7 +45,7 @@ namespace Properties
 NEW_TYPE_TAG(Test2P2CSpatialParams);
 
 // Set the spatial parameters
-SET_TYPE_PROP(Test2P2CSpatialParams, SpatialParams, Dumux::Test2P2CSpatialParams<TypeTag>);
+SET_TYPE_PROP(Test2P2CSpatialParams, SpatialParams, Ewoms::Test2P2CSpatialParams<TypeTag>);
 
 // Set the material law
 SET_PROP(Test2P2CSpatialParams, MaterialLaw)

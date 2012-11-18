@@ -19,24 +19,24 @@
 /*!
  * \file
  *
- * \copydoc Dumux::Co2InjectionProblem
+ * \copydoc Ewoms::Co2InjectionProblem
  */
-#ifndef DUMUX_CO2_INJECTION_PROBLEM_HH
-#define DUMUX_CO2_INJECTION_PROBLEM_HH
+#ifndef EWOMS_CO2_INJECTION_PROBLEM_HH
+#define EWOMS_CO2_INJECTION_PROBLEM_HH
 
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidsystems/brineco2fluidsystem.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/constraintsolvers/computefromreferencephase.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/material/binarycoefficients/brine_co2.hh>
-#include <dumux/common/statictabulated2dfunction.hh>
-#include <dumux/boxmodels/pvs/pvsproperties.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/fluidsystems/brineco2fluidsystem.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/heatconduction/somerton.hh>
+#include <ewoms/material/binarycoefficients/brine_co2.hh>
+#include <ewoms/common/statictabulated2dfunction.hh>
+#include <ewoms/boxmodels/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -44,13 +44,13 @@
 #include <iostream>
 #include <string>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class Co2InjectionProblem;
 
 namespace Co2Injection {
-#include <dumux/material/components/co2tables.inc>
+#include <ewoms/material/components/co2tables.inc>
 }
 
 namespace Properties {
@@ -73,18 +73,18 @@ NEW_PROP_TAG(SimulationName);
 SET_TYPE_PROP(Co2InjectionBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(Co2InjectionBaseProblem, Problem, Dumux::Co2InjectionProblem<TypeTag>);
+SET_TYPE_PROP(Co2InjectionBaseProblem, Problem, Ewoms::Co2InjectionProblem<TypeTag>);
 
 // Set fluid configuration
 SET_PROP(Co2InjectionBaseProblem, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dumux::Co2Injection::CO2Tables CO2Tables;
+    typedef Ewoms::Co2Injection::CO2Tables CO2Tables;
 
     static const bool useComplexRelations = false;
 public:
-    typedef Dumux::FluidSystems::BrineCO2<Scalar, CO2Tables> type;
-    //typedef Dumux::FluidSystems::H2ON2<Scalar, useComplexRelations> type;
+    typedef Ewoms::FluidSystems::BrineCO2<Scalar, CO2Tables> type;
+    //typedef Ewoms::FluidSystems::H2ON2<Scalar, useComplexRelations> type;
 };
 
 // Set the material Law
@@ -114,7 +114,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
 };
 
 // Write the Newton convergence behavior to disk?
@@ -422,7 +422,7 @@ public:
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(pos)) {
-            Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+            Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
             fs.checkDefined();
 
@@ -433,7 +433,7 @@ public:
             RateVector massRate(0.0);
             massRate[contiCO2EqIdx] = -1e-3; // [kg/(m^3 s)]
 
-            Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
             fs.setSaturation(gPhaseIdx, 1.0);
             fs.setPressure(gPhaseIdx,context. volVars(spaceIdx, timeIdx).fluidState().pressure(gPhaseIdx));
             fs.setTemperature(temperature(context, spaceIdx, timeIdx));
@@ -463,7 +463,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        Dumux::CompositionalFluidState<Scalar, FluidSystem> fs;
+        Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         //const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
@@ -524,7 +524,7 @@ private:
                            1.0 - fs.moleFraction(lPhaseIdx, CO2Idx));
 
         typename FluidSystem::ParameterCache paramCache;
-        typedef Dumux::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         CFRP::solve(fs,
                     paramCache,
                     /*refPhaseIdx=*/lPhaseIdx,

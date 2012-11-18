@@ -19,27 +19,27 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestDecTwoPTwoCProblem
+ * \copydoc Ewoms::TestDecTwoPTwoCProblem
  */
-#ifndef DUMUX_TEST_2P2C_PROBLEM_HH
-#define DUMUX_TEST_2P2C_PROBLEM_HH
+#ifndef EWOMS_TEST_2P2C_PROBLEM_HH
+#define EWOMS_TEST_2P2C_PROBLEM_HH
 
 #include "test_dec2p2c_spatialparams.hh"
 
-#include <dumux/decoupled/2p2c/2p2cproblem.hh>
-#include <dumux/decoupled/2p2c/fvpressure2p2c.hh>
-#include <dumux/decoupled/2p2c/fvtransport2p2c.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-//#include <dumux/linear/impetbicgstabilu0solver.hh>
-#include <dumux/common/cubegridcreator.hh>
+#include <ewoms/decoupled/2p2c/2p2cproblem.hh>
+#include <ewoms/decoupled/2p2c/fvpressure2p2c.hh>
+#include <ewoms/decoupled/2p2c/fvtransport2p2c.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+//#include <ewoms/linear/impetbicgstabilu0solver.hh>
+#include <ewoms/common/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
 
 #include <dune/common/fvector.hh>
-#include <dumux/material/fluidsystems/h2oairfluidsystem.hh>
+#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 template<class TypeTag>
@@ -63,18 +63,18 @@ SET_PROP(TestDecTwoPTwoCProblem, Grid)
 // Set the problem property
 SET_PROP(TestDecTwoPTwoCProblem, Problem)
 {
-    typedef Dumux::TestDecTwoPTwoCProblem<TypeTag> type;
+    typedef Ewoms::TestDecTwoPTwoCProblem<TypeTag> type;
 };
 
 // Set the model properties
 SET_PROP(TestDecTwoPTwoCProblem, TransportModel)
 {
-    typedef Dumux::FVTransport2P2C<TypeTag> type;
+    typedef Ewoms::FVTransport2P2C<TypeTag> type;
 };
 
 SET_PROP(TestDecTwoPTwoCProblem, PressureModel)
 {
-    typedef Dumux::FVPressure2P2C<TypeTag> type;
+    typedef Ewoms::FVPressure2P2C<TypeTag> type;
 };
 
 SET_INT_PROP(TestDecTwoPTwoCProblem, PressureFormulation,
@@ -83,7 +83,7 @@ SET_INT_PROP(TestDecTwoPTwoCProblem, PressureFormulation,
 // Select fluid system
 SET_TYPE_PROP(TestDecTwoPTwoCProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //SET_TYPE_PROP(TestDecTwoPTwoCProblem, LinearSolver, IMPETBiCGStabILU0Solver<TypeTag> );
 

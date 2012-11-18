@@ -25,11 +25,11 @@
 #include "config.h"
 
 #include "problems/cuvetteproblem.hh"
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
 
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(CuvetteProblem, INHERITS_FROM(BoxPvs, CuvetteBaseProblem));
 }}
@@ -38,5 +38,5 @@ int main(int argc, char** argv)
 {
     typedef TTAG(CuvetteProblem) ProblemTypeTag;
 //    typedef TTAG(ColumnProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

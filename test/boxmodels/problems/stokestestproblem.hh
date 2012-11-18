@@ -20,19 +20,19 @@
 /*!
  * \file
  *
- * \copydoc Dumux::StokesTestProblem
+ * \copydoc Ewoms::StokesTestProblem
  */
-#ifndef DUMUX_STOKES_TEST_PROBLEM_HH
-#define DUMUX_STOKES_TEST_PROBLEM_HH
+#ifndef EWOMS_STOKES_TEST_PROBLEM_HH
+#define EWOMS_STOKES_TEST_PROBLEM_HH
 
-#include <dumux/boxmodels/stokes/stokesmodel.hh>
-#include <dumux/material/fluidsystems/h2on2fluidsystem.hh>
-#include <dumux/material/fluidsystems/gasphase.hh>
+#include <ewoms/boxmodels/stokes/stokesmodel.hh>
+#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
+#include <ewoms/material/fluidsystems/gasphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class StokesTestProblem;
@@ -48,7 +48,7 @@ NEW_TYPE_TAG(StokesTestProblem, INHERITS_FROM(BoxStokes));
 SET_TYPE_PROP(StokesTestProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(StokesTestProblem, Problem, Dumux::StokesTestProblem<TypeTag>);
+SET_TYPE_PROP(StokesTestProblem, Problem, Ewoms::StokesTestProblem<TypeTag>);
 
 // Use the default fluid system of the Stokes model. It requires to
 // specify a fluid, though.
@@ -57,7 +57,7 @@ SET_PROP(StokesTestProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::GasPhase<Scalar, Dumux::N2<Scalar> > type;
+    typedef Ewoms::GasPhase<Scalar, Ewoms::N2<Scalar> > type;
 };
 
 // Disable gravity

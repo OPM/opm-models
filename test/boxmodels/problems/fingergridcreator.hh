@@ -18,13 +18,13 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::FingerGridCreator
+ * \copydoc Ewoms::FingerGridCreator
  */
-#ifndef DUMUX_FINGER_GRID_CREATOR_HH
-#define DUMUX_FINGER_GRID_CREATOR_HH
+#ifndef EWOMS_FINGER_GRID_CREATOR_HH
+#define EWOMS_FINGER_GRID_CREATOR_HH
 
-#include <dumux/common/propertysystem.hh>
-#include <dumux/common/parameters.hh>
+#include <ewoms/common/propertysystem.hh>
+#include <ewoms/common/parameters.hh>
 
 #if HAVE_ALUGRDID
 #include <dune/grid/alugrid.hh>
@@ -35,7 +35,7 @@
 
 #include <vector>
 
-namespace Dumux
+namespace Ewoms
 {
 // some hacky defines for the grid creator
 #define FINGER_DIM 2

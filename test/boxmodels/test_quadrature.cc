@@ -33,11 +33,11 @@
 #include<dune/common/version.hh>
 #include<dune/geometry/quadraturerules.hh>
 
-#include <dumux/boxmodels/common/boxfvelementgeometry.hh>
+#include <ewoms/boxmodels/common/boxfvelementgeometry.hh>
 
 const unsigned dim = 3;
 typedef double Scalar;
-typedef Dumux::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
+typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> QuadratureGeom;
 typedef QuadratureGeom::LocalPosition LocalPosition;
 typedef QuadratureGeom::GlobalPosition GlobalPosition;
 
@@ -97,7 +97,7 @@ void writeSubControlVolumes(const Grid &grid)
     typedef Dune::GridFactory<Grid2> GridFactory2;
 
     // instanciate a FVElementGeometry
-    typedef Dumux::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
+    typedef Ewoms::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
     FVElementGeometry fvElemGeom;
 
     GridFactory2 gf2;
@@ -196,7 +196,7 @@ void testQuadrature()
     const auto eEndIt = gridView.end<0>();
     Scalar result=0;
     // instanciate a FVElementGeometry
-    typedef Dumux::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
+    typedef Ewoms::BoxFVElementGeometry<Scalar, GridView> FVElementGeometry;
     FVElementGeometry fvElemGeom;
     for (; eIt != eEndIt; ++eIt) {
         const auto &elemGeom = eIt->geometry();

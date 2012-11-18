@@ -28,11 +28,11 @@
  */
 #include "config.h"
 
-#include <dumux/common/propertysystem.hh>
+#include <ewoms/common/propertysystem.hh>
 
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 
 ///////////////////
@@ -123,7 +123,7 @@ SET_INT_PROP(HummerH1, TopSpeed, GET_PROP_VALUE(TTAG(Pickup), TopSpeed));
 UNSET_PROP(HummerH1, CanonCaliber);
 
 } // namespace Properties
-} // namespace Dumux
+} // namespace Ewoms
 
 
 int main()
@@ -184,7 +184,7 @@ int main()
     std::cout << "---------------------------------------\n";
 
     std::cout << "---- All properties for Sedan ---\n";
-    Dumux::Properties::print<TTAG(Sedan)>();
+    Ewoms::Properties::print<TTAG(Sedan)>();
 
     std::cout << "---- Message for (HummerH1, CanonCaliber) ---\n"
               << PROP_DIAGNOSTIC(TTAG(HummerH1), CanonCaliber);

@@ -93,7 +93,7 @@ int main(int argc, char** argv)
         fvProblem.calculateFVVelocity();
         double fvTime = timer.elapsed();
         fvProblem.writeOutput();
-        Dumux::ResultEvaluation fvResult;
+        Ewoms::ResultEvaluation fvResult;
         fvResult.evaluate(grid.leafView(), fvProblem, consecutiveNumbering);
 
         typedef GET_PROP_TYPE(TTAG(FVMPFAOVelocity2PTestProblem), Problem) MPFAOProblem;
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         mpfaProblem.init();
         double mpfaTime = timer.elapsed();
         mpfaProblem.writeOutput();
-        Dumux::ResultEvaluation mpfaResult;
+        Ewoms::ResultEvaluation mpfaResult;
         mpfaResult.evaluate(grid.leafView(), mpfaProblem, consecutiveNumbering);
 
         typedef GET_PROP_TYPE(TTAG(MimeticPressure2PTestProblem), Problem) MimeticProblem;
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
         mimeticProblem.init();
         double mimeticTime = timer.elapsed();
         mimeticProblem.writeOutput();
-        Dumux::ResultEvaluation mimeticResult;
+        Ewoms::ResultEvaluation mimeticResult;
         mimeticResult.evaluate(grid.leafView(), mimeticProblem, consecutiveNumbering);
 
         std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);

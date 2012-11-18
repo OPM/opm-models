@@ -20,20 +20,20 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestIMPESSpatialParams
+ * \copydoc Ewoms::TestIMPESSpatialParams
  */
 #ifndef TEST_IMPES_SPATIAL_PARAMS_HH
 #define TEST_IMPES_SPATIAL_PARAMS_HH
 
-#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Dumux
+namespace Ewoms
 {
 
 //forward declaration
@@ -46,7 +46,7 @@ namespace Properties
 NEW_TYPE_TAG(TestIMPESSpatialParams);
 
 // Set the spatial parameters
-SET_TYPE_PROP(TestIMPESSpatialParams, SpatialParams, Dumux::TestIMPESSpatialParams<TypeTag>);
+SET_TYPE_PROP(TestIMPESSpatialParams, SpatialParams, Ewoms::TestIMPESSpatialParams<TypeTag>);
 
 // Set the material law
 SET_PROP(TestIMPESSpatialParams, MaterialLaw)

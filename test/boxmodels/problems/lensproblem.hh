@@ -19,29 +19,29 @@
 /*!
  * \file
  *
- * \copydoc Dumux::LensProblem
+ * \copydoc Ewoms::LensProblem
  */
-#ifndef DUMUX_LENS_PROBLEM_HH
-#define DUMUX_LENS_PROBLEM_HH
+#ifndef EWOMS_LENS_PROBLEM_HH
+#define EWOMS_LENS_PROBLEM_HH
 
 #include "lensgridcreator.hh"
 
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <dumux/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/components/dnapl.hh>
-#include <dumux/boxmodels/immiscible/immiscibleproperties.hh>
-#include <dumux/linear/boxparallelamgsolver.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/components/dnapl.hh>
+#include <ewoms/boxmodels/immiscible/immiscibleproperties.hh>
+#include <ewoms/linear/boxparallelamgsolver.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <iostream>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class LensProblem;
@@ -68,7 +68,7 @@ SET_TYPE_PROP(LensBaseProblem, GridCreator, LensGridCreator<TypeTag>);
 SET_TYPE_PROP(LensBaseProblem, Grid, typename GET_PROP_TYPE(TypeTag, GridCreator)::Grid);
 
 // Set the problem property
-SET_TYPE_PROP(LensBaseProblem, Problem, Dumux::LensProblem<TypeTag>);
+SET_TYPE_PROP(LensBaseProblem, Problem, Ewoms::LensProblem<TypeTag>);
 
 // Set the wetting phase
 SET_PROP(LensBaseProblem, WettingPhase)
@@ -76,7 +76,7 @@ SET_PROP(LensBaseProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -85,7 +85,7 @@ SET_PROP(LensBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::DNAPL<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::DNAPL<Scalar> > type;
 };
 
 // Set the material Law
@@ -107,7 +107,7 @@ public:
 };
 
 // Use the algebraic multi-grid solver for this problem
-SET_TYPE_PROP(LensBaseProblem, LinearSolver, Dumux::Linear::BoxParallelAmgSolver<TypeTag>);
+SET_TYPE_PROP(LensBaseProblem, LinearSolver, Ewoms::Linear::BoxParallelAmgSolver<TypeTag>);
 
 // Enable partial reassembly of the jacobian matrix?
 //SET_BOOL_PROP(LensBaseProblem, EnablePartialReassemble, true);
@@ -396,7 +396,7 @@ public:
             const MaterialLawParams &matParams =
                 this->materialLawParams(context, spaceIdx, timeIdx);
 
-            Dumux::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             fs.setSaturation(wPhaseIdx, Sw);
             fs.setSaturation(nPhaseIdx, 1 - Sw);
             fs.setTemperature(T);

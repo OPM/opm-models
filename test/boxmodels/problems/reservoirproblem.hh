@@ -19,14 +19,14 @@
 /*!
  * \file
  *
- * \copydoc Dumux::ReservoirProblem
+ * \copydoc Ewoms::ReservoirProblem
  */
-#ifndef DUMUX_RESERVOIR_PROBLEM_HH
-#define DUMUX_RESERVOIR_PROBLEM_HH
+#ifndef EWOMS_RESERVOIR_PROBLEM_HH
+#define EWOMS_RESERVOIR_PROBLEM_HH
 
-#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/boxmodels/blackoil/blackoilproperties.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/boxmodels/blackoil/blackoilproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -34,7 +34,7 @@
 #include <iostream>
 #include <string>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class ReservoirProblem;
@@ -56,7 +56,7 @@ NEW_PROP_TAG(SimulationName);
 SET_TYPE_PROP(ReservoirBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(ReservoirBaseProblem, Problem, Dumux::ReservoirProblem<TypeTag>);
+SET_TYPE_PROP(ReservoirBaseProblem, Problem, Ewoms::ReservoirProblem<TypeTag>);
 
 // Set the material Law
 SET_PROP(ReservoirBaseProblem, MaterialLaw)

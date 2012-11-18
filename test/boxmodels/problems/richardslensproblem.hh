@@ -19,24 +19,24 @@
 /*!
  * \file
  *
- * \copydoc Dumux::RichardsLensProblem
+ * \copydoc Ewoms::RichardsLensProblem
  */
-#ifndef DUMUX_RICHARDS_LENS_PROBLEM_HH
-#define DUMUX_RICHARDS_LENS_PROBLEM_HH
+#ifndef EWOMS_RICHARDS_LENS_PROBLEM_HH
+#define EWOMS_RICHARDS_LENS_PROBLEM_HH
 
-#include <dumux/boxmodels/richards/richardsmodel.hh>
-#include <dumux/material/components/simpleh2o.hh>
-#include <dumux/material/fluidsystems/liquidphase.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <ewoms/boxmodels/richards/richardsmodel.hh>
+#include <ewoms/material/components/simpleh2o.hh>
+#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
 
 #include <dune/grid/io/file/dgfparser.hh>
 
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class RichardsLensProblem;
@@ -53,7 +53,7 @@ SET_TYPE_PROP(RichardsLensProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the physical problem to be solved
 SET_PROP(RichardsLensProblem, Problem)
-{ typedef Dumux::RichardsLensProblem<TypeTag> type; };
+{ typedef Ewoms::RichardsLensProblem<TypeTag> type; };
 
 // Set the wetting phase
 SET_PROP(RichardsLensProblem, WettingPhase)
@@ -61,7 +61,7 @@ SET_PROP(RichardsLensProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Dumux::LiquidPhase<Scalar, Dumux::SimpleH2O<Scalar> > type;
+    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
 };
 
 // Set the material Law

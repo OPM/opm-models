@@ -25,10 +25,10 @@
 
 #include "problems/outflowproblem.hh"
 
-#include <dumux/common/start.hh>
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/common/start.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(OutflowProblem, INHERITS_FROM(BoxPvs, OutflowBaseProblem));
 
@@ -39,5 +39,5 @@ SET_INT_PROP(OutflowProblem, PvsVerbosity, 1);
 int main(int argc, char** argv)
 {
     typedef TTAG(OutflowProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

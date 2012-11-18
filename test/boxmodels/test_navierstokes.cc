@@ -23,10 +23,10 @@
  */
 #include "config.h"
 #include "problems/navierstokestestproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 int main(int argc, char** argv)
 {
     typedef TTAG(NavierStokesTestProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

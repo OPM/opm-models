@@ -20,26 +20,26 @@
 /*!
  * \file
  *
- * \copydoc Dumux::CuvetteProblem
+ * \copydoc Ewoms::CuvetteProblem
  */
-#ifndef DUMUX_CUVETTE_PROBLEM_HH
-#define DUMUX_CUVETTE_PROBLEM_HH
+#ifndef EWOMS_CUVETTE_PROBLEM_HH
+#define EWOMS_CUVETTE_PROBLEM_HH
 
-#include <dumux/material/fluidstates/compositionalfluidstate.hh>
-#include <dumux/material/fluidstates/immisciblefluidstate.hh>
-#include <dumux/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <dumux/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <dumux/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <dumux/material/heatconduction/somerton.hh>
-#include <dumux/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <ewoms/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
+#include <ewoms/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <ewoms/material/heatconduction/somerton.hh>
+#include <ewoms/material/constraintsolvers/misciblemultiphasecomposition.hh>
 
-#include <dumux/boxmodels/pvs/pvsproperties.hh>
+#include <ewoms/boxmodels/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
 
-namespace Dumux {
+namespace Ewoms {
 
 template <class TypeTag>
 class CuvetteProblem;
@@ -56,12 +56,12 @@ SET_BOOL_PROP(CuvetteBaseProblem, EnableJacobianRecycling, true);
 SET_TYPE_PROP(CuvetteBaseProblem, Grid, Dune::YaspGrid<2>);
 
 // Set the problem property
-SET_TYPE_PROP(CuvetteBaseProblem, Problem, Dumux::CuvetteProblem<TypeTag>);
+SET_TYPE_PROP(CuvetteBaseProblem, Problem, Ewoms::CuvetteProblem<TypeTag>);
 
 // Set the fluid system
 SET_TYPE_PROP(CuvetteBaseProblem,
               FluidSystem,
-              Dumux::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Ewoms::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
 SET_BOOL_PROP(CuvetteBaseProblem, EnableGravity, true);
@@ -82,15 +82,15 @@ private:
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
     // define the three-phase material law
-    typedef Dumux::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
+    typedef Ewoms::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
 
 
 public:
     // wrap the three-phase law in an adaptor to make use the generic
     // material law API
-    typedef Dumux::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
+    typedef Ewoms::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
 
-    //typedef Dumux::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
+    //typedef Ewoms::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
 };
 
 // Set the heat conduction law
@@ -102,7 +102,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Dumux::Somerton<FluidSystem, Scalar> type;
+    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
 };
 
 // The default for the end time of the simulation
@@ -544,7 +544,7 @@ private:
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
-        Dumux::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setTemperature(293.15);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fs.setPressure(phaseIdx, 1.0135e5);

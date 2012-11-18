@@ -25,7 +25,7 @@
 #include "config.h"
 
 #include "test_1pproblem.hh"
-#include <dumux/common/start.hh>
+#include <ewoms/common/start.hh>
 
 ////////////////////////
 // the main function
@@ -34,5 +34,5 @@ int main(int argc, char** argv)
 {
     typedef TTAG(TestProblemOneP) ProblemTypeTag;
 
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

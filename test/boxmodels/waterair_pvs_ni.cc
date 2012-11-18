@@ -26,10 +26,10 @@
 
 #include "problems/waterairproblem.hh"
 
-#include <dumux/boxmodels/pvs/pvsmodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/pvs/pvsmodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(WaterAirProblem, INHERITS_FROM(BoxPvs, WaterAirBaseProblem));
 
@@ -39,5 +39,5 @@ SET_BOOL_PROP(WaterAirProblem, EnableEnergy, true);
 int main(int argc, char** argv)
 {
     typedef TTAG(WaterAirProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

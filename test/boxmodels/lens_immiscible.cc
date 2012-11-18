@@ -26,10 +26,10 @@
 
 #include "problems/lensproblem.hh"
 
-#include <dumux/boxmodels/immiscible/immisciblemodel.hh>
-#include <dumux/common/start.hh>
+#include <ewoms/boxmodels/immiscible/immisciblemodel.hh>
+#include <ewoms/common/start.hh>
 
-namespace Dumux {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, LensBaseProblem));
 }}
@@ -37,5 +37,5 @@ NEW_TYPE_TAG(LensProblem, INHERITS_FROM(BoxImmiscibleTwoPhase, LensBaseProblem))
 int main(int argc, char** argv)
 {
     typedef TTAG(LensProblem) ProblemTypeTag;
-    return Dumux::start<ProblemTypeTag>(argc, argv);
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
 }

@@ -20,21 +20,21 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Dumux::TestDiffusionSpatialParams
+ * \copydoc Ewoms::TestDiffusionSpatialParams
  */
 #ifndef TEST_DIFFUSION_SPATIAL_PARAMS_HH
 #define TEST_DIFFUSION_SPATIAL_PARAMS_HH
 
-#include <dumux/decoupled/spatialparams/fvspatialparams.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <dumux/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
 #include <vector>
 
-namespace Dumux
+namespace Ewoms
 {
 
 //forward declaration
@@ -47,7 +47,7 @@ namespace Properties
 NEW_TYPE_TAG(TestDiffusionSpatialParams);
 
 // Set the spatial parameters
-SET_TYPE_PROP(TestDiffusionSpatialParams, SpatialParams, Dumux::TestDiffusionSpatialParams<TypeTag>);
+SET_TYPE_PROP(TestDiffusionSpatialParams, SpatialParams, Ewoms::TestDiffusionSpatialParams<TypeTag>);
 
 // Set the material law
 SET_PROP(TestDiffusionSpatialParams, MaterialLaw)

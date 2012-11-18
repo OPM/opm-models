@@ -10,7 +10,7 @@ PREDEFINED            += "NEW_PROP_TAG(name)=Property tag name" \
 INPUT                 += @srcdir@/mainpage \
 						 @srcdir@/doxygroups \
 						 @srcdir@/doxytemplates \
-						 @top_srcdir@/dumux \
+						 @top_srcdir@/ewoms \
 						 @top_srcdir@/test \
 						 @top_srcdir@/tutorial
 						 

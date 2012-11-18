@@ -19,14 +19,14 @@
 /*!
  * \file
  *
- * \copydoc Dumux::Co2InjectionFlash
+ * \copydoc Ewoms::Co2InjectionFlash
  */
-#ifndef DUMUX_CO2_INJECTION_FLASH_HH
-#define DUMUX_CO2_INJECTION_FLASH_HH
+#ifndef EWOMS_CO2_INJECTION_FLASH_HH
+#define EWOMS_CO2_INJECTION_FLASH_HH
 
-#include <dumux/material/constraintsolvers/ncpflash.hh>
+#include <ewoms/material/constraintsolvers/ncpflash.hh>
 
-namespace Dumux {
+namespace Ewoms {
 /*!
  * \brief Flash solver used by the CO2 injection problem.
  *
@@ -65,6 +65,6 @@ public:
 
 };
 
-} // namespace Dumux
+} // namespace Ewoms
 
-#endif // DUMUX_CO2_INJECTION_FLASH_HH
+#endif // EWOMS_CO2_INJECTION_FLASH_HH

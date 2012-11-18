@@ -480,9 +480,9 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
 ])
 
 # Additional checks needed to find eWoms
-# This macro should be invoked by every module which depends on dumux, but
-# not by dumux itself
+# This macro should be invoked by every module which depends on ewoms, but
+# not by ewoms itself
 AC_DEFUN([EWOMS_CHECK_MODULE],
 [
-  EWOMS_CHECK_MODULES([ewoms],[dumux/common/exceptions.hh])
+  EWOMS_CHECK_MODULES([ewoms],[ewoms/common/exceptions.hh])
 ])
