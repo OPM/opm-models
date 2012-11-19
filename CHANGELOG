@@ -37,7 +37,10 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
        xargs sed -i "s/dumux/ewoms/g"
 
   - Run dunecontrol for your project and re-compile.
-
+- The autotools based build system is now non-recursive. This makes
+  parallel builds (i.e. 'make -j$NUM_CORES check') more efficent. New
+  tests need to be added to the toplevel Makefile.am instead of to the
+  Makefile.am of the directory where the test resides.
 - The concept of Newton controllers has been abandoned. The
   functionality previously implemented has been folded into the
   NewtonMethod classes which now use static polymorphism. The reason
