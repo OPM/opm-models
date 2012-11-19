@@ -1,6 +1,43 @@
 Notable Differences Between eWoms 2.2 and eWoms 2.3
 ===================================================
 
+- The namespace for all eWoms classes has been changed from "Dumux" to
+  "Ewoms". This makes it easy to provide distribution packages for
+  both, Dumux and eWoms that do not clash. Also, it allows to use
+  Dumux and eWoms classes within the same piece of code. Finally, this
+  helps to avoid mental confusion when it comes to relation between
+  Dumux and eWoms. To adapt your code to the change, you may follow
+  the procedure below:
+
+  - MAKE A BACKUP OF YOUR PROJECT. Although the following steps should
+    usually work without manual intervention, there might still be
+    unforseen problems!
+  - Go to the root directory of your project:
+
+     cd $YOUR_PROJECT_ROOT
+
+  - Rename the 'dumux' directory (if existent) to 'ewoms'. If you use
+    git for revision control of your project, this should be done
+    using
+
+     git mv dumux ewoms
+
+  - Run the following to adapt the contents of the files of your
+    project:
+
+     # adapt c++ sources
+     find -name "*.hh" -o -name "*.cc" | \
+       xargs sed -i "
+         s/Dumux::/Ewoms::/g;
+         s/namespace Dumux/namespace Ewoms/;
+         s/\(include.*\)dumux\(.*\)/\1ewoms\2/;
+         s/DUMUX/EWOMS/"
+     # adapt the build system
+     find -name "Makefile.am" -o -name "configure.ac" | \
+       xargs sed -i "s/dumux/ewoms/g"
+
+  - Run dunecontrol for your project and re-compile.
+
 - The concept of Newton controllers has been abandoned. The
   functionality previously implemented has been folded into the
   NewtonMethod classes which now use static polymorphism. The reason
