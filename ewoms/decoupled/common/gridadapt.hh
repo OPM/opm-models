@@ -243,7 +243,7 @@ public:
                     {
                         ElementPointer outside = is->outside();
                         if ((problem_.grid().getMark(*outside) > 0)
-                            || outside.level()>eIt.level()))
+                            || outside.level() > eIt.level())
                         {
                             coarsenPossible = false;
                         }
