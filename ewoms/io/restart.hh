@@ -32,12 +32,15 @@
 #include <sstream>
 
 namespace Ewoms {
+
 /*!
- * \brief Load or save a state of a model to/from the harddisk.
+ * \brief Load or save a state of a problem to/from the harddisk.
  */
 class Restart {
-    //! \brief Create a magic cookie for restart files, so that it is
-    //!        unlikely to load a restart file for an incorrectly.
+    /*!
+     * \brief Create a magic cookie for restart files, so that it is
+     *        unlikely to load a restart file for an incorrectly.
+     */
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView &gridView)
     {
@@ -61,7 +64,9 @@ class Restart {
         return oss.str();
     }
 
-    //! \brief Return the restart file name.
+    /*!
+     * \brief Return the restart file name.
+     */
     template <class GridView>
     static const std::string restartFileName_(const GridView &gridView,
                                               const std::string &simName,
@@ -104,17 +109,13 @@ public:
      * \brief The output stream to write the serialized data.
      */
     std::ostream &serializeStream()
-    {
-        return outStream_;
-    }
+    { return outStream_; }
 
     /*!
      * \brief Start a new section in the serialized output.
      */
     void serializeSectionBegin(const std::string &cookie)
-    {
-        outStream_ << cookie << "\n";
-    }
+    { outStream_ << cookie << "\n"; }
 
     /*!
      * \brief End of a section in the serialized output.
@@ -153,9 +154,7 @@ public:
      * \brief Finish the restart file.
      */
     void serializeEnd()
-    {
-        outStream_.close();
-    }
+    { outStream_.close(); }
 
 
     /*!
@@ -202,9 +201,7 @@ public:
      *        deserialized.
      */
     std::istream &deserializeStream()
-    {
-        return inStream_;
-    }
+    { return inStream_; }
 
     /*!
      * \brief Start reading a new section of the restart file.
@@ -275,20 +272,7 @@ public:
      * \brief Stop reading the restart file.
      */
     void deserializeEnd()
-    {
-        inStream_.close();
-    }
-
-    /*!
-     * \brief Returns the list of restart files in the current directory.
-     */
-    static void restartFileList(std::list<std::string> &fileList,
-                                const std::string directory=".")
-    {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Ewoms::Restart::restartFileList()");
-    }
-
+    { inStream_.close(); }
 
 private:
     std::string fileName_;

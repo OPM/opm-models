@@ -295,7 +295,13 @@ public:
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         Ewoms::InverseOperatorResult result;
-        solver.apply(*overlappingx_, *overlappingb_, result);
+        try {
+            solver.apply(*overlappingx_, *overlappingb_, result);
+        }
+        catch (const Dune::Exception &e) {
+            DUNE_THROW(Ewoms::NumericalProblem,
+                       e.what());
+        }
 
         // free the unneeded memory of the sequential preconditioner
         // and the linear solver
