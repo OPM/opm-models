@@ -109,6 +109,10 @@ test_boxmodels_test_stokes2c_SOURCES=test/boxmodels/test_stokes2c.cc
 test_boxmodels_test_stokesni_SOURCES=test/boxmodels/test_stokesni.cc
 test_boxmodels_waterair_pvs_ni_SOURCES=test/boxmodels/waterair_pvs_ni.cc
 
+# tutorials
+tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
+tutorial_tutorial_decoupled_SOURCES=tutorial/tutorial_decoupled.cc
+
 # IMPET tests
 test_decoupled_1p_test_1p_SOURCES=test/decoupled/1p/test_1p.cc
 test_decoupled_1p_test_diffusion_SOURCES=test/decoupled/1p/test_diffusion.cc
@@ -132,6 +136,99 @@ test_common_propertysystem_test_propertysystem_SOURCES=test/common/propertysyste
 # tutorials
 tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
 tutorial_tutorial_decoupled_SOURCES=tutorial/tutorial_decoupled.cc
+
+# convenience shortcuts
+co2injection_immiscible: test/boxmodels/co2injection_immiscible
+
+co2injection_flash: test/boxmodels/co2injection_flash
+
+co2injection_ncp: test/boxmodels/co2injection_ncp
+
+co2injection_pvs: test/boxmodels/co2injection_pvs
+
+co2injection_immiscible_ni: test/boxmodels/co2injection_immiscible_ni
+
+co2injection_flash_ni: test/boxmodels/co2injection_flash_ni
+
+co2injection_ncp_ni: test/boxmodels/co2injection_ncp_ni
+
+co2injection_pvs_ni: test/boxmodels/co2injection_pvs_ni
+
+cuvette_pvs: test/boxmodels/cuvette_pvs
+
+diffusion_flash: test/boxmodels/diffusion_flash
+
+diffusion_ncp: test/boxmodels/diffusion_ncp
+
+diffusion_pvs: test/boxmodels/diffusion_pvs
+
+finger_immiscible: test/boxmodels/finger_immiscible
+
+groundwater_immiscible: test/boxmodels/groundwater_immiscible 
+
+infiltration_pvs: test/boxmodels/infiltration_pvs
+
+lens_immiscible: test/boxmodels/lens_immiscible
+
+lens_richards: test/boxmodels/lens_richards
+
+obstacle_immiscible: test/boxmodels/obstacle_immiscible
+
+obstacle_ncp: test/boxmodels/obstacle_ncp
+
+obstacle_pvs: test/boxmodels/obstacle_pvs
+
+outflow_pvs: test/boxmodels/outflow_pvs
+
+powerinjection_darcy: test/boxmodels/powerinjection_darcy
+
+powerinjection_forchheimer: test/boxmodels/powerinjection_forchheimer
+
+reservoir_blackoil: test/boxmodels/reservoir_blackoil
+
+test_navierstokes: test/boxmodels/test_navierstokes
+
+test_quadrature: test/boxmodels/test_quadrature
+
+test_stokes: test/boxmodels/test_stokes
+
+test_stokes2c: test/boxmodels/test_stokes2c
+
+test_stokesni: test/boxmodels/test_stokesni
+
+waterair_pvs_ni: test/boxmodels/waterair_pvs_ni
+
+test_1p:test/decoupled/1p/test_1p
+
+test_diffusion:test/decoupled/1p/test_diffusion
+
+test_transport:test/decoupled/2p/test_transport
+
+test_impes:test/decoupled/2p/test_impes
+
+test_mpfa2p:test/decoupled/2p/test_mpfa2p
+
+test_impesadaptive:test/decoupled/2p/test_impesadaptive
+
+test_dec2p2c:test/decoupled/2p2c/test_dec2p2c
+
+test_adaptive2p2c:test/decoupled/2p2c/test_adaptive2p2c
+
+test_multiphysics2p2c:test/decoupled/2p2c/test_multiphysics2p2c
+
+test_immiscibleflash:test/material/immiscibleflash/test_immiscibleflash
+
+test_pengrobinson:test/material/pengrobinson/test_pengrobinson
+
+test_tabulation:test/material/tabulation/test_tabulation
+
+test_fluidsystems:test/material/fluidsystems/test_fluidsystems
+
+test_ncpflash:test/material/ncpflash/test_ncpflash
+
+test_spline:test/common/spline/test_spline
+
+test_propertysystem:test/common/propertysystem/test_propertysystem
 
 include $(top_srcdir)/am/top-rules
 include $(top_srcdir)/am/global-rules
