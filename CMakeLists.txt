@@ -317,7 +317,7 @@ add_test(test_transport bin/runtest.sh --simulation test_transport)
 add_test(test_impes bin/runtest.sh --simulation test_impes)
 add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c --end-time=2000)
 
-add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled --end-time=8000)
+add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled)
 add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
 
 # test the restart capability

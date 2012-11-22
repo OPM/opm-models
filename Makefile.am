@@ -230,6 +230,10 @@ test_spline:test/common/spline/test_spline
 
 test_propertysystem:test/common/propertysystem/test_propertysystem
 
+tutorial_coupled:tutorial/tutorial_coupled
+
+tutorial_decoupled:tutorial/tutorial_decoupled
+
 include $(top_srcdir)/am/top-rules
 include $(top_srcdir)/am/global-rules
 
