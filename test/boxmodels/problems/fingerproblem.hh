@@ -255,9 +255,9 @@ public:
         for (int i = 0; i < n; ++i) {
             materialParams_[i].setMicParams(&micParams_);
             materialParams_[i].setMdcParams(&mdcParams_);
-            materialParams_[i].setSwr(0.02);
-            materialParams_[i].setSnr(0.0);
-            materialParams_[i].setSnre(0.0);
+            materialParams_[i].setSwr(0.0);
+            materialParams_[i].setSnr(0.1);
+            ParkerLenhard::reset(materialParams_[i]);
         }
 
         K_ = this->toDimMatrix_(4.6e-10);
