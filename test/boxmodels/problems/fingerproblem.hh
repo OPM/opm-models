@@ -122,13 +122,13 @@ SET_BOOL_PROP(FingerBaseProblem, EnableGravity, true);
 
 // define the properties specific for the finger problem
 SET_SCALAR_PROP(FingerBaseProblem, DomainSizeX, 0.1);
-SET_SCALAR_PROP(FingerBaseProblem, DomainSizeY, 1.0);
+SET_SCALAR_PROP(FingerBaseProblem, DomainSizeY, 0.3);
 SET_SCALAR_PROP(FingerBaseProblem, DomainSizeZ, 0.1);
 
 SET_SCALAR_PROP(FingerBaseProblem, InitialWaterSaturation, 0.01);
 
 SET_INT_PROP(FingerBaseProblem, CellsX, 20);
-SET_INT_PROP(FingerBaseProblem, CellsY, 200);
+SET_INT_PROP(FingerBaseProblem, CellsY, 70);
 SET_INT_PROP(FingerBaseProblem, CellsZ, 1);
 
 // The default for the end time of the simulation
@@ -221,8 +221,8 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const char *name() const
-    { return "finger"; }
+    std::string name() const
+    { return std::string("finger_")+this->model().name(); }
 
     /*!
      * \copydoc BoxMultiPhaseProblem::registerParameters
