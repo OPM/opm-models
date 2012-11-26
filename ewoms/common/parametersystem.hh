@@ -235,7 +235,7 @@ void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &
     for (; keyIt != keyEndIt; ++keyIt) {
         const auto &paramInfo = paramRegistry_[*keyIt];
         os << *keyIt << "=\"" << paramInfo.compileTimeValue
-           << "\" # taken from GET_PROP_VALUE(" << paramInfo.typeTagName << ", " << paramInfo.propertyName << ")\n";
+           << "\" # property: " << paramInfo.propertyName << "\n";
     }
 }
 
@@ -341,7 +341,8 @@ void registerParam(const char *paramName, const char *typeTagName, const char *p
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
     paramInfo.paramTypeName = Dune::className<ParamType>();
-    paramInfo.typeTagName = typeTagName;
+    std::string tmp = Dune::className<TypeTag>();
+    tmp.replace(0, strlen("EWoms::Properties::TTag::"), "");
     paramInfo.propertyName = propertyName;
     paramInfo.usageString = usageString;
     std::ostringstream oss;
