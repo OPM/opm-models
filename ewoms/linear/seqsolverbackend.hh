@@ -57,7 +57,7 @@ public:
 
   static void registerParameters()
   {
-      REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+      REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
       REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
       REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
       REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner");
@@ -69,7 +69,7 @@ public:
   {
       int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
       const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-      const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
+      const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
 
       Vector bTmp(b);
 
@@ -94,7 +94,7 @@ public:
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 
@@ -402,7 +402,7 @@ public:
 
   static void registerParameters()
   {
-      REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
+      REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
       REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
       REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
       REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner");
@@ -414,7 +414,7 @@ public:
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 
@@ -438,7 +438,7 @@ public:
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
     const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverTolerance);
+    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 

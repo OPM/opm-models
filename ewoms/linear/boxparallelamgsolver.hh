@@ -199,7 +199,7 @@ public:
             std::cout << "Creating the solver\n";
 
         typedef Ewoms::BiCGSTABSolver<Vector>  SolverType;
-        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
         int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
         SolverType solver(fineOperator,
                           scalarProduct,
@@ -225,7 +225,7 @@ public:
         }
 
         // create a weighted residual reduction convergence criterion
-        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
+        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
         auto *convCrit =
             new Ewoms::WeightedResidReductionCriterion<Vector,
                                                        typename GridView::CollectiveCommunication>

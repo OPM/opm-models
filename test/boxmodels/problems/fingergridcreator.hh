@@ -24,7 +24,7 @@
 #define EWOMS_FINGER_GRID_CREATOR_HH
 
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #if HAVE_ALUGRDID
 #include <dune/grid/alugrid.hh>

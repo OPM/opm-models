@@ -24,7 +24,7 @@
 #define EWOMS_LENS_GRID_CREATOR_HH
 
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>

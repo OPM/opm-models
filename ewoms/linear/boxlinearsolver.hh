@@ -77,13 +77,13 @@ NEW_PROP_TAG(LinearSolverOverlapSize);
 /*!
  * \brief Maximum accepted error of the solution of the linear solver.
  */
-NEW_PROP_TAG(LinearSolverTolerance);
+NEW_PROP_TAG(LinearSolverRelativeTolerance);
 
 
 /*!
  * \brief Maximum accepted defect of a component for the solution of the linear solver.
  */
-NEW_PROP_TAG(LinearSolverAbsTolerance);
+NEW_PROP_TAG(LinearSolverAbsoluteTolerance);
 
 /*!
  * \brief Specifies the verbosity of the linear solver
@@ -185,8 +185,8 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance, "The maximum tolerance of the linear solver");
-        REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance, "The maximum tolerance of the defect of a component for the linear solver");
+        REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
+        REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance, "The maximum allowed weighted maximum of the defect of the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
         REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
@@ -281,13 +281,13 @@ public:
         }
 
         // create a fixpoint convergence criterion
-        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
+        Scalar linearSolverRelTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
         auto *convCrit = new Ewoms::WeightedResidReductionCriterion<OverlappingVector,
                                                                     typename GridView::CollectiveCommunication>
             (problem_.gridView().comm(),
              weightVec,
-             linearSolverTolerance,
+             linearSolverRelTolerance,
              linearSolverAbsTolerance);
 
         // tell the linear solver to use it
@@ -440,7 +440,7 @@ private:
                         ScalarProduct &parScalarProduct,                \
                         Preconditioner &parPreCond)                     \
     {                                                                   \
-        Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance); \
+        Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance); \
         int maxIter = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations); \
                                                                         \
         int verbosity = 0;                                              \

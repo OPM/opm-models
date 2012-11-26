@@ -227,11 +227,11 @@ SET_TYPE_PROP(BoxModel, LinearSolver, Ewoms::Linear::BoxParallelSolver<TypeTag>)
 // that the initial value for the delta vector u is quite
 // close to the final value, a reduction of 6 orders of
 // magnitude in the defect should be sufficient...
-SET_SCALAR_PROP(BoxModel, LinearSolverTolerance, 1e-6);
+SET_SCALAR_PROP(BoxModel, LinearSolverRelativeTolerance, 1e-6);
 
 // the absolute defect of a component tolerated by the linear solver.
 // By default, looking at the absolute defect is "almost" disabled.
-SET_SCALAR_PROP(BoxModel, LinearSolverAbsTolerance, 1e-30);
+SET_SCALAR_PROP(BoxModel, LinearSolverAbsoluteTolerance, 1e-30);
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(BoxModel, LinearSolverMaxIterations, 250);

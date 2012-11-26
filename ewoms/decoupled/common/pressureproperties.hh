@@ -101,7 +101,7 @@ SET_TYPE_PROP(Pressure, PressureSolutionVector, typename GET_PROP(TypeTag, Solut
 SET_TYPE_PROP(Pressure, LinearSolver, Ewoms::ILU0BiCGSTABBackend<TypeTag> );
 
 //! set the default for the reduction of the initial residual
-SET_SCALAR_PROP(Pressure, LinearSolverTolerance, 1e-13);
+SET_SCALAR_PROP(Pressure, LinearSolverRelativeTolerance, 1e-13);
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(Pressure, LinearSolverMaxIterations, 500);
