@@ -202,7 +202,7 @@ public:
     /*!
      * \copydoc BoxProblem::name
      */
-    const std::string name() const
+    std::string name() const
     {
         std::ostringstream oss;
         oss << "powerinjection_";
