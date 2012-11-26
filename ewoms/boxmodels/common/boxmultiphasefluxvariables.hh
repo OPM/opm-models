@@ -26,7 +26,7 @@
 
 #include <ewoms/common/spline.hh>
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

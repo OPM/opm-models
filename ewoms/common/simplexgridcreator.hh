@@ -26,7 +26,7 @@
 
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/common/fvector.hh>

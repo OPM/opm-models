@@ -60,7 +60,7 @@
  * \endcode
  */
 #define REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
-    Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, Description)
+    Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, #TypeTag, #ParamName, Description)
 
 /*!
  * \ingroup Parameter
@@ -108,6 +108,8 @@ struct ParamInfo
 {
     std::string paramName;
     std::string paramTypeName;
+    std::string typeTagName;
+    std::string propertyName;
     std::string usageString;
     std::string compileTimeValue;
 
@@ -116,6 +118,8 @@ struct ParamInfo
         return
             other.paramName == paramName &&
             other.paramTypeName == paramTypeName &&
+            other.typeTagName == typeTagName &&
+            other.propertyName == propertyName &&
             other.usageString == usageString &&
             other.compileTimeValue == compileTimeValue;
     }
@@ -220,6 +224,21 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
     }
 }
 
+// print the values of a list of parameters
+template <class TypeTag>
+void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &keyList)
+{
+    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+
+    auto keyIt = keyList.begin();
+    const auto &keyEndIt = keyList.end();
+    for (; keyIt != keyEndIt; ++keyIt) {
+        const auto &paramInfo = paramRegistry_[*keyIt];
+        os << *keyIt << "=\"" << paramInfo.compileTimeValue
+           << "\" # taken from GET_PROP_VALUE(" << paramInfo.typeTagName << ", " << paramInfo.propertyName << ")\n";
+    }
+}
+
 //! \endcond
 
 /*!
@@ -286,21 +305,21 @@ void printValues(std::ostream &os = std::cout)
     // parameters
     if (runTimeKeyList.size() > 0) {
         os << "###########\n";
-        os << "# Parameters specified at run-time\n";
+        os << "# Used run-time specified parameters\n";
         os << "###########\n";
         printParamList_<TypeTag>(os, runTimeKeyList);
     }
 
     if (compileTimeKeyList.size() > 0) {
         os << "###########\n";
-        os << "# Parameters with use compile-time fallback values\n";
+        os << "# Compile-time specified parameters\n";
         os << "###########\n";
-        printParamList_<TypeTag>(os, compileTimeKeyList);
+        printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
     }
 
     if (unknownKeyList.size() > 0) {
         os << "###########\n";
-        os << "# Parameters unknown to the simulation\n";
+        os << "# Unused run-time specified parameters\n";
         os << "###########\n";
         auto keyIt = unknownKeyList.begin();
         const auto &keyEndIt = unknownKeyList.end();
@@ -312,7 +331,7 @@ void printValues(std::ostream &os = std::cout)
 
 //! \cond 0
 template <class TypeTag, class ParamType, class PropTag>
-void registerParam(const char *paramName, const char *usageString)
+void registerParam(const char *paramName, const char *typeTagName, const char *propertyName, const char *usageString)
 {
     if (!paramRegistrationOpen_)
         DUNE_THROW(Dune::InvalidStateException,
@@ -322,6 +341,8 @@ void registerParam(const char *paramName, const char *usageString)
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
     paramInfo.paramTypeName = Dune::className<ParamType>();
+    paramInfo.typeTagName = typeTagName;
+    paramInfo.propertyName = propertyName;
     paramInfo.usageString = usageString;
     std::ostringstream oss;
     oss << GET_PROP_VALUE_(TypeTag, PropTag);

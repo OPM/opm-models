@@ -26,7 +26,7 @@
 #include "boxvtkoutputmodule.hh"
 
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 namespace Ewoms
 {

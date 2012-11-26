@@ -57,6 +57,9 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
    - NewtonTargetSteps -> NewtonTargetIterations
    - NewtonMaxRelError -> NewtonMaxRelativeError
    - NewtonSatisfyAbsAndRel -> NewtonSatisfyAbsoluteAndRelative
+- The header file containing the eWoms parameter system has been
+  renamed from "parameters.hh" to "parametersystem.hh" to make it
+  consistent with the naming scheme of the property system.
 
 Notable Differences Between DuMuX 2.1 and eWoms 2.2
 ===================================================

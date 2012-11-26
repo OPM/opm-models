@@ -24,7 +24,7 @@
 #define EWOMS_BOX_VTK_OUTPUT_MODULE_HH
 
 #include <ewoms/io/vtkmultiwriter.hh>
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 
 #include <dune/istl/bvector.hh>

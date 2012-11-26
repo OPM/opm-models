@@ -25,10 +25,10 @@
 #define EWOMS_START_HH
 
 #include "propertysystem.hh"
-#include "parameters.hh"
+#include "parametersystem.hh"
 #include "valgrind.hh"
 
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/mpihelper.hh>
 #include <dune/grid/io/file/dgfparser.hh>
@@ -358,15 +358,15 @@ int start(int argc,
         if (myRank ==  0) std::cout << "Distributing the grid\n";
         GridCreator::loadBalance();
 
-        // print the properties if requested
-        bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
-        if (printProps && myRank == 0)
-            Ewoms::Properties::print<TypeTag>();
-
         // print the parameters if requested
         bool printParams = GET_PARAM(TypeTag, Scalar, PrintParameters);
         if (printParams && myRank == 0)
             Ewoms::Parameters::printValues<TypeTag>();
+
+        // print the properties if requested
+        bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
+        if (printProps && myRank == 0)
+            Ewoms::Properties::print<TypeTag>();
 
         // instantiate and run the concrete problem
         TimeManager timeManager;

@@ -26,7 +26,7 @@
 #ifndef EWOMS_SEQUENTIAL_SOLVER_BACKENDS_HH
 #define EWOMS_SEQUENTIAL_SOLVER_BACKENDS_HH
 
-#include <ewoms/common/parameters.hh>
+#include <ewoms/common/parametersystem.hh>
 #include <ewoms/linear/linearsolverproperties.hh>
 
 #include <ewoms/istl/solvers.hh>
