@@ -76,7 +76,7 @@ NEW_PROP_TAG( FluidSystem ); //!< Defines the fluid system
 NEW_PROP_TAG( FluidState ); //!< Defines the fluid state
 
 //! \cond \private
-// keep only for compatibility with box models
+// keep only for compatibility with VCVF discretizations
 NEW_PROP_TAG( TwoPIndices );
 //! \endcond
 

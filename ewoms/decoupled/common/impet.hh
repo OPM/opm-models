@@ -37,7 +37,7 @@ namespace Ewoms
  * \brief IMplicit Pressure Explicit Transport (IMPET) scheme for the solution of weakly coupled diffusion-transport formulations.
  *
  * The model implements the decoupled equations of two-phase flow.
- * These equations can be derived from the two-phase flow equations shown for the two-phase box model (TwoPBoxModel).
+ * These equations can be derived from the two-phase flow equations shown for the two-phase VCVF discretization (TwoPVcfvModel).
  * The first equation to solve is a pressure equation of elliptic character. The second one is a transport equation (e.g. for saturation, concentration,...),
  * which can be hyperbolic or parabolic.
  *

@@ -268,7 +268,7 @@ foreach(file ${vtus})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/referencesolutions)
 endforeach(file)
 
-file(GLOB dgfs "test/boxmodels/grids/*.dgf" "test/decoupled/*/grids/*.dgf")
+file(GLOB dgfs "test/implicit/grids/*.dgf" "test/decoupled/*/grids/*.dgf")
 foreach(file ${dgfs})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach(file)

@@ -20,36 +20,36 @@ EXTRA_DIST = dune.module \
 SUBDIRS = doc ewoms m4 test tutorial
 
 VCFV_TESTS= \
-test/boxmodels/co2injection_immiscible \
-test/boxmodels/co2injection_flash \
-test/boxmodels/co2injection_ncp \
-test/boxmodels/co2injection_pvs \
-test/boxmodels/co2injection_immiscible_ni \
-test/boxmodels/co2injection_flash_ni \
-test/boxmodels/co2injection_ncp_ni \
-test/boxmodels/co2injection_pvs_ni \
-test/boxmodels/cuvette_pvs \
-test/boxmodels/diffusion_ncp \
-test/boxmodels/diffusion_pvs \
-test/boxmodels/diffusion_flash \
-test/boxmodels/finger_immiscible \
-test/boxmodels/groundwater_immiscible \
-test/boxmodels/infiltration_pvs \
-test/boxmodels/lens_immiscible \
-test/boxmodels/lens_richards \
-test/boxmodels/obstacle_immiscible \
-test/boxmodels/obstacle_ncp \
-test/boxmodels/obstacle_pvs \
-test/boxmodels/outflow_pvs \
-test/boxmodels/powerinjection_darcy \
-test/boxmodels/powerinjection_forchheimer \
-test/boxmodels/reservoir_blackoil \
-test/boxmodels/test_navierstokes \
-test/boxmodels/test_quadrature \
-test/boxmodels/test_stokes \
-test/boxmodels/test_stokes2c \
-test/boxmodels/test_stokesni \
-test/boxmodels/waterair_pvs_ni
+test/implicit/co2injection_immiscible \
+test/implicit/co2injection_flash \
+test/implicit/co2injection_ncp \
+test/implicit/co2injection_pvs \
+test/implicit/co2injection_immiscible_ni \
+test/implicit/co2injection_flash_ni \
+test/implicit/co2injection_ncp_ni \
+test/implicit/co2injection_pvs_ni \
+test/implicit/cuvette_pvs \
+test/implicit/diffusion_ncp \
+test/implicit/diffusion_pvs \
+test/implicit/diffusion_flash \
+test/implicit/finger_immiscible \
+test/implicit/groundwater_immiscible \
+test/implicit/infiltration_pvs \
+test/implicit/lens_immiscible \
+test/implicit/lens_richards \
+test/implicit/obstacle_immiscible \
+test/implicit/obstacle_ncp \
+test/implicit/obstacle_pvs \
+test/implicit/outflow_pvs \
+test/implicit/powerinjection_darcy \
+test/implicit/powerinjection_forchheimer \
+test/implicit/reservoir_blackoil \
+test/implicit/test_navierstokes \
+test/implicit/test_quadrature \
+test/implicit/test_stokes \
+test/implicit/test_stokes2c \
+test/implicit/test_stokesni \
+test/implicit/waterair_pvs_ni
 
 IMPET_TESTS= \
 test/decoupled/1p/test_1p \
@@ -78,36 +78,36 @@ tutorial/tutorial_decoupled
 check_PROGRAMS = $(VCFV_TESTS) $(IMPET_TESTS) $(OTHER_TESTS) $(TUTORIALS)
 
 # VCFV tests
-test_boxmodels_co2injection_immiscible_SOURCES=test/boxmodels/co2injection_immiscible.cc
-test_boxmodels_co2injection_flash_SOURCES=test/boxmodels/co2injection_flash.cc
-test_boxmodels_co2injection_ncp_SOURCES=test/boxmodels/co2injection_ncp.cc
-test_boxmodels_co2injection_pvs_SOURCES=test/boxmodels/co2injection_pvs.cc
-test_boxmodels_co2injection_immiscible_ni_SOURCES=test/boxmodels/co2injection_immiscible_ni.cc
-test_boxmodels_co2injection_flash_ni_SOURCES=test/boxmodels/co2injection_flash_ni.cc
-test_boxmodels_co2injection_ncp_ni_SOURCES=test/boxmodels/co2injection_ncp_ni.cc
-test_boxmodels_co2injection_pvs_ni_SOURCES=test/boxmodels/co2injection_pvs_ni.cc
-test_boxmodels_cuvette_pvs_SOURCES=test/boxmodels/cuvette_pvs.cc
-test_boxmodels_diffusion_flash_SOURCES=test/boxmodels/diffusion_flash.cc
-test_boxmodels_diffusion_ncp_SOURCES=test/boxmodels/diffusion_ncp.cc
-test_boxmodels_diffusion_pvs_SOURCES=test/boxmodels/diffusion_pvs.cc
-test_boxmodels_finger_immiscible_SOURCES=test/boxmodels/finger_immiscible.cc
-test_boxmodels_groundwater_immiscible_SOURCES=test/boxmodels/groundwater_immiscible.cc 
-test_boxmodels_infiltration_pvs_SOURCES=test/boxmodels/infiltration_pvs.cc
-test_boxmodels_lens_immiscible_SOURCES=test/boxmodels/lens_immiscible.cc
-test_boxmodels_lens_richards_SOURCES=test/boxmodels/lens_richards.cc
-test_boxmodels_obstacle_immiscible_SOURCES=test/boxmodels/obstacle_immiscible.cc
-test_boxmodels_obstacle_ncp_SOURCES=test/boxmodels/obstacle_ncp.cc
-test_boxmodels_obstacle_pvs_SOURCES=test/boxmodels/obstacle_pvs.cc
-test_boxmodels_outflow_pvs_SOURCES=test/boxmodels/outflow_pvs.cc
-test_boxmodels_powerinjection_darcy_SOURCES=test/boxmodels/powerinjection_darcy.cc
-test_boxmodels_powerinjection_forchheimer_SOURCES=test/boxmodels/powerinjection_forchheimer.cc
-test_boxmodels_reservoir_blackoil_SOURCES=test/boxmodels/reservoir_blackoil.cc
-test_boxmodels_test_navierstokes_SOURCES=test/boxmodels/test_navierstokes.cc
-test_boxmodels_test_quadrature_SOURCES=test/boxmodels/test_quadrature.cc
-test_boxmodels_test_stokes_SOURCES=test/boxmodels/test_stokes.cc
-test_boxmodels_test_stokes2c_SOURCES=test/boxmodels/test_stokes2c.cc
-test_boxmodels_test_stokesni_SOURCES=test/boxmodels/test_stokesni.cc
-test_boxmodels_waterair_pvs_ni_SOURCES=test/boxmodels/waterair_pvs_ni.cc
+test_implicit_co2injection_immiscible_SOURCES=test/implicit/co2injection_immiscible.cc
+test_implicit_co2injection_flash_SOURCES=test/implicit/co2injection_flash.cc
+test_implicit_co2injection_ncp_SOURCES=test/implicit/co2injection_ncp.cc
+test_implicit_co2injection_pvs_SOURCES=test/implicit/co2injection_pvs.cc
+test_implicit_co2injection_immiscible_ni_SOURCES=test/implicit/co2injection_immiscible_ni.cc
+test_implicit_co2injection_flash_ni_SOURCES=test/implicit/co2injection_flash_ni.cc
+test_implicit_co2injection_ncp_ni_SOURCES=test/implicit/co2injection_ncp_ni.cc
+test_implicit_co2injection_pvs_ni_SOURCES=test/implicit/co2injection_pvs_ni.cc
+test_implicit_cuvette_pvs_SOURCES=test/implicit/cuvette_pvs.cc
+test_implicit_diffusion_flash_SOURCES=test/implicit/diffusion_flash.cc
+test_implicit_diffusion_ncp_SOURCES=test/implicit/diffusion_ncp.cc
+test_implicit_diffusion_pvs_SOURCES=test/implicit/diffusion_pvs.cc
+test_implicit_finger_immiscible_SOURCES=test/implicit/finger_immiscible.cc
+test_implicit_groundwater_immiscible_SOURCES=test/implicit/groundwater_immiscible.cc 
+test_implicit_infiltration_pvs_SOURCES=test/implicit/infiltration_pvs.cc
+test_implicit_lens_immiscible_SOURCES=test/implicit/lens_immiscible.cc
+test_implicit_lens_richards_SOURCES=test/implicit/lens_richards.cc
+test_implicit_obstacle_immiscible_SOURCES=test/implicit/obstacle_immiscible.cc
+test_implicit_obstacle_ncp_SOURCES=test/implicit/obstacle_ncp.cc
+test_implicit_obstacle_pvs_SOURCES=test/implicit/obstacle_pvs.cc
+test_implicit_outflow_pvs_SOURCES=test/implicit/outflow_pvs.cc
+test_implicit_powerinjection_darcy_SOURCES=test/implicit/powerinjection_darcy.cc
+test_implicit_powerinjection_forchheimer_SOURCES=test/implicit/powerinjection_forchheimer.cc
+test_implicit_reservoir_blackoil_SOURCES=test/implicit/reservoir_blackoil.cc
+test_implicit_test_navierstokes_SOURCES=test/implicit/test_navierstokes.cc
+test_implicit_test_quadrature_SOURCES=test/implicit/test_quadrature.cc
+test_implicit_test_stokes_SOURCES=test/implicit/test_stokes.cc
+test_implicit_test_stokes2c_SOURCES=test/implicit/test_stokes2c.cc
+test_implicit_test_stokesni_SOURCES=test/implicit/test_stokesni.cc
+test_implicit_waterair_pvs_ni_SOURCES=test/implicit/waterair_pvs_ni.cc
 
 # tutorials
 tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
@@ -138,65 +138,65 @@ tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
 tutorial_tutorial_decoupled_SOURCES=tutorial/tutorial_decoupled.cc
 
 # convenience shortcuts
-co2injection_immiscible: test/boxmodels/co2injection_immiscible
+co2injection_immiscible: test/implicit/co2injection_immiscible
 
-co2injection_flash: test/boxmodels/co2injection_flash
+co2injection_flash: test/implicit/co2injection_flash
 
-co2injection_ncp: test/boxmodels/co2injection_ncp
+co2injection_ncp: test/implicit/co2injection_ncp
 
-co2injection_pvs: test/boxmodels/co2injection_pvs
+co2injection_pvs: test/implicit/co2injection_pvs
 
-co2injection_immiscible_ni: test/boxmodels/co2injection_immiscible_ni
+co2injection_immiscible_ni: test/implicit/co2injection_immiscible_ni
 
-co2injection_flash_ni: test/boxmodels/co2injection_flash_ni
+co2injection_flash_ni: test/implicit/co2injection_flash_ni
 
-co2injection_ncp_ni: test/boxmodels/co2injection_ncp_ni
+co2injection_ncp_ni: test/implicit/co2injection_ncp_ni
 
-co2injection_pvs_ni: test/boxmodels/co2injection_pvs_ni
+co2injection_pvs_ni: test/implicit/co2injection_pvs_ni
 
-cuvette_pvs: test/boxmodels/cuvette_pvs
+cuvette_pvs: test/implicit/cuvette_pvs
 
-diffusion_flash: test/boxmodels/diffusion_flash
+diffusion_flash: test/implicit/diffusion_flash
 
-diffusion_ncp: test/boxmodels/diffusion_ncp
+diffusion_ncp: test/implicit/diffusion_ncp
 
-diffusion_pvs: test/boxmodels/diffusion_pvs
+diffusion_pvs: test/implicit/diffusion_pvs
 
-finger_immiscible: test/boxmodels/finger_immiscible
+finger_immiscible: test/implicit/finger_immiscible
 
-groundwater_immiscible: test/boxmodels/groundwater_immiscible 
+groundwater_immiscible: test/implicit/groundwater_immiscible 
 
-infiltration_pvs: test/boxmodels/infiltration_pvs
+infiltration_pvs: test/implicit/infiltration_pvs
 
-lens_immiscible: test/boxmodels/lens_immiscible
+lens_immiscible: test/implicit/lens_immiscible
 
-lens_richards: test/boxmodels/lens_richards
+lens_richards: test/implicit/lens_richards
 
-obstacle_immiscible: test/boxmodels/obstacle_immiscible
+obstacle_immiscible: test/implicit/obstacle_immiscible
 
-obstacle_ncp: test/boxmodels/obstacle_ncp
+obstacle_ncp: test/implicit/obstacle_ncp
 
-obstacle_pvs: test/boxmodels/obstacle_pvs
+obstacle_pvs: test/implicit/obstacle_pvs
 
-outflow_pvs: test/boxmodels/outflow_pvs
+outflow_pvs: test/implicit/outflow_pvs
 
-powerinjection_darcy: test/boxmodels/powerinjection_darcy
+powerinjection_darcy: test/implicit/powerinjection_darcy
 
-powerinjection_forchheimer: test/boxmodels/powerinjection_forchheimer
+powerinjection_forchheimer: test/implicit/powerinjection_forchheimer
 
-reservoir_blackoil: test/boxmodels/reservoir_blackoil
+reservoir_blackoil: test/implicit/reservoir_blackoil
 
-test_navierstokes: test/boxmodels/test_navierstokes
+test_navierstokes: test/implicit/test_navierstokes
 
-test_quadrature: test/boxmodels/test_quadrature
+test_quadrature: test/implicit/test_quadrature
 
-test_stokes: test/boxmodels/test_stokes
+test_stokes: test/implicit/test_stokes
 
-test_stokes2c: test/boxmodels/test_stokes2c
+test_stokes2c: test/implicit/test_stokes2c
 
-test_stokesni: test/boxmodels/test_stokesni
+test_stokesni: test/implicit/test_stokesni
 
-waterair_pvs_ni: test/boxmodels/waterair_pvs_ni
+waterair_pvs_ni: test/implicity/waterair_pvs_ni
 
 test_1p:test/decoupled/1p/test_1p
 

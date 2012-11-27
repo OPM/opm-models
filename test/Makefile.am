@@ -1,4 +1,4 @@
-SUBDIRS = boxmodels common decoupled material
+SUBDIRS = common decoupled implicit material
 
 EXTRA_DIST = CMakeLists.txt referencesolutions/*.vtu referencesolutions/*.vtp
 

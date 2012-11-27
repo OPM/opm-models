@@ -13,20 +13,18 @@ AC_CONFIG_FILES([Makefile
     doc/doxygen/Doxyfile
     doc/handbook/Makefile
     ewoms/Makefile 
-    ewoms/boxmodels/Makefile 
-    ewoms/boxmodels/blackoil/Makefile 
-    ewoms/boxmodels/common/Makefile 
-    ewoms/boxmodels/flash/Makefile 
-    ewoms/boxmodels/immiscible/Makefile 
-    ewoms/boxmodels/modules/Makefile 
-    ewoms/boxmodels/modules/energy/Makefile 
-    ewoms/boxmodels/modules/diffusion/Makefile 
-    ewoms/boxmodels/modules/velocity/Makefile 
-    ewoms/boxmodels/ncp/Makefile 
-    ewoms/boxmodels/pvs/Makefile 
-    ewoms/boxmodels/richards/Makefile 
-    ewoms/boxmodels/stokes/Makefile
-    ewoms/boxmodels/vtk/Makefile 
+    ewoms/models/Makefile 
+    ewoms/models/blackoil/Makefile 
+    ewoms/models/flash/Makefile 
+    ewoms/models/immiscible/Makefile 
+    ewoms/models/modules/Makefile 
+    ewoms/models/modules/energy/Makefile 
+    ewoms/models/modules/diffusion/Makefile 
+    ewoms/models/modules/velocity/Makefile 
+    ewoms/models/ncp/Makefile 
+    ewoms/models/pvs/Makefile 
+    ewoms/models/richards/Makefile 
+    ewoms/models/stokes/Makefile
     ewoms/common/Makefile 
     ewoms/decoupled/Makefile
     ewoms/decoupled/1p/Makefile
@@ -49,6 +47,7 @@ AC_CONFIG_FILES([Makefile
     ewoms/decoupled/common/mimetic/Makefile
     ewoms/decoupled/constraintsolvers/Makefile 
     ewoms/decoupled/spatialparams/Makefile 
+    ewoms/disc/Makefile 
     ewoms/io/Makefile
     ewoms/istl/Makefile
     ewoms/linear/Makefile
@@ -67,11 +66,12 @@ AC_CONFIG_FILES([Makefile
     ewoms/material/heatconduction/Makefile 
     ewoms/nonlinear/Makefile
     ewoms/parallel/Makefile 
+    ewoms/vtk/Makefile 
     m4/Makefile
     test/Makefile
-    test/boxmodels/Makefile 
-    test/boxmodels/problems/Makefile 
-    test/boxmodels/grids/Makefile 
+    test/implicit/Makefile 
+    test/implicit/problems/Makefile 
+    test/implicit/grids/Makefile 
     test/common/Makefile
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
