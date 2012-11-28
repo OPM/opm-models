@@ -344,15 +344,6 @@ namespace Ewoms {
       }
     }
 
-    //! \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
-    {
-      double origTol = this->convergenceCriterion().tolerance();
-      this->convergenceCriterion().setTolerance(reduction);
-      (*this).apply(x,b,res);
-      this->convergenceCriterion().setTolerance(origTol);
-    }
-
   private:
     Dune::SeqScalarProduct<X> ssp;
     Dune::LinearOperator<X,X>& _op;
@@ -467,18 +458,6 @@ namespace Ewoms {
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
       res.elapsed = watch.elapsed();
-    }
-
-    /*!
-      \brief Apply inverse operator with given reduction factor.
-
-      \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    */
-    virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
-    {
-      std::swap(_reduction,reduction);
-      (*this).apply(x,b,res);
-      std::swap(_reduction,reduction);
     }
 
   private:
@@ -611,20 +590,6 @@ namespace Ewoms {
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
       res.elapsed = watch.elapsed();
-    }
-
-    /*!
-      \brief Apply inverse operator with given reduction factor.
-
-      \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    */
-    virtual void apply (X& x, X& b, double reduction,
-      InverseOperatorResult& res)
-    {
-      double origTol = this->convergenceCriterion().tolerance();
-      this->convergenceCriterion().setTolerance(reduction);
-      (*this).apply(x,b,res);
-      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -1079,19 +1044,6 @@ public:
         res.elapsed = watch.elapsed();
     }
 
-    /*!
-      \brief Apply inverse operator with given reduction factor.
-
-      \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    */
-    virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
-    {
-      double origTol = this->convergenceCriterion().tolerance();
-      this->convergenceCriterion().setTolerance(reduction);
-      (*this).apply(x,b,res);
-      this->convergenceCriterion().setTolerance(origTol);
-    }
-
   private:
     Dune::SeqScalarProduct<X> ssp;
     Dune::LinearOperator<X,X>& _op;
@@ -1174,16 +1126,6 @@ public:
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     virtual void apply (X& x, X& b, InverseOperatorResult& res)
-    {
-      apply(x,b,_reduction,res);
-    }
-
-    /*!
-      \brief Apply inverse operator.
-
-      \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    */
-    virtual void apply (X& x, Y& b, double reduction, InverseOperatorResult& res)
     {
       int m = _restart;
       field_type norm;

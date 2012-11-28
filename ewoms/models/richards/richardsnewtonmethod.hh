@@ -78,7 +78,7 @@ protected:
     friend class VcfvNewtonMethod<TypeTag>;
 
     /*!
-     * \copydoc VcfvNewtonMethod::newtonUpdate
+     * \copydoc VcfvNewtonMethod::update_
      */
     void update_(SolutionVector &uCurrentIter,
                  const SolutionVector &uLastIter,

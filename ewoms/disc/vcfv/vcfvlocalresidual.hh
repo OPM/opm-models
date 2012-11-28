@@ -106,7 +106,7 @@ public:
      * \brief Return the result of the eval() call using internal
      *        storage.
      *
-     * \copydetails Doxygen::vcvfScvIdxParam
+     * \copydetails Doxygen::vcfvScvIdxParam
      */
     const VectorBlock &residual(int scvIdx) const
     { return internalResidual_[scvIdx]; }
@@ -122,7 +122,7 @@ public:
      * \brief Return the storage term calculated using the last call
      *        to eval() using internal storage.
      *
-     * \copydetails Doxygen::vcvfScvIdxParam
+     * \copydetails Doxygen::vcfvScvIdxParam
      */
     const VectorBlock &storageTerm(int scvIdx) const
     { return internalStorageTerm_[scvIdx]; }
@@ -153,7 +153,7 @@ public:
      * The results can be requested afterwards using the residual()
      * and storageTerm() methods.
      *
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      */
     void eval(const ElementContext &elemCtx)
     {
@@ -169,7 +169,7 @@ public:
      *
      * \copydetails Doxygen::residualParam
      * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      */
     void eval(LocalBlockVector &residual,
               LocalBlockVector &storage,
@@ -215,7 +215,7 @@ public:
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
      *
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
     void evalStorage(const ElementContext &elemCtx,
@@ -237,7 +237,7 @@ public:
      * quantity is inside the element.
      *
      * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
     void evalStorage(LocalBlockVector &storage,
@@ -263,7 +263,7 @@ public:
      * \brief Add the flux term to a local residual.
      *
      * \copydetails Doxygen::residualParam
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
     void evalFluxes(LocalBlockVector &residual,
@@ -314,7 +314,7 @@ public:
      *        (e.g. phase mass) within a finite sub-control volume.
      *
      * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::vcvfScvCtxParams
+     * \copydetails Doxygen::vcfvScvCtxParams
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
@@ -331,7 +331,7 @@ public:
      *        quantities over a face of a sub-control volume.
      *
      * \copydetails Doxygen::areaFluxParam
-     * \copydetails Doxygen::vcvfScvfCtxParams
+     * \copydetails Doxygen::vcfvScvfCtxParams
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
@@ -347,7 +347,7 @@ public:
      * \brief Calculate the source term of the equation
      *
      * \copydoc Doxygen::sourceParam
-     * \copydoc Doxygen::vcvfScvCtxParams
+     * \copydoc Doxygen::vcfvScvCtxParams
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,

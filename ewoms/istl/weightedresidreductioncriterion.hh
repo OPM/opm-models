@@ -97,8 +97,8 @@ public:
   /*!
    * \brief Sets the relative weight of each row of the solution.
    *
-   * \param residWeightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
-   *                  with the relative weights of the linear equations
+   * \param fixPointWeightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
+   *                 with the relative weights of the linear equations
    */
   void setFixPointWeight(const Vector &fixPointWeightVec)
   {

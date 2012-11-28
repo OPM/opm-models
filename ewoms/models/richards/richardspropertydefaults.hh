@@ -34,7 +34,7 @@
 #include "richardsprimaryvariables.hh"
 #include "richardsvolumevariables.hh"
 #include "richardsproperties.hh"
-#include "richardsnewtoncontroller.hh"
+#include "richardsnewtonmethod.hh"
 
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>

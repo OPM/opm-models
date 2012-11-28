@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvNewtonController
+ * \copydoc Ewoms::VcfvNewtonMethod
  */
-#ifndef EWOMS_VCFV_NEWTON_CONTROLLER_HH
-#define EWOMS_VCFV_NEWTON_CONTROLLER_HH
+#ifndef EWOMS_VCFV_NEWTON_METHOD_HH
+#define EWOMS_VCFV_NEWTON_METHOD_HH
 
 #include "vcfvnewtonconvergencewriter.hh"
 

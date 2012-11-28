@@ -109,7 +109,7 @@ public:
   }
 
   /*!
-   * \copydoc ConvergenceCriterion::setTolerance(Scalar)
+   * \brief Set the maximum allowed weighted maximum difference between two iterations
    */
   void setTolerance(Scalar tol)
   {
@@ -117,19 +117,11 @@ public:
   }
 
   /*!
-   * \copydoc ConvergenceCriterion::tolerance()
+   * \brief Return the maximum allowed weighted maximum difference between two iterations
    */
   Scalar tolerance() const
   {
     return tolerance_;
-  }
-
-  /*!
-   * \copydoc ConvergenceCriterion::accuracy()
-   */
-  Scalar accuracy() const
-  {
-    return delta_;
   }
 
   /*!

@@ -4,7 +4,7 @@
  * \file
  *
  * \brief This file contains templates for the doxygen documentation
- *        intented to in increasing maintainability to avoid excessive
+ *        intended to in increasing maintainability to avoid excessive
  *        copy-and-paste of the documentation.
  */
 class Doxygen {
@@ -54,14 +54,14 @@ public:
      *               (equivalent to the local vertex index of the
      *               element).
      */
-    void boxScvIdxParam(int scvIdx);
+    void vcfvScvIdxParam(int scvIdx);
 
     /*!
      * \param scvfIdx The local sub-control volume face index of interest
      *               (equivalent to the local edge index of the
      *               element).
      */
-    void boxScvfIdxParam(int scvfIdx);
+    void vcfvScvfIdxParam(int scvfIdx);
 
     /*!
      * \param source The values of the source term.
@@ -84,24 +84,24 @@ public:
     void residualParam(EqVector &residual);
 
     /*!
-     * \param elemCtx The element execution context of the box scheme.
+     * \param elemCtx The element execution context of the vcfv scheme.
      */
-    void boxElemCtxParam(const ElementContext &elemCtx);
+    void vcfvElemCtxParam(const ElementContext &elemCtx);
 
     /*!
-     * \copydetails Doxygen::boxScvIdxParam
-     * \copydetails Doxygen::boxElemCtxParam
+     * \copydetails Doxygen::vcfvScvIdxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void boxScvCtxParams(const ElementContext &elemCtx, int scvIdx, int timeIdx);
+    void vcfvScvCtxParams(const ElementContext &elemCtx, int scvIdx, int timeIdx);
 
     /*!
-     * \copydetails Doxygen::boxElemCtxParam
-     * \copydetails Doxygen::boxScvfIdxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
+     * \copydetails Doxygen::vcfvScvfIdxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void boxScvfCtxParams(const ElementContext &elemCtx, int scvfIdx, int timeIdx);
-    
+    void vcfvScvfCtxParams(const ElementContext &elemCtx, int scvfIdx, int timeIdx);
+
     /*!
      * \tparam FluidState The type of the fluid state.
      *

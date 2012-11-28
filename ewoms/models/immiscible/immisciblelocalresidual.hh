@@ -67,7 +67,7 @@ public:
      *        mass) within a single fluid phase
      *
      * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::vcvfScvCtxParams
+     * \copydetails Doxygen::vcfvScvCtxParams
      * \copydetails Doxygen::phaseIdxParam
      */
     void addPhaseStorage(EqVector &storage,

@@ -489,7 +489,7 @@ public:
      * \brief Returns the reassemble color of a vertex
      *
      * \copydetails Doxygen::elementParam
-     * \copydetails Doxygen::vcvfScvIdxParam
+     * \copydetails Doxygen::vcfvScvIdxParam
      */
     int vertexColor(const Element &element, int scvIdx) const
     {

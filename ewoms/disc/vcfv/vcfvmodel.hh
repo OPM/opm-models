@@ -446,8 +446,6 @@ public:
      * \brief Try to progress the model to the next timestep.
      *
      * \param solver The non-linear solver
-     * \param controller The controller which specifies the behaviour
-     *                   of the non-linear solver
      */
     bool update(NewtonMethod &solver)
     {
@@ -677,7 +675,7 @@ public:
      * \brief Update the weights of all primary variables within an
      *        element given the complete set of volume variables
      *
-     * \copydetails Doxygen::vcvfElemCtxParam
+     * \copydetails Doxygen::vcfvElemCtxParam
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     { }

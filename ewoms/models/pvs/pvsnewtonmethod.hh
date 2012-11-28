@@ -66,7 +66,7 @@ protected:
     friend class VcfvNewtonMethod<TypeTag>;
 
     /*!
-     * \copydoc NewtonMethod::endIteration
+     * \copydoc NewtonMethod::endIteration_
      */
     void endIteration_(SolutionVector &uCurrentIter,
                        const SolutionVector &uLastIter)

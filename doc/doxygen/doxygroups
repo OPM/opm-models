@@ -102,109 +102,109 @@
 
 /****************** Fully Implicit ******************/
 /*!
- * \defgroup BoxModel Box Scheme
+ * \defgroup VcfvModel Vcfv Discretizations
  * \brief Fully Implicit Vertex Centered Finite Volume Scheme
  */
     /*!
-     * \ingroup BoxModel
-     * \defgroup BoxModels Models
-     * \brief Models Using the Box Scheme
+     * \ingroup VcfvModel
+     * \defgroup VcfvModels Models
+     * \brief Models Using the Vcfv Scheme
      */
         /*!
-         * \ingroup BoxModels
-         * \defgroup ImmiscibleBoxModel Immiscible
+         * \ingroup VcfvModels
+         * \defgroup ImmiscibleVcfvModel Immiscible
          * \brief Immiscible Multi-Phase Model
          *
          * \copydetails Ewoms::ImmiscibleModel
          */
          /*!
-          * \ingroup BoxModels
-          * \defgroup PvsBoxModel PVS
+          * \ingroup VcfvModels
+          * \defgroup PvsVcfvModel PVS
           * \brief Compositional Multi-Phase Model Using Primary Variable Switching
           *
           * \copydetails Ewoms::PvsModel
           */
          /*!
-          * \ingroup BoxModels
+          * \ingroup VcfvModels
           * \defgroup NcpModel NCP
           * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
           *
           * \copydetails Ewoms::NcpModel
           */
          /*!
-          * \ingroup BoxModels
+          * \ingroup VcfvModels
           * \defgroup FlashModel Flash
           * \brief Compositional Multi-Phase Model Based on Flash Calculations
           *
           * \copydetails Ewoms::FlashModel
           */
          /*!
-          * \ingroup BoxModels
-          * \defgroup BlackOilBoxModel Black Oil
+          * \ingroup VcfvModels
+          * \defgroup BlackOilVcfvModel Black Oil
           * \brief Partially Miscible Three-Phase Model Based on the Black Oil Assumptions
           *
           * \copydetails Ewoms::BlackOilModel
           */
          /*!
-          * \ingroup BoxModels
+          * \ingroup VcfvModels
           * \defgroup RichardsModel Richards
           * \brief Immiscible Two-Phase Model Using the Richards Equation
           *
           * \copydetails Ewoms::RichardsModel
           */
          /*!
-          * \ingroup BoxModels
-          * \defgroup BoxStokesModel (Navier-)Stokes
+          * \ingroup VcfvModels
+          * \defgroup VcfvStokesModel (Navier-)Stokes
           * \brief Compositional/Immiscible Single-Phase Model for Turbulent Flow
           *
           * \copydetails Ewoms::StokesModel
           */
       /*!
-       * \ingroup BoxModel
-       * \defgroup BoxModules Modules
-       * \brief Modules Used by the Box Models
+       * \ingroup VcfvModel
+       * \defgroup VcfvModules Modules
+       * \brief Modules Used by the Vcfv Models
        */
           /*!
-           * \ingroup BoxModules
-           * \defgroup BoxDarcyVelocity Darcy Velocity
+           * \ingroup VcfvModules
+           * \defgroup VcfvDarcyVelocity Darcy Velocity
            * \brief The Darcy Velocity Module
            *
-           * \copydetails Ewoms::BoxDarcyVelocityModule
+           * \copydetails Ewoms::VcfvDarcyVelocityModule
            */
 
           /*!
-           * \ingroup BoxModules
-           * \defgroup BoxForchheimerVelocity Forchheimer Velocity
+           * \ingroup VcfvModules
+           * \defgroup VcfvForchheimerVelocity Forchheimer Velocity
            * \brief The Forchheimer Velocity Module
            *
-           * \copydetails Ewoms::BoxForchheimerVelocityModule
+           * \copydetails Ewoms::VcfvForchheimerVelocityModule
            */
 
           /*!
-           * \ingroup BoxModules
-           * \defgroup BoxDiffusion Molecular Diffusion
+           * \ingroup VcfvModules
+           * \defgroup VcfvDiffusion Molecular Diffusion
            * \brief A Module for to include molecular diffusion
            *
-           * \copydetails Ewoms::BoxDiffusionModule
+           * \copydetails Ewoms::VcfvDiffusionModule
            */
 
           /*!
-           * \ingroup BoxModules
-           * \defgroup BoxEnergy Energy
+           * \ingroup VcfvModules
+           * \defgroup VcfvEnergy Energy
            * \brief A Module for the Energy Equation 
            *
-           * \copydetails Ewoms::BoxEnergyModule
+           * \copydetails Ewoms::VcfvEnergyModule
            */
 
           /*!
-           * \ingroup BoxModules
-           * \defgroup BoxVtk VTK
+           * \ingroup VcfvModules
+           * \defgroup VcfvVtk VTK
            * \brief Various Modules to Write VTK Output
            */
     /*!
-     * \ingroup BoxModel
-     * \defgroup BoxTestProblems Test Problems
-     * \brief Test Problems for the Box Models
+     * \ingroup VcfvModel
+     * \defgroup VcfvTestProblems Test Problems
+     * \brief Test Problems for the Vcfv Models
      */
 
 /****************** Semi-Implicit ******************/
