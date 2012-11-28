@@ -177,9 +177,15 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        if (pvIdx == Indices::pressure0Idx) {
-            Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
-            return std::min(1.0/absPv, 1.0);
+        if (Indices::pressure0Idx == pvIdx) {
+            // use a pressure gradient of 1e3 Pa/m an intrinisc
+            // permeability of 1e-12 as reference (basically, a highly
+            // permeable sand stone filled with liquid water.)
+            static constexpr Scalar KRef = 1e-12; // [m^2]
+            static constexpr Scalar pGradRef = 1e3; // [Pa / m]
+            Scalar V = this->boxVolume(globalVertexIdx);
+
+            return std::max(1e-5, pGradRef * KRef / V);
         }
         return 1;
     }

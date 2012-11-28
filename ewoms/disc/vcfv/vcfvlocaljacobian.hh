@@ -213,7 +213,7 @@ public:
      * \brief Returns the unweighted epsilon value used to calculate
      *        the local derivatives
      */
-    Scalar baseEpsilon() const
+    static Scalar baseEpsilon()
     { return newtonTolerance_/1e2; }
 
     /*!
@@ -231,7 +231,6 @@ public:
                           int scvIdx,
                           int pvIdx) const
     {
-        assert(std::numeric_limits<Scalar>::epsilon()*1e4 < baseEpsilon());
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
 
@@ -483,7 +482,7 @@ protected:
     Problem *problemPtr_;
     Model *modelPtr_;
 
-    Scalar newtonTolerance_;
+    static Scalar newtonTolerance_;
     ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;
@@ -497,6 +496,9 @@ protected:
 
     LocalResidual localResidual_;
 };
+
+template <class TypeTag>
+typename VcfvLocalJacobian<TypeTag>::Scalar VcfvLocalJacobian<TypeTag>::newtonTolerance_;
 }
 
 #endif

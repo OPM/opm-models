@@ -50,6 +50,17 @@ public:
         : ParentType(problem)
     {}
 
+    /*!
+     * \copydoc NewtonMethod::converged
+     */
+    bool converged() const
+    {
+        if (this->problem().model().switched())
+            return false;
+
+        return ParentType::converged();
+    }
+
 protected:
     friend class NewtonMethod<TypeTag>;
     friend class VcfvNewtonMethod<TypeTag>;
@@ -62,17 +73,6 @@ protected:
     {
         ParentType::endIteration_(uCurrentIter, uLastIter);
         this->problem().model().switchPrimaryVars_();
-    }
-
-    /*!
-     * \copydoc NewtonMethod::converged_
-     */
-    bool converged_()
-    {
-        if (this->problem().model().switched())
-            return false;
-
-        return ParentType::newtonConverged();
     }
 };
 }

@@ -299,8 +299,16 @@ public:
             // energy related quantity
             return tmp;
 
-        if (Indices::pressure0Idx == pvIdx)
-            return std::min(1.0/this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx], 1.0);
+        if (Indices::pressure0Idx == pvIdx) {
+            // use a pressure gradient of 1e3 Pa/m an intrinisc
+            // permeability of 1e-12 as reference (basically, a highly
+            // permeable sand stone filled with liquid water.)
+            static constexpr Scalar KRef = 1e-12; // [m^2]
+            static constexpr Scalar pGradRef = 1e3; // [Pa / m]
+            Scalar V = this->boxVolume(globalVertexIdx);
+
+            return std::max(1e-5, pGradRef * KRef / V);
+        }
         return 1; // saturations and mole fractions have a weight of 1
     }
 

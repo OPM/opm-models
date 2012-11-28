@@ -299,9 +299,15 @@ public:
             Valgrind::CheckDefined(minActivityCoeff_[globalVertexIdx][compIdx]);
             return 1.0 / minActivityCoeff_[globalVertexIdx][compIdx];
         }
-        else if (pvIdx == pressure0Idx) {
-            // first phase pressure
-            return 1.0 / this->solution(/*timeIdx=*/0)[globalVertexIdx][pressure0Idx];
+        else if (Indices::pressure0Idx == pvIdx) {
+            // use a pressure gradient of 1e3 Pa/m an intrinisc
+            // permeability of 1e-12 as reference (basically, a highly
+            // permeable sand stone filled with liquid water.)
+            static constexpr Scalar KRef = 1e-12; // [m^2]
+            static constexpr Scalar pGradRef = 1e3; // [Pa / m]
+            Scalar V = this->boxVolume(globalVertexIdx);
+
+            return std::max(1e-5, pGradRef * KRef / V);
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
