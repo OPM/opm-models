@@ -166,7 +166,7 @@ public:
    */
   bool converged() const
   {
-    return accuracy() < tolerance();
+    return delta_ < tolerance();
   }
 
 private:

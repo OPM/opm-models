@@ -108,7 +108,7 @@ public:
    */
   bool converged() const
   {
-    return accuracy() <= tolerance();
+    return curDefect_ <= tolerance();
   }
 
 private:
@@ -124,4 +124,3 @@ private:
 } // end namespace Ewoms
 
 #endif
-

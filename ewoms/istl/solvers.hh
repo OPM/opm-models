@@ -175,18 +175,6 @@ namespace Ewoms {
     */
     virtual void apply (X& x, Y& b, InverseOperatorResult& res) = 0;
 
-    /*!
-      \brief apply inverse operator, with given convergence criteria.
-
-      \warning Right hand side b may be overwritten!
-
-      \param x The left hand side to store the result in.
-      \param b The right hand side
-      \param reduction The minimum defect reduction to achieve.
-      \param res Object to store the statistics about applying the operator.
-    */
-    virtual void apply (X& x, Y& b, double reduction, InverseOperatorResult& res) = 0;
-
     //! \brief Destructor
     virtual ~InverseOperator () {}
 
@@ -344,8 +332,6 @@ namespace Ewoms {
 
       // fill statistics
       res.iterations = i;
-      res.reduction = this->convergenceCriterion().accuracy();
-      res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
 
       // final print
@@ -480,14 +466,7 @@ namespace Ewoms {
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
-      res.reduction = this->convergenceCriterion().accuracy();
-      res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
-      if (_verbose>0)                 // final print
-        std::cout << "=== rate=" << res.conv_rate
-                  << ", T=" << res.elapsed
-                  << ", TIT=" << res.elapsed/i
-                  << ", IT=" << i << std::endl;
     }
 
     /*!
@@ -631,17 +610,7 @@ namespace Ewoms {
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = i;               // fill statistics
-      res.reduction = this->convergenceCriterion().accuracy();
-      res.conv_rate  = pow(res.reduction,1.0/i);
       res.elapsed = watch.elapsed();
-
-      if (_verbose>0)                 // final print
-      {
-        std::cout << "=== rate=" << res.conv_rate
-                  << ", T=" << res.elapsed
-                  << ", TIT=" << res.elapsed/i
-                  << ", IT=" << i << std::endl;
-      }
     }
 
     /*!
@@ -890,27 +859,7 @@ public:
 
       _prec.post(x);                  // postprocess preconditioner
       res.iterations = static_cast<int>(std::ceil(it));              // fill statistics
-      res.reduction = this->convergenceCriterion().accuracy();
-      res.conv_rate  = pow(res.reduction,1.0/it);
       res.elapsed = watch.elapsed();
-      if (_verbose>0)                 // final print
-        std::cout << "=== rate=" << res.conv_rate
-                  << ", T=" << res.elapsed
-                  << ", TIT=" << res.elapsed/it
-                  << ", IT=" << it << std::endl;
-    }
-
-    /*!
-      \brief Apply inverse operator with given reduction factor.
-
-      \copydoc InverseOperator::apply(X&,Y&,double,InverseOperatorResult&)
-    */
-    virtual void apply (X& x, X& b, double reduction, InverseOperatorResult& res)
-    {
-      double origTol = this->convergenceCriterion().tolerance();
-      this->convergenceCriterion().setTolerance(reduction);
-      (*this).apply(x,b,res);
-      this->convergenceCriterion().setTolerance(origTol);
     }
 
   private:
@@ -1127,18 +1076,7 @@ public:
 
         _prec.post(x);                  // postprocess preconditioner
         res.iterations = i;               // fill statistics
-        res.reduction = this->convergenceCriterion().accuracy();
-        res.conv_rate  = pow(res.reduction,1.0/i);
         res.elapsed = watch.elapsed();
-
-        if (_verbose>0)                 // final print
-        {
-          std::cout << "=== rate=" << res.conv_rate
-                    << ", T=" << res.elapsed
-                    << ", TIT=" << res.elapsed/i
-                    << ", IT=" << i << std::endl;
-        }
-
     }
 
     /*!
@@ -1401,26 +1339,10 @@ public:
       _M.post(x);                  // postprocess preconditioner
 
       res.iterations = j;
-      res.reduction = this->convergenceCriterion().accuracy();
-      res.conv_rate  = pow(res.reduction,1.0/j);
       res.elapsed = watch.elapsed();
 
-      if (_verbose>0)
-        print_result(res);
     }
   private:
-
-    void
-    print_result (const InverseOperatorResult & res) const
-    {
-      int j = res.iterations>0?res.iterations:1;
-      std::cout << "=== rate=" << res.conv_rate
-                << ", T=" << res.elapsed
-                << ", TIT=" << res.elapsed/j
-                << ", IT=" << res.iterations
-                << std::endl;
-    }
-
     static void
     update(X &x, int k,
       std::vector< std::vector<field_type> > & h,

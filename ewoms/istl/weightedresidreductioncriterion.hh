@@ -60,17 +60,21 @@ public:
   { }
 
   WeightedResidReductionCriterion(const CollectiveCommunication &comm,
-                                  const Vector &weights,
-                                  Scalar reduction,
-                                  Scalar absTolerance = 0.0)
+                                  const Vector &fixPointWeights,
+                                  const Vector &residWeights,
+                                  Scalar fixPointTolerance,
+                                  Scalar residTolerance,
+                                  Scalar absResidTolerance = 0.0)
     : comm_(comm)
-    , weightVec_(weights)
-    , tolerance_(reduction)
-    , absTolerance_(absTolerance)
+    , fixPointWeightVec_(fixPointWeights)
+    , residWeightVec_(residWeights)
+    , fixPointTolerance_(fixPointTolerance)
+    , residTolerance_(residTolerance)
+    , absResidTolerance_(absResidTolerance)
   { }
 
   /*!
-   * \brief Sets the relative weight of each equation.
+   * \brief Sets the relative weight of each row of the residual.
    *
    * For the WeightedResidReductionCriterion, the error of the solution is defined
    * as
@@ -82,58 +86,113 @@ public:
    *
    * This method is not part of the generic ConvergenceCriteria interface.
    *
-   * \param weightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
+   * \param residWeightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
    *                  with the relative weights of the linear equations
    */
-  void setWeight(const Vector &weightVec)
+  void setResidualWeight(const Vector &residWeightVec)
   {
-    weightVec_ = weightVec;
+    residWeightVec_ = residWeightVec;
   }
 
   /*!
-   * \brief Return the relative weight of a primary variable
+   * \brief Sets the relative weight of each row of the solution.
    *
-   * For the FixPointCriterion, the error of the solution is defined
-   * as
-   * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
-   *
-   * where \f$\delta = x^k - x^{k + 1} \f$ is the difference between
-   * two consequtive iterative solution vectors \f$x^k\f$ and \f$x^{k + 1}\f$
-   * and \f$w_i\f$ is the weight of the \f$i\f$-th degree of freedom.
-   *
-   * This method is specific to the FixPointCriterion.
+   * \param residWeightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
+   *                  with the relative weights of the linear equations
+   */
+  void setFixPointWeight(const Vector &fixPointWeightVec)
+  {
+    fixPointWeightVec_ = fixPointWeightVec;
+  }
+
+  /*!
+   * \brief Return the relative weight of a row of the residual.
    *
    * \param outerIdx The index of the outer vector (i.e. Dune::BlockVector)
    * \param innerIdx The index of the inner vector (i.e. Dune::FieldVector)
    */
-  Scalar weight(int outerIdx, int innerIdx) const
+  Scalar residualWeight(int outerIdx, int innerIdx) const
   {
-    return (weightVec_.size() == 0)?1.0:weightVec_[outerIdx][innerIdx];
+    return (residWeightVec_.size() == 0)?1.0:residWeightVec_[outerIdx][innerIdx];
   }
 
   /*!
-   * \copydoc ConvergenceCriterion::setTolerance(Scalar)
+   * \brief Return the relative weight of a row of the solution vector.
+   *
+   * \param outerIdx The index of the outer vector (i.e. Dune::BlockVector)
+   * \param innerIdx The index of the inner vector (i.e. Dune::FieldVector)
    */
-  void setTolerance(Scalar tol)
+  Scalar fixPointWeight(int outerIdx, int innerIdx) const
   {
-    tolerance_ = tol;
+    return (fixPointWeightVec_.size() == 0)?1.0:fixPointWeightVec_[outerIdx][innerIdx];
   }
 
   /*!
-   * \brief Returns true if and only if the convergence criterion is
-   *        met.
+   * \brief Sets the residual reduction tolerance.
    */
-  Scalar tolerance() const
+  void setResidReductionTolerance(Scalar tol)
   {
-    return tolerance_;
+    residTolerance_ = tol;
   }
 
   /*!
-   * \copydoc ConvergenceCriterion::accuracy()
+   * \brief Returns the tolerance of the residual reduction of the solution.
    */
-  Scalar accuracy() const
+  Scalar residReductionTolerance() const
   {
-    return error_/initialError_;
+    return residTolerance_;
+  }
+
+  /*!
+   * \brief Sets the maximum absolute tolerated residual.
+   */
+  void setResidTolerance(Scalar tol)
+  {
+    absResidTolerance_ = tol;
+  }
+
+  /*!
+   * \brief Returns the maximum absolute tolerated residual.
+   */
+  Scalar absResidTolerance() const
+  {
+    return absResidTolerance_;
+  }
+
+  /*!
+   * \brief Returns the reduction of the weighted maximum of the
+   *        residual compared to the initial solution.
+   */
+  Scalar residAccuracy() const
+  {
+    return residError_/initialResidError_;
+  }
+
+  /*!
+   * \brief Sets the fix-point tolerance.
+   */
+  void setFixPointTolerance(Scalar tol)
+  {
+    fixPointTolerance_ = tol;
+  }
+
+  /*!
+   * \brief Returns the maximum tolerated difference between two
+   *        iterations to be met before a solution is considered to be
+   *        converged.
+   */
+  Scalar fixPointTolerance() const
+  {
+    return fixPointTolerance_;
+  }
+
+  /*!
+   * \brief Returns the weighted maximum of the difference
+   *        between the last two iterative solutions.
+   */
+  Scalar fixPointAccuracy() const
+  {
+    return fixPointError_;
   }
 
   /*!
@@ -142,13 +201,17 @@ public:
   void setInitial(const Vector &curSol,
                   const Vector &curResid)
   {
-    lastError_ = 1e100;
-    updateError_(curSol, curResid);
+    lastResidError_ = 1e100;
+
+    lastSolVec_ = curSol;
+    updateErrors_(curSol, curResid);
+    // the fix-point error is not applicable for the initial solution!
+    fixPointError_ = 1e100;
 
     // make sure that we don't allow an initial error of 0 to avoid
     // divisions by zero
-    error_ = std::max(error_, 1e-20);
-    initialError_ = error_;
+    residError_ = std::max(residError_, 1e-20);
+    initialResidError_ = residError_;
   }
 
   /*!
@@ -157,8 +220,8 @@ public:
   void update(const Vector &curSol,
               const Vector &curResid)
   {
-    lastError_ = error_;
-    updateError_(curSol, curResid);
+    lastResidError_ = residError_;
+    updateErrors_(curSol, curResid);
   }
 
   /*!
@@ -166,13 +229,11 @@ public:
    */
   bool converged() const
   {
-    // we're converged if difference between two iterations is either
-    // smaller than the numerical precision, or if the solution is
-    // better than the tolerance. TODO: are we actually converged in
-    // the first case?
-    return
-      accuracy() <= tolerance() ||
-      error_ <= absTolerance_;
+    // we're converged if the solution is better than the tolerance
+    // fix-point and residual tolerance.
+    return fixPointAccuracy() < fixPointTolerance() &&
+           ( residAccuracy() <= residReductionTolerance() ||
+             residError_ <= absResidTolerance_);
   }
 
   /*!
@@ -181,13 +242,15 @@ public:
   void printInitial(std::ostream &os=std::cout) const
   {
     os << std::setw(20) << " Iter ";
-    os << std::setw(20) << " Accuracy ";
+    os << std::setw(20) << " Delta ";
+    os << std::setw(20) << " ResidRed ";
     os << std::setw(20) << " Defect ";
     os << std::setw(20) << " Rate " << std::endl;
 
     os << std::setw(20) << 0 << " ";
-    os << std::setw(20) << accuracy() << " ";
-    os << std::setw(20) << error_ << " ";
+    os << std::setw(20) << 1e100 << " ";
+    os << std::setw(20) << residAccuracy() << " ";
+    os << std::setw(20) << residError_ << " ";
     os << std::setw(20) << 0 << " ";
     os << std::endl;
   }
@@ -198,35 +261,45 @@ public:
   void print(Scalar iter, std::ostream &os=std::cout) const
   {
     os << std::setw(20) << iter << " ";
-    os << std::setw(20) << accuracy() << " ";
-    os << std::setw(20) << error_ << " ";
-    os << std::setw(20) << lastError_/std::max(error_, 1e-80) << " ";
+    os << std::setw(20) << fixPointAccuracy() << " ";
+    os << std::setw(20) << residAccuracy() << " ";
+    os << std::setw(20) << residError_ << " ";
+    os << std::setw(20) << lastResidError_/std::max(residError_, 1e-80) << " ";
     os << std::endl;
   };
 
 private:
   // update the weighted absolute residual
-  void updateError_(const Vector &curSol, const Vector &curResid)
+  void updateErrors_(const Vector &curSol, const Vector &curResid)
   {
-    error_ = 0.0;
+    residError_ = 0.0;
+    fixPointError_ = 0.0;
     for (size_t i = 0; i < curResid.size(); ++i) {
       for (size_t j = 0; j < BlockType::dimension; ++j) {
-        error_ = std::max<Scalar>(error_, weight(i, j)*std::abs(curResid[i][j]));
+        residError_ = std::max<Scalar>(residError_, residualWeight(i, j)*std::abs(curResid[i][j]));
+        fixPointError_ = std::max<Scalar>(fixPointError_, fixPointWeight(i, j)*std::abs(curSol[i][j] - lastSolVec_[i][j]));
       }
     }
+    lastSolVec_ = curSol;
 
-    error_ = comm_.max(error_);
+    residError_ = comm_.max(residError_);
+    fixPointError_ = comm_.max(fixPointError_);
   }
 
   const CollectiveCommunication &comm_;
 
-  Vector weightVec_; // the weights of the components of the residual
+  Vector fixPointWeightVec_; // the weights of the solution vector
+  Vector residWeightVec_; // the weights of the components of the residual
+  Vector lastSolVec_; // solution vector of the last iteration
 
-  Scalar error_; // the maximum of the absolute weighted difference of the last two iterations
-  Scalar lastError_; // the maximum of the absolute weighted difference of the last two iterations
-  Scalar initialError_; // the maximum of the absolute weighted difference of the last two iterations
-  Scalar tolerance_; // the maximum allowed relative tolerance for the solution to be considered converged
-  Scalar absTolerance_; // the maximum allowed absolute tolerance for the solution to be considered converged
+  Scalar fixPointError_; // the maximum of the weighted difference between the last two iterations
+  Scalar fixPointTolerance_; // the maximum allowed relative tolerance for difference of the solution of two iterations
+
+  Scalar residError_; // the maximum of the absolute weighted residual of the last iteration
+  Scalar lastResidError_; // the maximum of the absolute weighted difference of the last iteration
+  Scalar initialResidError_; // the maximum of the absolute weighted residual of the initial solution
+  Scalar residTolerance_; // the maximum allowed relative tolerance of the residual for the solution to be considered converged
+  Scalar absResidTolerance_; // the maximum allowed absolute tolerance of the residual for the solution to be considered converged
 };
 
 //! \} end documentation
@@ -234,4 +307,3 @@ private:
 } // end namespace Ewoms
 
 #endif
-

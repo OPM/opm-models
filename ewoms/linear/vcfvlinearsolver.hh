@@ -264,29 +264,35 @@ public:
         // run the linear solver and have some fun
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
 
-        // use the fixpoint convergence criterion if possible
-        OverlappingVector weightVec(*overlappingx_);
+        // use the residual reduction convergence criterion
+        OverlappingVector residWeightVec(*overlappingx_), fixPointWeightVec(*overlappingx_);
 
         // set the default weight of the row to 0 (-> do not consider
         // the row when calculating the error)
-        weightVec = 0.0;
+        residWeightVec = 0.0;
+        fixPointWeightVec = 0.0;
+
         // for rows local to the current peer, ping the model for their
         // relative weight
         const auto &foreignOverlap = overlappingMatrix_->overlap().foreignOverlap();
         for (unsigned localIdx = 0; localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
             int nativeIdx = foreignOverlap.localToNative(localIdx);
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                weightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+                residWeightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+                fixPointWeightVec[localIdx][eqIdx] = this->problem_.model().primaryVarWeight(nativeIdx, eqIdx);
             }
         }
 
-        // create a fixpoint convergence criterion
+        // create a residual reduction convergence criterion
         Scalar linearSolverRelTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
         Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
+        Scalar linearSolverFixPointTolerance = GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance)/10;
         auto *convCrit = new Ewoms::WeightedResidReductionCriterion<OverlappingVector,
                                                                     typename GridView::CollectiveCommunication>
             (problem_.gridView().comm(),
-             weightVec,
+             fixPointWeightVec,
+             residWeightVec,
+             linearSolverFixPointTolerance,
              linearSolverRelTolerance,
              linearSolverAbsTolerance);
 
@@ -295,18 +301,23 @@ public:
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         Ewoms::InverseOperatorResult result;
+        int solverSucceeded = 1;
         try {
             solver.apply(*overlappingx_, *overlappingb_, result);
+            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
         catch (const Dune::Exception &e) {
-            DUNE_THROW(Ewoms::NumericalProblem,
-                       e.what());
+            solverSucceeded = 0;
+            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
 
         // free the unneeded memory of the sequential preconditioner
         // and the linear solver
         solverWrapper_.cleanup();
         precWrapper_.cleanup();
+
+        if (!solverSucceeded)
+            return false;
 
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);

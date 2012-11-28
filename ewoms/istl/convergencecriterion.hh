@@ -55,29 +55,6 @@ public:
   {}
 
   /*!
-   * \brief Set the maximum acceptable accuracy the solution for
-   *        which the iterative solution ought to be considered to be
-   *        converged.
-   *
-   * \param tol The maximum acceptable error for convergence of the
-   *            iterative solution
-   */
-  virtual void setTolerance(Scalar tol) = 0;
-
-  /*!
-   * \brief Return the maximum acceptable accuracy the solution for
-   *        which the iterative solution ought to be considered to be
-   *        converged.
-   */
-  virtual Scalar tolerance() const = 0;
-
-  /*!
-   * \brief Return the accuracy of the solution given as an argument
-   *        to the last call of the update() method.
-   */
-  virtual Scalar accuracy() const = 0;
-
-  /*!
    * \brief Set the initial solution of the linear system of equations.
    *
    * This version of the method does NOT take the two-norm of the
@@ -127,15 +104,7 @@ public:
    * \param os The output stream to which the message gets written.
    */
   virtual void printInitial(std::ostream &os=std::cout) const
-  {
-    os << std::setw(20) << "Solver tolerance: " << tolerance() << "\n";
-    os << std::setw(20) << " Iter ";
-    os << std::setw(20) << " Accuracy " << std::endl;
-
-    os << std::setw(20) << 0 << " ";
-    os << std::setw(20) << accuracy() << " ";
-    os << std::endl;
-  };
+  { };
 
   /*!
    * \brief Prints the information about the convergence behaviour for
@@ -146,11 +115,7 @@ public:
    * \param os The output stream to which the message gets written.
    */
   virtual void print(Scalar iter, std::ostream &os=std::cout) const
-  {
-    os << std::setw(20) << iter << " ";
-    os << std::setw(20) << accuracy() << " ";
-    os << std::endl;
-  };
+  { };
 };
 
 //! \} end documentation
