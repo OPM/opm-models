@@ -48,6 +48,7 @@ AC_CONFIG_FILES([Makefile
     ewoms/decoupled/constraintsolvers/Makefile 
     ewoms/decoupled/spatialparams/Makefile 
     ewoms/disc/Makefile 
+    ewoms/disc/vcfv/Makefile 
     ewoms/io/Makefile
     ewoms/istl/Makefile
     ewoms/linear/Makefile

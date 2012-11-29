@@ -256,11 +256,6 @@ public:
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
 
-        // free the unneeded memory of the sequential preconditioner
-        // and the linear solver
-        solverWrapper_.cleanup();
-        precWrapper_.cleanup();
-
         if (!solverSucceeded)
             return false;
 
