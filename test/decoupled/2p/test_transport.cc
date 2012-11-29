@@ -27,12 +27,6 @@
 #include "test_transportproblem.hh"
 #include <ewoms/common/start.hh>
 
-
-#include <dune/grid/common/gridinfo.hh>
-#include <dune/common/exceptions.hh>
-#include <dune/common/mpihelper.hh>
-#include <iostream>
-
 ////////////////////////
 // the main function
 ////////////////////////
@@ -41,4 +35,3 @@ int main(int argc, char** argv)
     typedef TTAG(TransportTestProblem) ProblemTypeTag;
     return Ewoms::start<ProblemTypeTag>(argc, argv);
 }
-
