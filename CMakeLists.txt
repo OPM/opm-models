@@ -276,6 +276,10 @@ endforeach(file)
 # set up CTest 
 enable_testing()
 include(CTest)
+
+# we add the water-air test first because it takes longest by far
+add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
+
 add_test(test_propertysystem bin/runtest.sh --plain test_propertysystem)
 add_test(test_spline bin/runtest.sh --plain test_spline)
 add_test(test_fluidsystems bin/runtest.sh --plain test_fluidsystems)
@@ -309,7 +313,6 @@ add_test(powerinjection_darcy bin/runtest.sh --simulation powerinjection_darcy)
 add_test(powerinjection_forchheimer bin/runtest.sh --simulation powerinjection_forchheimer)
 add_test(reservoir_blackoil bin/runtest.sh --simulation reservoir_blackoil)
 add_test(test_quadrature bin/runtest.sh --plain test_quadrature)
-add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
 
 add_test(test_diffusion bin/runtest.sh --simulation-diffusion test_diffusion 3)
 add_test(test_1p bin/runtest.sh --plain test_1p)
