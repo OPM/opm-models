@@ -33,7 +33,7 @@ NEW_PROP_TAG(NewtonMethod);
 
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-};
+}
 
 /*!
  * \ingroup Newton
