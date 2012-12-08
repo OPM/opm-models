@@ -33,6 +33,7 @@ test/implicit/diffusion_ncp \
 test/implicit/diffusion_pvs \
 test/implicit/diffusion_flash \
 test/implicit/finger_immiscible \
+test/implicit/fracture_discretefracture \
 test/implicit/groundwater_immiscible \
 test/implicit/infiltration_pvs \
 test/implicit/lens_immiscible \
@@ -91,6 +92,7 @@ test_implicit_diffusion_flash_SOURCES=test/implicit/diffusion_flash.cc
 test_implicit_diffusion_ncp_SOURCES=test/implicit/diffusion_ncp.cc
 test_implicit_diffusion_pvs_SOURCES=test/implicit/diffusion_pvs.cc
 test_implicit_finger_immiscible_SOURCES=test/implicit/finger_immiscible.cc
+test_implicit_fracture_discretefracture_SOURCES=test/implicit/fracture_discretefracture.cc
 test_implicit_groundwater_immiscible_SOURCES=test/implicit/groundwater_immiscible.cc 
 test_implicit_infiltration_pvs_SOURCES=test/implicit/infiltration_pvs.cc
 test_implicit_lens_immiscible_SOURCES=test/implicit/lens_immiscible.cc
@@ -163,6 +165,8 @@ diffusion_ncp: test/implicit/diffusion_ncp
 diffusion_pvs: test/implicit/diffusion_pvs
 
 finger_immiscible: test/implicit/finger_immiscible
+
+fracture_discretefracture: test/implicit/fracture_discretefracture
 
 groundwater_immiscible: test/implicit/groundwater_immiscible 
 

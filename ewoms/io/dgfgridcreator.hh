@@ -31,10 +31,9 @@
 
 #include <string>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Ewoms {
+
+namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);

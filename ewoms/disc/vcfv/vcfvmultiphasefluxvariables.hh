@@ -125,9 +125,9 @@ public:
             }
         }
         else {
-            // we are *not* the evaluation point. in this take just
-            // take the up-/downstream indices from the evaluation
-            // point.
+            // we are *not* the evaluation point. in this case, we
+            // just take the up-/downstream indices from the
+            // evaluation point.
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 upstreamScvIdx_[phaseIdx] = evalFluxVars.upstreamIndex(phaseIdx);
                 downstreamScvIdx_[phaseIdx] = evalFluxVars.downstreamIndex(phaseIdx);

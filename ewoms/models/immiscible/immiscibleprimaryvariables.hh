@@ -51,6 +51,7 @@ class ImmisciblePrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -160,12 +161,16 @@ public:
     {
         // assign the phase temperatures. this is out-sourced to
         // the energy module
-        EnergyModule::setPriVarTemperatures(*this, fluidState);
+        EnergyModule::setPriVarTemperatures(asImp_(), fluidState);
 
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++ phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
+
+private:
+    Implementation &asImp_()
+    { return *static_cast<Implementation*>(this); }
 };
 
 } // end namepace

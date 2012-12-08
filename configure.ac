@@ -15,6 +15,7 @@ AC_CONFIG_FILES([Makefile
     ewoms/Makefile 
     ewoms/models/Makefile 
     ewoms/models/blackoil/Makefile 
+    ewoms/models/discretefracture/Makefile 
     ewoms/models/flash/Makefile 
     ewoms/models/immiscible/Makefile 
     ewoms/models/modules/Makefile 

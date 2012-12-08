@@ -1,4 +1,4 @@
-SUBDIRS = blackoil flash immiscible ncp pvs stokes richards modules
+SUBDIRS = blackoil discretefracture flash immiscible ncp pvs stokes richards modules
 
 boxmodelsdir = $(includedir)/ewoms/models
 

@@ -77,13 +77,14 @@ public:
         // retrieve the volume variables for the SCV at the specified
         // point in time
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &fs = volVars.fluidState();
 
-        storage[conti0EqIdx + phaseIdx] +=
+        storage[conti0EqIdx + phaseIdx] =
             volVars.porosity()
-            * volVars.fluidState().saturation(phaseIdx)
-            * volVars.fluidState().density(phaseIdx);
+            * fs.saturation(phaseIdx)
+            * fs.density(phaseIdx);
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
+        EnergyModule::addPhaseStorage(storage, volVars, phaseIdx);
     }
 
     /*!
@@ -96,7 +97,7 @@ public:
     {
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+            asImp_().addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
 
         EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
     }
@@ -110,8 +111,8 @@ public:
                      int timeIdx) const
     {
         flux = 0;
-        addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        asImp_().addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -188,6 +189,10 @@ public:
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
+
+private:
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
 };
 
 }

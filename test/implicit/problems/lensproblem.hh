@@ -168,10 +168,10 @@ SET_SCALAR_PROP(LensBaseProblem, InitialTimeStepSize, 250);
  * boundaries; DNAPL is injected at the top boundary from 3m to 4m at
  * a rate of 0.04 kg/(s m^2).
  *
- * The free-floq boundaries on the left boundary is the hydrostatic
- * pressure scaled by a factor of 1.125, while on the right side it is
- * just the hydrostatic pressure. The DNAPL saturation on both sides
- * is zero.
+ * At the boundary on the left, a free-flow condition using the
+ * hydrostatic pressure scaled by a factor of 1.125 is imposed, while
+ * on the right, it is just the hydrostatic pressure. The DNAPL
+ * saturation on both sides is zero.
  */
 template <class TypeTag>
 class LensProblem

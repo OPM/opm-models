@@ -143,11 +143,18 @@ public:
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
+    template <class Scv>
+    static void addFracturePhaseStorage(EqVector &storage, const VolumeVariables &volVars, const Scv &scv, int phaseIdx)
+    { }
+
+    /*!
+     * \brief Add the energy storage term for a fluid phase to an equation vector
+     */
     static void addSolidHeatStorage(EqVector &storage, const VolumeVariables &volVars)
     { }
 
     /*!
-     * \brief Evaluates the advective energy fluxver a face of a
+     * \brief Evaluates the advective energy fluxes over a face of a
      *        subcontrol volume and adds the result in the flux vector.
      *
      * This method is called by compute flux (base class)
@@ -157,6 +164,18 @@ public:
                                  const Context &context,
                                  int spaceIdx,
                                  int timeIdx)
+    { }
+
+    /*!
+     * \brief Evaluates the advective energy fluxes over a fracture
+     *        which should be attributed to a face of a subcontrol
+     *        volume and adds the result in the flux vector.
+     */
+    template <class Context>
+    static void handleFractureFlux(RateVector &flux,
+                                   const Context &context,
+                                   int spaceIdx,
+                                   int timeIdx)
     { }
 
     /*!
@@ -263,7 +282,7 @@ public:
     { rateVec[energyEqIdx] += rate; }
 
     /*!
-     * \brief Add the rate of the conductive heat flux to a rate vector.
+     * \brief Returns the rate of the conductive heat flux for a given flux integration point.
      */
     static Scalar heatConductionRate(const FluxVariables &fluxVars)
     {
@@ -318,6 +337,21 @@ public:
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation vector
      */
+    template <class Scv>
+    static void addFracturePhaseStorage(EqVector &storage, const VolumeVariables &volVars, const Scv &scv, int phaseIdx)
+    {
+        const auto &fs = volVars.fractureFluidState();
+        storage[energyEqIdx] +=
+            fs.density(phaseIdx)
+            * fs.internalEnergy(phaseIdx)
+            * fs.saturation(phaseIdx)
+            * volVars.fracturePorosity()
+            * volVars.fractureVolume()/scv.volume;
+    }
+
+    /*!
+     * \brief Add the energy storage term for a fluid phase to an equation vector
+     */
     static void addSolidHeatStorage(EqVector &storage, const VolumeVariables &volVars)
     {
         storage[energyEqIdx] +=
@@ -326,8 +360,9 @@ public:
     }
 
     /*!
-     * \brief Evaluates the advective energy fluxver a face of a
-     *        subcontrol volume and adds the result in the flux vector.
+     * \brief Evaluates the advective energy fluxes over a face of a
+     *        subcontrol volume and adds the result in the flux
+     *        vector.
      *
      * This method is called by compute flux (base class)
      */
@@ -355,6 +390,43 @@ public:
         }
     }
 
+
+    /*!
+     * \brief Evaluates the advective energy fluxes over a fracture
+     *        which should be attributed to a face of a subcontrol
+     *        volume and adds the result in the flux vector.
+     */
+    template <class Context>
+    static void handleFractureFlux(RateVector &flux,
+                                   const Context &context,
+                                   int spaceIdx,
+                                   int timeIdx)
+    {
+        const auto &scvf = context.fvElemGeom(timeIdx).subContVolFace[spaceIdx];
+        const auto &fluxVars = context.fluxVars(spaceIdx, timeIdx);
+        const auto &evalPointFluxVars = context.evalPointFluxVars(spaceIdx, timeIdx);
+
+        // reduce the heat flux in the matrix by the half the width
+        // occupied by the fracture
+        flux[energyEqIdx] *=
+            1 - fluxVars.fractureWidth()/(2*scvf.normal.two_norm());
+
+
+        // advective heat flux in all phases
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!context.model().phaseIsConsidered(phaseIdx))
+                continue;
+
+            // vertex data of the upstream and the downstream vertices
+            const VolumeVariables &up = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
+
+            flux[energyEqIdx] +=
+                fluxVars.fractureVolumeFlux(phaseIdx)
+                * up.fluidState().enthalpy(phaseIdx)
+                * up.fluidState().density(phaseIdx);
+        }
+    }
+
     /*!
      * \brief Adds the diffusive heat flux to the flux vector over
      *        the face of a sub-control volume.
@@ -371,7 +443,7 @@ public:
 
         // diffusive heat flux
         flux[energyEqIdx] +=
-            -fluxVars.temperatureGradNormal()
+            - fluxVars.temperatureGradNormal()
             * fluxVars.heatConductivity();
     }
 };

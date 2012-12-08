@@ -40,7 +40,7 @@ namespace Ewoms {
  * \ingroup VcfvVolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the two-phase model.
+ *        finite volume for the immiscible multi-phase model.
  */
 template <class TypeTag>
 class ImmiscibleVolumeVariables
@@ -175,7 +175,7 @@ public:
     Scalar porosity() const
     { return porosity_; }
 
-private:
+protected:
     FluidState fluidState_;
     Scalar porosity_;
     DimMatrix intrinsicPerm_;

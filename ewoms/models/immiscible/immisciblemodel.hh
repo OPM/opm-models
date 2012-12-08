@@ -38,7 +38,7 @@ namespace Ewoms {
  * \brief A fully-implicit multi-phase flow model which assumes
  *        immiscibility of the phases.
  *
- * This model multi-phase flow of \f$M > 0\f$ immiscible
+ * This model implements multi-phase flow of \f$M > 0\f$ immiscible
  * fluids \f$\alpha\f$. By default, the standard multi-phase Darcy
  * approach is used to determine the velocity, i.e.
  * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
@@ -72,6 +72,7 @@ template<class TypeTag >
 class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -203,7 +204,7 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(asImp_(), globalVertexIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -225,7 +226,7 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
-        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        Scalar tmp = EnergyModule::eqWeight(asImp_(), globalVertexIdx, eqIdx);
         if (tmp > 0)
             // energy related equation
             return tmp;
@@ -251,6 +252,10 @@ protected:
         if (enableEnergy)
             this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
+
+private:
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
 };
 }
 

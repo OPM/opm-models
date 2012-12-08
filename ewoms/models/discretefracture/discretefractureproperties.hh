@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010-2012 by Andreas Lauser                               *
- *   Copyright (C) 2010-2012 by Bernd Flemisch                               *
+ *   Copyright (C) 2009-2012 by Andreas Lauser                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -19,24 +18,33 @@
  *****************************************************************************/
 /*!
  * \file
+ * \ingroup DiscreteFractureVcfvModel
  *
- * \brief Two-phase test for the immiscible model which uses the
- *        vertex-centered finite volume discretization
+ * \brief Defines the properties required for the immiscible
+ *        multi-phase model which considers discrete fractures.
  */
-#include "config.h"
+#ifndef EWOMS_DISCRETE_FRACTIRE_PROPERTIES_HH
+#define EWOMS_DISCRETE_FRACTIRE_PROPERTIES_HH
 
-#include "problems/lensproblem.hh"
+#include <ewoms/models/immiscible/immiscibleproperties.hh>
 
-#include <ewoms/models/immiscible/immisciblemodel.hh>
-#include <ewoms/common/start.hh>
+#include <ewoms/vtk/vcfvvtkdiscretefracturemodule.hh>
 
 namespace Ewoms {
-namespace Properties {
-NEW_TYPE_TAG(LensProblem, INHERITS_FROM(VcfvImmiscibleTwoPhase, LensBaseProblem));
-}}
 
-int main(int argc, char** argv)
-{
-    typedef TTAG(LensProblem) ProblemTypeTag;
-    return Ewoms::start<ProblemTypeTag>(argc, argv);
-}
+////////////////////////////////
+// properties
+////////////////////////////////
+namespace Properties {
+
+//////////////////////////////////////////////////////////////////
+// Type tags
+//////////////////////////////////////////////////////////////////
+
+//! The generic type tag for problems using the immiscible multi-phase model
+NEW_TYPE_TAG(VcfvDiscreteFracture, INHERITS_FROM(VcfvImmiscibleTwoPhase, VtkDiscreteFracture));
+
+} // namespace Properties
+} // namespace Ewoms
+
+#endif
