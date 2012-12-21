@@ -29,7 +29,7 @@
 #include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
 #include <ewoms/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 

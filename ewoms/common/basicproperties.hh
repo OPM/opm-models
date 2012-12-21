@@ -29,7 +29,7 @@
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/dgfgridcreator.hh>
+#include <ewoms/io/dgfgridcreator.hh>
 
 namespace Ewoms
 {

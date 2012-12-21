@@ -31,7 +31,7 @@
 #include <ewoms/decoupled/2p2c/fvtransport2p2cmultiphysics.hh>
 #include <ewoms/decoupled/2p2c/cellData2p2cmultiphysics.hh>
 #include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>

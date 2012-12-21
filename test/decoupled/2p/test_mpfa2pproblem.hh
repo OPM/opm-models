@@ -28,7 +28,7 @@
 
 #include <dune/grid/alugrid/2d/alugrid.hh>
 
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <ewoms/material/fluidsystems/liquidphase.hh>
 #include <ewoms/material/components/simpleh2o.hh>

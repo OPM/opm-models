@@ -26,7 +26,7 @@
 #include <dune/grid/alugrid.hh>
 // #include <dune/grid/uggrid.hh>
 
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <ewoms/common/math.hh>
 #include <ewoms/decoupled/2p2c/2p2cadaptiveproperties.hh>

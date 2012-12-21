@@ -33,7 +33,7 @@
 #include <ewoms/material/components/simpleh2o.hh>
 #include <ewoms/material/components/air.hh>
 #include <ewoms/models/immiscible/immisciblemodel.hh>
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
 

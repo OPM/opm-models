@@ -26,7 +26,7 @@
 
 #include "test_1pspatialparams.hh"
 
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 #include <ewoms/material/fluidsystems/liquidphase.hh>
 #include <ewoms/material/components/unit.hh>
 #include <ewoms/decoupled/1p/diffusion/fv/fvpressureproperties1p.hh>

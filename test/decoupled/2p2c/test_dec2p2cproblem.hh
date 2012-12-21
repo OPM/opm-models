@@ -31,7 +31,7 @@
 #include <ewoms/decoupled/2p2c/fvtransport2p2c.hh>
 #include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
 //#include <ewoms/linear/impetbicgstabilu0solver.hh>
-#include <ewoms/common/cubegridcreator.hh>
+#include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/sgrid.hh>
