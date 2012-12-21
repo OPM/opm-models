@@ -55,7 +55,7 @@ doc/doxygen/html
 *.vtu
 *.pvtu
 *.vtp
-*.drs
+*.ers
 
 # exclude test binaries
 test_*
