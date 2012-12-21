@@ -30,7 +30,7 @@
 #include <dune/grid/common/gridinfo.hh>
 
 #include "test_diffusionproblem.hh"
-#include "benchmarkresult.hh"
+#include "resultevaluation.hh"
 
 ////////////////////////
 // the main function
