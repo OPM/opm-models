@@ -228,8 +228,6 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
 template <class TypeTag>
 void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &keyList)
 {
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
-
     auto keyIt = keyList.begin();
     const auto &keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {

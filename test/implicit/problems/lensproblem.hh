@@ -106,7 +106,7 @@ public:
     typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 
-// Use the algebraic multi-grid solver for this problem
+// Use the algebraic multi-grid linear solver for this problem
 SET_TYPE_PROP(LensBaseProblem, LinearSolver, Ewoms::Linear::VcfvParallelAmgSolver<TypeTag>);
 
 // Enable partial reassembly of the jacobian matrix?
