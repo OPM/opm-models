@@ -40,8 +40,10 @@
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
-#include <iostream>
+#include <vector>
+#include <string>
 
 namespace Ewoms {
 

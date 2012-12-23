@@ -30,8 +30,6 @@
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
 
-#include <dune/common/fvector.hh>
-
 namespace Ewoms {
 
 /*!

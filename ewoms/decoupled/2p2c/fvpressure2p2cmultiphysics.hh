@@ -24,6 +24,9 @@
 #include <ewoms/decoupled/2p2c/fvpressure2p2c.hh>
 #include <ewoms/decoupled/2p2c/pseudo1p2cfluidstate.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /*!
  * \file
  * \copydoc Ewoms::FVPressure2P2CMultiPhysics

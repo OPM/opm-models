@@ -27,8 +27,6 @@
 
 #include "evalcflflux.hh"
 
-#include <dune/common/fvector.hh>
-
 namespace Ewoms
 {
 /*!\ingroup IMPES

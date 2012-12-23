@@ -27,6 +27,8 @@
 
 #include <dune/common/mpihelper.hh>
 
+#include <iostream>
+
 namespace Ewoms {
 /*! \addtogroup ISTL_Solvers
  * \{

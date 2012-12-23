@@ -29,8 +29,6 @@
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/common/valgrind.hh>
 
-#include <dune/common/fvector.hh>
-
 namespace Ewoms {
 
 /*!

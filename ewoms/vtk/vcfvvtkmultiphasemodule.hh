@@ -32,10 +32,8 @@
 
 #include <cstdio>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Ewoms {
+namespace Properties {
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkMultiPhase);
 

@@ -33,7 +33,8 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <sstream>
+#include <string>
 
 namespace Ewoms {
 

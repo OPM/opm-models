@@ -37,11 +37,16 @@
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/istl/solvers.hh>
+
+#include <dune/grid/io/file/vtk/vtkwriter.hh>
+
 #include <dune/istl/preconditioners.hh>
 
 #include <dune/common/shared_ptr.hh>
+#include <dune/common/fvector.hh>
 
-#include <dune/grid/io/file/vtk/vtkwriter.hh>
+#include <sstream>
+#include <iostream>
 
 namespace Ewoms {
 namespace Properties {

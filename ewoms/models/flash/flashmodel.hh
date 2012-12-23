@@ -30,10 +30,8 @@
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/disc/vcfv/vcfvmodel.hh>
 
-#include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 
 namespace Ewoms {
 

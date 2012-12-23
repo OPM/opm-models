@@ -34,6 +34,7 @@
 #include <dune/istl/istlexception.hh>
 
 #include <iostream>
+#include <sstream>
 
 namespace Ewoms {
 // forward declaration of classes

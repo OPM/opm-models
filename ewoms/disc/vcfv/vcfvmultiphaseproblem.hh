@@ -29,6 +29,9 @@
 #include <ewoms/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <ewoms/common/math.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);

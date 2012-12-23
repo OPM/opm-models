@@ -32,7 +32,6 @@
 #include <dune/common/fvector.hh>
 
 #include <memory>
-#include <vector>
 #include <map>
 #include <iostream>
 

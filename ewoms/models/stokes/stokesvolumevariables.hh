@@ -34,6 +34,8 @@
 
 #include <dune/common/fvector.hh>
 
+#include <vector>
+
 namespace Ewoms {
 
 /*!

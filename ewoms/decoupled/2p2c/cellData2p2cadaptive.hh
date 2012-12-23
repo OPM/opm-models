@@ -22,6 +22,9 @@
 
 #include <ewoms/decoupled/2p2c/cellData2p2c.hh>
 #include <ewoms/decoupled/2p2c/cellData2p2cmultiphysics.hh>
+
+#include <dune/common/fvector.hh>
+
 /*!
  * \file
  * \copydoc Ewoms::CellData2P2CAdaptive

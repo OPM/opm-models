@@ -28,6 +28,9 @@
 
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 #include <cmath>
 
 namespace Ewoms {

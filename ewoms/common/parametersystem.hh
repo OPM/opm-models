@@ -34,10 +34,11 @@
 #include <dune/common/parametertree.hh>
 #include <dune/common/classname.hh>
 
-#include <iostream>
+#include <map>
 #include <list>
 #include <sstream>
 #include <string>
+#include <iostream>
 #include <unordered_map>
 
 /*!

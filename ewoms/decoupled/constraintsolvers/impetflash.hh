@@ -24,7 +24,6 @@
 #define EWOMS_IMPET_FLASH_HH
 
 #include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
 
 #include <ewoms/common/exceptions.hh>
 #include <ewoms/common/valgrind.hh>

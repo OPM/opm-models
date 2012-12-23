@@ -25,6 +25,7 @@
 #define EWOMS_VCFV_DIFFUSION_MODULE_HH
 
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
+#include <dune/common/fvector.hh>
 
 namespace Ewoms {
 

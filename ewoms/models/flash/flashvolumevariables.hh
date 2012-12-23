@@ -33,6 +33,7 @@
 #include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
 

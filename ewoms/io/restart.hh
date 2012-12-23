@@ -25,7 +25,6 @@
 
 #include <dune/common/exceptions.hh>
 
-#include <list>
 #include <string>
 #include <fstream>
 #include <iostream>

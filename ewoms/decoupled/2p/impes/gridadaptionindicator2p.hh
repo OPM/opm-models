@@ -23,7 +23,6 @@
 #include <ewoms/decoupled/common/impetproperties.hh>
 #include <ewoms/decoupled/2p/2pproperties.hh>
 
-#include <dune/common/fvector.hh>
 
 /*!
  * \file

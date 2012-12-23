@@ -28,6 +28,8 @@
 #include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Ewoms
 {

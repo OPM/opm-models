@@ -29,8 +29,6 @@
 
 #include <dune/istl/preconditioners.hh>
 
-#include <iostream>
-
 namespace Ewoms {
 namespace Linear {
 

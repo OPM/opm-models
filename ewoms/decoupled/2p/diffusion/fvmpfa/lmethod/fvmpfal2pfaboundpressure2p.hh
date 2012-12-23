@@ -25,6 +25,12 @@
 #include <ewoms/decoupled/2p/diffusion/diffusionproperties2p.hh>
 #include <ewoms/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <vector>
+#include <iostream>
+
 /*!
  * \file
  * \copydoc Ewoms::FVMPFAL2PFABoundPressure2P

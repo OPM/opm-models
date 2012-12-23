@@ -24,6 +24,9 @@
 #include <ewoms/decoupled/2p2c/fvtransport2p2c.hh>
 #include <ewoms/common/math.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 /*!
  * \file
  * \copydoc Ewoms::FVTransport2P2CAdaptive

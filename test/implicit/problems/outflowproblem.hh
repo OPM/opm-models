@@ -28,7 +28,9 @@
 #include <ewoms/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
 

@@ -26,6 +26,11 @@
 
 #include <ewoms/decoupled/common/fv/mpfa/fvmpfaproperties.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <vector>
+
 namespace Ewoms
 {
 

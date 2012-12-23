@@ -28,8 +28,6 @@
 
 #include <ewoms/disc/vcfv/vcfvmodel.hh>
 
-#include <dune/common/fvector.hh>
-
 namespace Ewoms {
 
 /*!

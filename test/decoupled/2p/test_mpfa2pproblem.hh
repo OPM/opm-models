@@ -17,7 +17,6 @@
  *   You should have received a copy of the GNU General Public License       *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
  *****************************************************************************/
-
 /*!
  * \file
  * \copydoc Ewoms::MPFATwoPTestProblem
@@ -42,9 +41,13 @@
 #include <ewoms/decoupled/2p/transport/fv/fvtransportproperties2p.hh>
 #include <ewoms/decoupled/2p/impes/impesproblem2p.hh>
 
-
 #include<ewoms/decoupled/2p/transport/fv/evalcflfluxcoats.hh>
 #include<ewoms/decoupled/2p/impes/gridadaptionindicator2plocal.hh>
+
+#include <dune/common/fvector.hh>
+
+#include <sstream>
+#include <string>
 
 #include "test_mpfa2pspatialparams.hh"
 

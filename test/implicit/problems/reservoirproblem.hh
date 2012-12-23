@@ -29,9 +29,11 @@
 #include <ewoms/models/blackoil/blackoilproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-#include <dune/common/fvector.hh>
 
-#include <iostream>
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <vector>
 #include <string>
 
 namespace Ewoms {

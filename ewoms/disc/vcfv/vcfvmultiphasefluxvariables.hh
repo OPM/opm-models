@@ -29,7 +29,6 @@
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
 
 #include "vcfvproperties.hh"
 

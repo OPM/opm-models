@@ -24,8 +24,6 @@
 #ifndef EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 
-#include <dune/common/fvector.hh>
-
 #include <ewoms/common/valgrind.hh>
 #include <ewoms/material/constraintsolvers/ncpflash.hh>
 

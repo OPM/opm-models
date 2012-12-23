@@ -23,6 +23,11 @@
 // for  parallelization
 #include <ewoms/decoupled/common/variableclassadaptive.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <vector>
+#include <map>
+
 /*!
  * \file
  * \copydoc Ewoms::VariableClass2P2CAdaptive

@@ -30,10 +30,15 @@
 #include <ewoms/material/fluidsystems/liquidphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+
+#include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
 
-namespace Ewoms
-{
+#include <sstream>
+#include <string>
+
+namespace Ewoms {
+
 template <class TypeTag>
 class GroundWaterProblem;
 

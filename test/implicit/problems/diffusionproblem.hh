@@ -32,8 +32,10 @@
 #include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
-#include <iostream>
+#include <sstream>
+#include <string>
 
 namespace Ewoms {
 

@@ -29,12 +29,9 @@
 #include <dune/common/mpihelper.hh>
 
 #include <iostream>
-#include <string>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Ewoms {
+namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Problem);
 }

@@ -37,10 +37,7 @@
 #include <dune/grid/sgrid.hh>
 #include <dune/common/fvector.hh>
 
-#include <iostream>
-
-namespace Ewoms
-{
+namespace Ewoms {
 
 template<class TypeTag>
 class TestProblemOneP;
@@ -48,8 +45,7 @@ class TestProblemOneP;
 //////////
 // Specify the properties
 //////////
-namespace Properties
-{
+namespace Properties {
 NEW_TYPE_TAG(TestProblemOneP, INHERITS_FROM(FVPressureOneP));
 
 NEW_PROP_TAG(Delta);

@@ -36,7 +36,12 @@
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
+
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <sstream>
+#include <string>
 
 namespace Ewoms {
 

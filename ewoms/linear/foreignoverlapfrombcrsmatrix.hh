@@ -34,6 +34,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
+#include <vector>
 
 #if HAVE_MPI
 #include <mpi.h>

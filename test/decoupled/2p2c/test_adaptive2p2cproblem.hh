@@ -39,6 +39,9 @@
 
 #include "test_dec2p2c_spatialparams.hh"
 
+#include <dune/common/fvector.hh>
+#include <string>
+
 namespace Ewoms
 {
 

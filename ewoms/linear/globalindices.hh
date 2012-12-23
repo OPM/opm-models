@@ -29,7 +29,6 @@
 #include <dune/istl/operators.hh>
 
 #include <algorithm>
-#include <list>
 #include <set>
 #include <map>
 #include <iostream>

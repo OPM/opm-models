@@ -22,8 +22,6 @@
 
 #include <ewoms/decoupled/2p/2pproperties.hh>
 
-#include <dune/common/fvector.hh>
-
 /*!
  * \file
  * \copydoc Ewoms::EvalCflFlux

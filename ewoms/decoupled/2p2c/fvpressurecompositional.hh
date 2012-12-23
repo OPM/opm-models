@@ -28,8 +28,8 @@
 #include <ewoms/io/vtkmultiwriter.hh>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
 
+#include <sstream>
 #include <iostream>
 
 /*!

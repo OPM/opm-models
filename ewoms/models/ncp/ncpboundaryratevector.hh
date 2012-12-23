@@ -30,8 +30,6 @@
 #include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
 #include <ewoms/common/valgrind.hh>
 
-#include <dune/common/fvector.hh>
-
 namespace Ewoms {
 
 /*!

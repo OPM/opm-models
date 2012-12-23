@@ -22,6 +22,11 @@
 
 #include "fvmpfal2pfaboundpressure2padaptive.hh"
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <vector>
+
 /*!
  * \file
  * \copydoc Ewoms::FVMPFAL2PFABoundVelocity2PAdaptive

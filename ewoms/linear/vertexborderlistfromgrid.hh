@@ -32,7 +32,6 @@
 #include <dune/istl/operators.hh>
 
 #include <algorithm>
-#include <list>
 
 namespace Ewoms {
 namespace Linear {

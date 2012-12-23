@@ -30,6 +30,9 @@
 #include <ewoms/material/constraintsolvers/ncpflash.hh>
 #include <ewoms/material/fluidstates/compositionalfluidstate.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
 namespace Ewoms {
 /*!
  * \ingroup NcpModel

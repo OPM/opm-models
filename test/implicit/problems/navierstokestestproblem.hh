@@ -40,6 +40,8 @@
 
 #include <dune/grid/io/file/dgfparser.hh>
 
+#include <dune/common/fvector.hh>
+
 namespace Ewoms {
 
 template <class TypeTag>

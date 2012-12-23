@@ -35,6 +35,7 @@
 #include <dune/grid/io/file/dgfparser.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
 

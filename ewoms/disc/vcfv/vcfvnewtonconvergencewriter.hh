@@ -27,6 +27,8 @@
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/common/propertysystem.hh>
 
+#include <iostream>
+
 namespace Ewoms {
 namespace Properties {
 // forward declaration of the required property tags

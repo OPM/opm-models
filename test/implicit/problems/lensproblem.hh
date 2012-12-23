@@ -38,7 +38,10 @@
 #include <ewoms/linear/vcfvparallelamgsolver.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
+#include <sstream>
+#include <string>
 #include <iostream>
 
 namespace Ewoms {

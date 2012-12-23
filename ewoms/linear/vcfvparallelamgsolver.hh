@@ -45,6 +45,8 @@
 #include <dune/common/parallel/indexset.hh>
 #include <dune/common/mpicollectivecommunication.hh>
 
+#include <iostream>
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(AmgCoarsenTarget);

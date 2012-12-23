@@ -34,6 +34,11 @@
 #include <ewoms/common/math.hh>
 #include <ewoms/io/vtkmultiwriter.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <vector>
+
 /*!
  * \file
  * \copydoc Ewoms::FVPressure2P2CAdaptive

@@ -27,6 +27,10 @@
 
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 
+#include <dune/common/fvector.hh>
+
+#include <string>
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);

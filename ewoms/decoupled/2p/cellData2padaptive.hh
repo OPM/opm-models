@@ -23,8 +23,6 @@
 
 #include "cellData2p.hh"
 
-#include <dune/common/fvector.hh>
-
 /*!
  * \file
  * \copydoc Ewoms::CellData2PAdaptive

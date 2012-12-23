@@ -39,8 +39,11 @@
 #include <ewoms/models/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-#include <dune/common/fvector.hh>
 
+#include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
+
+#include <sstream>
 #include <iostream>
 #include <string>
 

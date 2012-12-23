@@ -29,6 +29,8 @@
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
 
+#include <iostream>
+
 namespace Ewoms
 {
 
