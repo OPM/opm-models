@@ -417,8 +417,6 @@ public:
                      const Context &context,
                      int spaceIdx, int timeIdx) const
     {
-        const auto &volVars = context.volVars(spaceIdx, timeIdx);
-
         const auto &pos = context.pos(spaceIdx, timeIdx);
         Scalar x = pos[0] - this->bboxMin()[0];
         Scalar y = pos[dim-1] - this->bboxMin()[dim-1];
