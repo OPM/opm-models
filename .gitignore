@@ -3,6 +3,7 @@ Makefile.in
 Makefile
 .deps/
 .libs/
+.dirstamp
 aclocal*
 depcomp
 dependencies.m4
@@ -17,6 +18,8 @@ missing
 stamp-h1
 config.*
 configure
+ewoms.pc
+EwomsConfig.cmake
 
 # auto-generated doxygen files
 Doxyfile
@@ -75,3 +78,54 @@ config.h
 
 # always consider reference solutions
 !*reference.vtu
+
+# excutables of tests
+test/implicit/co2injection_immiscible
+test/implicit/co2injection_flash
+test/implicit/co2injection_ncp
+test/implicit/co2injection_pvs
+test/implicit/co2injection_immiscible_ni
+test/implicit/co2injection_flash_ni
+test/implicit/co2injection_ncp_ni
+test/implicit/co2injection_pvs_ni
+test/implicit/cuvette_pvs
+test/implicit/diffusion_ncp
+test/implicit/diffusion_pvs
+test/implicit/diffusion_flash
+test/implicit/finger_immiscible
+test/implicit/fracture_immiscible
+test/implicit/groundwater_immiscible
+test/implicit/infiltration_pvs
+test/implicit/lens_immiscible
+test/implicit/lens_richards
+test/implicit/obstacle_immiscible
+test/implicit/obstacle_ncp
+test/implicit/obstacle_pvs
+test/implicit/outflow_pvs
+test/implicit/powerinjection_darcy
+test/implicit/powerinjection_forchheimer
+test/implicit/reservoir_blackoil
+test/implicit/test_navierstokes
+test/implicit/test_quadrature
+test/implicit/test_stokes
+test/implicit/test_stokes2c
+test/implicit/test_stokesni
+test/implicit/waterair_pvs_ni
+test/decoupled/1p/test_1p
+test/decoupled/1p/test_diffusion
+test/decoupled/2p/test_transport
+test/decoupled/2p/test_impes
+test/decoupled/2p/test_mpfa2p
+test/decoupled/2p/test_impesadaptive
+test/decoupled/2p2c/test_dec2p2c
+test/decoupled/2p2c/test_adaptive2p2c
+test/decoupled/2p2c/test_multiphysics2p2c
+test/material/immiscibleflash/test_immiscibleflash
+test/material/pengrobinson/test_pengrobinson
+test/material/tabulation/test_tabulation
+test/material/fluidsystems/test_fluidsystems
+test/material/ncpflash/test_ncpflash
+test/common/spline/test_spline
+test/common/propertysystem/test_propertysystem
+tutorial/tutorial_coupled
+tutorial/tutorial_decoupled
