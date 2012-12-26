@@ -31,6 +31,7 @@
 #include <ewoms/common/math.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
+#include <dune/grid/common/gridfactory.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -41,6 +42,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <memory>
 
 namespace Ewoms {
 

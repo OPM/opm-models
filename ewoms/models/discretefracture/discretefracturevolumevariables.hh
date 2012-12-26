@@ -26,6 +26,8 @@
 
 #include "discretefractureproperties.hh"
 
+#include <ewoms/models/immiscible/immisciblevolumevariables.hh>
+
 namespace Ewoms {
 
 /*!

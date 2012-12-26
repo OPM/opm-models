@@ -80,10 +80,14 @@ NEW_PROP_TAG(PreconditionerWrapper);
 NEW_PROP_TAG(LinearSolverOverlapSize);
 
 /*!
+ * \brief Maximum accepted error of the solution of the non-linear solver.
+ */
+NEW_PROP_TAG(NewtonRelativeTolerance);
+
+/*!
  * \brief Maximum accepted error of the solution of the linear solver.
  */
 NEW_PROP_TAG(LinearSolverRelativeTolerance);
-
 
 /*!
  * \brief Maximum accepted defect of a component for the solution of the linear solver.
