@@ -42,7 +42,6 @@ template <class TypeTag>
 class StokesBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;

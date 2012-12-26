@@ -48,7 +48,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { numComponents = FluidSystem::numComponents };
-    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
 
 public:

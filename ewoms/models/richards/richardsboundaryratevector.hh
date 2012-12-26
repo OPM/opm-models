@@ -40,7 +40,6 @@ template <class TypeTag>
 class RichardsBoundaryRateVector
     : public GET_PROP_TYPE(TypeTag, RateVector)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

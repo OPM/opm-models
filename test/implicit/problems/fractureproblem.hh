@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010-2012 by Andreas Lauser                               *
+ *   Copyright (C) 2012 by Andreas Lauser                                    *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -168,7 +168,6 @@ class FractureProblem
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
         // phase indices
@@ -184,7 +183,6 @@ class FractureProblem
     };
 
     typedef Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
-    typedef typename GridView::template Codim<0>::Entity Element;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;

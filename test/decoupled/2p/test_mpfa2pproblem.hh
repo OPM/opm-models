@@ -181,7 +181,6 @@ typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
 typedef typename SolutionTypes::PrimaryVariables PrimaryVariables;
 
 typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
-typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
 
 enum
 {
@@ -200,10 +199,7 @@ enum
 typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 typedef typename GridView::Traits::template Codim<0>::Entity Element;
-typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-typedef typename GridView::Intersection Intersection;
 typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
-typedef Dune::FieldVector<Scalar, dim> LocalPosition;
 
 public:
 MPFATwoPTestProblem(TimeManager &timeManager)

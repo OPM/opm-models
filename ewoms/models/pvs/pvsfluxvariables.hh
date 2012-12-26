@@ -51,11 +51,9 @@ class PvsFluxVariables
 {
     typedef VcfvMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    enum { dimWorld = GridView::dimensionworld };
 
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
