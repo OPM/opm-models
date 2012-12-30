@@ -465,7 +465,7 @@ private:
             if (pcGW>pcIn) lower=Sw;
             else upper=Sw;
         }
-        return(Sw);
+        return 0;
     }
 
     bool isFineMaterial_(const GlobalPosition &pos) const

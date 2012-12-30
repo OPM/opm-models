@@ -23,6 +23,11 @@
  */
 #include "config.h"
 
+#if !HAVE_ALUGRID
+#warning "The ALUGrid Dune grid manager is required for this test."
+int main(int argc, char** argv)
+{}
+#else
 #include "problems/fractureproblem.hh"
 
 #include <ewoms/common/start.hh>
@@ -32,3 +37,5 @@ int main(int argc, char** argv)
     typedef TTAG(FractureProblem) ProblemTypeTag;
     return Ewoms::start<ProblemTypeTag>(argc, argv);
 }
+
+#endif
