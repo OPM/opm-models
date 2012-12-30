@@ -91,6 +91,10 @@ public:
         std::vector<std::pair<int, int> > fractureEdges;
         Dune::GridFactory<Grid> gridFactory;
         std::ifstream inStream(artFileName);
+        if (!inStream.is_open()) {
+            DUNE_THROW(Dune::IOError,
+                       "File '" << artFileName << "' does not exist or is not readable");
+        }
         std::string curLine;
         ParseMode curParseMode = Vertex;
         while (inStream) {
