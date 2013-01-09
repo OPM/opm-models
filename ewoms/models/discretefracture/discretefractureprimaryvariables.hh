@@ -112,7 +112,7 @@ private:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             matrixFluidState.setSaturation(phaseIdx, saturations[phaseIdx]);
-    };
+    }
 };
 
 } // end namepace

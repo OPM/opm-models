@@ -329,7 +329,7 @@ public:
      */
     template <class Context>
     const MaterialLawParams& materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
-    { return matrixMaterialParams_; };
+    { return matrixMaterialParams_; }
 
     /*!
      * \brief The parameters for the material law inside the fractures.

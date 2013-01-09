@@ -107,14 +107,14 @@ public:
             }
 
             // remove leading whitespace
-            int numLeadingSpaces = 0;
+            unsigned numLeadingSpaces = 0;
             while (curLine.size() > numLeadingSpaces && std::isspace(curLine[numLeadingSpaces]))
                 ++ numLeadingSpaces;
             curLine = curLine.substr(numLeadingSpaces,
                                      curLine.size() - numLeadingSpaces);
 
             // remove trailing whitespace
-            int numTrailingSpaces = 0;
+            unsigned numTrailingSpaces = 0;
             while (curLine.size() > numTrailingSpaces && std::isspace(curLine[curLine.size() - numTrailingSpaces]))
                 ++ numTrailingSpaces;
             curLine = curLine.substr(0, curLine.size() - numTrailingSpaces);
@@ -200,9 +200,9 @@ public:
                 std::vector<unsigned int> vertIndices;
                 for (int i = 0; i < 3; ++i) {
                     bool haveFirstVertex = false;
-                    for (int j = 0; j < vertIndices.size(); ++j) {
+                    for (int j = 0; j < int(vertIndices.size()); ++j) {
                         assert(edgeIndices[i] < edges.size());
-                        if (vertIndices[j] == edges[edgeIndices[i]].first) {
+                        if (int(vertIndices[j]) == edges[edgeIndices[i]].first) {
                             haveFirstVertex = true;
                             break;
                         }
@@ -211,9 +211,9 @@ public:
                         vertIndices.push_back(edges[edgeIndices[i]].first);
 
                     bool haveSecondVertex = false;
-                    for (int j = 0; j < vertIndices.size(); ++j) {
+                    for (unsigned j = 0; j < vertIndices.size(); ++j) {
                         assert(edgeIndices[i] < edges.size());
-                        if (vertIndices[j] == edges[edgeIndices[i]].second) {
+                        if (int(vertIndices[j]) == edges[edgeIndices[i]].second) {
                             haveSecondVertex = true;
                             break;
                         }

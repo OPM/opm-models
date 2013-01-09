@@ -214,7 +214,7 @@ public:
         if (intrinsicPermeabilityOutput_()) this->commitScalarBuffer_(writer, "fractureIntrinsicPerm", intrinsicPermeability_);
         if (volumeFractionOutput_()) {
             // divide the fracture volume by the total volume of the finite volumes
-            for (int I = 0; I < volumeFraction_.size(); ++ I)
+            for (unsigned I = 0; I < volumeFraction_.size(); ++ I)
                 volumeFraction_[I] /= this->problem_.model().boxVolume(I);
             this->commitScalarBuffer_(writer, "fractureVolumeFraction", volumeFraction_);
         }
