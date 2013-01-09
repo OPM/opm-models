@@ -27,7 +27,7 @@
 #include "vcfvproperties.hh"
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/linear/foreignoverlapfrombcrsmatrix.hh>
-#include <ewoms/parallel/vertexhandles.hh>
+#include <ewoms/parallel/gridcommhandles.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -413,7 +413,7 @@ public:
         // at this point we communicate the yellow vertices to the
         // neighboring processes because a neigbor process may not see
         // the red vertex for yellow border vertices
-        VertexHandleMin<EntityColor, std::vector<EntityColor>,  VertexMapper>
+        GridCommHandleMin<EntityColor, std::vector<EntityColor>,  VertexMapper>
             minHandle(vertexColor_, vertexMapper_());
         gridView_().communicate(minHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
@@ -462,7 +462,7 @@ public:
         }
 
         // demote the border orange vertices
-        VertexHandleMax<EntityColor, std::vector<EntityColor>,  VertexMapper>
+        GridCommHandleMax<EntityColor, std::vector<EntityColor>,  VertexMapper>
             maxHandle(vertexColor_,
                       vertexMapper_());
         gridView_().communicate(maxHandle,

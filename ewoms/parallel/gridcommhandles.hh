@@ -33,14 +33,14 @@ namespace Ewoms
  * \brief Data handle for parallel communication which sums up all
  *        values are attached to vertices
  */
-template <class FieldType, class Container, class VertexMapper>
-class VertexHandleSum
-    : public Dune::CommDataHandleIF< VertexHandleSum<FieldType, Container, VertexMapper>,
+template <class FieldType, class Container, class EntityMapper>
+class GridCommHandleSum
+    : public Dune::CommDataHandleIF< GridCommHandleSum<FieldType, Container, EntityMapper>,
                                      FieldType >
 {
 public:
-    VertexHandleSum(Container &container,
-                    const VertexMapper &mapper)
+    GridCommHandleSum(Container &container,
+                 const EntityMapper &mapper)
         : mapper_(mapper)
         , container_(container)
     { }
@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    const VertexMapper &mapper_;
+    const EntityMapper &mapper_;
     Container &container_;
 };
 
@@ -91,14 +91,14 @@ private:
  * \brief Data handle for parallel communication which takes the
  *        maximum of all values that are attached to vertices
  */
-template <class FieldType, class Container, class VertexMapper>
-class VertexHandleMax
-    : public Dune::CommDataHandleIF< VertexHandleMax<FieldType, Container, VertexMapper>,
+template <class FieldType, class Container, class EntityMapper>
+class GridCommHandleMax
+    : public Dune::CommDataHandleIF< GridCommHandleMax<FieldType, Container, EntityMapper>,
                                      FieldType >
 {
 public:
-    VertexHandleMax(Container &container,
-                    const VertexMapper &mapper)
+    GridCommHandleMax(Container &container,
+                    const EntityMapper &mapper)
         : mapper_(mapper)
         , container_(container)
     { }
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    const VertexMapper &mapper_;
+    const EntityMapper &mapper_;
     Container &container_;
 };
 
@@ -150,14 +150,14 @@ private:
  * \brief Provides data handle for parallel communication which takes
  *        the minimum of all values that are attached to vertices
  */
-template <class FieldType, class Container, class VertexMapper>
-class VertexHandleMin
-    : public Dune::CommDataHandleIF< VertexHandleMin<FieldType, Container, VertexMapper>,
+template <class FieldType, class Container, class EntityMapper>
+class GridCommHandleMin
+    : public Dune::CommDataHandleIF< GridCommHandleMin<FieldType, Container, EntityMapper>,
                                      FieldType >
 {
 public:
-    VertexHandleMin(Container &container,
-                    const VertexMapper &mapper)
+    GridCommHandleMin(Container &container,
+                 const EntityMapper &mapper)
         : mapper_(mapper)
         , container_(container)
     { }
@@ -200,7 +200,7 @@ public:
     }
 
 private:
-    const VertexMapper &mapper_;
+    const EntityMapper &mapper_;
     Container &container_;
 };
 

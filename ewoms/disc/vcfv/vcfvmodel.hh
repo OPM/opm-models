@@ -32,7 +32,7 @@
 
 #include <ewoms/vtk/vcfvvtkoutputmodule.hh>
 #include <ewoms/vtk/vcfvvtkprimaryvarsmodule.hh>
-#include <ewoms/parallel/vertexhandles.hh>
+#include <ewoms/parallel/gridcommhandles.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -288,7 +288,7 @@ public:
         };
 
         // add up the residuals on the process borders
-        VertexHandleSum<EqVector, GlobalEqVector, VertexMapper>
+        GridCommHandleSum<EqVector, GlobalEqVector, VertexMapper>
             sumHandle(dest, vertexMapper());
         gridView().communicate(sumHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
@@ -942,9 +942,9 @@ protected:
         }
 
         // add the finite volumes which cross process borders
-        VertexHandleSum<Dune::FieldVector<Scalar, 1>,
-                        Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
-                        VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
+        GridCommHandleSum<Dune::FieldVector<Scalar, 1>,
+                     Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
+                     VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
         gridView().communicate(sumVolumeHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
                                Dune::ForwardCommunication);
