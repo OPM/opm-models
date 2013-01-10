@@ -481,7 +481,6 @@ public:
         reset();
     }
 
-protected:
     //! resets the accumulated CFL-fluxes to zero
     void reset()
     {
@@ -491,8 +490,6 @@ protected:
     }
 
 private:
-
-
     Problem& problem_;//problem data
     Scalar cflFluxFunction_;
     bool hasHangingNode_;
