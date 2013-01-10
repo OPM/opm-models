@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2010-2012 by Markus Wolff                                 *
+ *   Copyright (C) 2010-2013 by Markus Wolff                                 *
  *   Copyright (C) 2011-2012 by Andreas Lauser                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
@@ -20,22 +20,19 @@
 #ifndef EWOMS_EVALCFLFLUX_COATS_HH
 #define EWOMS_EVALCFLFLUX_COATS_HH
 
-/*!
+/**
  * \file
  * \copydoc Ewoms::EvalCflFluxCoats
  */
 
 #include "evalcflfluxdefault.hh"
 
-#include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
-
 namespace Ewoms
 {
 /*!\ingroup IMPES
  * \brief  CFL-flux-function to evaluate a CFL-Condition after Coats 2003
  *
- * tparam TypeTag The problem TypeTag
+ * \tparam TypeTag The problem TypeTag
  */
 template<class TypeTag>
 class EvalCflFluxCoats: public EvalCflFluxDefault<TypeTag>
@@ -490,6 +487,8 @@ public:
     }
 
 private:
+
+
     Problem& problem_;//problem data
     Scalar cflFluxFunction_;
     bool hasHangingNode_;
