@@ -291,7 +291,24 @@ public:
 
     //\}
     TwoPTwoCFluidState()
-    { Valgrind::SetUndefined(*this); }
+    {
+        Valgrind::SetUndefined(*this);
+
+        temperature_ = 0.0;
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            phasePressure_[phaseIdx] = 0.0;
+            nu_[phaseIdx] = 0.0;
+            density_[phaseIdx] = 0.0;
+            viscosity_[phaseIdx] = 0.0;
+            averageMolarMass_[phaseIdx] = 0.0;
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                massFraction_[phaseIdx][compIdx] = 0.0;
+                moleFraction_[phaseIdx][compIdx] = 0.0;
+                equilRatio_[phaseIdx][compIdx] = 0.0;
+            }
+        }
+    }
+
 private:
 //    Scalar massConcentration_[numComponents];
     Scalar phasePressure_[numPhases];
