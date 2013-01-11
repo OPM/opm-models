@@ -39,7 +39,8 @@
 
 /*!
  * \file
- * \brief  defines a class for piecewise linear finite element functions
+ *
+ * \copydoc Ewoms::LocalStiffness
  */
 
 namespace Ewoms

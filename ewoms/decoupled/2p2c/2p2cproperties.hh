@@ -80,8 +80,9 @@ NEW_PROP_TAG( FluidState ); //!< The fluid state
 NEW_PROP_TAG( ImpetEnableVolumeIntegral ); //!< Enables volume integral in the pressure equation (volume balance formulation)
 }}
 
-//EWOMS includes
+// eWoms includes
 #include <ewoms/decoupled/2p/2pindices.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
 #include <ewoms/decoupled/2p2c/cellData2p2c.hh>
 #include <ewoms/decoupled/2p2c/2p2cfluidstate.hh>
 
@@ -152,11 +153,18 @@ SET_TYPE_PROP(DecoupledTwoPTwoC, CellData, CellData2P2C<TypeTag>);
 SET_TYPE_PROP(DecoupledTwoPTwoC, FluidState, TwoPTwoCFluidState<TypeTag>);
 
 
+//! The spatial parameters to be employed.
+//! Use BoxSpatialParams by default.
+SET_TYPE_PROP(DecoupledTwoPTwoC, SpatialParams, FVSpatialParams<TypeTag>);
+
 SET_BOOL_PROP(DecoupledTwoPTwoC, ImpetEnableVolumeIntegral, true); //!< Regard volume integral in pressure equation
 
 SET_SCALAR_PROP(DecoupledTwoPTwoC, ImpetErrorTermFactor, 0.5); //!< Damping factor \f$ \alpha \f$ in pressure equation
 SET_SCALAR_PROP(DecoupledTwoPTwoC, ImpetErrorTermLowerBound, 0.2); //!< Lower bound where error is not corrected
 SET_SCALAR_PROP(DecoupledTwoPTwoC, ImpetErrorTermUpperBound, 0.9); //!< Upper bound for regularized error damping
+
+// enable gravity by default
+SET_BOOL_PROP(DecoupledTwoPTwoC, EnableGravity, true);
 }
 
 /*!

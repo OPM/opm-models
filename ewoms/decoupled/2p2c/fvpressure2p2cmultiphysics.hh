@@ -108,7 +108,7 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     typedef Dune::FieldVector<Scalar, GET_PROP_VALUE(TypeTag, NumPhases)> PhaseVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
-    //! @copydoc FVPressure::EntryType
+    //! \copydoc FVPressure::EntryType
 //! Access functions to the current problem object
     Problem& problem()
     {    return this->problem_;   }
@@ -436,7 +436,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::get1pStorage(Dune::FieldVector<Scalar,
     // if damping is not done, the solution method gets unstable!
     problem().variables().cellData(globalIdxI).volumeError() /= timestep_;
     Scalar maxError = this->maxError_;
-    Scalar erri = fabs(cellDataI.volumeError());
+    Scalar erri = std::abs(cellDataI.volumeError());
     Scalar x_lo = this->ErrorTermLowerBound_;
     Scalar x_mi = this->ErrorTermUpperBound_;
     Scalar fac  = this->ErrorTermFactor_;
@@ -840,7 +840,7 @@ void FVPressure2P2CMultiPhysics<TypeTag>::updateMaterialLaws(bool postTimeStep)
         // b) will be simple and was complex: complex FS available, so next TS
         //         will use comlex FS, next updateMaterialLaw will transform to simple
 
-        maxError = std::max(maxError, fabs(cellData.volumeError()));
+        maxError = std::max(maxError, std::abs(cellData.volumeError()));
     }// end grid traversal
     this->maxError_ = maxError/problem().timeManager().timeStepSize();
 

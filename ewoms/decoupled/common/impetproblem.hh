@@ -405,8 +405,7 @@ public:
         // check if we are in first TS and an initialDt was assigned
         if (t==0. && timeManager().timeStepSize()!=0.)
         {
-            if (this->gridView().comm().size() > 1)
-                dt = this->gridView().comm().min(dt);
+            dt = this->gridView().comm().min(dt);
 
             // check if assigned initialDt is in accordance with dt from first transport step
             if (timeManager().timeStepSize() > dt
@@ -421,8 +420,7 @@ public:
         dt = std::min(dt, asImp_().maxTimeStepSize());
 
         //make sure the right time-step is used by all processes in the parallel case
-        if (this->gridView().comm().size() > 1)
-            dt = this->gridView().comm().min(dt);
+        dt = this->gridView().comm().min(dt);
 
         //assign next tiestep size
         timeManager().setTimeStepSize(dt);

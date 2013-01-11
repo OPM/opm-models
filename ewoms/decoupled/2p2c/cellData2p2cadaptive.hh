@@ -38,7 +38,7 @@ namespace Ewoms
 /*! The class provides model-specific functions needed to adapt the stored cell data to a new (adapted) grid.
  * Additionally, it provides the storage-infrastructure for explicit front tracking.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 template<class TypeTag>
 class CellData2P2CAdaptive: public CellData2P2Cmultiphysics<TypeTag>
@@ -72,7 +72,7 @@ private:
 
 public:
     //! A container for all necessary variables to map an old solution to a new grid
-    /**
+    /*!
      * If the primary variables (pressure, total concentrations) are mapped to a new grid,
      * the secondary variables can be calulated. For the mapping between sons and father, it
      * is in addition necessary to know about how many sons live in each father ("count").
@@ -155,7 +155,7 @@ public:
                 += adaptedValues.cellVolume* adaptedValues.totalConcentration_[nCompIdx];
         // if all cells are summed up, re-convert mass into total concentrations
         Scalar fatherVolume = fatherElement.geometry().volume();
-        if(adaptedValuesFather.count == (pow(2,dim)))
+        if(adaptedValuesFather.count == (std::pow(2.0,dim)))
         {
             adaptedValuesFather.totalConcentration_[wCompIdx] /= fatherVolume;
             adaptedValuesFather.totalConcentration_[nCompIdx] /= fatherVolume;

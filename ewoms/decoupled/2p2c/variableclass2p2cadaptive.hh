@@ -4,12 +4,12 @@
  *   Copyright (C) 2012 by Benjamin Faigle                                   *
  *   Copyright (C) 2012 by Andreas Lauser                                    *
  *                                                                           *
- *   T1his program is free software: you can redistribute it and/or modify    *
+ *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
  *   the Free Software Foundation, either version 2 of the License, or       *
  *   (at your option) any later version.                                     *
  *                                                                           *
- *   T1his program is distributed in the hope that it will be useful,         *
+ *   This program is distributed in the hope that it will be useful,         *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of          *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
  *   GNU General Public License for more details.                            *
@@ -47,7 +47,7 @@ namespace Ewoms
  * Note that according to the number of half-edges (sub-faces) regarded, one ore two transmissibility
  * can be stored and loaded.
  *
- * @tparam TypeTag The Type Tag
+ * \tparam TypeTag The Type Tag
  */
 template<class TypeTag>
 class VariableClass2P2CAdaptive: public VariableClassAdaptive<TypeTag>
@@ -83,7 +83,7 @@ protected:
     */
     const static int storageRequirement = (dim-1)*(dim-1);
     //! Storage object for data related to the MPFA method
-    /**
+    /*!
      * This Struct stores the transmissibility coefficients
      * for the two half-eges of an irregular interface (one
      * near a hanging node) in an h-adaptive simulation.

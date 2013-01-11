@@ -72,13 +72,7 @@ NEW_PROP_TAG( EnableCompressibility);//!< Returns whether compressibility is all
 NEW_PROP_TAG( WettingPhase); //!< The wetting phase of a two-phase model
 NEW_PROP_TAG( NonwettingPhase); //!< The non-wetting phase of a two-phase model
 NEW_PROP_TAG( FluidSystem ); //!< Defines the fluid system
-
 NEW_PROP_TAG( FluidState ); //!< Defines the fluid state
-
-//! \cond \private
-// keep only for compatibility with VCVF discretizations
-NEW_PROP_TAG( TwoPIndices );
-//! \endcond
 
 NEW_PROP_TAG( ImpetErrorTermFactor ); //! Scaling factor for the error term (term to damp unphysical saturation overshoots via pressure correction)
 NEW_PROP_TAG( ImpetErrorTermLowerBound );//! Lower threshold used for the error term evaluation (term to damp unphysical saturation overshoots via pressure correction)
@@ -86,6 +80,7 @@ NEW_PROP_TAG( ImpetErrorTermUpperBound );//!Upper threshold used for the error t
 }
 }
 
+#include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
 #include <ewoms/decoupled/common/variableclass.hh>
 #include <ewoms/decoupled/2p/cellData2p.hh>
 #include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
@@ -165,6 +160,10 @@ public:
     typedef ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> type;
 };
 
+//! The spatial parameters to be employed.
+//! Use BoxSpatialParams by default.
+SET_TYPE_PROP(DecoupledTwoP, SpatialParams, FVSpatialParams<TypeTag>);
+
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
@@ -185,6 +184,8 @@ SET_SCALAR_PROP(DecoupledTwoP, ImpetErrorTermLowerBound, 0.1);
 //! Default upper threshold for evaluation of an error term
 SET_SCALAR_PROP(DecoupledTwoP, ImpetErrorTermUpperBound, 0.9);
 
+// enable gravity by default
+SET_BOOL_PROP(DecoupledTwoP, EnableGravity, true);
 // \}
 }
 

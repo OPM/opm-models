@@ -25,7 +25,8 @@
 
 /*!
  * \file
- * \brief Class including data of one grid cell.
+ *
+ * \copydoc Ewoms::CellData2P
  */
 
 namespace Ewoms

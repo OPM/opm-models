@@ -93,6 +93,13 @@ SET_TYPE_PROP(DecoupledOneP, Variables, VariableClass<TypeTag>);
 
 //! Set standart CellData of immiscible one-phase models as default
 SET_TYPE_PROP(DecoupledOneP, CellData, CellData1P<TypeTag>);
+
+//! The spatial parameters to be employed.
+//! Use BoxSpatialParams by default.
+SET_TYPE_PROP(DecoupledOneP, SpatialParams, FVSpatialParamsOneP<TypeTag>);
+
+// enable gravity by default
+SET_BOOL_PROP(DecoupledOneP, EnableGravity, true);
 }
 }
 #endif

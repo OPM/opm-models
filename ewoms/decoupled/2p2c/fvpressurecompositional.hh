@@ -277,9 +277,9 @@ public:
                 for(int faceIdx = 0; faceIdx<cellData.fluxData().size(); faceIdx++)
                 {
                     if(cellData.isUpwindCell(faceIdx, contiWEqIdx))
-                        (*faceUpwindW)[i] += pow(10,static_cast<double>(3-faceIdx));
+                        (*faceUpwindW)[i] += std::pow(10,static_cast<double>(3-faceIdx));
                     if(cellData.isUpwindCell(faceIdx, contiNEqIdx))
-                        (*faceUpwindN)[i] += pow(10,static_cast<double>(3-faceIdx));
+                        (*faceUpwindN)[i] += std::pow(10,static_cast<double>(3-faceIdx));
                 }
             }
             //  writer.attachCellData(*nun, "phase mass fraction n-phase");

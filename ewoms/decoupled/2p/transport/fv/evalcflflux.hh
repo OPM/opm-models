@@ -112,7 +112,7 @@ public:
     void reset()
     {}
 
-    /*! @brief Constructs a EvalCflFlux instance */
+    /*! \brief Constructs a EvalCflFlux instance */
     EvalCflFlux ()
     {}
 };

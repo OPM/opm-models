@@ -130,7 +130,7 @@ template<class TypeTag> class FVPressure2P2C
     // the typenames used for the stiffness matrix and solution vector
 
 protected:
-    //! @copydoc FVPressure::EntryType
+    //! \copydoc FVPressure::EntryType
 
     Problem& problem()
     {

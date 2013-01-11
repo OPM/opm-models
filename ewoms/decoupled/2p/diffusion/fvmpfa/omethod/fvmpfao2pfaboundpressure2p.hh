@@ -962,7 +962,7 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::storeInteractionVolumeInfo()
             // compute dF1, the area of quadrilateral made by normal vectors 'nu'
             DimVector Rnu12(0);
             R.umv(nu12, Rnu12);
-            interactionVolumes_[globalVertIdx1234].setDF(fabs(nu14 * Rnu12), 0);
+            interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu14 * Rnu12), 0);
 
             // handle interior face
             if (isIt12->neighbor())
@@ -1099,15 +1099,15 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::storeInteractionVolumeInfo()
                                     // compute dF2, dF3, dF4 i.e., the area of quadrilateral made by normal vectors 'nu'
                                     DimVector Rnu21(0);
                                     R.umv(nu21, Rnu21);
-                                    interactionVolumes_[globalVertIdx1234].setDF(fabs(nu23 * Rnu21), 1);
+                                    interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu23 * Rnu21), 1);
 
                                     DimVector Rnu34(0);
                                     R.umv(nu34, Rnu34);
-                                    interactionVolumes_[globalVertIdx1234].setDF(fabs(nu32 * Rnu34), 2);
+                                    interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu32 * Rnu34), 2);
 
                                     DimVector Rnu43(0);
                                     R.umv(nu43, Rnu43);
-                                    interactionVolumes_[globalVertIdx1234].setDF(fabs(nu41 * Rnu43), 3);
+                                    interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu41 * Rnu43), 3);
 
                                     finished = true;
 
@@ -1217,7 +1217,7 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::storeInteractionVolumeInfo()
                                     // compute dF2 i.e., the area of quadrilateral made by normal vectors 'nu'
                                     DimVector Rnu21(0);
                                     R.umv(nu21, Rnu21);
-                                    interactionVolumes_[globalVertIdx1234].setDF(fabs(nu23 * Rnu21), 1);
+                                    interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu23 * Rnu21), 1);
 
                                     finished = true;
 
@@ -1369,7 +1369,7 @@ void FVMPFAO2PFABoundPressure2P<TypeTag>::storeInteractionVolumeInfo()
                                     // compute dF1, dF3 i.e., the area of quadrilateral made by normal vectors 'nu'
                                     DimVector Rnu43(0);
                                     R.umv(nu43, Rnu43);
-                                    interactionVolumes_[globalVertIdx1234].setDF(fabs(nu41 * Rnu43), 3);
+                                    interactionVolumes_[globalVertIdx1234].setDF(std::abs(nu41 * Rnu43), 3);
 
                                     finished = true;
 
