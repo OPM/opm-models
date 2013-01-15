@@ -1,0 +1,30 @@
+Source: ewoms
+Section: science
+Priority: extra
+Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
+Build-Depends: debhelper (>= 8.0.0), cmake, libdune-grid-dev, libdune-istl-dev, libdune-localfunctions-dev
+Standards-Version: 3.9.2
+Homepage: http://opm-project.org
+Vcs-Git: git://github.com/OPM/ewoms.git
+Vcs-Browser: https://github.com/OPM/ewoms
+
+Package: ewoms
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: eWoms is a simulation framework for flow and transport in porous media.
+ eWoms [0] is a fork of the Dumux simulation framework [1] for flow and
+ transport in porous media. It follows a more agile development model
+ with a lower priority on backward compatibility and higher openness to
+ disruptive changes. “eWoms” is an acronym for the German idiom 
+ “eierlegende Wollmilchsau” (egg-laying wool-milk pig) and reflects the fact 
+ that the goal of this project is to create an all-encompassing simulation framework.
+
+Package: ewoms-doc
+Architecture: all
+Description: documentation for ewoms
+ eWoms [0] is a fork of the Dumux simulation framework [1] for flow and
+ transport in porous media. It follows a more agile development model
+ with a lower priority on backward compatibility and higher openness to
+ disruptive changes. “eWoms” is an acronym for the German idiom 
+ “eierlegende Wollmilchsau” (egg-laying wool-milk pig) and reflects the fact 
+ that the goal of this project is to create an all-encompassing simulation framework.
