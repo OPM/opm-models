@@ -1,21 +1,49 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-# Sample debian/rules that uses debhelper.
-#
-# This file was originally written by Joey Hess and Craig Small.
-# As a special exception, when this file is copied by dh-make into a
-# dh-make output file, you may use that output file without restriction.
-# This special exception was added by Craig Small in version 0.37 of dh-make.
-#
-# Modified to make a template file for a multi-binary package with separated
-# build-arch and build-indep targets  by Bill Allombert 2001
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+DUNE_DEBIAN_DUNECONTROL ?= /usr/bin/dunecontrol
+DUNE_DEBIAN_CONFIGURE_FLAGS ?= \
+	--enable-parallel \
+	--enable-shared \
+	--enable-documentation \
+	--enable-fieldvector-size-is-method \
+	--with-alberta=/usr \
+	--with-gmp \
+	--without-grape \
+	--without-metis \
+	--without-parmetis \
+	--with-superlu \
+	--without-ug \
+	--without-x \
+        --libdir='$${prefix}/lib'
 
-# This has to be exported to make some magic below work.
-export DH_OPTIONS
 
+override_dh_auto_configure:
+	# needed so that dunecontrol does not skip the autogen stage
+	touch stamp-vc
+        # remove the 'am' directory from the tarball 'duncontrol
+        # autogen' will add a symbolic link instead
+	rm -rf am
+	$(DUNE_DEBIAN_DUNECONTROL) autogen
+	dh_auto_configure -- $(DUNE_DEBIAN_CONFIGURE_FLAGS)
+
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
+
+override_dh_clean:
+	dh_clean
+	find . -name Makefile.in -delete
+	rm -f aclocal.m4 config.guess config.h.in config.sub configure dependencies.m4 depcomp install-sh ltmain.sh missing
+	rm -rf doc/doxygen/Doxyfile.in doc/doxygen/doxyerr.log doc/doxygen/doxygen-tag doc/doxygen/doxygen.log doc/doxygen/html
+	rm -rf debian/tmp-test
+
+override_dh_auto_build:
+	dh_auto_build --buildsystem=autoconf
+
+# don't do 'make check'. it just takes a long time and does not
+# provide any benefit in the case of eWoms.
+override_dh_auto_test:
+	/bin/true
 
 %:
-	dh $@ 
+	dh $@ --parallel

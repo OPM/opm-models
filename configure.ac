@@ -8,6 +8,7 @@ DUNE_CHECK_ALL
 EWOMS_CHECKS_PRIVATE
 
 AC_CONFIG_FILES([Makefile
+    debian/Makefile
     doc/Makefile 
     doc/doxygen/Makefile 
     doc/doxygen/Doxyfile

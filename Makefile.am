@@ -17,7 +17,7 @@ EXTRA_DIST = dune.module \
              EwomsConfig.cmake.in \
              *.opts 
 
-SUBDIRS = doc ewoms m4 test tutorial
+SUBDIRS = debian doc ewoms m4 test tutorial
 
 VCFV_TESTS= \
 test/implicit/co2injection_immiscible \
@@ -238,6 +238,5 @@ tutorial_coupled:tutorial/tutorial_coupled
 
 tutorial_decoupled:tutorial/tutorial_decoupled
 
-include $(top_srcdir)/am/top-rules
 include $(top_srcdir)/am/global-rules
-
+include $(top_srcdir)/am/top-rules
