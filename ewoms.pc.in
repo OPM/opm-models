@@ -10,6 +10,6 @@ Name: @PACKAGE_NAME@
 Version: @VERSION@
 Description: The eWoms simulation framework
 URL: https://gitorious.org/ewoms
-Requires: dune-common dune-grid dune-localfunctions dune-istl 
-Libs: -L
-Cflags: -I
+Requires: ${DEPENDENCIES}
+Libs:
+Cflags:  -I${includedir}
