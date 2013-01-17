@@ -24,6 +24,8 @@
 #ifndef EWOMS_NCP_VOLUME_VARIABLES_HH
 #define EWOMS_NCP_VOLUME_VARIABLES_HH
 
+#include "ncpproperties.hh"
+
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>

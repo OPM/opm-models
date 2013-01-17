@@ -27,6 +27,7 @@
 #include "flashproperties.hh"
 #include "flashindices.hh"
 
+#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/material/fluidstates/compositionalfluidstate.hh>

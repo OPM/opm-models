@@ -28,6 +28,9 @@
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
+namespace Properties {
+NEW_PROP_TAG(Indices);
+}
 
 /*!
  * \ingroup VcfvDiffusion

@@ -34,6 +34,7 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);
+NEW_PROP_TAG(EnableEnergy);
 NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
 }

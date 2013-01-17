@@ -28,7 +28,7 @@
 
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
+#include <ewoms/disc/vcfv/vcfvlocalresidual.hh>
 #include <ewoms/common/math.hh>
 
 namespace Ewoms {

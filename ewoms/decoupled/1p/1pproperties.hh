@@ -28,6 +28,7 @@
 
 // eWoms includes
 #include <ewoms/decoupled/common/decoupledproperties.hh>
+#include <ewoms/decoupled/spatialparams/fvspatialparams1p.hh>
 
 namespace Ewoms
 {

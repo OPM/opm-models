@@ -24,6 +24,7 @@
 #ifndef EWOMS_NCP_FLUX_VARIABLES_HH
 #define EWOMS_NCP_FLUX_VARIABLES_HH
 
+#include <ewoms/models/ncp/ncpproperties.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>

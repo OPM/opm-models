@@ -26,6 +26,7 @@
 
 #include "pvsproperties.hh"
 
+#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
