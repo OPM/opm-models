@@ -37,10 +37,23 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
        xargs sed -i "s/dumux/ewoms/g"
 
   - Run dunecontrol for your project and re-compile.
+- The implicit models have been reorganized:
+  - Discretizations now reside in the ewoms/disc directory
+  - The vertex-centered finite volume discretization has been renamed
+    from "box" to "vcfv" to make its name more descriptive and more
+    consistent with further discretizations. The names of all
+    properties, classes and files which where prefixed by 'Box' are
+    now prefixed by 'Vcfv'.
+- Control files for creating Debian/Ubuntu packages have been
+  added. To build these packages, just run 'debuild -us -uc' in the
+  top-level directory of the source tree. (This only works for Debian
+  or Ubuntu based distributions, obviously.)
 - The autotools based build system is now non-recursive. This makes
   parallel builds (i.e. 'make -j$NUM_CORES check') more efficent. New
   tests need to be added to the toplevel Makefile.am instead of to the
   Makefile.am of the directory where the test resides.
+- The decoupled models have been parallelized. No dynamic
+  load balancing can be done yet.
 - The concept of Newton controllers has been abandoned. The
   functionality previously implemented has been folded into the
   NewtonMethod classes which now use static polymorphism. The reason
@@ -57,6 +70,8 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
    - NewtonTargetSteps -> NewtonTargetIterations
    - NewtonMaxRelError -> NewtonMaxRelativeError
    - NewtonSatisfyAbsAndRel -> NewtonSatisfyAbsoluteAndRelative
+- A fully-implicit discrete fracture model for two-phase problems has
+  been added.
 - The header file containing the eWoms parameter system has been
   renamed from "parameters.hh" to "parametersystem.hh" to make it
   consistent with the naming scheme of the property system.
