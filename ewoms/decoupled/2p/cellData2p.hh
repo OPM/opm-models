@@ -42,6 +42,7 @@ class FluxData2P;
  * mobilities, fractional flow functions and capillary pressure are stored.
  * Additionally, data assigned to cell-cell interfaces, so-called flux-data are stored.
  *
+ * \class Ewoms::CellData2P
  * \tparam TypeTag The problem TypeTag
  * \tparam bool Used for specialization for case of compressible flow (<tt>true</tt>) or incompressible flow (<tt>false</tt>)
  */

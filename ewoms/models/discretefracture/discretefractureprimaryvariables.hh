@@ -82,6 +82,8 @@ public:
      *                           primary variables. The temperatures,
      *                           pressures and compositions of all
      *                           phases must be defined.
+     * \param matParams The parameters for the capillary-pressure law
+     *                  which apply for the fracture.
      */
     template <class FluidState>
     void assignNaiveFromFracture(const FluidState &fractureFluidState,

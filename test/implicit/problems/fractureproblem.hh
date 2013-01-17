@@ -349,7 +349,14 @@ public:
     /*!
      * \brief Returns the width of the fracture.
      *
-     * \copydoc Doxygen::contextParameters
+     * \todo This method should get one face index instead of two
+     *       vertex indices. This probably requires a new context
+     *       class, though.
+     *
+     * \param context The execution context.
+     * \param spaceIdx1 The local index of the edge's first edge.
+     * \param spaceIdx2 The local index of the edge's second edge.
+     * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
     Scalar fractureWidth(const Context &context, int spaceIdx1, int spaceIdx2, int timeIdx) const
@@ -426,7 +433,7 @@ public:
      * \copydoc VcfvProblem::constraints
      */
     template <class Context>
-    void constraints(Constraints &values,
+    void constraints(Constraints &constraints,
                      const Context &context,
                      int spaceIdx, int timeIdx) const
     {
@@ -458,8 +465,8 @@ public:
         fractureFluidState.setPressure(wPhaseIdx, /*pressure=*/1e5);
         fractureFluidState.setPressure(nPhaseIdx, fractureFluidState.pressure(wPhaseIdx) + (pCFracture[nPhaseIdx] - pCFracture[wPhaseIdx]));
 
-        values.setAllConstraint();
-        values.assignNaiveFromFracture(fractureFluidState, matrixMaterialParams_);
+        constraints.setAllConstraint();
+        constraints.assignNaiveFromFracture(fractureFluidState, matrixMaterialParams_);
     }
 
     /*!
