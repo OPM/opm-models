@@ -1,13 +1,13 @@
 What is eWoms?
 ==============
 
-eWoms [0] is a fork of the Dumux simulation framework [1] for flow and
-transport in porous media. It follows a more agile development model
+eWoms [0, 5] is a fork of the Dumux simulation framework [1] for flow
+and transport in porous media. It follows a more agile development model
 with a lower priority on backward compatibility and higher openness to
 disruptive changes. To facilitate distributed development, eWoms uses
 git instead of Subversion as its revision control system as well using
-github.com [4], a public website, to host its source code
-repositories
+github.com [4], a public website, to host its source code repositories,
+and Flyspray as an issue tracker [6].
 
 “eWoms” is an acronym for the German idiom “eierlegende Wollmilchsau”
 (egg-laying wool-milk pig) and reflects the fact that the goal of this
@@ -53,3 +53,5 @@ Links
 [2] http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 [3] http://www.gnu.org/licenses/gpl-3.0.html
 [4] https://github.com
+[5] http://www.opm-project.org/ewoms/
+[6] http://www.opm-project.org/flyspray/
