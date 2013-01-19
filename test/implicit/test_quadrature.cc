@@ -238,7 +238,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     testIdenityMapping();
-    //testTetrahedron();
+    testTetrahedron();
     testQuadrature();
 
     return 0;
