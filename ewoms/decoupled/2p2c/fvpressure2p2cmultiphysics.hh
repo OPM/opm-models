@@ -189,7 +189,7 @@ protected:
     #if HAVE_MPI
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
-    typedef GridCommHandleSum<Dune::FieldVector<int, 1>, Dune::BlockVector<Dune::FieldVector<int, 1> >, ElementMapper> DataHandle;
+    typedef GridCommHandleSum<Dune::FieldVector<int, 1>, Dune::BlockVector<Dune::FieldVector<int, 1> >, ElementMapper, /*commCodim=*/0> DataHandle;
     #endif
 
     // subdomain map

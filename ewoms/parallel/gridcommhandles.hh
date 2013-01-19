@@ -22,33 +22,34 @@
  * \brief Provides data handles for parallel communication which
  *        operate on vertices
  */
-#ifndef EWOMS_VERTEX_HANDLES_HH
-#define EWOMS_VERTEX_HANDLES_HH
+#ifndef EWOMS_GRID_COMM_HANDLES_HH
+#define EWOMS_GRID_COMM_HANDLES_HH
 
 #include <dune/grid/common/datahandleif.hh>
 
-namespace Ewoms
-{
+namespace Ewoms {
+
 /*!
  * \brief Data handle for parallel communication which sums up all
  *        values are attached to vertices
  */
-template <class FieldType, class Container, class EntityMapper>
+template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleSum
-    : public Dune::CommDataHandleIF< GridCommHandleSum<FieldType, Container, EntityMapper>,
+    : public Dune::CommDataHandleIF< GridCommHandleSum<FieldType, Container, EntityMapper, commCodim>,
                                      FieldType >
 {
 public:
     GridCommHandleSum(Container &container,
-                 const EntityMapper &mapper)
+                      const EntityMapper &mapper)
         : mapper_(mapper)
         , container_(container)
     { }
 
     bool contains(int dim, int codim) const
     {
-        // only communicate vertices
-        return codim == dim;
+        // return true if the codim is the same as the codim which we
+        // are asked to communicate with.
+        return codim == commCodim;
     }
 
     bool fixedsize(int dim, int codim) const
@@ -91,9 +92,9 @@ private:
  * \brief Data handle for parallel communication which takes the
  *        maximum of all values that are attached to vertices
  */
-template <class FieldType, class Container, class EntityMapper>
+template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMax
-    : public Dune::CommDataHandleIF< GridCommHandleMax<FieldType, Container, EntityMapper>,
+    : public Dune::CommDataHandleIF< GridCommHandleMax<FieldType, Container, EntityMapper, commCodim>,
                                      FieldType >
 {
 public:
@@ -105,8 +106,9 @@ public:
 
     bool contains(int dim, int codim) const
     {
-        // only communicate vertices
-        return codim == dim;
+        // return true if the codim is the same as the codim which we
+        // are asked to communicate with.
+        return codim == commCodim;
     }
 
     bool fixedsize(int dim, int codim) const
@@ -150,9 +152,9 @@ private:
  * \brief Provides data handle for parallel communication which takes
  *        the minimum of all values that are attached to vertices
  */
-template <class FieldType, class Container, class EntityMapper>
+template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMin
-    : public Dune::CommDataHandleIF< GridCommHandleMin<FieldType, Container, EntityMapper>,
+    : public Dune::CommDataHandleIF< GridCommHandleMin<FieldType, Container, EntityMapper, commCodim>,
                                      FieldType >
 {
 public:
@@ -164,8 +166,9 @@ public:
 
     bool contains(int dim, int codim) const
     {
-        // only communicate vertices
-        return codim == dim;
+        // return true if the codim is the same as the codim which we
+        // are asked to communicate with.
+        return codim == commCodim;
     }
 
     bool fixedsize(int dim, int codim) const

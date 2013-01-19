@@ -288,7 +288,7 @@ public:
         };
 
         // add up the residuals on the process borders
-        GridCommHandleSum<EqVector, GlobalEqVector, VertexMapper>
+        GridCommHandleSum<EqVector, GlobalEqVector, VertexMapper, /*commCodim=*/dim>
             sumHandle(dest, vertexMapper());
         gridView().communicate(sumHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
@@ -943,8 +943,9 @@ protected:
 
         // add the finite volumes which cross process borders
         GridCommHandleSum<Dune::FieldVector<Scalar, 1>,
-                     Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
-                     VertexMapper> sumVolumeHandle(boxVolume_, vertexMapper());
+                          Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
+                          VertexMapper,
+                          /*commCodim=*/dim> sumVolumeHandle(boxVolume_, vertexMapper());
         gridView().communicate(sumVolumeHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
                                Dune::ForwardCommunication);

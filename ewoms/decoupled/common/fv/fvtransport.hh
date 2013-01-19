@@ -293,7 +293,7 @@ void FVTransport<TypeTag>::update(const Scalar t, Scalar& dt, TransportSolutionT
     // communicate updated values
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
-    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper> DataHandle;
+    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper, /*commCodim=*/0> DataHandle;
     DataHandle dataHandle(updateVec, problem_.variables().elementMapper());
     problem_.gridView().template communicate<DataHandle>(dataHandle,
                                                          Dune::InteriorBorder_All_Interface,

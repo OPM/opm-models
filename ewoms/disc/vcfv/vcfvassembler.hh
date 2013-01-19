@@ -413,7 +413,7 @@ public:
         // at this point we communicate the yellow vertices to the
         // neighboring processes because a neigbor process may not see
         // the red vertex for yellow border vertices
-        GridCommHandleMin<EntityColor, std::vector<EntityColor>,  VertexMapper>
+        GridCommHandleMin<EntityColor, std::vector<EntityColor>,  VertexMapper, /*commCodim=*/dim>
             minHandle(vertexColor_, vertexMapper_());
         gridView_().communicate(minHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
@@ -462,7 +462,7 @@ public:
         }
 
         // demote the border orange vertices
-        GridCommHandleMax<EntityColor, std::vector<EntityColor>,  VertexMapper>
+        GridCommHandleMax<EntityColor, std::vector<EntityColor>,  VertexMapper, /*commCodim=*/dim>
             maxHandle(vertexColor_,
                       vertexMapper_());
         gridView_().communicate(maxHandle,

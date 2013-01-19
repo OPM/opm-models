@@ -331,7 +331,7 @@ void FVTransport2P2C<TypeTag>::update(const Scalar t, Scalar& dt,
     // communicate updated values
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
-    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper> DataHandle;
+    typedef GridCommHandleSum<Dune::FieldVector<Scalar, 1>, Dune::BlockVector<Dune::FieldVector<Scalar, 1> >, ElementMapper, /*commCodim=*/0> DataHandle;
     for (int i = 0; i < updateVec.size(); i++)
     {
         DataHandle dataHandle(updateVec[i], problem_.variables().elementMapper());
