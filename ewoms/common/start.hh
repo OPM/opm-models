@@ -367,11 +367,15 @@ int start(int argc,
         if (printProps && myRank == 0)
             Ewoms::Properties::print<TypeTag>();
 
-        // instantiate and run the concrete problem
+        // instantiate and run the concrete problem. make sure to
+        // deallocate the problem and before the time manager and the
+        // grid
         TimeManager timeManager;
-        Problem problem(timeManager);
-        timeManager.init(problem, restartTime, dt, tEnd, restart);
-        timeManager.run();
+        {
+            Problem problem(timeManager);
+            timeManager.init(problem, restartTime, dt, tEnd, restart);
+            timeManager.run();
+        }
 
         if (myRank == 0) {
             std::cout
