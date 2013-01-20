@@ -277,8 +277,11 @@ endforeach(file)
 enable_testing()
 include(CTest)
 
-# we add the water-air test first because it takes longest by far
+# we add the water-air and the lens-immiscible tests first because
+# they take longest and so that we don't have to wait for them as long
+# for parallel test runs
 add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
+add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
 
 add_test(test_propertysystem bin/runtest.sh --plain test_propertysystem)
 add_test(test_spline bin/runtest.sh --plain test_spline)
@@ -303,7 +306,6 @@ add_test(diffusion_pvs bin/runtest.sh --simulation diffusion_pvs)
 add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
 add_test(groundwater_immiscible bin/runtest.sh --simulation groundwater_immiscible --linear-solver-verbosity=2)
 add_test(infiltration_pvs bin/runtest.sh --simulation infiltration_pvs)
-add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
 add_test(lens_richards bin/runtest.sh --simulation lens_richards --newton-write-convergence=true)
 add_test(obstacle_immiscible bin/runtest.sh --simulation obstacle_immiscible)
 add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
