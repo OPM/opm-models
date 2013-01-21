@@ -30,6 +30,7 @@
 
 #include <ewoms/common/parametersystem.hh>
 
+#include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpihelper.hh>
 #else
