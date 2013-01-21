@@ -14,8 +14,8 @@ meant for the impatient.
 Getting started
 ---------------
 
-In order to compile eWoms, you first have to download and extract the
-following DUNE modules into your source directory:
+In order to compile eWoms, you first have to install the following
+DUNE modules so that DUNE's 'dunecontrol' finds them:
  
   - dune-common        from [1]
   - dune-geometry      from [1]
@@ -23,28 +23,46 @@ following DUNE modules into your source directory:
   - dune-istl          from [1]
   - dune-localfuctions from [1]
 
-Use either the 2.2 release or the 2.3-svn trunk. 
+If you are using Ubuntu 12.10 or newer or Debian Wheezy or newer, you
+may install these modules using the standard Debian package management
+tools:
+
+    sudo apt-get install libdune-grid-dev libdune-istl-dev libdune-localfunctions-dev 
+
+On Ubuntu, make sure that you have the 'Universe' package repositories
+enabled.  Besides the Debian based distributions, DUNE packages for
+openSUSE (>= 12.2) are also available. These can be installed using the
+following commands:
+
+   sudo zypper ar http://download.opensuse.org/repositories/science/openSUSE_12.2
+   sudo zypper ref
+   sudo zypper in dune-grid-devel dune-localfunctions-devel dune-istl-devel
+
+If you use a different Linux distribution or want to live on the
+bleeding edge, you need to download the sources directly from the
+website of the DUNE project. For this, follow the instructions at
+[1]. For eWoms you currently need either the 2.2 release or the latest
+2.3 trunk version.
 
 With option files you can enable options, set compiler flags and
-define paths to external libraries. Exemplary option files are located 
-in $EWOMS_ROOT/optim.opts and $EWOMS_ROOT/debug.opts respectively. 
+define paths to external libraries. Exemplary option files are located
+in $EWOMS_ROOT/optim.opts and $EWOMS_ROOT/debug.opts respectively.
 ($EWOMS_ROOT is the directory where the unpacked files of the eWoms
-distribution are located.) 
+package are located.)
 
-A mandatory option to be included in CONFIGURE_FLAGS is:
---enable-fieldvector-size-is-method
+After you've obtained DUNE, compile eWoms using
 
-Now compile everything with
-
-  ./dune-common/bin/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=dumux all
+  $PATH_TO_DUNECONTROL/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=ewoms all
+  cd $EWOMS_ROOT
+  make check # <- only required if you want to compile the example applications
 
 A more comprehensive introduction to the DUNE build system can be
-found in [2].
+found at [2].
 
 Links
 -----
 
-0. http://www.dune-project.org/doc/installation-notes.html
-1. http://www.dune-project.org/download.html
-2. http://www.dune-project.org/doc/buildsystem/buildsystem.pdf
+[0] http://www.dune-project.org/doc/installation-notes.html
+[1] http://www.dune-project.org/download.html
+[2] http://www.dune-project.org/doc/buildsystem/buildsystem.pdf
 

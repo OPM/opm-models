@@ -7,37 +7,40 @@ Copyright holders:
 2008--2012  Melanie Darcis
 2008--2009  Onur Dogan
 2009--2011  Karin Erbertseder
-2009--2012  Benjamin Faigle
-2007--2012  Bernd Flemisch
+2009--2013  Benjamin Faigle
+2007--2013  Bernd Flemisch
 2007--2010  Jochen Fritz
 2012        Christoph Grüninger
 2012        Vishal Jambhekar
 2012        Alexander Kissinger
-2008--2012  Andreas Lauser
+2008--2013  Andreas Lauser
 2008--2012  Klaus Mosthaf
 2009--2012  Philipp Nuske
 2008        Irina Rybak
 2009        Anneli Schöniger
-2010--2012  Nicolas Schwenck
+2010--2013  Nicolas Schwenck
 2011        Michael Sinsbeck
 2010        Leopold Stadler
 2010--2012  Lena Walter
 2010--2011  David Werner 
-2008--2012  Markus Wolff
+2008--2013  Markus Wolff
 
-eWons is licensed under the terms and conditions of the GNU General
+
+eWoms is licensed under the terms and conditions of the GNU General
 Public License (GPL) version 2 or - at your option - any later
-version. The GPL can be read online [0], or below.
+version. At this point, we would like explicitly state the fact that
+this license also includes version three [3] of the GPL. The GPL can
+be read online [2, 3] and is also embedded in the file COPYING in the
+topmost directory of the eWoms source code tree.
 
-Please note that eWoms' license, unlike DUNE's, does _NOT_ feature a
+Please note that eWoms' license - unlike DUNE's - does _NOT_ feature a
 template exception from the GNU General Public License. This means
 that you must publish any source code under a compatible license which
 uses any of the eWoms header files if you want to redistribute your
-program to third parties. (Note that the GPL only applies to code
+program to third parties. (Note, that the GPL only applies to code
 which you redistribute; If you don't pass the modified code, the
 modifications don't need to be covered by the GPL.)
 
-[0] http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 
                     GNU GENERAL PUBLIC LICENSE

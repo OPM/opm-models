@@ -4,14 +4,13 @@ Why CMake
 You can use CMake 2.8 or higher as alternative to the build system 
 provided by DUNE. CMake is included in most GNU/Linux distributions 
 or can be downloaded at www.cmake.org. Using CMake has several 
-advantages compared to autotools:
+advantages compared to the default DUNE build system:
 
  - Out-of-tree builds are the default way to build software: The
    directory where the source code resides won't get modified during
    compilation.
- - Much faster checking of the configuration
- - Much simpler to write your own modules
- - Better dependency handling
+ - Much faster configuration step
+ - Much simpler to write your own build system modules
  - Less noisy output during compilation
 
 But alas, it comes with a cost:
@@ -19,25 +18,26 @@ But alas, it comes with a cost:
  - Parameters to the compiler are usually not exactly the same as
    those picked by DUNE's build system. This might sometimes lead to
    problems.
- - Dependencies between DUNE modules are not yet handled, i.e. all
-   DUNE modules on which eWoms depends (-> common, grid, istl, 
-   geometry, localfunctions) need to be installed already.
+ - Dependencies between DUNE modules are not handled automatically
+   yet. This means that all DUNE modules on which eWoms depends (->
+   common, grid, istl, geometry, localfunctions) need to be installed
+   already.
 
 Preparing the installation
 --------------------------
 
 After installing cmake on your system, make sure that the 'cmake'
-executable is in your PATH. To configure the project, create a 
-new empty directory which will be used to store the files from
-the build process and run
+executable is in your PATH. To configure the project, create an empty
+directory which will be used to store the files stemming from the
+build process and run
 
 cd path/to/empty/build/directory
 cmake path/to/ewoms/source/directory
 
-You might want to set a few parameters if you didn't install the
+You might need to set a few parameters if you didn't install the
 required libraries system wide. CMake cache variables can be set using
-the "-D" command line switch to 'cmake'. The most important paramerters
-are probably:
+the "-D" command line switch to 'cmake'. The most commonly required
+parameters are:
 
 DUNE_DIR        Path where all DUNE modules have been compiled and can be
                 found in subdirectories with the module name
@@ -55,29 +55,27 @@ METIS_DIR         Location of the METIS graph partioning library (required
 CMAKE_BUILD_TYPE  Type of build. Either 'debug' or 'release', default is 
                   'release'.
 
+If cmake did not report any errors, the project can be build by 
 
-If this was successful, the project can be build by 
+    make
 
-make
+Finally, everything can be installed:
 
-Finally, install everything:
-
-make install
+   make install
 
 Examples
 ========
 
-cd path/to/empty/build/directory
-cmake -DCMAKE_BUILD_TYPE=debug \
-      -DDUNE_DIR=/usr/local/dune/ \
-      -DUG_DIR=/usr/local/ug \
-      -DALUGrid_DIR=/usr/local/alugrid \
-      -DMETIS_DIR=/usr/local/metis \
-      path/to/ewoms/source/directory
+    cd path/to/empty/build/directory
+    cmake -DCMAKE_BUILD_TYPE=debug \
+          -DDUNE_DIR=/usr/local/dune/ \
+          -DUG_DIR=/usr/local/ug \
+          -DALUGrid_DIR=/usr/local/alugrid \
+          -DMETIS_DIR=/usr/local/metis \
+          path/to/ewoms/source/directory
 
 You can also specify the compiler explicitly using the cmake options
 -DCMAKE_CXX_COMPILER and -DCMAKE_C_COMPILER.
-
 
 Testing
 =======
