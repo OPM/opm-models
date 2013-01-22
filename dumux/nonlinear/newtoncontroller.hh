@@ -31,7 +31,11 @@
 
 #include <dune/istl/istlexception.hh>
 #include <dune/istl/ilu.hh> // required for Dune::MatrixBlockError. WTF?
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
 
 #include <iostream>
 #include <sstream>

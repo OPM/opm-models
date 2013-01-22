@@ -25,7 +25,11 @@
 
 #include "convergencecriterion.hh"
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
 
 namespace Dumux {
 /*! \addtogroup ISTL_Solvers
