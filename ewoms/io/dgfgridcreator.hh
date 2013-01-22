@@ -24,7 +24,12 @@
 #define EWOMS_DGF_GRID_CREATOR_HH
 
 #include <dune/grid/io/file/dgfparser.hh>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
 #include <dune/common/mpihelper.hh>
+#endif
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
