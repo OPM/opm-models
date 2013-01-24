@@ -13,6 +13,9 @@ enable_language(C)
 # make sure our own modules will be found
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
+# needed for Debian installation scheme
+include (UseMultiArch)
+
 ##############
 # Set the policy how CMake resolves library paths to the
 # policy introduced by CMake 2.6. For details, see
@@ -144,7 +147,7 @@ EwomsSetBoolConfigHVar(HAVE_TR1_TUPLE HAVE_TR1_TUPLE)
 ##############
 # default directory to find control files if installed by package
 if (UNIX)
-  set (DUNE_DIR "/usr/lib/dunecontrol" CACHE PATH "Parent directory of DUNE modules")
+  set (DUNE_DIR ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol CACHE PATH "Parent directory of DUNE modules")
 endif (UNIX)
 
 # add dune-common version from dune.module to config.h
@@ -272,6 +275,28 @@ file(GLOB grids "test/implicit/grids/*.dgf" "test/decoupled/*/grids/*.dgf" "test
 foreach(file ${grids})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach(file)
+
+# find all the source code (note that these variables have name after
+# the target library and not the project). the documentation recommends
+# against using globs to enumerate source code, but if you list the
+# files explicitly you'll change the build files every time you add to
+# the project as well as having to rebuild completely anyway.
+file (GLOB_RECURSE ewoms_HEADERS "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.hh")
+
+### installation ###
+foreach (_hdr IN LISTS ewoms_HEADERS)
+	get_filename_component (_dir ${_hdr} PATH)
+	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
+	install (
+		FILES ${_hdr}
+		DESTINATION include/${_rel_dir}
+		)
+endforeach (_hdr)
+install (
+	FILES ${CMAKE_SOURCE_DIR}/dune.module
+	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol/ewoms
+	)
+message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
 
 # set up CTest 
 enable_testing()
