@@ -17,5 +17,5 @@ INPUT                 += @srcdir@/mainpage \
 COLLABORATION_GRAPH=no
 HAVE_DOT=no
 IMAGE_PATH             = @srcdir@/images
-					 
+
 EXTRA_PACKAGES        += amsmath,amssymb

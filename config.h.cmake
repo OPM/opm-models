@@ -4,14 +4,11 @@
 #define CONFIG_H
 
 #define DUNE_MINIMAL_DEBUG_LEVEL 4
-#cmakedefine HAVE_BOOST 1
-#cmakedefine HAVE_DUNE 1
+#cmakedefine HAVE_DUNE_COMMON 1
+#cmakedefine HAVE_DUNE_GEOMETRY 1
 #cmakedefine HAVE_DUNE_GRID 1
-#cmakedefine HAVE_DUNE_DISC 1
-#cmakedefine HAVE_DUNE_FEM 1
-#cmakedefine HAVE_DUNE_ISTL 1
 #cmakedefine HAVE_DUNE_LOCALFUNCTIONS 1
-#cmakedefine HAVE_DUNE_PDELAB 1
+#cmakedefine HAVE_DUNE_ISTL 1
 
 /* If this is set, the member 'size' of FieldVector is a method rather than an
    enum */
@@ -30,19 +27,25 @@
 #define DUNE_COMMON_VERSION_REVISION ${DUNE_COMMON_VERSION_REVISION}
 
 /* Define to the version of eWoms */
-#cmakedefine EWOMS_VERSION "${EWOMS_VERSION}"
+#define EWOMS_VERSION "${ProjectVersion}"
 
 /* Define to the major version of eWoms */
-#cmakedefine EWOMS_VERSION_MAJOR ${EWOMS_VERSION_MAJOR}
+#define EWOMS_VERSION_MAJOR ${EWOMS_VERSION_MAJOR}
 
 /* Define to the minor version of eWoms */
-#cmakedefine EWOMS_VERSION_MINOR ${EWOMS_VERSION_MINOR}
+#define EWOMS_VERSION_MINOR ${EWOMS_VERSION_MINOR}
 
 /* Define to the revision of eWoms */
-#cmakedefine EWOMS_VERSION_REVISION ${EWOMS_VERSION_REVISION}
+#define EWOMS_VERSION_REVISION ${EWOMS_VERSION_REVISION}
 
 /* Define to the code name of eWoms */
-#cmakedefine EWOMS_CODENAME "${EWOMS_CODENAME}"
+#define EWOMS_CODENAME "${ProjectCodename}"
+
+/* Define to the name of the maintainer of eWoms */
+#define EWOMS_MAINTAINER_NAME "${ProjectMaintainer}"
+
+/* Define to the email address of the maintainer of eWoms */
+#define EWOMS_MAINTAINER "${ProjectMaintainerEmail}"
 
 #cmakedefine HAVE_MPI 1
 #if HAVE_MPI
@@ -85,6 +88,9 @@
 #cmakedefine HAVE_MEM_USAGE_T_EXPANSIONS
 #endif
 
+/* Define to 1 if you have <valgrind/memcheck.h> */
+#cmakedefine HAVE_VALGRIND 1
+
 /* Define to 1 if you have the <memory> header file. */
 #cmakedefine HAVE_MEMORY 1
 
@@ -96,9 +102,6 @@
 
 /* Define to 1 if SHARED_PTR_NAMESPACE::make_shared is usable */
 #cmakedefine HAVE_MAKE_SHARED 1
-
-/* Define to 1 if you have <boost/make_shared.hpp> */
-#cmakedefine HAVE_BOOST_MAKE_SHARED_HPP 1
 
 /* C++-2011 features */
 #cmakedefine HAVE_NULLPTR 1

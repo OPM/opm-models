@@ -1,75 +1,57 @@
-add_executable("co2injection_immiscible" co2injection_immiscible.cc)
-add_executable("co2injection_flash" co2injection_flash.cc)
-add_executable("co2injection_ncp" co2injection_ncp.cc)
-add_executable("co2injection_pvs" co2injection_pvs.cc)
-add_executable("co2injection_immiscible_ni" co2injection_immiscible_ni.cc)
-add_executable("co2injection_flash_ni" co2injection_flash_ni.cc)
-add_executable("co2injection_ncp_ni" co2injection_ncp_ni.cc)
-add_executable("co2injection_pvs_ni" co2injection_pvs_ni.cc)
-add_executable("cuvette_pvs" cuvette_pvs.cc)
-add_executable("diffusion_flash" diffusion_flash.cc)
-add_executable("diffusion_ncp" diffusion_ncp.cc)
-add_executable("diffusion_pvs" diffusion_pvs.cc)
-add_executable("finger_immiscible" finger_immiscible.cc)
-add_executable("fracture_discretefracture" fracture_discretefracture.cc)
-add_executable("groundwater_immiscible" groundwater_immiscible.cc)
-add_executable("infiltration_pvs" infiltration_pvs.cc)
-add_executable("lens_immiscible" lens_immiscible.cc)
-add_executable("lens_richards" lens_richards.cc)
-add_executable("obstacle_immiscible" obstacle_immiscible.cc)
-add_executable("obstacle_ncp" obstacle_ncp.cc)
-add_executable("obstacle_pvs" obstacle_pvs.cc)
-add_executable("outflow_pvs" outflow_pvs.cc)
-add_executable("powerinjection_darcy" powerinjection_darcy.cc)
-add_executable("powerinjection_forchheimer" powerinjection_forchheimer.cc)
-add_executable("reservoir_blackoil" reservoir_blackoil.cc)
-add_executable("test_navierstokes" test_navierstokes.cc)
-add_executable("test_quadrature" test_quadrature.cc)
-add_executable("test_stokes" test_stokes.cc)
-add_executable("test_stokes2c" test_stokes2c.cc)
-add_executable("test_stokesni" test_stokesni.cc)
-add_executable("waterair_pvs_ni" waterair_pvs_ni.cc)
+# set the CMake module include path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-target_link_libraries("co2injection_immiscible" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_flash" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_ncp" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_pvs" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_immiscible_ni" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_flash_ni" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_ncp_ni" ${EwomsLinkLibraries})
-target_link_libraries("co2injection_pvs_ni" ${EwomsLinkLibraries})
-target_link_libraries("cuvette_pvs" ${EwomsLinkLibraries})
-target_link_libraries("fracture_discretefracture" ${EwomsLinkLibraries})
-target_link_libraries("finger_immiscible" ${EwomsLinkLibraries})
-target_link_libraries("diffusion_flash" ${EwomsLinkLibraries})
-target_link_libraries("diffusion_ncp" ${EwomsLinkLibraries})
-target_link_libraries("diffusion_pvs" ${EwomsLinkLibraries})
-target_link_libraries("groundwater_immiscible" ${EwomsLinkLibraries})
-target_link_libraries("infiltration_pvs" ${EwomsLinkLibraries})
-target_link_libraries("lens_immiscible" ${EwomsLinkLibraries})
-target_link_libraries("lens_richards" ${EwomsLinkLibraries})
-target_link_libraries("obstacle_immiscible" ${EwomsLinkLibraries})
-target_link_libraries("obstacle_ncp" ${EwomsLinkLibraries})
-target_link_libraries("obstacle_pvs" ${EwomsLinkLibraries})
-target_link_libraries("outflow_pvs" ${EwomsLinkLibraries})
-target_link_libraries("powerinjection_darcy" ${EwomsLinkLibraries})
-target_link_libraries("powerinjection_forchheimer" ${EwomsLinkLibraries})
-target_link_libraries("reservoir_blackoil" ${EwomsLinkLibraries})
-target_link_libraries("test_navierstokes" ${EwomsLinkLibraries})
-target_link_libraries("test_quadrature" ${EwomsLinkLibraries})
-target_link_libraries("test_stokes" ${EwomsLinkLibraries})
-target_link_libraries("test_stokes2c" ${EwomsLinkLibraries})
-target_link_libraries("test_stokesni" ${EwomsLinkLibraries})
-target_link_libraries("waterair_pvs_ni" ${EwomsLinkLibraries})
+# eWoms unit-testing infrastructure
+include(EwomsAddTest)
 
-# add required libraries and includes to the build flags 
-link_directories(${EwomsLinkDirectories})
-include_directories(${EwomsIncludeDirectories})
+# we add the water-air test first because it take longest and so that
+# we don't have to wait for them as long for parallel test runs
+EwomsAddTest(waterair_pvs_ni)
 
-# make sure the grids are present in the build directory
-add_custom_command(TARGET "lens_immiscible"
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E
-                        copy_directory 
-                           "${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                           "${CMAKE_CURRENT_BINARY_DIR}/grids")
+# add targets for all tests of the implicit models
+EwomsAddTest(co2injection_immiscible)
+EwomsAddTest(co2injection_flash)
+EwomsAddTest(co2injection_ncp)
+EwomsAddTest(co2injection_pvs)
+EwomsAddTest(co2injection_immiscible_ni)
+EwomsAddTest(co2injection_flash_ni)
+EwomsAddTest(co2injection_ncp_ni)
+EwomsAddTest(co2injection_pvs_ni)
+EwomsAddTest(cuvette_pvs)
+EwomsAddTest(diffusion_flash)
+EwomsAddTest(diffusion_ncp)
+EwomsAddTest(diffusion_pvs)
+EwomsAddTest(finger_immiscible)
+EwomsAddTest(fracture_discretefracture CONDITION ALUGRID_FOUND)
+EwomsAddTest(groundwater_immiscible)
+EwomsAddTest(infiltration_pvs)
+EwomsAddTest(lens_immiscible)
+EwomsAddTest(lens_richards)
+EwomsAddTest(obstacle_immiscible)
+EwomsAddTest(obstacle_ncp)
+EwomsAddTest(obstacle_pvs)
+EwomsAddTest(outflow_pvs)
+EwomsAddTest(powerinjection_darcy)
+EwomsAddTest(powerinjection_forchheimer)
+EwomsAddTest(reservoir_blackoil)
+EwomsAddTest(test_navierstokes CONDITION ${ALUGRID_FOUND} AND ${SUPERLU_FOUND})
+EwomsAddTest(test_quadrature DRIVER_ARGS --plain test_quadrature)
+EwomsAddTest(test_stokes CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokes2c CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokesni CONDITION SUPERLU_FOUND)
+
+EwomsAddTest(obstacle_immiscible_parallel
+  EXE_NAME obstacle_immiscible
+  NO_COMPILE
+  CONDITION MPI_FOUND
+  DRIVER_ARGS --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
+
+EwomsAddTest(obstacle_immiscible_parameters
+  EXE_NAME obstacle_immiscible
+  NO_COMPILE
+  DRIVER_ARGS --parameters obstacle_immiscible)
+
+EwomsAddTest(obstacle_pvs_restart
+  EXE_NAME obstacle_pvs
+  NO_COMPILE
+  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2)

@@ -1,10 +1,41 @@
 ##############
-# general stuff
+# general stuff. we extract the all information possible from the
+# dune.module file.
 cmake_minimum_required(VERSION 2.8)
-set(ProjectName            "eWoms")
-set(ProjectVersion         "2.2-git")
-set(ProjectMaintainer      "Andreas Lauser")
-set(ProjectMaintainerEmail "Andreas.Lauser_at_iws dot uni-stuttgart dot de")
+
+# read the dune.module file
+file(READ "${CMAKE_SOURCE_DIR}/dune.module" DUNE_MODULE)
+
+# find the project name
+string(REGEX REPLACE ".*Module:[ ]*([^\n]+).*" "\\1" ProjectName "${DUNE_MODULE}")
+
+# set the project version. also split the version string into MAJOR.MINOR.REVISON
+string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" ProjectVersion "${DUNE_MODULE}")
+string(REGEX REPLACE "^([0-9]*)\\..*\$" "\\1" EWOMS_VERSION_MAJOR "${ProjectVersion}")
+string(REGEX REPLACE "^[0-9]*\\.([0-9]*).*\$" "\\1" EWOMS_VERSION_MINOR "${ProjectVersion}")
+string(REGEX REPLACE "^[0-9]*\\.[0-9]*\\.([0-9]*).*\$" "\\1" EWOMS_VERSION_REVISION "${ProjectVersion}")
+
+# if the regular expression for the revision did not match, we use "0"
+# as the revision number. (we silently assume, that the regexps for
+# the major and minor version match.)
+if ("${EWOMS_VERSION_REVISION}" STREQUAL "${ProjectVersion}")
+  set(EWOMS_VERSION_REVISION "0")
+endif("${EWOMS_VERSION_REVISION}" STREQUAL "${ProjectVersion}")
+
+# set the maintainer email (the default Dune autotools build system
+# assumes that dune.module's 'Maintainer' field only contains the
+# email address of the maintainer. Using the format 'Maintainer:
+# Maintainer Name <maintainer@address.org>' makes the DUNE autotools
+# build system choke, so we introduce a new field 'MaintainerName'
+# which is ignored by the DUNE autotools build system.)
+string(REGEX REPLACE ".*MaintainerName:[ ]*([^\n]+).*" "\\1" ProjectMaintainer "${DUNE_MODULE}")
+string(REGEX REPLACE ".*Maintainer:[ ]*([^\n]+).*" "\\1" ProjectMaintainerEmail "${DUNE_MODULE}")
+
+# find codename string
+string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" ProjectCodename "${DUNE_MODULE}")
+
+##############
+
 project(${ProjectName} CXX)
 # needed for tests like pthread and BLAS
 enable_language(C)
@@ -14,35 +45,41 @@ enable_language(C)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 # needed for Debian installation scheme
-include (UseMultiArch)
+include(UseMultiArch)
 
+# eWoms unit-testing infrastructure
+include(EwomsAddTest)
+ 
 ##############
-# Set the policy how CMake resolves library paths to the
-# policy introduced by CMake 2.6. For details, see
+# Set CMake policies
+
+# resolve library paths to the policy introduced by CMake 2.6. For
+# details, see
 # http://www.cmake.org/cmake/help/cmake-2.6.html#policy:CMP0003
 cmake_policy(SET CMP0003 NEW)
+
+##############
+# Find the required packages
 
 # set required compiler flags for C++11 (former C++0x)
 find_package(CXX11Features)
 find_package(SharedPtr)
 
-##############
-# Find the required packages
-find_package(DUNE_grid REQUIRED)
-find_package(DUNE_istl REQUIRED)
-find_package(DUNE_localfunctions REQUIRED)
-find_package(DUNE_geometry REQUIRED)
 find_package(DUNE_common REQUIRED)
+find_package(DUNE_geometry REQUIRED)
+find_package(DUNE_grid REQUIRED)
+find_package(DUNE_localfunctions REQUIRED)
+find_package(DUNE_istl REQUIRED)
 
 ##############
 # Find the optional packages
 find_package(MPI)
-#find_package(Boost)
 find_package(Alberta)
 find_package(UG)
 find_package(ALUGrid)
 find_package(METIS)
 find_package(SuperLU)
+find_package(Valgrind)
 
 ##############
 # use this macros in the CMakelists of the subdirectories. 
@@ -63,12 +100,6 @@ set(EwomsIncludeDirectories
     ${DUNE_common_INCLUDE_DIRS}
     ${DUNE_istl_INCLUDE_DIRS}
     ${DUNE_localfunctions_INCLUDE_DIRS})
-
-if(BOOST_FOUND)
-  set(EwomsLinkDirectories "${EwomsLinkDirectories} ${Boost_LIBRARY_DIRS}")
-  set(EwomsLinkLibraries "${EwomsLinkLibraries} ${Boost_LIBRARIES}")
-  set(EwomsIncludeDirectories "${EwomsIncludeDirectories} ${Boost_INCLUDE_DIR}")
-endif(BOOST_FOUND)
 
 if(SUPERLU_FOUND)
   set(EwomsLinkLibraries ${EwomsLinkLibraries} ${SUPERLU_LIBS})
@@ -97,8 +128,9 @@ add_definitions(${CUSTOM_CXX_FLAGS})
 
 # with the config.h include file...
 macro(EwomsSetConfigHVar ConfigHName CMakeName)
+
   if(${CMakeName})
-    set(${ConfigHName} ${${CMakeName}})
+    set(${ConfigHName} "${${CMakeName}}")
   else(${CMakeName})
     set(${ConfigHName} 0)
   endif(${CMakeName})
@@ -106,23 +138,19 @@ endmacro(EwomsSetConfigHVar)
 
 macro(EwomsSetBoolConfigHVar ConfigHName CMakeName)
   if(${CMakeName})
-    if (${${CMakeName}})
-        set(${ConfigHName} 1)
-    else (${${CMakeName}})
-        set(${ConfigHName} 0)
-    endif(${${CMakeName}})
+    set(${ConfigHName} 1)
   else(${CMakeName})
     set(${ConfigHName} 0)
   endif(${CMakeName})
 endmacro(EwomsSetBoolConfigHVar)
 
-EwomsSetBoolConfigHVar(HAVE_BOOST               Boost_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE                DUNE_common_FOUND)
+EwomsSetBoolConfigHVar(HAVE_DUNE_COMMON         DUNE_common_FOUND)
+EwomsSetBoolConfigHVar(HAVE_DUNE_GEOMETRY       DUNE_geometry_FOUND)
 EwomsSetBoolConfigHVar(HAVE_DUNE_GRID           DUNE_grid_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_ISTL           DUNE_istl_FOUND)
 EwomsSetBoolConfigHVar(HAVE_DUNE_LOCALFUNCTIONS DUNE_localfunctions_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_PDELAB         DUNE_pdelab_FOUND)
+EwomsSetBoolConfigHVar(HAVE_DUNE_ISTL           DUNE_istl_FOUND)
 EwomsSetBoolConfigHVar(HAVE_SUPERLU             SUPERLU_FOUND)
+EwomsSetBoolConfigHVar(HAVE_VALGRIND            VALGRIND_INCLUDE_DIR)
 
 EwomsSetConfigHVar(PROJECT_NAME             ProjectName)
 EwomsSetConfigHVar(PROJECT_VERSION          ProjectVersion)
@@ -179,32 +207,6 @@ endif(NON_NUMBER_CHARACTER)
 ##############
 
 ##############
-# add eWoms version from dune.module to config.h
-file(READ "${CMAKE_SOURCE_DIR}/dune.module" EWOMS_MODULE)
-
-# find version string
-string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" EWOMS_VERSION "${EWOMS_MODULE}")
-string(REGEX REPLACE "([0-9]).*" "\\1" EWOMS_VERSION_MAJOR "${EWOMS_VERSION}")
-string(REGEX REPLACE "[0-9]*\\.([0-9]).*" "\\1" EWOMS_VERSION_MINOR "${EWOMS_VERSION}")
-string(REGEX REPLACE "[0-9]*\\.[0-9]*\\.([0-9]).*" "\\1" EWOMS_VERSION_REVISION "${EWOMS_VERSION}")
-
-# remove false matches
-string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${EWOMS_VERSION_MINOR}")
-if(NON_NUMBER_CHARACTER)
-  set(EWOMS_VERSION_MINOR "0")
-endif(NON_NUMBER_CHARACTER)
-string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${EWOMS_VERSION_REVISION}")
-if(NON_NUMBER_CHARACTER)
-  set(EWOMS_VERSION_REVISION "0")
-endif(NON_NUMBER_CHARACTER)
-
-# find codename string
-string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" EWOMS_CODENAME "${EWOMS_MODULE}")
-set(EWOMS_CODENAME "${EWOMS_CODENAME}")
-
-##############
-
-##############
 # adapt build system to detected packages
 
 # deal with UG
@@ -236,6 +238,8 @@ endif(METIS_FOUND)
 EwomsSetBoolConfigHVar(HAVE_METIS METIS_FOUND)
 ##############
 
+##############
+# deal with MPI
 if(MPI_FOUND)
    set(TMP ${MPI_COMPILE_FLAGS})
    separate_arguments(TMP)
@@ -245,16 +249,92 @@ if(MPI_FOUND)
    set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${MPI_INCLUDE_PATH})
 endif(MPI_FOUND)
 EwomsSetBoolConfigHVar(HAVE_MPI MPI_FOUND)
-
-# actually write the config.h file to disk 
-configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
-#add_definitions(-DHAVE_CONFIG_H)
+##############
 
 ##############
-# tell cmake that we've got a few subdirectories. (that's the
-# directories where the actual programs are)
-add_subdirectory("test")
-add_subdirectory("tutorial")
+# documentation
+configure_file (
+        ${PROJECT_SOURCE_DIR}/doc/doxygen/Doxyfile.cmake
+        ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
+        @ONLY
+        )
+find_package (Doxygen)
+if (DOXYGEN_FOUND)
+        add_custom_target (doc
+                COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
+                SOURCES ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen
+                COMMENT "Generating API documentation with Doxygen"
+                VERBATIM
+                )
+        set (_formats html)
+        foreach (format IN LISTS _formats)
+                string (TOUPPER ${format} FORMAT)
+                install (
+                        DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen/${format}
+                        DESTINATION share/doc/ewoms/
+                        COMPONENT ${format}
+                        OPTIONAL
+                        )
+                # target to install just HTML documentation
+                add_custom_target (install-${format}
+                        COMMAND ${CMAKE_COMMAND} -DCOMPONENT=${format} -P cmake_install.cmake
+                        COMMENT Installing ${FORMAT} documentation
+                        VERBATIM
+                        )
+                # since the documentation is optional, it is not automatically built
+                add_dependencies (install-${format} doc)
+        endforeach (format)
+endif (DOXYGEN_FOUND)
+##############
+
+##############
+# header file installation
+
+# find all the headers. The CMake documentation recommends against
+# using globs to enumerate source code, but if you list the files
+# explicitly you'll need to change the build files every time you add
+# to the project as well as having to rebuild completely...
+file (GLOB_RECURSE ewoms_HEADERS "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.hh")
+
+foreach (_hdr IN LISTS ewoms_HEADERS)
+	get_filename_component (_dir ${_hdr} PATH)
+	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
+	install (
+		FILES ${_hdr}
+		DESTINATION include/${_rel_dir}
+		)
+endforeach (_hdr)
+install (
+	FILES ${CMAKE_SOURCE_DIR}/dune.module
+	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol/ewoms
+	)
+message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
+
+# use the same name for the source tree as AutoTools so that we can
+# share the config file template between the two systems
+get_filename_component(abs_top_srcdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# extract the definitions that various modules have added
+get_directory_property (EWOMS_COMP_DEFS COMPILE_DEFINITIONS)
+foreach(d ${EWOMS_COMP_DEFS})
+  set(ALL_PKG_CPPFLAGS "${ALL_PKG_CPPFLAGS}-D${d} ")
+endforeach()
+
+##############
+# write the config.h file to disk 
+configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
+
+# make variable substitution and write config mode file
+configure_file(EwomsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/EwomsConfig.cmake @ONLY)
+
+#add_definitions(-DHAVE_CONFIG_H)
+##############
+
+##############
+# set up CTest 
+enable_testing()
+include(CTest)
 
 # copy the testing script
 make_directory(bin)
@@ -276,122 +356,9 @@ foreach(file ${grids})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach(file)
 
-# find all the source code (note that these variables have name after
-# the target library and not the project). the documentation recommends
-# against using globs to enumerate source code, but if you list the
-# files explicitly you'll change the build files every time you add to
-# the project as well as having to rebuild completely anyway.
-file (GLOB_RECURSE ewoms_HEADERS "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.hh")
-
-### installation ###
-foreach (_hdr IN LISTS ewoms_HEADERS)
-	get_filename_component (_dir ${_hdr} PATH)
-	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
-	install (
-		FILES ${_hdr}
-		DESTINATION include/${_rel_dir}
-		)
-endforeach (_hdr)
-install (
-	FILES ${CMAKE_SOURCE_DIR}/dune.module
-	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol/ewoms
-	)
-message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
-
-# set up CTest 
-enable_testing()
-include(CTest)
-
-# we add the water-air and the lens-immiscible tests first because
-# they take longest and so that we don't have to wait for them as long
-# for parallel test runs
-add_test(waterair_pvs_ni bin/runtest.sh --simulation waterair_pvs_ni)
-add_test(lens_immiscible bin/runtest.sh --simulation lens_immiscible)
-
-add_test(test_propertysystem bin/runtest.sh --plain test_propertysystem)
-add_test(test_spline bin/runtest.sh --plain test_spline)
-add_test(test_fluidsystems bin/runtest.sh --plain test_fluidsystems)
-add_test(test_immiscibleflash bin/runtest.sh --plain test_immiscibleflash)
-add_test(test_ncpflash bin/runtest.sh --plain test_ncpflash)
-add_test(test_pengrobinson bin/runtest.sh --plain test_pengrobinson)
-add_test(test_tabulation bin/runtest.sh --plain test_tabulation)
-
-add_test(co2injection_immiscible bin/runtest.sh --simulation co2injection_immiscible)
-add_test(co2injection_immiscible_ni bin/runtest.sh --simulation co2injection_immiscible_ni)
-add_test(co2injection_flash bin/runtest.sh --simulation co2injection_flash)
-add_test(co2injection_flash_ni bin/runtest.sh --simulation co2injection_flash_ni)
-add_test(co2injection_ncp bin/runtest.sh --simulation co2injection_ncp)
-add_test(co2injection_ncp_ni bin/runtest.sh --simulation co2injection_ncp_ni)
-add_test(co2injection_pvs bin/runtest.sh --simulation co2injection_pvs)
-add_test(co2injection_pvs_ni bin/runtest.sh --simulation co2injection_pvs_ni)
-add_test(cuvette_pvs bin/runtest.sh --simulation cuvette_pvs)
-add_test(diffusion_flash bin/runtest.sh --simulation diffusion_flash)
-add_test(diffusion_ncp bin/runtest.sh --simulation diffusion_ncp)
-add_test(diffusion_pvs bin/runtest.sh --simulation diffusion_pvs)
-add_test(finger_immiscible bin/runtest.sh --simulation finger_immiscible)
-add_test(groundwater_immiscible bin/runtest.sh --simulation groundwater_immiscible --linear-solver-verbosity=2)
-add_test(infiltration_pvs bin/runtest.sh --simulation infiltration_pvs)
-add_test(lens_richards bin/runtest.sh --simulation lens_richards --newton-write-convergence=true)
-add_test(obstacle_immiscible bin/runtest.sh --simulation obstacle_immiscible)
-add_test(obstacle_ncp bin/runtest.sh --simulation obstacle_ncp)
-add_test(obstacle_pvs bin/runtest.sh --simulation obstacle_pvs)
-add_test(outflow_pvs bin/runtest.sh --simulation outflow_pvs)
-add_test(powerinjection_darcy bin/runtest.sh --simulation powerinjection_darcy)
-add_test(powerinjection_forchheimer bin/runtest.sh --simulation powerinjection_forchheimer)
-add_test(reservoir_blackoil bin/runtest.sh --simulation reservoir_blackoil)
-add_test(test_quadrature bin/runtest.sh --plain test_quadrature)
-
-add_test(test_diffusion bin/runtest.sh --simulation-diffusion test_diffusion 3)
-add_test(test_1p bin/runtest.sh --plain test_1p)
-add_test(test_transport bin/runtest.sh --simulation test_transport)
-add_test(test_impes bin/runtest.sh --simulation test_impes)
-add_test(test_multiphysics2p2c bin/runtest.sh --simulation test_multiphysics2p2c --end-time=2000)
-
-add_test(tutorial_coupled bin/runtest.sh --simulation tutorial_coupled)
-add_test(tutorial_decoupled bin/runtest.sh --simulation tutorial_decoupled)
-
-# test the restart capability
-add_test(obstacle_pvs_restart bin/runtest.sh --restart obstacle_pvs --pvs-verbosity=2)
-
-# test the parameter system
-add_test(obstacle_immiscible_parameters bin/runtest.sh --parameters obstacle_immiscible)
-
-# conditionally add the tests that depend on superLU and ALUGrid
-if(SUPERLU_FOUND AND ALUGRID_FOUND)
-  add_test(test_navierstokes bin/runtest.sh --simulation test_navierstokes)
-endif()
-
-# conditionally add the tests that depend on ALUGrid
-if(ALUGRID_FOUND)
-  add_test(fracture_discretefracture bin/runtest.sh --simulation fracture_discretefracture --end-time=1000)
-  add_test(test_mpfao2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAO)
-  add_test(test_mpfal2p bin/runtest.sh --simulation test_mpfa2p -ModelType MPFAL)
-  add_test(test_mpfal2padaptive  bin/runtest.sh --simulation test_mpfa2p -ModelType MPFALAdaptive --end-time=2e4)
-  add_test(test_adaptive2p2c bin/runtest.sh --simulation test_adaptive2p2c)
-  add_test(test_impesadaptive bin/runtest.sh --simulation test_impesadaptive)
-endif()
-
-# run a test in parallel
-if(MPI_FOUND)
-  add_test(obstacle_immiscible_parallel bin/runtest.sh --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
-endif()
-
-# conditionally add the tests that depend on superLU
-if(SUPERLU_FOUND)
- add_test(test_stokes bin/runtest.sh --simulation test_stokes)
- add_test(test_stokes2c bin/runtest.sh --simulation test_stokes2c)
- add_test(test_stokesni bin/runtest.sh --simulation test_stokesni)
-endif()
-
-# use the same name for the source tree as AutoTools so that we can
-# share the config file template between the two systems
-get_filename_component(abs_top_srcdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
-
-# extract the definitions that various modules have added
-get_directory_property (EWOMS_COMP_DEFS COMPILE_DEFINITIONS)
-foreach(d ${EWOMS_COMP_DEFS})
-  set(ALL_PKG_CPPFLAGS "${ALL_PKG_CPPFLAGS}-D${d} ")
-endforeach()
-
-# make variable substitution and write config mode file
-configure_file(EwomsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/EwomsConfig.cmake @ONLY)
+##############
+# tell cmake that we've got a few subdirectories. (that's the
+# directories where the unit tests and tutorials are.)
+add_subdirectory("test")
+add_subdirectory("tutorial")
+##############

@@ -1,8 +1,8 @@
-# add build targets
-add_executable("test_spline" test_spline.cc)
-target_link_libraries("test_spline" ${EwomsLinkLibraries})
+# set the CMake module include path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-# add required libraries and includes to the build flags 
-link_directories(${EwomsLinkDirectories})
-include_directories(${EwomsIncludeDirectories})
+# eWoms unit-testing infrastructure
+include(EwomsAddTest)
+
+EwomsAddTest(test_spline DRIVER_ARGS --plain test_spline)
 

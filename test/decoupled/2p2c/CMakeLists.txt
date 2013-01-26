@@ -1,13 +1,10 @@
-# add build targets
-add_executable("test_adaptive2p2c" test_adaptive2p2c.cc)
-target_link_libraries("test_adaptive2p2c" ${EwomsLinkLibraries})
+# set the CMake module include path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-add_executable("test_dec2p2c" test_dec2p2c.cc)
-target_link_libraries("test_dec2p2c" ${EwomsLinkLibraries})
+# eWoms unit-testing infrastructure
+include(EwomsAddTest)
 
-add_executable("test_multiphysics2p2c" test_multiphysics2p2c.cc)
-target_link_libraries("test_multiphysics2p2c" ${EwomsLinkLibraries})
-
-# add required libraries and includes to the build flags 
-link_directories(${EwomsLinkDirectories})
-include_directories(${EwomsIncludeDirectories})
+EwomsAddTest(test_adaptive2p2c CONDITION ALUGRID_FOUND)
+EwomsAddTest(test_dec2p2c)
+EwomsAddTest(test_multiphysics2p2c 
+  DRIVER_ARGS --simulation test_multiphysics2p2c --end-time=2000)

@@ -1,19 +1,8 @@
-# add build targets
-add_executable("test_diffusion" test_diffusion.cc)
-target_link_libraries("test_diffusion" ${EwomsLinkLibraries})
+# set the CMake module include path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
-add_executable("test_1p" test_1p.cc)
-target_link_libraries("test_1p" ${EwomsLinkLibraries})
+# eWoms unit-testing infrastructure
+include(EwomsAddTest)
 
-# add required libraries and includes to the build flags 
-link_directories(${EwomsLinkDirectories})
-include_directories(${EwomsIncludeDirectories})
-
-# make sure the grids are present in the build directory
-add_custom_command(TARGET "test_diffusion"
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E
-                        copy_directory 
-                           "${CMAKE_CURRENT_SOURCE_DIR}/grids"
-                           "${CMAKE_CURRENT_BINARY_DIR}/grids")
-
+EwomsAddTest(test_diffusion DRIVER_ARGS --simulation-diffusion test_diffusion 3)
+EwomsAddTest(test_1p DRIVER_ARGS --plain test_1p)

@@ -36,8 +36,7 @@ cmake path/to/ewoms/source/directory
 
 You might need to set a few parameters if you didn't install the
 required libraries system wide. CMake cache variables can be set using
-the "-D" command line switch to 'cmake'. The most commonly required
-parameters are:
+the "-D" command line switch to 'cmake'. Common parameters are:
 
 DUNE_DIR        Path where all DUNE modules have been compiled and can be
                 found in subdirectories with the module name
@@ -46,14 +45,22 @@ DUNE_common_DIR Path where the DUNE-common module can be found. If there
                 required.
 (All other DUNE modules are analogous)
 
-BOOST_ROOT        Path where the BOOST libraries from www.boost.org reside. 
-                  Usually this is detected automagically.
 UG_DIR            Location of the UG grid manager
 ALUGrid_DIR       Location of the ALUGrid grid manager
 METIS_DIR         Location of the METIS graph partioning library (required
                   for the parallel version of ALUGrid)
-CMAKE_BUILD_TYPE  Type of build. Either 'debug' or 'release', default is 
-                  'release'.
+CMAKE_BUILD_TYPE  Type of build. Either 'debug', 'release' or
+                  'ctest'. The 'ctest' build type is identical to the
+                  'debug' one, but it adds the compiler flags
+                  'fprofile-arcs' and '-ftest-coverage' which allows a
+                  coverage analysis of the tests. The default build
+                  type is 'release'.
+ENABLE_TESTS       Set this variable to '1' if you want to compile the unit
+                   tests. Since this takes quite some time and the
+                   unit tests are not interesting for most people,
+                   this variable defaults to '0'.
+CMAKE_INSTALL_PREFIX The directory to which eWoms will be
+                     installed. The default is '/usr/local'.
 
 If cmake did not report any errors, the project can be build by 
 

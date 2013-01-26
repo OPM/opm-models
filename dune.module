@@ -5,5 +5,6 @@
 Module: ewoms
 Version: 2.3-git
 Codename: Marsellus
-Maintainer: andreas.lauser@iws.uni-stuttgart.de
+MaintainerName: Andreas Lauser
+Maintainer: and_at_poware_dot_org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2)
