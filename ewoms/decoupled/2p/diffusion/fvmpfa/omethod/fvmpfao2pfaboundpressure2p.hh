@@ -476,10 +476,14 @@ private:
 
     int vtkOutputLevel_;
 
-    static constexpr Scalar threshold_ = 1e-15;
-    static constexpr int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
-    static constexpr int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
+    static const Scalar threshold_;
+    static const int pressureType_ = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w\f$, \f$ 1 = p_n\f$, \f$ 2 = p_{global}\f$)
+    static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation); //!< gives kind of saturation used (\f$ 0 = S_w\f$, \f$ 1 = S_n\f$)
 };
+
+template <class TypeTag>
+const typename FVMPFAO2PFABoundPressure2P<TypeTag>::Scalar
+FVMPFAO2PFABoundPressure2P<TypeTag>::threshold_ = 1e-15;
 
 template<class TypeTag>
 void FVMPFAO2PFABoundPressure2P<TypeTag>::initializeMatrix()

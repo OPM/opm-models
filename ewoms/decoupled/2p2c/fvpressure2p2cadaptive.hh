@@ -99,16 +99,16 @@ template<class TypeTag> class FVPressure2P2CAdaptive
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
+        pn = Indices::pressureNW
     };
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx,
+        wCompIdx = Indices::wPhaseIdx, nCompIdx = Indices::nPhaseIdx
     };
     enum
     {
-        rhs = BaseType::rhs, matrix = BaseType::matrix,
+        rhs = BaseType::rhs, matrix = BaseType::matrix
     };
 
     // typedefs to abbreviate several dune classes...

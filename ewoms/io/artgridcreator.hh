@@ -291,7 +291,7 @@ public:
      * MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { gridPtr_ = 0; }
+    { gridPtr_ = GridPointer((Grid*) 0); }
 
     /*!
      * \brief Returns the fracture mapper

@@ -147,8 +147,7 @@ class ReservoirProblem
 
         gCompIdx = FluidSystem::gCompIdx,
         oCompIdx = FluidSystem::oCompIdx,
-        wCompIdx = FluidSystem::wCompIdx,
-
+        wCompIdx = FluidSystem::wCompIdx
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

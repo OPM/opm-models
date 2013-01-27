@@ -98,7 +98,7 @@ public:
             boundaryInfo_[eqIdx].isCouplingInflow = 0;
             boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
 
@@ -118,7 +118,7 @@ public:
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
 
@@ -135,7 +135,7 @@ public:
             boundaryInfo_[eqIdx].isCouplingInflow = 0;
             boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
 
@@ -152,7 +152,7 @@ public:
             boundaryInfo_[eqIdx].isCouplingInflow = 1;
             boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
 
@@ -169,7 +169,7 @@ public:
             boundaryInfo_[eqIdx].isCouplingInflow = 0;
             boundaryInfo_[eqIdx].isCouplingOutflow = 1;
 
-            Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+            //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
         }
     }
 
@@ -188,7 +188,7 @@ public:
         boundaryInfo_[eqIdx].isCouplingInflow = 0;
         boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
 
     /*!
@@ -213,7 +213,7 @@ public:
         eq2pvIdx_[eqIdx] = pvIdx;
         pv2eqIdx_[pvIdx] = eqIdx;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
 
     /*!
@@ -232,7 +232,7 @@ public:
         boundaryInfo_[eqIdx].isCouplingInflow = 0;
         boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
 
     /*!
@@ -247,7 +247,7 @@ public:
         boundaryInfo_[eqIdx].isCouplingInflow = 1;
         boundaryInfo_[eqIdx].isCouplingOutflow = 0;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
 
     /*!
@@ -262,7 +262,7 @@ public:
         boundaryInfo_[eqIdx].isCouplingInflow = 0;
         boundaryInfo_[eqIdx].isCouplingOutflow = 1;
 
-        Valgrind::SetDefined(boundaryInfo_[eqIdx]);
+        //Valgrind::SetDefined(boundaryInfo_[eqIdx]);
     }
 
     /*!

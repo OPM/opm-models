@@ -91,7 +91,7 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, ImpetCflFactor, 0.95);
 
-SET_INT_PROP(TestIMPESAdaptiveProblem, EndTime, 2e7);
+SET_INT_PROP(TestIMPESAdaptiveProblem, EndTime, 20*1000*1000);
 SET_INT_PROP(TestIMPESAdaptiveProblem, GridAdaptMinLevel, 0);
 SET_INT_PROP(TestIMPESAdaptiveProblem, GridAdaptMaxLevel, 5);
 SET_SCALAR_PROP(TestIMPESAdaptiveProblem, GridAdaptRefineTolerance, 0.05);

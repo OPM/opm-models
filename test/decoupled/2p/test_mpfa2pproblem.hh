@@ -405,8 +405,13 @@ bool isBottom(const GlobalPosition& globalPos) const
 Scalar inFlux_;
 GlobalPosition inletLeftCoord_;
 GlobalPosition inletRightCoord_;
-static constexpr Scalar eps_ = 1e-6;
+static const Scalar eps_;
 };
+
+template <class TypeTag>
+const typename MPFATwoPTestProblem<TypeTag>::Scalar
+MPFATwoPTestProblem<TypeTag>::eps_ = 1e-6;
+
 } //end namespace
 
 #endif

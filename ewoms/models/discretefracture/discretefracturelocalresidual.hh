@@ -89,16 +89,12 @@ public:
 
         // add the storage term inside the fractures
         const auto &fsFracture = volVars.fractureFluidState();
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
-                continue;
 
-            phaseStorage[conti0EqIdx + phaseIdx] =
-                volVars.fracturePorosity()*
-                fsFracture.saturation(phaseIdx) *
-                fsFracture.density(phaseIdx) *
-                volVars.fractureVolume()/scv.volume;
-        }
+        phaseStorage[conti0EqIdx + phaseIdx] =
+            volVars.fracturePorosity()*
+            fsFracture.saturation(phaseIdx) *
+            fsFracture.density(phaseIdx) *
+            volVars.fractureVolume()/scv.volume;
 
         EnergyModule::addFracturePhaseStorage(phaseStorage, volVars, scv, phaseIdx);
 

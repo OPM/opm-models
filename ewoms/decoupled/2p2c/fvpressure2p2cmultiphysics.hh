@@ -85,7 +85,7 @@ class FVPressure2P2CMultiPhysics : public FVPressure2P2C<TypeTag>
     };
     enum
     {
-        pw = Indices::pressureW,
+        pw = Indices::pressureW
     };
     enum
     {

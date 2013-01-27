@@ -100,9 +100,8 @@ public:
 
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
-
-            Valgrind::SetDefined(constraintInfo_[eqIdx]);
         }
+        //Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
@@ -118,7 +117,7 @@ public:
         setConstraint(eqIdx, pvIdx);
         ParentType::operator[](pvIdx) = value;
 
-        Valgrind::SetDefined(constraintInfo_[eqIdx]);
+        //Valgrind::SetDefined(constraintInfo_);
     }
 
     /*!
@@ -136,7 +135,7 @@ public:
         eq2pvIdx_[eqIdx] = pvIdx;
         pv2eqIdx_[pvIdx] = eqIdx;
 
-        Valgrind::SetDefined(constraintInfo_[eqIdx]);
+        //Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
