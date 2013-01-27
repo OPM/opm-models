@@ -22,7 +22,9 @@ EwomsAddTest(diffusion_flash)
 EwomsAddTest(diffusion_ncp)
 EwomsAddTest(diffusion_pvs)
 EwomsAddTest(finger_immiscible)
-EwomsAddTest(fracture_discretefracture CONDITION ALUGRID_FOUND)
+EwomsAddTest(fracture_discretefracture
+  CONDITION ALUGRID_FOUND
+  DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
 EwomsAddTest(groundwater_immiscible)
 EwomsAddTest(infiltration_pvs)
 EwomsAddTest(lens_immiscible)
