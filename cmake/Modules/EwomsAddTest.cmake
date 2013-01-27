@@ -3,9 +3,9 @@
 #
 # EwomsAddTest(TestName
 #              [NO_COMPILE]
+#              [EXE_NAME TestExecutableName]
 #              [CONDITION ConditionalExpression]
 #              [DRIVER_ARGS TestDriverScriptArguments]
-#              [EXE_NAME TestExecutableName]
 #              [SOURCES SourceFile1 SourceFile2 ...])
 macro(EwomsAddTest TestName)
   CMAKE_PARSE_ARGUMENTS(CURTEST

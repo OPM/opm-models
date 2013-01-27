@@ -9,6 +9,19 @@ file(READ "${CMAKE_SOURCE_DIR}/dune.module" DUNE_MODULE)
 # find the project name
 string(REGEX REPLACE ".*Module:[ ]*([^\n]+).*" "\\1" ProjectName "${DUNE_MODULE}")
 
+# find the project description
+string(REGEX REPLACE ".*Description:[ ]*([^\n]+).*" "\\1" ProjectDescription "${DUNE_MODULE}")
+
+# find the URL of the homepage project
+string(REGEX REPLACE ".*Url:[ ]*([^\n]+).*" "\\1" ProjectUrl "${DUNE_MODULE}")
+
+# find the dependent modules
+string(REGEX REPLACE ".*Depends:[ ]*([^\n]+).*" "\\1" ProjectDepends "${DUNE_MODULE}")
+string(REGEX REPLACE "\\(" "" ProjectDepends "${ProjectDepends}")
+string(REGEX REPLACE "\\)" "" ProjectDepends "${ProjectDepends}")
+string(REGEX REPLACE " [ \t]*" " " ProjectDepends "${ProjectDepends}")
+
+
 # set the project version. also split the version string into MAJOR.MINOR.REVISON
 string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" ProjectVersion "${DUNE_MODULE}")
 string(REGEX REPLACE "^([0-9]*)\\..*\$" "\\1" EWOMS_VERSION_MAJOR "${ProjectVersion}")
@@ -37,8 +50,6 @@ string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" ProjectCodename "${DUNE_M
 ##############
 
 project(${ProjectName} CXX)
-# needed for tests like pthread and BLAS
-enable_language(C)
 
 ##############
 # make sure our own modules will be found
@@ -296,8 +307,9 @@ endif (DOXYGEN_FOUND)
 # explicitly you'll need to change the build files every time you add
 # to the project as well as having to rebuild completely...
 file (GLOB_RECURSE ewoms_HEADERS "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.hh")
+file (GLOB_RECURSE ewoms_INCFILES "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.inc")
 
-foreach (_hdr IN LISTS ewoms_HEADERS)
+foreach (_hdr IN LISTS ewoms_HEADERS ewoms_INCFILES)
 	get_filename_component (_dir ${_hdr} PATH)
 	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
 	install (
@@ -305,11 +317,29 @@ foreach (_hdr IN LISTS ewoms_HEADERS)
 		DESTINATION include/${_rel_dir}
 		)
 endforeach (_hdr)
+
+# install the m4 files required by the autotools build system
+file (GLOB_RECURSE ewoms_M4FILES "${CMAKE_SOURCE_DIR}/m4/*.m4")
+foreach (_m4file IN LISTS ewoms_M4FILES)
+	get_filename_component (_dir ${_m4file} PATH)
+	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
+	install (
+		FILES ${_m4file}
+		DESTINATION share/aclocal)
+endforeach()
+
+# install the dune.module file
 install (
 	FILES ${CMAKE_SOURCE_DIR}/dune.module
 	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol/ewoms
 	)
-message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
+
+# install the pkgconfig control file
+install (
+	FILES ${CMAKE_BINARY_DIR}/ewoms.pc
+	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/pkgconfig
+	)
+message(STATUS "This build will install into the directory ${CMAKE_INSTALL_PREFIX}")
 
 # use the same name for the source tree as AutoTools so that we can
 # share the config file template between the two systems
@@ -327,6 +357,9 @@ configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
 
 # make variable substitution and write config mode file
 configure_file(EwomsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/EwomsConfig.cmake @ONLY)
+
+# deal with the pkgconfig file
+configure_file(ewoms.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/ewoms.pc @ONLY)
 
 #add_definitions(-DHAVE_CONFIG_H)
 ##############
