@@ -52,7 +52,7 @@ macro(EwomsAddTest TestName)
         WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
         COMMAND bin/runtest.sh ${CURTEST_DRIVER_ARGS})
     else ()
-      add_test(${CURTEST_EXE_NAME} skip_test_dummy)
+      add_test(${TestName} skip_test_dummy)
     endif()
   endif()
 endmacro()
