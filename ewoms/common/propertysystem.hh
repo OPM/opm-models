@@ -49,6 +49,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <tuple>
 
 //! \cond 0
 
@@ -56,46 +57,42 @@ namespace Ewoms {
 namespace Properties {
 
 #define EWOMS_GET_HEAD_(Arg1, ...) Arg1
-#define EWOMS_GET_TAIL_(Arg1, ...) Blubber // __VA_ARGS__
-
-#define EWOMS_STRINGIGY_HEAD_(Arg1, ...) #Arg1
-#define EWOMS_STRINGIGY_TAIL_(Arg1, ...) #__VA_ARGS__
 
 #if !defined NO_PROPERTY_INTROSPECTION
 
 //! Internal macro which is only required if the property introspection is enabled
 #define PROP_INFO_(EffTypeTagName, PropKind, PropTagName, ...)          \
     template <>                                                         \
-    struct PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>       \
-    {                                                                   \
-    static int init() {                                                 \
-        PropertyRegistryKey key(                                        \
-            /*effTypeTagName=*/ Dune::className<TTAG(EffTypeTagName)>(), \
-            /*kind=*/PropKind,                                          \
-            /*name=*/#PropTagName,                                      \
-            /*value=*/#__VA_ARGS__,                                     \
-            /*file=*/__FILE__,                                          \
-            /*line=*/__LINE__);                                         \
-        PropertyRegistry::addKey(key);                                  \
-        return 0;                                                       \
-    }                                                                  \
-    static int foo;                                                     \
-    };                                                                  \
-    int PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::foo =   \
-    PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();
-
-//! Internal macro which is only required if the property introspection is enabled
-#define TTAG_INFO_(...)                                                 \
-    template <>                                                         \
-    struct TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>               \
+    struct PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>        \
     {                                                                   \
         static int init() {                                             \
-            TypeTagRegistry::addChildren<__VA_ARGS__>();                \
+            PropertyRegistryKey key(                                    \
+                /*effTypeTagName=*/ Dune::className<TTAG(EffTypeTagName)>(), \
+                /*kind=*/PropKind,                                      \
+                /*name=*/#PropTagName,                                  \
+                /*value=*/#__VA_ARGS__,                                 \
+                /*file=*/__FILE__,                                      \
+                /*line=*/__LINE__);                                     \
+            PropertyRegistry::addKey(key);                              \
             return 0;                                                   \
-        }                                                              \
+        }                                                               \
         static int foo;                                                 \
     };                                                                  \
-    int TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::foo =           \
+    int PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::foo =    \
+        PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();
+
+//! Internal macro which is only required if the property introspection is enabled
+#define TTAG_INFO_(...)                                     \
+    template <>                                             \
+    struct TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>        \
+    {                                                       \
+        static int init() {                                 \
+            TypeTagRegistry::addChildren<__VA_ARGS__>();    \
+            return 0;                                       \
+        }                                                   \
+        static int foo;                                     \
+    };                                                      \
+    int TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::foo =    \
         TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::init();
 
 #else
@@ -146,13 +143,13 @@ namespace Properties {
  * NEW_TYPE_TAG(FooBarTypeTag, INHERITS_FROM(FooTypeTag, BarTypeTag));
  * \endcode
  */
-#define NEW_TYPE_TAG(...)                                               \
-    namespace TTag {                                                    \
-    struct EWOMS_GET_HEAD_(__VA_ARGS__, blubb)                          \
-        : public TypeTag<__VA_ARGS__>                                   \
-    { };                                                                \
-    TTAG_INFO_(__VA_ARGS__, void)                                       \
-    }                                                                   \
+#define NEW_TYPE_TAG(...)                       \
+    namespace TTag {                            \
+    struct EWOMS_GET_HEAD_(__VA_ARGS__, blubb)  \
+        : public TypeTag<__VA_ARGS__>           \
+    { };                                        \
+    TTAG_INFO_(__VA_ARGS__, void)               \
+    }                                           \
     extern int semicolonHack_
 
 /*!
@@ -178,23 +175,23 @@ namespace Properties {
  * NEW_PROP_TAG(blabbPropTag);
  * \endcode
  */
-#define NEW_PROP_TAG(PTagName)                             \
-    namespace PTag {                                       \
+#define NEW_PROP_TAG(PTagName)                      \
+    namespace PTag {                                \
     struct PTagName; } extern int semicolonHack_
 
 //! \cond 0
-#define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)       \
-    template <class TypeTag>                                        \
-    struct Property<TypeTag,                                        \
-                    TTAG(EffTypeTagName),                           \
-                    PTAG(PropTagName)>;                            \
-    PROP_INFO_(EffTypeTagName,                                      \
-               /*kind=*/PropKind,                                   \
-               PropTagName,                                         \
-               /*value=*/__VA_ARGS__)                               \
-    template <class TypeTag>                                        \
-    struct Property<TypeTag,                                        \
-                    TTAG(EffTypeTagName),                           \
+#define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)   \
+    template <class TypeTag>                                    \
+    struct Property<TypeTag,                                    \
+                    TTAG(EffTypeTagName),                       \
+                    PTAG(PropTagName)>;                         \
+    PROP_INFO_(EffTypeTagName,                                  \
+               /*kind=*/PropKind,                               \
+               PropTagName,                                     \
+               /*value=*/__VA_ARGS__)                           \
+    template <class TypeTag>                                    \
+    struct Property<TypeTag,                                    \
+                    TTAG(EffTypeTagName),                       \
                     PTAG(PropTagName) >
 //! \endcond
 
@@ -228,18 +225,18 @@ namespace Properties {
  * \endcode
  * };
  */
-#define SET_PROP(EffTypeTagName, PropTagName)                   \
-    template <class TypeTag>                                    \
-    struct Property<TypeTag,                                    \
-                    TTAG(EffTypeTagName),                       \
-                    PTAG(PropTagName)>;                        \
-    PROP_INFO_(EffTypeTagName,                                  \
-               /*kind=*/"opaque",                               \
-               PropTagName,                                     \
-               /*value=*/"<opaque>")                            \
-    template <class TypeTag>                                    \
-    struct Property<TypeTag,                                    \
-                    TTAG(EffTypeTagName),                       \
+#define SET_PROP(EffTypeTagName, PropTagName)   \
+    template <class TypeTag>                    \
+    struct Property<TypeTag,                    \
+                    TTAG(EffTypeTagName),       \
+                    PTAG(PropTagName)>;         \
+    PROP_INFO_(EffTypeTagName,                  \
+               /*kind=*/"opaque",               \
+               PropTagName,                     \
+               /*value=*/"<opaque>")            \
+    template <class TypeTag>                    \
+    struct Property<TypeTag,                    \
+                    TTAG(EffTypeTagName),       \
                     PTAG(PropTagName) >
 
 /*!
@@ -247,7 +244,7 @@ namespace Properties {
  * \brief Explicitly unset a property for a type tag.
  *
  * This means that the property will not be inherited from the type
- * tag's parents and that no default will be used.
+ * tag's parents.
  *
  * Example:
  *
@@ -256,19 +253,19 @@ namespace Properties {
  * UNSET_PROP(BarTypeTag, blabbPropTag);
  * \endcode
  */
-#define UNSET_PROP(EffTypeTagName, PropTagName)                 \
-    template <>                                                 \
-    struct PropertyUnset<TTAG(EffTypeTagName),                  \
-                         PTAG(PropTagName) >;                  \
-    PROP_INFO_(EffTypeTagName,                                  \
-               /*kind=*/"withdraw",                             \
-               PropTagName,                                     \
-               /*value=*/<none>)                                \
-    template <>                                                 \
-    struct PropertyUnset<TTAG(EffTypeTagName),                  \
-                         PTAG(PropTagName) >                   \
-        : public PropertyExplicitlyUnset                        \
-        {}
+#define UNSET_PROP(EffTypeTagName, PropTagName) \
+    template <>                                 \
+    struct PropertyUnset<TTAG(EffTypeTagName),  \
+                         PTAG(PropTagName) >;   \
+    PROP_INFO_(EffTypeTagName,                  \
+               /*kind=*/"withdraw",             \
+               PropTagName,                     \
+               /*value=*/<none>)                \
+    template <>                                 \
+    struct PropertyUnset<TTAG(EffTypeTagName),  \
+                         PTAG(PropTagName) >    \
+            : public PropertyExplicitlyUnset    \
+    {}
 
 /*!
  * \ingroup PropertySystem
@@ -276,7 +273,7 @@ namespace Properties {
  *
  * The constant can be accessed by the \c value attribute.
  */
-#define SET_INT_PROP(EffTypeTagName, PropTagName, /*Value*/...)    \
+#define SET_INT_PROP(EffTypeTagName, PropTagName, /*Value*/...) \
     SET_PROP_(EffTypeTagName,                                   \
               /*kind=*/"int   ",                                \
               PropTagName,                                      \
@@ -337,7 +334,7 @@ namespace Properties {
         static const Scalar value;                                      \
     };                                                                  \
     template <class TypeTag>                                            \
-    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type   \
+    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
     Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
 
 /*!
@@ -430,9 +427,8 @@ namespace Properties {
     ::Ewoms::Properties::getDiagnostic<TypeTag>(#PropTagName)
 
 #else
-#define PROP_DIAGNOSTIC(TypeTag, PropTagName) "Property introspection disabled by NO_PROPERTY_INTROSPECTION"
+#define PROP_DIAGNOSTIC(TypeTag, PropTagName) "Property introspection disabled by macro NO_PROPERTY_INTROSPECTION."
 #endif
-
 
 //////////////////////////////////////////////
 // some serious template kung fu. Don't look at it too closely, it
@@ -542,58 +538,24 @@ public:
     typedef std::list<std::string> ChildrenList;
     typedef std::map<std::string, ChildrenList> ChildrenListMap;
 
-    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Child6, class Child7, class Dummy>
+    // end of recursion. the last argument is not a child, but 'void'
+    // which is required for the macro magic...
+    template <class TypeTag, class DummyChild>
+    static void addChildren()
+    {}
+
+    // the last argument is not a child, but 'void' which is required
+    // for the macro magic...
+    template <class TypeTag, class Child1, class Child2, typename ... RemainingChildren>
     static void addChildren()
     {
         std::string typeTagName = Dune::className<TypeTag>();
-        if (typeid(Child1) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child1>());
-        if (typeid(Child2) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child2>());
-        if (typeid(Child3) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child3>());
-        if (typeid(Child4) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child4>());
-        if (typeid(Child5) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child5>());
-        if (typeid(Child6) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child6>());
-        if (typeid(Child7) != typeid(void))
-            keys_[typeTagName].push_front(Dune::className<Child7>());
+        keys_[typeTagName].push_front(Dune::className<Child1>());
+        addChildren<TypeTag, Child2, RemainingChildren...>();
     }
-
-    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Child6, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, Child4, Child5, Child6, void, Dummy>(); }
-
-    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Child5, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, Child4, Child5, void, void, Dummy>(); }
-
-    template <class TypeTag, class Child1, class Child2, class Child3, class Child4, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, Child4, void, void, void, Dummy>(); }
-
-    template <class TypeTag, class Child1, class Child2, class Child3, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, Child3, void, void, void, void, Dummy>(); }
-
-    template <class TypeTag, class Child1, class Child2, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, Child2, void, void, void, void, void, Dummy>(); }
-
-    template <class TypeTag, class Child1, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, Child1, void, void, void, void, void, void, Dummy>(); }
-
-    template <class TypeTag, class Dummy>
-    static void addChildren()
-    { addChildren<TypeTag, void, void, void, void, void, void, void, Dummy>(); }
 
     static const ChildrenList &children(const std::string &typeTagName)
-    {
-        return keys_[typeTagName];
-    }
+    { return keys_[typeTagName]; }
 
 private:
     static ChildrenListMap keys_;
@@ -603,362 +565,172 @@ TypeTagRegistry::ChildrenListMap TypeTagRegistry::keys_;
 
 #endif // !defined NO_PROPERTY_INTROSPECTION
 
-using std::is_void;
-using std::is_base_of;
-
-// logical AND, OR and NOT operations to be used for template meta programming
-template <bool b1, bool b2, bool b3 = true, bool b4 = true, bool b5 = true, bool b6 = true, bool b7 = true, bool b8 = true>
-struct ice_and
-{
-    static const bool value = false;
-};
-
-template <>
-struct ice_and<true, true, true, true, true, true, true, true>
-{
-    static const bool value = true;
-};
-
-template <bool b1, bool b2, bool b3 = false, bool b4 = false, bool b5 = false, bool b6 = false, bool b7 = false, bool b8 = false>
-struct ice_or
-{
-    static const bool value = true;
-};
-
-template <>
-struct ice_or<false, false, false, false, false, false, false, false>
-{
-    static const bool value = false;
-};
-
-template <bool b>
-struct ice_not
-{
-    static const bool value = false;
-};
-
-template <>
-struct ice_not<false>
-{
-    static const bool value = true;
-};
-
-//! \internal
 class PropertyUndefined {};
-//! \internal
 class PropertyExplicitlyUnset {};
 
-//! \internal
 template <class RealTypeTag,
           class EffectiveTypeTag,
           class PropertyTag>
 struct Property : public PropertyUndefined
-{
-};
+{};
 
-//! \internal
 template <class EffectiveTypeTag,
           class PropertyTag>
 struct PropertyUnset : public PropertyUndefined
-{
-};
+{};
 
-//! \internal
-template <class RealTypeTag,
-          class PropertyTag>
-struct DefaultProperty : public PropertyUndefined
-{
-};
-
-//! \internal
 template <class Tree, class PropertyTag>
 struct propertyExplicitlyUnset
 {
     const static bool value =
-        is_base_of<PropertyExplicitlyUnset,
-                   PropertyUnset<typename Tree::SelfType,
-                                 PropertyTag>
-                   >::value;
+        std::is_base_of<PropertyExplicitlyUnset,
+                        PropertyUnset<typename Tree::SelfType,
+                                      PropertyTag>
+                        >::value;
 };
 
-//! \internal
 template <class Tree, class PropertyTag>
 class propertyExplicitlyUnsetOnTree
 {
-    static const bool explicitlyUnset = propertyExplicitlyUnset<Tree, PropertyTag>::value;
+    static constexpr bool explicitlyUnset = propertyExplicitlyUnset<Tree, PropertyTag>::value;
 
-    static const bool isLeaf = ice_and<is_void<typename Tree::Child1>::value,
-                                       is_void<typename Tree::Child2>::value,
-                                       is_void<typename Tree::Child3>::value,
-                                       is_void<typename Tree::Child4>::value,
-                                       is_void<typename Tree::Child5>::value,
-                                       is_void<typename Tree::Child6>::value,
-                                       is_void<typename Tree::Child7>::value
-                                       >::value;
+    template <class ChildTuple>
+    struct unsetOnAllChildren
+    { static constexpr bool value = true; };
+
+    template <class Child, class ... RemainingChildren>
+    struct unsetOnAllChildren<std::tuple<Child, RemainingChildren...> >
+    { static constexpr bool value =
+            propertyExplicitlyUnsetOnTree<Child, PropertyTag>::value
+            && unsetOnAllChildren<std::tuple<RemainingChildren...> >::value; };
 
 public:
-    static const bool value =
-        ice_or<explicitlyUnset,
-               ice_and<ice_not<isLeaf>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child1, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child2, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child3, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child4, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child5, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child6, PropertyTag>::value,
-                       propertyExplicitlyUnsetOnTree<typename Tree::Child7, PropertyTag>::value
-                       >::value
-               >::value;
+    static constexpr bool value =
+        (explicitlyUnset || (!Tree::isLeaf && unsetOnAllChildren<typename Tree::ChildrenTuple>::value));
 };
 
-//! \internal
 template <class PropertyTag>
 struct propertyExplicitlyUnsetOnTree<void, PropertyTag>
 {
     const static bool value = std::true_type::value;
 };
 
-//! \internal
 template <class RealTypeTag, class Tree, class PropertyTag>
 struct propertyDefinedOnSelf
 {
     const static bool value =
-        ice_not<is_base_of<PropertyUndefined,
-                           Property<RealTypeTag,
-                                    typename Tree::SelfType,
-                                    PropertyTag>
-                           >::value
-                           >::value;
+        ! std::is_base_of<PropertyUndefined,
+                          Property<RealTypeTag,
+                                   typename Tree::SelfType,
+                                   PropertyTag> >::value;
 };
 
-//! \internal
-template <class RealTypeTag, class Tree, class PropertyTag>
-class propertyDefinedOnTree
-{
-    static const bool notExplicitlyUnset =
-        ice_not<propertyExplicitlyUnsetOnTree<Tree,
-                                              PropertyTag>::value >::value;
+// template class to revert the order or a std::tuple's
+// arguments. This is required to make the properties of children
+// defined on the right overwrite the properties of the previous
+// children. this is not a very nice solution, but it works...
+template <class ... Args>
+struct RevertedTuple;
 
-public:
-    static const bool value =
-        ice_and<notExplicitlyUnset,
-                ice_or<propertyDefinedOnSelf<RealTypeTag, Tree, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child1, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child2, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child3, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child4, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child5, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child6, PropertyTag>::value,
-                       propertyDefinedOnTree<RealTypeTag, typename Tree::Child7, PropertyTag>::value
-                       >::value >::value;
-};
+template <>
+struct RevertedTuple<>
+{ typedef std::tuple<> type; };
 
-//! \internal
-template <class RealTypeTag, class PropertyTag>
-class propertyDefinedOnTree<RealTypeTag, void, PropertyTag>
-{
-public:
-    static const bool value = std::false_type::value;
-};
+template <class Arg1>
+struct RevertedTuple<Arg1>
+{ typedef std::tuple<Arg1> type; };
 
-//! \internal
-template <class RealTypeTag, class PropertyTag>
-struct defaultPropertyDefined
-{
-    const static bool value =
-        ice_not<is_base_of<PropertyUndefined,
-                           DefaultProperty<RealTypeTag,
-                                           PropertyTag>
-                           >::value
-                           >::value;
-};
+template <class Arg1, class Arg2>
+struct RevertedTuple<Arg1, Arg2>
+{ typedef std::tuple<Arg2, Arg1> type; };
 
-//! \internal
-template <class RealTypeTag, class Tree, class PropertyTag>
-class defaultPropertyDefinedOnTree
-{
-    static const bool isLeaf = ice_and<is_void<typename Tree::Child1>::value,
-                                       is_void<typename Tree::Child2>::value,
-                                       is_void<typename Tree::Child3>::value,
-                                       is_void<typename Tree::Child4>::value,
-                                       is_void<typename Tree::Child5>::value,
-                                       is_void<typename Tree::Child6>::value,
-                                       is_void<typename Tree::Child7>::value
-                                       >::value;
+template <class Arg1, class Arg2, class Arg3>
+struct RevertedTuple<Arg1, Arg2, Arg3>
+{ typedef std::tuple<Arg3, Arg2, Arg1> type; };
 
-    static const bool explicitlyUnset =
-        propertyExplicitlyUnsetOnTree<Tree, PropertyTag>::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4>
+{ typedef std::tuple<Arg4, Arg3,  Arg2, Arg1> type; };
 
-public:
-    static const bool value =
-        ice_and<ice_not<explicitlyUnset>::value,
-                ice_or<ice_and<isLeaf,defaultPropertyDefined<RealTypeTag, PropertyTag>::value >::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child1, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child2, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child3, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child4, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child5, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child6, PropertyTag>::value,
-                       defaultPropertyDefinedOnTree<RealTypeTag,typename Tree::Child7, PropertyTag>::value
-                       >::value >::value;
-};
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5>
+{ typedef std::tuple<Arg5, Arg4,  Arg3,  Arg2, Arg1> type; };
 
-//! \internal
-template <class RealTypeTag, class PropertyTag>
-struct defaultPropertyDefinedOnTree<RealTypeTag,void, PropertyTag>
-{
-    static const bool value = std::false_type::value;
-};
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6>
+{ typedef std::tuple<Arg6, Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-//! \internal
-template <class RealTypeTag, class Tree, class PropertyTag>
-class propertyDefined
-{
-public:
-    static const bool onSelf = propertyDefinedOnSelf<RealTypeTag,Tree,PropertyTag>::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6, class Arg7>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7>
+{ typedef std::tuple<Arg7, Arg6,  Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-    static const bool onChild1 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child1,PropertyTag>::value;
-    static const bool onChild2 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child2,PropertyTag>::value;
-    static const bool onChild3 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child3,PropertyTag>::value;
-    static const bool onChild4 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child4,PropertyTag>::value;
-    static const bool onChild5 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child5,PropertyTag>::value;
-    static const bool onChild6 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child6,PropertyTag>::value;
-    static const bool onChild7 = propertyDefinedOnTree<RealTypeTag,typename Tree::Child7,PropertyTag>::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6, class Arg7, class Arg8>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8>
+{ typedef std::tuple<Arg8, Arg7,  Arg6,  Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-    static const bool asDefault =
-        defaultPropertyDefinedOnTree<RealTypeTag, Tree,PropertyTag>::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6, class Arg7, class Arg8, class Arg9>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9>
+{ typedef std::tuple<Arg9, Arg8,  Arg7,  Arg6,  Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-    static const bool onChildren =
-        ice_or<onChild1,
-               onChild2,
-               onChild3,
-               onChild4,
-               onChild5,
-               onChild6,
-               onChild7
-               >::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6, class Arg7, class Arg8, class Arg9, class Arg10>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10>
+{ typedef std::tuple<Arg10, Arg9, Arg8,  Arg7,  Arg6,  Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-    static const bool value =
-        ice_or<onSelf ,
-               onChildren>::value;
+template <class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Arg6, class Arg7, class Arg8, class Arg9, class Arg10, class Arg11>
+struct RevertedTuple<Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11>
+{ typedef std::tuple<Arg11, Arg10, Arg9, Arg8,  Arg7,  Arg6,  Arg5,  Arg4,  Arg3,  Arg2, Arg1> type; };
 
-
-};
-
-//! \internal
-template <class RealTypeTag, class Tree, class PropertyTag>
-class propertyTagIndex
-{
-    typedef propertyDefined<RealTypeTag, Tree, PropertyTag> definedWhere;
-
-public:
-    static const int value =
-        definedWhere::onSelf ? 0 :
-        ( definedWhere::onChild7 ? 7 :
-          ( definedWhere::onChild6 ? 6 :
-            ( definedWhere::onChild5 ? 5 :
-              ( definedWhere::onChild4 ? 4 :
-                ( definedWhere::onChild3 ? 3 :
-                  ( definedWhere::onChild2 ? 2 :
-                    ( definedWhere::onChild1 ? 1 :
-                      ( definedWhere::asDefault ? -1 :
-                        -1000))))))));
-};
-
-
-//! \internal
 template <class SelfT,
-          class Child1T = void,
-          class Child2T = void,
-          class Child3T = void,
-          class Child4T = void,
-          class Child5T = void,
-          class Child6T = void,
-          class Child7T = void>
+          typename ... Children>
 class TypeTag
 {
 public:
     typedef SelfT SelfType;
 
-    typedef Child1T Child1;
-    typedef Child2T Child2;
-    typedef Child3T Child3;
-    typedef Child4T Child4;
-    typedef Child5T Child5;
-    typedef Child6T Child6;
-    typedef Child7T Child7;
-};
-
-//! \internal
-template <class EffectiveTypeTag,
-          class PropertyTag,
-          class RealTypeTag=EffectiveTypeTag,
-          int tagIdx = propertyTagIndex<RealTypeTag, EffectiveTypeTag, PropertyTag>::value >
-struct GetProperty
-{
-};
-
-// property not defined, but a default property is available
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, -1>
-{
-    typedef DefaultProperty<RealTypeTag, PropertyTag>  p;
+    typedef typename RevertedTuple<Children...>::type ChildrenTuple;
+    static constexpr bool isLeaf = std::is_same<ChildrenTuple, std::tuple<> >::value;
 };
 
 // property defined on self
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 0>
+template <class TypeTag, class PropertyTag>
+class GetProperty
 {
-    typedef Property<RealTypeTag, TypeTag, PropertyTag>   p;
-};
+    template <class CurTree, bool definedOnSelf = propertyDefinedOnSelf<TypeTag, CurTree, PropertyTag>::value >
+    struct GetEffectiveTypeTag_;
 
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 1>
-{
-    typedef typename GetProperty<typename TypeTag::Child1, PropertyTag, RealTypeTag>::p p;
-};
+    template <class Dummy, class ChildrenTuple>
+    struct TraverseRemainingChilds_;
 
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 2>
-{
-    typedef typename GetProperty<typename TypeTag::Child2, PropertyTag, RealTypeTag>::p p;
-};
+    template <class EffTypeTag, class ... RemainingChildren>
+    struct StopAtFirstChildElseTraverseRemaining_
+    { typedef EffTypeTag type; };
 
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 3>
-{
-    typedef typename GetProperty<typename TypeTag::Child3, PropertyTag, RealTypeTag>::p p;
-};
+    template <class ... RemainingChildren>
+    struct StopAtFirstChildElseTraverseRemaining_<void, RemainingChildren...>
+    {
+        typedef typename TraverseRemainingChilds_</*dummy=*/void, std::tuple<RemainingChildren...> >::type type;
+    };
 
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 4>
-{
-    typedef typename GetProperty<typename TypeTag::Child4, PropertyTag, RealTypeTag>::p p;
-};
+    template <class Dummy>
+    struct TraverseRemainingChilds_<Dummy, std::tuple<> >
+    { typedef void type; };
 
-//! \internal
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 5>
-{
-    typedef typename GetProperty<typename TypeTag::Child5, PropertyTag, RealTypeTag>::p p;
-};
+    template <class Dummy, class CurChild, class ... RemainingChildren>
+    struct TraverseRemainingChilds_<Dummy, std::tuple<CurChild, RemainingChildren...> >
+    {
+        typedef typename StopAtFirstChildElseTraverseRemaining_<typename GetEffectiveTypeTag_<CurChild>::type, RemainingChildren...>::type type;
+    };
 
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 6>
-{
-    typedef typename GetProperty<typename TypeTag::Child6, PropertyTag, RealTypeTag>::p p;
-};
+    template <class CurTree>
+    struct GetEffectiveTypeTag_<CurTree, /*definedOnSelf=*/true>
+    { typedef CurTree type; };
 
-template <class TypeTag, class PropertyTag, class RealTypeTag>
-struct GetProperty<TypeTag, PropertyTag, RealTypeTag, 7>
-{
-    typedef typename GetProperty<typename TypeTag::Child7, PropertyTag, RealTypeTag>::p p;
+    template <class CurTree>
+    struct GetEffectiveTypeTag_<CurTree, /*definedOnSelf=*/false>
+    { typedef typename TraverseRemainingChilds_</*dummy=*/void, typename CurTree::ChildrenTuple>::type type; };
+
+public:
+    typedef Property<TypeTag, typename GetEffectiveTypeTag_<TypeTag>::type, PropertyTag> p;
 };
 
 #if !defined NO_PROPERTY_INTROSPECTION
@@ -1087,7 +859,6 @@ inline void print_(const std::string &typeTagName,
     }
 }
 
-//! \internal
 template <class TypeTag>
 void print(std::ostream &os = std::cout)
 {
@@ -1113,7 +884,7 @@ const std::string getDiagnostic(std::string propTagName)
         "NO_PROPERTY_INTROSPECTION defined.\n"
         "No diagnostic messages this time, sorry.\n";
     return result;
-};
+}
 
 #endif // !defined NO_PROPERTY_INTROSPECTION
 
