@@ -50,6 +50,8 @@ string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" ProjectCodename "${DUNE_M
 ##############
 
 project(${ProjectName} CXX)
+# C is needed for tests like pthread, BLAS and Super-LU
+enable_language(C)
 
 ##############
 # make sure our own modules will be found
