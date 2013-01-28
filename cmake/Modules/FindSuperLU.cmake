@@ -84,7 +84,10 @@ if(SUPERLU_FOUND)
     "Include directory: ${SUPERLU_INCLUDE_DIR}\n"
     "Library directory: ${SUPERLU_LIBRARY}\n\n")
   set(SUPERLU_CPPFLAGS "-I${SUPERLU_INCLUDE_DIRS} -DENABLE_SUPERLU=1")
-  set(SUPERLU_LIBS "-L. ${SUPERLU_LIBRARIES} ${BLAS_LIBRARIES}")
+  set(SUPERLU_LIBS "-L. ${SUPERLU_LIBRARIES}")
+  if (BLAS_LIBRARIES)
+    set(SUPERLU_LIBS "SUPERLU_LIBS ${BLAS_LIBRARIES}")
+  endif()
 else()
   # log errornous result
   file(APPEND ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeError.log
