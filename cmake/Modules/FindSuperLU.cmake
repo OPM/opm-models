@@ -18,12 +18,21 @@ find_library(SUPERLU_LIBRARY
   PATH_SUFFIXES "lib" "lib64"
 )
 
+# look for internal SuperLU blas library
+if (NOT BLAS_LIBRARIES)
+  find_library(BLAS_LIBRARIES
+    NAMES "blas"
+    HINTS ${SUPERLU_DIR}
+    PATH_SUFFIXES "lib" "lib64"
+  )
+endif()
+
 # check if version is 4.3
 include(CheckCSourceCompiles)
 include(CheckIncludeFiles)
 set(CMAKE_REQUIRED_INCLUDES ${SUPERLU_INCLUDE_DIR})
 set(CMAKE_REQUIRED_LIBRARIES ${SUPERLU_LIBRARY})
-set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARY})
+set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES})
 
 # check if slu_ddefs.h is available
 CHECK_INCLUDE_FILES("slu_ddefs.h" HAVE_SLU_DDEFS)
