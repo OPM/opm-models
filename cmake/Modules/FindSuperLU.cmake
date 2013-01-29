@@ -20,11 +20,13 @@ find_library(SUPERLU_LIBRARY
 
 # look for internal SuperLU blas library
 if (NOT BLAS_LIBRARIES)
-  find_library(BLAS_LIBRARIES
+  find_library(CBLAS_LIBRARY
     NAMES "blas"
-    HINTS ${SUPERLU_DIR}
+    PATHS "${SUPERLU_DIR}"
     PATH_SUFFIXES "lib" "lib64"
+    NO_DEFAULT_PATH
   )
+  set(BLAS_LIBRARIES ${CBLAS_LIBRARY})
 endif()
 
 # check if version is 4.3

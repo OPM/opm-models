@@ -1,6 +1,7 @@
 # check if make_shared works
 macro(CHECK_MAKE_SHARED)
   include(CheckIncludeFileCXX)
+  set(TMP2_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
   set(CMAKE_REQUIRED_FLAGS "--std=c++0x -DHAVE_MEMORY=${HAVE_MEMORY} -DHAVE_TR1_MEMORY=${HAVE_TR1_MEMORY}")
   
   if(SHARED_PTR_NAMESPACE EQUAL "boost")
@@ -25,10 +26,12 @@ macro(CHECK_MAKE_SHARED)
        return 0;
     }
     " HAVE_MAKE_SHARED)
+    set(CMAKE_REQUIRED_FLAGS "${TMP2_REQUIRED_FLAGS}")
 endmacro(CHECK_MAKE_SHARED)
 
 # check location of shared_ptr header file and the necessary namespace
-set(CMAKE_REQUIRED_FLAGS "--std=c++0x")
+set(TMP_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+set(CMAKE_REQUIRED_FLAGS "-std=c++0x")
 include(CheckCXXSourceCompiles)
 
 # search namespace
@@ -69,8 +72,11 @@ foreach(SHARED_PTR_NAMESPACE_ "std" "tr1" "std::tr1" "boost")
         set(SHARED_PTR_NAMESPACE ${SHARED_PTR_NAMESPACE_})
         set(SHARED_PTR_HEADER ${SHARED_PTR_HEADER_})
         CHECK_MAKE_SHARED()
+        set(CMAKE_REQUIRED_FLAGS "${TMP_REQUIRED_FLAGS}")
         return()
       endif(SHARED_PTR_HEADER_FOUND)
     endforeach(SHARED_PTR_HEADER_ "<memory>" "<tr1/memory>" "<boost/shared_ptr.hpp>")
   endif(SHARED_PTR_NAMESPACE_FOUND)
 endforeach(SHARED_PTR_NAMESPACE_ "std" "tr1" "std::tr1" "boost")
+
+set(CMAKE_REQUIRED_FLAGS "${TMP_REQUIRED_FLAGS}")
