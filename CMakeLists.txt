@@ -188,7 +188,7 @@ EwomsSetBoolConfigHVar(HAVE_TR1_TUPLE HAVE_TR1_TUPLE)
 ##############
 # default directory to find control files if installed by package
 if (UNIX)
-  set (DUNE_DIR ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol CACHE PATH "Parent directory of DUNE modules")
+  set (DUNE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol" CACHE PATH "Parent directory of control files for all DUNE modules")
 endif (UNIX)
 
 # add dune-common version from dune.module to config.h
