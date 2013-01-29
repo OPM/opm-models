@@ -143,12 +143,12 @@ public:
         assert(nnz(is_) != 0);
 
         // set size of all rows to zero
-        for (unsigned int i = 0; i < is_.size(dim); i++)
+        for (unsigned int i = 0; i < faceMapper_.size(); i++)
             A_.setrowsize(i,0);
 
         // build needs a flag for all entities of all codims
-        std::vector<bool> visited(allMapper_.size());
-        for (int i = 0; i < allMapper_.size(); i++)
+        std::vector<bool> visited(faceMapper_.size());
+        for (int i = 0; i < faceMapper_.size(); i++)
             visited[i] = false;
 
         // LOOP 1 : Compute row sizes
@@ -162,7 +162,7 @@ public:
             // faces, c=1
             for (int i = 0; i < refelem.size(1); i++)
             {
-                int index = allMapper_.map(*it, i,1);
+                int index = faceMapper_.map(*it, i,1);
                 int alpha = faceMapper_.map(*it, i,1);
                 //std::cout << "index = " << index << ", alpha = " << alpha << std::endl;
                 if (!visited[index])
@@ -184,7 +184,7 @@ public:
         A_.endrowsizes();
 
         // clear the flags for the next round, actually that is not necessary because addindex takes care of this
-        for (int i = 0; i < allMapper_.size(); i++)
+        for (int i = 0; i < faceMapper_.size(); i++)
             visited[i] = false;
 
         // LOOP 2 : insert the nonzeros
@@ -198,7 +198,7 @@ public:
             // faces, c=1
             for (int i = 0; i < refelem.size(1); i++)
             {
-                int index = allMapper_.map(*it, i, 1);
+                int index = faceMapper_.map(*it, i, 1);
                 int alpha = faceMapper_.map(*it, i, 1);
                 if (!visited[index])
                 {
