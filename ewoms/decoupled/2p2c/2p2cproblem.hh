@@ -195,10 +195,11 @@ protected:
         {
             values[Indices::pressureEqIdx] = 0.;
         }
-        else if(equation == Indices::contiNEqIdx)
+        else if(equation == Indices::contiNEqIdx or Indices::contiWEqIdx)
+        {
             values[Indices::contiNEqIdx] =0.;
-        else if(equation == Indices::contiWEqIdx)
             values[Indices::contiWEqIdx] =0.;
+        }
         else if (equation == -1)
         {
             // set everything to zero
