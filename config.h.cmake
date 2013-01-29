@@ -118,6 +118,12 @@
 #cmakedefine HAVE_TUPLE 1
 #cmakedefine HAVE_TR1_TUPLE 1
 
+#cmakedefine HAVE_CONSTEXPR 1
+/* use 'const' instead of 'constexpr' if the latter is not supported */
+#if ! defined HAVE_CONSTEXPR
+#  define constexpr const 
+#endif
+
 #include <dune/common/deprecated.hh>
 #include <dune/common/unused.hh>
 

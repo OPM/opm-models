@@ -58,6 +58,18 @@ CHECK_CXX_SOURCE_COMPILES("
 "  HAVE_NULLPTR
 )
 
+# constexpr
+CHECK_CXX_SOURCE_COMPILES("
+    template <class T>
+    inline constexpr int foo(T bar) { return bar*2; }
+    int main(void)
+    {
+      constexpr int foobar = foo(100);
+      return 0;
+    }
+"  HAVE_CONSTEXPR
+)
+
 # array and fill
 check_include_file_cxx("array" HAVE_ARRAY)
 
