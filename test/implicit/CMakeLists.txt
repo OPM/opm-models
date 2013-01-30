@@ -56,4 +56,4 @@ EwomsAddTest(obstacle_immiscible_parameters
 EwomsAddTest(obstacle_pvs_restart
   EXE_NAME obstacle_pvs
   NO_COMPILE
-  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2)
+  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=12000)
