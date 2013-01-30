@@ -92,7 +92,7 @@ void writeSubControlVolumes(const Grid &grid)
 #if HAVE_ALUGRID
     typedef typename Grid::LeafGridView GridView;
 
-    typedef Dune::ALUCubeGrid<dim, dim> Grid2;
+    typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::nonconforming> Grid2;
     typedef typename Grid2::LeafGridView GridView2;
     typedef Dune::GridFactory<Grid2> GridFactory2;
 
