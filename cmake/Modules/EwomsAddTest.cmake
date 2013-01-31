@@ -3,16 +3,21 @@
 #
 # EwomsAddTest(TestName
 #              [NO_COMPILE]
+#              [ONLY_COMPILE]
 #              [EXE_NAME TestExecutableName]
 #              [CONDITION ConditionalExpression]
 #              [DRIVER_ARGS TestDriverScriptArguments]
 #              [SOURCES SourceFile1 SourceFile2 ...])
 macro(EwomsAddTest TestName)
   CMAKE_PARSE_ARGUMENTS(CURTEST
-    "NO_COMPILE" # flags
+    "NO_COMPILE;ONLY_COMPILE" # flags
     "EXE_NAME" # one value args
     "CONDITION;DRIVER_ARGS;SOURCES" # multi-value args
     ${ARGN})
+
+  if (CURTEST_NO_COMPILE AND CURTEST_ONLY_COMPILE) 
+    message(FATAL_ERROR "The NO_COMPILE and the ONLY_COMPILE flags for the EwomsAddTest macro are mutually exclusive. Specification of test '${TestName}' incorrect!")
+  endif()
 
   if (NOT CURTEST_EXE_NAME)
     set(CURTEST_EXE_NAME ${TestName})
@@ -38,7 +43,7 @@ macro(EwomsAddTest TestName)
     include_directories(${EwomsIncludeDirectories})
   endif()
   
-  if (ENABLE_TESTS)
+  if (ENABLE_TESTS AND NOT CURTEST_ONLY_COMPILE)
     set(SKIP_CUR_TEST "1")
     if ("${CURTEST_CONDITION}" STREQUAL "")
       set(SKIP_CUR_TEST "0")

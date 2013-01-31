@@ -280,21 +280,25 @@ if (DOXYGEN_FOUND)
                 COMMENT "Generating API documentation with Doxygen"
                 VERBATIM
                 )
+
         set (_formats html)
         foreach (format IN LISTS _formats)
                 string (TOUPPER ${format} FORMAT)
-                install (
-                        DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen/${format}
-                        DESTINATION share/doc/ewoms/
-                        COMPONENT ${format}
-                        OPTIONAL
-                        )
+                if(EXISTS ${PROJECT_BINARY_DIR}/doc/doxygen/${format})
+                  install (
+                    DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen/${format}
+                    DESTINATION share/doc/ewoms/
+                    COMPONENT ${format}
+                    OPTIONAL
+                    )
+                endif()
                 # target to install just HTML documentation
                 add_custom_target (install-${format}
                         COMMAND ${CMAKE_COMMAND} -DCOMPONENT=${format} -P cmake_install.cmake
                         COMMENT Installing ${FORMAT} documentation
                         VERBATIM
                         )
+                # make the target directory
                 # since the documentation is optional, it is not automatically built
                 add_dependencies (install-${format} doc)
         endforeach (format)

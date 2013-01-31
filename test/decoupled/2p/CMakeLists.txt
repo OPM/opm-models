@@ -13,8 +13,7 @@ EwomsAddTest(test_transport)
 # correspond to any test name, this means that we have to compile the
 # executable ourselfs and jump though quite a few hoops to make the
 # tests work with the eWoms testing infrastructure macro.
-add_executable("test_mpfa2p" test_mpfa2p.cc)
-target_link_libraries("test_mpfa2p" ${EwomsLinkLibraries})
+EwomsAddTest(test_mpfa2p ONLY_COMPILE)
 EwomsAddTest(test_mpfao2p
   NO_COMPILE
   CONDITION ALUGRID_FOUND
