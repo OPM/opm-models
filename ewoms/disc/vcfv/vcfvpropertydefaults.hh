@@ -106,6 +106,10 @@ SET_TYPE_PROP(VcfvModel, BaseModel, Ewoms::VcfvModel<TypeTag>);
 //! The local jacobian operator for the VCVF discretization
 SET_TYPE_PROP(VcfvModel, LocalJacobian, Ewoms::VcfvLocalJacobian<TypeTag>);
 
+//! The maximum allowed number of timestep divisions for the
+//! Newton solver
+SET_INT_PROP(VcfvModel, MaxTimeStepDivisions, 10);
+
 /*!
  * \brief A vector of quanties, each for one equation.
  */

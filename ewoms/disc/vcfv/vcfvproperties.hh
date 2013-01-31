@@ -144,6 +144,10 @@ NEW_PROP_TAG(ElementMapper);
 //! mapper for degrees of freedom
 NEW_PROP_TAG(DofMapper);
 
+//! The maximum allowed number of timestep divisions for the
+//! Newton solver
+NEW_PROP_TAG(MaxTimeStepDivisions);
+
 //! The history size required by the time discretization
 NEW_PROP_TAG(TimeDiscHistorySize);
 }
