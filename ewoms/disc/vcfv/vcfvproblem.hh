@@ -115,6 +115,7 @@ public:
     {
         Model::registerParameters();
         REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
+        REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
         REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
     }
 
@@ -265,6 +266,18 @@ public:
     void timeIntegration()
     {
         const int maxFails = GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
+        const Scalar minTimeStepSize = GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
+
+        // if the time step size of the time manager is smaller than
+        // the specified minimum size and we're not going to finish
+        // the simulation or an episode, try with the minimum size.
+        if (timeManager().timeStepSize() < minTimeStepSize &&
+            !timeManager().episodeWillBeOver() &&
+            !timeManager().willBeFinished())
+        {
+            timeManager().setTimeStepSize(minTimeStepSize);
+        }
+
         for (int i = 0; i < maxFails; ++i) {
             if (model_.update(newtonMethod_)) {
                 assembleTime_ += newtonMethod_.assembleTime();
@@ -280,6 +293,8 @@ public:
 
             Scalar dt = timeManager().timeStepSize();
             Scalar nextDt = dt / 2;
+            if (nextDt < minTimeStepSize)
+                break; // give up: we can't make the time step smaller anymore!
             timeManager().setTimeStepSize(nextDt);
 
             // update failed

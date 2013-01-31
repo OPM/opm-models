@@ -193,6 +193,8 @@ SET_SCALAR_PROP(VcfvModel, MaxTimeStepSize, std::numeric_limits<Scalar>::infinit
 #else
 SET_SCALAR_PROP(VcfvModel, MaxTimeStepSize, 1e100);
 #endif
+//! By default, accept any time step larger than zero
+SET_SCALAR_PROP(VcfvModel, MinTimeStepSize, 0.0);
 
 //! use forward differences to calculate the jacobian by default
 SET_INT_PROP(VcfvModel, NumericDifferenceMethod, +1);

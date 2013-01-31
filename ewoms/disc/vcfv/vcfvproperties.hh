@@ -111,6 +111,17 @@ NEW_PROP_TAG(EnableConstraints);
 NEW_PROP_TAG(MaxTimeStepSize);
 
 /*!
+ * \brief Specify the minimal size of a time integration [s].
+ *
+ * The default is to not limit the step size.
+ */
+NEW_PROP_TAG(MinTimeStepSize);
+
+//! The maximum allowed number of timestep divisions for the
+//! Newton solver
+NEW_PROP_TAG(MaxTimeStepDivisions);
+
+/*!
  * \brief Specify which kind of method should be used to numerically
  * calculate the partial derivatives of the residual.
  *
@@ -143,10 +154,6 @@ NEW_PROP_TAG(VertexMapper);
 NEW_PROP_TAG(ElementMapper);
 //! mapper for degrees of freedom
 NEW_PROP_TAG(DofMapper);
-
-//! The maximum allowed number of timestep divisions for the
-//! Newton solver
-NEW_PROP_TAG(MaxTimeStepDivisions);
 
 //! The history size required by the time discretization
 NEW_PROP_TAG(TimeDiscHistorySize);
