@@ -62,6 +62,7 @@ template<class TypeTag> class FVPressureCompositional
 : public FVPressure<TypeTag>
 {
     //the model implementation
+    typedef typename GET_PROP_TYPE(TypeTag, PressureModel) Implementation;
     typedef FVPressure<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -304,7 +305,7 @@ public:
     {
         std::cout << "Writing debug for current time step\n";
         initializationOutputWriter_.beginWrite(problem_.timeManager().time() + pseudoTS);
-        addOutputVtkFields(initializationOutputWriter_);
+        asImp_().addOutputVtkFields(initializationOutputWriter_);
 
 #if DUNE_MINIMAL_DEBUG_LEVEL <= 2
         int size_ = problem_.gridView().size(0);
@@ -366,6 +367,14 @@ protected:
     Scalar ErrorTermUpperBound_; //!< Handling of error term: upper bound for error dampening
 
     static constexpr int pressureType = GET_PROP_VALUE(TypeTag, PressureFormulation); //!< gives kind of pressure used (\f$ 0 = p_w \f$, \f$ 1 = p_n \f$, \f$ 2 = p_{global} \f$)
+private:
+    //! Returns the implementation of the problem (i.e. static polymorphism)
+    Implementation &asImp_()
+    {   return *static_cast<Implementation *>(this);}
+
+    //! \copydoc Dumux::IMPETProblem::asImp_()
+    const Implementation &asImp_() const
+    {   return *static_cast<const Implementation *>(this);}
 };
 
 
@@ -607,9 +616,10 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                             pressure, problem_.spatialParams().porosity(*eIt), temperature_);
                 }
             } //end conc initial condition
-            cellData.calculateMassConcentration(problem_.spatialParams().porosity(*eIt));
-
         } //end compositional
+
+        cellData.calculateMassConcentration(problem_.spatialParams().porosity(*eIt));
+
         problem_.transportModel().totalConcentration(wCompIdx,globalIdx) = cellData.massConcentration(wCompIdx);
         problem_.transportModel().totalConcentration(nCompIdx,globalIdx) = cellData.massConcentration(nCompIdx);
 
