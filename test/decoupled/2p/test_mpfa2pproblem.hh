@@ -123,7 +123,7 @@ SET_INT_PROP(MPFATwoPTestProblem, CellsZ, 1);
 SET_SCALAR_PROP(MPFATwoPTestProblem, EndTime, 5e4);
 SET_SCALAR_PROP(MPFATwoPTestProblem, InletWidth, 2.0);
 SET_SCALAR_PROP(MPFATwoPTestProblem, InjectionFlux, 0.1);
-SET_SCALAR_PROP(MPFATwoPTestProblem, OutputInterval, 0.0);
+SET_INT_PROP(MPFATwoPTestProblem, OutputInterval, 0);
 SET_SCALAR_PROP(MPFATwoPTestProblem, OutputTimeInterval, 1e4);
 SET_STRING_PROP(MPFATwoPTestProblem, OutputfileName, "test_mpfa2p");
 SET_STRING_PROP(MPFATwoPTestProblem, ModelType, "MPFAL");
@@ -233,8 +233,8 @@ static void registerParameters()
 
     REGISTER_PARAM(TypeTag, Scalar, InletWidth, "The width on which mass is injected [m]" );
     REGISTER_PARAM(TypeTag, Scalar, InjectionFlux, "The rate of the injected mass [kg/m^2]");
-    REGISTER_PARAM(TypeTag, bool, OutputInterval, "The number of time steps between writing VTK output");
-    REGISTER_PARAM(TypeTag, bool, OutputTimeInterval, "The minumum time [s] between writing VTK output");
+    REGISTER_PARAM(TypeTag, int, OutputInterval, "The number of time steps between writing VTK output");
+    REGISTER_PARAM(TypeTag, Scalar, OutputTimeInterval, "The minumum time [s] between writing VTK output");
     REGISTER_PARAM(TypeTag, std::string, OutputfileName, "The name of the VTK output file");
     REGISTER_PARAM(TypeTag, std::string, ModelType, "The PDE model to be used (FV, FVAdaptive, MPFAL, MPFAO, MPFALAdaptive");
 }

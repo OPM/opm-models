@@ -200,7 +200,7 @@ public:
 
         typedef Dumux::BiCGSTABSolver<Vector>  SolverType;
         Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        int maxIterations = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations);
+        int maxIterations = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
         SolverType solver(fineOperator,
                           scalarProduct,
                           /*preconditioner=*/*amg_,

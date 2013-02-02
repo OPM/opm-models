@@ -435,7 +435,7 @@ private:
                         Preconditioner &parPreCond)                     \
     {                                                                   \
         Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverTolerance); \
-        int maxIter = GET_PARAM(TypeTag, Scalar, LinearSolverMaxIterations); \
+        int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations); \
                                                                         \
         int verbosity = 0;                                              \
         if (parOperator.overlap().myRank() == 0)                        \

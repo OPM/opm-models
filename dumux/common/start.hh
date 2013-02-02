@@ -206,6 +206,103 @@ std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
     }
     return "";
 }
+
+/*!
+ * \brief Register all runtime parameters, parse the command line
+ *        arguments and the parameter file.
+ *
+ * \param argc The number of command line arguments
+ * \param argv Array with the command line argument strings
+ */
+template <class TypeTag>
+bool setupParameters_(int argc, char ** argv)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+
+    ////////////////////////////////////////////////////////////
+    // parse the command line arguments
+    ////////////////////////////////////////////////////////////
+
+    // first, get the MPI rank of the current process
+    int myRank = 0;
+#if HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif
+
+    // check whether the user wanted to see the help message
+    for (int i = 1; i < argc; ++i) {
+        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
+        {
+            if (myRank == 0)
+                printUsage(argv[0], "");
+            return true;
+        }
+    }
+
+    // fill the parameter tree with the options from the command line
+    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
+    std::string s = readOptions_(argc, argv, ParameterTree::tree());
+    if (!s.empty()) {
+        if (myRank == 0)
+            printUsage(argv[0], s);
+        return false;
+    }
+
+    std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
+    if (paramFileName != "") {
+        ////////////////////////////////////////////////////////////
+        // add the parameters specified using an .ini file
+        ////////////////////////////////////////////////////////////
+
+        // check whether the parameter file is readable.
+        std::ifstream tmp;
+        tmp.open(paramFileName.c_str());
+        if (!tmp.is_open()){
+            std::ostringstream oss;
+            if (myRank == 0) {
+                oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
+                printUsage(argv[0], oss.str());
+            }
+            return false;
+        }
+
+        // read the parameter file.
+        Dune::ParameterTreeParser::readINITree(paramFileName,
+                                               ParameterTree::tree(),
+                                               /*overwrite=*/false);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // Register all parameters
+    ////////////////////////////////////////////////////////////
+    REGISTER_PARAM(TypeTag, std::string,
+                   ParameterFile,
+                   "An .ini file which contains a set of run-time parameters");
+    REGISTER_PARAM(TypeTag, bool,
+                   PrintProperties,
+                   "Print the values of the compile time properties at the start of the simulation");
+    REGISTER_PARAM(TypeTag, bool,
+                   PrintParameters,
+                   "Print the values of the run-time parameters at the start of the simulation");
+    REGISTER_PARAM(TypeTag, Scalar,
+                   EndTime,
+                   "The time at which the simulation is finished [s]");
+    REGISTER_PARAM(TypeTag, Scalar,
+                   InitialTimeStepSize,
+                   "The size of the initial time step [s]");
+    REGISTER_PARAM(TypeTag, Scalar,
+                   RestartTime,
+                   "The time time at which a simulation restart should be attempted [s]");
+
+    GridCreator::registerParameters();
+    TimeManager::registerParameters();
+    END_PARAM_REGISTRATION;
+
+    return true;
+}
+
 //! \endcond
 
 /*!
@@ -223,7 +320,10 @@ template <class TypeTag>
 int start(int argc,
           char **argv)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     // initialize MPI, finalize is done automatically on exit
     const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
@@ -231,88 +331,8 @@ int start(int argc,
     int myRank = mpiHelper.rank();
 
     try {
-        typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-        typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-        typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-
-        ////////////////////////////////////////////////////////////
-        // parse the command line arguments
-        ////////////////////////////////////////////////////////////
-
-        REGISTER_PARAM(TypeTag, std::string,
-                       ParameterFile,
-                       "An .ini file which contains a set of run-time parameters");
-        REGISTER_PARAM(TypeTag, std::string,
-                       PrintProperties,
-                       "Print the values of the compile time properties at the start of the simulation");
-        REGISTER_PARAM(TypeTag, std::string,
-                       PrintParameters,
-                       "Print the values of the run-time parameters at the start of the simulation");
-        REGISTER_PARAM(TypeTag, Scalar,
-                       EndTime,
-                       "The time at which the simulation is finished [s]");
-        REGISTER_PARAM(TypeTag, Scalar,
-                       InitialTimeStepSize,
-                       "The size of the initial time step [s]");
-        REGISTER_PARAM(TypeTag, Scalar,
-                       RestartTime,
-                       "The time time at which a simulation restart should be attempted [s]");
-
-        GridCreator::registerParameters();
-        TimeManager::registerParameters();
-        END_PARAM_REGISTRATION;
-
-        // check whether the user wanted to see the help message
-        for (int i = 1; i < argc; ++i) {
-            if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-            {
-                if (myRank == 0)
-                    printUsage(argv[0], "");
-                return 0;
-            }
-        }
-
-        // fill the parameter tree with the options from the command line
-        typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
-        std::string s = readOptions_(argc, argv, ParameterTree::tree());
-        if (!s.empty()) {
-            if (myRank == 0)
-                printUsage(argv[0], s);
+        if (!setupParameters_<TypeTag>(argc, argv))
             return 1;
-        }
-
-        std::string paramFileName = GET_PARAM(TypeTag, std::string, ParameterFile);
-        if (paramFileName != "") {
-            // check whether the parameter file is readable.
-            std::ifstream tmp;
-            tmp.open(paramFileName.c_str());
-            if (!tmp.is_open()){
-                std::ostringstream oss;
-                if (myRank == 0) {
-                    oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
-                    printUsage(argv[0], oss.str());
-                }
-                return 1;
-            }
-
-            try {
-                // read the parameter file.
-                Dune::ParameterTreeParser::readINITree(paramFileName,
-                                                       ParameterTree::tree(),
-                                                       /*overwrite=*/false);
-            }
-            catch (const Dune::Exception &e) {
-                if (myRank == 0) {
-                    std::ostringstream oss;
-                    oss << "Error while parsing parameter file: \""
-                        << paramFileName
-                        << "\": "
-                        << e.what();
-                    printUsage(argv[0], oss.str());
-                }
-                return 1;
-            }
-        }
 
         // read the initial time step and the end time
         double tEnd;
@@ -368,7 +388,7 @@ int start(int argc,
             Dumux::Properties::print<TypeTag>();
 
         // print the parameters if requested
-        bool printParams = GET_PARAM(TypeTag, Scalar, PrintParameters);
+        bool printParams = GET_PARAM(TypeTag, bool, PrintParameters);
         if (printParams && myRank == 0)
             Dumux::Parameters::printValues<TypeTag>();
 
