@@ -97,6 +97,13 @@
 
 
 //!\cond 0
+#define GET_PARAM_(TypeTag, ParamType, ParamName)                       \
+    Ewoms::Parameters::get<TypeTag,                                     \
+                           ParamType,                                   \
+                           PTAG(ParamName)>(#ParamName,                 \
+                                            #ParamName,                 \
+                                            /*errorIfNotRegistered=*/false)
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(ParameterTree);
@@ -329,52 +336,15 @@ void printValues(std::ostream &os = std::cout)
 }
 
 //! \cond 0
-template <class TypeTag, class ParamType, class PropTag>
-void registerParam(const char *paramName, const char *typeTagName, const char *propertyName, const char *usageString)
-{
-    if (!paramRegistrationOpen_)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "Parameter registration was already closed before the parameter " << paramName << " was registered.");
-
-
-    ParamInfo paramInfo;
-    paramInfo.paramName = paramName;
-    paramInfo.paramTypeName = Dune::className<ParamType>();
-    std::string tmp = Dune::className<TypeTag>();
-    tmp.replace(0, strlen("EWoms::Properties::TTag::"), "");
-    paramInfo.propertyName = propertyName;
-    paramInfo.usageString = usageString;
-    std::ostringstream oss;
-    oss << GET_PROP_VALUE_(TypeTag, PropTag);
-    paramInfo.compileTimeValue = oss.str();
-    if (paramRegistry_.find(paramName) != paramRegistry_.end()) {
-        // allow to register a parameter twice, but only if the
-        // parameter name, type and usage string are exactly the same.
-        if (paramRegistry_[paramName] == paramInfo)
-            return;
-        DUNE_THROW(Dune::InvalidStateException,
-                   "Parameter " << paramName << " registered twice with non-matching characteristics.");
-    }
-    paramRegistry_[paramName] = paramInfo;
-}
-
-void endParamRegistration()
-{
-    if (!paramRegistrationOpen_)
-        DUNE_THROW(Dune::InvalidStateException,
-                   "Parameter registration was already closed. It is only possible to close it once.");
-    paramRegistrationOpen_ = false;
-}
-
 template <class TypeTag>
 class Param
 {
     typedef typename GET_PROP(TypeTag, ParameterTree) Params;
 public:
     template <class ParamType, class PropTag>
-    static const ParamType &get(const char *propTagName, const char *paramName)
+    static const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
     {
-        static const ParamType &value = retrieve_<ParamType, PropTag>(propTagName, paramName);
+        static const ParamType &value = retrieve_<ParamType, PropTag>(propTagName, paramName, errorIfNotRegistered);
         return value;
     }
 
@@ -429,7 +399,7 @@ private:
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType &retrieve_(const char *propTagName, const char *paramName)
+    static const ParamType &retrieve_(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
     {
 #ifndef NDEBUG
         // make sure that the parameter is used consistently. since
@@ -438,13 +408,15 @@ private:
         check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
-        if (paramRegistrationOpen_)
-            DUNE_THROW(Dune::InvalidStateException,
-                       "Parameters can only retieved after _all_ of them have been registered.");
+        if (errorIfNotRegistered) {
+            if (paramRegistrationOpen_)
+                DUNE_THROW(Ewoms::ParameterException,
+                           "Parameters can only retieved after _all_ of them have been registered.");
 
-        if (paramRegistry_.find(paramName) == paramRegistry_.end())
-            DUNE_THROW(Dune::InvalidStateException,
-                       "Accessing parameter " << paramName << " without prior registration is not allowed.");
+            if (paramRegistry_.find(paramName) == paramRegistry_.end())
+                DUNE_THROW(Ewoms::ParameterException,
+                           "Accessing parameter " << paramName << " without prior registration is not allowed.");
+        }
 
         // prefix the parameter name by the model's GroupName. E.g. If
         // the model specifies its group name to be 'Stokes', in an
@@ -461,7 +433,7 @@ private:
         }
 
         // retrieve actual parameter from the parameter tree
-        ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
+        const ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
         static ParamType value = Params::tree().template get<ParamType>(canonicalName, defaultValue);
 
         return value;
@@ -469,9 +441,51 @@ private:
 };
 
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName)
-{ return Param<TypeTag>::template get<ParamType, PropTag>(propTagName, paramName); }
+const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
+{ return Param<TypeTag>::template get<ParamType, PropTag>(propTagName, paramName, errorIfNotRegistered); }
 
+template <class TypeTag, class ParamType, class PropTag>
+void registerParam(const char *paramName, const char *typeTagName, const char *propertyName, const char *usageString)
+{
+    if (!paramRegistrationOpen_)
+        DUNE_THROW(Dune::InvalidStateException,
+                   "Parameter registration was already closed before the parameter " << paramName << " was registered.");
+
+    // retrieve the parameter once to make sure that its value does
+    // not contain a syntax error.
+    ParamType DUNE_UNUSED dummy =
+        get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName,
+                                         paramName,
+                                         /*errorIfNotRegistered=*/false);
+
+    ParamInfo paramInfo;
+    paramInfo.paramName = paramName;
+    paramInfo.paramTypeName = Dune::className<ParamType>();
+    std::string tmp = Dune::className<TypeTag>();
+    tmp.replace(0, strlen("EWoms::Properties::TTag::"), "");
+    paramInfo.propertyName = propertyName;
+    paramInfo.usageString = usageString;
+    std::ostringstream oss;
+    oss << GET_PROP_VALUE_(TypeTag, PropTag);
+    paramInfo.compileTimeValue = oss.str();
+    if (paramRegistry_.find(paramName) != paramRegistry_.end()) {
+        // allow to register a parameter twice, but only if the
+        // parameter name, type and usage string are exactly the same.
+        if (paramRegistry_[paramName] == paramInfo)
+            return;
+        DUNE_THROW(Dune::InvalidStateException,
+                   "Parameter " << paramName << " registered twice with non-matching characteristics.");
+    }
+    paramRegistry_[paramName] = paramInfo;
+}
+
+void endParamRegistration()
+{
+    if (!paramRegistrationOpen_)
+        DUNE_THROW(Dune::InvalidStateException,
+                   "Parameter registration was already closed. It is only possible to close it once.");
+    paramRegistrationOpen_ = false;
+}
 //! \endcond
 
 } // namespace Parameters

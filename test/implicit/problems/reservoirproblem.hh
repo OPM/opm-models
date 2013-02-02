@@ -294,7 +294,7 @@ public:
 
         REGISTER_PARAM(TypeTag, Scalar, Temperature, "The temperature [K] in the reservoir");
         REGISTER_PARAM(TypeTag, Scalar, MaxDepth, "The maximum depth [m] of the reservoir");
-        REGISTER_PARAM(TypeTag, Scalar, SimulationName, "The name of the simulation used for the output files");
+        REGISTER_PARAM(TypeTag, std::string, SimulationName, "The name of the simulation used for the output files");
     }
 
     /*!

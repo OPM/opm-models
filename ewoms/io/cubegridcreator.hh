@@ -32,11 +32,9 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms
-{
+namespace Ewoms {
 
-namespace Properties
-{
+namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
 
@@ -75,16 +73,16 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
         REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
-        REGISTER_PARAM(TypeTag, Scalar, CellsX, "The number of intervalls in x direction");
+        REGISTER_PARAM(TypeTag, int, CellsX, "The number of intervalls in x direction");
         if (dimWorld > 1) {
             REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
-            REGISTER_PARAM(TypeTag, Scalar, CellsY, "The number of intervalls in y direction");
+            REGISTER_PARAM(TypeTag, int, CellsY, "The number of intervalls in y direction");
         }
         if (dimWorld > 2) {
             REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
-            REGISTER_PARAM(TypeTag, Scalar, CellsZ, "The number of intervalls in z direction");
+            REGISTER_PARAM(TypeTag, int, CellsZ, "The number of intervalls in z direction");
         }
     }
 

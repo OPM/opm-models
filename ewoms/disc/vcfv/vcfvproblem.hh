@@ -116,7 +116,7 @@ public:
         Model::registerParameters();
         REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
         REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
-        REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
+        REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
     }
 
     /*!

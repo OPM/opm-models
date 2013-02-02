@@ -60,7 +60,7 @@ public:
     static void registerParameters()
     {
         REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
-        REGISTER_PARAM(TypeTag, int, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
     }
 
     /*!

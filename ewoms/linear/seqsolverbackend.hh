@@ -68,12 +68,12 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
       int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-      const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-      const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
+      const int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+      const Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
 
       Vector bTmp(b);
 
-      const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
+      const Scalar relaxation = GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);
       const int precondOrder = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
       Preconditioner precond(A, precondOrder, relaxation);
@@ -93,12 +93,12 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b, const int restartGMRes)
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
+    const int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+    const Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 
-    const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
+    const Scalar relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
     const int precondIter = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
     Preconditioner precond(A, precondIter, relaxation);
@@ -413,12 +413,12 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b)
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
+    const int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+    const double tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 
-    const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
+    const double relaxation = GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);
 
     Preconditioner precond(A, relaxation);
 
@@ -437,12 +437,12 @@ public:
   bool solve(const Matrix& A, Vector& x, const Vector& b, const int restartGMRes)
   {
     int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-    const int maxIter = GET_PARAM(TypeTag, double, LinearSolverMaxIterations);
-    const double tolerance = GET_PARAM(TypeTag, double, LinearSolverRelativeTolerance);
+    const int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+    const double tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
 
     Vector bTmp(b);
 
-    const double relaxation = GET_PARAM(TypeTag, double, PreconditionerRelaxation);
+    const double relaxation = GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);
     //const int precondIter = GET_PARAM(TypeTag, int, PreconditionerOrder);
 
     Preconditioner precond(A, relaxation);
