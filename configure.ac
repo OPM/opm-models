@@ -2,7 +2,7 @@
 DUNE_AC_INIT
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([ewoms/common/spline.hh])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 DUNE_CHECK_ALL
 EWOMS_CHECKS_PRIVATE
