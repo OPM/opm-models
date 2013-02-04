@@ -92,9 +92,11 @@ public:
     static void makeGrid()
     {
         Dune::array< unsigned int, dimWorld > cellRes;
-        std::fill(cellRes.begin(), cellRes.end(), 0);
         GlobalPosition upperRight(0.0);
         GlobalPosition lowerLeft(0.0);
+
+        for (unsigned i = 0; i < dimWorld; ++i)
+            cellRes[i] = 0;
 
         upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
         cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
