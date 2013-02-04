@@ -166,6 +166,7 @@ void testTetrahedron()
                      v);
     auto *grid = gf.createGrid();
 
+    // write the sub-control volumes to a VTK file.
     writeSubControlVolumes(*grid);
 
     delete grid;
@@ -238,7 +239,12 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     testIdenityMapping();
+    // test the quadrature in a tetrahedron. since the CLang compiler
+    // prior to version 3.2 generates incorrect code here, we do not
+    // do it if the compiler is clang 3.1 or older.
+#if !__clang__ || (__clang_major__ >= 3 && __clang_minor__ >= 2)
     testTetrahedron();
+#endif
     testQuadrature();
 
     return 0;
