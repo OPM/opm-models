@@ -200,7 +200,7 @@ test_stokes2c: test/implicit/test_stokes2c
 
 test_stokesni: test/implicit/test_stokesni
 
-waterair_pvs_ni: test/implicity/waterair_pvs_ni
+waterair_pvs_ni: test/implicit/waterair_pvs_ni
 
 test_1p:test/decoupled/1p/test_1p
 
