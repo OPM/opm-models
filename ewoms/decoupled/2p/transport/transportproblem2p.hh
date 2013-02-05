@@ -94,8 +94,7 @@ public:
     {
         cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
 
-        newSpatialParams_ = true;
-        spatialParams_ = new SpatialParams(gridView);
+        spatialParams_ = Dune::make_shared<SpatialParams>(gridView);
 
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
@@ -115,19 +114,9 @@ public:
     {
         cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
 
-        newSpatialParams_ = false;
-
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = - 9.81;
-    }
-
-    ~TransportProblem2P()
-    {
-        if (newSpatialParams_)
-        {
-        delete spatialParams_;
-        }
     }
 
     /*!
@@ -239,8 +228,7 @@ private:
     GlobalPosition gravity_;
 
     // material properties
-    SpatialParams*  spatialParams_;
-    bool newSpatialParams_;
+    Dune::shared_ptr<SpatialParams> spatialParams_;
 
     Scalar cFLFactor_;
 };

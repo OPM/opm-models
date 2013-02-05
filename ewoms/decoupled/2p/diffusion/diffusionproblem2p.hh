@@ -79,8 +79,7 @@ public:
     DiffusionProblem2P(TimeManager &timeManager, const GridView &gridView)
     : ParentType(timeManager, gridView), gravity_(0)
     {
-        spatialParams_ = new SpatialParams(gridView);
-        newSpatialParams_ = true;
+        spatialParams_ = Dune::make_shared<SpatialParams>(gridView);
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;
@@ -95,7 +94,6 @@ public:
     DiffusionProblem2P(TimeManager &timeManager, const GridView &gridView, SpatialParams &spatialParams)
     : ParentType(timeManager, gridView), gravity_(0), spatialParams_(&spatialParams)
     {
-        newSpatialParams_ = false;
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;
@@ -109,8 +107,7 @@ public:
     DiffusionProblem2P(const GridView &gridView)
     : ParentType(gridView, false), gravity_(0)
     {
-        spatialParams_ = new SpatialParams(gridView);
-        newSpatialParams_ = true;
+        spatialParams_ = Dune::make_shared<SpatialParams>(gridView);
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;
@@ -124,19 +121,9 @@ public:
     DiffusionProblem2P(const GridView &gridView, SpatialParams &spatialParams)
     : ParentType(gridView, false), gravity_(0), spatialParams_(&spatialParams)
     {
-        newSpatialParams_ = false;
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;
-    }
-
-    //! Destructor
-    virtual ~DiffusionProblem2P()
-    {
-        if (newSpatialParams_)
-        {
-            delete spatialParams_;
-        }
     }
 
     static void registerParameters()
@@ -252,7 +239,7 @@ private:
     GlobalPosition gravity_;
 
     // fluids and material properties
-    SpatialParams* spatialParams_;
+    Dune::shared_ptr<SpatialParams> spatialParams_;
     bool newSpatialParams_;
 };
 

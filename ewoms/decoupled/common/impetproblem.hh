@@ -106,7 +106,6 @@ public:
    */
     IMPETProblem(TimeManager &timeManager, const GridView &gridView)
         : gridView_(gridView),
-          grid_(0),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
           timeManager_(&timeManager),
@@ -131,28 +130,17 @@ public:
             bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
         }
 
-        pressModel_ = new PressureModel(asImp_());
+        pressModel_ = Dune::make_shared<PressureModel>(asImp_());
 
-        transportModel_ = new TransportModel(asImp_());
-        model_ = new IMPETModel(asImp_()) ;
+        transportModel_ = Dune::make_shared<TransportModel>(asImp_());
+        model_ = Dune::make_shared<IMPETModel>(asImp_()) ;
 
         // create an Object to handle adaptive grids
         if (adaptiveGrid)
-            gridAdapt_ = new GridAdaptModel(asImp_());
+            gridAdapt_ = Dune::make_shared<GridAdaptModel>(asImp_());
 
         resultWriter_ = NULL;
         vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
-    }
-
-    //! destructor
-    virtual ~IMPETProblem ()
-    {
-        delete pressModel_;
-        delete transportModel_;
-        delete model_;
-        delete resultWriter_;
-        if (adaptiveGrid)
-            delete gridAdapt_;
     }
 
     static void registerParameters()
@@ -803,7 +791,7 @@ public:
             std::cout << "Writing result file for current time step\n";
 
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView_, asImp_().name());
         if (adaptiveGrid)
             resultWriter_->gridChanged();
         resultWriter_->beginWrite(timeManager().time() + timeManager().timeStepSize());
@@ -819,14 +807,14 @@ protected:
     VtkMultiWriter& resultWriter()
     {
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView_, asImp_().name());
         return *resultWriter_;
     }
     //! \copydoc Ewoms::IMPETProblem::resultWriter()
     VtkMultiWriter& resultWriter() const
     {
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView_, asImp_().name());
         return *resultWriter_;
     }
 
@@ -844,7 +832,7 @@ private:
                                  // for example.
     const GridView gridView_;
     // pointer to a possibly adaptive grid.
-    Grid* grid_;
+    Grid *grid_;
 
     GlobalPosition bboxMin_;
     GlobalPosition bboxMax_;
@@ -853,15 +841,15 @@ private:
 
     Variables variables_;
 
-    PressureModel* pressModel_;//!< object including the pressure model
-    TransportModel* transportModel_;//!< object including the saturation model
-    IMPETModel* model_;
+    Dune::shared_ptr<PressureModel> pressModel_;//!< object including the pressure model
+    Dune::shared_ptr<TransportModel> transportModel_;//!< object including the saturation model
+    Dune::shared_ptr<IMPETModel> model_;
 
-    VtkMultiWriter *resultWriter_;
+    Dune::shared_ptr<VtkMultiWriter> resultWriter_;
     int outputInterval_;
     Scalar outputTimeInterval_;
     int vtkOutputLevel_;
-    GridAdaptModel* gridAdapt_;
+    Dune::shared_ptr<GridAdaptModel> gridAdapt_;
 };
 }
 #endif

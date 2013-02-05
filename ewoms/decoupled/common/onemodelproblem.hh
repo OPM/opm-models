@@ -98,7 +98,6 @@ public:
         : gridView_(gridView),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          deleteTimeManager_(true),
           variables_(gridView),
           outputInterval_(1)
     {
@@ -112,11 +111,9 @@ public:
             }
         }
 
-        timeManager_ = new TimeManager(verbose);
+        timeManager_ = Dune::make_shared<TimeManager>(verbose);
 
-        model_ = new Model(asImp_()) ;
-
-        resultWriter_ = NULL;
+        model_ = Dune::make_shared<Model>(asImp_()) ;
     }
 
     //! Constructs an object of type OneModelProblemProblem
@@ -129,7 +126,6 @@ public:
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
           timeManager_(&timeManager),
-          deleteTimeManager_(false),
           variables_(gridView),
           outputInterval_(1)
     {
@@ -143,18 +139,7 @@ public:
             }
         }
 
-        model_ = new Model(asImp_()) ;
-
-        resultWriter_ = NULL;
-    }
-
-    //! destructor
-    virtual ~OneModelProblem ()
-    {
-        delete model_;
-        delete resultWriter_;
-        if (deleteTimeManager_)
-            delete timeManager_;
+        model_ = Dune::make_shared<Model>(asImp_()) ;
     }
 
     static void registerParameters()
@@ -463,7 +448,7 @@ public:
         if (verbose && gridView().comm().rank() == 0)
             std::cout << "Writing result file for current time step\n";
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView(), asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView(), asImp_().name());
         resultWriter_->beginWrite(timeManager().time() + timeManager().timeStepSize());
         model().addOutputVtkFields(*resultWriter_);
         asImp_().addOutputVtkFields();
@@ -632,14 +617,14 @@ protected:
     VtkMultiWriter& resultWriter()
     {
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView_, asImp_().name());
         return *resultWriter_;
     }
 
     VtkMultiWriter& resultWriter() const
     {
         if (!resultWriter_)
-            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+            resultWriter_ = Dune::make_shared<VtkMultiWriter>(gridView_, asImp_().name());
         return *resultWriter_;
     }
 
@@ -660,14 +645,13 @@ private:
     GlobalPosition bboxMin_;
     GlobalPosition bboxMax_;
 
-    TimeManager *timeManager_;
-    bool deleteTimeManager_;
+    Dune::shared_ptr<TimeManager> timeManager_;
 
     Variables variables_;
 
-    Model* model_;
+    Dune::shared_ptr<Model> model_;
 
-    VtkMultiWriter *resultWriter_;
+    Dune::shared_ptr<VtkMultiWriter> resultWriter_;
     int outputInterval_;
 };
 
