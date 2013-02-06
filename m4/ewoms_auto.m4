@@ -4,12 +4,15 @@ AC_DEFUN([EWOMS_CHECK_AUTO],[
   AC_REQUIRE([GXX0X])
   AC_LANG_PUSH([C++])
   AC_MSG_CHECKING([whether the auto keyword is supported])
-  AC_TRY_COMPILE([],[
-        struct Foo
+  AC_COMPILE_IFELSE([
+        void f()
         {
-            static float bar() { return 1.234; }
-        };
-         auto foobar = Foo::bar();], [
+            struct Foo
+            {
+                static float bar() { return 1.234; }
+            };
+            auto foobar = Foo::bar();
+         }], [
     HAVE_AUTO=yes
     AC_MSG_RESULT(yes)], [
     HAVE_AUTO=no

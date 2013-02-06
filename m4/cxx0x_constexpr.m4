@@ -3,7 +3,7 @@ AC_DEFUN([CONSTEXPR_CHECK],[
   AC_REQUIRE([GXX0X])
   AC_LANG_PUSH([C++])
   AC_MSG_CHECKING([whether constexpr is supported])
-  AC_TRY_COMPILE([],[constexpr int peng = 123;], [
+  AC_COMPILE_IFELSE([void f() { constexpr int peng = 123; }], [
     HAVE_CONSTEXPR=yes
     AC_MSG_RESULT(yes)], [
     HAVE_CONSTEXPR=no
