@@ -400,9 +400,9 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
 
         AC_MSG_CHECKING([for lib[]_dune_lib])
 
-        AC_TRY_LINK(dnl
-          [#]include<$DUNE_[]_HEADER_PREFIX/[]_dune_header>,
-          _dune_symbol,
+        AC_LINK_IFELSE(
+            [AC_LANG_PROGRAM([[#include<$DUNE_[]_HEADER_PREFIX/[]_dune_header>]],
+               _dune_symbol)],
           [
             AC_MSG_RESULT([yes])
             HAVE_[]_DUNE_MODULE=1
