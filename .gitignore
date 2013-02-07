@@ -35,6 +35,7 @@ doc/doxygen/html
 
 # object files
 *.o
+*.o-*
 *.lo
 *.la
 
@@ -93,7 +94,7 @@ test/implicit/diffusion_ncp
 test/implicit/diffusion_pvs
 test/implicit/diffusion_flash
 test/implicit/finger_immiscible
-test/implicit/fracture_immiscible
+test/implicit/fracture_discretefracture
 test/implicit/groundwater_immiscible
 test/implicit/infiltration_pvs
 test/implicit/lens_immiscible
