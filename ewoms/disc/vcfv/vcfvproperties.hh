@@ -47,9 +47,14 @@ namespace Properties {
 
 //! The type tag for models based on the VCFV-scheme
 NEW_TYPE_TAG(VcfvModel, INHERITS_FROM(VcfvNewtonMethod,
-                                      VcfvLinearSolverTypeTag,
                                       ImplicitModel,
                                       VtkPrimaryVars));
+
+
+// set the splices for the vertex-centered finite volume
+// discretization
+NEW_PROP_TAG(LinearSolverSplice);
+SET_SPLICES(VcfvModel, LinearSolverSplice);
 
 //////////////////////////////////////////////////////////////////
 // Property tags

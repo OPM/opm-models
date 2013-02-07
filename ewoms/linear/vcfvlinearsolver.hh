@@ -50,7 +50,7 @@
 
 namespace Ewoms {
 namespace Properties {
-NEW_TYPE_TAG(VcfvLinearSolverTypeTag);
+NEW_TYPE_TAG(ParallelIterativeLinearSolver);
 
 // forward declaration of the required property tags
 NEW_PROP_TAG(Problem);
@@ -536,38 +536,38 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 
 namespace Properties {
 //! make the linear solver shut up by default
-SET_INT_PROP(VcfvLinearSolverTypeTag, LinearSolverVerbosity, 0);
+SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverVerbosity, 0);
 
 //! set the preconditioner relaxation parameter to 1.0 by default
-SET_SCALAR_PROP(VcfvLinearSolverTypeTag, PreconditionerRelaxation, 1.0);
+SET_SCALAR_PROP(ParallelIterativeLinearSolver, PreconditionerRelaxation, 1.0);
 
 //! set the preconditioner order to 0 by default
-SET_INT_PROP(VcfvLinearSolverTypeTag, PreconditionerOrder, 0);
+SET_INT_PROP(ParallelIterativeLinearSolver, PreconditionerOrder, 0);
 
 //! set the GMRes restart parameter to 10 by default
-SET_INT_PROP(VcfvLinearSolverTypeTag, GMResRestart, 10);
+SET_INT_PROP(ParallelIterativeLinearSolver, GMResRestart, 10);
 
-SET_TYPE_PROP(VcfvLinearSolverTypeTag,
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
               OverlappingMatrix,
               Ewoms::Linear::OverlappingBCRSMatrix<typename GET_PROP_TYPE(TypeTag, JacobianMatrix)>);
-SET_TYPE_PROP(VcfvLinearSolverTypeTag,
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
               Overlap,
               typename GET_PROP_TYPE(TypeTag, OverlappingMatrix)::Overlap);
-SET_PROP(VcfvLinearSolverTypeTag,
+SET_PROP(ParallelIterativeLinearSolver,
          OverlappingVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Ewoms::Linear::OverlappingBlockVector<typename Vector::block_type, Overlap> type;
 };
-SET_PROP(VcfvLinearSolverTypeTag,
+SET_PROP(ParallelIterativeLinearSolver,
          OverlappingScalarProduct)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> type;
 };
-SET_PROP(VcfvLinearSolverTypeTag,
+SET_PROP(ParallelIterativeLinearSolver,
          OverlappingLinearOperator)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
@@ -576,6 +576,10 @@ SET_PROP(VcfvLinearSolverTypeTag,
                                                OverlappingVector,
                                                OverlappingVector> type;
 };
+
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              LinearSolver,
+              Ewoms::Linear::VcfvParallelSolver<TypeTag>);
 } // namespace Properties
 } // namespace Ewoms
 

@@ -62,6 +62,9 @@ namespace Properties {
 //! Set the default type for the time manager
 SET_TYPE_PROP(VcfvModel, TimeManager, Ewoms::TimeManager<TypeTag>);
 
+// use a parallel iterative linear solver by default
+SET_TAG_PROP(VcfvModel, LinearSolverSplice, ParallelIterativeLinearSolver);
+
 //////////////////////////////////////////////////////////////////
 // Properties
 //////////////////////////////////////////////////////////////////
@@ -224,9 +227,6 @@ private:
 public:
     typedef typename Dune::BCRSMatrix<MatrixBlock> type;
 };
-
-// use a parallel iterative solver by default
-SET_TYPE_PROP(VcfvModel, LinearSolver, Ewoms::Linear::VcfvParallelSolver<TypeTag>);
 
 // if the deflection of the newton method is large, we do not
 // need to solve the linear approximation accurately. Assuming
