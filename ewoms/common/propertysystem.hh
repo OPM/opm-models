@@ -875,7 +875,7 @@ struct GetProperty
     template <class CurTree, class EffTypeTag, bool isDefined,
               class ... RemainingSplices>
     struct StopAtSpliceIfPropDefinedElseTraverseRemaining_
-    { typedef EffTypeTag type; };
+    { typedef typename GetEffectiveTypeTag_<EffTypeTag>::type type; };
 
     template <class CurTree, class EffTypeTag, class ... RemainingSplices>
     struct StopAtSpliceIfPropDefinedElseTraverseRemaining_<CurTree, EffTypeTag, /*isDefined=*/false, RemainingSplices...>
