@@ -24,8 +24,9 @@
 #include <dune/istl/bvector.hh>
 
 #include "decoupledproperties.hh"
-#include <ewoms/linear/linearsolverproperties.hh>
-#include <ewoms/linear/seqsolverbackend.hh>
+#include <ewoms/linear/elementborderlistfromgrid.hh>
+#include <ewoms/linear/paralleliterativebackend.hh>
+#include <ewoms/linear/superlubackend.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -53,7 +54,10 @@ namespace Properties
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for models based on the diffusion-scheme
-NEW_TYPE_TAG(Pressure, INHERITS_FROM(LinearSolverTypeTag, DecoupledModel));
+NEW_TYPE_TAG(Pressure, INHERITS_FROM(DecoupledModel));
+
+NEW_PROP_TAG(LinearSolver);
+SET_SPLICES(Pressure, LinearSolver);
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -97,8 +101,27 @@ public:
 
 SET_TYPE_PROP(Pressure, PressureSolutionVector, typename GET_PROP(TypeTag, SolutionTypes)::ScalarSolution);
 
+SET_TYPE_PROP(Pressure, JacobianMatrix, typename GET_PROP_TYPE(TypeTag, PressureCoefficientMatrix));
+SET_TYPE_PROP(Pressure, GlobalEqVector, typename GET_PROP_TYPE(TypeTag, PressureSolutionVector));
+
+SET_PROP(Pressure, BorderListCreator)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
+
+public:
+    typedef Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
+};
+
+
 // use the stabilized BiCG solver preconditioned by the ILU-0 by default
-SET_TYPE_PROP(Pressure, LinearSolver, Ewoms::ILU0BiCGSTABBackend<TypeTag> );
+SET_TAG_PROP(Pressure, LinearSolver, ParallelIterativeLinearSolver);
+
+//! For some reason, the semi-implicit models need to use the
+//! reduction of the two-norm of the linear residual as their
+//! convergence criterion.
+SET_BOOL_PROP(Pressure, LinearSolverUseTwoNormReductionCriterion, true);
 
 //! set the default for the reduction of the initial residual
 SET_SCALAR_PROP(Pressure, LinearSolverRelativeTolerance, 1e-13);
@@ -106,10 +129,7 @@ SET_SCALAR_PROP(Pressure, LinearSolverRelativeTolerance, 1e-13);
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(Pressure, LinearSolverMaxIterations, 500);
 
-//! set the default number of maximum iterations for the linear solver
-SET_INT_PROP(Pressure, LinearSolverBlockSize, 1);
-
-SET_TYPE_PROP( Pressure, Velocity, FVVelocityDefault<TypeTag>);
+SET_TYPE_PROP(Pressure, Velocity, FVVelocityDefault<TypeTag>);
 
 }
 }

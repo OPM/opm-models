@@ -56,6 +56,7 @@ template<class TypeTag> class IMPET
 
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TransportSolutionType) TransportSolutionType;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
 
 public:
     typedef typename SolutionTypes::ScalarSolution SolutionType;
@@ -86,6 +87,21 @@ public:
 
         return;
     }
+
+    /*!
+     * \brief Returns the relative weight of the equations amongst each other.
+     */
+    Scalar eqWeight(int globalIdx, int eqIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Returns the relative weight of the primary variables amongst each other.
+     */
+    Scalar primaryVarWeight(int globalIdx, int pvIdx) const
+    { return 1.0; }
+
+    const ElementMapper &dofMapper() const
+    { return problem_.elementMapper(); }
 
     //! Calculate the update.
     /*!

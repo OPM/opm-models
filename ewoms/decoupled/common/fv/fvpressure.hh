@@ -61,9 +61,9 @@ template<class TypeTag> class FVPressure
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    ///\cond 0
-    typedef typename GET_PROP(TypeTag, SolutionTypes)::ScalarSolution ScalarSolution;
-    ///\endcond
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
+    typedef typename SolutionTypes::ScalarSolution ScalarSolution;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
 
     typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
 
@@ -125,11 +125,26 @@ protected:
 public:
     static void registerParameters()
     {
-        typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
-        LinearSolver::registerParameters();
+        typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
+        LinearSolverBackend::registerParameters();
 
         REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");
     }
+
+    /*!
+     * \brief Returns the relative weight of the equations amongst each other.
+     */
+    Scalar eqWeight(int globalIdx, int eqIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Returns the relative weight of the primary variables amongst each other.
+     */
+    Scalar primaryVarWeight(int globalIdx, int pvIdx) const
+    { return 1.0; }
+
+    const ElementMapper &dofMapper() const
+    { return problem_.elementMapper(); }
 
     /*! \brief Function which calculates the source entry
      *
@@ -483,7 +498,7 @@ void FVPressure<TypeTag>::assemble(bool first)
 template<class TypeTag>
 void FVPressure<TypeTag>::solve()
 {
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Solver;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Solver;
 
     int verboseLevelSolver = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 

@@ -18,12 +18,13 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Ewoms::Linear::VcfvParallelAmgSolver
+ * \copydoc Ewoms::Linear::ParallelAmgBackend
  */
-#ifndef EWOMS_VCFV_PARALLEL_AMG_SOLVER_HH
-#define EWOMS_VCFV_PARALLEL_AMG_SOLVER_HH
+#ifndef EWOMS_PARALLEL_AMG_BACKEND_HH
+#define EWOMS_PARALLEL_AMG_BACKEND_HH
 
-#include <ewoms/linear/seqsolverbackend.hh>
+#include <ewoms/linear/paralleliterativebackend.hh>
+#include <ewoms/linear/superlubackend.hh>
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/linear/overlappingbcrsmatrix.hh>
 #include <ewoms/linear/overlappingblockvector.hh>
@@ -31,7 +32,6 @@
 #include <ewoms/linear/overlappingscalarproduct.hh>
 #include <ewoms/linear/overlappingoperator.hh>
 #include <ewoms/linear/solverpreconditioner.hh>
-#include <ewoms/linear/vcfvlinearsolver.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
@@ -54,23 +54,27 @@
 
 namespace Ewoms {
 namespace Properties {
+NEW_TYPE_TAG(ParallelAmgBackend, INHERITS_FROM(ParallelIterativeLinearSolver));
+
 NEW_PROP_TAG(AmgCoarsenTarget);
+
+// use the AMG preconditioner wrapper.
+//NEW_PROP_TAG(ParallelAmgBackend, PreconditionerWrapper, ParallelAmgPreconditionerWrapper);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(ParallelIterativeLinearSolver, AmgCoarsenTarget, 5000);
+SET_INT_PROP(ParallelAmgBackend, AmgCoarsenTarget, 5000);
 }
 
 namespace Linear {
 /*!
  * \ingroup Linear
  *
- * \brief Provides a parallel algebraic multi-grid (AMG) linear solver
- *        from DUNE-ISTL for the vertex-centered finite volume ("vcfv")
- *        method.
+ * \brief Provides a linear solver backend using the parallel
+ *        algebraic multi-grid (AMG) linear solver from DUNE-ISTL.
  */
 template <class TypeTag>
-class VcfvParallelAmgSolver
+class ParallelAmgBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Implementation;
 
@@ -115,7 +119,7 @@ class VcfvParallelAmgSolver
 #endif
 
 public:
-    VcfvParallelAmgSolver(const Problem &problem)
+    ParallelAmgBackend(const Problem &problem)
         : problem_(problem)
     {
         overlappingMatrix_ = nullptr;
@@ -125,12 +129,12 @@ public:
         amg_ = nullptr;
     }
 
-    ~VcfvParallelAmgSolver()
+    ~ParallelAmgBackend()
     { cleanup_(); }
 
     static void registerParameters()
     {
-        VcfvParallelSolver<TypeTag>::registerParameters();
+        ParallelIterativeSolverBackend<TypeTag>::registerParameters();
 
         REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget, "The coarsening target for the agglomerations of the AMG preconditioner");
     }
@@ -252,7 +256,7 @@ public:
         typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
         solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
-        Ewoms::InverseOperatorResult result;
+        Dune::InverseOperatorResult result;
         int solverSucceeded = 1;
         try {
             solver.apply(*overlappingx_, *overlappingb_, result);

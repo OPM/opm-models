@@ -86,7 +86,7 @@ SET_BOOL_PROP(FVVelocity2PTestProblem, EnableGravity, false);
 // set the types for the MPFA-O FV method
 NEW_TYPE_TAG(FVMPFAOVelocity2PTestProblem, INHERITS_FROM(FVMPFAOPressurePropertiesTwoP, TestDiffusionSpatialParams));
 //SET_TYPE_PROP(FVMPFAOVelocity2PTestProblem, LinearSolver, Ewoms::ILUnBiCGSTABBackend<TypeTag>);
-SET_TYPE_PROP(FVMPFAOVelocity2PTestProblem, LinearSolver, Ewoms::SSORBiCGSTABBackend<TypeTag>);
+SET_TYPE_PROP(FVMPFAOVelocity2PTestProblem, PreconditionerWrapper, Ewoms::Linear::PreconditionerWrapperSSOR<TypeTag>);
 SET_INT_PROP(FVMPFAOVelocity2PTestProblem, PreconditionerOrder, 2);
 SET_TYPE_PROP(FVMPFAOVelocity2PTestProblem, Problem, Ewoms::TestDiffusionProblem<TypeTag>);
 // Set the grid type

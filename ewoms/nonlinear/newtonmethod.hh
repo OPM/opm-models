@@ -80,7 +80,7 @@ NEW_PROP_TAG(JacobianAssembler);
 NEW_PROP_TAG(JacobianMatrix);
 
 //! Specifies the type of the linear solver to be used
-NEW_PROP_TAG(LinearSolver);
+NEW_PROP_TAG(LinearSolverBackend);
 
 //! Specifies whether the Newton method should print messages or not
 NEW_PROP_TAG(NewtonVerbose);
@@ -165,7 +165,7 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolver;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) ConvergenceWriter;
 
     typedef typename Dune::MPIHelper::MPICommunicator Communicator;
@@ -173,11 +173,11 @@ class NewtonMethod
 
 public:
     NewtonMethod(Problem &problem)
-    : problem_(problem)
-    , endIterMsgStream_(std::ostringstream::out)
-    , linearSolver_(problem)
-    , comm_(Dune::MPIHelper::getCommunicator())
-    , convergenceWriter_(asImp_())
+        : problem_(problem)
+        , endIterMsgStream_(std::ostringstream::out)
+        , linearSolver_(problem)
+        , comm_(Dune::MPIHelper::getCommunicator())
+        , convergenceWriter_(asImp_())
     {
         if (!enableRelativeCriterion_() && !enableAbsoluteCriterion_())
         {
@@ -210,7 +210,7 @@ public:
      */
     static void registerParameters()
     {
-        LinearSolver::registerParameters();
+        LinearSolverBackend::registerParameters();
 
         REGISTER_PARAM(TypeTag, bool, NewtonVerbose, "Specify whether the Newton method should inform the user about its progress or not");
         REGISTER_PARAM(TypeTag, bool, NewtonWriteConvergence, "Write the convergence behaviour of the Newton method to a VTK file");
@@ -757,7 +757,7 @@ protected:
     int numIterations_;
 
     // the linear solver
-    LinearSolver linearSolver_;
+    LinearSolverBackend linearSolver_;
 
     // the collective communication used by the simulation (i.e. fake
     // or MPI)

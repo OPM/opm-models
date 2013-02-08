@@ -26,11 +26,24 @@
 #include "test_1pproblem.hh"
 #include <ewoms/common/start.hh>
 
-////////////////////////
-// the main function
-////////////////////////
 int main(int argc, char** argv)
 {
+/*
+    typedef TTAG(Pressure) TypeTag;
+    std::cout << "Children: "
+              << Dune::className<
+                  TypeTag::ChildrenTuple
+                     >() << "\n";
+    std::cout << "EffTypeTag: "
+              << Dune::className<
+                  Ewoms::Properties::GetProperty<TypeTag, Ewoms::Properties::PTag::LinearSolverBackend>::GetEffectiveTypeTag_<TypeTag>::type
+                     >() << "\n";
+    std::cout << "Splices: "
+              << Dune::className<
+                  Ewoms::Properties::PTag::Splices<TypeTag>::tuple
+                     >() << "\n";
+*/
+
     typedef TTAG(TestProblemOneP) ProblemTypeTag;
 
     return Ewoms::start<ProblemTypeTag>(argc, argv);

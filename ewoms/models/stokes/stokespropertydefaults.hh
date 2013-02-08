@@ -43,6 +43,8 @@
 #include <ewoms/material/fluidsystems/1pfluidsystem.hh>
 #include <ewoms/material/fluidstates/compositionalfluidstate.hh>
 
+#include <ewoms/linear/superlubackend.hh>
+
 namespace Ewoms {
 
 namespace Properties {
@@ -79,7 +81,7 @@ SET_TYPE_PROP(VcfvStokes,
 SET_SCALAR_PROP(VcfvStokes, NewtonRelativeTolerance, 1e-7);
 
 #if HAVE_SUPERLU
-SET_TYPE_PROP(VcfvStokes, LinearSolver, SuperLUBackend<TypeTag>);
+SET_TAG_PROP(VcfvStokes, LinearSolver, SuperLULinearSolver);
 #else
 #warning "No SuperLU installed. SuperLU is the recommended linear solver for the Stokes models."
 #endif

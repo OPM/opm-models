@@ -63,7 +63,6 @@ NEW_PROP_TAG( CellData ); //!< The cell data storage class
 }
 }
 
-#include <ewoms/linear/seqsolverbackend.hh>
 #include <ewoms/decoupled/common/variableclass.hh>
 #include <ewoms/decoupled/1p/cellData1p.hh>
 #include <ewoms/decoupled/1p/1pindices.hh>

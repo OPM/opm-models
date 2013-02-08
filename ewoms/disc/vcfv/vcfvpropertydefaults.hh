@@ -38,8 +38,9 @@
 #include "vcfvconstraintscontext.hh"
 #include "vcfvnewtonmethod.hh"
 
-#include <ewoms/linear/vcfvlinearsolver.hh>
-//#include <ewoms/linear/vcfvparallelamgsolver.hh>
+#include <ewoms/linear/vertexborderlistfromgrid.hh>
+#include <ewoms/linear/paralleliterativebackend.hh>
+
 #include <ewoms/nonlinear/newtonmethod.hh>
 #include <ewoms/common/timemanager.hh>
 
@@ -63,7 +64,7 @@ namespace Properties {
 SET_TYPE_PROP(VcfvModel, TimeManager, Ewoms::TimeManager<TypeTag>);
 
 // use a parallel iterative linear solver by default
-SET_TAG_PROP(VcfvModel, LinearSolverSplice, ParallelIterativeLinearSolver);
+SET_TAG_PROP(VcfvModel, LinearSolver, ParallelIterativeLinearSolver);
 
 //////////////////////////////////////////////////////////////////
 // Properties
@@ -99,6 +100,15 @@ SET_TYPE_PROP(VcfvModel,
 
 //! Mapper for the degrees of freedoms.
 SET_TYPE_PROP(VcfvModel, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
+
+//! marks the border indices (required for the algebraic overlap stuff)
+SET_PROP(VcfvModel, BorderListCreator)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+public:
+    typedef Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
+};
 
 //! Set the BaseLocalResidual to VcfvLocalResidual
 SET_TYPE_PROP(VcfvModel, BaseLocalResidual, Ewoms::VcfvLocalResidual<TypeTag>);
@@ -239,46 +249,11 @@ SET_SCALAR_PROP(VcfvModel, LinearSolverRelativeTolerance, 1e-6);
 // By default, looking at the absolute defect is "almost" disabled.
 SET_SCALAR_PROP(VcfvModel, LinearSolverAbsoluteTolerance, 1e-30);
 
-//! set the default number of maximum iterations for the linear solver
-SET_INT_PROP(VcfvModel, LinearSolverMaxIterations, 250);
-
-//! set number of equations of the mathematical model as default
-SET_INT_PROP(VcfvModel, LinearSolverBlockSize, GET_PROP_VALUE(TypeTag, NumEq));
-
-//! set the size of the overlap region of the linear solver
-SET_INT_PROP(VcfvModel, LinearSolverOverlapSize, 2);
+//! set the default for the accepted fix-point tolerance (we use 0 to disable considering the fix-point tolerance)
+SET_SCALAR_PROP(VcfvModel, LinearSolverFixPointTolerance, GET_PROP_VALUE(TypeTag, NewtonRelativeTolerance)/100);
 
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(VcfvModel, TimeDiscHistorySize, 2);
-
-/*!
- * \brief Set the algorithm used for the linear solver.
- *
- * Possible choices are:
- * - \c SolverWrapperLoop: A fixpoint solver (using the Richardson iteration)
- * - \c SolverWrapperGradients: The steepest descent solver
- * - \c SolverWrapperCG: A conjugated gradients solver
- * - \c SolverWrapperBiCGStab: A stabilized bi-conjugated gradients solver
- * - \c SolverWrapperMinRes: A solver based on the  minimized residual algorithm
- * - \c SolverWrapperGMRes: A restarted GMRES solver
- */
-SET_TYPE_PROP(VcfvModel,
-              LinearSolverWrapper,
-              Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
-
-/*!
- * \brief Set the algorithm used for as the preconditioner for the linear solver.
- *
- * Possible choices are:
- * - \c PreconditionerWrapperJacobi: A simple Jacobi preconditioner
- * - \c PreconditionerWrapperGaussSeidel: A Gauss-Seidel preconditioner
- * - \c PreconditionerWrapperSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
- * - \c PreconditionerWrapperSOR: A successive overrelaxation (SOR) preconditioner
- * - \c PreconditionerWrapperILU: An ILU(n) preconditioner
- */
-SET_TYPE_PROP(VcfvModel,
-              PreconditionerWrapper,
-              Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
 
 } // namespace Properties
 } // namespace Ewoms

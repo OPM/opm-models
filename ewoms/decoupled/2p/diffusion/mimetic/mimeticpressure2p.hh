@@ -105,7 +105,9 @@ template<class TypeTag> class MimeticPressure2P
     typedef MimeticOperatorAssembler<Scalar,GridView> OperatorAssembler;
 
     ///\cond 0
-    typedef typename GET_PROP(TypeTag, SolutionTypes)::ScalarSolution ScalarSolution;
+    typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
+    typedef typename SolutionTypes::ScalarSolution ScalarSolution;
+    typedef typename SolutionTypes::ElementMapper ElementMapper;
     ///\endcond
 
     typedef typename GET_PROP_TYPE(TypeTag, PressureRHSVector) RHSVector;
@@ -153,6 +155,21 @@ public:
         typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) LinearSolverSolver;
         LinearSolverSolver::registerParameters();
     }
+
+    /*!
+     * \brief Returns the relative weight of the equations amongst each other.
+     */
+    Scalar eqWeight(int globalIdx, int eqIdx) const
+    { return 1.0; }
+
+    /*!
+     * \brief Returns the relative weight of the primary variables amongst each other.
+     */
+    Scalar primaryVarWeight(int globalIdx, int pvIdx) const
+    { return 1.0; }
+
+    const ElementMapper &dofMapper() const
+    { return problem_.elementMapper(); }
 
     //constitutive functions are initialized and stored in the variables object
     void updateMaterialLaws();
@@ -321,7 +338,7 @@ private:
 template<class TypeTag>
 void MimeticPressure2P<TypeTag>::solve()
 {
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Solver;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Solver;
 
     int verboseLevelSolver = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 

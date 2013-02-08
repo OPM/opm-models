@@ -80,47 +80,6 @@ namespace Ewoms {
       \{
   */
 
-  /*!
-      \brief Statistics about the application of an inverse operator
-
-      The return value of an application of the inverse
-      operator delivers some important information about
-      the iteration.
-  */
-  struct InverseOperatorResult
-  {
-    /** \brief Default constructor */
-    InverseOperatorResult ()
-    {
-      clear();
-    }
-
-    /** \brief Resets all data */
-    void clear ()
-    {
-      iterations = 0;
-      reduction = 0;
-      converged = false;
-      conv_rate = 1;
-      elapsed = 0;
-    }
-
-    /** \brief Number of iterations */
-    int iterations;
-
-    /** \brief Reduction achieved: \f$ \|b-A(x^n)\|/\|b-A(x^0)\|\f$ */
-    double reduction;
-
-    /** \brief True if convergence criterion has been met */
-    bool converged;
-
-    /** \brief Convergence rate (average reduction per step) */
-    double conv_rate;
-
-    /** \brief Elapsed time in seconds */
-    double elapsed;
-  };
-
 
   //=====================================================================
   /*!
@@ -173,7 +132,7 @@ namespace Ewoms {
         \param b The right hand side
         \param res Object to store the statistics about applying the operator.
     */
-    virtual void apply (X& x, Y& b, InverseOperatorResult& res) = 0;
+    virtual void apply (X& x, Y& b, Dune::InverseOperatorResult& res) = 0;
 
     //! \brief Destructor
     virtual ~InverseOperator () {}
@@ -272,7 +231,7 @@ namespace Ewoms {
     }
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       // clear solver statistics
       res.clear();
@@ -408,7 +367,7 @@ namespace Ewoms {
 
       \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       res.clear();                  // clear solver statistics
       Dune::Timer watch;                // start a timer
@@ -523,7 +482,7 @@ namespace Ewoms {
 
       \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       res.clear();                  // clear solver statistics
       Dune::Timer watch;                // start a timer
@@ -669,7 +628,7 @@ public:
 
       \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       const double EPSILON=1e-80;
 
@@ -894,7 +853,7 @@ public:
 
       \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       res.clear();                // clear solver statistics
       Dune::Timer watch;                // start a timer
@@ -1125,7 +1084,7 @@ public:
     }
 
     //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
-    virtual void apply (X& x, X& b, InverseOperatorResult& res)
+    virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       int m = _restart;
       field_type norm;

@@ -35,7 +35,7 @@
 #include <ewoms/material/components/simpleh2o.hh>
 #include <ewoms/material/components/dnapl.hh>
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
-#include <ewoms/linear/vcfvparallelamgsolver.hh>
+#include <ewoms/linear/parallelamgbackend.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -110,7 +110,7 @@ public:
 };
 
 // Use the algebraic multi-grid linear solver for this problem
-SET_TYPE_PROP(LensBaseProblem, LinearSolver, Ewoms::Linear::VcfvParallelAmgSolver<TypeTag>);
+SET_TAG_PROP(LensBaseProblem, LinearSolver, ParallelAmgBackend);
 
 // Enable partial reassembly of the jacobian matrix?
 //SET_BOOL_PROP(LensBaseProblem, EnablePartialReassemble, true);

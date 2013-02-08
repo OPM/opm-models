@@ -29,7 +29,6 @@
 #include "vcfvnewtonmethod.hh"
 
 #include <ewoms/vtk/vcfvvtkprimaryvarsmodule.hh>
-#include <ewoms/linear/vcfvlinearsolver.hh>
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/common/propertysystem.hh>
 
@@ -53,8 +52,8 @@ NEW_TYPE_TAG(VcfvModel, INHERITS_FROM(VcfvNewtonMethod,
 
 // set the splices for the vertex-centered finite volume
 // discretization
-NEW_PROP_TAG(LinearSolverSplice);
-SET_SPLICES(VcfvModel, LinearSolverSplice);
+NEW_PROP_TAG(LinearSolver);
+SET_SPLICES(VcfvModel, LinearSolver);
 
 //////////////////////////////////////////////////////////////////
 // Property tags
@@ -159,6 +158,9 @@ NEW_PROP_TAG(VertexMapper);
 NEW_PROP_TAG(ElementMapper);
 //! mapper for degrees of freedom
 NEW_PROP_TAG(DofMapper);
+
+//! The class which marks the border indices. (Required for the algebraic overlap stuff.)
+NEW_PROP_TAG(BorderListCreator);
 
 //! The history size required by the time discretization
 NEW_PROP_TAG(TimeDiscHistorySize);
