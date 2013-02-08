@@ -210,7 +210,7 @@ namespace Properties {
     template<>                                                      \
     struct Splices<TTAG(TypeTagName)>                               \
     {                                                               \
-        typedef typename RevertedTuple<__VA_ARGS__>::type tuple;    \
+        typedef RevertedTuple<__VA_ARGS__>::type tuple;             \
     };                                                              \
     SPLICE_INFO_(TTAG(TypeTagName), __VA_ARGS__)                    \
     }                                                               \
