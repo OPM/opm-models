@@ -231,7 +231,7 @@ namespace Ewoms {
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
 
-    //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
+    //! Solve the linear system of eqations \f$Ax = b\f$
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       // clear solver statistics
@@ -365,8 +365,6 @@ namespace Ewoms {
 
     /*!
       \brief Apply inverse operator.
-
-      \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
@@ -480,8 +478,6 @@ namespace Ewoms {
 
     /*!
       \brief Apply inverse operator.
-
-      \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
@@ -626,8 +622,6 @@ public:
 
     /*!
       \brief Apply inverse operator.
-
-      \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
@@ -851,8 +845,6 @@ public:
 
     /*!
       \brief Apply inverse operator.
-
-      \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
     */
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
@@ -1084,7 +1076,7 @@ public:
       this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
     }
 
-    //! \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
+    //! Solve the linear system of eqations \f$Ax = b\f$
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       int m = _restart;

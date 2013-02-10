@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \copydoc Ewoms::SuperLUBackend
+ * \copydoc Ewoms::Linear::SuperLUBackend
  */
 #ifndef EWOMS_SUPER_LU_BACKEND_HH
 #define EWOMS_SUPER_LU_BACKEND_HH
