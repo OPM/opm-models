@@ -38,7 +38,6 @@
 #include "vcfvnewtonmethod.hh"
 
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
-#include <ewoms/linear/paralleliterativebackend.hh>
 
 #include <ewoms/nonlinear/newtonmethod.hh>
 #include <ewoms/common/timemanager.hh>
@@ -61,9 +60,6 @@ namespace Properties {
 
 //! Set the default type for the time manager
 SET_TYPE_PROP(VcfvModel, TimeManager, Ewoms::TimeManager<TypeTag>);
-
-// use a parallel iterative linear solver by default
-SET_TAG_PROP(VcfvModel, LinearSolver, ParallelIterativeLinearSolver);
 
 //////////////////////////////////////////////////////////////////
 // Properties

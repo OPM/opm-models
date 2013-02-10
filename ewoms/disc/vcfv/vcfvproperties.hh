@@ -29,6 +29,7 @@
 #include "vcfvnewtonmethod.hh"
 
 #include <ewoms/vtk/vcfvvtkprimaryvarsmodule.hh>
+#include <ewoms/linear/paralleliterativebackend.hh>
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/common/propertysystem.hh>
 
@@ -54,6 +55,9 @@ NEW_TYPE_TAG(VcfvModel, INHERITS_FROM(VcfvNewtonMethod,
 // discretization
 NEW_PROP_TAG(LinearSolver);
 SET_SPLICES(VcfvModel, LinearSolver);
+
+// use a parallel iterative linear solver by default
+SET_TAG_PROP(VcfvModel, LinearSolver, ParallelIterativeLinearSolver);
 
 //////////////////////////////////////////////////////////////////
 // Property tags

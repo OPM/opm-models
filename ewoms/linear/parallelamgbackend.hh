@@ -76,7 +76,7 @@ namespace Linear {
 template <class TypeTag>
 class ParallelAmgBackend
 {
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolver) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
