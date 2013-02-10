@@ -42,7 +42,7 @@ class MpiBuffer
 public:
     MpiBuffer()
     {
-        data_ = nullptr;
+        data_ = NULL;
         dataSize_ = 0;
 
         setMpiDataType_();
