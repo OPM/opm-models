@@ -4,7 +4,7 @@ AC_DEFUN([EWOMS_CHECK_AUTO],[
   AC_REQUIRE([GXX0X])
   AC_LANG_PUSH([C++])
   AC_MSG_CHECKING([whether the auto keyword is supported])
-  AC_COMPILE_IFELSE([
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
         void f()
         {
             struct Foo
@@ -12,7 +12,7 @@ AC_DEFUN([EWOMS_CHECK_AUTO],[
                 static float bar() { return 1.234; }
             };
             auto foobar = Foo::bar();
-         }], [
+         }]])], [
     HAVE_AUTO=yes
     AC_MSG_RESULT(yes)], [
     HAVE_AUTO=no
