@@ -221,25 +221,15 @@ bool setupParameters_(int argc, char ** argv)
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
-    ////////////////////////////////////////////////////////////
-    // parse the command line arguments
-    ////////////////////////////////////////////////////////////
-
     // first, get the MPI rank of the current process
     int myRank = 0;
 #if HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 #endif
 
-    // check whether the user wanted to see the help message
-    for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-        {
-            if (myRank == 0)
-                printUsage(argv[0], "");
-            return true;
-        }
-    }
+    ////////////////////////////////////////////////////////////
+    // parse the command line arguments
+    ////////////////////////////////////////////////////////////
 
     // fill the parameter tree with the options from the command line
     typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
@@ -247,7 +237,7 @@ bool setupParameters_(int argc, char ** argv)
     if (!s.empty()) {
         if (myRank == 0)
             printUsage(argv[0], s);
-        return false;
+        return /*continueExecution=*/false;
     }
 
     std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
@@ -265,7 +255,7 @@ bool setupParameters_(int argc, char ** argv)
                 oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
                 printUsage(argv[0], oss.str());
             }
-            return false;
+            return /*continueExecution=*/false;
         }
 
         // read the parameter file.
@@ -300,7 +290,17 @@ bool setupParameters_(int argc, char ** argv)
     TimeManager::registerParameters();
     END_PARAM_REGISTRATION;
 
-    return true;
+    // check whether the user wanted to see the help message
+    for (int i = 1; i < argc; ++i) {
+        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
+        {
+            if (myRank == 0)
+                printUsage(argv[0], "");
+            return /*continueExecution=*/false;
+        }
+    }
+
+    return /*continueExecution=*/true;
 }
 
 //! \endcond
@@ -369,19 +369,6 @@ int start(int argc,
                 <<" will now start the trip. "
                 << "Please sit back, relax and enjoy the ride.\n";
 
-        // try to create a grid (from the given grid file)
-        if (myRank ==  0) std::cout << "Creating the grid\n";
-        try { GridCreator::makeGrid(); }
-        catch (const Dune::Exception &e) {
-            std::cout << __FILE__ << ":" << __LINE__ << "\n";
-            std::ostringstream oss;
-            oss << "Creation of the grid failed:" << e.what();
-            printUsage(argv[0], oss.str());
-            return 1;
-        }
-        if (myRank ==  0) std::cout << "Distributing the grid\n";
-        GridCreator::loadBalance();
-
         // print the parameters if requested
         bool printParams = GET_PARAM(TypeTag, bool, PrintParameters);
         if (printParams && myRank == 0)
@@ -391,6 +378,18 @@ int start(int argc,
         bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
         if (printProps && myRank == 0)
             Ewoms::Properties::print<TypeTag>();
+
+        // try to create a grid (from the given grid file)
+        if (myRank ==  0) std::cout << "Creating the grid\n";
+        try { GridCreator::makeGrid(); }
+        catch (const Dune::Exception &e) {
+            std::cout << __FILE__ << ":" << __LINE__ << "\n";
+            std::ostringstream oss;
+            oss << "Creation of the grid failed:" << e.what();
+            return 1;
+        }
+        if (myRank ==  0) std::cout << "Distributing the grid\n";
+        GridCreator::loadBalance();
 
         // instantiate and run the concrete problem. make sure to
         // deallocate the problem and before the time manager and the
