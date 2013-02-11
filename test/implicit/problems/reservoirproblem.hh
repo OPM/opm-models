@@ -247,7 +247,6 @@ public:
         FluidSystem::setOilFormationVolumeFactor(Bo);
         FluidSystem::setGasFormationFactor(Rs);
         FluidSystem::setOilViscosity(muo);
-        FluidSystem::setBubblePressure(2.206322e+07);
         FluidSystem::setGasViscosity(mug);
         FluidSystem::setWaterViscosity(9.6e-4);
         FluidSystem::setWaterCompressibility(1.450377e-10);
