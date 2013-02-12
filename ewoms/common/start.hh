@@ -231,37 +231,51 @@ bool setupParameters_(int argc, char ** argv)
     // parse the command line arguments
     ////////////////////////////////////////////////////////////
 
-    // fill the parameter tree with the options from the command line
-    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
-    std::string s = readOptions_(argc, argv, ParameterTree::tree());
-    if (!s.empty()) {
-        if (myRank == 0)
-            printUsage(argv[0], s);
-        return /*continueExecution=*/false;
+
+    // check whether the user wanted to see the help message
+    bool printHelp = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
+        {
+            printHelp = true;
+            break;
+        }
     }
 
-    std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
-    if (paramFileName != "") {
-        ////////////////////////////////////////////////////////////
-        // add the parameters specified using an .ini file
-        ////////////////////////////////////////////////////////////
-
-        // check whether the parameter file is readable.
-        std::ifstream tmp;
-        tmp.open(paramFileName.c_str());
-        if (!tmp.is_open()){
-            std::ostringstream oss;
-            if (myRank == 0) {
-                oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
-                printUsage(argv[0], oss.str());
-            }
+    // only parse the parameters if we were not called with --help or -h
+    if (!printHelp) {
+        // fill the parameter tree with the options from the command line
+        typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
+        std::string s = readOptions_(argc, argv, ParameterTree::tree());
+        if (!s.empty()) {
+            if (myRank == 0)
+                printUsage(argv[0], s);
             return /*continueExecution=*/false;
         }
 
-        // read the parameter file.
-        Dune::ParameterTreeParser::readINITree(paramFileName,
-                                               ParameterTree::tree(),
-                                               /*overwrite=*/false);
+        std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
+        if (paramFileName != "") {
+            ////////////////////////////////////////////////////////////
+            // add the parameters specified using an .ini file
+            ////////////////////////////////////////////////////////////
+
+            // check whether the parameter file is readable.
+            std::ifstream tmp;
+            tmp.open(paramFileName.c_str());
+            if (!tmp.is_open()){
+                std::ostringstream oss;
+                if (myRank == 0) {
+                    oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
+                    printUsage(argv[0], oss.str());
+                }
+                return /*continueExecution=*/false;
+            }
+
+            // read the parameter file.
+            Dune::ParameterTreeParser::readINITree(paramFileName,
+                                                   ParameterTree::tree(),
+                                                   /*overwrite=*/false);
+        }
     }
 
     ////////////////////////////////////////////////////////////
@@ -290,14 +304,10 @@ bool setupParameters_(int argc, char ** argv)
     TimeManager::registerParameters();
     END_PARAM_REGISTRATION;
 
-    // check whether the user wanted to see the help message
-    for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-        {
-            if (myRank == 0)
-                printUsage(argv[0], "");
-            return /*continueExecution=*/false;
-        }
+    if (printHelp) {
+        if (myRank == 0)
+            printUsage(argv[0], "");
+        return /*continueExecution=*/false;
     }
 
     return /*continueExecution=*/true;
