@@ -87,7 +87,7 @@ void testIdenityMapping()
 }
 
 template <class Grid>
-void writeSubControlVolumes(const Grid &grid)
+void writeTetrahedronSubControlVolumes(const Grid &grid)
 {
 #if HAVE_ALUGRID
     typedef typename Grid::LeafGridView GridView;
@@ -137,7 +137,7 @@ void writeSubControlVolumes(const Grid &grid)
     const auto &grid2 = *gf2.createGrid();
     typedef Dune::VTKWriter<GridView2> VtkWriter;
     VtkWriter writer(grid2.leafView(), Dune::VTK::conforming);
-    writer.write("quadrature", Dune::VTK::ascii);
+    writer.write("tetrahedron-scvs", Dune::VTK::ascii);
 #endif // HAVE_ALUGRID
 }
 
@@ -167,7 +167,98 @@ void testTetrahedron()
     auto *grid = gf.createGrid();
 
     // write the sub-control volumes to a VTK file.
-    writeSubControlVolumes(*grid);
+    writeTetrahedronSubControlVolumes(*grid);
+
+    delete grid;
+#endif // HAVE_ALUGRID
+}
+
+template <class Grid>
+void writeCubeSubControlVolumes(const Grid &grid)
+{
+#if HAVE_ALUGRID
+    typedef typename Grid::LeafGridView GridView;
+
+    typedef Dune::ALUGrid<dim, dim, Dune::cube, Dune::nonconforming> Grid2;
+    typedef typename Grid2::LeafGridView GridView2;
+    typedef Dune::GridFactory<Grid2> GridFactory2;
+
+    // instanciate a ElementGeometry
+    typedef Ewoms::VcfvElementGeometry<Scalar, GridView> FvElementGeometry;
+    FvElementGeometry fvElemGeom;
+
+    GridFactory2 gf2;
+    const auto &gridView = grid.leafView();
+    auto eIt = gridView.template begin<0>();
+    const auto &eEndIt = gridView.template end<0>();
+    for (; eIt != eEndIt; ++eIt) {
+        fvElemGeom.update(gridView, *eIt);
+        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
+            const auto &scvLocalGeom = *(fvElemGeom.subContVol[scvIdx].localGeometry);
+
+            for (int i = 0; i < scvLocalGeom.numCorners; ++ i) {
+                GlobalPosition pos(eIt->geometry().global(scvLocalGeom.corner(i)));
+                gf2.insertVertex(pos);
+            }
+        }
+    }
+
+    int cornerOffset = 0;
+    eIt = gridView.template begin<0>();
+    for (; eIt != eEndIt; ++eIt) {
+        fvElemGeom.update(gridView, *eIt);
+        for (int scvIdx = 0; scvIdx < fvElemGeom.numVertices; ++scvIdx) {
+            const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
+
+            std::vector<unsigned int> vertexIndices;
+            for (int i = 0; i < scvLocalGeom.numCorners; ++ i) {
+                vertexIndices.push_back(cornerOffset);
+                ++ cornerOffset;
+            }
+
+            gf2.insertElement(Dune::GeometryType(Dune::GeometryType::cube,dim),
+                              vertexIndices);
+        }
+    }
+
+    const auto &grid2 = *gf2.createGrid();
+    typedef Dune::VTKWriter<GridView2> VtkWriter;
+    VtkWriter writer(grid2.leafView(), Dune::VTK::conforming);
+    writer.write("cube-scvs", Dune::VTK::ascii);
+#endif // HAVE_ALUGRID
+}
+
+void testCube()
+{
+#if HAVE_ALUGRID
+    typedef Dune::ALUGrid<dim, dim, Dune::cube, Dune::nonconforming> Grid;
+    typedef Grid::LeafGridView GridView;
+    typedef Dune::GridFactory<Grid> GridFactory;
+    GridFactory gf;
+    Scalar corners[][3] = {
+        { 0, 0, 0 },
+        { 1, 0, 0 },
+        { 0, 2, 0 },
+        { 3, 3, 0 },
+        { 0, 0, 4 },
+        { 5, 0, 5 },
+        { 0, 6, 6 },
+        { 7, 7, 7 },
+    };
+
+    for (unsigned i = 0; i < sizeof(corners)/sizeof(corners[0]); ++i) {
+        GlobalPosition pos;
+        for (unsigned j = 0; j < dim; ++j)
+            pos[j] = corners[i][j];
+        gf.insertVertex(pos);
+    }
+    std::vector<unsigned int> v = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    gf.insertElement(Dune::GeometryType(Dune::GeometryType::cube,dim),
+                     v);
+    auto *grid = gf.createGrid();
+
+    // write the sub-control volumes to a VTK file.
+    writeCubeSubControlVolumes(*grid);
 
     delete grid;
 #endif // HAVE_ALUGRID
@@ -245,6 +336,7 @@ int main(int argc, char** argv)
 #if !__clang__ || (__clang_major__ >= 3 && __clang_minor__ >= 2)
     testTetrahedron();
 #endif
+    testCube();
     testQuadrature();
 
     return 0;
