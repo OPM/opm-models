@@ -335,8 +335,8 @@ int main(int argc, char** argv)
     // do it if the compiler is clang 3.1 or older.
 #if !__clang__ || (__clang_major__ >= 3 && __clang_minor__ >= 2)
     testTetrahedron();
-#endif
     testCube();
+#endif
     testQuadrature();
 
     return 0;
