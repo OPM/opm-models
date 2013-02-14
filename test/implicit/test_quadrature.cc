@@ -333,7 +333,7 @@ int main(int argc, char** argv)
     // test the quadrature in a tetrahedron. since the CLang compiler
     // prior to version 3.2 generates incorrect code here, we do not
     // do it if the compiler is clang 3.1 or older.
-#if !__clang__ || (__clang_major__ >= 3 && __clang_minor__ >= 2)
+#if !__clang__ || __clang_major__ >= 3 || (__clang_major__ == 3  && __clang_minor__ >= 2)
     testTetrahedron();
     testCube();
 #endif
