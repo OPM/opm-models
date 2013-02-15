@@ -104,22 +104,20 @@ public:
             // use a "negative saturation" of the gas phase to
             // compensate
 
-            // first we calculate the "mass per cubic meter of pore
-            // space" of gas which is missing to make the oil
-            // saturated
+            // calculate the "mass per cubic meter of pore space" of
+            // gas which is missing to make the oil saturated
             Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
             Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
-            Scalar rhorefg = FluidSystem::surfaceDensity(gPhaseIdx);
-            Scalar RsSat = FluidSystem::gasFormationFactor(po);
-            Scalar XoGSat = RsSat*rhorefg / rhoo;
+            Scalar Rs = FluidSystem::gasFormationFactor(po);
+            Scalar XoG = Rs*FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
 
             Scalar rhogDef =
                 fluidState.saturation(oPhaseIdx)
                 * rhoo
-                * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));
+                * (XoG - fluidState.massFraction(oPhaseIdx, gCompIdx));
 
             Scalar Bg = FluidSystem::gasFormationVolumeFactor(po);
-            Scalar rhog = rhorefg/Bg;
+            Scalar rhog = FluidSystem::surfaceDensity(gPhaseIdx)/Bg;
 
             saturation[gPhaseIdx] = - rhogDef/rhog;
             saturation[oPhaseIdx] = 1 - saturation[wPhaseIdx] - saturation[gPhaseIdx];
