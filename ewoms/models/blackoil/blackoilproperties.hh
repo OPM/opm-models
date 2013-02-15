@@ -29,6 +29,7 @@
 #include <ewoms/vtk/vcfvvtkmultiphasemodule.hh>
 #include <ewoms/vtk/vcfvvtkcompositionmodule.hh>
 #include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
+#include <ewoms/vtk/vcfvvtkblackoilmodule.hh>
 
 namespace Ewoms {
 
@@ -42,7 +43,7 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the black-oil problems
-NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkComposition, VtkTemperature));
+NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkBlackOil, VtkMultiPhase, VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags

@@ -116,6 +116,7 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
+        Ewoms::VcfvVtkBlackOilModule<TypeTag>::registerParameters();
         Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
         Ewoms::VcfvVtkCompositionModule<TypeTag>::registerParameters();
         Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
@@ -210,6 +211,7 @@ protected:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules available on all model
+        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
