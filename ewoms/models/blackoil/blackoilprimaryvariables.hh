@@ -109,12 +109,12 @@ public:
             Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
             Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
             Scalar Rs = FluidSystem::gasFormationFactor(po);
-            Scalar XoG = Rs*FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
+            Scalar XoGSat = Rs*FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
 
             Scalar rhogDef =
                 fluidState.saturation(oPhaseIdx)
                 * rhoo
-                * (XoG - fluidState.massFraction(oPhaseIdx, gCompIdx));
+                * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));
 
             Scalar Bg = FluidSystem::gasFormationVolumeFactor(po);
             Scalar rhog = FluidSystem::surfaceDensity(gPhaseIdx)/Bg;

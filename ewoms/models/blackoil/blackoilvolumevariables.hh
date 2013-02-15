@@ -149,36 +149,38 @@ public:
         // minus the water saturation
         Scalar Sg = fluidState_.saturation(gPhaseIdx);
         Scalar Sw = fluidState_.saturation(wPhaseIdx);
-        if (Sg < 0 && (1 - Sw) > 0) {
+        if (Sg < 0) {
             Scalar So = 1 - Sw;
 
-            // Calculate the total partial mass density of the gas and
-            // oil components in the saturated oil phase
-            Scalar rho_oGSat = So*XoG*rhoo;
+            if (So > 0) {
+                // Calculate the total partial mass density of the gas and
+                // oil components in the saturated oil phase
+                Scalar rho_oGSat = So*XoG*rhoo;
 
-            // Calculate the amount of gas that cannot be subtracted
-            // from the oil and thus needs to be accounted for in the
-            // gas saturation
-            Scalar rho_oGResid = std::max(0.0, std::abs(Sg)*rhog - rho_oGSat);
+                // Calculate the amount of gas that cannot be subtracted
+                // from the oil and thus needs to be accounted for in the
+                // gas saturation
+                Scalar rho_GInPhase = std::max(0.0, std::abs(Sg)*rhog - rho_oGSat);
 
-            // calculate the composition of the undersaturated oil phase
-            Scalar rho_oG = std::max(0.0, rho_oGSat - std::abs(Sg)*rhog);
+                // calculate the composition of the undersaturated oil phase
+                Scalar rho_oG = std::max(0.0, rho_oGSat - std::abs(Sg)*rhog);
 
-            // convert to mass fractions
-            XoG = rho_oG/rhoo;
-            XoO = 1 - XoG;
+                // convert to mass fractions
+                XoG = rho_oG/(So*rhoo);
+                XoO = 1 - XoG;
 
-            // calculate the bubble pressure of the oil with the new
-            // composition
-            Scalar pBubb = FluidSystem::oilSaturationPressure(XoG);
+                // calculate the bubble pressure of the oil with the new
+                // composition
+                Scalar pBubb = FluidSystem::oilSaturationPressure(XoG);
 
-            // calculate the density of the oil at the saturation pressure
-            rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/FluidSystem::oilFormationVolumeFactor(pBubb);
-            // compress to the actual pressure of the system
-            rhoo *= 1.0 + FluidSystem::oilCompressibility() * (fluidState_.pressure(oPhaseIdx) - pBubb);
+                // calculate the density of the oil at the saturation pressure
+                rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/FluidSystem::oilFormationVolumeFactor(p);
+                // compress to the actual pressure of the system
+                rhoo *= 1.0 + FluidSystem::oilCompressibility() * (fluidState_.pressure(oPhaseIdx) - pBubb);
 
-            // convert the "residual gas" into a saturation
-            Sg = - rho_oGResid/rhog;
+                // convert the "residual gas" into a saturation
+                Sg = - rho_GInPhase/rhog;
+            }
 
             // update the saturations. Gas phase is not present!
             fluidState_.setSaturation(gPhaseIdx, Sg);
@@ -197,6 +199,7 @@ public:
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
+        rhoo = FluidSystem::density(fluidState_, paramCache, oPhaseIdx);
 
         // set the phase densities for the phases
         fluidState_.setDensity(wPhaseIdx, FluidSystem::density(fluidState_, paramCache, wPhaseIdx));
