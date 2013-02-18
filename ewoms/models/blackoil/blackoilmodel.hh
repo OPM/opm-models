@@ -103,7 +103,9 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+    enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
 
@@ -184,9 +186,9 @@ public:
             // permeable sand stone filled with liquid water.)
             static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1e-5, pGradRef * KRef / V);
+            return std::max(1/referencePressure_, pGradRef * KRef / r);
         }
         return 1;
     }
@@ -203,6 +205,16 @@ public:
         return FluidSystem::molarMass(compIdx);
     }
 
+    /*!
+     * \copydoc VcfvModel::updateBegin
+     */
+    void updateBegin()
+    {
+        ParentType::updateBegin();
+
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+    }
+
 protected:
     friend class VcfvModel<TypeTag>;
 
@@ -216,6 +228,8 @@ protected:
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
     }
+
+    mutable Scalar referencePressure_;
 };
 }
 

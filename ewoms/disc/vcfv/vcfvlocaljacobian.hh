@@ -212,7 +212,7 @@ public:
      *        the local derivatives
      */
     static Scalar baseEpsilon()
-    { return newtonTolerance_/1e2; }
+    { return std::numeric_limits<Scalar>::epsilon() * 1e6; }
 
     /*!
      * \brief Returns the epsilon value which is added and removed

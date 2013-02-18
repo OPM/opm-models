@@ -85,6 +85,7 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    enum { dimWorld = GridView::dimensionworld };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
@@ -200,6 +201,16 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::updateBegin
+     */
+    void updateBegin()
+    {
+        ParentType::updateBegin();
+
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+    }
+
+    /*!
      * \copydetails VcfvModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
@@ -214,9 +225,9 @@ public:
             // permeable sand stone filled with liquid water.)
             static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1e-5, pGradRef * KRef / V);
+            return std::max(1/referencePressure_, pGradRef * KRef / r);
         }
         return 1.0;
     }
@@ -256,6 +267,8 @@ protected:
 private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
+
+    mutable Scalar referencePressure_;
 };
 }
 

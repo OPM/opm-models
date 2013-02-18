@@ -152,6 +152,7 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
@@ -289,6 +290,16 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::updateBegin
+     */
+    void updateBegin()
+    {
+        ParentType::updateBegin();
+
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+    }
+
+    /*!
      * \copydoc VcfvModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
@@ -304,10 +315,11 @@ public:
             // permeable sand stone filled with liquid water.)
             static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1e-5, pGradRef * KRef / V);
+            return std::max(1/referencePressure_, pGradRef * KRef / r);
         }
+
         return 1; // saturations and mole fractions have a weight of 1
     }
 
@@ -502,6 +514,8 @@ private:
         if (enableEnergy)
             this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
+
+    mutable Scalar referencePressure_;
 
     // number of switches of the phase state in the last Newton
     // iteration

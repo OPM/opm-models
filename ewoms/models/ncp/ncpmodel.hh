@@ -135,6 +135,7 @@ class NcpModel
     enum { ncp0EqIdx = Indices::ncp0EqIdx };
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { dimWorld = GridView::dimensionworld };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
@@ -260,6 +261,16 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::updateBegin
+     */
+    void updateBegin()
+    {
+        ParentType::updateBegin();
+
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+    }
+
+    /*!
      * \copydoc VcfvModel::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
@@ -305,9 +316,9 @@ public:
             // permeable sand stone filled with liquid water.)
             static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1e-5, pGradRef * KRef / V);
+            return std::max(1/referencePressure_, pGradRef * KRef / r);
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
@@ -364,6 +375,7 @@ private:
             this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
+    mutable Scalar referencePressure_;
     mutable std::vector<ComponentVector> minActivityCoeff_;
 };
 
