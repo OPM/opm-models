@@ -87,10 +87,10 @@ find_package(DUNE_istl REQUIRED)
 ##############
 # Find the optional packages
 find_package(MPI)
+find_package(METIS)
 find_package(Alberta)
 find_package(UG)
 find_package(ALUGrid)
-find_package(METIS)
 find_package(SuperLU)
 find_package(Valgrind)
 
