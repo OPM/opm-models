@@ -393,9 +393,8 @@ int start(int argc,
         if (myRank ==  0) std::cout << "Creating the grid\n";
         try { GridCreator::makeGrid(); }
         catch (const Dune::Exception &e) {
-            std::cout << __FILE__ << ":" << __LINE__ << "\n";
-            std::ostringstream oss;
-            oss << "Creation of the grid failed:" << e.what();
+            std::cout << __FILE__ << ":" << __LINE__ << ":"
+                      << " Creation of the grid failed: " << e.what() << "\n";
             return 1;
         }
         if (myRank ==  0) std::cout << "Distributing the grid\n";

@@ -133,8 +133,42 @@ struct ParamInfo
     }
 };
 
+// forward definition
+template <class TypeTag, class ParamType, class PropTag>
+const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true);
+
+class ParamRegFinalizerBase_
+{
+public:
+    virtual ~ParamRegFinalizerBase_() {}
+    virtual void retrieve() = 0;
+};
+
+template <class TypeTag, class ParamType, class PropTag>
+class ParamRegFinalizer_ : public ParamRegFinalizerBase_
+{
+public:
+    ParamRegFinalizer_(const std::string &paramName)
+        : paramName_(paramName)
+    {}
+
+    void retrieve()
+    {
+        // retrieve the parameter once to make sure that its value does
+        // not contain a syntax error.
+        ParamType DUNE_UNUSED dummy =
+            get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
+                                             paramName_.data(),
+                                             /*errorIfNotRegistered=*/true);
+    }
+
+private:
+    std::string paramName_;
+};
+
 bool paramRegistrationOpen_ = true;
 std::map<std::string, ParamInfo> paramRegistry_;
+std::list<ParamRegFinalizerBase_*> paramRegFinalizers_;
 
 void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
 {
@@ -441,7 +475,7 @@ private:
 };
 
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
+const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered)
 { return Param<TypeTag>::template get<ParamType, PropTag>(propTagName, paramName, errorIfNotRegistered); }
 
 template <class TypeTag, class ParamType, class PropTag>
@@ -451,12 +485,7 @@ void registerParam(const char *paramName, const char *typeTagName, const char *p
         DUNE_THROW(Dune::InvalidStateException,
                    "Parameter registration was already closed before the parameter " << paramName << " was registered.");
 
-    // retrieve the parameter once to make sure that its value does
-    // not contain a syntax error.
-    ParamType DUNE_UNUSED dummy =
-        get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName,
-                                         paramName,
-                                         /*errorIfNotRegistered=*/false);
+    paramRegFinalizers_.push_back(new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
 
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
@@ -484,7 +513,17 @@ void endParamRegistration()
     if (!paramRegistrationOpen_)
         DUNE_THROW(Dune::InvalidStateException,
                    "Parameter registration was already closed. It is only possible to close it once.");
+
     paramRegistrationOpen_ = false;
+
+    // loop over all parameters and retrieve their values to make sure
+    // that there is no syntax error
+    auto pIt = paramRegFinalizers_.begin();
+    const auto &pEndIt = paramRegFinalizers_.end();
+    for (; pIt != pEndIt; ++ pIt) {
+        (*pIt)->retrieve();
+        delete *pIt;
+    }
 }
 //! \endcond
 
