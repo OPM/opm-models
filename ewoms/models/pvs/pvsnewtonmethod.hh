@@ -54,8 +54,8 @@ public:
      */
     bool converged() const
     {
-        if (this->problem().model().switched())
-            return false;
+//        if (this->problem().model().switched())
+//            return false;
 
         return ParentType::converged();
     }
