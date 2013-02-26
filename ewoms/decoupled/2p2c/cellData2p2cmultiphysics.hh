@@ -72,7 +72,7 @@ public:
 
     //! Constructor for a local storage object
     CellData2P2Cmultiphysics() : CellData2P2C<TypeTag>(),
-        subdomain_(2), fluidStateType_(complex), simpleFluidState_(0)
+        subdomain_(2), fluidStateType_(complex)
     {
     }
 
