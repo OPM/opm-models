@@ -92,8 +92,9 @@ public:
      * \param spatialParams SpatialParams instantiation
      */
     DiffusionProblem1P(TimeManager &timeManager, const GridView &gridView, SpatialParams &spatialParams)
-    : ParentType(timeManager, gridView), gravity_(0), spatialParams_(&spatialParams)
+    : ParentType(timeManager, gridView), gravity_(0)
     {
+        spatialParams_ = Dune::stackobject_to_shared_ptr<SpatialParams>(spatialParams);
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;
@@ -118,8 +119,9 @@ public:
      * \param spatialParams SpatialParams instantiation
      */
     DiffusionProblem1P(const GridView &gridView, SpatialParams &spatialParams)
-    : ParentType(gridView, false), gravity_(0), spatialParams_(&spatialParams)
+    : ParentType(gridView, false), gravity_(0)
     {
+        spatialParams_ = Dune::stackobject_to_shared_ptr<SpatialParams>(spatialParams);
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;

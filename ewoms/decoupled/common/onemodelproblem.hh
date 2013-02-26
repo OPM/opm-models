@@ -111,8 +111,7 @@ public:
             }
         }
 
-        timeManager_ = new TimeManager(verbose);
-        newTimeManager_ = true;
+        timeManager_ = Dune::make_shared<TimeManager>(verbose);
 
         model_ = Dune::make_shared<Model>(asImp_()) ;
     }
@@ -126,8 +125,6 @@ public:
         : gridView_(gridView),
           bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          timeManager_(&timeManager),
-          newTimeManager_(false),
           variables_(gridView),
           outputInterval_(1)
     {
@@ -141,14 +138,9 @@ public:
             }
         }
 
-        model_ = Dune::make_shared<Model>(asImp_()) ;
-    }
+        timeManager_ = Dune::stackobject_to_shared_ptr<TimeManager>(timeManager);
 
-    //! Destructor
-    ~OneModelProblem()
-    {
-        if (newTimeManager_)
-            delete timeManager_;
+        model_ = Dune::make_shared<Model>(asImp_()) ;
     }
 
     static void registerParameters()
@@ -654,8 +646,7 @@ private:
     GlobalPosition bboxMin_;
     GlobalPosition bboxMax_;
 
-    TimeManager *timeManager_;
-    bool newTimeManager_;
+    Dune::shared_ptr<TimeManager> timeManager_;
 
     Variables variables_;
 

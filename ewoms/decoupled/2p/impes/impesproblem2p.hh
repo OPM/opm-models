@@ -95,8 +95,9 @@ public:
      */
     IMPESProblem2P(TimeManager &timeManager, const GridView &gridView, SpatialParams &spatialParams)
         : ParentType(timeManager, gridView),
-        gravity_(0),spatialParams_(&spatialParams)
+        gravity_(0)
     {
+        spatialParams_ = Dune::stackobject_to_shared_ptr<SpatialParams>(spatialParams);
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = - 9.81;
