@@ -216,11 +216,11 @@ public:
                 for (int i = 0; i < dim; i++)
                 refVelocity[i] = 0.5 * (fluxW[2*i + 1] - fluxW[2*i]);
 
-                const Dune::FieldVector<Scalar, dim>& localPos =
+                const Dune::FieldVector<Scalar, dim> localPos =
                 ReferenceElementContainer::general(eIt->geometry().type()).position(0, 0);
 
                 // get the transposed Jacobian of the element mapping
-                const auto &jacobianT =
+                const auto jacobianT =
                     eIt->geometry().jacobianTransposed(localPos);
 
                 // calculate the element velocity by the Piola transformation
@@ -243,25 +243,14 @@ public:
             }
 
             //switch velocities
-            switch (velocityType_)
+            if (velocityType_ == vt)
             {
-                case vw:
-                {
-                    writer.attachCellData(velocity, "wetting-velocity", dim);
-                    writer.attachCellData(velocitySecondPhase, "non-wetting-velocity", dim);
-                    break;
-                }
-                case vn:
-                {
-                    writer.attachCellData(velocity, "non-wetting-velocity", dim);
-                    writer.attachCellData(velocitySecondPhase, "wetting-velocity", dim);
-                    break;
-                }
-                case vt:
-                {
-                    writer.attachCellData(velocity, "total velocity", dim);
-                    break;
-                }
+                 writer.attachCellData(velocity, "total velocity", dim);
+            }
+            else
+            {
+                writer.attachCellData(velocity, "wetting-velocity", dim);
+                writer.attachCellData(velocitySecondPhase, "non-wetting-velocity", dim);
             }
         }
 
