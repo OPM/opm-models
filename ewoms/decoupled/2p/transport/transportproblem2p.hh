@@ -94,7 +94,7 @@ public:
     {
         cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
 
-        spatialParams_ = Dune::stackobject_to_shared_ptr<SpatialParams>(spatialParams);
+        spatialParams_ = Dune::make_shared<SpatialParams>(gridView);
 
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))
