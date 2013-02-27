@@ -81,8 +81,8 @@ find_package(SharedPtr)
 find_package(DUNE_common REQUIRED)
 find_package(DUNE_geometry REQUIRED)
 find_package(DUNE_grid REQUIRED)
-find_package(DUNE_localfunctions REQUIRED)
 find_package(DUNE_istl REQUIRED)
+find_package(DUNE_localfunctions REQUIRED)
 
 ##############
 # Find the optional packages
