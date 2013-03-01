@@ -228,20 +228,6 @@ bool setupParameters_(int argc, char ** argv)
 #endif
 
     ////////////////////////////////////////////////////////////
-    // parse the command line arguments
-    ////////////////////////////////////////////////////////////
-
-    // check whether the user wanted to see the help message
-    bool printHelp = false;
-    for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-        {
-            printHelp = true;
-            break;
-        }
-    }
-
-    ////////////////////////////////////////////////////////////
     // Register all parameters
     ////////////////////////////////////////////////////////////
     REGISTER_PARAM(TypeTag, std::string,
@@ -266,13 +252,18 @@ bool setupParameters_(int argc, char ** argv)
     GridCreator::registerParameters();
     TimeManager::registerParameters();
 
-    // fill the parameter tree with the options from the command line
-    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
-    std::string s = readOptions_(argc, argv, ParameterTree::tree());
-    if (!s.empty()) {
-        if (myRank == 0)
-            printUsage(argv[0], s);
-        return /*continueExecution=*/false;
+    ////////////////////////////////////////////////////////////
+    // set the parameter values
+    ////////////////////////////////////////////////////////////
+
+    // check whether the user wanted to see the help message
+    for (int i = 1; i < argc; ++i) {
+        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
+        {
+            if (myRank == 0)
+                printUsage(argv[0], "");
+            return /*continueExecution=*/false;
+        }
     }
 
     std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
@@ -294,18 +285,13 @@ bool setupParameters_(int argc, char ** argv)
         }
 
         // read the parameter file.
+        typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
         Dune::ParameterTreeParser::readINITree(paramFileName,
                                                ParameterTree::tree(),
                                                /*overwrite=*/false);
     }
 
     END_PARAM_REGISTRATION;
-
-    if (printHelp) {
-        if (myRank == 0)
-            printUsage(argv[0], "");
-        return /*continueExecution=*/false;
-    }
 
     return /*continueExecution=*/true;
 }
