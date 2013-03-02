@@ -139,7 +139,7 @@ public:
         if (adaptiveGrid)
             gridAdapt_ = Dune::make_shared<GridAdaptModel>(asImp_());
 
-        resultWriter_ = nullptr;
+        resultWriter_ = 0;
         vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
     }
 

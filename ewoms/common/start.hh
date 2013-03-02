@@ -266,6 +266,15 @@ bool setupParameters_(int argc, char ** argv)
         }
     }
 
+    // fill the parameter tree with the options from the command line
+    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
+    std::string s = readOptions_(argc, argv, ParameterTree::tree());
+    if (!s.empty()) {
+        if (myRank == 0)
+            printUsage(argv[0], s);
+        return /*continueExecution=*/false;
+    }
+
     std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
     if (paramFileName != "") {
         ////////////////////////////////////////////////////////////
@@ -285,7 +294,6 @@ bool setupParameters_(int argc, char ** argv)
         }
 
         // read the parameter file.
-        typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
         Dune::ParameterTreeParser::readINITree(paramFileName,
                                                ParameterTree::tree(),
                                                /*overwrite=*/false);
