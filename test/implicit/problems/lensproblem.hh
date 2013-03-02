@@ -383,11 +383,7 @@ public:
                 pw = 1e5 - alpha*densityW*this->gravity()[1]*depth;
                 Sw = 1.0;
             }
-            else
-            {
-                // if this triggers, something went wrong in boundaryTypes()!
-                assert(onRightBoundary_(pos));
-
+            else {
                 Scalar depth = this->bboxMax()[1] - pos[1];
 
                 // hydrostatic pressure
