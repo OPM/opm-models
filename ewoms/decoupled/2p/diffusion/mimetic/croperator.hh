@@ -143,7 +143,7 @@ public:
         assert(nnz(is_) != 0);
 
         // set size of all rows to zero
-        for (unsigned int i = 0; i < faceMapper_.size(); i++)
+        for (int i = 0; i < faceMapper_.size(); i++)
             A_.setrowsize(i,0);
 
         // build needs a flag for all entities of all codims
