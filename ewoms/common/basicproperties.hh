@@ -82,10 +82,20 @@ NEW_PROP_TAG(GridGlobalRefinements);
 //! Property provides the name of the file from which the additional runtime parameters should to be loaded from
 NEW_PROP_TAG(ParameterFile);
 
-//! Print all properties on startup?
+/*!
+ * \brief Print all properties on startup?
+ *
+ * 0 means 'no', 1 means 'yes', 2 means 'print only to logfiles'. The
+ * default is 2.
+ */
 NEW_PROP_TAG(PrintProperties);
 
-//! Print the values of all run-time parameters on startup?
+/*!
+ * \brief Print all parameters on startup?
+ *
+ * 0 means 'no', 1 means 'yes', 2 means 'print only to logfiles'. The
+ * default is 2.
+ */
 NEW_PROP_TAG(PrintParameters);
 
 //! The default value for the simulation's end time
@@ -134,10 +144,10 @@ SET_STRING_PROP(NumericModel, ParameterFile, "");
 SET_INT_PROP(NumericModel, GridGlobalRefinements, 0);
 
 //! By default, print the properties on startup
-SET_BOOL_PROP(NumericModel, PrintProperties, true);
+SET_INT_PROP(NumericModel, PrintProperties, 2);
 
 //! By default, print the values of the run-time parameters on startup
-SET_BOOL_PROP(NumericModel, PrintParameters, true);
+SET_INT_PROP(NumericModel, PrintParameters, 2);
 
 //! The default value for the simulation's end time
 SET_SCALAR_PROP(NumericModel, EndTime, -1e100);

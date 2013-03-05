@@ -45,6 +45,9 @@
 #include <string>
 #include <locale>
 
+#include <stdio.h>
+#include <unistd.h>
+
 #if HAVE_MPI
 #include <mpi.h>
 #endif
@@ -233,10 +236,10 @@ bool setupParameters_(int argc, char ** argv)
     REGISTER_PARAM(TypeTag, std::string,
                    ParameterFile,
                    "An .ini file which contains a set of run-time parameters");
-    REGISTER_PARAM(TypeTag, bool,
+    REGISTER_PARAM(TypeTag, int,
                    PrintProperties,
                    "Print the values of the compile time properties at the start of the simulation");
-    REGISTER_PARAM(TypeTag, bool,
+    REGISTER_PARAM(TypeTag, int,
                    PrintParameters,
                    "Print the values of the run-time parameters at the start of the simulation");
     REGISTER_PARAM(TypeTag, Scalar,
@@ -371,14 +374,18 @@ int start(int argc,
                 << "Please sit back, relax and enjoy the ride.\n";
 
         // print the parameters if requested
-        bool printParams = GET_PARAM(TypeTag, bool, PrintParameters);
-        if (printParams && myRank == 0)
-            Ewoms::Parameters::printValues<TypeTag>();
+        int printParams = GET_PARAM(TypeTag, int, PrintParameters);
+        if (printParams && myRank == 0) {
+            if (printParams == 1 || !isatty(fileno(stdout)))
+                Ewoms::Parameters::printValues<TypeTag>();
+        }
 
         // print the properties if requested
-        bool printProps = GET_PARAM(TypeTag, bool, PrintProperties);
-        if (printProps && myRank == 0)
-            Ewoms::Properties::print<TypeTag>();
+        int printProps = GET_PARAM(TypeTag, int, PrintProperties);
+        if (printProps && myRank == 0) {
+            if (printProps == 1 || !isatty(fileno(stdout)))
+                Ewoms::Properties::print<TypeTag>();
+        }
 
         // try to create a grid (from the given grid file)
         if (myRank ==  0) std::cout << "Creating the grid\n";
