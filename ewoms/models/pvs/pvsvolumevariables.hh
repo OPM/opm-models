@@ -171,7 +171,7 @@ public:
 
             int auxIdx = 0;
             int switchIdx = 0;
-            for (; switchIdx < numPhases - 1; ++switchIdx) {
+            for (; switchIdx < numPhases; ++switchIdx) {
                 int compIdx = switchIdx + 1;
                 int switchPhaseIdx = switchIdx;
                 if (switchIdx >= lowestPresentPhaseIdx)
@@ -184,11 +184,8 @@ public:
             }
 
             for (; auxIdx < numAuxConstraints; ++auxIdx, ++switchIdx) {
-                int phaseIdx = priVars.lowestPresentPhaseIdx();
                 int compIdx = numPhases - numNonPresentPhases + auxIdx;
-
-                auxConstraints[auxIdx].set(phaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
-                std::cout << "auxConstraints[" << auxIdx << "] = (" << phaseIdx << ", " << compIdx << ", " << priVars[switch0Idx + switchIdx] << ")\n";
+                auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
             }
 
             // both phases are present, i.e. phase compositions are a

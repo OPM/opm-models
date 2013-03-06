@@ -217,6 +217,9 @@ public:
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         else if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx + numPhases - 1)
             oss << "switch_" << pvIdx - Indices::switch0Idx;
+        else if (Indices::switch0Idx + numPhases - 1 <= pvIdx &&
+                 pvIdx < Indices::switch0Idx + numComponents - 1)
+            oss << "auxMoleFrac^" << FluidSystem::componentName(pvIdx);
         else
             assert(false);
 
@@ -334,7 +337,7 @@ public:
             return tmp;
 
         int compIdx = eqIdx - Indices::conti0EqIdx;
-        assert(0 <= compIdx && compIdx <= numPhases);
+        assert(0 <= compIdx && compIdx <= numComponents);
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);

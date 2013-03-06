@@ -315,6 +315,14 @@ public:
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
         }
+
+        // set the mole fractions in of the remaining components in
+        // the phase with the lowest index
+        for (int compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
+            (*this)[switch0Idx + compIdx] =
+                fluidState.moleFraction(lowestPhaseIdx, compIdx + 1);
+            Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
+        }
     }
 
     /*!
@@ -342,6 +350,11 @@ public:
                    << " = " << (*this)[switch0Idx + switchIdx];
             }
         };
+        for (int compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
+            os << ", x_" << FluidSystem::phaseName(lowestPhaseIdx)
+               << "^" << FluidSystem::componentName(compIdx + 1)
+               << " = " << (*this)[switch0Idx + compIdx];
+        }
         os << ")";
         os << ", phase presence: " << static_cast<int>(phasePresence_);
     }
