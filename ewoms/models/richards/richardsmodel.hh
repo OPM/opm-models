@@ -45,9 +45,9 @@ namespace Ewoms {
  * \f[
  * \frac{\partial\;\phi S_\alpha \rho_\alpha}{\partial t}
  * -
- * \text{div} \left\{
+ * \mathrm{div} \left\{
  * \rho_\alpha \frac{k_{r\alpha}}{\mu_\alpha}\; \mathbf{K}\;
- * \textbf{grad}\left[
+ * \mathbf{grad}\left[
  * p_\alpha - g\rho_\alpha
  * \right]
  * \right\}

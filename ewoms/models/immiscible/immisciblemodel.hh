@@ -41,7 +41,7 @@ namespace Ewoms {
  * This model implements multi-phase flow of \f$M > 0\f$ immiscible
  * fluids \f$\alpha\f$. By default, the standard multi-phase Darcy
  * approach is used to determine the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\textbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
@@ -53,7 +53,7 @@ namespace Ewoms {
  * means of the equation
  * \f[
  * \frac{\partial\;\phi S_\alpha \rho_\alpha }{\partial t}
- * - \text{div} \left\{ \rho_\alpha \mathbf{v}_\alpha  \right\}
+ * - \mathrm{div} \left\{ \rho_\alpha \mathbf{v}_\alpha  \right\}
  * - q_\alpha = 0 \;.
  * \f]
  *

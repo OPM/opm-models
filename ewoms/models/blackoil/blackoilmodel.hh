@@ -74,7 +74,7 @@ namespace Ewoms {
  *
  * \f[
  * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
- * - \sum_\alpha \text{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
  * - q^\kappa = 0 \;,
  * \f]
  * where \f$\mathrm{v}_\alpha\f$ is the filter velocity of the phase
@@ -82,7 +82,7 @@ namespace Ewoms {
  *
  * By default \f$\mathrm{v}_\alpha\f$ is determined by using the
  * standard multi-phase Darcy approach, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\textbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by

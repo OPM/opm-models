@@ -41,7 +41,7 @@ namespace Ewoms
  * The pressure has to be given as piecewise constant cell values.
  * The velocities are calculated as
  *
- *\f[ \boldsymbol v_\alpha = - \lambda_\alpha \boldsymbol K \textbf{grad}\, \Phi_\alpha, \f]
+ *\f[ \boldsymbol v_\alpha = - \lambda_\alpha \boldsymbol K \mathbf{grad}\, \Phi_\alpha, \f]
  * and,
  * \f[ \boldsymbol v_t = \boldsymbol v_w + \boldsymbol v_n,\f]
  *

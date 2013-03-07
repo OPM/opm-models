@@ -42,12 +42,12 @@ namespace Ewoms
 /*! \brief Finite volume MPFA O-method discretization of a two-phase flow pressure equation of the sequential IMPES model.
  *
  * Finite volume MPFA O-method discretization of the equations
- * \f[ - \text{div}\, \boldsymbol v_t = - \text{div}\, (\lambda_t \boldsymbol K \textbf{grad}\, \Phi_w + f_n \lambda_t \boldsymbol K \textbf{grad}\, \Phi_{cap}   ) = 0, \f]
+ * \f[ - \mathrm{div}\, \boldsymbol v_t = - \mathrm{div}\, (\lambda_t \boldsymbol K \mathbf{grad}\, \Phi_w + f_n \lambda_t \boldsymbol K \mathbf{grad}\, \Phi_{cap}   ) = 0, \f]
  * or
- * \f[ - \text{div}\, \boldsymbol v_t = - \text{div}\, (\lambda_t \boldsymbol K \textbf{grad}\, \Phi_n - f_w \lambda_t \boldsymbol K \textbf{grad}\, \Phi_{cap}   ) = 0. \f]
+ * \f[ - \mathrm{div}\, \boldsymbol v_t = - \mathrm{div}\, (\lambda_t \boldsymbol K \mathbf{grad}\, \Phi_n - f_w \lambda_t \boldsymbol K \mathbf{grad}\, \Phi_{cap}   ) = 0. \f]
  *  At Dirichlet boundaries a two-point flux approximation is used.
  * \f[ \Phi = g \;  \text{on} \; \Gamma_1, \quad \text{and} \quad
- * -\text{div}\, \boldsymbol v_t \cdot \mathbf{n} = J \;  \text{on}  \; \Gamma_2. \f]
+ * -\mathrm{div}\, \boldsymbol v_t \cdot \mathbf{n} = J \;  \text{on}  \; \Gamma_2. \f]
  *  Here, \f$ \Phi_\alpha \f$ denotes the potential of phase \f$ \alpha \f$, \f$ \boldsymbol K \f$ the intrinsic permeability,
  * \f$ \lambda_t \f$ the total mobility, \f$ f_\alpha \f$ the phase fractional flow function.
  *
