@@ -48,7 +48,7 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\text{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\textbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
