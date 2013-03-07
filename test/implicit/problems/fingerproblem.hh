@@ -159,7 +159,7 @@ template <class TypeTag>
 class FingerProblem
     : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
-//!\cond 0
+//!\cond SKIP_THIS
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

@@ -96,7 +96,7 @@
                            PTAG(ParamName)>(#ParamName, #ParamName)
 
 
-//!\cond 0
+//!\cond SKIP_THIS
 #define GET_PARAM_(TypeTag, ParamType, ParamName)                       \
     Ewoms::Parameters::get<TypeTag,                                     \
                            ParamType,                                   \
@@ -369,7 +369,7 @@ void printValues(std::ostream &os = std::cout)
     }
 }
 
-//! \cond 0
+//! \cond SKIP_THIS
 template <class TypeTag>
 class Param
 {

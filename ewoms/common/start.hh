@@ -68,7 +68,7 @@ NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
 }
 
-//! \cond 0
+//! \cond SKIP_THIS
 
 /*!
  * \ingroup Startup

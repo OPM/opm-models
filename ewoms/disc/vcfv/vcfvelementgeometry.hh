@@ -37,7 +37,7 @@
 namespace Ewoms {
 
 /*!
- * \cond 0
+ * \cond SKIP_THIS
  */
 template <class Scalar, int dim, int basicGeomType>
 class VcfvScvGeometries;

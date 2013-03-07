@@ -157,7 +157,7 @@ int invertQuadraticPolynomial(SolContainer &sol,
     return 2; // two real roots
 }
 
-//! \cond 0
+//! \cond SKIP_THIS
 template <class Scalar, class SolContainer>
 void invertCubicPolynomialPostProcess_(SolContainer &sol,
                                        int numSol,

@@ -51,7 +51,7 @@
 #include <cstring>
 #include <tuple>
 
-//! \cond 0
+//! \cond SKIP_THIS
 
 namespace Ewoms {
 namespace Properties {
@@ -252,7 +252,7 @@ namespace Properties {
     namespace PTag {                                \
 struct PTagName; } extern int semicolonHack_
 
-//! \cond 0
+//! \cond SKIP_THIS
 #define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)   \
     template <class TypeTag>                                    \
     struct Property<TypeTag,                                    \
@@ -441,7 +441,7 @@ struct PTagName; } extern int semicolonHack_
  */
 #define GET_PROP(TypeTag, PropTagName) \
     ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p
-//!\cond 0
+//!\cond SKIP_THIS
 #define GET_PROP_(TypeTag, PropTag) \
     ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p
 //!\endcond
@@ -456,7 +456,7 @@ struct PTagName; } extern int semicolonHack_
  */
 #define GET_PROP_VALUE(TypeTag, PropTagName)                            \
     ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::value
-//!\cond 0
+//!\cond SKIP_THIS
 #define GET_PROP_VALUE_(TypeTag, PropTag)                               \
     ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p::value
 //!\endcond
@@ -473,7 +473,7 @@ struct PTagName; } extern int semicolonHack_
  */
 #define GET_PROP_TYPE(TypeTag, PropTagName) \
     ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::type
-//!\cond 0
+//!\cond SKIP_THIS
 #define GET_PROP_TYPE_(TypeTag, PropTag) \
     ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p::type
 //!\endcond
@@ -508,7 +508,7 @@ struct PTagName; } extern int semicolonHack_
 // might damage your brain!
 //////////////////////////////////////////////
 
-//! \cond 0
+//! \cond SKIP_THIS
 
 namespace PTag {}
 namespace TTag {}

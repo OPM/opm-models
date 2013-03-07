@@ -104,7 +104,7 @@ template<class TypeTag> class MimeticPressure2P
     typedef Dune::BlockVector< Dune::FieldVector<Scalar, 2*dim> > NormalVelType;
     typedef MimeticOperatorAssembler<Scalar,GridView> OperatorAssembler;
 
-    ///\cond 0
+    ///\cond SKIP_THIS
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename SolutionTypes::ScalarSolution ScalarSolution;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
