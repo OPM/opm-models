@@ -38,7 +38,7 @@ namespace Ewoms
  * Defines the gravity term of the form
  *
  * \f[
- * \bar \lambda \boldsymbol K \, (\rho_n - \rho_w) \, g \, \text{grad} \, z,
+ * \bar \lambda \boldsymbol K \, (\rho_n - \rho_w) \, g \, \textbf{grad} \, z,
  * \f]
  *
  * where \f$ \bar \lambda = \lambda_w f_n = \lambda_n f_w \f$ and \f$ \lambda \f$ is a phase mobility and \f$ f \f$ a phase fractional flow function,
