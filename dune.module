@@ -2,12 +2,11 @@
 # Dune module information file: This file gets parsed by dunecontrol
 # and the CMake build scripts.
 ################################
-
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media
 Version: 2.3-git
 Url: http://opm-project.org/ewoms
 Codename: Marsellus
-MaintainerName: Andreas Lauser
-Maintainer: and_at_poware_dot_org
+MaintainerName: The Open Porous Media Initiative
+Maintainer: opm@opm-project.org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2)
