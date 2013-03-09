@@ -2,7 +2,8 @@ CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
     -Wno-tautological-compare \
-    -Wcast-align"
+    -Wno-overloaded-virtual \
+    -Wno-cast-align"
 
 CXX_OPTS=" \
     -fno-strict-aliasing \
