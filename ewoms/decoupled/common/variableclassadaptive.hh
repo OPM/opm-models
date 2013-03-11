@@ -197,6 +197,7 @@ public:
             }
 
         }
+
         // reset entries in restrictionmap
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2, 3)
         adaptationMap_.resize();

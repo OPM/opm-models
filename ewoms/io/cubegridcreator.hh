@@ -109,10 +109,10 @@ public:
             upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        unsigned numRefinements = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
-        cubeGrid_->globalRefine(numRefinments);
+        cubeGrid_->globalRefine(numRefinements);
         initialized_ = true;
     }
 
