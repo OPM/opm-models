@@ -3,49 +3,6 @@
 # dune.module file.
 cmake_minimum_required(VERSION 2.8)
 
-# read the dune.module file
-file(READ "${CMAKE_SOURCE_DIR}/dune.module" DUNE_MODULE)
-
-# find the project name
-string(REGEX REPLACE ".*Module:[ ]*([^\n]+).*" "\\1" ProjectName "${DUNE_MODULE}")
-
-# find the project description
-string(REGEX REPLACE ".*Description:[ ]*([^\n]+).*" "\\1" ProjectDescription "${DUNE_MODULE}")
-
-# find the URL of the homepage project
-string(REGEX REPLACE ".*Url:[ ]*([^\n]+).*" "\\1" ProjectUrl "${DUNE_MODULE}")
-
-# find the dependent modules
-string(REGEX REPLACE ".*Depends:[ ]*([^\n]+).*" "\\1" ProjectDepends "${DUNE_MODULE}")
-string(REGEX REPLACE "\\(" "" ProjectDepends "${ProjectDepends}")
-string(REGEX REPLACE "\\)" "" ProjectDepends "${ProjectDepends}")
-string(REGEX REPLACE " [ \t]*" " " ProjectDepends "${ProjectDepends}")
-
-
-# set the project version. also split the version string into MAJOR.MINOR.REVISON
-string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" ProjectVersion "${DUNE_MODULE}")
-string(REGEX REPLACE "^([0-9]*)\\..*\$" "\\1" EWOMS_VERSION_MAJOR "${ProjectVersion}")
-string(REGEX REPLACE "^[0-9]*\\.([0-9]*).*\$" "\\1" EWOMS_VERSION_MINOR "${ProjectVersion}")
-string(REGEX REPLACE "^[0-9]*\\.[0-9]*\\.([0-9]*).*\$" "\\1" EWOMS_VERSION_REVISION "${ProjectVersion}")
-
-# if the regular expression for the revision did not match, we use "0"
-# as the revision number. (we silently assume, that the regexps for
-# the major and minor version match.)
-if ("${EWOMS_VERSION_REVISION}" STREQUAL "${ProjectVersion}")
-  set(EWOMS_VERSION_REVISION "0")
-endif("${EWOMS_VERSION_REVISION}" STREQUAL "${ProjectVersion}")
-
-# set the maintainer email (the default Dune autotools build system
-# assumes that dune.module's 'Maintainer' field only contains the
-# email address of the maintainer. Using the format 'Maintainer:
-# Maintainer Name <maintainer@address.org>' makes the DUNE autotools
-# build system choke, so we introduce a new field 'MaintainerName'
-# which is ignored by the DUNE autotools build system.)
-string(REGEX REPLACE ".*MaintainerName:[ ]*([^\n]+).*" "\\1" ProjectMaintainer "${DUNE_MODULE}")
-string(REGEX REPLACE ".*Maintainer:[ ]*([^\n]+).*" "\\1" ProjectMaintainerEmail "${DUNE_MODULE}")
-
-# find codename string
-string(REGEX REPLACE ".*Codename:[ ]*([^\n]+).*" "\\1" ProjectCodename "${DUNE_MODULE}")
 
 ##############
 
@@ -59,6 +16,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 # needed for Debian installation scheme
 include(UseMultiArch)
+
+# eWoms build system macros
+include(EwomsMacros)
 
 # eWoms unit-testing infrastructure
 include(EwomsAddTest)
@@ -78,6 +38,7 @@ cmake_policy(SET CMP0003 NEW)
 find_package(CXX11Features)
 find_package(SharedPtr)
 
+EwomsParseDuneModuleInfo("eWoms" FILE_NAME "${CMAKE_SOURCE_DIR}/dune.module")
 find_package(DUNE_common REQUIRED)
 find_package(DUNE_geometry REQUIRED)
 find_package(DUNE_grid REQUIRED)
@@ -201,22 +162,6 @@ else()
   endif(NOT EXISTS "${DUNE_DIR}/dune-common/dune.module")
   file(READ "${DUNE_DIR}/dune-common/dune.module" DUNE_COMMON_MODULE)
 endif(DUNE_common_DIR)
-
-# find version string
-string(REGEX REPLACE ".*Version:[ ]*([^ \n]+).*" "\\1" DUNE_COMMON_VERSION "${DUNE_COMMON_MODULE}")
-string(REGEX REPLACE "([0-9]).*" "\\1" DUNE_COMMON_VERSION_MAJOR "${DUNE_COMMON_VERSION}")
-string(REGEX REPLACE "[0-9]*\\.([0-9]).*" "\\1" DUNE_COMMON_VERSION_MINOR "${DUNE_COMMON_VERSION}")
-string(REGEX REPLACE "[0-9]*\\.[0-9]*\\.([0-9]).*" "\\1" DUNE_COMMON_VERSION_REVISION "${DUNE_COMMON_VERSION}")
-
-# remove false matches
-string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${DUNE_COMMON_VERSION_MINOR}")
-if(NON_NUMBER_CHARACTER)
-  set(DUNE_COMMON_VERSION_MINOR "0")
-endif(NON_NUMBER_CHARACTER)
-string(REGEX MATCH "[^0-9]" NON_NUMBER_CHARACTER "${DUNE_COMMON_VERSION_REVISION}")
-if(NON_NUMBER_CHARACTER)
-  set(DUNE_COMMON_VERSION_REVISION "0")
-endif(NON_NUMBER_CHARACTER)
 ##############
 
 ##############

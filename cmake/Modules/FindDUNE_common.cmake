@@ -7,6 +7,7 @@
 INCLUDE(EwomsMacros)
 
 EwomsSetup("DUNE_common" "dune-common" "DUNE")
+EwomsParseDuneModuleInfo("dune-common" FILE_NAME "${DUNE_common_DIR}/dune.module")
 
 EwomsFindIncludeDir("dune/common/misc.hh")
 EwomsFindLibrary("dunecommon")

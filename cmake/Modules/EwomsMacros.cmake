@@ -1,3 +1,84 @@
+# helper macro to retrieve a single field of a dune.module file
+macro(EwomsGetDuneModuleDirective_ FieldName OutputVariable DuneModuleContents)
+  string(REGEX MATCH ".*${FieldName}:[ ]*([^\n]+).*" ${OutputVariable} "${DuneModuleContents}")
+  string(REGEX REPLACE ".*${FieldName}:[ ]*([^\n]+).*" "\\1" "${OutputVariable}" "${${OutputVariable}}")
+endmacro()
+
+# This macro parses the dune.module file of a Dune module.
+#
+# Usage:
+#
+# EwomsParseDuneModuleInfo(DuneModuleName
+#              [FILE_NAME "PathTo/dune.module"])
+#
+# This macro sets the following variables:
+#
+# ${MODULE_NAME}_NAME: The name of the module which ought to be used when referencing it in texts
+# ${MODULE_NAME}_DESCRIPTION: A textual description of the module
+# ${MODULE_NAME}_URL: The URL of the module's website
+# ${MODULE_NAME}_MAINTAINER_NAME: The real name of the module maintainer(s)
+# ${MODULE_NAME}_MAINTAINER_EMAIL: The e-mail address of the module maintainer(s)
+# ${MODULE_NAME}_VERSION: version string of the dune module
+# ${MODULE_NAME}_VERSION_MAJOR: major version of the dune module
+# ${MODULE_NAME}_VERSION_MINOR: minor version of the dune module
+# ${MODULE_NAME}_VERSION_REVISION: revision of the dune module
+# ${MODULE_NAME}_CODENAME: code name for the version of the module
+macro(EwomsParseDuneModuleInfo ModuleName)
+  CMAKE_PARSE_ARGUMENTS(
+    CURMOD # prefix
+    "" # flags
+    "FILE_NAME" # one value args
+    "" # multi-value args
+    ${ARGN})
+
+  # create an uppercase, underscore version of the given module name
+  string(TOUPPER "${ModuleName}" MODULE_NAME)
+  string(REPLACE "-" "_" MODULE_NAME "${MODULE_NAME}")
+  
+  if (NOT CURMOD_FILE_NAME)
+    set(CURMOD_FILE_NAME "${${MODULE_NAME}_DIR}/dune.module")
+  endif()
+
+  # read the dune.module file
+  file(READ "${CURMOD_FILE_NAME}" DUNE_MODULE)
+
+  # set the module name
+  EwomsGetDuneModuleDirective_("Module" ${MODULE_NAME}_NAME "${DUNE_MODULE}")
+
+  # set the module description
+  EwomsGetDuneModuleDirective_("Description" ${MODULE_NAME}__DESCRIPTION "${DUNE_MODULE}")
+
+  # set the URL of the module's website
+  EwomsGetDuneModuleDirective_("Url" ${MODULE_NAME}_URL "${DUNE_MODULE}")
+
+  # set the project version. also split the version string into MAJOR.MINOR.REVISON
+  EwomsGetDuneModuleDirective_("Version" ${MODULE_NAME}_VERSION "${DUNE_MODULE}")
+
+  string(REGEX REPLACE "^([0-9]*)\\..*\$" "\\1" ${MODULE_NAME}_VERSION_MAJOR "${${MODULE_NAME}_VERSION}")
+  string(REGEX REPLACE "^[0-9]*\\.([0-9]*).*\$" "\\1" ${MODULE_NAME}_VERSION_MINOR "${${MODULE_NAME}_VERSION}")
+  string(REGEX REPLACE "^[0-9]*\\.[0-9]*\\.([0-9]*).*\$" "\\1" ${MODULE_NAME}_VERSION_REVISION "${${MODULE_NAME}_VERSION}")
+
+  # if the regular expression for the revision did not match, we use "0"
+  # as the revision number. (we silently assume, that the regexps for
+  # the major and minor version match.)
+  if ("${${MODULE_NAME}_VERSION_REVISION}" STREQUAL "${${MODULE_NAME}_VERSION}")
+    set(${MODULE_NAME}_VERSION_REVISION "0")
+  endif()
+
+  # set the maintainer email (the default Dune autotools build system
+  # assumes that dune.module's 'Maintainer' field only contains the
+  # email address of the maintainer. Using the format 'Maintainer:
+  # Maintainer Name <maintainer@address.org>' makes the DUNE autotools
+  # build system choke, so we introduce a new field 'MaintainerName'
+  # which is ignored by the DUNE autotools build system.)
+  EwomsGetDuneModuleDirective_("MaintainerName" ${MODULE_NAME}_MAINTAINER_NAME "${DUNE_MODULE}")
+  EwomsGetDuneModuleDirective_("Maintainer" ${MODULE_NAME}_MAINTAINER_EMAIL "${DUNE_MODULE}")
+
+  # find codename string
+  EwomsGetDuneModuleDirective_("Codename" ${MODULE_NAME}_CODENAME "${DUNE_MODULE}")
+
+endmacro()
+
 #############################################################
 # This sets up the EwomsMacros for the current CMake module.
 # Call EwomsSweep at the end of your CMake module in order to
@@ -23,13 +104,13 @@ macro(EwomsSetup
 where the ${EwomsModuleName} libraries reside. Alternatively you can set
 the ${EwomsFramework}_DIR entry where all ${EwomsFramework} sub-modules have been compiled.")
 
-  # Base path to look for libraries and includes
+  # Base path to look for libraries and includes and auxiliary files
+  if(NOT ${EwomsModule}_DIR AND ${EwomsFramework}_DIR)
+    set(${EwomsModule}_DIR "${${EwomsFramework}_DIR}/${EwomsModuleName}")
+  endif()
   if(${EwomsModule}_DIR)
     list(APPEND EwomsModulePath ${${EwomsModule}_DIR})
-  endif(${EwomsModule}_DIR)
-  if(${EwomsFramework}_DIR)
-    list(APPEND EwomsModulePath "${${EwomsFramework}_DIR}/${EwomsModuleName}")
-  endif(${EwomsFramework}_DIR)
+  endif()
 
   # Path to look for includes (->EwomsIncludePath) and libraries (-> EwomsLibraryPath)
   set(EwomsIncludePath "")
@@ -204,7 +285,7 @@ macro(EwomsCheckFound)
 
   if(NOT EwomsFound AND ${EwomsModule}_FIND_REQUIRED)
     if(EwomsLibsFound)
-      message(FATAL_ERROR "${EwomsPathMessage}")
+      message(FATAL_ERRR "${EwomsPathMessage}")
     else(EwomsLibsFound)
       message(FATAL_ERROR "${EwomsPathMessage} ${EwomsFailedLibsMessage}")
     endif(EwomsLibsFound)

@@ -7,6 +7,7 @@
 INCLUDE(EwomsMacros)
 
 EwomsSetup("DUNE_grid" "dune-grid" "DUNE")
+EwomsParseDuneModuleInfo("dune-grid" FILE_NAME "${DUNE_grid_DIR}/dune.module")
 
 EwomsFindIncludeDir("dune/grid/sgrid.hh")
 EwomsFindLibrary("dunegrid")

@@ -7,6 +7,7 @@
 INCLUDE(EwomsMacros)
 
 EwomsSetup("DUNE_geometry" "dune-geometry" "DUNE")
+EwomsParseDuneModuleInfo("dune-geometry" FILE_NAME "${DUNE_geometry_DIR}/dune.module")
 
 EwomsFindIncludeDir("dune/geometry/type.hh")
 EwomsFindLibrary("dunegeometry")

@@ -26,8 +26,20 @@
 /* Define to the revision of dune-common */
 #define DUNE_COMMON_VERSION_REVISION ${DUNE_COMMON_VERSION_REVISION}
 
+/* Define to the version of dune-grid */
+#cmakedefine DUNE_GRID_VERSION "${DUNE_GRID_VERSION}"
+
+/* Define to the major version of dune-grid */
+#cmakedefine DUNE_GRID_VERSION_MAJOR ${DUNE_GRID_VERSION_MAJOR}
+
+/* Define to the minor version of dune-grid */
+#define DUNE_GRID_VERSION_MINOR ${DUNE_GRID_VERSION_MINOR}
+
+/* Define to the revision of dune-grid */
+#define DUNE_GRID_VERSION_REVISION ${DUNE_GRID_VERSION_REVISION}
+
 /* Define to the version of eWoms */
-#define EWOMS_VERSION "${ProjectVersion}"
+#define EWOMS_VERSION "${EWOMS_VERSION}"
 
 /* Define to the major version of eWoms */
 #define EWOMS_VERSION_MAJOR ${EWOMS_VERSION_MAJOR}
@@ -39,13 +51,13 @@
 #define EWOMS_VERSION_REVISION ${EWOMS_VERSION_REVISION}
 
 /* Define to the code name of eWoms */
-#define EWOMS_CODENAME "${ProjectCodename}"
+#define EWOMS_CODENAME "${EWOMS_CODENAME}"
 
 /* Define to the name of the maintainer of eWoms */
-#define EWOMS_MAINTAINER_NAME "${ProjectMaintainer}"
+#define EWOMS_MAINTAINER_NAME "${EWOMS_MAINTAINER_NAME}"
 
 /* Define to the email address of the maintainer of eWoms */
-#define EWOMS_MAINTAINER "${ProjectMaintainerEmail}"
+#define EWOMS_MAINTAINER "${EWOMS_MAINTAINER_EMAIL}"
 
 #cmakedefine HAVE_MPI 1
 #if HAVE_MPI

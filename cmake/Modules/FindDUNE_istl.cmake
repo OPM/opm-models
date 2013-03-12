@@ -7,6 +7,7 @@
 INCLUDE(EwomsMacros)
 
 EwomsSetup("DUNE_istl" "dune-istl" "DUNE")
+EwomsParseDuneModuleInfo("dune-istl" FILE_NAME "${DUNE_istl_DIR}/dune.module")
 
 EwomsFindIncludeDir("dune/istl/io.hh")
 

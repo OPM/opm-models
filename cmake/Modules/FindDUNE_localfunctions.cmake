@@ -7,6 +7,7 @@
 INCLUDE(EwomsMacros)
 
 EwomsSetup("DUNE_localfunctions" "dune-localfunctions" "DUNE")
+EwomsParseDuneModuleInfo("dune-localfunctions" FILE_NAME "${DUNE_localfunctions_DIR}/dune.module")
 
 EwomsFindIncludeDir("dune/localfunctions/lagrange.hh")
 
