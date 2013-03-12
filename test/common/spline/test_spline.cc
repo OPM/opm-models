@@ -88,7 +88,7 @@ void testFull(const Spline &sp,
     // test the common properties of splines
     testCommon(sp, x, y);
 
-    static double eps = 1e-10;
+    static double eps = 1e-5;
     int n = sp.numSamples();
 
     // make sure the derivative at both end points is correct
@@ -112,7 +112,7 @@ void testNatural(const Spline &sp,
     // test the common properties of splines
     testCommon(sp, x, y);
 
-    static double eps = 1e-10;
+    static double eps = 1e-5;
     int n = sp.numSamples();
 
     // make sure the second derivatives at both end points are 0
@@ -249,8 +249,14 @@ void plot()
 
 int main(int argc, char** argv)
 {
-    testAll();
+    try {
+        testAll();
 
-    plot();
+        plot();
+    }
+    catch (const Dune::Exception &e) {
+        std::cout << "Caught DUNE exception: " << e.what() << "\n";
+    }
+
     return 0;
 }
