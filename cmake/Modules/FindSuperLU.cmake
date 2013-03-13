@@ -32,9 +32,13 @@ endif()
 # check if version is 4.3
 include(CheckCSourceCompiles)
 include(CheckIncludeFiles)
-set(CMAKE_REQUIRED_INCLUDES ${SUPERLU_INCLUDE_DIR})
-set(CMAKE_REQUIRED_LIBRARIES ${SUPERLU_LIBRARY})
-set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES})
+include(CMakePushCheckState)
+
+cmake_push_check_state()
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${SUPERLU_INCLUDE_DIR})
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${SUPERLU_LIBRARY})
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${BLAS_LIBRARIES})
 
 # check if slu_ddefs.h is available
 CHECK_INCLUDE_FILES("slu_ddefs.h" HAVE_SLU_DDEFS)
@@ -71,10 +75,6 @@ int main()
 "
 HAVE_MEM_USAGE_T_EXPANSIONS)
 
-# reset include paths
-set(CMAKE_REQUIRED_INCLUDES "")
-set(CMAKE_REQUIRED_LIBRARIES "")
-
 # behave like a CMake module is supposed to behave
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
@@ -106,3 +106,5 @@ else()
     "Include directory: ${SUPERLU_INCLUDE_DIR}\n"
     "Library directory: ${SUPERLU_LIBRARY}\n\n")
 endif()
+
+cmake_pop_check_state()

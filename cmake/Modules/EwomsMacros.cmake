@@ -1,3 +1,5 @@
+include(CMakeParseArguments)
+
 # helper macro to retrieve a single field of a dune.module file
 macro(EwomsGetDuneModuleDirective_ FieldName OutputVariable DuneModuleContents)
   string(REGEX MATCH ".*${FieldName}:[ ]*([^\n]+).*" ${OutputVariable} "${DuneModuleContents}")

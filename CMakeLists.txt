@@ -2,13 +2,7 @@
 # general stuff. we extract the all information possible from the
 # dune.module file.
 cmake_minimum_required(VERSION 2.8)
-
-
 ##############
-
-project(${ProjectName} CXX)
-# C is needed for tests like pthread, BLAS and Super-LU
-enable_language(C)
 
 ##############
 # make sure our own modules will be found
@@ -22,6 +16,22 @@ include(EwomsMacros)
 
 # eWoms unit-testing infrastructure
 include(EwomsAddTest)
+
+# parse the dune.module file in the source tree
+EwomsParseDuneModuleInfo("eWoms" FILE_NAME "${CMAKE_SOURCE_DIR}/dune.module")
+
+# set the generic CMake project variables to the values from the
+# dune.module file
+set(ProjectName "${EWOMS_NAME}")
+set(ProjectDescription "${EWOMS_DESCRIPTION}")
+set(ProjectVersion "${EWOMS_VERSION}")
+set(ProjectMaintainer "${EWOMS_MAINTAINER_NAME}")
+set(ProjectMaintainerEmail "${EWOMS_MAINTAINER_EMAIL}")
+set(ProjectCodename "${EWOMS_CODENAME}")
+
+project(${ProjectName} CXX)
+# C is needed for tests like pthread, BLAS and Super-LU
+enable_language(C)
  
 ##############
 # Set CMake policies
@@ -38,7 +48,6 @@ cmake_policy(SET CMP0003 NEW)
 find_package(CXX11Features)
 find_package(SharedPtr)
 
-EwomsParseDuneModuleInfo("eWoms" FILE_NAME "${CMAKE_SOURCE_DIR}/dune.module")
 find_package(DUNE_common REQUIRED)
 find_package(DUNE_geometry REQUIRED)
 find_package(DUNE_grid REQUIRED)
