@@ -138,7 +138,7 @@ public:
 #if HAVE_MPI
         return MPI_COMM_WORLD;
 #else
-        static Dune::MPICommunicator comm;
+        static MPICommunicator comm;
         return comm;
 #endif
     }
