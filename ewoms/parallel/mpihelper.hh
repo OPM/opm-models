@@ -23,6 +23,15 @@
 #ifndef EWOMS_MPI_HELPER_HH
 #define EWOMS_MPI_HELPER_HH
 
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+#include <dune/common/parallel/collectivecommunication.hh>
+#include <dune/common/parallel/mpicollectivecommunication.hh>
+#else
+#include <dune/common/collectivecommunication.hh>
+#include <dune/common/mpicollectivecommunication.hh>
+#endif
+
 #if HAVE_MPI
 #include <mpi.h>
 #endif
@@ -52,6 +61,21 @@ namespace Ewoms {
 class MpiHelper
 {
 public:
+    enum{
+#if HAVE_MPI
+        isFake = false //!< Returns whether MPI is really available or not
+#else
+        isFake = true //!< Returns whether MPI is really available or not
+#endif
+    };
+
+    /// The type of the MPI communicator object
+#if HAVE_MPI
+    typedef MPI_Comm MPICommunicator;
+#else
+    typedef Dune::No_Comm MPICommunicator;
+#endif
+
     MpiHelper(int &argc, char **&argv)
     {
         // make it only possible to instanciate this class once during
@@ -63,7 +87,9 @@ public:
         wasInstanced = true;
 
 #if HAVE_MPI
-        MPI_Init(&argc, &argv);
+        if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
+            DUNE_THROW(Dune::InvalidStateException,
+                       "Initialization of MPI failed!");
 #endif
     }
 
@@ -73,6 +99,7 @@ public:
         MPI_Finalize();
 #endif
     }
+
 
     /*!
      * \brief Return the MPI rank of the running process.
@@ -101,8 +128,50 @@ public:
         return 1;
 #endif
     }
+
+    /*!
+     * \brief Returns the communicator which can be used to talk to
+     *        peer processes.
+     */
+    static MPICommunicator getCommunicator()
+    {
+#if HAVE_MPI
+        return MPI_COMM_WORLD;
+#else
+        static Dune::MPICommunicator comm;
+        return comm;
+#endif
+    }
+
+    /*!
+     * \brief Returns the communicator which can be used for soliloquizing.
+     */
+    static MPICommunicator getLocalCommunicator()
+    {
+#if HAVE_MPI
+        return MPI_COMM_SELF;
+#else
+        return getCommunicator();
+#endif
+    }
+
+    /*!
+     * \brief Returns an object which can be used for collective
+     * communications.
+     */
+    static Dune::CollectiveCommunication<MPICommunicator> getCollectiveCommunication()
+    { return Dune::CollectiveCommunication<MPICommunicator>(getCommunicator()); }
+
+private:
+    MpiHelper& operator=(const MpiHelper);
 };
 
+}
+
+// this is a bit hacky, but required for DUNE compatibility
+#define DUNE_MPIHELPER
+namespace Dune {
+    typedef Ewoms::MpiHelper MPIHelper;
 }
 
 #endif
