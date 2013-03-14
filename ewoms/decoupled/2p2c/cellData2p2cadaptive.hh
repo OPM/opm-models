@@ -154,7 +154,7 @@ public:
                 += adaptedValues.cellVolume* adaptedValues.totalConcentration_[nCompIdx];
         // if all cells are summed up, re-convert mass into total concentrations
         Scalar fatherVolume = fatherElement.geometry().volume();
-        if(adaptedValuesFather.count == (std::pow(2.0,dim)))
+        if(adaptedValuesFather.count == (1 << dim))
         {
             adaptedValuesFather.totalConcentration_[wCompIdx] /= fatherVolume;
             adaptedValuesFather.totalConcentration_[nCompIdx] /= fatherVolume;
