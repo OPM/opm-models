@@ -27,14 +27,8 @@
 #include "parametersystem.hh"
 #include "valgrind.hh"
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/parametersystem.hh>
-
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
 
 #include <dune/grid/io/file/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>
@@ -330,7 +324,7 @@ int start(int argc,
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
 
     // initialize MPI, finalize is done automatically on exit
-    const Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
+    const Ewoms::MpiHelper mpiHelper(argc, argv);
 
     int myRank = mpiHelper.rank();
 
