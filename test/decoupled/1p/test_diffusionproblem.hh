@@ -23,6 +23,7 @@
 #ifndef EWOMS_TEST_2P_PROBLEM_HH
 #define EWOMS_TEST_2P_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "test_diffusionspatialparams.hh"
 
 #include <ewoms/material/components/unit.hh>

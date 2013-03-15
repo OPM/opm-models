@@ -24,6 +24,7 @@
 #ifndef EWOMS_FRACTURE_PROBLEM_HH
 #define EWOMS_FRACTURE_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid.hh>
 
 #include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>

@@ -21,8 +21,8 @@
  * \brief Test for the isothermal Stokes VCVF discretization.
  */
 #include "config.h"
-#include "problems/stokestestproblem.hh"
 #include <ewoms/common/start.hh>
+#include "problems/stokestestproblem.hh"
 
 int main(int argc, char** argv)
 {

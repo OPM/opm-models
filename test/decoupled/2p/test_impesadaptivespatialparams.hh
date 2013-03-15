@@ -23,6 +23,7 @@
 #ifndef TEST_IMPES_ADAPTIVE_SPATIAL_PARAMS_HH
 #define TEST_IMPES_ADAPTIVE_SPATIAL_PARAMS_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>

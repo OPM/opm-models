@@ -22,8 +22,9 @@
  *        known as lid-driven cavity-flow in literature.
  */
 #include "config.h"
-#include "problems/navierstokestestproblem.hh"
+
 #include <ewoms/common/start.hh>
+#include "problems/navierstokestestproblem.hh"
 
 int main(int argc, char** argv)
 {

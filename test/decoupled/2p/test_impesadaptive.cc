@@ -23,8 +23,8 @@
 #include "config.h"
 
 #if HAVE_ALUGRID
-#include "test_impesadaptiveproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_impesadaptiveproblem.hh"
 
 int main(int argc, char** argv)
 {

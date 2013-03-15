@@ -23,6 +23,7 @@
 #ifndef EWOMS_TEST_2P2C_PROBLEM_HH
 #define EWOMS_TEST_2P2C_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "test_dec2p2c_spatialparams.hh"
 
 #include <ewoms/decoupled/2p2c/2p2cproblem.hh>

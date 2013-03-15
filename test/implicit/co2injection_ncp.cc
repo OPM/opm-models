@@ -24,10 +24,9 @@
  */
 #include "config.h"
 
-#include "problems/co2injectionproblem.hh"
-
-#include <ewoms/models/ncp/ncpmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/ncp/ncpmodel.hh>
+#include "problems/co2injectionproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

@@ -22,8 +22,8 @@
  */
 #include "config.h"
 
-#include "test_transportproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_transportproblem.hh"
 
 ////////////////////////
 // the main function

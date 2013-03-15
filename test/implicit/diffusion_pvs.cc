@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/diffusionproblem.hh"
-
-#include <ewoms/models/pvs/pvsmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/diffusionproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

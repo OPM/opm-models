@@ -23,6 +23,7 @@
 #ifndef EWOMS_FINGER_GRID_CREATOR_HH
 #define EWOMS_FINGER_GRID_CREATOR_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 

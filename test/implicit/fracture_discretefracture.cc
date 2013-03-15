@@ -28,9 +28,8 @@
 int main(int argc, char** argv)
 {}
 #else
-#include "problems/fractureproblem.hh"
-
 #include <ewoms/common/start.hh>
+#include "problems/fractureproblem.hh"
 
 int main(int argc, char** argv)
 {

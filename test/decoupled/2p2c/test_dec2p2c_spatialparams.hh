@@ -23,6 +23,7 @@
 #ifndef TEST_2P2C_SPATIAL_PARAMS_HH
 #define TEST_2P2C_SPATIAL_PARAMS_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/decoupled/2p2c/2p2cproperties.hh>
 #include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>

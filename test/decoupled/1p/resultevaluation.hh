@@ -24,6 +24,7 @@
 #ifndef EWOMS_RESULT_EVALUATION_HH
 #define EWOMS_RESULT_EVALUATION_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/decoupled/common/onemodelproblem.hh>
 
 #include <dune/common/fvector.hh>

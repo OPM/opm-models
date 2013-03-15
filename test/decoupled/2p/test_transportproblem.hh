@@ -25,6 +25,7 @@
 #ifndef EWOMS_TEST_TRANSPORT_PROBLEM_HH
 #define EWOMS_TEST_TRANSPORT_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "test_transportspatialparams.hh"
 
 #include <ewoms/decoupled/2p/transport/fv/fvtransportproperties2p.hh>

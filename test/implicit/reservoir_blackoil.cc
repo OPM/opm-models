@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/reservoirproblem.hh"
-
 #include <ewoms/common/start.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>
+#include "problems/reservoirproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

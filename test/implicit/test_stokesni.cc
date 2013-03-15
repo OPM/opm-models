@@ -22,8 +22,8 @@
  * \brief Test for the non-isothermal two-component Stokes VCVF discretization.
  */
 #include "config.h"
-#include "problems/stokesnitestproblem.hh"
 #include <ewoms/common/start.hh>
+#include "problems/stokesnitestproblem.hh"
 
 int main(int argc, char** argv)
 {

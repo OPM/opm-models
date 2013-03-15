@@ -24,8 +24,8 @@
 #ifndef EWOMS_TEST_MPFA2P_PROBLEM_HH
 #define EWOMS_TEST_MPFA2P_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid/2d/alugrid.hh>
-
 #include <ewoms/io/cubegridcreator.hh>
 
 #include <ewoms/material/fluidsystems/liquidphase.hh>

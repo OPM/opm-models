@@ -22,8 +22,8 @@
  */
 #include "config.h"
 
-#include "test_1pproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_1pproblem.hh"
 
 int main(int argc, char** argv)
 {

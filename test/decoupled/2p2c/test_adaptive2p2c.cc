@@ -24,8 +24,8 @@
  */
 #include "config.h"
 
-#include "test_adaptive2p2cproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_adaptive2p2cproblem.hh"
 
 // The main function using the standard start procedure
 int main(int argc, char** argv)

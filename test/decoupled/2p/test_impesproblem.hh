@@ -25,6 +25,7 @@
 #ifndef EWOMS_TEST_IMPES_PROBLEM_HH
 #define EWOMS_TEST_IMPES_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "test_impesspatialparams.hh"
 
 #include <ewoms/decoupled/2p/diffusion/fv/fvpressureproperties2p.hh>

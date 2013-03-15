@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/diffusionproblem.hh"
-
-#include <ewoms/models/flash/flashmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/flash/flashmodel.hh>
+#include "problems/diffusionproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

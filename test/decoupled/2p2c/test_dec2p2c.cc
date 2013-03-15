@@ -23,8 +23,8 @@
  */
 #include "config.h"
 
-#include "test_dec2p2cproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_dec2p2cproblem.hh"
 
 ////////////////////////
 // the main function

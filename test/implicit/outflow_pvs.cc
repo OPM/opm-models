@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/outflowproblem.hh"
-
 #include <ewoms/common/start.hh>
 #include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/outflowproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

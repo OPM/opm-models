@@ -19,11 +19,13 @@
 #ifndef EWOMS_PRESSURE_PROPERTIES_HH
 #define EWOMS_PRESSURE_PROPERTIES_HH
 
+#include "decoupledproperties.hh"
+
 //Dune-includes
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/bvector.hh>
 
-#include "decoupledproperties.hh"
 #include <ewoms/linear/elementborderlistfromgrid.hh>
 #include <ewoms/linear/paralleliterativebackend.hh>
 #include <ewoms/linear/superlubackend.hh>

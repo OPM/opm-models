@@ -23,6 +23,7 @@
 #ifndef TEST_2P_SPATIALPARAMETERS_HH
 #define TEST_2P_SPATIALPARAMETERS_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/decoupled/spatialparams/fvspatialparams.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
 #include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>

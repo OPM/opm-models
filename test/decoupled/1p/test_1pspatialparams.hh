@@ -23,6 +23,7 @@
 #ifndef TEST_1P_SPATIAL_PARAMS_HH
 #define TEST_1P_SPATIAL_PARAMS_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/decoupled/spatialparams/fvspatialparams1p.hh>
 
 #include <dune/common/fvector.hh>

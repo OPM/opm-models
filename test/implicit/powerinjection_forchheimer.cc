@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/powerinjectionproblem.hh"
-
-#include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/immiscible/immisciblemodel.hh>
+#include "problems/powerinjectionproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

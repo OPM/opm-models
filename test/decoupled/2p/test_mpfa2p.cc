@@ -27,8 +27,8 @@
 
 #if HAVE_ALUGRID
 
-#include "test_mpfa2pproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_mpfa2pproblem.hh"
 
 ////////////////////////
 // the main function

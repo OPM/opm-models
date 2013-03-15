@@ -23,6 +23,12 @@
 #ifndef EWOMS_MPI_HELPER_HH
 #define EWOMS_MPI_HELPER_HH
 
+// this is a bit hacky, but required for DUNE compatibility
+#ifdef DUNE_MPIHELPER
+#error "You must include this file _before_ DUNE's mpihelper.hh!"
+#endif
+#define DUNE_MPIHELPER
+
 #include <dune/common/version.hh>
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/collectivecommunication.hh>
@@ -56,7 +62,7 @@ namespace Ewoms {
  * \endcode
  *
  * Except that it requires to be instanced in the main function, it
- * should be compatible with Dune's MPIHelper class.
+ * is designed to be 100% compatible with Dune's MPIHelper.
  */
 class MpiHelper
 {
@@ -80,16 +86,19 @@ public:
     {
         // make it only possible to instanciate this class once during
         // the lifetime of the program
-        static bool wasInstanced = false;
-        if (wasInstanced)
+        static bool wasInstanciated = false;
+        if (wasInstanciated)
             DUNE_THROW(Dune::InvalidStateException,
                        "Ewoms::MpiHelper may only be instanciated once!");
-        wasInstanced = true;
+        wasInstanciated = true;
 
 #if HAVE_MPI
         if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
             DUNE_THROW(Dune::InvalidStateException,
                        "Initialization of MPI failed!");
+
+        MPI_Comm_size(MPI_COMM_WORLD, &size_);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
 #endif
     }
 
@@ -100,34 +109,28 @@ public:
 #endif
     }
 
+    /*!
+     * \brief The deprecated singleton DUNE interface
+     */
+    DUNE_DEPRECATED_MSG("Construct an instance of this class in your main function instead!")
+    static MpiHelper &instance(int &argc, char **&argv)
+    {
+        static MpiHelper singleton(argc, argv);
+        return singleton;
+    }
+
 
     /*!
      * \brief Return the MPI rank of the running process.
      */
     static int rank()
-    {
-#if HAVE_MPI
-        int tmp;
-        MPI_Comm_rank(MPI_COMM_WORLD, &tmp);
-        return tmp;
-#else
-        return 0;
-#endif
-    }
+    { return rank_; }
 
     /*!
      * \brief Return the number of MPI processes of the simulation.
      */
     static int size()
-    {
-#if HAVE_MPI
-        int tmp;
-        MPI_Comm_size(MPI_COMM_WORLD, &tmp);
-        return tmp;
-#else
-        return 1;
-#endif
-    }
+    { return 1; }
 
     /*!
      * \brief Returns the communicator which can be used to talk to
@@ -164,12 +167,16 @@ public:
 
 private:
     MpiHelper& operator=(const MpiHelper);
+    static int size_;
+    static int rank_;
 };
+
+int MpiHelper::size_ = 1;
+int MpiHelper::rank_ = 0;
 
 }
 
 // this is a bit hacky, but required for DUNE compatibility
-#define DUNE_MPIHELPER
 namespace Dune {
     typedef Ewoms::MpiHelper MPIHelper;
 }

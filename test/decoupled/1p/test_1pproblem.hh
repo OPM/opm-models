@@ -24,6 +24,7 @@
 #ifndef EWOMS_TEST_1P_PROBLEM_HH
 #define EWOMS_TEST_1P_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "test_1pspatialparams.hh"
 
 #include <ewoms/io/cubegridcreator.hh>

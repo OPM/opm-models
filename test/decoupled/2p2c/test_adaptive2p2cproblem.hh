@@ -23,6 +23,7 @@
 #ifndef EWOMS_TEST_ADAPTIVE_2P2C_PROBLEM_HH
 #define EWOMS_TEST_ADAPTIVE_2P2C_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid.hh>
 // #include <dune/grid/uggrid.hh>
 

@@ -23,8 +23,8 @@
  */
 #include "config.h"
 
-#include "test_impesproblem.hh"
 #include <ewoms/common/start.hh>
+#include "test_impesproblem.hh"
 
 ////////////////////////
 // the main function

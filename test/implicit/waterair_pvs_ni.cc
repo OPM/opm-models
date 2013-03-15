@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/waterairproblem.hh"
-
-#include <ewoms/models/pvs/pvsmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/waterairproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

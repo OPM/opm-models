@@ -24,6 +24,7 @@
 #ifndef EWOMS_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 #define EWOMS_TEST_IMPES_ADAPTIVE_PROBLEM_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid/2d/alugrid.hh>
 #include <ewoms/io/cubegridcreator.hh>
 

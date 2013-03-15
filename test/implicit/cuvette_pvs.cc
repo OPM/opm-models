@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/cuvetteproblem.hh"
-#include <ewoms/models/pvs/pvsmodel.hh>
-
 #include <ewoms/common/start.hh>
+#include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/cuvetteproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

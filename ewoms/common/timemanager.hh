@@ -24,14 +24,9 @@
 #define EWOMS_TIME_MANAGER_HH
 
 #include <ewoms/common/propertysystem.hh>
+#include <ewoms/parallel/mpihelper.hh>
 
 #include <dune/common/timer.hh>
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
 
 #include <iostream>
 

@@ -23,10 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/co2injectionproblem.hh"
-
-#include <ewoms/models/pvs/pvsmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/co2injectionproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

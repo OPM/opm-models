@@ -24,15 +24,8 @@
 #include "config.h"
 #include <iostream>
 
+#include <ewoms/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
-
-#include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-#include <dune/common/parallel/mpihelper.hh>
-#else
-#include <dune/common/mpihelper.hh>
-#endif
-
 #include <dune/grid/common/gridinfo.hh>
 
 #include "test_diffusionproblem.hh"
@@ -57,11 +50,11 @@ int main(int argc, char** argv)
         static const int dim = Grid::dimension;
         typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
+        // initialize MPI, finalize is done automatically on exit
+        Ewoms::MpiHelper mpiHelper(argc, argv);
+
         TimeManager::registerParameters();
         END_PARAM_REGISTRATION;
-
-        // initialize MPI, finalize is done automatically on exit
-        Dune::MPIHelper::instance(argc, argv);
 
         ////////////////////////////////////////////////////////////
         // parse the command line arguments

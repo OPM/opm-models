@@ -23,8 +23,8 @@
  */
 #include "config.h"
 
-#include <ewoms/models/ncp/ncpmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/ncp/ncpmodel.hh>
 
 #include "problems/obstacleproblem.hh"
 

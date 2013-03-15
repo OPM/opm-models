@@ -24,10 +24,9 @@
  */
 #include "config.h"
 
-#include "problems/lensproblem.hh"
-
-#include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/immiscible/immisciblemodel.hh>
+#include "problems/lensproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

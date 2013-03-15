@@ -23,9 +23,8 @@
  */
 #include "config.h"
 
-#include "problems/richardslensproblem.hh"
-
 #include <ewoms/common/start.hh>
+#include "problems/richardslensproblem.hh"
 
 int main(int argc, char** argv)
 {

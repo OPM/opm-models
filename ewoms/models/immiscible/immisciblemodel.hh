@@ -24,6 +24,7 @@
 #ifndef EWOMS_IMMISCIBLE_MODEL_HH
 #define EWOMS_IMMISCIBLE_MODEL_HH
 
+#include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
 #include "immisciblelocalresidual.hh"
 

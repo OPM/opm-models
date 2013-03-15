@@ -23,9 +23,9 @@
  */
 #include "config.h"
 
-#include "problems/infiltrationproblem.hh"
-#include <ewoms/models/pvs/pvsmodel.hh>
 #include <ewoms/common/start.hh>
+#include <ewoms/models/pvs/pvsmodel.hh>
+#include "problems/infiltrationproblem.hh"
 
 namespace Ewoms {
 namespace Properties {

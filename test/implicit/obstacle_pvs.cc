@@ -24,9 +24,8 @@
  */
 #include "config.h"
 
-#include <ewoms/models/pvs/pvsmodel.hh>
 #include <ewoms/common/start.hh>
-
+#include <ewoms/models/pvs/pvsmodel.hh>
 #include "problems/obstacleproblem.hh"
 
 namespace Ewoms {
