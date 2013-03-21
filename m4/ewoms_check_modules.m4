@@ -1,4 +1,21 @@
 dnl -*- autoconf -*-
+# SYNOPSIS
+#
+# AX_RESET_HEADERS_CACHE(headers ...)
+#
+# DESCRIPTION
+#
+# This macro invalidates the headers cache variables created by previous AC_CHECK_HEADER/AC_CHECK_HEADERS checks.
+# (taken from: http://stackoverflow.com/questions/1632767/how-should-ac-cache-check-be-reset)
+AC_DEFUN([AX_RESET_HEADERS_CACHE], [
+    AS_FOR([AX_var], [ax_var], [$1], [
+        dnl You can replace "ac_cv_header_" with any prefix from http://www.gnu.org/software/autoconf/manual/html_node/Cache-Variable-Index.html
+        AS_VAR_PUSHDEF([ax_Var], [ac_cv_header_${ax_var}])
+        AS_UNSET([ax_Var])
+        AS_VAR_POPDEF([ax_Var])
+    ])
+]) # AX_RESET_HEADERS_CACHE
+
 # EWOMS_CHECK_MODULES(NAME, HEADER, SYMBOL)
 #
 # THIS MACRO IS JUST A COPY OF DUNE_CHECK_MODULES WITH THE REQUIREMENT THAT ALL
@@ -15,8 +32,7 @@ dnl -*- autoconf -*-
 #        value must be known when autoconf runs, so shell variables in the
 #        value are not permissible.
 #
-# HEADER Header to check for.  The check will really be for <dune/{HEADER}>,
-#        so the header must reside within a directory called "dune".
+# HEADER Header file to check for.
 #
 # SYMBOL Symbol to check for in the module's library.  If this argument is
 #        empty or missing, it is assumed that the module does not provide a
@@ -64,10 +80,6 @@ dnl -*- autoconf -*-
 # automake conditionals:
 #   HAVE_{MODULE}
 AC_DEFUN([EWOMS_CHECK_MODULES],[
-  m4_pushdef([_DUNE_MODULE], [m4_toupper(_dune_module)])
-  EWOMS_CHECK_MODULES_DUNE23([$1],[$2])
-  if test "$HAVE_[]_DUNE_MODULE" != "1"; then
-  
   AC_REQUIRE([AC_PROG_CXX])
   AC_REQUIRE([AC_PROG_CXXCPP])
   AC_REQUIRE([PKG_PROG_PKG_CONFIG])
@@ -140,7 +152,7 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
       _DUNE_MODULE[]_ROOT=`cd $with_[]_dune_module && pwd`
 
       # expand search path (otherwise empty CPPFLAGS)
-      AS_IF([test -d "$_DUNE_MODULE[]_ROOT/include/dune"],[
+      AS_IF([test -d "$_DUNE_MODULE[]_ROOT/include"],[
         # Dune was installed into directory given by with-dunecommon
         _dune_cm_CPPFLAGS="-I$_DUNE_MODULE[]_ROOT/include"
         _DUNE_MODULE[]_BUILDDIR=_DUNE_MODULE[]_ROOT
@@ -167,7 +179,7 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
     ],[
       HAVE_[]_DUNE_MODULE=0
       AC_MSG_RESULT([not found])
-      AC_MSG_ERROR([_dune_name-directory $with_[]_dune_module does not exist])
+      AC_MSG_WARN([_dune_name-directory $with_[]_dune_module does seem to work with dune < 2.3. trying with dune 2.3])
     ])
   ])
 
@@ -175,18 +187,12 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
   ##  
   ## check for an arbitrary header
   ##
-  AC_CHECK_HEADER([dune/[]_dune_header],
-    [HAVE_[]_DUNE_MODULE=1; DUNE_[]_HEADER_PREFIX="dune/"],
-    [HAVE_[]_DUNE_MODULE=0])
-
-  AS_IF([test "$HAVE_[]_DUNE_MODULE" != "1"],[
-    AC_CHECK_HEADER([[]_dune_header],
+  AC_CHECK_HEADER([[]_dune_header],
       [HAVE_[]_DUNE_MODULE=1; DUNE_[]_HEADER_PREFIX=""],
-      [HAVE_[]_DUNE_MODULE=0])
-  ])    
+      [HAVE_[]_DUNE_MODULE=0; AX_RESET_HEADERS_CACHE(_dune_header)])
 
   AS_IF([test "$HAVE_[]_DUNE_MODULE" != "1"],[
-    AC_MSG_WARN([$_DUNE_MODULE[]_ROOT does not seem to contain a valid _dune_name (dune/[]_dune_header not found)])
+    AC_MSG_WARN([$_DUNE_MODULE[]_ROOT does not seem to contain a valid _dune_name ([]_dune_header not found)])
   ])
   
   ##
@@ -214,7 +220,7 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
         AC_MSG_CHECKING([for lib[]_dune_lib])
 
         AC_LINK_IFELSE(
-            [AC_LANG_PROGRAM([[#include<$DUNE_[]_HEADER_PREFIX/[]_dune_header>]],
+            [AC_LANG_PROGRAM([[#include<_dune_header>]],
                _dune_symbol)],
           [
             AC_MSG_RESULT([yes])
@@ -259,21 +265,29 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
     # for backward compatibility
     DUNE_LDFLAGS="$DUNE_LDFLAGS $_DUNE_MODULE[]_LDFLAGS"
     DUNE_LIBS="$_DUNE_MODULE[]_LIBS $DUNE_LIBS"
+
+    # get the codename from the dune.module file. this is an eWoms
+    # extension
+    EWOMS_GET_CODENAME(_DUNE_MODULE[], $_DUNE_MODULE[]_ROOT)
+
+    # add this module to DUNE_SUMMARY
+    DUNE_MODULE_ADD_SUMMARY_ENTRY(_dune_name)
+
+    AM_CONDITIONAL(HAVE_[]_DUNE_MODULE, test x$HAVE_[]_DUNE_MODULE = x1)
     
     with_[]_dune_module="yes"
   ],[
-    with_[]_dune_module="no"
+     unset _DUNE_MODULE[]_CPPFLAGS
+     unset _DUNE_MODULE[]_LDFLAGS
+     unset _DUNE_MODULE[]_LIBS
+     unset _DUNE_MODULE[]_ROOT
+#    with_my_[]_dune_module="no"
   ])
-
-  AM_CONDITIONAL(HAVE_[]_DUNE_MODULE, test x$HAVE_[]_DUNE_MODULE = x1)
 
   # reset previous flags
   CPPFLAGS="$ac_save_CPPFLAGS"
   LDFLAGS="$ac_save_LDFLAGS"
   LIBS="$ac_save_LIBS"
-
-  # add this module to DUNE_SUMMARY
-  DUNE_MODULE_ADD_SUMMARY_ENTRY(_dune_name)
 
   # remove local variables
   m4_popdef([_dune_name])
@@ -284,12 +298,13 @@ AC_DEFUN([EWOMS_CHECK_MODULES],[
   m4_popdef([_dune_symbol])
   m4_popdef([_DUNE_MODULE])
 
-  # get the codename from the dune.module file. this is an eWoms
-  # extension
-  EWOMS_GET_CODENAME(_DUNE_MODULE[], $_DUNE_MODULE[]_ROOT)
-
   # restore previous language settings (leave C++)
   AC_LANG_POP([C++])
-  fi # -> not dune 2.3
-  m4_popdef([_DUNE_MODULE])
+
+  m4_pushdef([MY_DUNE_MODULE], [m4_toupper($1)])
+  if test "$HAVE_[]MY_DUNE_MODULE" != "1"; then
+    echo "Trying new method to detect the module..."
+    EWOMS_CHECK_MODULES_DUNE23([$1],[$2])
+  fi
+  m4_popdef([MY_DUNE_MODULE])
 ])

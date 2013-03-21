@@ -105,6 +105,12 @@ AC_DEFUN([EWOMS_CHECK_MODULES_DUNE23],[
   # is a directory set?
   AS_IF([test -z "$with_[]_dune_module"],[
     #
+    # initialize variables for lib
+    #
+    _DUNE_MODULE[]_LIBDIR=""
+    _dune_cm_LDFLAGS=""
+    _dune_cm_LIBS=""
+    #
     # search module $1 via pkg-config
     #
     with_[]_dune_module="global installation"
@@ -135,22 +141,22 @@ AC_DEFUN([EWOMS_CHECK_MODULES_DUNE23],[
       _DUNE_MODULE[]_LIBDIR="$_DUNE_MODULE[]_ROOT/lib"
 
       # expand search path (otherwise empty CPPFLAGS)
-      AS_IF([test -d "$_DUNE_MODULE[]_ROOT/include/dune"],[
+      AS_IF([test -d "$_DUNE_MODULE[]_ROOT/include"],[
         # Dune was installed into directory given by with-dunecommon
         _dune_cm_CPPFLAGS="-I$_DUNE_MODULE[]_ROOT/include"
         _DUNE_MODULE[]_BUILDDIR=_DUNE_MODULE[]_ROOT
         _DUNE_MODULE[]_VERSION="`PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$_DUNE_MODULE[]_ROOT/lib/pkgconfig $PKG_CONFIG --modversion _dune_name`" 2>/dev/null
-        _dune_cm_LIBS="-L$_DUNE_MODULE[]_LIBDIR -l[]_dune_lib"
+		_dune_cm_LIBS="-L$_DUNE_MODULE[]_LIBDIR -l[]_dune_lib"
       ],[
         _DUNE_MODULE[]_SRCDIR=$_DUNE_MODULE[]_ROOT
         # extract src and build path from Makefile, if found
-        AS_IF([test -f $_DUNE_MODULE[]_ROOT/Makefile],[
+	    AS_IF([test -f $_DUNE_MODULE[]_ROOT/Makefile],[
           _DUNE_MODULE[]_SRCDIR="`sed -ne '/^abs_top_srcdir = /{s/^abs_top_srcdir = //; p;}' $_DUNE_MODULE[]_ROOT/Makefile`"
-        ])
+		])
         _dune_cm_CPPFLAGS="-I$_DUNE_MODULE[]_SRCDIR"
         _DUNE_MODULE[]_VERSION="`grep Version $_DUNE_MODULE[]_SRCDIR/dune.module | sed -e 's/^Version: *//'`" 2>/dev/null
         # local modules is linked directly via the .la file
-        _dune_cm_LIBS="$_DUNE_MODULE[]_LIBDIR[]/lib[]_dune_lib[].la"
+		_dune_cm_LIBS="$_DUNE_MODULE[]_LIBDIR[]/lib[]_dune_lib[].la"
       ])
       # set expanded module path
       with_[]_dune_module="$_DUNE_MODULE[]_ROOT"
@@ -165,21 +171,16 @@ AC_DEFUN([EWOMS_CHECK_MODULES_DUNE23],[
 
   CPPFLAGS="$ac_save_CPPFLAGS $DUNE_CPPFLAGS_TMP $DUNE_PKG_CPPFLAGS $_dune_cm_CPPFLAGS"
   ##  
-  ## check for the specified header file
+  ## check for an arbitrary header
   ##
-  AC_CHECK_HEADER([dune/[]_dune_header],
-    [HAVE_[]_DUNE_MODULE=1; DUNE_[]_HEADER_PREFIX="dune/"],
-    [HAVE_[]_DUNE_MODULE=0])
-
-  AS_IF([test "$HAVE_[]_DUNE_MODULE" != "1"],[
-    AC_CHECK_HEADER([[]_dune_header],
-      [HAVE_[]_DUNE_MODULE=1; DUNE_[]_HEADER_PREFIX=""],
-      [HAVE_[]_DUNE_MODULE=0])
-  ])
-
-  AS_IF([test "$HAVE_[]_DUNE_MODULE" != "1"],[
-    AC_MSG_WARN([$_DUNE_MODULE[]_ROOT does not seem to contain a valid _dune_name (_dune_header not found)])
-  ])
+  AC_CHECK_HEADER([[]_dune_header],
+    [HAVE_[]_DUNE_MODULE=1],
+    [HAVE_[]_DUNE_MODULE=0
+     AS_IF([test -n "$_DUNE_MODULE[]_ROOT"],[
+       AC_MSG_WARN([$_DUNE_MODULE[]_ROOT does not seem to contain a valid _dune_name ([]_dune_header not found)])
+     ])
+    ]
+  )
 
   ##
   ## check for lib (if lib name was provided)
@@ -196,23 +197,24 @@ AC_DEFUN([EWOMS_CHECK_MODULES_DUNE23],[
       AS_IF([test "x$HAVE_[]_DUNE_MODULE" = "x1"],[
         # save current LDFLAGS
         ac_save_CXX="$CXX"
-        AC_CACHE_CHECK([for lib[]_dune_lib], dune_cv_lib[]_dune_lib, [
+
           # Use $CXX $DUNE_LDFLAGS as link command, as the latter might 
           # contain the -static option to force static linkage
           ac_cxx_ld=`echo $ac_save_CXX | sed -e "s@$CXX@$CXX $DUNE_LDFLAGS_TMP@"`
 
           # define LTCXXLINK like it will be defined in the Makefile
           CXX="./libtool --tag=CXX --mode=link $ac_cxx_ld "
-
+          
           # use module LDFLAGS
           LDFLAGS="$ac_save_LDFLAGS $DUNE_LDFLAGS_TMP $DUNE_PKG_LDFLAGS $_dune_cm_LDFLAGS"
           LIBS="$_dune_cm_LIBS $DUNE_LIBS_TMP $LIBS"
 
-          AC_TRY_LINK(dnl
-            [#]include<_dune_header>,
-            _dune_symbol,
-            dune_cv_lib[]_dune_lib=yes,
-            dune_cv_lib[]_dune_lib=no)
+          AC_LINK_IFELSE(
+            [AC_LANG_PROGRAM(
+              [#]include<[]_dune_header>,
+              _dune_symbol)],
+            [dune_cv_lib[]_dune_lib=yes],
+            [dune_cv_lib[]_dune_lib=no])
         ])
 
         AS_IF([test "x$dune_cv_lib[]_dune_lib" = "xyes"], [
@@ -223,7 +225,6 @@ AC_DEFUN([EWOMS_CHECK_MODULES_DUNE23],[
             AC_MSG_WARN([$with_[]_dune_module does not seem to contain a valid _dune_name (failed to link with lib[]_dune_lib[].la)])
           ])
         ])
-      ])
 
       # reset variables
       CXX="$ac_save_CXX"
