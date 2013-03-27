@@ -8,7 +8,8 @@ usable, well maintainable, high performance framework which is capable
 of capturing all macro-scale scenarios relevant for academic research
 and industrial applications involving flow and transport processes in
 porous media. Like all other OPM modules eWoms is available under the
-terms of the GNU General Public License (GPL) version 3.
+terms of the GNU General Public License (GPL) version 2 or - at your
+option - any later version.
 
 eWoms uses an agile development model similar to the one of the other
 OPM modules. This means that, the development branch is considered
