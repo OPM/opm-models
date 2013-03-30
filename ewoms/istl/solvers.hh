@@ -336,7 +336,7 @@ namespace Ewoms {
     template<class L, class P>
     GradientSolver (L& op, P& prec,
       double reduction, int maxit, int verbose) :
-      ssp(), _op(op), _prec(prec), _sp(ssp), _reduction(reduction), _maxit(maxit), _verbose(verbose)
+      ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
         "L and P have to have the same category!");
@@ -353,7 +353,7 @@ namespace Ewoms {
     template<class L, class S, class P>
     GradientSolver (L& op, S& sp, P& prec,
       double reduction, int maxit, int verbose) :
-      _op(op), _prec(prec), _sp(sp), _reduction(reduction), _maxit(maxit), _verbose(verbose)
+      _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
       dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
         "L and P have to have the same category!");
@@ -424,7 +424,6 @@ namespace Ewoms {
     Dune::Preconditioner<X,X>& _prec;
     Dune::ScalarProduct<X>& _sp;
     Dune::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
-    double _reduction;
     int _maxit;
     int _verbose;
   };
@@ -570,6 +569,8 @@ public:
     typedef X range_type;
     //! \brief The field type of the operator to be inverted
     typedef typename X::field_type field_type;
+    //! \brief The real type of the field type (is the same of using real numbers, but differs for std::complex)
+    typedef typename Dune::FieldTraits<field_type>::real_type real_type;
 
     /*!
       \brief Set up solver.
@@ -817,7 +818,7 @@ public:
     */
     template<class L, class P>
     MINRESSolver (L& op, P& prec, double reduction, int maxit, int verbose) :
-      ssp(), _op(op), _prec(prec), _sp(ssp), _reduction(reduction), _maxit(maxit), _verbose(verbose)
+      ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(P::category),
         "L and P must have the same category!");
@@ -833,7 +834,7 @@ public:
     */
     template<class L, class S, class P>
     MINRESSolver (L& op, S& sp, P& prec, double reduction, int maxit, int verbose) :
-      _op(op), _prec(prec), _sp(sp), _reduction(reduction), _maxit(maxit), _verbose(verbose)
+      _op(op), _prec(prec), _sp(sp),_maxit(maxit), _verbose(verbose)
     {
       dune_static_assert( static_cast<int>(L::category) == static_cast<int>(P::category),
         "L and P must have the same category!");
@@ -1002,7 +1003,6 @@ public:
     Dune::Preconditioner<X,X>& _prec;
     Dune::ScalarProduct<X>& _sp;
     Dune::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
-    double _reduction;
     int _maxit;
     int _verbose;
   };
@@ -1029,6 +1029,8 @@ public:
     typedef Y range_type;
     //! \brief The field type of the operator to be inverted
     typedef typename X::field_type field_type;
+    //! \brief The real type of the field type (is the same of using real numbers, but differs for std::complex)
+    typedef typename Dune::FieldTraits<field_type>::real_type real_type;
     //! \brief The field type of the basis vectors
     typedef F basis_type;
 
@@ -1043,7 +1045,7 @@ public:
     RestartedGMResSolver (L& op, P& prec, double reduction, int restart, int maxit, int verbose, bool recalc_defect = false) :
       _A_(op), _M(prec),
       ssp(), _sp(ssp), _restart(restart),
-      _reduction(reduction), _maxit(maxit), _verbose(verbose),
+      _maxit(maxit), _verbose(verbose),
       _recalc_defect(recalc_defect)
     {
       dune_static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
@@ -1065,7 +1067,7 @@ public:
     RestartedGMResSolver (L& op, S& sp, P& prec, double reduction, int restart, int maxit, int verbose, bool recalc_defect = false) :
       _A_(op), _M(prec),
       _sp(sp), _restart(restart),
-      _reduction(reduction), _maxit(maxit), _verbose(verbose),
+      _maxit(maxit), _verbose(verbose),
       _recalc_defect(recalc_defect)
     {
       dune_static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
@@ -1080,10 +1082,10 @@ public:
     virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
     {
       int m = _restart;
-      field_type norm;
-      field_type norm_old = 0.0;
-      field_type norm_0;
-      field_type beta;
+      real_type norm;
+      real_type norm_old = 0.0;
+      real_type norm_0;
+      real_type beta;
       int i, j = 1, k;
       std::vector<field_type> s(m+1), cs(m), sn(m);
       // helper vector
@@ -1110,9 +1112,7 @@ public:
       }
       else
       {
-        // norm_0 = norm(M^-1 b)
-        w = 0.0; _M.apply(w,b); // w = M^-1 b
-        // r = _M.solve(b - A * x);
+        // norm_0 = norm(b-Ax)
         _A_.applyscaleadd(-1,x, /* => */ b); // b = b - Ax;
         norm_0 = _sp.norm(b);
         v[0] = 0.0; _M.apply(v[0],b); // r = M^-1 b
@@ -1155,7 +1155,7 @@ public:
           H[i+1][i] = _sp.norm(w);
           if (H[i+1][i] == 0.0)
             DUNE_THROW(Dune::ISTLError,"breakdown in GMRes - |w| "
-              << w << " == 0.0 after " << j << " iterations");
+                       << w << " == 0.0 after " << j << " iterations");
           // v[i+1] = w * (1.0 / H[i+1][i]);
           v[i+1] = w; v[i+1] *= (1.0 / H[i+1][i]);
 
@@ -1225,9 +1225,6 @@ public:
           // fill statistics
           res.converged = true;
         }
-
-        if (!res.converged && _verbose > 0)
-          std::cout << "=== GMRes::restart\n";
       }
 
       _M.post(x);                  // postprocess preconditioner
@@ -1287,10 +1284,207 @@ public:
     Dune::SeqScalarProduct<X> ssp;
     Dune::ScalarProduct<X>& _sp;
     int _restart;
-    double _reduction;
     int _maxit;
     int _verbose;
     bool _recalc_defect;
+  };
+
+   /*!
+    * @brief Generalized preconditioned conjugate gradient solver.
+    *
+    * A preconditioned conjugate gradient that allows
+    * the preconditioner to change between iterations.
+    *
+    * One example for such preconditioner is AMG when used without
+    * a direct coarse solver. In this case the number of iterations
+    * performed on the coarsest level might change between applications.
+    *
+    * In contrast to CGSolver the search directions are stored and
+    * the orthogonalization is done explicitly.
+    */
+   template<class X>
+   class GeneralizedPCGSolver : public InverseOperator<X,X>
+   {
+    typedef Ewoms::ConvergenceCriterion<X> ConvergenceCriterion;
+  public:
+      //! \brief The domain type of the operator to be inverted.
+      typedef X domain_type;
+      //! \brief The range type of the operator to be inverted.
+      typedef X range_type;
+      //! \brief The field type of the operator to be inverted.
+      typedef typename X::field_type field_type;
+
+      /*!
+        \brief Set up nonlinear preconditioned conjugate gradient solver.
+
+        \copydoc LoopSolver::LoopSolver(L&,P&,double,int,int)
+        \param restart When to restart the construction of
+        the Krylov search space.
+      */
+      template<class L, class P>
+      GeneralizedPCGSolver (L& op, P& prec, double reduction, int maxit, int verbose,
+                            int restart=10) :
+          ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit),
+          _verbose(verbose), _restart(std::min(maxit,restart))
+      {
+          dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                             "L and P have to have the same category!");
+          dune_static_assert(static_cast<int>(L::category) ==
+                             static_cast<int>(Dune::SolverCategory::sequential),
+                             "L has to be sequential!");
+
+          this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
+      }
+
+      /*!
+        \brief Set up nonlinear preconditioned conjugate gradient solver.
+
+        \copydoc LoopSolver::LoopSolver(L&,S&,P&,double,int,int)
+        \param restart When to restart the construction of
+        the Krylov search space.
+      */
+      template<class L, class P, class S>
+      GeneralizedPCGSolver (L& op, S& sp, P& prec,
+                            double reduction, int maxit, int verbose, int restart=10) :
+          _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose),
+          _restart(std::min(maxit,restart))
+      {
+          dune_static_assert( static_cast<int>(L::category) == static_cast<int>(P::category),
+                              "L and P must have the same category!");
+          dune_static_assert( static_cast<int>(L::category) == static_cast<int>(S::category),
+                              "L and S must have the same category!");
+
+          this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction)));
+      }
+      /*!
+        \brief Apply inverse operator.
+
+        \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
+      */
+      virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
+      {
+          res.clear();                  // clear solver statistics
+          Dune::Timer watch;          // start a timer
+          _prec.pre(x,b);             // prepare preconditioner
+          _op.applyscaleadd(-1,x,b);  // overwrite b with defect
+
+          std::vector<Dune::shared_ptr<X> > p(_restart);
+          std::vector<typename X::field_type> pp(_restart);
+          X q(x);              // a temporary vector
+          X prec_res(x);       // a temporary vector for preconditioner output
+
+          p[0].reset(new X(x));
+
+          this->convergenceCriterion().setInitial(x, b);
+
+          // print header
+          if (_verbose > 0)
+          {
+            std::cout << "=== GeneralizedPCGSolver" << std::endl;
+            if (_verbose > 1)
+            {
+              this->convergenceCriterion().printInitial();
+            }
+          }
+
+          // some local variables
+          field_type rho, lambda;
+
+          int i=0;
+          int ii=0;
+          // determine initial search direction
+          *(p[0]) = 0;                          // clear correction
+          _prec.apply(*(p[0]),b);               // apply preconditioner
+          rho = _sp.dot(*(p[0]),b);         // orthogonalization
+          _op.apply(*(p[0]),q);             // q=Ap
+          pp[0] = _sp.dot(*(p[0]),q);       // scalar product
+          lambda = rho/pp[0];     // minimization
+          x.axpy(lambda,*(p[0]));           // update solution
+          b.axpy(-lambda,q);          // update defect
+
+          // convergence test
+          this->convergenceCriterion().update(x, b);
+
+          if (_verbose > 1)             // print
+          {
+            this->convergenceCriterion().print(i);
+          }
+
+          if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = true;
+          }
+
+          ++i;
+
+          while(i<_maxit){
+              // the loop
+              int end=std::min(_restart, _maxit-i+1);
+              for (ii=1; ii<end; ++ii )
+              {
+                  //std::cout<<" ii="<<ii<<" i="<<i<<std::endl;
+                  // compute next conjugate direction
+                  prec_res = 0;                          // clear correction
+                  _prec.apply(prec_res,b);               // apply preconditioner
+
+                  p[ii].reset(new X(prec_res));
+                  _op.apply(prec_res, q);
+
+                  for(int j=0; j<ii;++j){
+                      rho =_sp.dot(q,*(p[j]))/pp[j];
+                      p[ii]->axpy(-rho, *(p[j]));
+                  }
+
+                  // minimize in given search direction
+                  _op.apply(*(p[ii]),q);             // q=Ap
+                  pp[ii] = _sp.dot(*(p[ii]),q);       // scalar product
+                  rho = _sp.dot(*(p[ii]),b);         // orthogonalization
+                  lambda = rho/pp[ii];     // minimization
+                  x.axpy(lambda,*(p[ii]));           // update solution
+                  b.axpy(-lambda,q);          // update defect
+
+                  // convergence test
+                  this->convergenceCriterion().update(x, b);
+
+                  if (_verbose > 1)             // print
+                  {
+                    this->convergenceCriterion().print(i);
+                  }
+
+                  if (this->convergenceCriterion().converged()) {
+                    // fill statistics
+                    res.converged = true;
+                  }
+              }
+              if(res.converged)
+                  break;
+              if(end==_restart){
+                *(p[0])=*(p[_restart-1]);
+                pp[0]=pp[_restart-1];
+              }
+          }
+
+          // postprocess preconditioner
+          _prec.post(x);
+
+          // fill statistics
+          res.iterations = i;
+          res.reduction = this->convergenceCriterion().accuracy();
+          res.conv_rate  = pow(res.reduction,1.0/i);
+          res.elapsed = watch.elapsed();
+
+          if (_verbose==1)                // printing in non-verbose mode
+            this->convergenceCriterion().print(i);
+      }
+
+  private:
+      Dune::SeqScalarProduct<X> ssp;
+      Dune::LinearOperator<X,X>& _op;
+      Dune::Preconditioner<X,X>& _prec;
+      Dune::ScalarProduct<X>& _sp;
+      int _maxit;
+      int _verbose;
+      int _restart;
   };
 
   /** \} end documentation */
