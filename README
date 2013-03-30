@@ -1,8 +1,8 @@
 What is eWoms?
 ==============
 
-eWoms [0, 5] is an module of the Open Porous Media initiative (OPM)
-[7] which is primary focused on fully implicit models for flow and
+eWoms [0, 5] is an module of the Open Porous Media initiative (OPM) [6]
+which is primary focused on fully implicit models for flow and
 transport in porous media. Its main objectives are to provide a easily
 usable, well maintainable, high performance framework which is capable
 of capturing all macro-scale scenarios relevant for academic research
@@ -68,5 +68,4 @@ Links
 [3] http://www.gnu.org/licenses/gpl-3.0.html
 [4] https://github.com
 [5] http://www.opm-project.org/ewoms/
-[6] http://www.opm-project.org/flyspray/
-[7] http://www.opm-project.org
+[6] http://www.opm-project.org

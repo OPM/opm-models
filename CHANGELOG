@@ -37,6 +37,24 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
        xargs sed -i "s/dumux/ewoms/g"
 
   - Run dunecontrol for your project and re-compile.
+- The property system has received a major overhaul. The benefits of
+  this are the possibility to specify type tags with an arbitrary
+  number of parents and splices, a mechanism for deferred inheritance.
+  The Splices of a type tag can be thought of as ordinary parent
+  nodes, but these can be overwritten at a later point. This allows to
+  specify things which require specific properties -- like the linear
+  solver, spatial and time discretization, etc -- to be specified much
+  more easily. So far, splices are only used for the linear solvers,
+  but they also will be used to select the spatial and the temporal
+  discretization in a modular way. Despite all this, code which only
+  uses features officially supported by eWoms 2.2 is expected to work
+  without any modifcation.
+- The autotools based build system is now non-recursive. This makes
+  parallel builds (i.e. running 'make -j$NUM_CORES check' in the
+  toplevel directory of the eWoms source code) more efficent. The
+  implication is that new tests need to be added to the toplevel
+  Makefile.am instead of to the Makefile.am of the directory where the
+  test resides.
 - The implicit models have been reorganized:
   - Discretizations now reside in the ewoms/disc directory
   - The vertex-centered finite volume discretization has been renamed
@@ -44,37 +62,42 @@ Notable Differences Between eWoms 2.2 and eWoms 2.3
     consistent with further discretizations. The names of all
     properties, classes and files which where prefixed by 'Box' are
     now prefixed by 'Vcfv'.
-- Control files for creating Debian/Ubuntu packages have been
-  added. To build these packages, just run 'debuild -us -uc' in the
-  top-level directory of the source tree. (This only works for Debian
-  or Ubuntu based distributions, obviously.)
-- The autotools based build system is now non-recursive. This makes
-  parallel builds (i.e. 'make -j$NUM_CORES check') more efficent. New
-  tests need to be added to the toplevel Makefile.am instead of to the
-  Makefile.am of the directory where the test resides.
 - The decoupled models have been parallelized. No dynamic
   load balancing can be done yet.
 - The concept of Newton controllers has been abandoned. The
-  functionality previously implemented has been folded into the
+  functionality previously implemented has been absorbed by the
   NewtonMethod classes which now use static polymorphism. The reason
   for this change is that this makes the Newton solver use the same
-  design as used by the rest of eWoms, and that the original reason to
-  split the policy from the algorithmic part of the Newton method was
-  not required. (The reason was to be able to implement different
-  policies with zero overhead, but all implemented Newton controllers
-  were just derived from NewtonController.) Also, the following
-  properties have been renamed during the exercise:
+  design as used by most of the other parts of eWoms, and that the
+  original reason to split the policy from the algorithmic part of the
+  Newton method turned out not to be used in practice. (The reason was
+  to be able to implement different policies with zero overhead, but
+  all implemented Newton controllers were just derived from the default
+  NewtonController.) Also, the following properties have been renamed
+  during the exercise:
    - NewtonRelTolerance -> NewtonRelativeTolerance
    - NewtonAbsTolerance -> NewtonAbsoluteTolerance
    - NewtonMaxSteps -> NewtonMaxIterations
    - NewtonTargetSteps -> NewtonTargetIterations
    - NewtonMaxRelError -> NewtonMaxRelativeError
    - NewtonSatisfyAbsAndRel -> NewtonSatisfyAbsoluteAndRelative
-- A fully-implicit discrete fracture model for two-phase problems has
+- A fully-implicit discrete 2D fracture model for two-phase problems has
   been added.
 - The header file containing the eWoms parameter system has been
   renamed from "parameters.hh" to "parametersystem.hh" to make it
   consistent with the naming scheme of the property system.
+- Control files for creating Debian/Ubuntu packages have been added to
+  the git repositories. To build these packages, run 'debuild -us -uc'
+  in the top-level directory of the source tree. (This only works for
+  Debian or Ubuntu based distributions.)
+- A specfile to build packages for redhat distributions (RHEL and
+  Fedora) has also been added to the repositories. To build an RPM
+  package, run 'rpmbuild -bi redhat/ewoms.spec' in the directory which
+  contains the source tree checked out using git. For this, a tarball
+  with the sources needs to be located in rpmbuild's SOURCE
+  directory. (Note that the release tarballs do neither contain the
+  RPM specfiles nor the control files for Debian.)
+
 
 Notable Differences Between DuMuX 2.1 and eWoms 2.2
 ===================================================
