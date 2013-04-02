@@ -339,8 +339,8 @@ public:
      *        disk.
      *
      * The default behavior is to write one restart file every 10 time
-     * steps. This file is intended to be overwritten by the
-     * implementation.
+     * steps. This method should be overwritten by the
+     * implementation if the default behavior is deemed insufficient.
      */
     bool shouldWriteRestartFile() const
     {
@@ -352,9 +352,9 @@ public:
      * \brief Returns true if the current solution should be written to
      *        disk (i.e. as a VTK file)
      *
-     * The default behavior is to write out every the solution for
-     * very time step. This file is intended to be overwritten by the
-     * implementation.
+     * The default behavior is to write out the solution for every
+     * time step. This method is should be overwritten by the
+     * implementation if the default behavior is deemed insufficient.
      */
     bool shouldWriteOutput() const
     { return true; }
