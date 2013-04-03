@@ -148,8 +148,8 @@ class RichardsLensProblem
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         // copy some indices for convenience
-        pwIdx = Indices::pwIdx,
-        contiEqIdx = Indices::contiEqIdx,
+        pressureWIdx = Indices::pressureWIdx,
+        contiWEqIdx = Indices::contiWEqIdx,
 
         wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
         nPhaseIdx = 1 - wPhaseIdx,
@@ -300,7 +300,7 @@ public:
             RateVector massRate(0.0);
 
             // inflow of water
-            massRate[contiEqIdx] = -0.04; // kg / (m * s)
+            massRate[contiWEqIdx] = -0.04; // kg / (m * s)
 
             values.setMassRate(massRate);
         }
@@ -332,7 +332,7 @@ public:
 
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fs);
-        values[pwIdx] = pnRef_ + (pC[wPhaseIdx] - pC[nPhaseIdx]);
+        values[pressureWIdx] = pnRef_ + (pC[wPhaseIdx] - pC[nPhaseIdx]);
     }
 
     /*!

@@ -103,6 +103,7 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     enum { dimWorld = GridView::dimensionworld };
@@ -132,6 +133,7 @@ public:
         ParentType::init(problem);
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
+        intrinsicPermeability_.resize(this->numDofs());
     }
 
     /*!
@@ -184,11 +186,11 @@ public:
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static constexpr Scalar KRef = 1e-12; // [m^2]
+            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1/referencePressure_, pGradRef * KRef / r);
+            return std::max(1/referencePressure_, pGradRef * Kref / r);
         }
         return 1;
     }
@@ -215,6 +217,19 @@ public:
         referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
+    /*!
+     * \copydoc VcfvModel::updatePVWeights
+     */
+    void updatePVWeights(const ElementContext &elemCtx) const
+    {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+
+            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            intrinsicPermeability_[globalIdx] = K[0][0];
+        }
+    }
+
 protected:
     friend class VcfvModel<TypeTag>;
 
@@ -230,6 +245,7 @@ protected:
     }
 
     mutable Scalar referencePressure_;
+    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 }
 

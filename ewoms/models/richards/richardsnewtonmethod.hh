@@ -58,7 +58,7 @@ class RichardsNewtonMethod : public VcfvNewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum {
         dim = GridView::dimension,
-        pwIdx = Indices::pwIdx,
+        pressureWIdx = Indices::pressureWIdx,
 
         numPhases = FluidSystem::numPhases,
 
@@ -138,7 +138,7 @@ protected:
                     // non-wetting pressure can be larger than the
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
-                    Scalar pWOld = uLastIter[globI][pwIdx];
+                    Scalar pWOld = uLastIter[globI][pressureWIdx];
                     Scalar pNOld = std::max(problem.referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                                             pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
@@ -171,9 +171,9 @@ protected:
                     // clamp the result to the minimum and the maximum
                     // pressures we just calculated
                     /////////
-                    Scalar pW = uCurrentIter[globI][pwIdx];
+                    Scalar pW = uCurrentIter[globI][pressureWIdx];
                     pW = std::max(pwMin, std::min(pW, pwMax));
-                    uCurrentIter[globI][pwIdx] = pW;
+                    uCurrentIter[globI][pressureWIdx] = pW;
                 }
             }
         }

@@ -37,13 +37,13 @@ struct RichardsIndices
     //////////
 
     //! Primary variable index for the wetting phase pressure
-    static const int pwIdx = 0;
+    static const int pressureWIdx = 0;
 
     //////////
     // equation indices
     //////////
     //! Equation index for the mass conservation of the wetting phase
-    static const int contiEqIdx = 0;
+    static const int contiWEqIdx = 0;
 };
 
 } // end namepace

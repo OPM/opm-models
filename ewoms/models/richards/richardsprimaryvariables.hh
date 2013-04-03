@@ -57,7 +57,7 @@ class RichardsPrimaryVariables
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     // primary variable indices
-    enum { pwIdx = Indices::pwIdx };
+    enum { pressureWIdx = Indices::pressureWIdx };
 
     enum {
         wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
@@ -190,7 +190,7 @@ public:
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
-        (*this)[pwIdx] = fluidState.pressure(wPhaseIdx);
+        (*this)[pressureWIdx] = fluidState.pressure(wPhaseIdx);
     }
 };
 

@@ -47,7 +47,7 @@ class RichardsBoundaryRateVector
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { contiWEqIdx = Indices::contiWEqIdx };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
@@ -99,7 +99,7 @@ public:
 
         // add advective flux of current component in current
         // phase
-        (*this)[contiEqIdx] +=
+        (*this)[contiWEqIdx] +=
             fluxVars.volumeFlux(phaseIdx)
             * density;
 

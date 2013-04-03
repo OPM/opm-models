@@ -74,6 +74,7 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -106,6 +107,16 @@ public:
 
         if (enableEnergy)
             Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
+    }
+
+    /*!
+     * \copydoc VcfvModel::init
+     */
+    void init(Problem &problem)
+    {
+        ParentType::init(problem);
+
+        intrinsicPermeability_.resize(this->numDofs());
     }
 
     /*!
@@ -212,6 +223,19 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::updatePVWeights
+     */
+    void updatePVWeights(const ElementContext &elemCtx) const
+    {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+
+            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            intrinsicPermeability_[globalIdx] = K[0][0];
+        }
+    }
+
+    /*!
      * \copydetails VcfvModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
@@ -224,11 +248,11 @@ public:
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static constexpr Scalar KRef = 1e-12; // [m^2]
+            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1/referencePressure_, pGradRef * KRef / r);
+            return std::max(1/referencePressure_, pGradRef * Kref / r);
         }
         return 1.0;
     }
@@ -270,6 +294,7 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     mutable Scalar referencePressure_;
+    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 }
 

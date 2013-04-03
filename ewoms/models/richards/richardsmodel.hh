@@ -94,12 +94,16 @@ template<class TypeTag >
 class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { dimWorld = GridView::dimensionworld };
 
 public:
     /*!
@@ -115,6 +119,16 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::init
+     */
+    void init(Problem &problem)
+    {
+        ParentType::init(problem);
+
+        intrinsicPermeability_.resize(this->numDofs());
+    }
+
+    /*!
      * \copydoc VcfvModel::name
      */
     std::string name() const
@@ -126,7 +140,7 @@ public:
     std::string primaryVarName(int pvIdx) const
     {
         std::ostringstream oss;
-        if (pvIdx == Indices::pwIdx)
+        if (pvIdx == Indices::pressureWIdx)
             oss << "pressure_" << FluidSystem::phaseName(wPhaseIdx);
         else
             assert(0);
@@ -140,7 +154,7 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (eqIdx == Indices::contiEqIdx)
+        if (eqIdx == Indices::contiWEqIdx)
             oss << "continuity_" << FluidSystem::phaseName(wPhaseIdx);
         else
             assert(0);
@@ -153,15 +167,15 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        if (Indices::pwIdx == pvIdx) {
+        if (Indices::pressureWIdx == pvIdx) {
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static constexpr Scalar KRef = 1e-12; // [m^2]
+            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1e-5, pGradRef * KRef / V);
+            return std::max(1/referencePressure_, pGradRef * Kref / r);
         }
         return 1;
     }
@@ -171,11 +185,34 @@ public:
      */
     Scalar eqWeight(int globalVertexIdx, int eqIdx) const
     {
-        int DUNE_UNUSED compIdx = eqIdx - Indices::contiEqIdx;
+        int DUNE_UNUSED compIdx = eqIdx - Indices::contiWEqIdx;
         assert(0 <= compIdx && compIdx <= FluidSystem::numPhases);
 
         // make all kg equal
         return 1.0;
+    }
+
+    /*!
+     * \copydoc VcfvModel::updateBegin
+     */
+    void updateBegin()
+    {
+        ParentType::updateBegin();
+
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
+    }
+
+    /*!
+     * \copydoc VcfvModel::updatePVWeights
+     */
+    void updatePVWeights(const ElementContext &elemCtx) const
+    {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+
+            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            intrinsicPermeability_[globalIdx] = K[0][0];
+        }
     }
 
     /*!
@@ -195,6 +232,9 @@ private:
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
     }
+
+    mutable Scalar referencePressure_;
+    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 }
 

@@ -173,6 +173,8 @@ public:
         ParentType::init(problem);
         minActivityCoeff_.resize(this->numDofs());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
+
+        intrinsicPermeability_.resize(this->numDofs());
     }
 
     /*!
@@ -278,6 +280,9 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
+            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            intrinsicPermeability_[globalIdx] = K[0][0];
+
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -314,11 +319,11 @@ public:
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
+            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1/referencePressure_, pGradRef * KRef / r);
+            return std::max(1/referencePressure_, pGradRef * Kref / r);
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
@@ -377,6 +382,7 @@ private:
 
     mutable Scalar referencePressure_;
     mutable std::vector<ComponentVector> minActivityCoeff_;
+    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 
 }

@@ -56,7 +56,7 @@ class RichardsVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum { pwIdx = Indices::pwIdx };
+    enum { pressureWIdx = Indices::pressureWIdx };
     enum { numPhases = FluidSystem::numPhases };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
     enum { nPhaseIdx = 1 - wPhaseIdx };
@@ -103,7 +103,7 @@ public:
         // non-wetting pressure can be larger than the
         // reference pressure if the medium is fully
         // saturated by the wetting phase
-        Scalar pW = priVars[pwIdx];
+        Scalar pW = priVars[pressureWIdx];
         Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
                              pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 

@@ -51,7 +51,7 @@ class RichardsRateVector
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { contiWEqIdx = Indices::contiWEqIdx };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -92,7 +92,7 @@ public:
     {
         // convert to mass rates
         ParentType massRate(value);
-        massRate[contiEqIdx] *= FluidSystem::molarMass(/*compIdx=*/wPhaseIdx);
+        massRate[contiWEqIdx] *= FluidSystem::molarMass(/*compIdx=*/wPhaseIdx);
 
         // set the mass rate
         setMassRate(massRate);
@@ -113,7 +113,7 @@ public:
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[contiEqIdx + compIdx] =
+            (*this)[contiWEqIdx + compIdx] =
                 fluidState.density(phaseIdx)
                 * fluidState.massFraction(phaseIdx, /*compIdx=*/wPhaseIdx)
                 * volume;

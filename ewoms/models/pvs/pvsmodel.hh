@@ -195,6 +195,8 @@ public:
 
         verbosity_ = GET_PARAM(TypeTag, int, PvsVerbosity);
         numSwitched_ = 0;
+
+        intrinsicPermeability_.resize(this->numDofs());
     }
 
     /*!
@@ -303,6 +305,19 @@ public:
     }
 
     /*!
+     * \copydoc VcfvModel::updatePVWeights
+     */
+    void updatePVWeights(const ElementContext &elemCtx) const
+    {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+
+            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+            intrinsicPermeability_[globalIdx] = K[0][0];
+        }
+    }
+
+    /*!
      * \copydoc VcfvModel::primaryVarWeight
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
@@ -316,11 +331,12 @@ public:
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static constexpr Scalar KRef = 1e-12; // [m^2]
+            //static constexpr Scalar KRef = 1e-12; // [m^2]
             static constexpr Scalar pGradRef = 1e3; // [Pa / m]
+            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1/referencePressure_, pGradRef * KRef / r);
+            return std::max(1/referencePressure_, pGradRef * Kref / r);
         }
 
         return 1; // saturations and mole fractions have a weight of 1
@@ -519,6 +535,7 @@ private:
     }
 
     mutable Scalar referencePressure_;
+    mutable std::vector<Scalar> intrinsicPermeability_;
 
     // number of switches of the phase state in the last Newton
     // iteration

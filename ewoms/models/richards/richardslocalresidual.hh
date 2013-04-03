@@ -46,7 +46,7 @@ class RichardsLocalResidual : public VcfvLocalResidual<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum {
-        contiEqIdx = Indices::contiEqIdx,
+        contiWEqIdx = Indices::contiWEqIdx,
         wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex)
     };
 
@@ -62,7 +62,7 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
-        storage[contiEqIdx] =
+        storage[contiWEqIdx] =
             volVars.fluidState().density(wPhaseIdx)
             * volVars.fluidState().saturation(wPhaseIdx)
             * volVars.porosity();
@@ -85,7 +85,7 @@ public:
         const VolumeVariables &up = elemCtx.volVars(fluxVarsEval.upstreamIndex(wPhaseIdx), timeIdx);
         const VolumeVariables &dn = elemCtx.volVars(fluxVarsEval.downstreamIndex(wPhaseIdx), timeIdx);
 
-        flux[contiEqIdx] =
+        flux[contiWEqIdx] =
             fluxVars.volumeFlux(wPhaseIdx)
             *( fluxVars.upstreamWeight(wPhaseIdx)*up.fluidState().density(wPhaseIdx)
                +
