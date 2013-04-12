@@ -328,15 +328,15 @@ public:
             return tmp;
 
         if (Indices::pressure0Idx == pvIdx) {
-            // use a pressure gradient of 1e3 Pa/m an intrinisc
-            // permeability of 1e-12 as reference (basically, a highly
-            // permeable sand stone filled with liquid water.)
-            //static constexpr Scalar KRef = 1e-12; // [m^2]
-            static constexpr Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar Kref = intrinsicPermeability_[globalVertexIdx];
+            return 1e-7; //10/referencePressure_;
+            // use a pressure gradient of 1e2 Pa/m for liquid water as
+            // a reference
+            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            static constexpr Scalar muRef = 1e-3;
+            static constexpr Scalar pGradRef = 1e-4; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(1/referencePressure_, pGradRef * Kref / r);
+            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
         }
 
         return 1; // saturations and mole fractions have a weight of 1
