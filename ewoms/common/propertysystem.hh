@@ -39,6 +39,7 @@
 #define EWOMS_PROPERTIES_HH
 
 #include <dune/common/classname.hh>
+#include <ewoms/common/exceptions.hh>
 
 #include <type_traits> // required for 'is_base_of<A, B>'
 
@@ -130,7 +131,7 @@ namespace Properties {
  * The main advantage of the type of a \c TypeTag is that it can be
  * passed as a template argument.
  */
-#define TTAG(TypeTagName) ::Ewoms::Properties::TTag::TypeTagName
+#define TTAG(TypeTagName) Ewoms::Properties::TTag::TypeTagName
 
 /*!
  * \ingroup PropertySystem
@@ -139,7 +140,7 @@ namespace Properties {
  * Again property type names can be passed as template argument. This
  * is rarely needed, though.
  */
-#define PTAG(PropTagName) ::Ewoms::Properties::PTag::PropTagName
+#define PTAG(PropTagName) Ewoms::Properties::PTag::PropTagName
 
 /*!
  * \ingroup PropertySystem
@@ -218,15 +219,6 @@ namespace Properties {
 
 /*!
  * \ingroup PropertySystem
- * \brief Define a property containing a type tag.
- *
- * This is convenient fot splices.
- */
-#define SET_TAG_PROP(EffTypeTagName, PropTagName, ValueTypeTagName) \
-    SET_TYPE_PROP(EffTypeTagName, PropTagName, TTAG(ValueTypeTagName))
-
-/*!
- * \ingroup PropertySystem
  * \brief Syntactic sugar for NEW_TYPE_TAG.
  *
  * See the documentation for NEW_TYPE_TAG.
@@ -250,7 +242,7 @@ namespace Properties {
  */
 #define NEW_PROP_TAG(PTagName)                      \
     namespace PTag {                                \
-struct PTagName; } extern int semicolonHack_
+    struct PTagName; } extern int semicolonHack_
 
 //! \cond SKIP_THIS
 #define SET_PROP_(EffTypeTagName, PropKind, PropTagName, ...)   \
@@ -433,6 +425,22 @@ struct PTagName; } extern int semicolonHack_
 
 /*!
  * \ingroup PropertySystem
+ * \brief Define a property containing a type tag.
+ *
+ * This is convenient for splices.
+ */
+#define SET_TAG_PROP(EffTypeTagName, PropTagName, ValueTypeTagName) \
+    SET_PROP_(EffTypeTagName,                                     \
+              /*kind=*/"tag   ",                                  \
+              PropTagName,                                        \
+              /*value=*/TTAG(ValueTypeTagName))                   \
+    {                                                             \
+        typedef TTAG(ValueTypeTagName) type;                      \
+    }
+
+
+/*!
+ * \ingroup PropertySystem
  * \brief Retrieve a property for a type tag.
  *
  * If you use \c GET_PROP within a template and want to refer to some
@@ -586,32 +594,6 @@ private:
     int lineDefined_;
 };
 
-class PropertyRegistry
-{
-public:
-    typedef std::map<std::string, PropertyRegistryKey> KeyList;
-    typedef std::map<std::string, KeyList> KeyListMap;
-
-    static void addKey(const PropertyRegistryKey &key)
-    {
-        keys_[key.effTypeTagName()][key.propertyName()] = key;
-    }
-
-    static const PropertyRegistryKey &getKey(const std::string &effTypeTagName,
-                                             const std::string &propertyName)
-    {
-        return keys_[effTypeTagName][propertyName];
-    }
-
-    static const KeyList &getKeys(const std::string &effTypeTagName)
-    {
-        return keys_[effTypeTagName];
-    }
-
-private:
-    static KeyListMap keys_;
-};
-PropertyRegistry::KeyListMap PropertyRegistry::keys_;
 
 template <class TypeTag, class PropertyTag>
 struct GetProperty;
@@ -622,7 +604,6 @@ public:
     struct SpliceRegistryEntryBase {
         virtual ~SpliceRegistryEntryBase() {};
         virtual std::string propertyName() const = 0;
-        std::string typeTagName;
     };
 
     template <class TypeTag, class PropTag>
@@ -668,7 +649,6 @@ public:
         std::string typeTagName = Dune::className<TypeTag>();
 
         SpliceRegistryEntry<TypeTag, Splice1> *tmp = new SpliceRegistryEntry<TypeTag, Splice1>;
-        tmp->typeTagName = Dune::className<typename GetProperty<TypeTag, Splice1>::p::type>();
 
         splices_[typeTagName].push_front(tmp);
         addSplices<TypeTag, RemainingSplices...>();
@@ -687,6 +667,65 @@ private:
 
 TypeTagRegistry::SpliceListMap TypeTagRegistry::splices_;
 TypeTagRegistry::ChildrenListMap TypeTagRegistry::children_;
+
+class PropertyRegistry
+{
+public:
+    typedef std::map<std::string, PropertyRegistryKey> KeyList;
+    typedef std::map<std::string, KeyList> KeyListMap;
+
+    static void addKey(const PropertyRegistryKey &key)
+    {
+        keys_[key.effTypeTagName()][key.propertyName()] = key;
+    }
+
+    static const std::string &getSpliceTypeTagName(const std::string &typeTagName,
+                                                   const std::string &propertyName)
+    {
+        const auto &keyIt = keys_.find(typeTagName);
+        const auto &keyEndIt = keys_.end();
+        if (keyIt == keyEndIt)
+            DUNE_THROW(Dune::InvalidStateException,
+                       "Unknown type tag key '" << typeTagName << "'");
+
+        // check whether the propery is defined for the type tag
+        // currently checked
+        const auto &propIt = keyIt->second.find(propertyName);
+        const auto &propEndIt = keyIt->second.end();
+        if (propIt != propEndIt)
+            return propIt->second.propertyValue();
+
+        // if not, check all children
+        typedef TypeTagRegistry::ChildrenList ChildrenList;
+        const ChildrenList &children = TypeTagRegistry::children(typeTagName);
+        ChildrenList::const_iterator ttagIt = children.begin();
+        for (; ttagIt != children.end(); ++ttagIt) {
+            const auto &tmp = getSpliceTypeTagName(*ttagIt, propertyName);
+            if (tmp != "")
+                return tmp;
+        }
+
+        // if the property was not defined on a given type tag, return
+        // the empty string.
+        static std::string tmp("");
+        return tmp;
+    }
+
+    static const PropertyRegistryKey &getKey(const std::string &effTypeTagName,
+                                             const std::string &propertyName)
+    {
+        return keys_[effTypeTagName][propertyName];
+    }
+
+    static const KeyList &getKeys(const std::string &effTypeTagName)
+    {
+        return keys_[effTypeTagName];
+    }
+
+private:
+    static KeyListMap keys_;
+};
+PropertyRegistry::KeyListMap PropertyRegistry::keys_;
 
 #endif // !defined NO_PROPERTY_INTROSPECTION
 
@@ -827,7 +866,57 @@ struct Splices
 };
 } // namespace PTag
 
-// property defined on self
+// retrieve a property which is not defined on a splice
+template <class TypeTag, class PropertyTag>
+struct GetDirectProperty_
+{
+    // set the ::type attribute to the type tag for which the
+    // requested property was defined. First check whether the
+    // property is directly defined for the type tag, and if not,
+    // check all splices, then check all children
+    template <class CurTree, bool definedOnSelf = propertyDefinedOnSelf<TypeTag, CurTree, PropertyTag>::value >
+    struct GetEffectiveTypeTag_;
+
+    // set the ::type attribute to the child type tag for which the
+    // requested property was defined. The first child is ignored.
+    template <class Dummy, class ChildrenTuple>
+    struct TraverseRemainingChildren_;
+
+    // if the first argument != void this is the value of the ::type member, ...
+    template <class EffTypeTag, class ... RemainingChildren>
+    struct StopAtFirstChildElseTraverseRemaining_
+    { typedef EffTypeTag type; };
+
+    // ... or else the type tag is defined by the remaining children
+    template <class ... RemainingChildren>
+    struct StopAtFirstChildElseTraverseRemaining_<void, RemainingChildren...>
+    { typedef typename TraverseRemainingChildren_</*dummy=*/void, std::tuple<RemainingChildren...> >::type type; };
+
+    // set the ::type attribute to the type tag to the child for which
+    // the requested property was defined, or ...
+    template <class Dummy, class CurChild, class ... RemainingChildren>
+    struct TraverseRemainingChildren_<Dummy, std::tuple<CurChild, RemainingChildren...> >
+    { typedef typename StopAtFirstChildElseTraverseRemaining_<typename GetEffectiveTypeTag_<CurChild>::type, RemainingChildren...>::type type; };
+
+    // ... if there there are no children which we did not check
+    // anymore, the ::type attribute is void (i.e. the property was
+    // not defined for a given subtree)
+    template <class Dummy>
+    struct TraverseRemainingChildren_<Dummy, std::tuple<> >
+    { typedef void type; };
+
+    template <class CurTree>
+    struct GetEffectiveTypeTag_<CurTree, /*definedOnSelf=*/true>
+    { typedef CurTree type; };
+
+    template <class CurTree>
+    struct GetEffectiveTypeTag_<CurTree, /*definedOnSelf=*/false>
+    { typedef typename TraverseRemainingChildren_<CurTree, typename CurTree::ChildrenTuple >::type type; };
+
+public:
+    typedef Property<TypeTag, typename GetEffectiveTypeTag_<TypeTag>::type, PropertyTag> p;
+};
+
 template <class TypeTag, class PropertyTag>
 struct GetProperty
 {
@@ -872,36 +961,33 @@ struct GetProperty
     struct TraverseRemainingChildren_<Dummy, std::tuple<> >
     { typedef void type; };
 
-    template <class CurTree, class EffTypeTag, bool isDefined,
-              class ... RemainingSplices>
+    template <class CurTree, class FirstSpliceTypeTag, class EffTypeTag, class ... RemainingSplices>
     struct StopAtSpliceIfPropDefinedElseTraverseRemaining_
-    { typedef typename GetEffectiveTypeTag_<EffTypeTag>::type type; };
+    { typedef EffTypeTag type; };
 
-    template <class CurTree, class EffTypeTag, class ... RemainingSplices>
-    struct StopAtSpliceIfPropDefinedElseTraverseRemaining_<CurTree, EffTypeTag, /*isDefined=*/false, RemainingSplices...>
+    template <class CurTree, class FirstSpliceTypeTag, class ... RemainingSplices>
+    struct StopAtSpliceIfPropDefinedElseTraverseRemaining_<CurTree, FirstSpliceTypeTag, /*EffTypeTag=*/void, RemainingSplices...>
     { typedef typename TraverseRemainingSplicesAndChildren_<CurTree, std::tuple<RemainingSplices...> >::type type; };
 
     // if the property was defined for the current splice, stop
     // here. If not...
-    template <class CurTree, class EffTypeTag, class ... RemainingSplices>
+    template <class CurTree, class FirstSpliceProperty, class ... RemainingSplices>
     struct StopAtFirstSpliceElseTraverseRemaining_
     { typedef typename StopAtSpliceIfPropDefinedElseTraverseRemaining_<CurTree,
-                                                                       EffTypeTag,
-                                                                       /*isDefined=*/!std::is_same<
-                                                                                         typename GetEffectiveTypeTag_<EffTypeTag>::type,
-                                                                                         void>::value,
+                                                                       typename FirstSpliceProperty::p::type,
+                                                                       typename GetEffectiveTypeTag_<typename FirstSpliceProperty::p::type>::type,
                                                                        RemainingSplices...>::type type; };
 
     // ... check the remaining splices.
     template <class CurTree, class ... RemainingSplices>
-    struct StopAtFirstSpliceElseTraverseRemaining_<CurTree, /*EffTypeTag=*/void, RemainingSplices...>
+    struct StopAtFirstSpliceElseTraverseRemaining_<CurTree, /*FirstSpliceProperty=*/void, RemainingSplices...>
     { typedef typename TraverseRemainingSplicesAndChildren_<CurTree, std::tuple<RemainingSplices...> >::type type; };
 
-    // check whether the property is defined on the remaining splice
+    // check whether the property is defined on the remaining splices
     // of a list (i.e. discard its first member) ...
     template <class CurTree, class CurSplice, class ... RemainingSplices>
     struct TraverseRemainingSplicesAndChildren_<CurTree, std::tuple<CurSplice, RemainingSplices...> >
-    { typedef typename StopAtFirstSpliceElseTraverseRemaining_<CurTree, typename GetProperty<TypeTag, CurSplice>::p::type, RemainingSplices...>::type type; };
+    { typedef typename StopAtFirstSpliceElseTraverseRemaining_<CurTree, GetDirectProperty_<TypeTag, CurSplice>, RemainingSplices...>::type type; };
 
     // ... or if there are no splices left to check, proceed with the
     // children of the type tag.
@@ -919,13 +1005,29 @@ struct GetProperty
 
 public:
     typedef Property<TypeTag, typename GetEffectiveTypeTag_<TypeTag>::type, PropertyTag> p;
+    typedef typename GetEffectiveTypeTag_<TypeTag>::type q;
 };
 
 #if !defined NO_PROPERTY_INTROSPECTION
+int myReplaceAll_(std::string &s,
+                   const std::string &pattern,
+                   const std::string &replacement)
+{
+    size_t pos;
+    int i = 0;
+    while ( (pos = s.find(pattern)) != s.npos) {
+        s.replace(pos, pattern.size(), replacement);
+        ++i;
+    };
+    return i;
+}
+
 std::string canonicalTypeTagNameToName_(const std::string &canonicalName)
 {
     std::string result(canonicalName);
-    result.replace(0, strlen("Ewoms::Properties::TTag::"), "");
+    myReplaceAll_(result, "Ewoms::Properties::TTag::", "TTAG(");
+    myReplaceAll_(result, "::", "");
+    result += ")";
     return result;
 }
 
@@ -987,17 +1089,8 @@ const std::string getDiagnostic(std::string propTagName)
     return result;
 }
 
-void myReplaceAll_(std::string &s,
-                   const std::string &pattern,
-                   const std::string &replacement)
-{
-    size_t pos;
-    while ( (pos = s.find(pattern)) != s.npos) {
-        s.replace(pos, pattern.size(), replacement);
-    };
-}
-
-inline void print_(const std::string &typeTagName,
+inline void print_(const std::string &rootTypeTagName,
+                   const std::string &curTypeTagName,
                    const std::string &splicePropName,
                    std::ostream &os,
                    const std::string indent,
@@ -1007,14 +1100,14 @@ inline void print_(const std::string &typeTagName,
         os << indent << "###########\n";
         os << indent << "# Properties\n";
         os << indent << "###########\n";
-        os << indent << "Properties for " << canonicalTypeTagNameToName_(typeTagName) << ":";
+        os << indent << "Properties for " << canonicalTypeTagNameToName_(curTypeTagName) << ":";
     }
     else if (splicePropName != "")
-        os << indent << "Inherited from splice " << splicePropName << " (set to " << canonicalTypeTagNameToName_(typeTagName) << "):";
+        os << indent << "Inherited from splice " << splicePropName << " (set to " << canonicalTypeTagNameToName_(curTypeTagName) << "):";
     else
-        os << indent << "Inherited from " << canonicalTypeTagNameToName_(typeTagName) << ":";
+        os << indent << "Inherited from " << canonicalTypeTagNameToName_(curTypeTagName) << ":";
     const PropertyRegistry::KeyList &keys =
-        PropertyRegistry::getKeys(typeTagName);
+        PropertyRegistry::getKeys(curTypeTagName);
     PropertyRegistry::KeyList::const_iterator it = keys.begin();
     bool somethingPrinted = false;
     for (; it != keys.end(); ++it) {
@@ -1030,6 +1123,8 @@ inline void print_(const std::string &typeTagName,
         if (key.propertyKind() != "opaque") {
             std::string s(key.propertyValue());
             myReplaceAll_(s, "typename ", "");
+            if (myReplaceAll_(s, "::Ewoms::Properties::TTag::", "TTAG("))
+                s += ')';
             myReplaceAll_(s, "::Ewoms::Properties::PTag::", "");
             myReplaceAll_(s, "::Ewoms::Properties::GetProperty<", "GET_PROP(");
             myReplaceAll_(s, ">::p::", ")::");
@@ -1049,18 +1144,20 @@ inline void print_(const std::string &typeTagName,
 
     // first, iterate over the splices, ...
     typedef TypeTagRegistry::SpliceList SpliceList;
-    const SpliceList &splices = TypeTagRegistry::splices(typeTagName);
+    const SpliceList &splices = TypeTagRegistry::splices(curTypeTagName);
     SpliceList::const_iterator spliceIt = splices.begin();
     for (; spliceIt != splices.end(); ++ spliceIt) {
-        print_((*spliceIt)->typeTagName, (*spliceIt)->propertyName(), os, newIndent, printedProperties);
+        const auto &spliceTypeTagName = PropertyRegistry::getSpliceTypeTagName(rootTypeTagName,
+                                                                               (*spliceIt)->propertyName());
+        print_(rootTypeTagName, spliceTypeTagName, (*spliceIt)->propertyName(), os, newIndent, printedProperties);
     }
 
     // ... then, over the children
     typedef TypeTagRegistry::ChildrenList ChildrenList;
-    const ChildrenList &children = TypeTagRegistry::children(typeTagName);
+    const ChildrenList &children = TypeTagRegistry::children(curTypeTagName);
     ChildrenList::const_iterator ttagIt = children.begin();
     for (; ttagIt != children.end(); ++ttagIt) {
-        print_(*ttagIt, /*splicePropName=*/"", os, newIndent, printedProperties);
+        print_(rootTypeTagName, *ttagIt, /*splicePropName=*/"", os, newIndent, printedProperties);
     }
 }
 
@@ -1068,7 +1165,7 @@ template <class TypeTag>
 void print(std::ostream &os = std::cout)
 {
     std::set<std::string> printedProps;
-    print_(Dune::className<TypeTag>(), /*splicePropertyName=*/"", os, /*indent=*/"", printedProps);
+    print_(Dune::className<TypeTag>(), Dune::className<TypeTag>(), /*splicePropertyName=*/"", os, /*indent=*/"", printedProps);
 }
 #else // !defined NO_PROPERTY_INTROSPECTION
 template <class TypeTag>
