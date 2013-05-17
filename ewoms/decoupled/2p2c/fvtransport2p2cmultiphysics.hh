@@ -203,7 +203,7 @@ void FVTransport2P2CMultiPhysics<TypeTag>::update(const Scalar t, Scalar& dt, Tr
 
     if(impet)
     {
-        Dune::dinfo << "Timestep restricted by CellIdx " << restrictingCell << " leads to dt = "<<dt * GET_PARAM(TypeTag, Scalar, ImpetCflFactor)<< std::endl;
+        Dune::dinfo << "Timestep restricted by CellIdx " << restrictingCell << " leads to dt = "<<dt * GET_PARAM(TypeTag, Scalar, ImpetCFLFactor)<< std::endl;
         if(this->averagedFaces_ != 0)
             Dune::dinfo  << " Averageing done for " << this->averagedFaces_ << " faces. "<< std::endl;
     }

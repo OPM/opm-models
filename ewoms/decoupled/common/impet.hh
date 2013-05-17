@@ -57,6 +57,14 @@ template<class TypeTag> class IMPET
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionTypes;
     typedef typename GET_PROP_TYPE(TypeTag, TransportSolutionType) TransportSolutionType;
     typedef typename SolutionTypes::ElementMapper ElementMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, CellData) CellData;
+
+    enum IterationType
+        {
+            noIter,
+            iterToNumIter,
+            iterToConverged,
+        };
 
 public:
     typedef typename SolutionTypes::ScalarSolution SolutionType;
@@ -114,7 +122,17 @@ public:
      */
     void update(const Scalar t, Scalar& dt, TransportSolutionType& updateVec)
     {
-        if (iterFlag_) // only needed if iteration has to be done
+        if (iterFlag_ == noIter)
+        {
+            //update pressure
+            problem_.pressureModel().update();
+
+            //calculate defect of transported quantity
+            problem_.transportModel().update(t, dt, updateVec, true);
+
+            dt *= cFLFactor_;
+        }
+        else if (iterFlag_ == iterToNumIter || iterFlag_ == iterToConverged)
         {
             bool converg = false;
             int iter = 0;
@@ -151,16 +169,16 @@ public:
                 updateOldIter = updateVec;
                 Dune::dinfo << " defect = " << dt * updateDiff.two_norm() / transportedQuantity.two_norm();
                 // break criteria for iteration loop
-                if (iterFlag_ == 2 && dt * updateDiff.two_norm() / transportedQuantity.two_norm() <= maxDefect_)
+                if (iterFlag_ == iterToConverged && dt * updateDiff.two_norm() / transportedQuantity.two_norm() <= maxDefect_)
                 {
                     converg = true;
                 }
-                else if (iterFlag_ == 1 && iter > nIter_)
+                else if (iterFlag_ == iterToNumIter && iter > nIter_)
                 {
                     converg = true;
                 }
 
-                if (iterFlag_ == 2 && transportedQuantity.infinity_norm() > (1 + maxDefect_))
+                if (iterFlag_ == iterToConverged && transportedQuantity.infinity_norm() > (1 + maxDefect_))
                 {
                     converg = false;
                 }
@@ -168,25 +186,41 @@ public:
                 {
                     converg = true;
                     std::cout << "Nonlinear loop in IMPET.update exceeded nIter = " << nIter_ << " iterations."
-                            << std::endl;
+                              << std::endl;
                     std::cout << transportedQuantity.infinity_norm() << std::endl;
                 }
             }
             // outputs
-            if (iterFlag_ == 2)
+            if (iterFlag_ == iterToConverged)
                 std::cout << "Iteration steps: " << iterTot << std::endl;
             std::cout.setf(std::ios::scientific, std::ios::floatfield);
+
+            dt *= cFLFactor_;
         }
         else
         {
-            //update pressure
-            problem_.pressureModel().update();
-
-            //calculate defect of transported quantity
-            problem_.transportModel().update(t, dt, updateVec, true);
+            DUNE_THROW(Dune::NotImplemented,"IMPET: Iterationtype not implemented!");
         }
 
-        dt *= cFLFactor_;
+    }
+
+    void updateTransport(const Scalar t, Scalar& dt, TransportSolutionType& updateVec)
+    {
+        problem_.pressureModel().updateMaterialLaws();
+
+        //reset velocities
+        int size = problem_.gridView().size(0);
+        for (int i = 0; i < size; i++)
+        {
+            CellData& cellData = problem_.variables().cellData(i);
+            cellData.fluxData().resetVelocity();
+        }
+        if (!problem_.transportModel().velocity().calculateVelocityInTransport())
+        {
+            problem_.pressureModel().calculateVelocity();
+        }
+
+        problem_.transportModel().update(t, dt, updateVec, true);
     }
 
     //! \brief Write data files
@@ -208,9 +242,9 @@ public:
      * \param prob Problem
      */
     IMPET(Problem& prob) :
-            problem_(prob)
+        problem_(prob)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCFLFactor);
         iterFlag_ = GET_PARAM(TypeTag, int, ImpetIterationFlag);
         nIter_ = GET_PARAM(TypeTag, int, ImpetIterationNumber);
         maxDefect_ = GET_PARAM(TypeTag, Scalar, ImpetMaximumDefect);

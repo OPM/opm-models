@@ -106,7 +106,7 @@ SET_INT_PROP(Adaptive2p2c, GridAdaptMaxLevel, 1);
 SET_BOOL_PROP(Adaptive2p2c, EnableMultiPointFluxApproximation, true);
 SET_BOOL_PROP(Adaptive2p2c, MpfaEnableSecondHalfEdge, true);
 
-SET_SCALAR_PROP(Adaptive2p2c, ImpetCflFactor, 0.8);
+SET_SCALAR_PROP(Adaptive2p2c, ImpetCFLFactor, 0.8);
 SET_SCALAR_PROP(Adaptive2p2c, ImpetErrorTermLowerBound, 0.2);
 SET_SCALAR_PROP(Adaptive2p2c, ImpetErrorTermUpperBound, 0.9);
 SET_SCALAR_PROP(Adaptive2p2c, ImpetErrorTermFactor, 0.5);

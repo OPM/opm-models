@@ -90,7 +90,7 @@ SET_BOOL_PROP(TestIMPESAdaptiveProblem, EnableGravity, false);
 
 //SET_TYPE_PROP(TestIMPESAdaptiveProblem, EvalCflFluxFunction, Ewoms::EvalCflFluxCoats<TypeTag>);
 
-SET_SCALAR_PROP(TestIMPESAdaptiveProblem, ImpetCflFactor, 0.95);
+SET_SCALAR_PROP(TestIMPESAdaptiveProblem, ImpetCFLFactor, 0.95);
 
 SET_INT_PROP(TestIMPESAdaptiveProblem, EndTime, 20*1000*1000);
 SET_INT_PROP(TestIMPESAdaptiveProblem, GridAdaptMinLevel, 0);

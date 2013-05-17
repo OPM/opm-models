@@ -113,7 +113,7 @@ SET_BOOL_PROP(IMPESTestProblem, EnableGravity, false);
 
 SET_TYPE_PROP(IMPESTestProblem, EvalCflFluxFunction, Ewoms::EvalCflFluxCoats<TypeTag>);
 
-SET_SCALAR_PROP(IMPESTestProblem, ImpetCflFactor, 0.95);
+SET_SCALAR_PROP(IMPESTestProblem, ImpetCFLFactor, 0.95);
 
 SET_SCALAR_PROP(IMPESTestProblem, EndTime, 1e7);
 

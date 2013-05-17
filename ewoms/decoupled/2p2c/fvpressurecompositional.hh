@@ -141,7 +141,7 @@ public:
         // estimate then the size of the last time step
         if(problem_.timeManager().time() == problem_.timeManager().episodeStartTime()
                 && problem_.timeManager().episodeIndex() > 1)
-            problem_.timeManager().setTimeStepSize(dt_estimate*GET_PARAM(TypeTag, Scalar, ImpetCflFactor));
+            problem_.timeManager().setTimeStepSize(dt_estimate*GET_PARAM(TypeTag, Scalar, ImpetCFLFactor));
 
         updateEstimate_ *= problem_.timeManager().timeStepSize();
 

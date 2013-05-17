@@ -92,7 +92,7 @@ public:
         : ParentType(timeManager, gridView),
         gravity_(0)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCFLFactor);
 
         spatialParams_ = Dune::make_shared<SpatialParams>(gridView);
 
@@ -112,7 +112,7 @@ public:
         : ParentType(timeManager, gridView),
         gravity_(0),spatialParams_(spatialParams)
     {
-        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCflFactor);
+        cFLFactor_ = GET_PARAM(TypeTag, Scalar, ImpetCFLFactor);
 
         gravity_ = 0;
         if (GET_PARAM(TypeTag, bool, EnableGravity))

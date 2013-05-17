@@ -111,7 +111,7 @@ public:
     static void registerParameters()
     {
         REGISTER_PARAM(TypeTag, int, VtkOutputLevel, "Specifies the amount of stuff that gets written to the VTK output fles");
-        REGISTER_PARAM(TypeTag, Scalar, ImpetCflFactor, "The CFL factor to be used for transport");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetCFLFactor, "The CFL factor to be used for transport");
         REGISTER_PARAM(TypeTag, bool, ImpetRestrictFluxInTransport, "Impose an upper limit on the flux in the transport equation");
     }
 
@@ -347,7 +347,7 @@ void FVTransport2P2C<TypeTag>::update(const Scalar t, Scalar& dt,
     if(impet)
     {
         Dune::dinfo << "Timestep restricted by CellIdx " << restrictingCell << " leads to dt = "
-                <<dt * GET_PARAM(TypeTag, Scalar, ImpetCflFactor)<< std::endl;
+                <<dt * GET_PARAM(TypeTag, Scalar, ImpetCFLFactor)<< std::endl;
         if(averagedFaces_ != 0)
             Dune::dinfo  << " Averageing done for " << averagedFaces_ << " faces. "<< std::endl;
     }

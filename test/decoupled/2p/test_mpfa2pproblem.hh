@@ -106,7 +106,7 @@ public:
 SET_BOOL_PROP(MPFATwoPTestProblem, EnableGravity, true);
 
 SET_TYPE_PROP(MPFATwoPTestProblem, EvalCflFluxFunction, Ewoms::EvalCflFluxCoats<TypeTag>);
-SET_SCALAR_PROP(MPFATwoPTestProblem, ImpetCflFactor, 1.0);
+SET_SCALAR_PROP(MPFATwoPTestProblem, ImpetCFLFactor, 1.0);
 SET_TYPE_PROP(MPFATwoPTestProblem, GridAdaptIndicator, Ewoms::GridAdaptionIndicator2PLocal<TypeTag>);
 
 // grid adaption parameters
