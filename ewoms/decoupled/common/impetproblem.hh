@@ -84,7 +84,7 @@ private:
     enum
         {
             wetting = 0, nonwetting = 1,
-            adaptiveGrid = GET_PROP_VALUE(TypeTag, AdaptiveGrid)
+            adaptiveGrid = GET_PROP_VALUE(TypeTag, EnableGridAdapt)
         };
 
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;
@@ -142,7 +142,7 @@ public:
             gridAdapt_ = Dune::make_shared<GridAdaptModel>(asImp_());
 
         vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
-        dtVariationRestrictionFactor_ = GET_PARAM(TypeTag, Scalar, DtVariationRestrictionFactor);
+        dtVariationRestrictionFactor_ = GET_PARAM(TypeTag, Scalar, ImpetDtVariationRestrictionFactor);
     }
 
     static void registerParameters()
@@ -153,7 +153,7 @@ public:
         GridAdaptModel::registerParameters();
 
         REGISTER_PARAM(TypeTag, bool, EnableGravity, "Enable gravity.");
-        REGISTER_PARAM(TypeTag, Scalar, DtVariationRestrictionFactor, "The maximum reduction of two consecutive time steps.");
+        REGISTER_PARAM(TypeTag, Scalar, ImpetDtVariationRestrictionFactor, "The maximum reduction of two consecutive time steps.");
     }
 
     /*!
