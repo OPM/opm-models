@@ -128,16 +128,6 @@ class FVSaturation2P: public FVTransport<TypeTag>
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
 
-    Velocity& velocity()
-    {
-        return *velocity_;
-    }
-
-    Velocity& velocity() const
-    {
-        return *velocity_;
-    }
-
     CapillaryFlux& capillaryFlux()
     {
         return *capillaryFlux_;
@@ -159,6 +149,23 @@ class FVSaturation2P: public FVTransport<TypeTag>
     }
 
 public:
+    static void registerParameters()
+    {
+        ParentType::registerParameters();
+
+        REGISTER_PARAM(TypeTag, Scalar, ImpetPorosityThreshold, "The minimum porosity which does not get regularized");
+    }
+
+    Velocity& velocity()
+    {
+        return *velocity_;
+    }
+
+    Velocity& velocity() const
+    {
+        return *velocity_;
+    }
+
     // Function which calculates the flux update
     void getFlux(Scalar& update, const Intersection& intersection, CellData& cellDataI);
 
@@ -407,6 +414,7 @@ public:
         velocity_ = Dune::make_shared<Velocity>(problem);
 
         vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
+        porosityThreshold_ = GET_PARAM(TypeTag, Scalar, ImpetPorosityThreshold);
     }
 
 private:
@@ -416,6 +424,7 @@ private:
     Dune::shared_ptr<GravityFlux> gravityFlux_;
 
     int vtkOutputLevel_;
+    Scalar porosityThreshold_;
 
     static const bool compressibility_ = GET_PROP_VALUE(TypeTag, EnableCompressibility);
     static const int saturationType_ = GET_PROP_VALUE(TypeTag, SaturationFormulation);
@@ -450,7 +459,7 @@ void FVSaturation2P<TypeTag>::getFlux(Scalar& update, const Intersection& inters
 
     // cell volume, assume linear map here
     Scalar volume = elementI->geometry().volume();
-    Scalar porosity = problem_.spatialParams().porosity(*elementI);
+    Scalar porosity = std::max(problem_.spatialParams().porosity(*elementI), porosityThreshold_);
 
     if (compressibility_)
     {
@@ -599,16 +608,16 @@ void FVSaturation2P<TypeTag>::getFlux(Scalar& update, const Intersection& inters
     switch (velocityType_)
     {
     case vt:
-        if (porosity > 0.0){update -= factorTotal / (volume * porosity);} //-:v>0, if flow leaves the cell
+        update -= factorTotal / (volume * porosity); //-:v>0, if flow leaves the cell
         break;
     default:
         switch (saturationType_)
         {
         case Sw:
-            if (porosity > 0.0){ update -= factorW / (volume * porosity);}//-:v>0, if flow leaves the cell
+            update -= factorW / (volume * porosity);//-:v>0, if flow leaves the cell
             break;
         case Sn:
-            if (porosity > 0.0){update -= factorNW / (volume * porosity);} //-:v>0, if flow leaves the cell
+            update -= factorNW / (volume * porosity); //-:v>0, if flow leaves the cell
             break;
         }
         break;
@@ -635,7 +644,7 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
 
     // cell volume, assume linear map here
     Scalar volume = elementI->geometry().volume();
-    Scalar porosity = problem_.spatialParams().porosity(*elementI);
+    Scalar porosity = std::max(problem_.spatialParams().porosity(*elementI), porosityThreshold_);
 
     if (compressibility_)
     {
@@ -899,16 +908,16 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
     switch (velocityType_)
     {
     case vt:
-        if (porosity > 0.0){ update -= factorTotal / (volume * porosity);} //-:v>0, if flow leaves the cell
+        update -= factorTotal / (volume * porosity); //-:v>0, if flow leaves the cell
         break;
     default:
         switch (saturationType_)
         {
         case Sw:
-            if (porosity > 0.0){ update -= factorW / (volume * porosity);} //-:v>0, if flow leaves the cell
+            update -= factorW / (volume * porosity); //-:v>0, if flow leaves the cell
             break;
         case Sn:
-            if (porosity > 0.0){ update -= factorNW / (volume * porosity);} //-:v>0, if flow leaves the cell
+            update -= factorNW / (volume * porosity); //-:v>0, if flow leaves the cell
             break;
         }
         break;
@@ -927,7 +936,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
     // cell volume, assume linear map here
     Scalar volume = element.geometry().volume();
 
-    Scalar porosity = problem_.spatialParams().porosity(element);
+    Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
 
     if (compressibility_)
     {
@@ -965,7 +974,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
         if (sourceVec[wPhaseIdx] < 0 && cellDataI.saturation(wPhaseIdx) < threshold_)
             sourceVec[wPhaseIdx] = 0.0;
 
-        if (porosity > 0.0){update += sourceVec[wPhaseIdx] / porosity;}
+        update += sourceVec[wPhaseIdx] / porosity;
         break;
     }
     case Sn:
@@ -973,7 +982,7 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
         if (sourceVec[nPhaseIdx] < 0 && cellDataI.saturation(nPhaseIdx) < threshold_)
             sourceVec[nPhaseIdx] = 0.0;
 
-        if (porosity > 0.0){ update += sourceVec[nPhaseIdx] / porosity;}
+        update += sourceVec[nPhaseIdx] / porosity;
         break;
     }
     }
@@ -984,15 +993,15 @@ void FVSaturation2P<TypeTag>::getSource(Scalar& update, const Element& element, 
     {
         //add cflFlux for time-stepping
         this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx],
-                (sourceVec[wPhaseIdx] + sourceVec[nPhaseIdx]) * volume, element);
+                (sourceVec[wPhaseIdx] + sourceVec[nPhaseIdx]) * -1 * volume, element);
         break;
     }
     default:
     {
         //add cflFlux for time-stepping
-        this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], sourceVec[wPhaseIdx] * volume, element,
+        this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], sourceVec[wPhaseIdx] * -1 * volume, element,
                 wPhaseIdx);
-        this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], sourceVec[nPhaseIdx] * volume, element,
+        this->evalCflFluxFunction().addFlux(lambdaW, lambdaNW, viscosity_[wPhaseIdx], viscosity_[nPhaseIdx], sourceVec[nPhaseIdx] * -1 * volume, element,
                 nPhaseIdx);
         break;
     }
