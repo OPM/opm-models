@@ -73,7 +73,7 @@ private:
     enum
     {
         wPhaseIdx = Indices::wPhaseIdx, nPhaseIdx = Indices::nPhaseIdx,
-        pressEqIdx = Indices::pressEqIdx
+        pressEqIdx = Indices::pressureEqIdx
     };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;

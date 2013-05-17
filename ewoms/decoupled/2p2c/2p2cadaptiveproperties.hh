@@ -102,7 +102,7 @@ struct DecoupledTwoPTwoCIndicesAdaptive : public DecoupledTwoPTwoCIndices<TypeTa
 {
     static const int pressureIdx = 0;
     static const int saturationIdx = 0;
-    static const int pressEqIdx = 0;
+    static const int pressureEqIdx = 0;
     static const int satEqIdx = 0;
 };
 

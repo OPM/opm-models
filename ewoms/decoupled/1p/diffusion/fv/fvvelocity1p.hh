@@ -75,7 +75,7 @@ typedef typename GridView::IntersectionIterator IntersectionIterator;
 
     enum
     {
-        pressEqIdx = Indices::pressEqIdx // only one equation!
+        pressEqIdx = Indices::pressureEqIdx // only one equation!
     };
 
     typedef Dune::FieldVector<Scalar,dimWorld> GlobalPosition;

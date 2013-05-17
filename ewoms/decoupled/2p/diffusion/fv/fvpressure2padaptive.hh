@@ -68,7 +68,8 @@ template<class TypeTag> class FVPressure2PAdaptive: public FVPressure2P<TypeTag>
         pn = Indices::pressureNW,
         pglobal = Indices::pressureGlobal,
         Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
+        Sn = Indices::saturationNW,
+        eqIdxPress = Indices::pressureEqIdx,
     };
     enum
     {
