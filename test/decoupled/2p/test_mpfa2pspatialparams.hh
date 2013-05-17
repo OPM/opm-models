@@ -174,7 +174,13 @@ public:
 
     Scalar porosity(const Element& element) const
     {
+#if PROBLEM == 0
+        return 0.2;
+#elif PROBLEM == 1
+        return 0.3;
+#else
         return 0.4;
+#endif
     }
 
     // return the brooks-corey context depending on the position
@@ -194,6 +200,20 @@ public:
             ParentType(gridView), permBackground_(0), permLenses_(0),
             lensOneLowerLeft_(0), lensOneUpperRight_(0), lensTwoLowerLeft_(0), lensTwoUpperRight_(0), lensThreeLowerLeft_(0), lensThreeUpperRight_(0)
     {
+#if PROBLEM == 0
+        // residual saturations
+        materialLawParamsBackground_.setSwr(0.2);
+        materialLawParamsBackground_.setSnr(0.2);
+
+        materialLawParamsLenses_.setSwr(0.2);
+        materialLawParamsLenses_.setSnr(0.2);
+
+        //parameters for Brooks-Corey law
+
+        // entry pressures function
+        materialLawParamsBackground_.setPe(0.);
+        materialLawParamsLenses_.setPe(0.);
+#elif PROBLEM == 1
         // residual saturations
         materialLawParamsBackground_.setSwr(0.);
         materialLawParamsBackground_.setSnr(0.);
@@ -202,9 +222,24 @@ public:
         materialLawParamsLenses_.setSnr(0.);
 
         //parameters for Brooks-Corey law
+
+        // entry pressures function
+        materialLawParamsBackground_.setPe(5000.);
+        materialLawParamsLenses_.setPe(5000.);
+#else
+        // residual saturations
+        materialLawParamsBackground_.setSwr(0.);
+        materialLawParamsBackground_.setSnr(0.);
+
+        materialLawParamsLenses_.setSwr(0.);
+        materialLawParamsLenses_.setSnr(0.);
+
+        //parameters for Brooks-Corey law
+
         // entry pressures function
         materialLawParamsBackground_.setPe(GET_PARAM(TypeTag, Scalar, BackgroundEntryPressure));
         materialLawParamsLenses_.setPe(GET_PARAM(TypeTag, Scalar, LenseEntryPressure));
+#endif
 
         // Brooks-Corey shape parameters
         materialLawParamsBackground_.setLambda(3);

@@ -21,7 +21,7 @@
  * \file
  * \brief A test for the semi-implicit two-phase MPFA model.
  */
-#define STRUCTUREDGRID 1
+#define PROBLEM 2 // 0 = Buckley-Leverett, 1 = McWhorter, 2 = 2D Lense problem
 
 #include "config.h"
 
