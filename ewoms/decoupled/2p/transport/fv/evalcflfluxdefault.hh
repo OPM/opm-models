@@ -92,7 +92,7 @@ public:
      */
     Scalar getDt(const Element& element)
     {
-        Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
+        //Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
 
         return (getCFLFluxFunction(element) * problem_.spatialParams().porosity(element) * element.geometry().volume());
 

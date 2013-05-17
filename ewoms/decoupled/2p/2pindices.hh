@@ -92,6 +92,7 @@ struct DecoupledTwoPIndices : public DecoupledTwoPCommonIndices
     // indices of the equations
     static const int contiWEqIdx = PVOffset + 0; //!< Index of the continuity equation of the wetting phase
     static const int pressureEqIdx = contiWEqIdx; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int contiNEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase
     static const int satEqIdx = contiNEqIdx; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
@@ -126,6 +127,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnSw, PVOffset>
     // indices of the equations
     static const int contiNEqIdx = PVOffset + 0; //!< Index of the continuity equation of the non-wetting phase
     static const int pressureEqIdx = contiNEqIdx; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int contiWEqIdx = PVOffset + 1; //!< Index of the continuity equation of the wetting phase
     static const int satEqIdx = contiWEqIdx; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
@@ -162,6 +164,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pwSw, PVOffset>
     // indices of the equations
     static const int contiWEqIdx = PVOffset + 0; //!< Index of the continuity equation of the wetting phase
     static const int pressureEqIdx = contiWEqIdx; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int contiNEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase
     static const int satEqIdx = contiNEqIdx; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
@@ -196,6 +199,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnSn, PVOffset>
     // indices of the equations
     static const int contiNEqIdx = PVOffset + 0; //!< Index of the continuity equation of the non-wetting phase
     static const int pressureEqIdx = contiNEqIdx; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int contiWEqIdx = PVOffset + 1; //!< Index of the continuity equation of the wetting phase
     static const int satEqIdx = contiWEqIdx; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
@@ -230,6 +234,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pGlobalSw, PVOffset> : p
 
     // indices of the equations
     static const int pressureEqIdx = PVOffset + 0; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int satEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
 };
@@ -262,6 +267,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pGlobalSn, PVOffset>
 
     // indices of the equations
     static const int pressureEqIdx = PVOffset + 0; //!< Index of the pressure equation (total mass balance)
+    static const int pressEqIdx = pressureEqIdx; //!< !!!! DEPRECATED: Use pressureEqIdx instead!!!!
     static const int satEqIdx = PVOffset + 1; //!< Index of the continuity equation of the non-wetting phase (saturation equation)
     static const int transportEqIdx = satEqIdx; //!< Index of the saturation transport equation
 };
