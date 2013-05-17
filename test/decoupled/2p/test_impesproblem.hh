@@ -164,7 +164,7 @@ enum
 {
     pWIdx = Indices::pwIdx,
     SwIdx = Indices::SwIdx,
-    eqIdxPress = Indices::pressEqIdx,
+    eqIdxPress = Indices::pressureEqIdx,
     eqIdxSat = Indices::satEqIdx,
     nPhaseIdx = Indices::nPhaseIdx
 };

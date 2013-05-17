@@ -18,6 +18,8 @@
 #ifndef EWOMS_MCWHORTER_ANALYTIC_HH
 #define EWOMS_MCWHORTER_ANALYTIC_HH
 
+#include <ewoms/decoupled/2p/2pproperties.hh>
+
 /**
  * \file
  * \brief  Analytic solution of
