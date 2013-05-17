@@ -142,6 +142,7 @@ public:
             gridAdapt_ = Dune::make_shared<GridAdaptModel>(asImp_());
 
         vtkOutputLevel_ = GET_PARAM(TypeTag, int, VtkOutputLevel);
+        dtVariationRestrictionFactor_ = GET_PARAM(TypeTag, Scalar, DtVariationRestrictionFactor);
     }
 
     static void registerParameters()
@@ -152,6 +153,7 @@ public:
         GridAdaptModel::registerParameters();
 
         REGISTER_PARAM(TypeTag, bool, EnableGravity, "Enable gravity.");
+        REGISTER_PARAM(TypeTag, Scalar, DtVariationRestrictionFactor, "The maximum reduction of two consecutive time steps.");
     }
 
     /*!
@@ -382,10 +384,18 @@ public:
         TransportSolutionType updateVector;//(this->transportModel().solutionSize());
 
         Scalar t = timeManager().time();
-        Scalar dt = 1e100;
+        Scalar dt = std::numeric_limits<Scalar>::max();
 
         // obtain the first update and the time step size
         model().update(t, dt, updateVector);
+
+        if (t > 0 && timeManager().timeStepSize()> 0.)
+        {
+            Scalar oldDt = timeManager().timeStepSize();
+            Scalar minDt = std::max(oldDt - dtVariationRestrictionFactor_ * oldDt, 0.0);
+            Scalar maxDt = oldDt + dtVariationRestrictionFactor_ * oldDt;
+            dt = std::max(std::min(dt, maxDt), minDt);
+        }
 
         //make sure t_old + dt is not larger than tend
         dt = std::min(dt, timeManager().episodeMaxTimeStepSize());
@@ -397,7 +407,7 @@ public:
 
             // check if assigned initialDt is in accordance with dt from first transport step
             if (timeManager().timeStepSize() > dt
-                    && this->gridView().comm().rank() == 0)
+                && this->gridView().comm().rank() == 0)
                 Dune::dwarn << "Initial timestep of size " << timeManager().timeStepSize()
                             << " is larger then dt=" << dt <<" from transport" << std::endl;
             // internally assign next timestep size
@@ -864,6 +874,8 @@ private:
     Scalar outputTimeInterval_;
     int vtkOutputLevel_;
     Dune::shared_ptr<GridAdaptModel> gridAdapt_;
+
+    Scalar dtVariationRestrictionFactor_;
 };
 }
 #endif

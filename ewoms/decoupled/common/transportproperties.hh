@@ -49,6 +49,7 @@ NEW_PROP_TAG( TransportSolutionType);
 NEW_PROP_TAG( EvalCflFluxFunction ); //!< Type of the evaluation of the CFL-condition
 NEW_PROP_TAG( ImpetCflFactor );
 NEW_PROP_TAG( ImpetSwitchNormals );
+NEW_PROP_TAG(ImpetDtVariationRestrictionFactor);//!<Restricts the variation of a new time step compared to the old one
 
 SET_SCALAR_PROP(Transport, ImpetCflFactor, 1.0);
 SET_BOOL_PROP(Transport, ImpetSwitchNormals, false);
@@ -62,12 +63,13 @@ SET_BOOL_PROP(Transport, ImpetSwitchNormals, false);
  */
 SET_PROP(Transport, TransportSolutionType)
 {
-    private:
+ private:
     typedef typename GET_PROP(TypeTag, SolutionTypes) SolutionType;
 
-    public:
+ public:
     typedef typename SolutionType::ScalarSolution type;//!<type for vector of scalar properties
 };
+SET_SCALAR_PROP(Transport, ImpetDtVariationRestrictionFactor, std::numeric_limits<double>::max());
 }
 }
 
