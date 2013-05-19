@@ -3,6 +3,7 @@
 /*****************************************************************************
  *   Copyright (C) 2010-2012 by Markus Wolff                                 *
  *   Copyright (C) 2012 by Nicolas Schwenck                                  *
+ *   Copyright (C) 2009-2013 by Bernd Flemisch                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
