@@ -112,7 +112,7 @@ public:
         REGISTER_PARAM(TypeTag, bool, ImpetSwitchNormals, "Invert the direction of the normal vectors");
         REGISTER_PARAM(TypeTag, Scalar, ImpetCFLFactor, "The CFL factor to be used for transport");
         REGISTER_PARAM(TypeTag, Scalar, ImpetSubCFLFactor, "The CFL factor used for sub-timesteps");
-        REGISTER_PARAM(TypeTag, Scalar, TimeManagerSubTimestepVerbosity, "The verbosity of the IMPET model for a sub-timestep");
+        REGISTER_PARAM(TypeTag, int, TimeManagerSubTimestepVerbosity, "The verbosity of the IMPET model for a sub-timestep");
     }
 
     // Calculate the update vector.

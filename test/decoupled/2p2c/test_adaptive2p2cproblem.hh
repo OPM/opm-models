@@ -179,6 +179,10 @@ Adaptive2p2c(TimeManager &timeManager) :
         REGISTER_PARAM(TypeTag, int, OutputInterval, "The number of time steps between two VTK files get written to disk");
     }
 
+    void initialAtPos(PrimaryVariables &values,
+            const GlobalPosition &globalPos) const
+    {}
+
 //void preTimeStep()
 //{
 //    ParentType::preTimeStep();

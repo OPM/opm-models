@@ -142,6 +142,10 @@ public:
         REGISTER_PARAM(TypeTag, Scalar, Delta, "The epsilon value used to calculate the derivative of the permeability.");
     }
 
+    void initialAtPos(PrimaryVariables &values,
+            const GlobalPosition &globalPos) const
+    {}
+
     /*!
     * \name Problem parameters
     */

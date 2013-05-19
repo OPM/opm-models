@@ -218,6 +218,10 @@ public:
         velocity_.initialize();
     }
 
+    void initialAtPos(PrimaryVariables &values,
+            const GlobalPosition &globalPos) const
+    {}
+
     /*!
     * \name Problem parameters
     */
