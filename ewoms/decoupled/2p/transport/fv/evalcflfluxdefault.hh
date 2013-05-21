@@ -24,6 +24,7 @@
  * \copydoc Ewoms::EvalCflFluxDefault
  */
 
+#include <ewoms/decoupled/common/impetproperties.hh>
 #include "evalcflflux.hh"
 
 namespace Ewoms
@@ -92,10 +93,9 @@ public:
      */
     Scalar getDt(const Element& element)
     {
-        //Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
+        Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
 
-        return (getCFLFluxFunction(element) * problem_.spatialParams().porosity(element) * element.geometry().volume());
-
+        return (getCFLFluxFunction(element) * porosity * element.geometry().volume());
     }
 
     //! resets the accumulated CFL-fluxes to zero

@@ -24,6 +24,7 @@
  * \copydoc Ewoms::EvalCflFluxCoats
  */
 
+#include <ewoms/decoupled/common/impetproperties.hh>
 #include "evalcflflux.hh"
 
 namespace Ewoms
