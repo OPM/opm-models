@@ -254,19 +254,19 @@ void init()
 
 #if PROBLEM == 0
     Scalar vTot = 3e-6;
-    analyticSolution_.initialize(vTot);
+    this->analyticSolution_.initialize(vTot);
 #endif
 #if PROBLEM == 1
-    analyticSolution_.initialize();
+    this->analyticSolution_.initialize();
 #endif
 }
 
 void addOutputVtkFields()
 {
-    analyticSolution_.calculateAnalyticSolution();
+    this->analyticSolution_.calculateAnalyticSolution();
 
     ParentType::addOutputVtkFields();
-    analyticSolution_.addOutputVtkFields(this->resultWriter());
+    this->analyticSolution_.addOutputVtkFields(this->resultWriter());
 }
 #endif
 
