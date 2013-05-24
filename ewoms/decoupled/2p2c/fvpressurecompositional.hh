@@ -534,7 +534,7 @@ void FVPressureCompositional<TypeTag>::initialMaterialLaws(bool compositional)
                 Scalar pc=0.;
                 if(GET_PROP_VALUE(TypeTag, EnableCapillarity))
                 {
-                    pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt),
+                    pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt),
                                     sat_0);
                 }
                 else

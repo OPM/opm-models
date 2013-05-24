@@ -874,7 +874,7 @@ void FVTransport2P2C<TypeTag>::evalBoundary(GlobalPosition globalPosFace,
         Scalar satBound = primaryVariablesOnBoundary[contiWEqIdx];
         if(GET_PROP_VALUE(TypeTag, EnableCapillarity))
         {
-            Scalar pcBound = MaterialLaw::pC(problem().spatialParams().materialLawParams(*eIt),
+            Scalar pcBound = MaterialLaw::pc(problem().spatialParams().materialLawParams(*eIt),
                     satBound);
             switch (pressureType)
             {
@@ -908,7 +908,7 @@ void FVTransport2P2C<TypeTag>::evalBoundary(GlobalPosition globalPosFace,
 
         if(GET_PROP_VALUE(TypeTag, EnableCapillarity))
         {
-            Scalar pcBound = MaterialLaw::pC(problem().spatialParams().materialLawParams(*eIt),
+            Scalar pcBound = MaterialLaw::pc(problem().spatialParams().materialLawParams(*eIt),
                     BCfluidState.saturation(wPhaseIdx));
             int maxiter = 3;
             //start iteration loop
@@ -938,7 +938,7 @@ void FVTransport2P2C<TypeTag>::evalBoundary(GlobalPosition globalPosFace,
                 //update with better pressures
                 flashSolver.concentrationFlash2p2c(BCfluidState, Z1Bound, pressBound,
                         problem().spatialParams().porosity(*eIt), problem().temperatureAtPos(globalPosFace));
-                pcBound = MaterialLaw::pC(problem().spatialParams().materialLawParams(*eIt),
+                pcBound = MaterialLaw::pc(problem().spatialParams().materialLawParams(*eIt),
                         BCfluidState.saturation(wPhaseIdx));
                 // TODO: get right criterion, do output for evaluation
                 //converge criterion
