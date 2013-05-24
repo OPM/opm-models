@@ -79,7 +79,10 @@ struct DecoupledTwoPIndices : public DecoupledTwoPCommonIndices
 
     // indices of the primary variables
     static const int pwIdx = PVOffset + 0; //!< Pressure index of the wetting phase
-    static const int SnIdx = PVOffset + 1; //!< Saturation index of the non-wetting phase
+    static const int snIdx = PVOffset + 1; //!< \deprecated Saturation index of the nonwetting phase
+
+    DUNE_DEPRECATED_MSG("use snIdx (uncapitalized 's') instead")
+    static const int SnIdx = snIdx; //!< \deprecated Saturation index of the nonwetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
@@ -114,7 +117,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnSw, PVOffset>
 
     // indices of the primary variables
     static const int pnIdx = PVOffset + 0; //!< Pressure index of the non-wetting phase
-    static const int SwIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+    static const int swIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+
+    DUNE_DEPRECATED_MSG("use swIdx (uncapitalized 's') instead")
+    static const int SwIdx = swIdx; //!< \deprecated Saturation index of the wetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
@@ -151,7 +157,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pwSw, PVOffset>
 
     // indices of the primary variables
     static const int pwIdx = PVOffset + 0; //!< Pressure index of the wetting phase
-    static const int SwIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+    static const int swIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+
+    DUNE_DEPRECATED_MSG("use swIdx (uncapitalized 's') instead")
+    static const int SwIdx = swIdx; //!< \deprecated Saturation index of the wetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
@@ -186,7 +195,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnSn, PVOffset>
 
     // indices of the primary variables
     static const int pnIdx = PVOffset + 0; //!< Pressure index of the non-wetting phase
-    static const int SnIdx = PVOffset + 1; //!< Saturation index of the non-wetting phase
+    static const int snIdx = PVOffset + 1; //!< \deprecated Saturation index of the nonwetting phase
+
+    DUNE_DEPRECATED_MSG("use snIdx (uncapitalized 's') instead")
+    static const int SnIdx = snIdx; //!< \deprecated Saturation index of the nonwetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
@@ -222,7 +234,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pGlobalSw, PVOffset> : p
 
     // indices of the primary variables
     static const int pGlobalIdx = PVOffset + 0; //!< Global pressure index
-    static const int SwIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+    static const int swIdx = PVOffset + 1; //!< Saturation index of the wetting phase
+
+    DUNE_DEPRECATED_MSG("use swIdx (uncapitalized 's') instead")
+    static const int SwIdx = swIdx; //!< \deprecated Saturation index of the wetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
@@ -255,7 +270,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pGlobalSn, PVOffset>
 
     // indices of the primary variables
     static const int pGlobalIdx = PVOffset + 0; //!< Global pressure index
-    static const int SnIdx = PVOffset + 1; //!< Saturation index of the non-wetting phase
+    static const int snIdx = PVOffset + 1; //!< \deprecated Saturation index of the nonwetting phase
+
+    DUNE_DEPRECATED_MSG("use snIdx (uncapitalized 's') instead")
+    static const int SnIdx = snIdx; //!< \deprecated Saturation index of the nonwetting phase
 
     //! \cond \private
     //Set the types of the single models depending on the formulation

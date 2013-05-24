@@ -298,7 +298,7 @@ public:
     void dirichletAtPos(PrimaryVariables &values, const GlobalPosition& globalPos) const
     {
             values[pGlobalIdx] = exact(globalPos);
-            values[SwIdx] = 1.0;
+            values[swIdx] = 1.0;
     }
 
     //! set neumann condition for phases (flux, [kg/(m^2 s)])
