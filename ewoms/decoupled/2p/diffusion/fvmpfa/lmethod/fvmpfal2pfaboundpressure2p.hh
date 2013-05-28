@@ -240,7 +240,7 @@ public:
         {
             Scalar potW = this->pressure()[globalIdx];
             Scalar potPc = cellData.capillaryPressure()
-                    + (problem_.bboxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+                    + (problem_.bBoxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
             cellData.setPressure(wPhaseIdx, potW);
             cellData.setPressure(nPhaseIdx, potW + potPc);
@@ -251,7 +251,7 @@ public:
         {
             Scalar potNW = this->pressure()[globalIdx];
             Scalar potPc = cellData.capillaryPressure()
-                    + (problem_.bboxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+                    + (problem_.bBoxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
             cellData.setPressure(nPhaseIdx, potNW);
             cellData.setPressure(wPhaseIdx, potNW - potPc);
@@ -351,7 +351,7 @@ public:
                 if (pressureType_ == pw)
                 {
                     (*pressure)[idx] = this->pressure()[idx][0]
-                    - density_[wPhaseIdx] * (gravity_ * (problem_.bboxMax() - eIt->geometry().center()));
+                    - density_[wPhaseIdx] * (gravity_ * (problem_.bBoxMax() - eIt->geometry().center()));
                     (*potentialSecond)[idx] = cellData.pressure(nPhaseIdx);
                     (*pressureSecond)[idx] = (*pressure)[idx] + cellData.capillaryPressure();
                 }
@@ -359,7 +359,7 @@ public:
                 if (pressureType_ == pn)
                 {
                     (*pressure)[idx] = this->pressure()[idx][0]
-                    - density_[nPhaseIdx] * (gravity_ * (problem_.bboxMax() - eIt->geometry().center()));
+                    - density_[nPhaseIdx] * (gravity_ * (problem_.bBoxMax() - eIt->geometry().center()));
                     (*potentialSecond)[idx] = cellData.pressure(wPhaseIdx);
                     (*pressureSecond)[idx] = (*pressure)[idx] - cellData.capillaryPressure();
                 }
@@ -1449,12 +1449,12 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
 
             Dune::FieldVector<Scalar, 2 * dim> gravityDiff(0);
 
-//            std::cout<<"maxPos = "<<problem_.bboxMax()<<"\n";
+//            std::cout<<"maxPos = "<<problem_.bBoxMax()<<"\n";
 
-            gravityDiff[0] = (problem_.bboxMax() - globalPos1) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
-            gravityDiff[1] = (problem_.bboxMax() - globalPos2) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
-            gravityDiff[2] = (problem_.bboxMax() - globalPos3) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
-            gravityDiff[3] = (problem_.bboxMax() - globalPos4) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+            gravityDiff[0] = (problem_.bBoxMax() - globalPos1) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+            gravityDiff[1] = (problem_.bBoxMax() - globalPos2) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+            gravityDiff[2] = (problem_.bBoxMax() - globalPos3) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+            gravityDiff[3] = (problem_.bBoxMax() - globalPos4) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
             pc += gravityDiff;
 
@@ -1792,7 +1792,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
 
                 Scalar pc = cellData.capillaryPressure();
 
-                Scalar gravityDiff = (problem_.bboxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
+                Scalar gravityDiff = (problem_.bBoxMax() - globalPos) * gravity_ * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
                 pc += gravityDiff; //minus because of gravity definition!
 
@@ -1846,7 +1846,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
                             Scalar pcBound = MaterialLaw::pc(
                                     problem_.spatialParams().materialLawParams(*elementPointer), satWBound);
 
-                            Scalar gravityDiffBound = (problem_.bboxMax() - globalPosFace) * gravity_
+                            Scalar gravityDiffBound = (problem_.bBoxMax() - globalPosFace) * gravity_
                                     * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
                             pcBound += gravityDiffBound;
@@ -1860,7 +1860,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
                             lambdaBound[nPhaseIdx] /= viscosity_[nPhaseIdx];
 
                             Scalar potentialBound = interactionVolume.getDirichletValues(intVolFaceIdx)[pressureIdx];
-                            Scalar gdeltaZ = (problem_.bboxMax()-globalPosFace) * gravity_;
+                            Scalar gdeltaZ = (problem_.bBoxMax()-globalPosFace) * gravity_;
 
                             //calculate potential gradients
                             Scalar potentialW = 0;

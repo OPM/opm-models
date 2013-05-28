@@ -358,7 +358,7 @@ void boundaryTypesAtPos(BoundaryTypes &bcTypes, const GlobalPosition& globalPos)
     {
         bcTypes.setAllDirichlet();
     }
-    else if (globalPos[0] > this->bboxMax()[0] - eps_)
+    else if (globalPos[0] > this->bBoxMax()[0] - eps_)
     {
         bcTypes.setNeumann(eqIdxPress);
         bcTypes.setOutflow(eqIdxSat);
@@ -387,7 +387,7 @@ void dirichletAtPos(PrimaryVariables &values, const GlobalPosition& globalPos) c
     Scalar pRef = referencePressureAtPos(globalPos);
     Scalar temp = temperatureAtPos(globalPos);
 
-    values[pWIdx] = (1e5 - (this->bboxMax()- globalPos) * this->gravity() * WettingPhase::density(temp, pRef));
+    values[pWIdx] = (1e5 - (this->bBoxMax()- globalPos) * this->gravity() * WettingPhase::density(temp, pRef));
     values[swIdx] = 1.0;
 
     if (isInlet(globalPos))
@@ -419,7 +419,7 @@ void neumannAtPos(PrimaryVariables &values, const GlobalPosition& globalPos) con
         values[nPhaseIdx] = -inFlux_;
     }
 #elif PROBLEM == 0
-    if (globalPos[0] > this->bboxMax()[0] - eps_)
+    if (globalPos[0] > this->bBoxMax()[0] - eps_)
     {
         values[nPhaseIdx] = 3e-3;
     }
@@ -463,12 +463,12 @@ bool isTop(const GlobalPosition& globalPos) const
 {
     if (dim == 2)
     {
-        if (globalPos[1] > this->bboxMax()[1] - eps_)
+        if (globalPos[1] > this->bBoxMax()[1] - eps_)
             return true;
     }
     if (dim == 3)
     {
-        if (globalPos[2] > this->bboxMax()[2] - eps_)
+        if (globalPos[2] > this->bBoxMax()[2] - eps_)
             return true;
     }
     return false;

@@ -108,8 +108,8 @@ public:
      */
     IMPETProblem(TimeManager &timeManager, const GridView &gridView)
         : gridView_(gridView),
-          bboxMin_(std::numeric_limits<double>::max()),
-          bboxMax_(-std::numeric_limits<double>::max()),
+          bBoxMin_(std::numeric_limits<double>::max()),
+          bBoxMax_(-std::numeric_limits<double>::max()),
           timeManager_(&timeManager),
           variables_(gridView),
           outputInterval_(1),
@@ -657,15 +657,23 @@ public:
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the smallest values.
      */
+    const GlobalPosition &bBoxMin() const
+    { return bBoxMin_; }
+
+    DUNE_DEPRECATED_MSG("use bBoxMin() (capitalized second 'B') instead")
     const GlobalPosition &bboxMin() const
-    { return bboxMin_; }
+    { return bBoxMin(); }
 
     /*!
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the largest values.
      */
+    const GlobalPosition &bBoxMax() const
+    { return bBoxMax_; }
+
+    DUNE_DEPRECATED_MSG("use bBoxMax() (capitalized second 'B') instead")
     const GlobalPosition &bboxMax() const
-    { return bboxMax_; }
+    { return bBoxMax(); }
 
     //! \name Access functions
     //\{
@@ -858,8 +866,8 @@ private:
     // pointer to a possibly adaptive grid.
     Grid *grid_;
 
-    GlobalPosition bboxMin_;
-    GlobalPosition bboxMax_;
+    GlobalPosition bBoxMin_;
+    GlobalPosition bBoxMax_;
 
     TimeManager *timeManager_;
 

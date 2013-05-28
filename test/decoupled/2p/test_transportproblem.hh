@@ -238,7 +238,7 @@ public:
             {
                 bcTypes.setAllDirichlet();
             }
-            else if (globalPos[0] > this->bboxMax()[0] - eps_)
+            else if (globalPos[0] > this->bBoxMax()[0] - eps_)
             {
                 bcTypes.setAllOutflow();
             }

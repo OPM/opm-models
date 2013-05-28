@@ -91,7 +91,7 @@ class FVMPFAOPressure2P: public FVPressure<TypeTag>
     enum
     {
         Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
+        Sn = Indices::saturationNw,
         pGlobal = Indices::pressureGlobal
     };
     enum

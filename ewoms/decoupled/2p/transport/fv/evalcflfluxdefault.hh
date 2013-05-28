@@ -83,9 +83,13 @@ public:
 
     /*! \brief Returns the CFL flux-function
      *
-     * \copydetails EvalCflFlux::getCFLFluxFunction(const Element&)
+     * \copydetails EvalCflFlux::getCflFluxFunction(const Element&)
      */
-    Scalar getCFLFluxFunction(const Element& element);
+    Scalar getCflFluxFunction(const Element& element);
+
+    DUNE_DEPRECATED_MSG("use getCflFluxFunction() (uncapitalized 'fl') instead")
+    Scalar getCFLFluxFunction(const Element& element)
+    { return getCflFluxFunction(element); }
 
     /*! \brief  Returns the CFL time-step
      *
@@ -217,7 +221,7 @@ private:
 
 // Returns the CFL flux-function
 template<class TypeTag>
-typename EvalCflFluxDefault<TypeTag>::Scalar EvalCflFluxDefault<TypeTag>::getCFLFluxFunction(const Element& element)
+typename EvalCflFluxDefault<TypeTag>::Scalar EvalCflFluxDefault<TypeTag>::getCflFluxFunction(const Element& element)
 {
     Scalar residualSatW = problem_.spatialParams().materialLawParams(element).swr();
     Scalar residualSatNW = problem_.spatialParams().materialLawParams(element).snr();

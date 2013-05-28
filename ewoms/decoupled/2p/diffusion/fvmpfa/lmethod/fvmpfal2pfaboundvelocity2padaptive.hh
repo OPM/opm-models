@@ -1138,7 +1138,7 @@ void FVMPFAL2PFABoundVelocity2PAdaptive<TypeTag>::calculateVelocity()
                             Scalar pcBound = MaterialLaw::pc(
                                     problem_.spatialParams().materialLawParams(*elementPointer), satWBound);
 
-                            Scalar gravityDiffBound = (problem_.bboxMax() - globalPosFace) * problem_.gravity()
+                            Scalar gravityDiffBound = (problem_.bBoxMax() - globalPosFace) * problem_.gravity()
                                     * (density_[nPhaseIdx] - density_[wPhaseIdx]);
 
                             pcBound += gravityDiffBound;
@@ -1151,7 +1151,7 @@ void FVMPFAL2PFABoundVelocity2PAdaptive<TypeTag>::calculateVelocity()
                             lambdaBound[wPhaseIdx] /= viscosity_[wPhaseIdx];
                             lambdaBound[nPhaseIdx] /= viscosity_[nPhaseIdx];
 
-                            Scalar gdeltaZ = (problem_.bboxMax()-globalPosFace) * gravity_;
+                            Scalar gdeltaZ = (problem_.bBoxMax()-globalPosFace) * gravity_;
                             Scalar potentialBoundW = interactionVolume.getDirichletValues(intVolFaceIdx)[pressureIdx] + density_[wPhaseIdx]*gdeltaZ;
                             Scalar potentialBoundNW = potentialBoundW;
 

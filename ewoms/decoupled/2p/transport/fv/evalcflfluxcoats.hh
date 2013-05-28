@@ -148,6 +148,10 @@ public:
         }
     }
 
+    DUNE_DEPRECATED_MSG("use getCflFluxFunction() (uncapitalized 'fl') instead")
+    Scalar getCFLFluxFunction(const Element& element)
+    { return getCflFluxFunction(element); }
+
     /*! \brief  Returns the CFL time-step
      *
      * \copydetails EvalCflFlux::getDt(const Element&)
@@ -159,7 +163,7 @@ public:
 
         Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
 
-        return (getCFLFluxFunction(element) * porosity * element.geometry().volume());
+        return (getCflFluxFunction(element) * porosity * element.geometry().volume());
     }
 
     //! \brief  Resets the Timestep-estimator
@@ -188,7 +192,7 @@ public:
     }
 
 private:
-    Scalar getCFLFluxFunctionDefault()
+    Scalar getCflFluxFunctionDefault()
     {
         if (std::isnan(fluxIn_) || std::isinf(fluxIn_))
         {
@@ -337,7 +341,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
     Scalar lambdaWI = cellDataI.mobility(wPhaseIdx);
     Scalar lambdaNWI = cellDataI.mobility(nPhaseIdx);
 
-    Scalar dPcdSI = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*element), satI);
+    Scalar dPcdSI = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*element), satI);
 
     const GlobalPosition& unitOuterNormal = intersection.centerUnitOuterNormal();
 
@@ -381,7 +385,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
         Scalar lambdaWJ = cellDataI.mobility(wPhaseIdx);
         Scalar lambdaNWJ = cellDataI.mobility(nPhaseIdx);
 
-        Scalar dPcdSJ = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*neighbor), satJ);
+        Scalar dPcdSJ = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*neighbor), satJ);
 
         // compute vectorized permeabilities
         DimMatrix meanPermeability(0);
@@ -537,7 +541,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
 
         Scalar potWBound =  cellDataI.pressure(wPhaseIdx);
         Scalar potNWBound =  cellDataI.pressure(nPhaseIdx);
-        Scalar gdeltaZ = (problem_.bboxMax()-globalPosFace) * problem_.gravity();
+        Scalar gdeltaZ = (problem_.bBoxMax()-globalPosFace) * problem_.gravity();
         if (bcType.isDirichlet(eqIdxPress))
         {
             PrimaryVariables bcValues;
@@ -578,7 +582,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             }
         }
 
-        Scalar dPcdSBound = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*element), satWBound);
+        Scalar dPcdSBound = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*element), satWBound);
 
         Scalar lambdaWBound = 0;
         Scalar lambdaNWBound = 0;
