@@ -116,9 +116,9 @@ template<class TypeTag> class FVPressure2P: public FVPressure<TypeTag>
     {
         pw = Indices::pressureW,
         pn = Indices::pressureNw,
-        pglobal = Indices::pressureGlobal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNw,
+        pGlobal = Indices::pressureGlobal,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw,
         pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
         eqIdxPress = Indices::pressureEqIdx,
@@ -257,10 +257,10 @@ public:
                 Scalar sat = 0;
                 switch (saturationType_)
                 {
-                case Sw:
+                case sw:
                     sat = problem_.variables().cellData(i).saturation(wPhaseIdx);
                     break;
-                case Sn:
+                case sn:
                     sat = problem_.variables().cellData(i).saturation(nPhaseIdx);
                     break;
                 }
@@ -327,7 +327,7 @@ public:
 
             break;
         }
-        case pglobal:
+        case pGlobal:
         {
             cellData.setGlobalPressure(this->pressure()[globalIdx]);
             break;
@@ -350,12 +350,12 @@ public:
         int size = problem_.gridView().size(0);
         ScalarSolutionType *pressure = writer.allocateManagedBuffer(size);
         ScalarSolutionType *pressureSecond = 0;
-        ScalarSolutionType *pC = 0;
+        ScalarSolutionType *pc = 0;
 
         if (vtkOutputLevel_ > 0)
         {
             pressureSecond = writer.allocateManagedBuffer(size);
-            pC = writer.allocateManagedBuffer(size);
+            pc = writer.allocateManagedBuffer(size);
         }
 
         for (int i = 0; i < size; i++)
@@ -378,13 +378,13 @@ public:
                     (*pressureSecond)[i] = cellData.pressure(wPhaseIdx);
                 }
             }
-            else if (pressureType_ == pglobal)
+            else if (pressureType_ == pGlobal)
             {
                 (*pressure)[i] = cellData.globalPressure();
             }
             if (vtkOutputLevel_ > 0)
             {
-                (*pC)[i] = cellData.capillaryPressure();
+                (*pc)[i] = cellData.capillaryPressure();
             }
         }
 
@@ -404,7 +404,7 @@ public:
                 writer.attachCellData(*pressureSecond, "wetting pressure");
             }
         }
-        if (pressureType_ == pglobal)
+        if (pressureType_ == pGlobal)
         {
 
             writer.attachCellData(*pressure, "global pressure");
@@ -412,7 +412,7 @@ public:
 
         if (vtkOutputLevel_ > 0)
         {
-            writer.attachCellData(*pC, "capillary pressure");
+            writer.attachCellData(*pc, "capillary pressure");
         }
 
         if (compressibility_)
@@ -450,15 +450,15 @@ public:
     FVPressure2P(Problem& problem) :
             ParentType(problem), problem_(problem), gravity_(problem.gravity()), maxError_(0.), timeStep_(1.)
     {
-        if (pressureType_ != pw && pressureType_ != pn && pressureType_ != pglobal)
+        if (pressureType_ != pw && pressureType_ != pn && pressureType_ != pGlobal)
         {
             DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
-        if (pressureType_ == pglobal && compressibility_)
+        if (pressureType_ == pGlobal && compressibility_)
         {
             DUNE_THROW(Dune::NotImplemented, "Compressibility not supported for global pressure!");
         }
-        if (saturationType_ != Sw && saturationType_ != Sn)
+        if (saturationType_ != sw && saturationType_ != sn)
         {
             DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
@@ -558,13 +558,13 @@ void FVPressure2P<TypeTag>::getStorage(EntryType& entry, const Element& element
 
         switch (saturationType_)
         {
-        case Sw:
+        case sw:
         {
             entry[rhs] = -(cellData.volumeCorrection()/timeStep_ * porosity * volume
                     * (cellData.density(wPhaseIdx) - cellData.density(nPhaseIdx)));
             break;
         }
-        case Sn:
+        case sn:
         {
             entry[rhs] = -(cellData.volumeCorrection()/timeStep_ * porosity * volume
                     * (cellData.density(nPhaseIdx) - cellData.density(wPhaseIdx)));
@@ -579,10 +579,10 @@ void FVPressure2P<TypeTag>::getStorage(EntryType& entry, const Element& element
         Scalar sat = 0;
         switch (saturationType_)
         {
-        case Sw:
+        case sw:
             sat = cellData.saturation(wPhaseIdx);
             break;
-        case Sn:
+        case sn:
             sat = cellData.saturation(nPhaseIdx);
             break;
         }
@@ -692,7 +692,7 @@ void FVPressure2P<TypeTag>::getFlux(EntryType& entry, const Intersection& inters
         potentialW = cellData.pressure(wPhaseIdx) - cellDataJ.pressure(wPhaseIdx);
         potentialNW = cellData.pressure(nPhaseIdx) - cellDataJ.pressure(nPhaseIdx);
 
-        if (pressureType_ == pglobal)
+        if (pressureType_ == pGlobal)
         {
             potentialW = (cellData.globalPressure() - cellDataJ.globalPressure() - fMeanNW * (pcI - pcJ));
             potentialNW = (cellData.globalPressure() - cellDataJ.globalPressure() + fMeanW * (pcI - pcJ));
@@ -810,13 +810,13 @@ const Intersection& intersection, const CellData& cellData, const bool first)
         {
             switch (saturationType_)
             {
-            case Sw:
+            case sw:
             {
                 satW = boundValues[saturationIdx];
                 satNW = 1 - boundValues[saturationIdx];
                 break;
             }
-            case Sn:
+            case sn:
             {
                 satW = 1 - boundValues[saturationIdx];
                 satNW = boundValues[saturationIdx];
@@ -921,7 +921,7 @@ const Intersection& intersection, const CellData& cellData, const bool first)
                 potentialNW = (cellData.pressure(nPhaseIdx) - pressBound);
                 break;
             }
-            case pglobal:
+            case pGlobal:
             {
                 potentialW = (cellData.globalPressure() - pressBound - fMeanNW * (pcI - pcBound));
                 potentialNW = (cellData.globalPressure() - pressBound + fMeanW * (pcI - pcBound));
@@ -1066,7 +1066,7 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
         {
             cellData.setCapillaryPressure(pc);
 
-            if (pressureType_ != pglobal)
+            if (pressureType_ != pGlobal)
             {
                 cellData.setPressure(wPhaseIdx, pressW);
                 cellData.setPressure(nPhaseIdx, pressNW);

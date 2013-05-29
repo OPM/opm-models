@@ -90,12 +90,12 @@ class FVVelocity2P
     {
         pw = Indices::pressureW,
         pn = Indices::pressureNw,
-        pglobal = Indices::pressureGlobal,
+        pGlobal = Indices::pressureGlobal,
         vw = Indices::velocityW,
         vn = Indices::velocityNw,
         vt = Indices::velocityTotal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNw,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw,
         pressureIdx = Indices::pressureIdx,
         saturationIdx = Indices::saturationIdx,
         eqIdxPress = Indices::pressureEqIdx,
@@ -348,7 +348,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Intersection& intersection, 
                         density_[nPhaseIdx];
     }
 
-    if (pressureType_ == pglobal)
+    if (pressureType_ == pGlobal)
     {
         potentialW = (cellData.globalPressure() - cellDataJ.globalPressure()
                 - 0.5 * (fractionalNWI + fractionalNWJ) * (pcI - pcJ));
@@ -424,7 +424,7 @@ void FVVelocity2P<TypeTag>::calculateVelocity(const Intersection& intersection, 
                 * ((cellData.pressure(nPhaseIdx) - cellDataJ.pressure(nPhaseIdx)) / dist + gravityTermNW);
         break;
     }
-    case pglobal:
+    case pGlobal:
     {
         velocityW *= (lambdaW + lambdaNW) * scalarPerm * (cellData.globalPressure() - cellDataJ.globalPressure()) / dist
                 + scalarPerm * (lambdaW * gravityTermW + lambdaNW * gravityTermNW);
@@ -510,13 +510,13 @@ void FVVelocity2P<TypeTag>::calculateVelocityOnBoundary(const Intersection& inte
         {
             switch (saturationType_)
             {
-            case Sw:
+            case sw:
             {
                 satW = boundValues[saturationIdx];
                 satNW = 1 - boundValues[saturationIdx];
                 break;
             }
-            case Sn:
+            case sn:
             {
                 satW = 1 - boundValues[saturationIdx];
                 satNW = boundValues[saturationIdx];
@@ -594,7 +594,7 @@ void FVVelocity2P<TypeTag>::calculateVelocityOnBoundary(const Intersection& inte
         }
 
         //calculate potential gradient
-        if (pressureType_ == pglobal)
+        if (pressureType_ == pGlobal)
         {
             potentialW = (cellData.globalPressure() - pressBound - fractionalNWI * (pcI - pcBound));
             potentialNW = (cellData.globalPressure() - pressBound + fractionalWI * (pcI - pcBound));
@@ -658,7 +658,7 @@ void FVVelocity2P<TypeTag>::calculateVelocityOnBoundary(const Intersection& inte
             velocityNW *= lambdaNW * scalarPerm * ((cellData.pressure(nPhaseIdx) - pressBound) / dist + gravityTermNW);
             break;
         }
-        case pglobal:
+        case pGlobal:
         {
             velocityW *= (lambdaW + lambdaNW) * scalarPerm * (cellData.globalPressure() - pressBound) / dist
                     + scalarPerm * (lambdaW * gravityTermW + lambdaNW * gravityTermNW);

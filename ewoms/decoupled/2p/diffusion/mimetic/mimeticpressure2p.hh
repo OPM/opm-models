@@ -310,11 +310,11 @@ public:
     problem_(problem),
     A_(problem.gridView())
     {
-        if (pressureType != pglobal)
+        if (pressureType != pGlobal)
         {
             DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
-        if (saturationType != Sw)
+        if (saturationType != sw)
         {
             DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }

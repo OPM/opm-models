@@ -595,8 +595,8 @@ void FVPressure2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& entries,
         entries[rhs] *= (permeability * gravity_);         // = multipaper eq(3.3) line 2+3
 
         // calculate capillary pressure gradient
-        Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
-        pCGradient *= (cellDataI.capillaryPressure() - cellDataJ.capillaryPressure()) / dist;
+        Dune::FieldVector<Scalar, dim> pcGradient = unitDistVec;
+        pcGradient *= (cellDataI.capillaryPressure() - cellDataJ.capillaryPressure()) / dist;
 
         // include capillary pressure fluxes
         switch (pressureType)
@@ -604,17 +604,17 @@ void FVPressure2P2C<TypeTag>::getFlux(Dune::FieldVector<Scalar, 2>& entries,
         case pw:
         {
             //add capillary pressure term to right hand side
-            entries[rhs] += lambdaN * dV_n * (permeability * pCGradient) * faceArea* (unitOuterNormal * unitDistVec);
+            entries[rhs] += lambdaN * dV_n * (permeability * pcGradient) * faceArea* (unitOuterNormal * unitDistVec);
             if(enableVolumeIntegral)
-                entries[rhs]-= lambdaN * gV_n * (permeability * pCGradient) * volume * faceArea / perimeter;
+                entries[rhs]-= lambdaN * gV_n * (permeability * pcGradient) * volume * faceArea / perimeter;
             break;
         }
         case pn:
         {
             //add capillary pressure term to right hand side
-            entries[rhs] -= lambdaW * dV_w * (permeability * pCGradient) * faceArea* (unitOuterNormal * unitDistVec);
+            entries[rhs] -= lambdaW * dV_w * (permeability * pcGradient) * faceArea* (unitOuterNormal * unitDistVec);
             if(enableVolumeIntegral)
-                entries[rhs]+= lambdaW * gV_w * (permeability * pCGradient) * volume * faceArea / perimeter;
+                entries[rhs]+= lambdaW * gV_w * (permeability * pcGradient) * volume * faceArea / perimeter;
             break;
         }
         }
@@ -833,21 +833,21 @@ void FVPressure2P2C<TypeTag>::getFluxOnBoundary(Dune::FieldVector<Scalar, 2>& en
             case pw:
                 {
                     // calculate capillary pressure gradient
-                    Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
-                    pCGradient *= (cellDataI.capillaryPressure() - pcBound) / dist;
+                    Dune::FieldVector<Scalar, dim> pcGradient = unitDistVec;
+                    pcGradient *= (cellDataI.capillaryPressure() - pcBound) / dist;
 
                     //add capillary pressure term to right hand side
-                    rightEntry += lambdaNW * dV_n * (permeability * pCGradient) * faceArea;
+                    rightEntry += lambdaNW * dV_n * (permeability * pcGradient) * faceArea;
                     break;
                 }
             case pn:
                 {
                     // calculate capillary pressure gradient
-                    Dune::FieldVector<Scalar, dim> pCGradient = unitDistVec;
-                    pCGradient *= (cellDataI.capillaryPressure() - pcBound) / dist;
+                    Dune::FieldVector<Scalar, dim> pcGradient = unitDistVec;
+                    pcGradient *= (cellDataI.capillaryPressure() - pcBound) / dist;
 
                     //add capillary pressure term to right hand side
-                    rightEntry -= lambdaW * dV_w * (permeability * pCGradient) * faceArea;
+                    rightEntry -= lambdaW * dV_w * (permeability * pcGradient) * faceArea;
                     break;
                 }
             }

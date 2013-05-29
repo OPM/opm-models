@@ -181,7 +181,7 @@ public:
     {
         if (std::isnan(nu_[phaseIdx]))  //in contrast to the standard update() method, satflash() does not calculate nu.
         {
-            nu_[wPhaseIdx] = Sw_ * density_[wPhaseIdx] / (Sw_ * density_[wPhaseIdx] + (1. - Sw_) * density_[nPhaseIdx]);
+            nu_[wPhaseIdx] = sw_ * density_[wPhaseIdx] / (sw_ * density_[wPhaseIdx] + (1. - sw_) * density_[nPhaseIdx]);
             nu_[nPhaseIdx] = 1. - nu_[wPhaseIdx];
             return nu_[phaseIdx];
         }
@@ -253,9 +253,9 @@ public:
     void setSaturation(int phaseIdx, Scalar value)
     {
         if (phaseIdx == wPhaseIdx)
-            Sw_ = value;
+            sw_ = value;
         else
-            Sw_ = 1.-value;
+            sw_ = 1.-value;
     }
 
     /*!
@@ -313,7 +313,7 @@ private:
     Scalar phasePressure_[numPhases];
     Scalar temperature_;
 
-    Scalar Sw_;
+    Scalar sw_;
     Scalar nu_[numPhases]; //phase mass fraction
     Scalar density_[numPhases];
     Scalar viscosity_[numPhases];

@@ -262,17 +262,17 @@ void dirichletAtPos(PrimaryVariables &values, const GlobalPosition& globalPos) c
             Scalar pRef = referencePressureAtPos(globalPos);
             Scalar temp = temperatureAtPos(globalPos);
 
-            values[pWIdx] = (2e5 + (this->bBoxMax()[dim-1] - globalPos[dim-1]) * WettingPhase::density(temp, pRef) * this->gravity().two_norm());
+            values[pwIdx] = (2e5 + (this->bBoxMax()[dim-1] - globalPos[dim-1]) * WettingPhase::density(temp, pRef) * this->gravity().two_norm());
         }
         else
         {
-            values[pWIdx] = 2e5;
+            values[pwIdx] = 2e5;
         }
         values[swIdx] = 0.8;
     }
     else
     {
-        values[pWIdx] = 2e5;
+        values[pwIdx] = 2e5;
         values[swIdx] = 0.2;
     }
 }
@@ -290,7 +290,7 @@ void neumannAtPos(PrimaryVariables &values, const GlobalPosition& globalPos) con
 void initial(PrimaryVariables &values,
         const Element& element) const
 {
-    values[pWIdx] = 0;
+    values[pwIdx] = 0;
     values[swIdx] = 0.2;
 }
 

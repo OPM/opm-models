@@ -338,7 +338,7 @@ void FVVelocity2PAdaptive<TypeTag>::calculateVelocity(const Intersection& inters
 
         switch (pressureType_)
         {
-        case pglobal:
+        case pGlobal:
         {
             Scalar pressJK = (cellDataJ.globalPressure() + cellDataK.globalPressure()) / 2;
 
@@ -427,7 +427,7 @@ void FVVelocity2PAdaptive<TypeTag>::calculateVelocity(const Intersection& inters
             velocityNW += gravityTermNW;
             break;
         }
-        case pglobal:
+        case pGlobal:
         {
             Scalar pressJK = (cellDataJ.globalPressure() + cellDataK.globalPressure()) / 2;
 

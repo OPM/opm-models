@@ -319,18 +319,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
             CellData& cellData4 = problem_.variables().cellData(globalIdx4);
 
             // get pressure values
-            Dune::FieldVector < Scalar, 2 * dim > pW(0);
-            Dune::FieldVector < Scalar, 2 * dim > pN(0);
+            Dune::FieldVector < Scalar, 2 * dim > pw(0);
+            Dune::FieldVector < Scalar, 2 * dim > pn(0);
 
-            pW[0] = cellData1.pressure(wPhaseIdx);
-            pW[1] = cellData2.pressure(wPhaseIdx);
-            pW[2] = cellData3.pressure(wPhaseIdx);
-            pW[3] = cellData4.pressure(wPhaseIdx);
+            pw[0] = cellData1.pressure(wPhaseIdx);
+            pw[1] = cellData2.pressure(wPhaseIdx);
+            pw[2] = cellData3.pressure(wPhaseIdx);
+            pw[3] = cellData4.pressure(wPhaseIdx);
 
-            pN[0] = cellData1.pressure(nPhaseIdx);
-            pN[1] = cellData2.pressure(nPhaseIdx);
-            pN[2] = cellData3.pressure(nPhaseIdx);
-            pN[3] = cellData4.pressure(nPhaseIdx);
+            pn[0] = cellData1.pressure(nPhaseIdx);
+            pn[1] = cellData2.pressure(nPhaseIdx);
+            pn[2] = cellData3.pressure(nPhaseIdx);
+            pn[3] = cellData4.pressure(nPhaseIdx);
 
             //get mobilities of the phases
             Dune::FieldVector<Scalar, numPhases> lambda1(cellData1.mobility(wPhaseIdx));
@@ -393,18 +393,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
             if (rightTriangle)
             {
-                u[0] = pW[1];
-                u[1] = pW[2];
-                u[2] = pW[0];
+                u[0] = pw[1];
+                u[1] = pw[2];
+                u[2] = pw[0];
 
                 T.mv(u, Tu);
 
                 fluxW[0] = Tu[1];
                 potentialW12 = Tu[1];
 
-                u[0] = pN[1];
-                u[1] = pN[2];
-                u[2] = pN[0];
+                u[0] = pn[1];
+                u[1] = pn[2];
+                u[2] = pn[0];
 
                 T.mv(u, Tu);
 
@@ -413,18 +413,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
             }
             else
             {
-                u[0] = pW[0];
-                u[1] = pW[3];
-                u[2] = pW[1];
+                u[0] = pw[0];
+                u[1] = pw[3];
+                u[2] = pw[1];
 
                 T.mv(u, Tu);
 
                 fluxW[0] = Tu[1];
                 potentialW12 = Tu[1];
 
-                u[0] = pN[0];
-                u[1] = pN[3];
-                u[2] = pN[1];
+                u[0] = pn[0];
+                u[1] = pn[3];
+                u[2] = pn[1];
 
                 T.mv(u, Tu);
 
@@ -436,18 +436,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
             if (rightTriangle)
             {
-                u[0] = pW[2];
-                u[1] = pW[3];
-                u[2] = pW[1];
+                u[0] = pw[2];
+                u[1] = pw[3];
+                u[2] = pw[1];
 
                 T.mv(u, Tu);
 
                 fluxW[1] = Tu[1];
                 potentialW32 = -Tu[1];
 
-                u[0] = pN[2];
-                u[1] = pN[3];
-                u[2] = pN[1];
+                u[0] = pn[2];
+                u[1] = pn[3];
+                u[2] = pn[1];
 
                 T.mv(u, Tu);
 
@@ -456,18 +456,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
             }
             else
             {
-                u[0] = pW[1];
-                u[1] = pW[0];
-                u[2] = pW[2];
+                u[0] = pw[1];
+                u[1] = pw[0];
+                u[2] = pw[2];
 
                 T.mv(u, Tu);
 
                 fluxW[1] = Tu[1];
                 potentialW32 = -Tu[1];
 
-                u[0] = pN[1];
-                u[1] = pN[0];
-                u[2] = pN[2];
+                u[0] = pn[1];
+                u[1] = pn[0];
+                u[2] = pn[2];
 
                 T.mv(u, Tu);
 
@@ -479,18 +479,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
             if (rightTriangle)
             {
-                u[0] = pW[3];
-                u[1] = pW[0];
-                u[2] = pW[2];
+                u[0] = pw[3];
+                u[1] = pw[0];
+                u[2] = pw[2];
 
                 T.mv(u, Tu);
 
                 fluxW[2] = Tu[1];
                 potentialW34 = Tu[1];
 
-                u[0] = pN[3];
-                u[1] = pN[0];
-                u[2] = pN[2];
+                u[0] = pn[3];
+                u[1] = pn[0];
+                u[2] = pn[2];
 
                 T.mv(u, Tu);
 
@@ -499,18 +499,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
             }
             else
             {
-                u[0] = pW[2];
-                u[1] = pW[1];
-                u[2] = pW[3];
+                u[0] = pw[2];
+                u[1] = pw[1];
+                u[2] = pw[3];
 
                 T.mv(u, Tu);
 
                 fluxW[2] = Tu[1];
                 potentialW34 = Tu[1];
 
-                u[0] = pN[2];
-                u[1] = pN[1];
-                u[2] = pN[3];
+                u[0] = pn[2];
+                u[1] = pn[1];
+                u[2] = pn[3];
 
                 T.mv(u, Tu);
 
@@ -522,18 +522,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
             if (rightTriangle)
             {
-                u[0] = pW[0];
-                u[1] = pW[1];
-                u[2] = pW[3];
+                u[0] = pw[0];
+                u[1] = pw[1];
+                u[2] = pw[3];
 
                 T.mv(u, Tu);
 
                 fluxW[3] = Tu[1];
                 potentialW14 = -Tu[1];
 
-                u[0] = pN[0];
-                u[1] = pN[1];
-                u[2] = pN[3];
+                u[0] = pn[0];
+                u[1] = pn[1];
+                u[2] = pn[3];
 
                 T.mv(u, Tu);
 
@@ -542,18 +542,18 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
             }
             else
             {
-                u[0] = pW[3];
-                u[1] = pW[2];
-                u[2] = pW[0];
+                u[0] = pw[3];
+                u[1] = pw[2];
+                u[2] = pw[0];
 
                 T.mv(u, Tu);
 
                 fluxW[3] = Tu[1];
                 potentialW14 = -Tu[1];
 
-                u[0] = pN[3];
-                u[1] = pN[2];
-                u[2] = pN[0];
+                u[0] = pn[3];
+                u[1] = pn[2];
+                u[2] = pn[0];
 
                 T.mv(u, Tu);
 
@@ -778,12 +778,12 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
                                 Scalar satBound = interactionVolume.getDirichletValues(intVolFaceIdx)[saturationIdx];
                                 switch (saturationType_)
                                 {
-                                case Sw:
+                                case sw:
                                 {
                                     satWBound = satBound;
                                       break;
                                 }
-                                case Sn:
+                                case sn:
                                 {
                                     satWBound = 1 - satBound;
                                     break;

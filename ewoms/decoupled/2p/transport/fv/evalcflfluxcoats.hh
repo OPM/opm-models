@@ -467,12 +467,12 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             {
                 switch (saturationType_)
                 {
-                case Sw:
+                case sw:
                     {
                         cflFluxFunctionCoats_ += dLambdaWdS / (dLambdaWdS + dLambdaNWdS) * std::abs(flux);
                         break;
                     }
-                case Sn:
+                case sn:
                     {
                         cflFluxFunctionCoats_ +=  dLambdaNWdS / (dLambdaWdS + dLambdaNWdS) * std::abs(flux);
                         break;
@@ -520,12 +520,12 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             problem_.dirichlet(bcValues, intersection);
             switch (saturationType_)
             {
-            case Sw:
+            case sw:
                 {
                     satWBound = bcValues[eqIdxSat];
                     break;
                 }
-            case Sn:
+            case sn:
                 {
                     satWBound = 1 - bcValues[eqIdxSat];
                     break;
@@ -670,12 +670,12 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             {
                 switch (saturationType_)
                 {
-                case Sw:
+                case sw:
                     {
                         cflFluxFunctionCoats_ += dLambdaWdS / (dLambdaWdS + dLambdaNWdS) * std::abs(flux);
                         break;
                     }
-                case Sn:
+                case sn:
                     {
                         cflFluxFunctionCoats_ +=  dLambdaNWdS / (dLambdaWdS + dLambdaNWdS) * std::abs(flux);
                         break;

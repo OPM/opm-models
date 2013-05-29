@@ -278,10 +278,10 @@ public:
             Scalar sat = 0;
             switch (saturationType_)
             {
-            case Sw:
+            case sw:
                 sat = problem_.variables().cellData(i).saturation(wPhaseIdx);
                 break;
-            case Sn:
+            case sn:
                 sat = problem_.variables().cellData(i).saturation(nPhaseIdx);
                 break;
             }
@@ -337,7 +337,7 @@ public:
             ScalarSolutionType *pressure = writer.allocateManagedBuffer(size);
             ScalarSolutionType *pressureSecond = writer.allocateManagedBuffer(size);
             ScalarSolutionType *potentialSecond = writer.allocateManagedBuffer(size);
-            ScalarSolutionType *pC = writer.allocateManagedBuffer(size);
+            ScalarSolutionType *pc = writer.allocateManagedBuffer(size);
 
             ElementIterator eItBegin = problem_.gridView().template begin<0>();
             ElementIterator eItEnd = problem_.gridView().template end<0>();
@@ -346,7 +346,7 @@ public:
                 int idx = problem_.variables().index(*eIt);
                 CellData& cellData = problem_.variables().cellData(idx);
 
-                (*pC)[idx] = cellData.capillaryPressure();
+                (*pc)[idx] = cellData.capillaryPressure();
 
                 if (pressureType_ == pw)
                 {
@@ -379,7 +379,7 @@ public:
                 writer.attachCellData(*potentialSecond, "wetting potential");
             }
 
-            writer.attachCellData(*pC, "capillary pressure");
+            writer.attachCellData(*pc, "capillary pressure");
         }
 
         return;
@@ -398,7 +398,7 @@ public:
         {
             DUNE_THROW(Dune::NotImplemented, "Pressure type not supported!");
         }
-        if (saturationType_ != Sw && saturationType_ != Sn)
+        if (saturationType_ != sw && saturationType_ != sn)
         {
             DUNE_THROW(Dune::NotImplemented, "Saturation type not supported!");
         }
@@ -483,10 +483,10 @@ private:
         Scalar sat = 0;
         switch (saturationType_)
         {
-        case Sw:
+        case sw:
             sat = cellData.saturation(wPhaseIdx);
             break;
-        case Sn:
+        case sn:
             sat = cellData.saturation(nPhaseIdx);
             break;
         }
@@ -1829,12 +1829,12 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
                                 Scalar satBound = interactionVolume.getDirichletValues(intVolFaceIdx)[saturationIdx];
                                 switch (saturationType_)
                                 {
-                                case Sw:
+                                case sw:
                                 {
                                     satWBound = satBound;
                                     break;
                                 }
-                                case Sn:
+                                case sn:
                                 {
                                     satWBound = 1 - satBound;
                                     break;
@@ -1900,24 +1900,24 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
                             case pw:
                             {
                                 // calculate capillary pressure gradient
-                                DimVector pCGradient = unitDistVec;
-                                pCGradient *= (pc - pcBound) / dist;
+                                DimVector pcGradient = unitDistVec;
+                                pcGradient *= (pc - pcBound) / dist;
 
                                 //add capillary pressure term to right hand side
                                 pcFlux = 0.5 * (lambda[nPhaseIdx] + lambdaBound[nPhaseIdx])
-                                        * (permTimesNormal * pCGradient) * faceArea;
+                                        * (permTimesNormal * pcGradient) * faceArea;
 
                                 break;
                             }
                             case pn:
                             {
                                 // calculate capillary pressure gradient
-                                DimVector pCGradient = unitDistVec;
-                                pCGradient *= (pc - pcBound) / dist;
+                                DimVector pcGradient = unitDistVec;
+                                pcGradient *= (pc - pcBound) / dist;
 
                                 //add capillary pressure term to right hand side
                                 pcFlux = 0.5 * (lambda[wPhaseIdx] + lambdaBound[wPhaseIdx])
-                                        * (permTimesNormal * pCGradient) * faceArea;
+                                        * (permTimesNormal * pcGradient) * faceArea;
 
                                 break;
 
