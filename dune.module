@@ -1,6 +1,6 @@
 ################################ 
 # Dune module information file: This file gets parsed by dunecontrol
-# and the CMake build scripts.
+# and by the CMake build scripts.
 ################################
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media

@@ -291,8 +291,10 @@ public:
                 phasePresence_ |= (1 << phaseIdx);
         }
 
-        // assert that some phase is present
-        assert(phasePresence_ != 0);
+        // some phase must be present
+        if (phasePresence_ == 0)
+            DUNE_THROW(NumericalProblem,
+                       "Phase state was 0, i.e., no fluid is present");
 
         // set the primary variables which correspond to mole
         // fractions of the present phase which has the lowest index.
