@@ -165,10 +165,6 @@ ParentType(timeManager, GET_PROP_TYPE(TypeTag, GridCreator)::grid().leafView()),
                       /*numP=*/400);
 }
 
-    void initialAtPos(PrimaryVariables &values,
-            const GlobalPosition &globalPos) const
-    {}
-
 /*!
  * \name Problem parameters
  */
