@@ -97,9 +97,9 @@ public:
      */
     Scalar getDt(const Element& element)
     {
-        Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
+        //Scalar porosity = std::max(problem_.spatialParams().porosity(element), porosityThreshold_);
 
-        return (getCFLFluxFunction(element) * porosity * element.geometry().volume());
+        return (getCflFluxFunction(element) * problem_.spatialParams().porosity(element) * element.geometry().volume());
     }
 
     //! resets the accumulated CFL-fluxes to zero
@@ -223,8 +223,8 @@ private:
 template<class TypeTag>
 typename EvalCflFluxDefault<TypeTag>::Scalar EvalCflFluxDefault<TypeTag>::getCflFluxFunction(const Element& element)
 {
-    Scalar residualSatW = problem_.spatialParams().materialLawParams(element).swr();
-    Scalar residualSatNW = problem_.spatialParams().materialLawParams(element).snr();
+    Scalar residualSatW = problem_.spatialParams().materialLawParams(element).Swr();
+    Scalar residualSatNW = problem_.spatialParams().materialLawParams(element).Snr();
 
     // compute dt restriction
     Scalar volumeCorrectionFactor = 1 - residualSatW - residualSatNW;

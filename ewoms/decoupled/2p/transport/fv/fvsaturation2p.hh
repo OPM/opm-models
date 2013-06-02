@@ -758,7 +758,7 @@ void FVSaturation2P<TypeTag>::getFluxOnBoundary(Scalar& update, const Intersecti
         }
         }
 
-        Scalar pcBound = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*elementI), satWBound);
+        Scalar pcBound = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*elementI), satWBound);
 
         Scalar lambdaW = 0;
         Scalar lambdaNW = 0;
@@ -1143,7 +1143,7 @@ void FVSaturation2P<TypeTag>::updateMaterialLaws()
         Scalar satW = cellData.saturation(wPhaseIdx);
         Scalar satNW = cellData.saturation(nPhaseIdx);
 
-        Scalar pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
         cellData.setSaturation(wPhaseIdx, satW);
         cellData.setSaturation(nPhaseIdx, satNW);

@@ -67,10 +67,10 @@ typedef typename GridView::Traits::template Codim<0>::Entity Element;
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
+        pn = Indices::pressureNw,
+        pGlobal = Indices::pressureGlobal,
         vw = Indices::velocityW,
-        vn = Indices::velocityNW,
+        vn = Indices::velocityNw,
         vt = Indices::velocityTotal,
         eqIdxPress = Indices::pressureEqIdx,
     };

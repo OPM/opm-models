@@ -86,8 +86,8 @@ template<class TypeTag> class FVMPFAOVelocity2P:public FVMPFAOPressure2P<TypeTag
     };
     enum
     {
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNW,
         vt = Indices::velocityTotal,
         pGlobal = Indices::pressureGlobal
     };

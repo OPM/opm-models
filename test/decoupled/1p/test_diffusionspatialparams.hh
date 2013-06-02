@@ -150,8 +150,8 @@ public:
         materialLawParams_.setSnr(0.0);
 
         // parameters for the linear entry pressure function
-        materialLawParams_.setEntryPc(0);
-        materialLawParams_.setMaxPc(0);
+        materialLawParams_.setEntryPC(0);
+        materialLawParams_.setMaxPC(0);
     }
 
 private:

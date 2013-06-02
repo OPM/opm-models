@@ -121,15 +121,15 @@ public:
         const VertexIterator vEndIt = gridView.template end<dim>();
         for (; vIt!=vEndIt; ++vIt) {
             for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().center()[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().center()[i]);
+                bBoxMin_[i] = std::min(bBoxMin_[i], vIt->geometry().center()[i]);
+                bBoxMax_[i] = std::max(bBoxMax_[i], vIt->geometry().center()[i]);
             }
         }
 
         // communicate to get the bounding box of the whole domain
         for (int i = 0; i < dim; ++i) {
-            bboxMin_[i] = gridView.comm().min(bboxMin_[i]);
-            bboxMax_[i] = gridView.comm().max(bboxMax_[i]);
+            bBoxMin_[i] = gridView.comm().min(bBoxMin_[i]);
+            bBoxMax_[i] = gridView.comm().max(bBoxMax_[i]);
         }
 
         pressModel_ = Dune::make_shared<PressureModel>(asImp_());

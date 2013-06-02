@@ -98,9 +98,9 @@ class FVMPFAL2PFABoundPressure2P: public FVPressure<TypeTag>
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
+        pn = Indices::pressureNw,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw,
         vt = Indices::velocityTotal
     };
     enum
@@ -1843,7 +1843,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::assemble()
 
                             }
 
-                            Scalar pcBound = MaterialLaw::pc(
+                            Scalar pcBound = MaterialLaw::pC(
                                     problem_.spatialParams().materialLawParams(*elementPointer), satWBound);
 
                             Scalar gravityDiffBound = (problem_.bBoxMax() - globalPosFace) * gravity_
@@ -2332,7 +2332,7 @@ void FVMPFAL2PFABoundPressure2P<TypeTag>::updateMaterialLaws()
 
         Scalar satW = cellData.saturation(wPhaseIdx);
 
-        Scalar pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
         cellData.setCapillaryPressure(pc);
 

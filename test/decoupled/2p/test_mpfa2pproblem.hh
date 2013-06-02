@@ -217,7 +217,7 @@ MPFATwoPTestProblem(TimeManager &timeManager)
     this->setGrid(GridCreator::grid());
 
     Scalar inletWidth = GET_PARAM(TypeTag, Scalar, InletWidth);
-    GlobalPosition inletCenter = this->bboxMax();
+    GlobalPosition inletCenter = this->bBoxMax();
     inletCenter[0] *= 0.5;
 
     inletLeftCoord_ = inletCenter;

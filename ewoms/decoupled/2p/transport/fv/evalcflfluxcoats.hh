@@ -68,10 +68,10 @@ private:
 
     enum {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
+        pn = Indices::pressureNw,
         vt = Indices::velocityTotal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw
     };
 
     typedef typename GridView::Traits::template Codim<0>::Entity Element;
@@ -123,12 +123,12 @@ public:
      *
      * \copydetails EvalCflFlux::getCFLFluxFunction(const Element&)
      */
-    Scalar getCFLFluxFunction(const Element& element)
+    Scalar getCflFluxFunction(const Element& element)
     {
         if (rejectForTimeStepping_)
             return 1e100;
 
-        Scalar cflFluxDefault = getCFLFluxFunctionDefault();
+        Scalar cflFluxDefault = getCflFluxFunctionDefault();
 
         if (std::isnan(cflFluxFunctionCoats_) || std::isinf(cflFluxFunctionCoats_))
         {
@@ -341,7 +341,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
     Scalar lambdaWI = cellDataI.mobility(wPhaseIdx);
     Scalar lambdaNWI = cellDataI.mobility(nPhaseIdx);
 
-    Scalar dPcdSI = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*element), satI);
+    Scalar dPcdSI = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*element), satI);
 
     const GlobalPosition& unitOuterNormal = intersection.centerUnitOuterNormal();
 
@@ -385,7 +385,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
         Scalar lambdaWJ = cellDataI.mobility(wPhaseIdx);
         Scalar lambdaNWJ = cellDataI.mobility(nPhaseIdx);
 
-        Scalar dPcdSJ = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*neighbor), satJ);
+        Scalar dPcdSJ = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*neighbor), satJ);
 
         // compute vectorized permeabilities
         DimMatrix meanPermeability(0);
@@ -551,12 +551,12 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             case pw:
                 {
                     potWBound = bcValues[eqIdxPress] + density_[wPhaseIdx] * gdeltaZ;
-                    potNWBound = bcValues[eqIdxPress] + MaterialLaw::pc(problem_.spatialParams().materialLawParams(*element), satWBound) + density_[nPhaseIdx] * gdeltaZ;
+                    potNWBound = bcValues[eqIdxPress] + MaterialLaw::pC(problem_.spatialParams().materialLawParams(*element), satWBound) + density_[nPhaseIdx] * gdeltaZ;
                     break;
                 }
             case pn:
                 {
-                    potWBound = bcValues[eqIdxPress] - MaterialLaw::pc(problem_.spatialParams().materialLawParams(*element), satWBound) + density_[wPhaseIdx] * gdeltaZ;
+                    potWBound = bcValues[eqIdxPress] - MaterialLaw::pC(problem_.spatialParams().materialLawParams(*element), satWBound) + density_[wPhaseIdx] * gdeltaZ;
                     potNWBound = bcValues[eqIdxPress] + density_[nPhaseIdx] * gdeltaZ;
                     break;
                 }
@@ -582,7 +582,7 @@ void EvalCflFluxCoats<TypeTag>::addCoatsFlux(Scalar& lambdaW, Scalar& lambdaNW, 
             }
         }
 
-        Scalar dPcdSBound = MaterialLaw::dpc_dsw(problem_.spatialParams().materialLawParams(*element), satWBound);
+        Scalar dPcdSBound = MaterialLaw::dpC_dSw(problem_.spatialParams().materialLawParams(*element), satWBound);
 
         Scalar lambdaWBound = 0;
         Scalar lambdaNWBound = 0;

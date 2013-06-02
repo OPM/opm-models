@@ -69,9 +69,9 @@ public:
     Scalar saturation(int phaseIdx) const
     {
         if (phaseIdx == wPhaseIdx)
-            return Sw_;
+            return sw_;
         else
-            return Scalar(1.0) - Sw_;
+            return Scalar(1.0) - sw_;
     }
 
     /*!

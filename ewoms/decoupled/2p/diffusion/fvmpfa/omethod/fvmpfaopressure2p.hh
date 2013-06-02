@@ -2451,11 +2451,11 @@ void FVMPFAOPressure2P<TypeTag>::updateMaterialLaws()
         Scalar satW = cellData.saturation(wPhaseIdx);
         Scalar satNW = cellData.saturation(nPhaseIdx);
 
-        Scalar pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
-            cellData.setSaturation(wPhaseIdx, satW);
-            cellData.setSaturation(nPhaseIdx, satNW);
-            cellData.setCapillaryPressure(pc);
+        cellData.setSaturation(wPhaseIdx, satW);
+        cellData.setSaturation(nPhaseIdx, satNW);
+        cellData.setCapillaryPressure(pc);
 
 
         // initialize mobilities

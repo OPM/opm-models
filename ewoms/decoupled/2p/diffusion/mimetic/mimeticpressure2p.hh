@@ -86,8 +86,8 @@ template<class TypeTag> class MimeticPressure2P
     };
     enum
     {
-        pglobal = Indices::pressureGlobal,
-        Sw = Indices::saturationW
+        pGlobal = Indices::pressureGlobal,
+        sw = Indices::saturationW
     };
     enum
     {
@@ -368,7 +368,7 @@ void MimeticPressure2P<TypeTag>::updateMaterialLaws()
         //determine phase saturations from primary saturation variable
 
         Scalar satW = cellData.saturation(wPhaseIdx);
-        Scalar pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
         cellData.setCapillaryPressure(pc);
 

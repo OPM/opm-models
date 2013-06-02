@@ -98,9 +98,9 @@ template<class TypeTag> class FVMPFAL2PFABoundVelocity2P: public FVMPFAL2PFABoun
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
+        pn = Indices::pressureNw,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw,
         vt = Indices::velocityTotal
     };
     enum
@@ -792,7 +792,7 @@ void FVMPFAL2PFABoundVelocity2P<TypeTag>::calculateVelocity()
 
                             }
 
-                            Scalar pcBound = MaterialLaw::pc(
+                            Scalar pcBound = MaterialLaw::pC(
                                     problem_.spatialParams().materialLawParams(*elementPointer), satWBound);
 
                             Scalar gravityDiffBound = (problem_.bBoxMax() - globalPosFace) * problem_.gravity()

@@ -146,7 +146,7 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnsw, PVOffset>
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
-    static const int pressureType = pressureNW;
+    static const int pressureType = pressureNw;
     static const int saturationType = saturationW;
 
     static const int velocityDefault = velocityW;
@@ -224,10 +224,10 @@ struct DecoupledTwoPIndices<DecoupledTwoPCommonIndices::pnsn, PVOffset>
 
     //! \cond \private
     //Set the types of the single models depending on the formulation
-    static const int pressureType = pressureNW;
-    static const int saturationType = saturationNW;
+    static const int pressureType = pressureNw;
+    static const int saturationType = saturationNw;
 
-    static const int velocityDefault = velocityNW;
+    static const int velocityDefault = velocityNw;
     //! \endcond
 
     // indices of the equations

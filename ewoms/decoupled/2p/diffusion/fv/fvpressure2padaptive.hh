@@ -65,10 +65,10 @@ template<class TypeTag> class FVPressure2PAdaptive: public FVPressure2P<TypeTag>
     enum
     {
         pw = Indices::pressureW,
-        pn = Indices::pressureNW,
-        pglobal = Indices::pressureGlobal,
-        Sw = Indices::saturationW,
-        Sn = Indices::saturationNW,
+        pn = Indices::pressureNw,
+        pGlobal = Indices::pressureGlobal,
+        sw = Indices::saturationW,
+        sn = Indices::saturationNw,
         eqIdxPress = Indices::pressureEqIdx,
     };
     enum
@@ -151,7 +151,7 @@ public:
             case pn:
                 this->pressure()[i] = cellData.pressure(nPhaseIdx);
                 break;
-            case pglobal:
+            case pGlobal:
                 this->pressure()[i] = cellData.globalPressure();
                 break;
             }

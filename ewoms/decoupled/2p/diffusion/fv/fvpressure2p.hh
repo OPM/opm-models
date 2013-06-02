@@ -835,7 +835,7 @@ const Intersection& intersection, const CellData& cellData, const bool first)
         Scalar pressBound = boundValues[pressureIdx];
 
         //calculate consitutive relations depending on the kind of saturation used
-        Scalar pcBound = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*element), satW);
+        Scalar pcBound = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*element), satW);
 
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
@@ -1022,7 +1022,7 @@ void FVPressure2P<TypeTag>::updateMaterialLaws()
 
         Scalar satW = cellData.saturation(wPhaseIdx);
 
-        Scalar pc = MaterialLaw::pc(problem_.spatialParams().materialLawParams(*eIt), satW);
+        Scalar pc = MaterialLaw::pC(problem_.spatialParams().materialLawParams(*eIt), satW);
 
         //determine phase pressures from primary pressure variable
         Scalar pressW = 0;
