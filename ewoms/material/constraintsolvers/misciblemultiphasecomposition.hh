@@ -165,13 +165,21 @@ public:
         }
 #endif
 
+        // set some fake composition. This is required since even if
+        // the fugacity coefficients (in which we are interested here)
+        // do not depend on composition, other cached parameters may
+        // do, which leads to valgrind complaints
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                fluidState.setMoleFraction(phaseIdx, compIdx, /*value=*/0.0);
+        paramCache.updateAll(fluidState);
+
         // compute all fugacity coefficients
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            paramCache.updatePhase(fluidState, phaseIdx);
-
             // since we assume ideal mixtures, the fugacity
             // coefficients of the components cannot depend on
             // composition, i.e. the parameters in the cache are valid
+            // to calculate the compositions
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar fugCoeff = FluidSystem::fugacityCoefficient(fluidState, paramCache, phaseIdx, compIdx);
                 fluidState.setFugacityCoefficient(phaseIdx, compIdx, fugCoeff);
