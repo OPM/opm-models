@@ -50,7 +50,10 @@ NEW_TYPE_TAG(VcfvNcp, INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkComposition, Vt
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(NcpEnergyIndices); //!< Enumerations for the 2pNc model
+
+NEW_PROP_TAG(NcpPressureBaseWeight); //!< The unmodified weight for the pressure primary variable
+NEW_PROP_TAG(NcpSaturationsBaseWeight); //!< The weight for the saturation primary variables
+NEW_PROP_TAG(NcpFugacitiesBaseWeight); //!< The unmodified weight for the fugacity primary variables
 
 NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the soil)
 NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the soil)

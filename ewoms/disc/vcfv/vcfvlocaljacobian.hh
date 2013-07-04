@@ -212,7 +212,7 @@ public:
      *        the local derivatives
      */
     static Scalar baseEpsilon()
-    { return 1e-11; }
+    { return GET_PROP_VALUE(TypeTag, BaseEpsilon); }
 
     /*!
      * \brief Returns the epsilon value which is added and removed
@@ -231,6 +231,7 @@ public:
     {
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
+        Valgrind::CheckDefined(pvWeight);
 
         return baseEpsilon()/pvWeight;
     }

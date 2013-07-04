@@ -420,12 +420,12 @@ protected:
 
             // the values of the Henry constant for the solutes have
             // are faked so far...
-        case C1Idx: return 5.57601e+09;
-        case C3Idx: return 1e10;
-        case C6Idx: return 1e10;
-        case C10Idx: return 1e10;
-        case C15Idx: return 1e10;
-        case C20Idx: return 1e10;
+        case C1Idx: return 1.1e9;
+        case C3Idx: return 1.2e9;
+        case C6Idx: return 2.3e9;
+        case C10Idx: return 2.4e9;
+        case C15Idx: return 2.5e9;
+        case C20Idx: return 2.6e9;
         default: DUNE_THROW(Dune::InvalidStateException, "Unknown component index " << compIdx);
         }
     }

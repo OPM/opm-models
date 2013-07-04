@@ -146,6 +146,14 @@ SET_INT_PROP(VcfvNcp, NewtonChoppedIterations, 3);
 
 //! The indices required by the compositional NCP model
 SET_TYPE_PROP(VcfvNcp, Indices, NcpIndices<TypeTag, 0>);
+
+//! The unmodified weight for the pressure primary variable
+SET_SCALAR_PROP(VcfvNcp, NcpPressureBaseWeight, 1.0);
+//! The weight for the saturation primary variables
+SET_SCALAR_PROP(VcfvNcp, NcpSaturationsBaseWeight, 1.0);
+//! The unmodified weight for the fugacity primary variables
+SET_SCALAR_PROP(VcfvNcp, NcpFugacitiesBaseWeight, 1.0);
+
 }
 }
 

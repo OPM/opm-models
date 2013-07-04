@@ -392,7 +392,7 @@ protected:
 
         // search by means of the Newton method for a root of Forchheimer equation
         int newtonIter = 0;
-        while (deltaV.two_norm() > 1e-10) {
+        while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 30)
                 DUNE_THROW(NumericalProblem,
                            "Could not determine Forchheimer velocity within "

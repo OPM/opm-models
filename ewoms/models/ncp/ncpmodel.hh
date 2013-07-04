@@ -313,7 +313,8 @@ public:
             assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[globalVertexIdx][compIdx]);
-            return 1.0 / minActivityCoeff_[globalVertexIdx][compIdx];
+            static const Scalar fugacityBaseWeight = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
+            return fugacityBaseWeight / minActivityCoeff_[globalVertexIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
@@ -323,14 +324,16 @@ public:
             static constexpr Scalar pGradRef = 1e-2; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
-            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
+            static const Scalar pressureBaseWeight = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
+            return std::max(pressureBaseWeight/referencePressure_, pGradRef * KRef/muRef / r);
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
         assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
 
         // saturation
-        return 1.0;
+        static const Scalar saturationsBaseWeight = GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
+        return saturationsBaseWeight;
     }
 
     /*!

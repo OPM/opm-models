@@ -148,6 +148,9 @@ NEW_PROP_TAG(NumericDifferenceMethod);
  */
 NEW_PROP_TAG(EnableHints);
 
+//! The base epsilon value for finite difference calculations
+NEW_PROP_TAG(BaseEpsilon);
+
 /*!
  * \brief Specify whether twopoint gradients ought to be used instead
  *        of finite element gradients.

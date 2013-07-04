@@ -137,6 +137,15 @@ SET_BOOL_PROP(VcfvPvs, EnableEnergy, false);
 
 // disable molecular diffusion by default
 SET_BOOL_PROP(VcfvPvs, EnableDiffusion, false);
+
+//! The basis value for the weight of the pressure primary variable
+SET_SCALAR_PROP(VcfvPvs, PvsPressureBaseWeight, 1.0);
+
+//! The basis value for the weight of the saturation primary variables
+SET_SCALAR_PROP(VcfvPvs, PvsSaturationsBaseWeight, 1.0);
+
+//! The basis value for the weight of the mole fraction primary variables
+SET_SCALAR_PROP(VcfvPvs, PvsMoleFractionsBaseWeight, 1.0);
 }
 
 }

@@ -110,8 +110,11 @@ public:
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
+            Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
             sumSat += fluidState_.saturation(phaseIdx);
         }
+        Valgrind::CheckDefined(priVars.implicitSaturationIdx());
+        Valgrind::CheckDefined(sumSat);
         fluidState_.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
 
         /////////////
@@ -202,11 +205,18 @@ public:
 
         }
 
+        // make valgrind happy and set an enthalpy
+        if (!enableEnergy) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+                fluidState_.setEnthalpy(phaseIdx, 0);
+        }
+
         /////////////
         // calculate the remaining quantities
         /////////////
 
         // calculate relative permeabilities
+        fluidState_.checkDefined();
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 

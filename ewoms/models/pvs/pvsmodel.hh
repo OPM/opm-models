@@ -158,6 +158,8 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+
     typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
@@ -191,10 +193,10 @@ public:
      */
     void init(Problem &problem)
     {
-        ParentType::init(problem);
-
         verbosity_ = GET_PARAM(TypeTag, int, PvsVerbosity);
         numSwitched_ = 0;
+
+        ParentType::init(problem);
 
         intrinsicPermeability_.resize(this->numDofs());
     }
@@ -328,18 +330,31 @@ public:
             return tmp;
 
         if (Indices::pressure0Idx == pvIdx) {
-            return 1e-7; //10/referencePressure_;
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static constexpr Scalar muRef = 1e-3;
-            static constexpr Scalar pGradRef = 1e-4; // [Pa / m]
+            static constexpr Scalar pGradRef = 1e-2; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
             return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
         }
 
-        return 1; // saturations and mole fractions have a weight of 1
+        if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx + numPhases - 1) {
+            int phaseIdx = pvIdx -Indices::switch0Idx;
+
+            if (!this->solution(/*timeIdx=*/0)[globalVertexIdx].phaseIsPresent(phaseIdx))
+                // for saturations, the weight is always 1
+                return 1;
+
+            // for saturations, the PvsMoleSaturationsBaseWeight
+            // property determines the weight
+            return GET_PROP_VALUE(TypeTag, PvsSaturationsBaseWeight);
+        }
+
+        // for mole fractions, the PvsMoleFractionsBaseWeight
+        // property determines the weight
+        return GET_PROP_VALUE(TypeTag, PvsMoleFractionsBaseWeight);
     }
 
     /*!

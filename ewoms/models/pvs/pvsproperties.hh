@@ -65,6 +65,10 @@ NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy is considered as a conservation quantity or not
 NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
+
+NEW_PROP_TAG(PvsPressureBaseWeight); //!< The basis value for the weight of the pressure primary variable
+NEW_PROP_TAG(PvsSaturationsBaseWeight); //!< The basis value for the weight of the saturation primary variables
+NEW_PROP_TAG(PvsMoleFractionsBaseWeight); //!< The basis value for the weight of the mole fraction primary variables
 }
 }
 

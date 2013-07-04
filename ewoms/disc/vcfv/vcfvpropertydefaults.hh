@@ -204,6 +204,9 @@ SET_SCALAR_PROP(VcfvModel, MaxTimeStepSize, 1e100);
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(VcfvModel, MinTimeStepSize, 0.0);
 
+//! The base epsilon value for finite difference calculations
+SET_SCALAR_PROP(VcfvModel, BaseEpsilon, 9.123e-11);
+
 //! use forward differences to calculate the jacobian by default
 SET_INT_PROP(VcfvModel, NumericDifferenceMethod, +1);
 
