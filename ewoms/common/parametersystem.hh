@@ -299,7 +299,7 @@ void printUsage(std::ostream &os = std::cout)
 
 /*!
  * \ingroup Parameter
- * \brief Print values of the run-parameters.
+ * \brief Print values of the run-time parameters.
  *
  * \param os The \c std::ostream on which the message should be printed
  */
@@ -355,6 +355,43 @@ void printValues(std::ostream &os = std::cout)
         os << "# Compile-time specified parameters\n";
         os << "###########\n";
         printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
+    }
+
+    if (unknownKeyList.size() > 0) {
+        os << "###########\n";
+        os << "# Unused run-time specified parameters\n";
+        os << "###########\n";
+        auto keyIt = unknownKeyList.begin();
+        const auto &keyEndIt = unknownKeyList.end();
+        for (; keyIt != keyEndIt; ++keyIt) {
+            os << *keyIt << "=\"" << tree.get(*keyIt, "") << "\"\n";
+        }
+    }
+}
+
+/*!
+ * \ingroup Parameter
+ * \brief Print the list of unused run-time parameters.
+ *
+ * \param os The \c std::ostream on which the message should be printed
+ */
+template <class TypeTag>
+void printUnused(std::ostream &os = std::cout)
+{
+    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+
+    const Dune::ParameterTree &tree = Params::tree();
+    std::list<std::string> runTimeAllKeyList;
+    std::list<std::string> unknownKeyList;
+
+    getFlattenedKeyList_(runTimeAllKeyList, tree);
+    auto keyIt = runTimeAllKeyList.begin();
+    const auto &keyEndIt = runTimeAllKeyList.end();
+    for (; keyIt != keyEndIt; ++ keyIt) {
+        if (paramRegistry_.find(*keyIt) == paramRegistry_.end()) {
+            // key was not registered by the program!
+            unknownKeyList.push_back(*keyIt);
+        }
     }
 
     if (unknownKeyList.size() > 0) {

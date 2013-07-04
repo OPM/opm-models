@@ -369,9 +369,17 @@ int start(int argc,
 
         // print the parameters if requested
         int printParams = GET_PARAM(TypeTag, int, PrintParameters);
-        if (printParams && myRank == 0) {
-            if (printParams == 1 || !isatty(fileno(stdout)))
-                Ewoms::Parameters::printValues<TypeTag>();
+        if (myRank == 0) {
+            if (printParams) {
+                if (printParams == 1 || !isatty(fileno(stdout)))
+                    Ewoms::Parameters::printValues<TypeTag>();
+                else
+                    // always print the list of specified but unused parameters
+                    Ewoms::Parameters::printUnused<TypeTag>();
+            }
+            else
+                // always print the list of specified but unused parameters
+                Ewoms::Parameters::printUnused<TypeTag>();
         }
 
         // print the properties if requested
