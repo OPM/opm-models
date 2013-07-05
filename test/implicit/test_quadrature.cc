@@ -145,7 +145,6 @@ void testTetrahedron()
 {
 #if HAVE_ALUGRID
     typedef Dune::ALUGrid<dim, dim, Dune::simplex, Dune::nonconforming> Grid;
-    typedef Grid::LeafGridView GridView;
     typedef Dune::GridFactory<Grid> GridFactory;
     GridFactory gf;
     Scalar corners[][3] = {
