@@ -1,3 +1,10 @@
+Notable Differences Between eWoms 2.3 and eWoms 2.4
+===================================================
+
+- The semi implicit ("decoupled", "IMPET") models have been removed
+  due to a lack of interest and the slowly increasing maintainance
+  burden as the Dumux and eWoms code bases diverge.
+
 Notable Differences Between eWoms 2.2 and eWoms 2.3
 ===================================================
 

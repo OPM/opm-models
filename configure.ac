@@ -28,27 +28,6 @@ AC_CONFIG_FILES([Makefile
     ewoms/models/richards/Makefile 
     ewoms/models/stokes/Makefile
     ewoms/common/Makefile 
-    ewoms/decoupled/Makefile
-    ewoms/decoupled/1p/Makefile
-    ewoms/decoupled/1p/diffusion/Makefile
-    ewoms/decoupled/1p/diffusion/fv/Makefile 
-    ewoms/decoupled/2p/Makefile 
-    ewoms/decoupled/2p/diffusion/Makefile 
-    ewoms/decoupled/2p/diffusion/fv/Makefile 
-    ewoms/decoupled/2p/diffusion/fvmpfa/Makefile
-    ewoms/decoupled/2p/diffusion/fvmpfa/lmethod/Makefile
-    ewoms/decoupled/2p/diffusion/fvmpfa/omethod/Makefile 
-    ewoms/decoupled/2p/diffusion/mimetic/Makefile 
-    ewoms/decoupled/2p/impes/Makefile 
-    ewoms/decoupled/2p/transport/Makefile 
-    ewoms/decoupled/2p/transport/fv/Makefile
-    ewoms/decoupled/2p2c/Makefile 
-    ewoms/decoupled/common/Makefile
-    ewoms/decoupled/common/fv/Makefile
-    ewoms/decoupled/common/fv/mpfa/Makefile
-    ewoms/decoupled/common/mimetic/Makefile
-    ewoms/decoupled/constraintsolvers/Makefile 
-    ewoms/decoupled/spatialparams/Makefile 
     ewoms/disc/Makefile 
     ewoms/disc/vcfv/Makefile 
     ewoms/io/Makefile
@@ -78,10 +57,6 @@ AC_CONFIG_FILES([Makefile
     test/common/Makefile
     test/common/propertysystem/Makefile
     test/common/spline/Makefile
-    test/decoupled/Makefile
-    test/decoupled/1p/Makefile
-    test/decoupled/2p/Makefile
-    test/decoupled/2p2c/Makefile
     test/material/Makefile
     test/material/fluidsystems/Makefile
     test/material/immiscibleflash/Makefile

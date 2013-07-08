@@ -53,17 +53,6 @@ test/implicit/test_stokes2c \
 test/implicit/test_stokesni \
 test/implicit/waterair_pvs_ni
 
-IMPET_TESTS= \
-test/decoupled/1p/test_1p \
-test/decoupled/1p/test_diffusion \
-test/decoupled/2p/test_transport \
-test/decoupled/2p/test_impes \
-test/decoupled/2p/test_mpfa2p \
-test/decoupled/2p/test_impesadaptive \
-test/decoupled/2p2c/test_dec2p2c \
-test/decoupled/2p2c/test_adaptive2p2c \
-test/decoupled/2p2c/test_multiphysics2p2c
-
 OTHER_TESTS= \
 test/material/immiscibleflash/test_immiscibleflash \
 test/material/pengrobinson/test_pengrobinson \
@@ -74,8 +63,7 @@ test/common/spline/test_spline \
 test/common/propertysystem/test_propertysystem
 
 TUTORIALS= \
-tutorial/tutorial_coupled \
-tutorial/tutorial_decoupled
+tutorial/tutorial_coupled
 
 check_PROGRAMS = $(VCFV_TESTS) $(IMPET_TESTS) $(OTHER_TESTS) $(TUTORIALS)
 
@@ -114,18 +102,6 @@ test_implicit_waterair_pvs_ni_SOURCES=test/implicit/waterair_pvs_ni.cc
 
 # tutorials
 tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
-tutorial_tutorial_decoupled_SOURCES=tutorial/tutorial_decoupled.cc
-
-# IMPET tests
-test_decoupled_1p_test_1p_SOURCES=test/decoupled/1p/test_1p.cc
-test_decoupled_1p_test_diffusion_SOURCES=test/decoupled/1p/test_diffusion.cc
-test_decoupled_2p_test_transport_SOURCES=test/decoupled/2p/test_transport.cc
-test_decoupled_2p_test_impes_SOURCES=test/decoupled/2p/test_impes.cc
-test_decoupled_2p_test_mpfa2p_SOURCES=test/decoupled/2p/test_mpfa2p.cc
-test_decoupled_2p_test_impesadaptive_SOURCES=test/decoupled/2p/test_impesadaptive.cc
-test_decoupled_2p2c_test_dec2p2c_SOURCES=test/decoupled/2p2c/test_dec2p2c.cc
-test_decoupled_2p2c_test_adaptive2p2c_SOURCES=test/decoupled/2p2c/test_adaptive2p2c.cc
-test_decoupled_2p2c_test_multiphysics2p2c_SOURCES=test/decoupled/2p2c/test_multiphysics2p2c.cc
 
 # other tests
 test_material_immiscibleflash_test_immiscibleflash_SOURCES=test/material/immiscibleflash/test_immiscibleflash.cc
@@ -138,7 +114,6 @@ test_common_propertysystem_test_propertysystem_SOURCES=test/common/propertysyste
 
 # tutorials
 tutorial_tutorial_coupled_SOURCES=tutorial/tutorial_coupled.cc
-tutorial_tutorial_decoupled_SOURCES=tutorial/tutorial_decoupled.cc
 
 # convenience shortcuts
 co2injection_immiscible: test/implicit/co2injection_immiscible
@@ -203,24 +178,6 @@ test_stokesni: test/implicit/test_stokesni
 
 waterair_pvs_ni: test/implicit/waterair_pvs_ni
 
-test_1p:test/decoupled/1p/test_1p
-
-test_diffusion:test/decoupled/1p/test_diffusion
-
-test_transport:test/decoupled/2p/test_transport
-
-test_impes:test/decoupled/2p/test_impes
-
-test_mpfa2p:test/decoupled/2p/test_mpfa2p
-
-test_impesadaptive:test/decoupled/2p/test_impesadaptive
-
-test_dec2p2c:test/decoupled/2p2c/test_dec2p2c
-
-test_adaptive2p2c:test/decoupled/2p2c/test_adaptive2p2c
-
-test_multiphysics2p2c:test/decoupled/2p2c/test_multiphysics2p2c
-
 test_immiscibleflash:test/material/immiscibleflash/test_immiscibleflash
 
 test_pengrobinson:test/material/pengrobinson/test_pengrobinson
@@ -236,8 +193,6 @@ test_spline:test/common/spline/test_spline
 test_propertysystem:test/common/propertysystem/test_propertysystem
 
 tutorial_coupled:tutorial/tutorial_coupled
-
-tutorial_decoupled:tutorial/tutorial_decoupled
 
 include $(top_srcdir)/am/global-rules
 include $(top_srcdir)/am/top-rules

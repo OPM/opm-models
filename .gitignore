@@ -64,7 +64,6 @@ doc/doxygen/html
 # exclude test binaries
 test_*
 tutorial_coupled
-tutorial_decoupled
 
 # always consider files containing source code regardless of their name
 !*.cc
@@ -112,15 +111,6 @@ test/implicit/test_stokes
 test/implicit/test_stokes2c
 test/implicit/test_stokesni
 test/implicit/waterair_pvs_ni
-test/decoupled/1p/test_1p
-test/decoupled/1p/test_diffusion
-test/decoupled/2p/test_transport
-test/decoupled/2p/test_impes
-test/decoupled/2p/test_mpfa2p
-test/decoupled/2p/test_impesadaptive
-test/decoupled/2p2c/test_dec2p2c
-test/decoupled/2p2c/test_adaptive2p2c
-test/decoupled/2p2c/test_multiphysics2p2c
 test/material/immiscibleflash/test_immiscibleflash
 test/material/pengrobinson/test_pengrobinson
 test/material/tabulation/test_tabulation
@@ -129,4 +119,3 @@ test/material/ncpflash/test_ncpflash
 test/common/spline/test_spline
 test/common/propertysystem/test_propertysystem
 tutorial/tutorial_coupled
-tutorial/tutorial_decoupled

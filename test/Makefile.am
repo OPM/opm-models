@@ -1,4 +1,4 @@
-SUBDIRS = common decoupled implicit material
+SUBDIRS = common implicit material
 
 EXTRA_DIST = CMakeLists.txt referencesolutions/*.vtu referencesolutions/*.vtp
 

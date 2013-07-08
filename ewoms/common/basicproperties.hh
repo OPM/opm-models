@@ -19,8 +19,7 @@
 /*!
  * \file
  *
- * \brief Defines a type tags and some fundamental properties for
- *        fully coupled and decoupled models
+ * \brief Defines a type tags and some fundamental properties all models.
  */
 #ifndef EWOMS_BASIC_PROPERTIES_HH
 #define EWOMS_BASIC_PROPERTIES_HH
@@ -50,9 +49,6 @@ NEW_TYPE_TAG(NumericModel);
 
 //! Type tag for all fully coupled models.
 NEW_TYPE_TAG(ImplicitModel, INHERITS_FROM(NumericModel));
-
-//! Type tag for all decoupled models.
-NEW_TYPE_TAG(ExplicitModel, INHERITS_FROM(NumericModel));
 
 
 ///////////////////////////////////

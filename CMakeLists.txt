@@ -344,7 +344,7 @@ foreach(file ${vtus})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/referencesolutions)
 endforeach(file)
 
-file(GLOB grids "test/implicit/grids/*.dgf" "test/decoupled/*/grids/*.dgf" "test/implicit/grids/*.art")
+file(GLOB grids "test/implicit/grids/*.dgf" "test/implicit/grids/*.art")
 foreach(file ${grids})
     file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach(file)
