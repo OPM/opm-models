@@ -1355,8 +1355,6 @@ public:
       }
       /*!
         \brief Apply inverse operator.
-
-        \copydoc InverseOperator::apply(X&,Y&,InverseOperatorResult&)
       */
       virtual void apply (X& x, X& b, Dune::InverseOperatorResult& res)
       {

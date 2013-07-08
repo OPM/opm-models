@@ -86,10 +86,16 @@ public:
     OverlappingBlockVector()
     {}
 
+//! \cond SKIP
+    /*!
+     * \brief Recycle the assignment operators of Dune::BlockVector
+     */
+    using ParentType::operator=;
+//! \endcond
+
     /*!
      * \brief Assignment operator.
      */
-    using ParentType::operator=;
     OverlappingBlockVector &operator=(const OverlappingBlockVector &obv)
     {
         ParentType::operator=(obv);

@@ -53,7 +53,9 @@ class McWhorterAnalytic
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
 
+    //! \cond SKIP
     typedef typename GET_PROP(TypeTag, SolutionTypes)::PrimaryVariables PrimaryVariables;
+    //! \endcond
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 

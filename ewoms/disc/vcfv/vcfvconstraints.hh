@@ -49,7 +49,12 @@ public:
     VcfvConstraints()
     { reset(); }
 
+//! \cond SKIP
+    /*!
+     * \brief Use the assignment operators from Dune::FieldVector
+     */
     using ParentType::operator=;
+//! \endcond
 
     /*!
      * \brief Reset the constraints types.
