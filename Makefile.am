@@ -10,6 +10,7 @@ DISTCHECK_CONFIGURE_FLAGS= CXX="$(CXX)" CC="$(CC)"
 # a set of default .opts files for dunecontrol.
 EXTRA_DIST = dune.module \
 	     .gitignore \
+	     ewoms.pc.cmake \
              cmake/Modules/*.cmake \
              bin/runtest.sh bin/fuzzycomparevtu.py \
              CMakeLists.txt CTestConfig.cmake config.h.cmake \
