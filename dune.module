@@ -4,7 +4,7 @@
 ################################
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media
-Version: 2.3.0
+Version: 2.3.1
 Url: http://opm-project.org/ewoms
 Codename: Marsellus
 MaintainerName: The Open Porous Media Initiative
