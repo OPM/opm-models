@@ -1,5 +1,9 @@
-ewoms (2.3-git) unstable; urgency=low
+ewoms (2.3.1) unstable; urgency=low
 
   * Initial release
 
  -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 15 Jan 2013 17:13:59 +0100
+
+  * Update to release 2.3.1
+
+ -- Andreas Lauser <and@poware.no>  Tue, 16 Jul 2013 20:18:23 +0100
