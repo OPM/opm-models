@@ -24,6 +24,10 @@
  */
 #include "config.h"
 
+#if HAVE_QUAD
+#include <ewoms/common/quad.hh>
+#endif
+
 #include <ewoms/common/start.hh>
 #include <ewoms/models/flash/flashmodel.hh>
 #include "problems/co2injectionflash.hh"

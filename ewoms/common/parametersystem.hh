@@ -31,6 +31,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/exceptions.hh>
 
+#include <dune/common/unused.hh>
 #include <dune/common/parametertree.hh>
 #include <dune/common/classname.hh>
 

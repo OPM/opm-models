@@ -24,6 +24,7 @@
  */
 #include "config.h"
 
+#include <ewoms/common/quad.hh>
 #include <ewoms/common/start.hh>
 #include <ewoms/models/flash/flashmodel.hh>
 #include "problems/co2injectionflash.hh"

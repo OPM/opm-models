@@ -24,6 +24,8 @@
 #ifndef EWOMS_PENG_ROBINSON_HH
 #define EWOMS_PENG_ROBINSON_HH
 
+#include <dune/common/unused.hh>
+
 #include <ewoms/material/fluidstates/temperatureoverlayfluidstate.hh>
 #include <ewoms/material/idealgas.hh>
 #include <ewoms/common/exceptions.hh>
