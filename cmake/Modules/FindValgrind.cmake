@@ -6,16 +6,20 @@
 #  VALGRIND_FOUND, If false, do not try to use valgrind.
 #
 # If you have valgrind installed in a non-standard place, you can define
-# VALGRIND_PREFIX to tell cmake where it is.
-
-message(STATUS "Valgrind Prefix: ${VALGRIND_PREFIX}")
+# VALGRIND_ROOT to tell cmake where it is.
+if (VALGRIND_FOUND)
+  return()
+endif()
 
 find_path(VALGRIND_INCLUDE_DIR valgrind/memcheck.h
-  /usr/include /usr/local/include ${VALGRIND_PREFIX}/include)
-find_program(VALGRIND_PROGRAM NAMES valgrind PATH /usr/bin /usr/local/bin ${VALGRIND_PREFIX}/bin)
+  /usr/include /usr/local/include ${VALGRIND_ROOT}/include)
+
+# if VALGRIND_ROOT is empty, we explicitly add /bin to the search
+# path, but this does not hurt...
+find_program(VALGRIND_PROGRAM NAMES valgrind PATH ${VALGRIND_ROOT}/bin)
 
 find_package_handle_standard_args(VALGRIND DEFAULT_MSG
-    VALGRIND_INCLUDE_DIR
-    VALGRIND_PROGRAM)
+  VALGRIND_INCLUDE_DIR
+  VALGRIND_PROGRAM)
 
-mark_as_advanced(VALGRIND_INCLUDE_DIR VALGRIND_PROGRAM)
+mark_as_advanced(VALGRIND_ROOT VALGRIND_INCLUDE_DIR VALGRIND_PROGRAM)

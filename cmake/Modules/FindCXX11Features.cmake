@@ -1,17 +1,22 @@
 #
 # Module that checks for supported C++11 (former C++0x) features.
 #
-# Sets the follwing variables:
+# Sets the follwing variable:
 #
+# HAVE_TYPE_TRAITS                 True if the <type_traits> header is available and implements sufficient functionality
+# HAVE_SHARED_PTR                  True if std::shared_ptr is available
+# HAVE_UNIQUE_PTR                  True if std::unique_ptr is available
 # HAVE_NULLPTR                     True if nullptr is available
 # HAVE_ARRAY                       True if header <array> and fill() are available
 # HAVE_ATTRIBUTE_ALWAYS_INLINE     True if attribute always inline is supported
 # HAS_ATTRIBUTE_UNUSED             True if attribute unused is supported
 # HAS_ATTRIBUTE_DEPRECATED         True if attribute deprecated is supported
 # HAS_ATTRIBUTE_DEPRECATED_MSG     True if attribute deprecated("msg") is supported
+# HAVE_CONSTEXPR                   True if constexpr attribute is available
 # HAVE_INTEGRAL_CONSTANT           True if compiler supports integral_constant
 # HAVE_STATIC_ASSERT               True if static_assert is available
-# HAVE_VARIADIC_TEMPLATES          True if variadic templates are supprt
+# HAVE_AUTO                        True if the compiler supports the auto keyword
+# HAVE_VARIADIC_TEMPLATES          True if variadic templates are supported
 # HAVE_VARIADIC_CONSTRUCTOR_SFINAE True if variadic constructor sfinae is supported
 # HAVE_RVALUE_REFERENCES           True if rvalue references are supported
 # HAVE_TUPLE                       True if std::tuple is available
@@ -21,30 +26,92 @@
 include(TestCXXAcceptsFlag)
 include(CheckIncludeFileCXX)
 
+# macro to only add option once
+include(AddOptions)
+
 # try to use compiler flag -std=c++11
 CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
 if(CXX_FLAG_CXX11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11 ")
-  set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -std=c++11 ")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++11 ")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -std=c++11 ")
+  add_options (CXX ALL_BUILDS "-std=c++11")
   set(CXX_STD0X_FLAGS "-std=c++11")
 else()
   # try to use compiler flag -std=c++0x for older compilers
   CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
   if(CXX_FLAG_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x ")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++0x ")
-    set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -std=c++0x ")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++0x ")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -std=c++0x ")
-    set(CXX_STD0X_FLAGS "-std=c++0x")
+  add_options (CXX ALL_BUILDS "-std=c++0x")
+  set(CXX_STD0X_FLAGS "-std=c++0x")
   endif(CXX_FLAG_CXX0X)
 endif(CXX_FLAG_CXX11)
 
+# if we are building with an Apple toolchain in MacOS X,
+# we cannot use the old GCC 4.2 fork, but must use the
+# new runtime library
+set (CXX_STDLIB_FLAGS)
+string (TOUPPER "${CMAKE_CXX_COMPILER_ID}" _comp_id)
+if (APPLE AND (_comp_id MATCHES "CLANG"))
+  CHECK_CXX_ACCEPTS_FLAG ("-stdlib=libc++" CXX_FLAG_STDLIB_LIBCXX)
+  if (CXX_FLAG_STDLIB_LIBCXX)
+	add_options (CXX ALL_BUILDS "-stdlib=libc++")
+	set (CXX_STDLIB_FLAGS "-stdlib=libc++")
+  endif (CXX_FLAG_STDLIB_LIBCXX)
+endif (APPLE AND (_comp_id MATCHES "CLANG"))
+
+# to format the command-line options pretty, we have an optional space
+if (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+  set (CXX_SPACE " ")
+else (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+  set (CXX_SPACE)
+endif (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+
 # perform tests
 include(CheckCXXSourceCompiles)
+
+# std::is_convertible, std::is_base_of
+CHECK_CXX_SOURCE_COMPILES("
+#include <type_traits>
+
+class Base {};
+class Derived : public Base {};
+
+int main()
+{
+    bool foo = std::is_convertible<int, double>::value;
+    bool bar = std::is_base_of<Base, Derived>::value;
+    return 0;
+}
+"  HAVE_TYPE_TRAITS
+)
+
+# nullptr
+CHECK_CXX_SOURCE_COMPILES("
+    #include <memory>
+
+    int main(void)
+    {
+      std::shared_ptr<int> foo(new int(123));
+      return 0;
+    }
+"  HAVE_SHARED_PTR
+)
+
+# this is required by dune-common to avoid linker errors. "fun"!
+if (HAVE_SHARED_PTR)
+  set(HAVE_MAKE_SHARED 1)
+  set(SHARED_PTR_HEADER "<memory>")
+  set(SHARED_PTR_NAMESPACE "std")
+endif()
+
+# nullptr
+CHECK_CXX_SOURCE_COMPILES("
+    #include <memory>
+
+    int main(void)
+    {
+      std::unique_ptr<int> foo(new int(123));
+      return 0;
+    }
+"  HAVE_UNIQUE_PTR
+)
 
 # nullptr
 CHECK_CXX_SOURCE_COMPILES("
@@ -69,7 +136,17 @@ CHECK_CXX_SOURCE_COMPILES("
 )
 
 # array and fill
-check_include_file_cxx("array" HAVE_ARRAY)
+CHECK_CXX_SOURCE_COMPILES("
+    #include <array>
+    
+    int main(void)
+    {
+      std::array<int,2> a;
+      a.fill(9);
+      return 0;
+    }
+" HAVE_ARRAY
+)
 
 # Check whether if std::integral_constant< T, v > is supported and casts into T
 CHECK_CXX_SOURCE_COMPILES("
@@ -183,6 +260,16 @@ CHECK_CXX_SOURCE_COMPILES("
 "  HAVE_STATIC_ASSERT
 )
 
+# auto keyword
+CHECK_CXX_SOURCE_COMPILES("
+   int main(void)
+   {
+     auto foo = 1.23;
+     return 0;
+   }
+"  HAVE_AUTO
+)
+
 # variadic template support
 CHECK_CXX_SOURCE_COMPILES("
    #include <cassert>
@@ -274,3 +361,61 @@ foreach(_HEADER tuple tr1/tuple type_traits tr1/type_traits)
   string(TOUPPER ${_HEADER_VAR} _HEADER_VAR )
   check_include_file_cxx(${_HEADER} "HAVE_${_HEADER_VAR}")
 endforeach(_HEADER tuple tr1/tuple tr1/type_traits)
+
+# make sure that the C++-11 features implemented by the compiler are a
+# superset of those provided by GCC 4.4. This makes the test fail on
+# all GCC compilers before 4.4.
+set(CXX_FEATURES_MISSING "")
+if (NOT HAVE_TYPE_TRAITS)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Sufficiently conformant type traits (defined by the 'type_traits' header file)\n")
+endif()
+if (NOT HAVE_SHARED_PTR)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Shared pointers (the std::shared_ptr class)\n")
+endif()
+if (NOT HAVE_UNIQUE_PTR)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Unique pointers (the std::unique_ptr class)\n")
+endif()
+if (NOT HAVE_ARRAY)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Statically sized arrays (the std::array class)\n")
+endif()
+if (NOT HAVE_STATIC_ASSERT)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Static assertations (the static_assert() mechanism)\n")
+endif()
+if (NOT HAVE_AUTO)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Automatically typed variables (the 'auto' keyword)\n")
+endif()
+if (NOT HAVE_VARIADIC_TEMPLATES)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Variable number of template arguments\n")
+endif()
+if (NOT HAVE_VARIADIC_CONSTRUCTOR_SFINAE)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Constructors with variable number of template arguments obeying the SFINAE (specialization failure is not an error) rule\n")
+endif()
+if (NOT HAVE_RVALUE_REFERENCES)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - References to rvalue objects\n")
+endif()
+if (NOT HAVE_TUPLE)
+  set(CXX_FEATURES_MISSING
+      "${CXX_FEATURES_MISSING} - Tuples (the std::tuple class)\n")
+endif()
+
+if(CXX_FEATURES_MISSING)
+  set (CXX11FEATURES_FOUND FALSE)
+  if (CXX11Features_FIND_REQUIRED)
+	message(FATAL_ERROR
+      "Your C++ compiler does not support the minimum set of C++-2011 features required. "
+      "Make sure to use a compiler which implements all C++-2011 features provided by GCC 4.4. "
+      "Your compiler does not seem to implement the following features:\n"
+      "${CXX_FEATURES_MISSING}")
+  endif()
+else ()
+  set (CXX11FEATURES_FOUND TRUE)
+endif()

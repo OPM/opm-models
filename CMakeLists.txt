@@ -1,357 +1,129 @@
-##############
-# general stuff. we extract the all information possible from the
-# dune.module file.
-cmake_minimum_required(VERSION 2.8)
-##############
+# -*- mode: cmake; tab-width: 2; indent-tabs-mode: t; truncate-lines: t; compile-command: "cmake -Wdev" -*-
+# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
 
-##############
-# make sure our own modules will be found
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+###########################################################################
+#                                                                         #
+# Note: The bulk of the build system is located in the cmake/ directory.  #
+#       This file only contains the specializations for this particular   #
+#       project. Most likely you are interested in editing one of these   #
+#       files instead:                                                    #
+#                                                                         #
+#       dune.module                              Name and version number  #
+#       CMakeLists_files.cmake                   Path of source files     #
+#       cmake/Modules/${project}-prereqs.cmake   Dependencies             #
+#                                                                         #
+###########################################################################
 
-# needed for Debian installation scheme
-include(UseMultiArch)
+cmake_minimum_required (VERSION 2.8)
 
-# eWoms build system macros
-include(EwomsMacros)
-
-# eWoms unit-testing infrastructure
-include(EwomsAddTest)
-
-# parse the dune.module file in the source tree
-EwomsParseDuneModuleInfo("eWoms" FILE_NAME "${CMAKE_SOURCE_DIR}/dune.module")
-
-# set the generic CMake project variables to the values from the
-# dune.module file
-set(ProjectName "${EWOMS_NAME}")
-set(ProjectDescription "${EWOMS_DESCRIPTION}")
-set(ProjectVersion "${EWOMS_VERSION}")
-set(ProjectMaintainer "${EWOMS_MAINTAINER_NAME}")
-set(ProjectMaintainerEmail "${EWOMS_MAINTAINER_EMAIL}")
-set(ProjectCodename "${EWOMS_CODENAME}")
-
-project(${ProjectName} CXX)
-# C is needed for tests like pthread, BLAS and Super-LU
-enable_language(C)
- 
-##############
-# Set CMake policies
-
-# resolve library paths to the policy introduced by CMake 2.6. For
-# details, see
-# http://www.cmake.org/cmake/help/cmake-2.6.html#policy:CMP0003
-cmake_policy(SET CMP0003 NEW)
-
-##############
-# Find the required packages
-
-# set required compiler flags for C++11 (former C++0x)
-find_package(CXX11Features)
-find_package(SharedPtr)
-
-find_package(DUNE_common REQUIRED)
-find_package(DUNE_geometry REQUIRED)
-find_package(DUNE_grid REQUIRED)
-find_package(DUNE_istl REQUIRED)
-find_package(DUNE_localfunctions REQUIRED)
-
-##############
-# Find the optional packages
-find_package(MPI)
-find_package(METIS)
-find_package(Alberta)
-find_package(UG)
-find_package(ALUGrid)
-find_package(SuperLU)
-find_package(Valgrind)
-
-##############
-# use this macros in the CMakelists of the subdirectories. 
-
-# -> for TARGET_LINK_LIBRARIES
-set(EwomsLinkLibraries 
-    ${DUNE_common_LIBRARIES}
-    ${DUNE_geometry_LIBRARIES}
-    ${DUNE_grid_LIBRARIES})
-
-
-# -> for INCLUDE_DIRECTORIES
-set(EwomsIncludeDirectories 
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_SOURCE_DIR}
-    ${DUNE_grid_INCLUDE_DIRS}
-    ${DUNE_geometry_INCLUDE_DIRS}
-    ${DUNE_common_INCLUDE_DIRS}
-    ${DUNE_istl_INCLUDE_DIRS}
-    ${DUNE_localfunctions_INCLUDE_DIRS})
-
-if(SUPERLU_FOUND)
-  set(EwomsLinkLibraries ${EwomsLinkLibraries} ${SUPERLU_LIBS})
-  set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${SUPERLU_INCLUDE_DIRS})
-endif(SUPERLU_FOUND)
-
-##############
-# set appropriate compiler flags for debug/release compilation modes
-add_definitions("-Wall -Wno-sign-compare -fno-strict-aliasing")
-
-if(("${CMAKE_BUILD_TYPE}" STREQUAL "release") OR (NOT (DEFINED "CMAKE_BUILD_TYPE")))
-  # release mode
-  add_definitions("-O3 -march=native")
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "ctest")
-  # CTest debug mode
-  add_definitions(-DDEBUG=1)
-  add_definitions("-g -fprofile-arcs -ftest-coverage")
-  set(EwomsLinkLibraries "${EwomsLinkLibraries}" "-lm -fprofile-arcs -ftest-coverage")
-else()
-  # CTest debug mode
-  add_definitions(-DDEBUG=1)
-  add_definitions("-g")
-endif( )
-
-add_definitions(${CUSTOM_CXX_FLAGS}) 
-
-# with the config.h include file...
-macro(EwomsSetConfigHVar ConfigHName CMakeName)
-
-  if(${CMakeName})
-    set(${ConfigHName} "${${CMakeName}}")
-  else(${CMakeName})
-    set(${ConfigHName} 0)
-  endif(${CMakeName})
-endmacro(EwomsSetConfigHVar)
-
-macro(EwomsSetBoolConfigHVar ConfigHName CMakeName)
-  if(${CMakeName})
-    set(${ConfigHName} 1)
-  else(${CMakeName})
-    set(${ConfigHName} 0)
-  endif(${CMakeName})
-endmacro(EwomsSetBoolConfigHVar)
-
-EwomsSetBoolConfigHVar(HAVE_DUNE_COMMON         DUNE_common_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_GEOMETRY       DUNE_geometry_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_GRID           DUNE_grid_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_LOCALFUNCTIONS DUNE_localfunctions_FOUND)
-EwomsSetBoolConfigHVar(HAVE_DUNE_ISTL           DUNE_istl_FOUND)
-EwomsSetBoolConfigHVar(HAVE_SUPERLU             SUPERLU_FOUND)
-EwomsSetBoolConfigHVar(HAVE_VALGRIND            VALGRIND_INCLUDE_DIR)
-
-EwomsSetConfigHVar(PROJECT_NAME             ProjectName)
-EwomsSetConfigHVar(PROJECT_VERSION          ProjectVersion)
-EwomsSetConfigHVar(PROJECT_MAINTAINER       ProjectMaintainer)
-EwomsSetConfigHVar(PROJECT_MAINTAINER_EMAIL ProjectMaintainerEmail)
-
-# c++ 2011 features
-EwomsSetBoolConfigHVar(HAVE_NULLPTR HAVE_NULLPTR)
-EwomsSetBoolConfigHVar(HAVE_ARRAY HAVE_ARRAY)
-EwomsSetBoolConfigHVar(HAVE_ATTRIBUTE_ALWAYS_INLINE HAVE_ATTRIBUTE_ALWAYS_INLINE)
-EwomsSetBoolConfigHVar(HAS_ATTRIBUTE_UNUSED HAS_ATTRIBUTE_UNUSED)
-EwomsSetBoolConfigHVar(HAS_ATTRIBUTE_DEPRECATED HAS_ATTRIBUTE_DEPRECATED)
-EwomsSetBoolConfigHVar(HAS_ATTRIBUTE_DEPRECATED_MSG HAS_ATTRIBUTE_DEPRECATED_MSG)
-EwomsSetBoolConfigHVar(HAVE_INTEGRAL_CONSTANT HAVE_INTEGRAL_CONSTANT)
-EwomsSetBoolConfigHVar(HAVE_STATIC_ASSERT HAVE_STATIC_ASSERT)
-EwomsSetBoolConfigHVar(HAVE_VARIADIC_TEMPLATES HAVE_VARIADIC_TEMPLATES)
-EwomsSetBoolConfigHVar(HAVE_VARIADIC_CONSTRUCTOR_SFINAE HAVE_VARIADIC_CONSTRUCTOR_SFINAE)
-EwomsSetBoolConfigHVar(HAVE_RVALUE_REFERENCES HAVE_RVALUE_REFERENCES)
-EwomsSetBoolConfigHVar(HAVE_TUPLE HAVE_TUPLE)
-EwomsSetBoolConfigHVar(HAVE_TR1_TUPLE HAVE_TR1_TUPLE)
-
-##############
-# default directory to find control files if installed by package
-if (UNIX)
-  set (DUNE_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol" CACHE PATH "Parent directory of control files for all DUNE modules")
-endif (UNIX)
-
-# add dune-common version from dune.module to config.h
-if(DUNE_common_DIR)
-  file(READ "${DUNE_common_DIR}/dune.module" DUNE_COMMON_MODULE)
-else()
-  # note that forward slash works on WIN32 too
-  if(NOT EXISTS "${DUNE_DIR}/dune-common/dune.module")
-    message(FATAL_ERROR "No dune-common directory found")
-  endif(NOT EXISTS "${DUNE_DIR}/dune-common/dune.module")
-  file(READ "${DUNE_DIR}/dune-common/dune.module" DUNE_COMMON_MODULE)
-endif(DUNE_common_DIR)
-##############
-
-##############
-# adapt build system to detected packages
-
-# deal with UG
-if(UG_FOUND)
-  set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${UG_INCLUDE_DIRS})
-  set(EwomsLinkLibraries ${EwomsLinkLibraries} ${UG_LIBRARIES})
-endif(UG_FOUND)
-EwomsSetBoolConfigHVar(HAVE_UG UG_FOUND)
-
-# deal with ALUGrid
-if(ALUGRID_FOUND)
-  set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${ALUGRID_INCLUDES})
-  set(EwomsLinkLibraries ${EwomsLinkLibraries} ${ALUGRID_LIB})
-endif()
-EwomsSetBoolConfigHVar(HAVE_ALUGRID ALUGRID_FOUND)
-
-# deal with Alberta
-if(Alberta_FOUND)
- set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${Alberta_INCLUDE_DIRS})
- set(EwomsLinkLibraries ${EwomsLinkLibraries} ${Alberta_LIBRARIES})
-endif(Alberta_FOUND)
-EwomsSetBoolConfigHVar(HAVE_ALBERTA Alberta_FOUND)
-
-# deal with METIS
-if(METIS_FOUND)
- set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${METIS_INCLUDE_DIRS})
- set(EwomsLinkLibraries ${EwomsLinkLibraries} ${METIS_LIBRARIES})
-endif(METIS_FOUND)
-EwomsSetBoolConfigHVar(HAVE_METIS METIS_FOUND)
-##############
-
-##############
-# deal with MPI
-if(MPI_FOUND)
-   set(TMP ${MPI_COMPILE_FLAGS})
-   separate_arguments(TMP)
-   add_definitions(${TMP})
-# add_definitions(-DModelP) # tell UG that the model is parallelized
-   set(EwomsLinkLibraries ${EwomsLinkLibraries} ${MPI_LIBRARIES})
-   set(EwomsIncludeDirectories ${EwomsIncludeDirectories} ${MPI_INCLUDE_PATH})
-endif(MPI_FOUND)
-EwomsSetBoolConfigHVar(HAVE_MPI MPI_FOUND)
-##############
-
-##############
-# documentation
-configure_file (
-        ${PROJECT_SOURCE_DIR}/doc/doxygen/Doxyfile.cmake
-        ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
-        @ONLY
-        )
-find_package (Doxygen)
-if (DOXYGEN_FOUND)
-        add_custom_target (doc
-                COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
-                SOURCES ${PROJECT_BINARY_DIR}/doc/doxygen/Doxyfile
-                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen
-                COMMENT "Generating API documentation with Doxygen"
-                VERBATIM
-                )
-
-        set (_formats html)
-        foreach (format IN LISTS _formats)
-                string (TOUPPER ${format} FORMAT)
-                if(EXISTS ${PROJECT_BINARY_DIR}/doc/doxygen/${format})
-                  install (
-                    DIRECTORY ${PROJECT_BINARY_DIR}/doc/doxygen/${format}
-                    DESTINATION share/doc/ewoms/
-                    COMPONENT ${format}
-                    OPTIONAL
-                    )
-                endif()
-                # target to install just HTML documentation
-                add_custom_target (install-${format}
-                        COMMAND ${CMAKE_COMMAND} -DCOMPONENT=${format} -P cmake_install.cmake
-                        COMMENT Installing ${FORMAT} documentation
-                        VERBATIM
-                        )
-                # make the target directory
-                # since the documentation is optional, it is not automatically built
-                add_dependencies (install-${format} doc)
-        endforeach (format)
-endif (DOXYGEN_FOUND)
-##############
-
-##############
-# header file installation
-
-# find all the headers. The CMake documentation recommends against
-# using globs to enumerate source code, but if you list the files
-# explicitly you'll need to change the build files every time you add
-# to the project as well as having to rebuild completely...
-file (GLOB_RECURSE ewoms_HEADERS "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.hh")
-file (GLOB_RECURSE ewoms_INCFILES "${CMAKE_SOURCE_DIR}/ewoms/[^.]*.inc")
-
-foreach (_hdr IN LISTS ewoms_HEADERS ewoms_INCFILES)
-	get_filename_component (_dir ${_hdr} PATH)
-	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
-	install (
-		FILES ${_hdr}
-		DESTINATION include/${_rel_dir}
-		)
-endforeach (_hdr)
-
-# install the m4 files required by the autotools build system
-file (GLOB_RECURSE ewoms_M4FILES "${CMAKE_SOURCE_DIR}/m4/*.m4")
-foreach (_m4file IN LISTS ewoms_M4FILES)
-	get_filename_component (_dir ${_m4file} PATH)
-	file (RELATIVE_PATH _rel_dir "${PROJECT_SOURCE_DIR}" "${_dir}")
-	install (
-		FILES ${_m4file}
-		DESTINATION share/aclocal)
-endforeach()
-
-# install the dune.module file
-install (
-	FILES ${CMAKE_SOURCE_DIR}/dune.module
-	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/dunecontrol/ewoms
+# additional search modules
+find_path (OPM_MACROS_ROOT cmake/Modules/OpmInit.cmake
+	PATHS ${opm-macros_ROOT}
+	      ${CMAKE_CURRENT_SOURCE_DIR}
+	DOC "Path to build system macros and scripts"
+	NO_DEFAULT_PATH
 	)
+list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules")
 
-# install the pkgconfig control file
-install (
-	FILES ${CMAKE_BINARY_DIR}/ewoms.pc
-	DESTINATION ${CMAKE_INSTALL_LIBDIR_NOARCH}/pkgconfig
-	)
-message(STATUS "This build will install into the directory ${CMAKE_INSTALL_PREFIX}")
+# project information is in dune.module. Read this file and set variables.
+# we cannot generate dune.module since it is read by dunecontrol before
+# the build starts, so it makes sense to keep the data there then.
+include (OpmInit)
 
-# use the same name for the source tree as AutoTools so that we can
-# share the config file template between the two systems
-get_filename_component(abs_top_srcdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+# list of prerequisites for this particular project; this is in a
+# separate file (in cmake/Modules sub-directory) because it is shared
+# with the find module
+include (${project}-prereqs)
 
-# extract the definitions that various modules have added
-get_directory_property (EWOMS_COMP_DEFS COMPILE_DEFINITIONS)
-foreach(d ${EWOMS_COMP_DEFS})
-  set(ALL_PKG_CPPFLAGS "${ALL_PKG_CPPFLAGS}-D${d} ")
-endforeach()
+# read the list of components from this file (in the project directory);
+# it should set various lists with the names of the files to include
+include (CMakeLists_files.cmake)
 
-##############
-# write the config.h file to disk 
-configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h )
+macro (config_hook)
+	opm_need_version_of ("dune-common")
+endmacro (config_hook)
 
-# make variable substitution and write config mode file
-configure_file(EwomsConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/EwomsConfig.cmake @ONLY)
+macro (prereqs_hook)
+endmacro (prereqs_hook)
 
-# deal with the pkgconfig file
-configure_file(ewoms.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/ewoms.pc @ONLY)
+macro (sources_hook)
+endmacro (sources_hook)
 
-#add_definitions(-DHAVE_CONFIG_H)
-##############
+macro (fortran_hook)
+endmacro (fortran_hook)
 
-##############
-# set up CTest 
-enable_testing()
-include(CTest)
+macro (tests_hook)
+endmacro (tests_hook)
 
-# copy the testing script
-make_directory(bin)
-make_directory(referencesolutions)
-make_directory(grids)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/bin/runtest.sh
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/bin/fuzzycomparevtu.py
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
-file(GLOB vtus
-           "${CMAKE_CURRENT_SOURCE_DIR}/test/referencesolutions/*.vtu" 
-           "${CMAKE_CURRENT_SOURCE_DIR/}test/referencesolutions/*.vtp")
-foreach(file ${vtus})
-    file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/referencesolutions)
-endforeach(file)
+# all setup common to the OPM library modules is done here
+include (OpmLibMain)
 
 file(GLOB grids "test/implicit/grids/*.dgf" "test/implicit/grids/*.art")
 foreach(file ${grids})
-    file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
-endforeach(file)
+  file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
+endforeach()
 
-##############
-# tell cmake that we've got a few subdirectories. (that's the
-# directories where the unit tests and tutorials are.)
-add_subdirectory("test")
-add_subdirectory("tutorial")
-##############
+include(EwomsAddTest)
+
+# add targets for all tests of the models. we add the water-air test
+# first because it take longest and so that we don't have to wait for
+# them as long for parallel test runs
+EwomsAddTest(waterair_pvs_ni SOURCES test/implicit/waterair_pvs_ni.cc)
+EwomsAddTest(co2injection_immiscible SOURCES test/implicit/co2injection_immiscible.cc)
+EwomsAddTest(co2injection_flash SOURCES test/implicit/co2injection_flash.cc)
+EwomsAddTest(co2injection_ncp SOURCES test/implicit/co2injection_ncp.cc)
+EwomsAddTest(co2injection_pvs SOURCES test/implicit/co2injection_pvs.cc)
+EwomsAddTest(co2injection_immiscible_ni SOURCES test/implicit/co2injection_immiscible_ni.cc)
+EwomsAddTest(co2injection_flash_ni SOURCES test/implicit/co2injection_flash_ni.cc)
+EwomsAddTest(co2injection_ncp_ni SOURCES test/implicit/co2injection_ncp_ni.cc)
+EwomsAddTest(co2injection_pvs_ni SOURCES test/implicit/co2injection_pvs_ni.cc)
+EwomsAddTest(cuvette_pvs SOURCES test/implicit/cuvette_pvs.cc)
+EwomsAddTest(diffusion_flash SOURCES test/implicit/diffusion_flash.cc)
+EwomsAddTest(diffusion_ncp SOURCES test/implicit/diffusion_ncp.cc)
+EwomsAddTest(diffusion_pvs SOURCES test/implicit/diffusion_pvs.cc)
+EwomsAddTest(finger_immiscible SOURCES test/implicit/finger_immiscible.cc)
+EwomsAddTest(fracture_discretefracture
+  SOURCES test/implicit/fracture_discretefracture.cc
+  CONDITION ALUGRID_FOUND
+  DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
+EwomsAddTest(groundwater_immiscible SOURCES test/implicit/groundwater_immiscible.cc)
+EwomsAddTest(infiltration_pvs SOURCES test/implicit/infiltration_pvs.cc)
+EwomsAddTest(lens_immiscible SOURCES test/implicit/lens_immiscible.cc)
+EwomsAddTest(lens_richards SOURCES test/implicit/lens_richards.cc)
+EwomsAddTest(obstacle_immiscible SOURCES test/implicit/obstacle_immiscible.cc)
+EwomsAddTest(obstacle_ncp SOURCES test/implicit/obstacle_ncp.cc)
+EwomsAddTest(obstacle_pvs SOURCES test/implicit/obstacle_pvs.cc)
+EwomsAddTest(outflow_pvs SOURCES test/implicit/outflow_pvs.cc)
+EwomsAddTest(powerinjection_darcy SOURCES test/implicit/powerinjection_darcy.cc)
+EwomsAddTest(powerinjection_forchheimer SOURCES test/implicit/powerinjection_forchheimer.cc)
+EwomsAddTest(reservoir_blackoil SOURCES test/implicit/reservoir_blackoil.cc)
+EwomsAddTest(test_navierstokes SOURCES test/implicit/test_navierstokes.cc CONDITION ALUGRID_FOUND AND SUPERLU_FOUND)
+EwomsAddTest(test_quadrature SOURCES test/implicit/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
+EwomsAddTest(test_stokes SOURCES test/implicit/test_stokes.cc CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokes2c SOURCES test/implicit/test_stokes2c.cc CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokesni SOURCES test/implicit/test_stokesni.cc CONDITION SUPERLU_FOUND)
+
+EwomsAddTest(obstacle_immiscible_parallel
+  SOURCES test/implicit/obstacle_immiscible.cc
+  EXE_NAME obstacle_immiscible
+  NO_COMPILE
+  CONDITION MPI_FOUND
+  DRIVER_ARGS --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
+
+EwomsAddTest(obstacle_immiscible_parameters
+  SOURCES test/implicit/obstacle_immiscible.cc
+  EXE_NAME obstacle_immiscible
+  NO_COMPILE
+  DRIVER_ARGS --parameters obstacle_immiscible)
+
+EwomsAddTest(obstacle_pvs_restart
+  SOURCES test/implicit/obstacle_pvs.cc
+  EXE_NAME obstacle_pvs
+  NO_COMPILE
+  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=12000)
+
+# add the tutorial
+EwomsAddTest(tutorial_coupled SOURCES tutorial/tutorial_coupled.cc)
+
+# the tests for the common infrastructure
+EwomsAddTest(test_propertysystem SOURCES test/common/propertysystem/test_propertysystem.cc DRIVER_ARGS --plain test_propertysystem)
