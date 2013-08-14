@@ -36,8 +36,13 @@
 
 # originally generated with the command:
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
+file(GLOB_RECURSE TMP_GRIDS RELATIVE "${CMAKE_SOURCE_DIR}" "*.dgf")
+file(GLOB_RECURSE TMP_VTUS RELATIVE "${CMAKE_SOURCE_DIR}" "*.vtu")
+file(GLOB_RECURSE TMP_VTPS RELATIVE "${CMAKE_SOURCE_DIR}" "*.vtp")
 list(APPEND TEST_DATA_FILES
-	test/referencesolutions)
+	${TMP_GRIDS}
+	${TMP_VTPS}
+	${TMP_VTUS})
 
 # originally generated with the command:
 # find tutorials examples -name '*.c*' -printf '\t%p\n' | sort

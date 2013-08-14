@@ -127,3 +127,11 @@ EwomsAddTest(tutorial_coupled SOURCES tutorial/tutorial_coupled.cc)
 
 # the tests for the common infrastructure
 EwomsAddTest(test_propertysystem SOURCES test/common/propertysystem/test_propertysystem.cc DRIVER_ARGS --plain test_propertysystem)
+EwomsAddTest(test_spline SOURCES test/common/spline/test_spline.cc DRIVER_ARGS --plain test_spline)
+
+# the tests for the material subsystem
+EwomsAddTest(test_tabulation SOURCES test/material/tabulation/test_tabulation.cc DRIVER_ARGS --plain test_tabulation)
+EwomsAddTest(test_fluidsystems SOURCES test/material/fluidsystems/test_fluidsystems.cc DRIVER_ARGS --plain test_fluidsystems)
+EwomsAddTest(test_ncpflash SOURCES test/material/ncpflash/test_ncpflash.cc DRIVER_ARGS --plain test_ncpflash)
+EwomsAddTest(test_pengrobinson SOURCES test/material/pengrobinson/test_pengrobinson.cc DRIVER_ARGS --plain test_pengrobinson)
+EwomsAddTest(test_immiscibleflash SOURCES test/material/immiscibleflash/test_immiscibleflash.cc DRIVER_ARGS --plain test_immiscibleflash)
