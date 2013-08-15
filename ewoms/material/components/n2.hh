@@ -56,31 +56,31 @@ public:
     /*!
      * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of molecular nitrogen.
      */
-    static constexpr Scalar molarMass()
+    static Scalar molarMass()
     { return 28.0134e-3;}
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of molecular nitrogen
      */
-    static constexpr Scalar criticalTemperature()
+    static Scalar criticalTemperature()
     { return 126.192; /* [K] */ }
 
     /*!
      * \brief Returns the critical pressure \f$\mathrm{[Pa]}\f$ of molecular nitrogen.
      */
-    static constexpr Scalar criticalPressure()
+    static Scalar criticalPressure()
     { return 3.39858e6; /* [N/m^2] */ }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at molecular nitrogen's triple point.
      */
-    static constexpr Scalar tripleTemperature()
+    static Scalar tripleTemperature()
     { return 63.151; /* [K] */ }
 
     /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at molecular nitrogen's triple point.
      */
-    static constexpr Scalar triplePressure()
+    static Scalar triplePressure()
     { return 12.523e3; /* [N/m^2] */ }
 
     /*!
@@ -136,13 +136,13 @@ public:
      /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    static constexpr bool gasIsCompressible()
+    static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    static constexpr bool gasIsIdeal()
+    static bool gasIsIdeal()
     { return true; }
 
     /*!
@@ -166,7 +166,7 @@ public:
      * See: R. Reid, et al.: The Properties of Gases and Liquids, 4th
      * edition, McGraw-Hill, 1987, pp 154, 657, 665
      */
-    static const Scalar gasEnthalpy(Scalar T,
+    static Scalar gasEnthalpy(Scalar T,
                                     Scalar pressure)
     {
         // method of Joback
@@ -206,7 +206,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar gasInternalEnergy(Scalar temperature,
+    static Scalar gasInternalEnergy(Scalar temperature,
                                           Scalar pressure)
     {
         return
@@ -222,7 +222,7 @@ public:
      * This is equivalent to the partial derivative of the specific
      * enthalpy to the temperature.
      */
-    static const Scalar gasHeatCapacity(Scalar T,
+    static Scalar gasHeatCapacity(Scalar T,
                                         Scalar pressure)
     {
         // method of Joback
@@ -288,7 +288,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar gasThermalConductivity(Scalar temperature,
+    static Scalar gasThermalConductivity(Scalar temperature,
                                                   Scalar pressure)
     { return 0.024572; }
 };

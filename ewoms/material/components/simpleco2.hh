@@ -85,33 +85,33 @@ public:
     /*!
      * \copydoc Component::gasIsCompressible
      */
-    static constexpr bool gasIsCompressible()
+    static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \copydoc Component::gasIsIdeal
      */
-    static constexpr bool gasIsIdeal()
+    static bool gasIsIdeal()
     { return true; }
 
     /*!
      * \copydoc Component::gasEnthalpy
      */
-    static const Scalar gasEnthalpy(Scalar temperature,
+    static Scalar gasEnthalpy(Scalar temperature,
                                     Scalar pressure)
     { return 571.3e3 + (temperature - 298.15)*0.85e3; }
 
     /*!
      * \copydoc Component::liquidEnthalpy
      */
-    static const Scalar liquidEnthalpy(Scalar temperature,
+    static Scalar liquidEnthalpy(Scalar temperature,
                                        Scalar pressure)
     { return (temperature - 298.15)*5e3; }
 
     /*!
      * \copydoc Component::gasInternalEnergy
      */
-    static const Scalar gasInternalEnergy(Scalar temperature,
+    static Scalar gasInternalEnergy(Scalar temperature,
                                           Scalar pressure)
     {
         return

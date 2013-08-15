@@ -73,43 +73,43 @@ public:
     /*!
      * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of water.
      */
-    static constexpr Scalar molarMass()
+    static Scalar molarMass()
     { return Common::molarMass; }
 
     /*!
      * \brief The acentric factor \f$\mathrm{[-]}\f$ of water.
      */
-    static constexpr Scalar acentricFactor()
+    static Scalar acentricFactor()
     { return Common::acentricFactor; }
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of water
      */
-    static constexpr Scalar criticalTemperature()
+    static Scalar criticalTemperature()
     { return Common::criticalTemperature; }
 
     /*!
      * \brief Returns the critical pressure \f$\mathrm{[Pa]}\f$ of water.
      */
-    static constexpr Scalar criticalPressure()
+    static Scalar criticalPressure()
     { return Common::criticalPressure; }
 
     /*!
      * \brief Returns the molar volume \f$\mathrm{[m^3/mol]}\f$ of water at the critical point
      */
-    static constexpr Scalar criticalMolarVolume()
+    static Scalar criticalMolarVolume()
     { return Common::criticalMolarVolume; }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at water's triple point.
      */
-    static constexpr Scalar tripleTemperature()
+    static Scalar tripleTemperature()
     { return Common::tripleTemperature; }
 
     /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at water's triple point.
      */
-    static constexpr Scalar triplePressure()
+    static Scalar triplePressure()
     { return Common::triplePressure; }
 
     /*!
@@ -516,13 +516,13 @@ public:
     /*!
      * \brief Returns true iff the gas phase is assumed to be compressible
      */
-    static constexpr bool gasIsCompressible()
+    static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \brief Returns true iff the liquid phase is assumed to be compressible
      */
-    static constexpr bool liquidIsCompressible()
+    static bool liquidIsCompressible()
     { return true; }
 
     /*!
@@ -600,7 +600,7 @@ public:
     /*!
      * \brief Returns true iff the gas phase is assumed to be ideal
      */
-    static constexpr bool gasIsIdeal()
+    static bool gasIsIdeal()
     { return false; }
 
     /*!

@@ -54,31 +54,31 @@ public:
     /*!
      * \brief The molar mass in \f$\mathrm{[kg/mol]}\f$ of xylene
      */
-    constexpr static Scalar molarMass()
+    static Scalar molarMass()
     { return 0.106; }
 
     /*!
      * \brief Returns the critical temperature \f$\mathrm{[K]}\f$ of xylene
      */
-    constexpr static Scalar criticalTemperature()
+    static Scalar criticalTemperature()
     { return 617.1; }
 
     /*!
      * \brief Returns the critical pressure \f$\mathrm{[Pa]}\f$ of xylene
      */
-    constexpr static Scalar criticalPressure()
+    static Scalar criticalPressure()
     { return 35.4e5; }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at xylene's boiling point (1 atm).
      */
-    constexpr static Scalar boilingTemperature()
+    static Scalar boilingTemperature()
     { return 412.3; }
 
     /*!
      * \brief Returns the temperature \f$\mathrm{[K]}\f$ at xylene's triple point.
      */
-    static const Scalar tripleTemperature()
+    static Scalar tripleTemperature()
     {
         DUNE_THROW(Dune::NotImplemented, "tripleTemperature for xylene");
     }
@@ -86,7 +86,7 @@ public:
     /*!
      * \brief Returns the pressure \f$\mathrm{[Pa]}\f$ at xylene's triple point.
      */
-    static const Scalar triplePressure()
+    static Scalar triplePressure()
     {
         DUNE_THROW(Dune::NotImplemented, "triplePressure for xylene");
     }
@@ -184,9 +184,9 @@ public:
         temperature = std::min(temperature, criticalTemperature()); // regularization
         temperature = std::max(temperature, 0.0); // regularization
 
-        constexpr Scalar T_crit = criticalTemperature();
-        constexpr Scalar Tr1 = boilingTemperature()/criticalTemperature();
-        constexpr Scalar p_crit = criticalPressure();
+        const Scalar T_crit = criticalTemperature();
+        const Scalar Tr1 = boilingTemperature()/criticalTemperature();
+        const Scalar p_crit = criticalPressure();
 
         //        Chen method, eq. 7-11.4 (at boiling)
         const Scalar DH_v_boil = Consts::R * T_crit * Tr1
@@ -269,19 +269,19 @@ public:
     /*!
      * \copydoc Component::gasIsCompressible
      */
-    static constexpr bool gasIsCompressible()
+    static bool gasIsCompressible()
     { return true; }
 
     /*!
      * \copydoc Component::gasIsIdeal
      */
-    static constexpr bool gasIsIdeal()
+    static bool gasIsIdeal()
     { return true; }
 
     /*!
      * \copydoc Component::liquidIsCompressible
      */
-    static constexpr bool liquidIsCompressible()
+    static bool liquidIsCompressible()
     { return false; }
 
     /*!

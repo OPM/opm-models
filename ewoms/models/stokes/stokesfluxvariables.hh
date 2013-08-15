@@ -200,7 +200,7 @@ public:
     /*!
      * \brief Return the molar density \f$ \mathrm{[mol/m^3]} \f$ at the integration point.
      */
-    const Scalar molarDensity() const
+    Scalar molarDensity() const
     { return molarDensity_; }
 
     /*!

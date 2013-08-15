@@ -97,7 +97,7 @@ public:
     /*!
      * \copydoc Component::gasEnthalpy
      */
-    static const Scalar gasEnthalpy(Scalar temperature,
+    static Scalar gasEnthalpy(Scalar temperature,
                                     Scalar pressure)
     { return H2O::gasEnthalpy(temperature, pressure); /* [J/kg] */ }
 
@@ -109,7 +109,7 @@ public:
      * - Michaelides 1981
      * - Daubert & Danner 1989
      */
-    static const Scalar liquidEnthalpy(Scalar temperature,
+    static Scalar liquidEnthalpy(Scalar temperature,
                                        Scalar pressure)
     {
         /*Numerical coefficents from PALLISER*/
@@ -172,7 +172,7 @@ public:
     /*!
      * \copydoc H2O::liquidHeatCapacity
      */
-    static const Scalar liquidHeatCapacity(Scalar temperature,
+    static Scalar liquidHeatCapacity(Scalar temperature,
                                         Scalar pressure)
     {
         Scalar eps = temperature*1e-8;
@@ -182,14 +182,14 @@ public:
     /*!
      * \copydoc H2O::gasHeatCapacity
      */
-    static const Scalar gasHeatCapacity(Scalar temperature,
+    static Scalar gasHeatCapacity(Scalar temperature,
                                         Scalar pressure)
     { return H2O::gasHeatCapacity(temperature, pressure); }
 
     /*!
      * \copydoc H2O::gasInternalEnergy
      */
-    static const Scalar gasInternalEnergy(Scalar temperature,
+    static Scalar gasInternalEnergy(Scalar temperature,
                                           Scalar pressure)
     {
         return
@@ -200,7 +200,7 @@ public:
     /*!
      * \copydoc H2O::liquidInternalEnergy
      */
-    static const Scalar liquidInternalEnergy(Scalar temperature,
+    static Scalar liquidInternalEnergy(Scalar temperature,
                                              Scalar pressure)
     {
         return

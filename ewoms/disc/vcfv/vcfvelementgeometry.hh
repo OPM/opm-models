@@ -50,7 +50,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
 {
     enum { dim = 1 };
     enum { numScv = 2};
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -92,7 +92,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
 {
     enum { dim = 1 };
     enum { numScv = 2};
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -109,7 +109,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
 {
     enum { dim = 2 };
     enum { numScv = 3};
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -164,7 +164,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
 {
     enum { dim = 2 };
     enum { numScv = 4 };
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -229,7 +229,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
 {
     enum { dim = 3 };
     enum { numScv = 4 };
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
@@ -311,7 +311,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
 {
     enum { dim = 3 };
     enum { numScv = 8 };
-    static constexpr Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;

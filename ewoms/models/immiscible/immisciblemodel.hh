@@ -250,8 +250,8 @@ public:
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
-            static constexpr Scalar muRef = 1e-3;
-            static constexpr Scalar pGradRef = 1e-2; // [Pa / m]
+            static const Scalar muRef = 1e-3;
+            static const Scalar pGradRef = 1e-2; // [Pa / m]
             Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
 
             return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);

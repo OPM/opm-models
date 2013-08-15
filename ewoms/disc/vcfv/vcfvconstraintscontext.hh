@@ -103,7 +103,7 @@ public:
     /*!
      * \copydoc Ewoms::VcfvElementContext::pos
      */
-    const GlobalPosition pos(int scvIdx, int timeIdx) const
+    GlobalPosition pos(int scvIdx, int timeIdx) const
     { return elemCtx_.pos(scvIdx, timeIdx); }
 
 protected:

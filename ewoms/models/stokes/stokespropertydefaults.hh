@@ -58,7 +58,7 @@ SET_PROP(VcfvStokes, NumEq) //!< set the number of equations
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    static constexpr int value = GridView::dimensionworld + FluidSystem::numComponents;
+    static const int value = GridView::dimensionworld + FluidSystem::numComponents;
 };
 
 //! the number of phases

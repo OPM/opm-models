@@ -146,7 +146,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar gasEnthalpy(Scalar temperature, Scalar pressure)
+    static Scalar gasEnthalpy(Scalar temperature, Scalar pressure)
     { DUNE_THROW(Dune::NotImplemented, "Component::gasEnthalpy()"); }
 
     /*!
@@ -155,7 +155,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar liquidEnthalpy(Scalar temperature, Scalar pressure)
+    static Scalar liquidEnthalpy(Scalar temperature, Scalar pressure)
     { DUNE_THROW(Dune::NotImplemented, "Component::liquidEnthalpy()"); }
 
     /*!
@@ -164,7 +164,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar gasInternalEnergy(Scalar temperature, Scalar pressure)
+    static Scalar gasInternalEnergy(Scalar temperature, Scalar pressure)
     { DUNE_THROW(Dune::NotImplemented, "Component::gasInternalEnergy()"); }
 
     /*!
@@ -173,7 +173,7 @@ public:
      * \param temperature temperature of component in \f$\mathrm{[K]}\f$
      * \param pressure pressure of component in \f$\mathrm{[Pa]}\f$
      */
-    static const Scalar liquidInternalEnergy(Scalar temperature, Scalar pressure)
+    static Scalar liquidInternalEnergy(Scalar temperature, Scalar pressure)
     { DUNE_THROW(Dune::NotImplemented, "Component::liquidInternalEnergy()"); }
 
     /*!

@@ -111,7 +111,7 @@ protected:
         static const Scalar fPrimeXMin = 1.0/(2*std::sqrt(xMin));
         static const Scalar fPrime0 = 2*fPrimeXMin;
         typedef Ewoms::Spline<Scalar, 2> Spline;
-        static const Spline sqrtRegSpline(0, xMin, // x0, x1
+        static Spline sqrtRegSpline(0, xMin, // x0, x1
                                           0, sqrtXMin, // y0, y1
                                           fPrime0, fPrimeXMin); // m0, m1
 
