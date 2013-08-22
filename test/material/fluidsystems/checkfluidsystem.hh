@@ -41,6 +41,7 @@
 #include <ewoms/material/fluidstates/nonequilibriumfluidstate.hh>
 #include <ewoms/material/fluidstates/immisciblefluidstate.hh>
 
+#include <dune/common/unused.hh>
 #include <dune/common/classname.hh>
 
 #include <iostream>

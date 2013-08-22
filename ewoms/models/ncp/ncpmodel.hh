@@ -31,6 +31,7 @@
 #include <ewoms/disc/vcfv/vcfvmodel.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/unused.hh>
 
 #include <sstream>
 #include <string>

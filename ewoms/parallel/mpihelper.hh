@@ -23,6 +23,8 @@
 #ifndef EWOMS_MPI_HELPER_HH
 #define EWOMS_MPI_HELPER_HH
 
+#include <dune/common/deprecated.hh>
+
 // this is a bit hacky, but required for DUNE compatibility
 #ifdef DUNE_MPIHELPER
 #error "You must include this file _before_ DUNE's mpihelper.hh!"

@@ -30,6 +30,8 @@
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 
+#include <dune/common/unused.hh>
+
 #include <sstream>
 #include <string>
 

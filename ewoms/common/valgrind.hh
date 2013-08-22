@@ -23,6 +23,8 @@
 #ifndef EWOMS_VALGRIND_HH
 #define EWOMS_VALGRIND_HH
 
+#include <dune/common/unused.hh>
+
 #if ! HAVE_VALGRIND && ! defined(DOXYGEN)
 namespace Valgrind
 {
