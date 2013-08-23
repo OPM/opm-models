@@ -26,14 +26,14 @@
 
 #include "lensgridcreator.hh"
 
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/components/simpleh2o.hh>
-#include <ewoms/material/components/dnapl.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/components/simpleh2o.hh>
+#include <opm/material/components/dnapl.hh>
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
 #include <ewoms/linear/parallelamgbackend.hh>
 
@@ -79,7 +79,7 @@ SET_PROP(LensBaseProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -88,7 +88,7 @@ SET_PROP(LensBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::DNAPL<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::DNAPL<Scalar> > type;
 };
 
 // Set the material Law
@@ -98,15 +98,15 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    typedef Opm::RegularizedVanGenuchten<Scalar> EffectiveLaw;
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
 public:
-    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Use the algebraic multi-grid linear solver for this problem
@@ -395,7 +395,7 @@ public:
             const MaterialLawParams &matParams =
                 this->materialLawParams(context, spaceIdx, timeIdx);
 
-            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Opm::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             fs.setSaturation(wPhaseIdx, Sw);
             fs.setSaturation(nPhaseIdx, 1 - Sw);
             fs.setTemperature(T);
@@ -441,7 +441,7 @@ public:
         const GlobalPosition &pos = context.pos(spaceIdx, timeIdx);
         Scalar depth = this->bboxMax()[1] - pos[1];
 
-        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setPressure(wPhaseIdx, /*pressure=*/1e5);
 
         Scalar Sw = 1.0;

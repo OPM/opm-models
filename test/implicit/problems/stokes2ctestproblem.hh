@@ -25,7 +25,7 @@
 #define EWOMS_STOKES_2C_TEST_PROBLEM_HH
 
 #include <ewoms/models/stokes/stokesmodel.hh>
-#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
+#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -51,7 +51,7 @@ SET_TYPE_PROP(Stokes2cTestProblem, Problem, Ewoms::Stokes2cTestProblem<TypeTag>)
 //! Select the fluid system
 SET_TYPE_PROP(Stokes2cTestProblem,
               FluidSystem,
-              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! Select the phase to be considered
 SET_INT_PROP(Stokes2cTestProblem,

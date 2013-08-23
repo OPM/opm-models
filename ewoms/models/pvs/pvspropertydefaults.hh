@@ -39,8 +39,8 @@
 
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -70,7 +70,7 @@ SET_INT_PROP(VcfvPvs,
  */
 SET_TYPE_PROP(VcfvPvs,
               MaterialLaw,
-              Ewoms::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -83,7 +83,7 @@ SET_TYPE_PROP(VcfvPvs,
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvPvs,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself

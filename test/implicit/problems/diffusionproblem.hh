@@ -25,10 +25,10 @@
 #define EWOMS_POWER_INJECTION_PROBLEM_HH
 
 #include <ewoms/models/ncp/ncpproperties.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
 #include <ewoms/io/cubegridcreator.hh>
 
 #include <dune/common/fvector.hh>
@@ -65,7 +65,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Ewoms::FluidSystems::H2ON2<Scalar> type;
+    typedef Opm::FluidSystems::H2ON2<Scalar> type;
 };
 
 // Set the material Law
@@ -76,7 +76,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    typedef MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
+    typedef Opm::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
 };
 
 // Enable molecular diffusion for this problem
@@ -294,7 +294,7 @@ private:
         leftInitialFluidState_.setMoleFraction(gPhaseIdx, H2OIdx, xH2O);
         leftInitialFluidState_.setMoleFraction(gPhaseIdx, N2Idx, 1 - xH2O);
 
-        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
         CFRP::solve(leftInitialFluidState_, paramCache, gPhaseIdx, /*setViscosity=*/false, /*setEnthalpy=*/false);
 
@@ -310,8 +310,8 @@ private:
     DimMatrix K_;
     MaterialLawParams materialParams_;
 
-    CompositionalFluidState<Scalar, FluidSystem> leftInitialFluidState_;
-    CompositionalFluidState<Scalar, FluidSystem> rightInitialFluidState_;
+    Opm::CompositionalFluidState<Scalar, FluidSystem> leftInitialFluidState_;
+    Opm::CompositionalFluidState<Scalar, FluidSystem> rightInitialFluidState_;
     Scalar temperature_;
 };
 

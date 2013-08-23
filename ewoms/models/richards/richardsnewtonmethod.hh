@@ -27,7 +27,7 @@
 #include "richardsproperties.hh"
 
 #include <ewoms/disc/vcfv/vcfvnewtonmethod.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -119,7 +119,7 @@ protected:
                     // calculate the old wetting phase saturation
                     const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
 
-                    ImmiscibleFluidState<Scalar, FluidSystem> fs;
+                    Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
                     // set the temperatures
                     Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, /*timeIdx=*/0);

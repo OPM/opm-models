@@ -27,7 +27,7 @@
 #include "flashproperties.hh"
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/common/valgrind.hh>
+#include <opm/common/valgrind.hh>
 
 namespace Ewoms {
 

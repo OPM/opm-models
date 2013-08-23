@@ -25,7 +25,7 @@
 
 #include <ewoms/models/stokes/stokesmodel.hh>
 #include <ewoms/io/simplexgridcreator.hh>
-#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
+#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -52,7 +52,7 @@ SET_TYPE_PROP(StokesNITestProblem, Problem, StokesNITestProblem<TypeTag>);
 //! Select the fluid system
 SET_TYPE_PROP(StokesNITestProblem,
               FluidSystem,
-              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! Select the phase to be considered
 SET_INT_PROP(StokesNITestProblem,

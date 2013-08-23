@@ -30,7 +30,7 @@
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
@@ -82,7 +82,7 @@ class FlashVolumeVariables
 
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
 
     /*!
      * \copydoc VcfvVolumeVariables::update

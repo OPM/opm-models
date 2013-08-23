@@ -26,8 +26,8 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 
 #include <dune/common/fvector.hh>
@@ -68,7 +68,7 @@ class NcpPrimaryVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
-    typedef Ewoms::NcpFlash<Scalar, FluidSystem> NcpFlash;
+    typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:
     NcpPrimaryVariables()
@@ -114,7 +114,7 @@ public:
         // use a flash calculation to calculate a fluid state in
         // thermodynamic equilibrium
         typename FluidSystem::ParameterCache paramCache;
-        Ewoms::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
 
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);

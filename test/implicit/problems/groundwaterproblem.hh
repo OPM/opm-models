@@ -26,9 +26,9 @@
 
 #include <ewoms/linear/paralleliterativebackend.hh>
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
-#include <ewoms/material/components/simpleh2o.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/fluidsystems/liquidphase.hh>
+#include <opm/material/components/simpleh2o.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidsystems/liquidphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
@@ -61,7 +61,7 @@ SET_PROP(GroundWaterBaseProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::SimpleH2O<Scalar> > type;
 };
 
 // Set the grid type
@@ -249,7 +249,7 @@ public:
             else // on upper boundary
                 pressure = 1e5;
 
-            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Opm::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             fs.setSaturation(/*phaseIdx=*/0, 1.0);
             fs.setPressure(/*phaseIdx=*/0, pressure);
             fs.setTemperature(T);

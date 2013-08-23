@@ -26,12 +26,12 @@
 
 #include <ewoms/models/pvs/pvsproperties.hh>
 
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <ewoms/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
+#include <opm/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/heatconduction/somerton.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>
@@ -61,7 +61,7 @@ SET_TYPE_PROP(InfiltrationBaseProblem, Problem, Ewoms::InfiltrationProblem<TypeT
 // Set the fluid system
 SET_TYPE_PROP(InfiltrationBaseProblem,
               FluidSystem,
-              Ewoms::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity?
 SET_BOOL_PROP(InfiltrationBaseProblem, EnableGravity, true);
@@ -87,12 +87,12 @@ private:
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
     // define the three-phase material law
-    typedef Ewoms::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
+    typedef Opm::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
 
 public:
     // wrap the three-phase law in an adaptor to make use the generic
     // material law API
-    typedef Ewoms::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
+    typedef Opm::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
 };
 
 // Set the heat conduction law
@@ -104,7 +104,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // The default for the end time of the simulation
@@ -317,7 +317,7 @@ public:
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
-            CompositionalFluidState<Scalar, FluidSystem> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
 
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
@@ -347,7 +347,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        CompositionalFluidState<Scalar, FluidSystem> fs;
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
 
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
@@ -430,7 +430,7 @@ private:
         fs.setMoleFraction(gPhaseIdx, airIdx, 1 - fs.moleFraction(gPhaseIdx, H2OIdx));
         fs.setMoleFraction(gPhaseIdx, NAPLIdx, 0);
 
-        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         typename FluidSystem::ParameterCache paramCache;
         CFRP::solve(fs,
                     paramCache,

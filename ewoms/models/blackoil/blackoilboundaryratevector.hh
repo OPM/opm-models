@@ -24,8 +24,8 @@
 #ifndef EWOMS_BLACK_OIL_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_BLACK_OIL_BOUNDARY_RATE_VECTOR_HH
 
-#include <ewoms/common/valgrind.hh>
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
+#include <opm/common/valgrind.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
 
 #include "blackoilvolumevariables.hh"
 

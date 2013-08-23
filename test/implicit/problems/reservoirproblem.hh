@@ -24,8 +24,8 @@
 #ifndef EWOMS_RESERVOIR_PROBLEM_HH
 #define EWOMS_RESERVOIR_PROBLEM_HH
 
-#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/models/blackoil/blackoilproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
@@ -68,7 +68,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    typedef MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
+    typedef Opm::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
 };
 
 // Write the Newton convergence behavior to disk?

@@ -27,8 +27,8 @@
 #include <dune/common/fvector.hh>
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/material/constraintsolvers/immiscibleflash.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/constraintsolvers/immiscibleflash.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 
 #include "immiscibleproperties.hh"
 
@@ -67,7 +67,7 @@ class ImmisciblePrimaryVariables
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Ewoms::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
+    typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
     typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
@@ -132,7 +132,7 @@ public:
             }
         }
 
-        ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
         ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);

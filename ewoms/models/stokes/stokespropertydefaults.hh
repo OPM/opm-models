@@ -35,13 +35,13 @@
 #include "stokesfluxvariables.hh"
 #include "stokesboundaryratevector.hh"
 
-#include <ewoms/material/fluidsystems/gasphase.hh>
-#include <ewoms/material/fluidsystems/liquidphase.hh>
-#include <ewoms/material/components/nullcomponent.hh>
-#include <ewoms/material/heatconduction/fluidconduction.hh>
+#include <opm/material/fluidsystems/gasphase.hh>
+#include <opm/material/fluidsystems/liquidphase.hh>
+#include <opm/material/components/nullcomponent.hh>
+#include <opm/material/heatconduction/fluidconduction.hh>
 
-#include <ewoms/material/fluidsystems/1pfluidsystem.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidsystems/1pfluidsystem.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 
 #include <ewoms/linear/superlubackend.hh>
 
@@ -104,7 +104,7 @@ SET_PROP(VcfvStokes, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef FluidSystems::OneP<Scalar, Fluid> type;
+    typedef Opm::FluidSystems::OneP<Scalar, Fluid> type;
 };
 
 //! The fluid that is used in the single-phase fluidsystem.
@@ -112,7 +112,7 @@ SET_PROP(VcfvStokes, Fluid)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 SET_TYPE_PROP(VcfvStokes, Indices, StokesIndices<TypeTag, /*PVOffset=*/0>);
@@ -123,13 +123,13 @@ SET_PROP(VcfvStokes, FluidState)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef Ewoms::CompositionalFluidState<Scalar, FluidSystem> type;
+    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> type;
 };
 
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvStokes,
               HeatConductionLaw,
-              Ewoms::FluidHeatConduction<typename GET_PROP_TYPE(TypeTag, FluidSystem),
+              Opm::FluidHeatConduction<typename GET_PROP_TYPE(TypeTag, FluidSystem),
                                          typename GET_PROP_TYPE(TypeTag, Scalar),
                                          GET_PROP_VALUE(TypeTag, StokesPhaseIndex)>);
 

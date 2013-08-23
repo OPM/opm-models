@@ -61,7 +61,7 @@ class DiscreteFractureVolumeVariables
     enum { wPhaseIdx = MaterialLaw::wPhaseIdx };
     enum { nPhaseIdx = MaterialLaw::nPhaseIdx };
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef Ewoms::ImmiscibleFluidState<Scalar,
+    typedef Opm::ImmiscibleFluidState<Scalar,
                                         FluidSystem,
                                         /*storeEnthalpy=*/enableEnergy> FluidState;
 

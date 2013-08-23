@@ -26,7 +26,7 @@
 
 #include "richardsproperties.hh"
 
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 
 #include <dune/common/fvector.hh>
@@ -68,7 +68,7 @@ class RichardsVolumeVariables
 
 public:
     //! The type returned by the fluidState() method
-    typedef Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
+    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
      * \copydoc VcfvVolumeVariables::update

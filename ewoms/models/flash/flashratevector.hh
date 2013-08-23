@@ -27,8 +27,8 @@
 #include <dune/common/fvector.hh>
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
-#include <ewoms/common/valgrind.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/common/valgrind.hh>
 
 #include "flashvolumevariables.hh"
 

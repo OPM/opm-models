@@ -24,7 +24,7 @@
 #ifndef EWOMS_VCFV_LOCAL_RESIDUAL_HH
 #define EWOMS_VCFV_LOCAL_RESIDUAL_HH
 
-#include <ewoms/common/valgrind.hh>
+#include <opm/common/valgrind.hh>
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/geometry.hh>

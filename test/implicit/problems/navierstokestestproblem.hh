@@ -24,9 +24,9 @@
 #ifndef EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
 #define EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
 
-#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
-#include <ewoms/material/fluidsystems/gasphase.hh>
-#include <ewoms/material/components/n2.hh>
+#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
+#include <opm/material/fluidsystems/gasphase.hh>
+#include <opm/material/components/n2.hh>
 #include <ewoms/models/stokes/stokesmodel.hh>
 
 #if HAVE_ALUGRID
@@ -69,7 +69,7 @@ SET_PROP(NavierStokesTestProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::GasPhase<Scalar, Ewoms::N2<Scalar> > type;
+    typedef Opm::GasPhase<Scalar, Opm::N2<Scalar> > type;
 };
 
 // Disable gravity

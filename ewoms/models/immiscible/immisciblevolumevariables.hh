@@ -28,7 +28,7 @@
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -69,7 +69,7 @@ class ImmiscibleVolumeVariables
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
-    typedef Ewoms::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!

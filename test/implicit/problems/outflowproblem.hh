@@ -23,9 +23,9 @@
 #ifndef EWOMS_OUTFLOW_PROBLEM_HH
 #define EWOMS_OUTFLOW_PROBLEM_HH
 
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
-#include <ewoms/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
+#include <opm/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
@@ -53,7 +53,7 @@ SET_PROP(OutflowBaseProblem, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
     // Two-component single phase fluid system
-    typedef Ewoms::FluidSystems::H2ON2LiquidPhase<Scalar> type;
+    typedef Opm::FluidSystems::H2ON2LiquidPhase<Scalar> type;
 };
 
 // Disable gravity
@@ -216,7 +216,7 @@ public:
         const GlobalPosition &globalPos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(globalPos)) {
-            Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
             fs.setPressure(/*phaseIdx=*/0, fs.pressure(/*phaseIdx=*/0) + 1e5);
 
@@ -228,7 +228,7 @@ public:
             values.setFreeFlow(context, spaceIdx, timeIdx, fs);
         }
         else if (onRightBoundary_(globalPos)) {
-            Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
             // impose an outflow boundary condition
@@ -252,7 +252,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        Ewoms::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
+        Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/false> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         values.assignNaive(fs);

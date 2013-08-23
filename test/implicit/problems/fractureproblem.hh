@@ -27,15 +27,15 @@
 #include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid.hh>
 
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
-#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <ewoms/material/components/simpleh2o.hh>
-#include <ewoms/material/components/dnapl.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/heatconduction/somerton.hh>
+#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <opm/material/components/simpleh2o.hh>
+#include <opm/material/components/dnapl.hh>
 #include <ewoms/io/artgridcreator.hh>
 
 #include <ewoms/models/discretefracture/discretefracturemodel.hh>
@@ -74,7 +74,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -84,7 +84,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::DNAPL<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::DNAPL<Scalar> > type;
 };
 
 // Set the material Law
@@ -94,17 +94,17 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedBrooksCorey<Scalar> EffectiveLaw;
+    typedef Opm::RegularizedBrooksCorey<Scalar> EffectiveLaw;
     //typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
     //typedef LinearMaterial<Scalar> EffectiveLaw;
     //typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
 
 public:
-    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Enable the energy equation
@@ -119,7 +119,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // Disable gravity
@@ -183,7 +183,7 @@ class FractureProblem
         dimWorld = GridView::dimensionworld
     };
 
-    typedef Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
+    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
 
     typedef Dune::FieldVector<Scalar, dimWorld> GlobalPosition;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -521,7 +521,7 @@ private:
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
-        Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setTemperature(293.15);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fs.setPressure(phaseIdx, 1.0135e5);

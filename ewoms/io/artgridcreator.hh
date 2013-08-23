@@ -27,7 +27,7 @@
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/valgrind.hh>
+#include <opm/common/valgrind.hh>
 #include <ewoms/common/math.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>

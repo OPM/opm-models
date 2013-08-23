@@ -24,17 +24,17 @@
 #ifndef EWOMS_CO2_INJECTION_PROBLEM_HH
 #define EWOMS_CO2_INJECTION_PROBLEM_HH
 
-#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
-#include <ewoms/material/fluidsystems/brineco2fluidsystem.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
-#include <ewoms/material/binarycoefficients/brine_co2.hh>
+#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
+#include <opm/material/fluidsystems/brineco2fluidsystem.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/heatconduction/somerton.hh>
+#include <opm/material/binarycoefficients/brine_co2.hh>
 #include <ewoms/common/statictabulated2dfunction.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
 
@@ -53,7 +53,7 @@ template <class TypeTag>
 class Co2InjectionProblem;
 
 namespace Co2Injection {
-#include <ewoms/material/components/co2tables.inc>
+#include <opm/material/components/co2tables.inc>
 }
 
 namespace Properties {
@@ -86,8 +86,8 @@ SET_PROP(Co2InjectionBaseProblem, FluidSystem)
 
     static const bool useComplexRelations = false;
 public:
-    typedef Ewoms::FluidSystems::BrineCO2<Scalar, CO2Tables> type;
-    //typedef Ewoms::FluidSystems::H2ON2<Scalar, useComplexRelations> type;
+    typedef Opm::FluidSystems::BrineCO2<Scalar, CO2Tables> type;
+    //typedef Opm::FluidSystems::H2ON2<Scalar, useComplexRelations> type;
 };
 
 // Set the material Law
@@ -97,15 +97,15 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
+    typedef Opm::RegularizedBrooksCorey<Scalar> EffMaterialLaw;
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { lPhaseIdx = FluidSystem::lPhaseIdx };
 
 public:
-    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Set the heat conduction law
@@ -117,7 +117,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // Write the Newton convergence behavior to disk?
@@ -425,7 +425,7 @@ public:
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
         if (onLeftBoundary_(pos)) {
-            Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
             fs.checkDefined();
 
@@ -436,7 +436,7 @@ public:
             RateVector massRate(0.0);
             massRate[contiCO2EqIdx] = -1e-3; // [kg/(m^3 s)]
 
-            Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+            Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
             fs.setSaturation(gPhaseIdx, 1.0);
             fs.setPressure(gPhaseIdx,context. volVars(spaceIdx, timeIdx).fluidState().pressure(gPhaseIdx));
             fs.setTemperature(temperature(context, spaceIdx, timeIdx));
@@ -466,7 +466,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         //const auto &matParams = this->materialLawParams(context, spaceIdx, timeIdx);
@@ -527,7 +527,7 @@ private:
                            1.0 - fs.moleFraction(lPhaseIdx, CO2Idx));
 
         typename FluidSystem::ParameterCache paramCache;
-        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         CFRP::solve(fs,
                     paramCache,
                     /*refPhaseIdx=*/lPhaseIdx,

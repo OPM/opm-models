@@ -25,12 +25,12 @@
 #define EWOMS_RICHARDS_LENS_PROBLEM_HH
 
 #include <ewoms/models/richards/richardsmodel.hh>
-#include <ewoms/material/components/simpleh2o.hh>
-#include <ewoms/material/fluidsystems/liquidphase.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/components/simpleh2o.hh>
+#include <opm/material/fluidsystems/liquidphase.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
 
 #include <dune/grid/io/file/dgfparser.hh>
 
@@ -62,7 +62,7 @@ SET_PROP(RichardsLensProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::SimpleH2O<Scalar> > type;
 };
 
 // Set the material Law
@@ -72,15 +72,15 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedVanGenuchten<Scalar> EffectiveLaw;
+    typedef Opm::RegularizedVanGenuchten<Scalar> EffectiveLaw;
     // define the material law parameterized by absolute saturations
-    typedef EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffectiveLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
 public:
-    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Enable gravitational acceleration
@@ -285,7 +285,7 @@ public:
             const auto &materialParams = this->materialLawParams(context, spaceIdx, timeIdx);
 
             Scalar Sw = 0.0;
-            ImmiscibleFluidState<Scalar, FluidSystem> fs;
+            Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
             fs.setSaturation(wPhaseIdx, Sw);
             fs.setSaturation(nPhaseIdx, 1.0 - Sw);
 
@@ -326,7 +326,7 @@ public:
         const auto &materialParams = this->materialLawParams(context, spaceIdx, timeIdx);
 
         Scalar Sw = 0.0;
-        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setSaturation(wPhaseIdx, Sw);
         fs.setSaturation(nPhaseIdx, 1.0 - Sw);
 

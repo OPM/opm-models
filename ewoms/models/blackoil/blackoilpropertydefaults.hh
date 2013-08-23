@@ -37,8 +37,8 @@
 
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <ewoms/material/fluidsystems/blackoilfluidsystem.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/fluidsystems/blackoilfluidsystem.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -67,7 +67,7 @@ SET_PROP(VcfvBlackOil, BlackOilFluidState)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef Ewoms::CompositionalFluidState<Scalar,
+    typedef Opm::CompositionalFluidState<Scalar,
                                            FluidSystem,
                                            /*enableEnthalpy=*/false> type;
 };
@@ -104,7 +104,7 @@ SET_TYPE_PROP(VcfvBlackOil,
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvBlackOil,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -115,7 +115,7 @@ SET_TYPE_PROP(VcfvBlackOil,
 //! Set the fluid system to the black-oil fluid system by default
 SET_TYPE_PROP(VcfvBlackOil,
               FluidSystem,
-              Ewoms::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(VcfvBlackOil, EnableSmoothUpwinding, false);

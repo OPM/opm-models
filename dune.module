@@ -9,4 +9,4 @@ Url: http://opm-project.org/ewoms
 Codename: Esmarelda
 MaintainerName: The Open Porous Media Initiative
 Maintainer: opm@opm-project.org
-Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2)
+Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-material

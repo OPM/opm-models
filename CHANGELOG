@@ -2,11 +2,14 @@ Notable Differences Between eWoms 2.3 and eWoms 2.4
 ===================================================
 
 - The semi implicit ("decoupled", "IMPET") models have been removed
-  due to a lack of interest and the slowly increasing maintainance
-  burden as the Dumux and eWoms code bases diverge.
+  due to a lack of interest and the slowly increasing maintenance
+  burden as the Dumux and eWoms code bases continue to diverge.
 - The custom CMake-based and the autotools based DUNE build systems
   have been removed and replaced by the CMake based build system of
   the Open Porous Media Initiative.
+- The material laws framework has evolved into a separate module,
+  "opm-material". This means that this module must be also present
+  when compiling eWoms.
 
 Notable Differences Between eWoms 2.2 and eWoms 2.3
 ===================================================

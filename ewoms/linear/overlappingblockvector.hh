@@ -26,7 +26,7 @@
 #include "overlaptypes.hh"
 
 #include <ewoms/parallel/mpibuffer.hh>
-#include <ewoms/common/valgrind.hh>
+#include <opm/common/valgrind.hh>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>

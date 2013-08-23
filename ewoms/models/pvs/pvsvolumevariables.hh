@@ -29,9 +29,9 @@
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
-#include <ewoms/material/constraintsolvers/misciblemultiphasecomposition.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
@@ -75,8 +75,8 @@ class PvsVolumeVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Ewoms::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
-    typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
+    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -87,7 +87,7 @@ class PvsVolumeVariables
 
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Ewoms::CompositionalFluidState<Scalar, FluidSystem> FluidState;
+    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
      * \copydoc ImmiscibleVolumeVariables::update
@@ -170,7 +170,7 @@ public:
         else {
             // create the auxiliary constraints
             int numAuxConstraints = numComponents + numNonPresentPhases - numPhases;
-            MMPCAuxConstraint<Scalar> auxConstraints[numComponents];
+            Opm::MMPCAuxConstraint<Scalar> auxConstraints[numComponents];
 
             int auxIdx = 0;
             int switchIdx = 0;

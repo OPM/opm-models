@@ -27,8 +27,8 @@
 #include <dune/common/fvector.hh>
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
 
 #include "flashindices.hh"
 #include "flashproperties.hh"

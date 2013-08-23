@@ -24,16 +24,16 @@
 #ifndef EWOMS_OBSTACLE_PROBLEM_HH
 #define EWOMS_OBSTACLE_PROBLEM_HH
 
-#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
+#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedlinearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/heatconduction/somerton.hh>
 #include <ewoms/models/ncp/ncpproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
@@ -67,7 +67,7 @@ SET_TYPE_PROP(ObstacleBaseProblem,
 // Set fluid configuration
 SET_TYPE_PROP(ObstacleBaseProblem,
               FluidSystem,
-              Ewoms::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2ON2<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Set the material Law
 SET_PROP(ObstacleBaseProblem, MaterialLaw)
@@ -81,11 +81,11 @@ private:
     // define the material law
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     //    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
-    typedef RegularizedLinearMaterial<Scalar> EffMaterialLaw;
-    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    typedef Opm::RegularizedLinearMaterial<Scalar> EffMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
 
 public:
-    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Set the heat conduction law
@@ -97,7 +97,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // Enable gravity
@@ -497,7 +497,7 @@ private:
 
         // make the fluid state consistent with local thermodynamic
         // equilibrium
-        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+        typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
 
         typename FluidSystem::ParameterCache paramCache;
         ComputeFromReferencePhase::solve(fs,
@@ -532,8 +532,8 @@ private:
     HeatConductionLawParams fineHeatCondParams_;
     HeatConductionLawParams coarseHeatCondParams_;
 
-    CompositionalFluidState<Scalar, FluidSystem> inletFluidState_;
-    CompositionalFluidState<Scalar, FluidSystem> outletFluidState_;
+    Opm::CompositionalFluidState<Scalar, FluidSystem> inletFluidState_;
+    Opm::CompositionalFluidState<Scalar, FluidSystem> outletFluidState_;
 
     Scalar temperature_;
     Scalar eps_;

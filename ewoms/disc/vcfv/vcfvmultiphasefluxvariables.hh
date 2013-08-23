@@ -24,7 +24,7 @@
 #ifndef EWOMS_VCFV_MULTIPHASE_FLUX_VARIABLES_HH
 #define EWOMS_VCFV_MULTIPHASE_FLUX_VARIABLES_HH
 
-#include <ewoms/common/spline.hh>
+#include <opm/common/spline.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 

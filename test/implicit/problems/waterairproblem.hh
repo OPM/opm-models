@@ -24,15 +24,15 @@
 #ifndef EWOMS_WATER_AIR_PROBLEM_HH
 #define EWOMS_WATER_AIR_PROBLEM_HH
 
-#include <ewoms/material/fluidsystems/h2oairfluidsystem.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
-#include <ewoms/material/constraintsolvers/computefromreferencephase.hh>
+#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/heatconduction/somerton.hh>
+#include <opm/material/constraintsolvers/computefromreferencephase.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
@@ -67,18 +67,18 @@ private:
     // define the material law which is parameterized by effective
     // saturations
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef RegularizedBrooksCorey<Scalar> EffMaterialLaw;
+    typedef Opm::RegularizedBrooksCorey<Scalar> EffMaterialLaw;
 
     // define the material law parameterized by absolute saturations
     // which uses the two-phase API
-    typedef EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
+    typedef Opm::EffToAbsLaw<EffMaterialLaw> TwoPMaterialLaw;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { lPhaseIdx = FluidSystem::lPhaseIdx };
 
 public:
     // define the type of the generic material law
-    typedef TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<lPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Set the heat conduction law
@@ -90,13 +90,13 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // Set the fluid system. in this case, we use the one which describes
 // air and water
 SET_TYPE_PROP(WaterAirBaseProblem, FluidSystem,
-              Ewoms::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2OAir<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
 SET_BOOL_PROP(WaterAirBaseProblem, EnableGravity, true);
@@ -363,7 +363,7 @@ public:
         else if (onLeftBoundary_(pos) || onRightBoundary_(pos)) {
             //int globalIdx = context.elemContext().globalSpaceIndex(context.insideScvIndex(spaceIdx,timeIdx), timeIdx);
 
-            Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
             // impose an freeflow boundary condition
@@ -392,7 +392,7 @@ public:
     {
         //int globalIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
 
-        Ewoms::CompositionalFluidState<Scalar, FluidSystem> fs;
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
         const auto &matParams = materialLawParams(context, spaceIdx, timeIdx);
@@ -474,7 +474,7 @@ private:
         fs.setPressure(gPhaseIdx, fs.pressure(lPhaseIdx) + (pc[gPhaseIdx] - pc[lPhaseIdx]));
 
         typename FluidSystem::ParameterCache paramCache;
-        typedef Ewoms::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
+        typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> CFRP;
         CFRP::solve(fs, paramCache, lPhaseIdx, /*setViscosity=*/false,  /*setEnthalpy=*/true);
     }
 
@@ -483,7 +483,7 @@ private:
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
-        Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setTemperature(293.15);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fs.setPressure(phaseIdx, 1.0135e5);

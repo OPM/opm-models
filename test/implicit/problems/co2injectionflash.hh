@@ -24,7 +24,7 @@
 #ifndef EWOMS_CO2_INJECTION_FLASH_HH
 #define EWOMS_CO2_INJECTION_FLASH_HH
 
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
 
 namespace Ewoms {
 /*!
@@ -35,9 +35,9 @@ namespace Ewoms {
  * problem.
  */
 template <class Scalar, class FluidSystem>
-class Co2InjectionFlash : public NcpFlash<Scalar, FluidSystem>
+class Co2InjectionFlash : public Opm::NcpFlash<Scalar, FluidSystem>
 {
-    typedef NcpFlash<Scalar, FluidSystem> ParentType;
+    typedef Opm::NcpFlash<Scalar, FluidSystem> ParentType;
 
     typedef typename FluidSystem::ParameterCache ParameterCache;
     typedef typename ParentType::ComponentVector ComponentVector;

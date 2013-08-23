@@ -38,9 +38,9 @@
 
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
-#include <ewoms/material/components/nullcomponent.hh>
-#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/components/nullcomponent.hh>
+#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -104,7 +104,7 @@ SET_TYPE_PROP(VcfvRichards,
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvRichards,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -129,7 +129,7 @@ SET_PROP(VcfvRichards, WettingPhase)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 /*!
@@ -144,7 +144,7 @@ SET_PROP(VcfvRichards, NonwettingPhase)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::GasPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::GasPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 /*!
@@ -163,7 +163,7 @@ SET_PROP(VcfvRichards, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
 
 public:
-    typedef Ewoms::FluidSystems::TwoPImmiscible<Scalar,
+    typedef Opm::FluidSystems::TwoPImmiscible<Scalar,
                                                 WettingPhase,
                                                 NonwettingPhase> type;
 };

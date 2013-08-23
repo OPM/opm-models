@@ -26,16 +26,16 @@
 
 #include "fingergridcreator.hh"
 
-#include <ewoms/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <ewoms/material/fluidmatrixinteractions/2p/parkerlenhard.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/2padapter.hh>
+#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
+#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
+#include <opm/material/fluidmatrixinteractions/2p/parkerlenhard.hh>
+#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
 
-#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/components/simpleh2o.hh>
-#include <ewoms/material/components/air.hh>
+#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/components/simpleh2o.hh>
+#include <opm/material/components/air.hh>
 
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
 
@@ -74,7 +74,7 @@ SET_PROP(FingerBaseProblem, WettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::SimpleH2O<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::SimpleH2O<Scalar> > type;
 };
 
 // Set the non-wetting phase
@@ -83,7 +83,7 @@ SET_PROP(FingerBaseProblem, NonwettingPhase)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::GasPhase<Scalar, Ewoms::Air<Scalar> > type;
+    typedef Opm::GasPhase<Scalar, Opm::Air<Scalar> > type;
 };
 
 // Set the material Law
@@ -92,13 +92,13 @@ SET_PROP(FingerBaseProblem, MaterialLaw)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
     // use the parker-lenhard hysteresis law
-    typedef Ewoms::ParkerLenhard<Scalar> TwoPMaterialLaw;
-    typedef Ewoms::ParkerLenhard<Scalar> ParkerLenhard;
+    typedef Opm::ParkerLenhard<Scalar> TwoPMaterialLaw;
+    typedef Opm::ParkerLenhard<Scalar> ParkerLenhard;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     enum { wPhaseIdx = FluidSystem::wPhaseIdx };
 
-    typedef TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
+    typedef Opm::TwoPAdapter<wPhaseIdx, TwoPMaterialLaw> type;
 };
 
 // Enable partial reassembly of the jacobian matrix?
@@ -471,7 +471,7 @@ private:
 
     std::vector<MaterialLawParams> materialParams_;
 
-    ImmiscibleFluidState<Scalar, FluidSystem> initialFluidState_;
+    Opm::ImmiscibleFluidState<Scalar, FluidSystem> initialFluidState_;
 
     Scalar temperature_;
     Scalar eps_;

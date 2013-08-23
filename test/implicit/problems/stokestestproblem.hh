@@ -26,8 +26,8 @@
 #define EWOMS_STOKES_TEST_PROBLEM_HH
 
 #include <ewoms/models/stokes/stokesmodel.hh>
-#include <ewoms/material/fluidsystems/h2on2fluidsystem.hh>
-#include <ewoms/material/fluidsystems/gasphase.hh>
+#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
+#include <opm/material/fluidsystems/gasphase.hh>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>
@@ -57,7 +57,7 @@ SET_PROP(StokesTestProblem, Fluid)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::GasPhase<Scalar, Ewoms::N2<Scalar> > type;
+    typedef Opm::GasPhase<Scalar, Opm::N2<Scalar> > type;
 };
 
 // Disable gravity

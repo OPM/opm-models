@@ -25,7 +25,7 @@
 #define EWOMS_VCFV_CONSTRAINTS_HH
 
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/valgrind.hh>
+#include <opm/common/valgrind.hh>
 
 namespace Ewoms {
 namespace Properties {

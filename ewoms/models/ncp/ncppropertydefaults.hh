@@ -39,8 +39,8 @@
 
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
-#include <ewoms/material/constraintsolvers/compositionfromfugacities.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/constraintsolvers/compositionfromfugacities.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -78,7 +78,7 @@ SET_TYPE_PROP(VcfvNcp, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, Materi
 //! from the law itself
 SET_TYPE_PROP(VcfvNcp,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -97,7 +97,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    typedef Ewoms::CompositionFromFugacities<Scalar, FluidSystem> type;
+    typedef Opm::CompositionFromFugacities<Scalar, FluidSystem> type;
 };
 
 //! Use the Ncp local jacobian operator for the compositional NCP model

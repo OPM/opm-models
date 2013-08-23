@@ -37,14 +37,14 @@
 
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <ewoms/material/fluidsystems/gasphase.hh>
-#include <ewoms/material/fluidsystems/liquidphase.hh>
-#include <ewoms/material/components/nullcomponent.hh>
-#include <ewoms/material/fluidsystems/1pfluidsystem.hh>
-#include <ewoms/material/fluidsystems/2pimmisciblefluidsystem.hh>
+#include <opm/material/fluidsystems/gasphase.hh>
+#include <opm/material/fluidsystems/liquidphase.hh>
+#include <opm/material/components/nullcomponent.hh>
+#include <opm/material/fluidsystems/1pfluidsystem.hh>
+#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
 
-#include <ewoms/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -93,7 +93,7 @@ SET_TYPE_PROP(VcfvImmiscible, Indices, ImmiscibleIndices<TypeTag, /*PVOffset=*/0
  */
 SET_TYPE_PROP(VcfvImmiscible,
               MaterialLaw,
-              Ewoms::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -106,7 +106,7 @@ SET_TYPE_PROP(VcfvImmiscible,
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvImmiscible,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -125,13 +125,13 @@ SET_BOOL_PROP(VcfvImmiscible, EnableEnergy, false);
 /////////////////////
 
 //! The fluid system to use by default
-SET_TYPE_PROP(VcfvImmiscibleOnePhase, FluidSystem, Ewoms::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
+SET_TYPE_PROP(VcfvImmiscibleOnePhase, FluidSystem, Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
 
 SET_PROP(VcfvImmiscibleOnePhase, Fluid)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 // disable output of a few quantities which make sense in a
@@ -147,14 +147,14 @@ SET_PROP(VcfvImmiscibleTwoPhase, WettingPhase)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 SET_PROP(VcfvImmiscibleTwoPhase, NonwettingPhase)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 public:
-    typedef Ewoms::LiquidPhase<Scalar, Ewoms::NullComponent<Scalar> > type;
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 SET_PROP(VcfvImmiscibleTwoPhase, FluidSystem)
@@ -164,7 +164,7 @@ SET_PROP(VcfvImmiscibleTwoPhase, FluidSystem)
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
 
 public:
-    typedef Ewoms::FluidSystems::TwoPImmiscible<Scalar,
+    typedef Opm::FluidSystems::TwoPImmiscible<Scalar,
                                                 WettingPhase,
                                                 NonwettingPhase> type;
 };

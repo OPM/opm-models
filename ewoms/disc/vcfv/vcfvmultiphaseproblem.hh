@@ -26,7 +26,7 @@
 
 #include <ewoms/disc/vcfv/vcfvproblem.hh>
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
+#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
@@ -57,8 +57,8 @@ class VcfvMultiPhaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-    typedef typename Ewoms::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases),
-                                            typename GET_PROP_TYPE(TypeTag, Scalar)>::Params MaterialLawParams;
+    typedef typename Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases),
+                                          typename GET_PROP_TYPE(TypeTag, Scalar)>::Params MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -207,7 +207,7 @@ public:
      *
      * If you get a compiler error at this method, you set the
      * MaterialLaw property to something different than
-     * Ewoms::NullMaterialLaw. In this case, you have to overload the
+     * Opm::NullMaterialLaw. In this case, you have to overload the
      * matererialLaw() method in the derived class!
      *
      * \param context Reference to the object which represents the

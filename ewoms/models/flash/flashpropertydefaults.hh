@@ -38,9 +38,9 @@
 
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
-#include <ewoms/material/heatconduction/dummyheatconductionlaw.hh>
-#include <ewoms/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
+#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
+#include <opm/material/constraintsolvers/ncpflash.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -70,7 +70,7 @@ SET_INT_PROP(VcfvFlash,
  */
 SET_TYPE_PROP(VcfvFlash,
               MaterialLaw,
-              Ewoms::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -83,7 +83,7 @@ SET_TYPE_PROP(VcfvFlash,
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(VcfvFlash,
               HeatConductionLaw,
-              Ewoms::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
@@ -99,7 +99,7 @@ SET_TYPE_PROP(VcfvFlash,
 //! Use the NCP flash solver by default
 SET_TYPE_PROP(VcfvFlash,
               FlashSolver,
-              Ewoms::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
+              Opm::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
                               typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 //! Let the flash solver choose its tolerance by default

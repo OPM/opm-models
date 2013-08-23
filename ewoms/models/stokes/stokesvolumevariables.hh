@@ -29,7 +29,7 @@
 
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/common/fvector.hh>

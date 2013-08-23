@@ -26,8 +26,8 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ewoms/material/constraintsolvers/immiscibleflash.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/constraintsolvers/immiscibleflash.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
 
 #include "richardsproperties.hh"
 
@@ -72,7 +72,7 @@ class RichardsPrimaryVariables
 
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
 
-    typedef Ewoms::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
+    typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
 
 public:
     RichardsPrimaryVariables()
@@ -109,7 +109,7 @@ public:
                                      Scalar Sw,
                                      const MaterialLawParams &matParams)
     {
-        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, Sw);
@@ -139,7 +139,7 @@ public:
                                         Scalar Sn,
                                         const MaterialLawParams &matParams)
     {
-        ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, 1 - Sn);
@@ -172,7 +172,7 @@ public:
             }
         }
 
-        ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
         ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);

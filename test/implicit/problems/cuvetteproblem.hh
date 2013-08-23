@@ -25,14 +25,14 @@
 #ifndef EWOMS_CUVETTE_PROBLEM_HH
 #define EWOMS_CUVETTE_PROBLEM_HH
 
-#include <ewoms/material/fluidstates/compositionalfluidstate.hh>
-#include <ewoms/material/fluidstates/immisciblefluidstate.hh>
-#include <ewoms/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <ewoms/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <ewoms/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <ewoms/material/heatconduction/somerton.hh>
-#include <ewoms/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
+#include <opm/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
+#include <opm/material/fluidmatrixinteractions/mp/3padapter.hh>
+#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
+#include <opm/material/heatconduction/somerton.hh>
+#include <opm/material/constraintsolvers/misciblemultiphasecomposition.hh>
 
 #include <ewoms/models/pvs/pvsproperties.hh>
 
@@ -65,7 +65,7 @@ SET_TYPE_PROP(CuvetteBaseProblem, Problem, Ewoms::CuvetteProblem<TypeTag>);
 // Set the fluid system
 SET_TYPE_PROP(CuvetteBaseProblem,
               FluidSystem,
-              Ewoms::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::FluidSystems::H2OAirMesitylene<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Enable gravity
 SET_BOOL_PROP(CuvetteBaseProblem, EnableGravity, true);
@@ -86,15 +86,15 @@ private:
     enum { gPhaseIdx = FluidSystem::gPhaseIdx };
 
     // define the three-phase material law
-    typedef Ewoms::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
+    typedef Opm::ThreePParkerVanGenuchten<Scalar> ThreePLaw;
 
 
 public:
     // wrap the three-phase law in an adaptor to make use the generic
     // material law API
-    typedef Ewoms::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
+    typedef Opm::ThreePAdapter<wPhaseIdx, nPhaseIdx, gPhaseIdx, ThreePLaw> type;
 
-    //typedef Ewoms::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
+    //typedef Opm::MpLinearMaterial<FluidSystem::numPhases, Scalar> type;
 };
 
 // Set the heat conduction law
@@ -106,7 +106,7 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Ewoms::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::Somerton<FluidSystem, Scalar> type;
 };
 
 // The default for the end time of the simulation
@@ -379,7 +379,7 @@ public:
         const auto &pos = context.pos(spaceIdx, timeIdx);
 
         if (onRightBoundary_(pos)) {
-            CompositionalFluidState<Scalar, FluidSystem> fs;
+            Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
 
             initialFluidState_(fs, context, spaceIdx, timeIdx);
 
@@ -426,7 +426,7 @@ public:
     template <class Context>
     void initial(PrimaryVariables &values, const Context &context, int spaceIdx, int timeIdx) const
     {
-        CompositionalFluidState<Scalar, FluidSystem> fs;
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fs;
 
         initialFluidState_(fs, context, spaceIdx, timeIdx);
 
@@ -501,7 +501,7 @@ private:
                                pw + (pc[phaseIdx] - pc[wPhaseIdx]));
 
             // compute the phase compositions
-            typedef MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
+            typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
             typename FluidSystem::ParameterCache paramCache;
             MMPC::solve(fs, paramCache, /*setViscosity=*/true, /*setEnthalpy=*/true);
         }
@@ -519,7 +519,7 @@ private:
                                pw + (pc[phaseIdx] - pc[wPhaseIdx]));
 
             // compute the phase compositions
-            typedef MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
+            typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MMPC;
             typename FluidSystem::ParameterCache paramCache;
             MMPC::solve(fs, paramCache, /*setViscosity=*/true, /*setEnthalpy=*/true);
 
@@ -548,7 +548,7 @@ private:
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
-        Ewoms::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
         fs.setTemperature(293.15);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fs.setPressure(phaseIdx, 1.0135e5);
@@ -613,7 +613,7 @@ private:
 
     HeatConductionLawParams heatCondParams_;
 
-    CompositionalFluidState<Scalar, FluidSystem> injectFluidState_;
+    Opm::CompositionalFluidState<Scalar, FluidSystem> injectFluidState_;
 
     const Scalar eps_;
 };
