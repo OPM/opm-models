@@ -64,7 +64,6 @@ class VcfvAssembler
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
     typedef typename GridView::template Codim<dim>::EntityPointer VertexPointer;
 
     typedef GlobalEqVector Vector;
