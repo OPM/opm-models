@@ -18,7 +18,7 @@
  *****************************************************************************/
 /*!
  * \file
- * \brief Provides a few default main functions for convenience.
+ * \brief Provides convenience routines to bring up the simulation at runtime.
  */
 #ifndef EWOMS_START_HH
 #define EWOMS_START_HH
