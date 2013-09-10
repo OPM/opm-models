@@ -27,10 +27,11 @@
 #include <ewoms/common/quadraturegeometries.hh>
 
 #include <dune/grid/common/intersectioniterator.hh>
-#include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/type.hh>
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 
 #include <vector>
 
@@ -699,8 +700,13 @@ public:
         // convert the element-local face index plus face-local vertex
         // index to the element-local vertex index using the reference
         // element.
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+        const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
+            referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
+#else
         const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
             referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(geometryType_);
+#endif
         return referenceElement.subEntity(faceIdx, 1, vertInFaceIdx, dim);
     }
 
@@ -762,8 +768,13 @@ public:
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+        const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
+            referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
+#else
         const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
             referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(geometryType_);
+#endif
 
         const LocalFiniteElement
             &localFiniteElement = feCache_.get(geometryType_);

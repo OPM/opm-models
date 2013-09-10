@@ -30,6 +30,7 @@
 #include <dune/grid/common/geometry.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 
 #include "vcfvproperties.hh"
 #include "vcfvboundarycontext.hh"
@@ -56,8 +57,13 @@ private:
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::ctype CoordScalar;
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+    typedef typename Dune::ReferenceElements<CoordScalar, dim> ReferenceElements;
+    typedef typename Dune::ReferenceElement<CoordScalar, dim> ReferenceElement;
+#else
     typedef typename Dune::GenericReferenceElements<CoordScalar, dim> ReferenceElements;
     typedef typename Dune::GenericReferenceElement<CoordScalar, dim> ReferenceElement;
+#endif
 
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::IntersectionIterator IntersectionIterator;

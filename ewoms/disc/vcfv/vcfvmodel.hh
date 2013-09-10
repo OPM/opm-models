@@ -86,8 +86,13 @@ class VcfvModel
     typedef typename GridView::template Codim<dim>::Iterator VertexIterator;
 
     typedef typename GridView::ctype CoordScalar;
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
+    typedef typename Dune::ReferenceElements<CoordScalar, dim> ReferenceElements;
+    typedef typename Dune::ReferenceElement<CoordScalar, dim> ReferenceElement;
+#else
     typedef typename Dune::GenericReferenceElements<CoordScalar, dim> ReferenceElements;
     typedef typename Dune::GenericReferenceElement<CoordScalar, dim> ReferenceElement;
+#endif
 
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
