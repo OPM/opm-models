@@ -123,4 +123,4 @@ EwomsAddTest(obstacle_pvs_restart
   DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=12000)
 
 # add the tutorial
-EwomsAddTest(tutorial_coupled SOURCES tutorial/tutorial_coupled.cc)
+EwomsAddTest(tutorial1 SOURCES tutorial/tutorial1.cc)
