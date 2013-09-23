@@ -104,7 +104,7 @@ public:
     VcfvLocalJacobian()
     {
         internalElemContext_ = 0;
-        newtonTolerance_ = GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
+        newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
     }
 
     ~VcfvLocalJacobian()
@@ -117,7 +117,7 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod, "The method used for numeric differentiation (-1: backward differences, 0: central differences, 1: forward differences)");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod, "The method used for numeric differentiation (-1: backward differences, 0: central differences, 1: forward differences)");
     }
 
     /*!
@@ -296,7 +296,7 @@ protected:
      * \brief Returns the numeric difference method which is applied.
      */
     static int numericDifferenceMethod_()
-    { return GET_PARAM(TypeTag, int, NumericDifferenceMethod); }
+    { return EWOMS_GET_PARAM(TypeTag, int, NumericDifferenceMethod); }
 
     /*!
      * \brief Resize all internal attributes to the size of the

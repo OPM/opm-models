@@ -25,14 +25,14 @@
 
 #include "vcfvvtkoutputmodule.hh"
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <cstdio>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkDiscreteFracture);
@@ -55,7 +55,9 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities, fals
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureFilterVelocities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -103,13 +105,13 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureSaturations, "Include the phase saturations in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureMobilities, "Include the phase mobilities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFracturePorosity, "Include the porosity in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction, "Add the fraction of the total volume which is occupied by fractures in the VTK output");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureSaturations, "Include the phase saturations in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureMobilities, "Include the phase mobilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFracturePorosity, "Include the porosity in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction, "Add the fraction of the total volume which is occupied by fractures in the VTK output");
     }
 
     /*!
@@ -240,25 +242,25 @@ public:
 
 private:
     static bool saturationOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureSaturations); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureSaturations); }
 
     static bool mobilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureMobilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureMobilities); }
 
     static bool relativePermeabilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities); }
 
     static bool porosityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFracturePorosity); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFracturePorosity); }
 
     static bool intrinsicPermeabilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities); }
 
     static bool volumeFractionOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction); }
 
     static bool velocityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities); }
 
     PhaseBuffer pressure_;
     PhaseBuffer density_;

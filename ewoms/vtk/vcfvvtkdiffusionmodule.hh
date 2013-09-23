@@ -26,13 +26,11 @@
 
 #include "vcfvvtkoutputmodule.hh"
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 // create new type tag for the VTK output of the quantities for molecular diffusion
 NEW_TYPE_TAG(VtkDiffusion);
 
@@ -46,7 +44,9 @@ SET_BOOL_PROP(VtkDiffusion, VtkWriteTortuosities, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteDiffusionCoefficients, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteEffectiveDiffusionCoefficients, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -85,9 +85,9 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWriteTortuosities, "Include the tortuosity for each phase in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients, "Include the molecular diffusion coefficients in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients, "Include the effective molecular diffusion coefficients the medium in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTortuosities, "Include the tortuosity for each phase in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients, "Include the molecular diffusion coefficients in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients, "Include the effective molecular diffusion coefficients the medium in the VTK output files");
     }
 
     /*!
@@ -136,13 +136,13 @@ public:
 
 private:
     static bool tortuosityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteTortuosities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTortuosities); }
 
     static bool diffusionCoefficientOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients); }
 
     static bool effectiveDiffusionCoefficientOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients); }
 
     PhaseBuffer tortuosity_;
     PhaseComponentBuffer diffusionCoefficient_;

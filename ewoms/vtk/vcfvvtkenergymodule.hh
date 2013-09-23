@@ -25,13 +25,11 @@
 
 #include "vcfvvtkoutputmodule.hh"
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 // create new type tag for the VTK energy output
 NEW_TYPE_TAG(VtkEnergy);
 
@@ -47,7 +45,9 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteHeatConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -89,10 +89,10 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity, "Include the specific heat capacities of rock matrix in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity, "Include the lumped heat conductivity of the medium in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies, "Include the specific enthalpy of the phases in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity, "Include the specific heat capacities of rock matrix in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity, "Include the lumped heat conductivity of the medium in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies, "Include the specific enthalpy of the phases in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");
     }
 
     /*!
@@ -146,16 +146,16 @@ public:
 
 private:
     static bool solidHeatCapacityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity); }
 
     static bool heatConductivityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteHeatConductivity); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteHeatConductivity); }
 
     static bool enthalpyOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteEnthalpies); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEnthalpies); }
 
     static bool internalEnergyOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteInternalEnergies); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteInternalEnergies); }
 
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;

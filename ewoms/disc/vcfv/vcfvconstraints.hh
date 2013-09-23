@@ -24,7 +24,7 @@
 #ifndef EWOMS_VCFV_CONSTRAINTS_HH
 #define EWOMS_VCFV_CONSTRAINTS_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <opm/material/Valgrind.hpp>
 
 namespace Ewoms {

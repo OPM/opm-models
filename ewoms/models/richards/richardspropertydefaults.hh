@@ -43,7 +43,7 @@
 #include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Properties values
@@ -61,31 +61,31 @@ SET_INT_PROP(VcfvRichards, LiquidPhaseIndex, 0);
 //! The local residual operator
 SET_TYPE_PROP(VcfvRichards,
               LocalResidual,
-              RichardsLocalResidual<TypeTag>);
+              Ewoms::RichardsLocalResidual<TypeTag>);
 
 //! The global model used
-SET_TYPE_PROP(VcfvRichards, Model, RichardsModel<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, Model, Ewoms::RichardsModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvRichards, BaseProblem, VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvRichards, RateVector, RichardsRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, RateVector, Ewoms::RichardsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvRichards, BoundaryRateVector, RichardsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, BoundaryRateVector, Ewoms::RichardsBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvRichards, PrimaryVariables, RichardsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, PrimaryVariables, Ewoms::RichardsPrimaryVariables<TypeTag>);
 
 //! The class for the volume averaged quantities
-SET_TYPE_PROP(VcfvRichards, VolumeVariables, RichardsVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, VolumeVariables, Ewoms::RichardsVolumeVariables<TypeTag>);
 
 //! The class for the quantities required for the flux calculation
-SET_TYPE_PROP(VcfvRichards, FluxVariables, RichardsFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, FluxVariables, Ewoms::RichardsFluxVariables<TypeTag>);
 
 //! The class of the Newton method
-SET_TYPE_PROP(VcfvRichards, NewtonMethod, RichardsNewtonMethod<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, NewtonMethod, Ewoms::RichardsNewtonMethod<TypeTag>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(VcfvRichards, EnableSmoothUpwinding, false);
@@ -170,6 +170,6 @@ public:
 };
 
 } // end namepace Properties
-} // end namespace Ewoms
+} // end namespace Opm
 
 #endif

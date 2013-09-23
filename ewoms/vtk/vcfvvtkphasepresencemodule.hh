@@ -26,12 +26,10 @@
 #include "vcfvvtkoutputmodule.hh"
 
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 // create new type tag for the VTK primary variables output
 NEW_TYPE_TAG(VtkPhasePresence);
 
@@ -40,7 +38,9 @@ NEW_PROP_TAG(VtkWritePhasePresence);
 
 SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -71,7 +71,7 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence, "Include the phase presence pseudo primary variable in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence, "Include the phase presence pseudo primary variable in the VTK output files");
     }
 
     /*!
@@ -112,7 +112,7 @@ public:
 
 private:
     static bool phasePresenceOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWritePhasePresence); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePhasePresence); }
 
     ScalarBuffer phasePresence_;
 };

@@ -30,21 +30,11 @@
 
 #include <ewoms/vtk/vcfvvtkdiscretefracturemodule.hh>
 
-namespace Ewoms {
-
-////////////////////////////////
-// properties
-////////////////////////////////
+namespace Opm {
 namespace Properties {
-
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
-
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(VcfvDiscreteFracture, INHERITS_FROM(VcfvImmiscibleTwoPhase, VtkDiscreteFracture));
-
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

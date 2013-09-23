@@ -43,7 +43,7 @@
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Property values
@@ -95,44 +95,43 @@ SET_TYPE_PROP(VcfvFlash,
 //! Use the FlashLocalResidual function for the flash model
 SET_TYPE_PROP(VcfvFlash,
               LocalResidual,
-              FlashLocalResidual<TypeTag>);
+              Ewoms::FlashLocalResidual<TypeTag>);
 
 //! Use the NCP flash solver by default
 SET_TYPE_PROP(VcfvFlash,
               FlashSolver,
               Opm::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
-                              typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
+                            typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 //! Let the flash solver choose its tolerance by default
 SET_SCALAR_PROP(VcfvFlash, FlashTolerance, 0.0);
 
 //! the Model property
-SET_TYPE_PROP(VcfvFlash, Model, FlashModel<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, Model, Ewoms::FlashModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvFlash, BaseProblem, VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! Use the Darcy relation by default
 SET_TYPE_PROP(VcfvFlash, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvFlash, PrimaryVariables, FlashPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvFlash, RateVector, FlashRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, RateVector, Ewoms::FlashRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvFlash, BoundaryRateVector, FlashBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvFlash, VolumeVariables, FlashVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvFlash, FluxVariables, FlashFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
 
 //! The indices required by the flash-baseed isothermal compositional model
-SET_TYPE_PROP(VcfvFlash, Indices, FlashIndices<TypeTag, /*PVIdx=*/0>);
-
+SET_TYPE_PROP(VcfvFlash, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
 
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(VcfvFlash, EnableSmoothUpwinding, false);
@@ -144,6 +143,6 @@ SET_BOOL_PROP(VcfvFlash, EnableEnergy, false);
 SET_BOOL_PROP(VcfvFlash, EnableDiffusion, false);
 
 } // end namespace Properties
-} // end namespace Ewoms
+} // end namespace Opm
 
 #endif

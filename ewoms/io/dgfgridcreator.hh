@@ -27,19 +27,20 @@
 
 #include <dune/grid/io/file/dgfparser.hh>
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <string>
 
-namespace Ewoms {
-
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 }
+}
 
+namespace Ewoms {
 /*!
  * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
  */
@@ -55,8 +56,8 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
-        REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
     }
 
     /*!
@@ -64,8 +65,8 @@ public:
      */
     static void makeGrid()
     {
-        const std::string dgfFileName = GET_PARAM(TypeTag, std::string, GridFile);
-        unsigned numRefinments = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
+        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
         if (numRefinments > 0)

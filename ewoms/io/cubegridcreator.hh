@@ -25,15 +25,14 @@
 #define EWOMS_CUBE_GRID_CREATOR_HH
 
 #include <ewoms/common/basicproperties.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
-
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
@@ -48,7 +47,9 @@ NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
 }
+}
 
+namespace Ewoms {
 /*!
  * \brief Provides a grid creator which a regular grid made of
  *        quadrilaterals.
@@ -73,16 +74,16 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
-        REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
-        REGISTER_PARAM(TypeTag, int, CellsX, "The number of intervalls in x direction");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
+        EWOMS_REGISTER_PARAM(TypeTag, int, CellsX, "The number of intervalls in x direction");
         if (dimWorld > 1) {
-            REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
-            REGISTER_PARAM(TypeTag, int, CellsY, "The number of intervalls in y direction");
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
+            EWOMS_REGISTER_PARAM(TypeTag, int, CellsY, "The number of intervalls in y direction");
         }
         if (dimWorld > 2) {
-            REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
-            REGISTER_PARAM(TypeTag, int, CellsZ, "The number of intervalls in z direction");
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
+            EWOMS_REGISTER_PARAM(TypeTag, int, CellsZ, "The number of intervalls in z direction");
         }
     }
 
@@ -98,18 +99,18 @@ public:
         for (unsigned i = 0; i < dimWorld; ++i)
             cellRes[i] = 0;
 
-        upperRight[0] = GET_PARAM(TypeTag, Scalar, DomainSizeX);
-        cellRes[0] = GET_PARAM(TypeTag, int, CellsX);
+        upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
+        cellRes[0] = EWOMS_GET_PARAM(TypeTag, int, CellsX);
         if (dimWorld > 1) {
-            upperRight[1] = GET_PARAM(TypeTag, Scalar, DomainSizeY);
-            cellRes[1] = GET_PARAM(TypeTag, int, CellsY);
+            upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
+            cellRes[1] = EWOMS_GET_PARAM(TypeTag, int, CellsY);
         }
         if (dimWorld > 2)
         {
-            upperRight[2] = GET_PARAM(TypeTag, Scalar, DomainSizeZ);
-            cellRes[2] = GET_PARAM(TypeTag, int, CellsZ);
+            upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
+            cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinements = GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
         cubeGrid_->globalRefine(numRefinements);

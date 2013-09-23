@@ -23,7 +23,7 @@
 #ifndef EWOMS_START_HH
 #define EWOMS_START_HH
 
-#include "propertysystem.hh"
+#include <opm/core/utility/PropertySystem.hpp>
 #include "parametersystem.hh"
 #include <opm/material/Valgrind.hpp>
 
@@ -47,7 +47,7 @@
 #include <mpi.h>
 #endif
 
-namespace Ewoms {
+namespace Opm {
 // forward declaration of property tags
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -62,149 +62,10 @@ NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
 }
-
+}
 //! \cond SKIP_THIS
 
-/*!
- * \ingroup Startup
- *
- * \brief Prints the default usage message for the startWithParameters() function
- */
-void printUsage(const char *progName, const std::string &errorMsg)
-{
-    if (errorMsg.size() > 0) {
-        std::cout << errorMsg << "\n"
-                  << "\n";
-    }
-    std::cout
-        <<
-        "Usage: " << progName << " [options]\n"
-        "\n"
-        "The available options are:\n";
-
-    // print the -h/--help parameter. this is a little hack to make
-    // things more maintainable but it uses some internals of the
-    // parameter system.
-    Parameters::ParamInfo tmp;
-    tmp.paramName = "Help,-h";
-    tmp.usageString = "Print this usage message and exit";
-    Parameters::printParamUsage_(std::cout, tmp);
-
-    // print the list of available parameters
-    Parameters::printUsage(std::cout);
-}
-
-/*!
- * \ingroup Startup
- * \brief Read the command line arguments and write them into the parameter tree.
- *        Do some syntax checks.
- *
- * \param   argc      The 'argc' argument of the main function: count of arguments (1 if there are no arguments)
- * \param   argv      The 'argv' argument of the main function: array of pointers to the argument strings
- * \param   paramTree The parameterTree. It can be filled from an input file or the command line.
- * \return            Empty string if everything worked out. Otherwise the thing that could not be read.
- */
-std::string readOptions_(int argc, char **argv, Dune::ParameterTree &paramTree)
-{
-    // All command line options need to start with '-'
-    for (int i = 1; i < argc; ++i) {
-        if (argv[i][0] != '-') {
-            std::ostringstream oss;
-            oss << "Command line argument " << i << " (='" << argv[i] << "') is invalid.";
-            return oss.str();
-        }
-
-        std::string paramName, paramValue;
-
-        // read a --my-opt=abc option. This gets transformed
-        // into the parameter "MyOpt" with the value being
-        // "abc"
-        if (argv[i][1] == '-') {
-            // There is nothing after the '-'
-            if (argv[i][2] == 0 || !std::isalpha(argv[i][2]))
-            {
-                std::ostringstream oss;
-                oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                    << " is invalid because it does not start with a letter.";
-                return oss.str();
-            }
-
-            // copy everything after the "--" into a separate string
-            std::string s(argv[i] + 2);
-
-            // parse argument
-            unsigned j = 0;
-            while (true) {
-                if (j >= s.size()) {
-                    // encountered the end of the string, i.e. we
-                    // have a parameter where the argument is empty
-                    paramName = s;
-                    paramValue = "";
-                    break;
-                }
-                else if (s[j] == '=') {
-                    // we encountered a '=' character. everything
-                    // before is the name of the parameter,
-                    // everything after is the value.
-                    paramName = s.substr(0, j);
-                    paramValue = s.substr(j+1);
-                    break;
-                }
-                else if (s[j] == '-') {
-                    // remove all "-" characters and capitalize the
-                    // character after them
-                    s.erase(j, 1);
-                    if (s.size() == j)
-                    {
-                        std::ostringstream oss;
-                        oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                            << " is invalid (ends with a '-' character).";
-                        return oss.str();
-                    }
-                    else if (s[j] == '-')
-                    {
-                        std::ostringstream oss;
-                        oss << "Malformed parameter name in argument " << i << " ('" << argv[i] << "'): "
-                            << "'--' in parameter name.";
-                        return oss.str();
-                    }
-                    s[j] = std::toupper(s[j]);
-                }
-                else if (!std::isalnum(s[j]))
-                {
-                    std::ostringstream oss;
-                    oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                        << " is invalid (character '"<<s[j]<<"' is not a letter or digit).";
-                    return oss.str();
-                }
-
-                ++j;
-            }
-        }
-        else {
-            // read a -myOpt abc option for the parameter "MyOpt" with
-            // a value of "abc"
-            paramName = argv[i] + 1;
-
-            if (argc == i + 1 || argv[i+1][0] == '-') {
-                std::ostringstream oss;
-                oss << "No argument given for parameter '" << argv[i] << "'!";
-                return oss.str();
-            }
-
-            paramValue = argv[i+1];
-            ++i; // In the case of '-myOpt abc' each pair counts as two arguments
-        }
-
-        // capitalize first letter of parameter name
-        paramName[0] = std::toupper(paramName[0]);
-
-        // Put the key=value pair into the parameter tree
-        paramTree[paramName] = paramValue;
-    }
-    return "";
-}
-
+namespace Ewoms {
 /*!
  * \brief Register all runtime parameters, parse the command line
  *        arguments and the parameter file.
@@ -218,6 +79,7 @@ bool setupParameters_(int argc, char ** argv)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
     // first, get the MPI rank of the current process
     int myRank = 0;
@@ -228,24 +90,24 @@ bool setupParameters_(int argc, char ** argv)
     ////////////////////////////////////////////////////////////
     // Register all parameters
     ////////////////////////////////////////////////////////////
-    REGISTER_PARAM(TypeTag, std::string,
-                   ParameterFile,
-                   "An .ini file which contains a set of run-time parameters");
-    REGISTER_PARAM(TypeTag, int,
-                   PrintProperties,
-                   "Print the values of the compile time properties at the start of the simulation");
-    REGISTER_PARAM(TypeTag, int,
-                   PrintParameters,
-                   "Print the values of the run-time parameters at the start of the simulation");
-    REGISTER_PARAM(TypeTag, Scalar,
-                   EndTime,
-                   "The time at which the simulation is finished [s]");
-    REGISTER_PARAM(TypeTag, Scalar,
-                   InitialTimeStepSize,
-                   "The size of the initial time step [s]");
-    REGISTER_PARAM(TypeTag, Scalar,
-                   RestartTime,
-                   "The time time at which a simulation restart should be attempted [s]");
+    EWOMS_REGISTER_PARAM(TypeTag, std::string,
+                         ParameterFile,
+                         "An .ini file which contains a set of run-time parameters");
+    EWOMS_REGISTER_PARAM(TypeTag, int,
+                         PrintProperties,
+                         "Print the values of the compile time properties at the start of the simulation");
+    EWOMS_REGISTER_PARAM(TypeTag, int,
+                         PrintParameters,
+                         "Print the values of the run-time parameters at the start of the simulation");
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
+                         EndTime,
+                         "The time at which the simulation is finished [s]");
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
+                         InitialTimeStepSize,
+                         "The size of the initial time step [s]");
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
+                         RestartTime,
+                         "The time time at which a simulation restart should be attempted [s]");
 
     GridCreator::registerParameters();
     TimeManager::registerParameters();
@@ -259,21 +121,18 @@ bool setupParameters_(int argc, char ** argv)
         if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
         {
             if (myRank == 0)
-                printUsage(argv[0], "");
+                Parameters::printUsage<TypeTag>(argv[0], "");
             return /*continueExecution=*/false;
         }
     }
 
     // fill the parameter tree with the options from the command line
-    typedef typename GET_PROP(TypeTag, ParameterTree) ParameterTree;
-    std::string s = readOptions_(argc, argv, ParameterTree::tree());
+    std::string s = Parameters::parseCommandLineOptions<TypeTag>(argc, argv);
     if (!s.empty()) {
-        if (myRank == 0)
-            printUsage(argv[0], s);
         return /*continueExecution=*/false;
     }
 
-    std::string paramFileName = GET_PARAM_(TypeTag, std::string, ParameterFile);
+    std::string paramFileName = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
     if (paramFileName != "") {
         ////////////////////////////////////////////////////////////
         // add the parameters specified using an .ini file
@@ -286,18 +145,18 @@ bool setupParameters_(int argc, char ** argv)
             std::ostringstream oss;
             if (myRank == 0) {
                 oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
-                printUsage(argv[0], oss.str());
+                Parameters::printUsage<TypeTag>(argv[0], oss.str());
             }
             return /*continueExecution=*/false;
         }
 
         // read the parameter file.
         Dune::ParameterTreeParser::readINITree(paramFileName,
-                                               ParameterTree::tree(),
+                                               ParameterMetaData::tree(),
                                                /*overwrite=*/false);
     }
 
-    END_PARAM_REGISTRATION;
+    EWOMS_END_PARAM_REGISTRATION(TypeTag);
 
     return /*continueExecution=*/true;
 }
@@ -337,23 +196,23 @@ int start(int argc,
         double tEnd;
         double dt;
 
-        tEnd = GET_PARAM(TypeTag, Scalar, EndTime);
+        tEnd = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         if (tEnd < -1e50) {
             if (myRank == 0)
-                printUsage(argv[0], "Mandatory parameter '--end-time' not specified!");
+                Parameters::printUsage<TypeTag>(argv[0], "Mandatory parameter '--end-time' not specified!");
             return 1;
         }
 
-        dt = GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        dt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         if (dt < -1e50) {
             if (myRank == 0)
-                printUsage(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
+                Parameters::printUsage<TypeTag>(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
             return 1;
         }
 
         // deal with the restart stuff
         bool restart = false;
-        Scalar restartTime = GET_PARAM(TypeTag, Scalar, RestartTime);
+        Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
         if (restartTime != -1e100)
             restart = true;
         else
@@ -369,7 +228,7 @@ int start(int argc,
                 << "Please sit back, relax and enjoy the ride.\n";
 
         // print the parameters if requested
-        int printParams = GET_PARAM(TypeTag, int, PrintParameters);
+        int printParams = EWOMS_GET_PARAM(TypeTag, int, PrintParameters);
         if (myRank == 0) {
             if (printParams) {
                 if (printParams == 1 || !isatty(fileno(stdout)))
@@ -384,10 +243,10 @@ int start(int argc,
         }
 
         // print the properties if requested
-        int printProps = GET_PARAM(TypeTag, int, PrintProperties);
+        int printProps = EWOMS_GET_PARAM(TypeTag, int, PrintProperties);
         if (printProps && myRank == 0) {
             if (printProps == 1 || !isatty(fileno(stdout)))
-                Ewoms::Properties::print<TypeTag>();
+                Opm::Properties::printValues<TypeTag>();
         }
 
         // try to create a grid (from the given grid file)
@@ -419,15 +278,15 @@ int start(int argc,
         GridCreator::deleteGrid();
         return 0;
     }
-    catch (Ewoms::ParameterException &e) {
+    catch (std::runtime_error &e) {
         if (myRank == 0)
-            std::cout << e << ". Abort!\n";
+            std::cout << e.what() << ". Abort!\n";
         GridCreator::deleteGrid();
         return 1;
     }
     catch (Dune::Exception &e) {
         if (myRank == 0)
-            std::cout << "Dune reported an error: " << e << std::endl;
+            std::cout << "Dune reported an error: " << e.what() << std::endl;
         GridCreator::deleteGrid();
         return 2;
     }

@@ -25,7 +25,7 @@
 
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
@@ -37,9 +37,8 @@
 
 #include <cstdio>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
-
 // forward definition of property tags
 NEW_PROP_TAG(NumPhases);
 NEW_PROP_TAG(NumComponents);
@@ -52,7 +51,9 @@ NEW_PROP_TAG(ElementContext);
 NEW_PROP_TAG(VtkMultiWriter);
 NEW_PROP_TAG(FluidSystem);
 }
+}
 
+namespace Ewoms {
 /*!
  * \brief A the base class for VTK writer modules.
  *

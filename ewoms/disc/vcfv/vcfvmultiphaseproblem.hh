@@ -79,7 +79,7 @@ public:
     {
         ParentType::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
     };
 
     /*!
@@ -307,7 +307,7 @@ private:
     void init_()
     {
         gravity_ = 0.0;
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dimWorld-1]  = -9.81;
     }
 };

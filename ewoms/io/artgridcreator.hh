@@ -25,7 +25,7 @@
 #define EWOMS_ART_GRID_CREATOR_HH
 
 #include <ewoms/models/discretefracture/fracturemapper.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <opm/material/Valgrind.hpp>
 #include <ewoms/common/math.hh>
@@ -44,8 +44,7 @@
 #include <string>
 #include <memory>
 
-namespace Ewoms {
-
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
@@ -53,7 +52,9 @@ NEW_PROP_TAG(GridCreator);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(EnableFractures);
 }
+}
 
+namespace Ewoms {
 /*!
  * \brief Reads in mesh files in the ART format.
  *
@@ -76,7 +77,7 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
     }
 
     /*!
@@ -85,7 +86,7 @@ public:
     static void makeGrid()
     {
         enum ParseMode { Vertex, Edge, Element, Finished };
-        const std::string artFileName = GET_PARAM(TypeTag, std::string, GridFile);
+        const std::string artFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
         std::vector<GlobalPosition> vertexPos;
         std::vector<std::pair<int, int> > edges;
         std::vector<std::pair<int, int> > fractureEdges;
@@ -310,7 +311,6 @@ template <class TypeTag>
 typename Ewoms::ArtGridCreator<TypeTag>::GridPointer ArtGridCreator<TypeTag>::gridPtr_;
 template <class TypeTag>
 typename Ewoms::ArtGridCreator<TypeTag>::FractureMapper ArtGridCreator<TypeTag>::fractureMapper_;
-
 } // end namespace
 
 #endif // EWOMS_ART_GRID_CREATOR_HH

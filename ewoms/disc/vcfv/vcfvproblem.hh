@@ -114,9 +114,9 @@ public:
     static void registerParameters()
     {
         Model::registerParameters();
-        REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
-        REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
-        REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
     }
 
     /*!
@@ -265,8 +265,8 @@ public:
      */
     void timeIntegration()
     {
-        const int maxFails = GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
-        const Scalar minTimeStepSize = GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
+        const int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
+        const Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
 
         // if the time step size of the time manager is smaller than
         // the specified minimum size and we're not going to finish
@@ -330,7 +330,7 @@ public:
      */
     Scalar nextTimeStepSize()
     {
-        return std::min(GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
+        return std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
                         newtonMethod_.suggestTimeStepSize(timeManager().timeStepSize()));
     }
 

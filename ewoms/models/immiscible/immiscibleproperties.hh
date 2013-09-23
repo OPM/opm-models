@@ -31,11 +31,10 @@
 #include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
 #include <ewoms/vtk/vcfvvtkenergymodule.hh>
 
-namespace Ewoms {
-
 ////////////////////////////////
 // properties
 ////////////////////////////////
+namespace Opm {
 namespace Properties {
 
 //////////////////////////////////////////////////////////////////
@@ -76,6 +75,6 @@ NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
 NEW_PROP_TAG(Fluid); //!< The fluid used by the model
 
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

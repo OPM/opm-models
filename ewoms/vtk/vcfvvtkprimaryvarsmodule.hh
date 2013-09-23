@@ -26,9 +26,9 @@
 #include "vcfvvtkoutputmodule.hh"
 
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 // create new type tag for the VTK primary variables output
 NEW_TYPE_TAG(VtkPrimaryVars);
@@ -40,7 +40,9 @@ NEW_PROP_TAG(VtkWriteProcessRank);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -73,8 +75,8 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars, "Include the primary variables in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank, "Include the MPI process rank in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars, "Include the primary variables in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank, "Include the MPI process rank in the VTK output files");
     }
 
     /*!
@@ -121,9 +123,9 @@ public:
 
 private:
     static bool primaryVarsOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWritePrimaryVars); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVars); }
     static bool processRankOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteProcessRank); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteProcessRank); }
 
     EqBuffer primaryVars_;
     ScalarBuffer processRank_;

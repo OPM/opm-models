@@ -41,7 +41,7 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 
 //////////////////////////////////////////////////////////////////
@@ -54,13 +54,13 @@ SET_INT_PROP(VcfvBlackOil, NumComponents, 3);   //!< Number of chemical species 
 //! Set the local residual function
 SET_TYPE_PROP(VcfvBlackOil,
               LocalResidual,
-              BlackOilLocalResidual<TypeTag>);
+              Ewoms::BlackOilLocalResidual<TypeTag>);
 
 //! The Model property
-SET_TYPE_PROP(VcfvBlackOil, Model, BlackOilModel<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, Model, Ewoms::BlackOilModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvBlackOil, BaseProblem, VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! The BlackOilFluidState property
 SET_PROP(VcfvBlackOil, BlackOilFluidState)
@@ -77,22 +77,22 @@ public:
 SET_TYPE_PROP(VcfvBlackOil, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvBlackOil, RateVector, BlackOilRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, RateVector, Ewoms::BlackOilRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvBlackOil, BoundaryRateVector, BlackOilBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, BoundaryRateVector, Ewoms::BlackOilBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvBlackOil, PrimaryVariables, BlackOilPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, PrimaryVariables, Ewoms::BlackOilPrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvBlackOil, VolumeVariables, BlackOilVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, VolumeVariables, Ewoms::BlackOilVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvBlackOil, FluxVariables, BlackOilFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvBlackOil, FluxVariables, Ewoms::BlackOilFluxVariables<TypeTag>);
 
 //! The indices required by the model
-SET_TYPE_PROP(VcfvBlackOil, Indices, BlackOilIndices</*PVOffset=*/0>);
+SET_TYPE_PROP(VcfvBlackOil, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -122,7 +122,6 @@ SET_TYPE_PROP(VcfvBlackOil,
 SET_BOOL_PROP(VcfvBlackOil, EnableSmoothUpwinding, false);
 
 }
-
 }
 
 #endif

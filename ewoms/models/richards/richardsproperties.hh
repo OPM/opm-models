@@ -29,12 +29,8 @@
 #include <ewoms/vtk/vcfvvtkmultiphasemodule.hh>
 #include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
 
-namespace Ewoms
-{
 // \{
-///////////////////////////////////////////////////////////////////////////
-// properties for the isothermal richards model
-///////////////////////////////////////////////////////////////////////////
+namespace Opm {
 namespace Properties {
 
 //////////////////////////////////////////////////////////////////
@@ -64,7 +60,6 @@ NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the p
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 // \}
 }
-
 } // end namepace
 
 #endif

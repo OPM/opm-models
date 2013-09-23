@@ -43,7 +43,7 @@
 #include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // default property values
@@ -104,19 +104,19 @@ public:
 //! Use the Ncp local jacobian operator for the compositional NCP model
 SET_TYPE_PROP(VcfvNcp,
               LocalResidual,
-              NcpLocalResidual<TypeTag>);
+              Ewoms::NcpLocalResidual<TypeTag>);
 
 //! Use the Darcy relation by default
 SET_TYPE_PROP(VcfvNcp, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! Use the Ncp specific newton method for the compositional NCP model
-SET_TYPE_PROP(VcfvNcp, NewtonMethod, NcpNewtonMethod<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, NewtonMethod, Ewoms::NcpNewtonMethod<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(VcfvNcp, Model, NcpModel<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, Model, Ewoms::NcpModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvNcp, BaseProblem, VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! use an isothermal model by default
 SET_BOOL_PROP(VcfvNcp, EnableEnergy, false);
@@ -128,25 +128,25 @@ SET_BOOL_PROP(VcfvNcp, EnableDiffusion, false);
 SET_BOOL_PROP(VcfvNcp, EnableSmoothUpwinding, false);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvNcp, RateVector, NcpRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, RateVector, Ewoms::NcpRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvNcp, BoundaryRateVector, NcpBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, BoundaryRateVector, Ewoms::NcpBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvNcp, PrimaryVariables, NcpPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, PrimaryVariables, Ewoms::NcpPrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvNcp, VolumeVariables, NcpVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, VolumeVariables, Ewoms::NcpVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvNcp, FluxVariables, NcpFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, FluxVariables, Ewoms::NcpFluxVariables<TypeTag>);
 
 //! truncate the newton update for the first 3 iterations of a time step
 SET_INT_PROP(VcfvNcp, NewtonChoppedIterations, 3);
 
 //! The indices required by the compositional NCP model
-SET_TYPE_PROP(VcfvNcp, Indices, NcpIndices<TypeTag, 0>);
+SET_TYPE_PROP(VcfvNcp, Indices, Ewoms::NcpIndices<TypeTag, 0>);
 
 //! The unmodified weight for the pressure primary variable
 SET_SCALAR_PROP(VcfvNcp, NcpPressureBaseWeight, 1.0);

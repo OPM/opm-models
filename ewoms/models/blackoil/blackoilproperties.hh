@@ -31,17 +31,8 @@
 #include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
 #include <ewoms/vtk/vcfvvtkblackoilmodule.hh>
 
-namespace Ewoms {
-
-////////////////////////////////
-// properties
-////////////////////////////////
-
+namespace Opm {
 namespace Properties {
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
-
 //! The type tag for the black-oil problems
 NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkBlackOil, VtkMultiPhase, VtkComposition, VtkTemperature));
 
@@ -64,7 +55,6 @@ NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
 NEW_PROP_TAG(FluidState); //!<The type of the fluid state
 }
-
 }
 
 #endif

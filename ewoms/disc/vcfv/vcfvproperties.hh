@@ -31,11 +31,10 @@
 #include <ewoms/vtk/vcfvvtkprimaryvarsmodule.hh>
 #include <ewoms/linear/paralleliterativebackend.hh>
 #include <ewoms/common/basicproperties.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
-
 /*!
  * \ingroup VcfvModel
  */

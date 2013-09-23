@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*****************************************************************************
- *   Copyright (C) 2008-2013 by Andreas Lauser                               *
+ *   Copyright (C) 2010-2013 by Andreas Lauser                               *
  *                                                                           *
  *   This program is free software: you can redistribute it and/or modify    *
  *   it under the terms of the GNU General Public License as published by    *
@@ -28,12 +28,12 @@
 #ifndef EWOMS_PARAMETERS_HH
 #define EWOMS_PARAMETERS_HH
 
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/exceptions.hh>
+#include <opm/core/utility/PropertySystem.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ClassName.hpp>
 
-#include <dune/common/unused.hh>
 #include <dune/common/parametertree.hh>
-#include <dune/common/classname.hh>
 
 #include <map>
 #include <list>
@@ -47,7 +47,7 @@
  *
  * \brief Register a run-time parameter.
  *
- * In eWoms, parameter can only be used after they have been
+ * In OPM, parameters can only be used after they have been
  * registered.
  *
  * Example:
@@ -55,26 +55,26 @@
  * \code
  * // Registers a run-time parameter "UpwindWeight" which has type
  *  // "Scalar" and the description "Relative weight of the upwind node."
- * REGISTER_PARAM(TypeTag,
- *                Scalar,
- *                UpwindWeight,
- *               "Relative weight of the upwind node.");
+ *  EWOMS_REGISTER_PARAM(TypeTag,
+ *                    Scalar,
+ *                    UpwindWeight,
+ *                    "Relative weight of the upwind node.");
  * \endcode
  */
-#define REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
+#define  EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
     Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, #TypeTag, #ParamName, Description)
 
 /*!
  * \ingroup Parameter
  *
- * \brief Indicate that all parameters are registered.
+ * \brief Indicate that all parameters are registered for a given type tag.
  *
- * If \c REGISTER_PARAM is called after the invokation of
- * \c END_PARAM_REGISTRATION, a <tt>Dune::InvalidState</tt> exception
+ * If \c EWOMS_REGISTER_PARAM is called after the invokation of
+ * \c END_PARAM_REGISTRATION, a <tt>std::logic_error</tt> exception
  * will be thrown.
  */
-#define END_PARAM_REGISTRATION       \
-    Ewoms::Parameters::endParamRegistration()
+#define EWOMS_END_PARAM_REGISTRATION(TypeTag)             \
+    Ewoms::Parameters::endParamRegistration<TypeTag>()
 
 /*!
  * \ingroup Parameter
@@ -88,29 +88,24 @@
  * \code
  * // Retrieves scalar value UpwindWeight, default
  * // is taken from the property UpwindWeight
- * GET_PARAM(TypeTag, Scalar, UpwindWeight);
+ * EWOMS_GET_PARAM(TypeTag, Scalar, UpwindWeight);
  * \endcode
  */
-#define GET_PARAM(TypeTag, ParamType, ParamName)                        \
-    Ewoms::Parameters::get<TypeTag,                                     \
-                           ParamType,                                   \
+#define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)                    \
+    Ewoms::Parameters::get<TypeTag,                                       \
+                         ParamType,                                     \
                            PTAG(ParamName)>(#ParamName, #ParamName)
 
 
 //!\cond SKIP_THIS
-#define GET_PARAM_(TypeTag, ParamType, ParamName)                       \
-    Ewoms::Parameters::get<TypeTag,                                     \
-                           ParamType,                                   \
-                           PTAG(ParamName)>(#ParamName,                 \
-                                            #ParamName,                 \
-                                            /*errorIfNotRegistered=*/false)
+#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                   \
+    Ewoms::Parameters::get<TypeTag,                                       \
+                         ParamType,                                     \
+                         PTAG(ParamName)>(#ParamName,                   \
+                                          #ParamName,                   \
+                                          /*errorIfNotRegistered=*/false)
 
 namespace Ewoms {
-namespace Properties {
-NEW_PROP_TAG(ParameterTree);
-NEW_PROP_TAG(ModelParameterGroup);
-} // namespace Properties
-
 namespace Parameters {
 
 struct ParamInfo
@@ -134,7 +129,7 @@ struct ParamInfo
     }
 };
 
-// forward definition
+// forward declaration
 template <class TypeTag, class ParamType, class PropTag>
 const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true);
 
@@ -157,7 +152,7 @@ public:
     {
         // retrieve the parameter once to make sure that its value does
         // not contain a syntax error.
-        ParamType DUNE_UNUSED dummy =
+        ParamType __attribute__((unused)) dummy =
             get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
                                              paramName_.data(),
                                              /*errorIfNotRegistered=*/true);
@@ -166,11 +161,57 @@ public:
 private:
     std::string paramName_;
 };
+}
+} // namespace Ewoms
 
-bool paramRegistrationOpen_ = true;
-std::map<std::string, ParamInfo> paramRegistry_;
-std::list<ParamRegFinalizerBase_*> paramRegFinalizers_;
+namespace Opm {
+namespace Properties {
+// type tag which is supposed to spliced in or inherited from if the
+// parameter system is to be used
+NEW_TYPE_TAG(ParameterSystem);
 
+NEW_PROP_TAG(ParameterMetaData);
+NEW_PROP_TAG(ParameterGroupPrefix);
+NEW_PROP_TAG(Description);
+
+//! Set the ParameterMetaData property
+SET_PROP(ParameterSystem, ParameterMetaData)
+{
+    typedef Dune::ParameterTree type;
+
+    static Dune::ParameterTree &tree()
+    {
+        static Dune::ParameterTree obj_;
+        return obj_;
+    }
+
+    static std::map<std::string, Ewoms::Parameters::ParamInfo> &registry()
+    {
+        static std::map<std::string, Ewoms::Parameters::ParamInfo> obj_;
+        return obj_;
+    }
+
+    static std::list<Ewoms::Parameters::ParamRegFinalizerBase_*> &registrationFinalizers()
+    {
+        static std::list<Ewoms::Parameters::ParamRegFinalizerBase_*> obj_;
+        return obj_;
+    }
+
+    static bool &registrationOpen()
+    {
+        static bool obj_ = true;
+        return obj_;
+    }
+};
+
+SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
+SET_STRING_PROP(ParameterSystem, Description, "");
+
+} // namespace Properties
+} // namespace Opm
+
+namespace Ewoms {
+namespace Parameters {
 void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
 {
     std::string paramMessage, paramType, paramDescription;
@@ -253,14 +294,14 @@ void getFlattenedKeyList_(std::list<std::string> &dest,
 template <class TypeTag>
 void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
 {
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = Params::tree();
+    const Dune::ParameterTree &tree = ParamsMeta::tree();
 
     auto keyIt = keyList.begin();
     const auto &keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        std::string value = paramRegistry_[*keyIt].compileTimeValue;
+        std::string value = ParamsMeta::registry()[*keyIt].compileTimeValue;
         if (tree.hasKey(*keyIt))
             value = tree.get(*keyIt, "");
         os << *keyIt << "=\"" << value << "\"\n";
@@ -271,10 +312,12 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
 template <class TypeTag>
 void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &keyList)
 {
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+
     auto keyIt = keyList.begin();
     const auto &keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        const auto &paramInfo = paramRegistry_[*keyIt];
+        const auto &paramInfo = ParamsMeta::registry()[*keyIt];
         os << *keyIt << "=\"" << paramInfo.compileTimeValue
            << "\" # property: " << paramInfo.propertyName << "\n";
     }
@@ -287,15 +330,175 @@ void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &
  * \brief Print a usage message for all run-time parameters.
  *
  * \param os The \c std::ostream which should be used.
+ * \param progName The name of the program
  */
-void printUsage(std::ostream &os = std::cout)
+template <class TypeTag>
+void printUsage(const std::string &progName, const std::string &errorMsg = "", std::ostream &os = std::cerr)
 {
-    auto paramIt = paramRegistry_.begin();
-    const auto &paramEndIt = paramRegistry_.end();
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    std::string desc = GET_PROP_VALUE(TypeTag, Description);
 
+    if (errorMsg != "") {
+        os << errorMsg << "\n"
+           << "\n";
+    }
+
+    os << "Usage: " << progName << " [OPTIONS]\n";
+    if (desc != "")
+        os << desc << "\n";
+    os << "\n";
+    os << "Recognized options:\n";
+
+    auto paramIt = ParamsMeta::registry().begin();
+    const auto &paramEndIt = ParamsMeta::registry().end();
     for (; paramIt != paramEndIt; ++ paramIt) {
         printParamUsage_(os, paramIt->second);
     }
+}
+
+/*!
+ * \ingroup Parameter
+ * \brief Parse the parameters provided on the command line.
+ *
+ * This function does some basic syntax checks.
+ *
+ * \param argc The number of parameters passed by the operating system to the main() function
+ * \param argv The array of strings passed by the operating system to the main() function
+ * \param handleHelp Set to true if the function should deal with the -h and --help parameters
+ * \return Empty string if everything worked out. Otherwise the thing that could not be read.
+ */
+template <class TypeTag>
+std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = true)
+{
+    Dune::ParameterTree &paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
+
+    if (handleHelp) {
+        for (int i = 1; i < argc; ++i) {
+            if (std::string("-h") == argv[i] ||
+                std::string("--help") == argv[i])
+            {
+                printUsage<TypeTag>(argv[0], "", std::cout);
+                return "Help called";
+            }
+        }
+    }
+
+    // All command line options need to start with '-'
+    for (int i = 1; i < argc; ++i) {
+        if (argv[i][0] != '-') {
+            std::ostringstream oss;
+            oss << "Command line argument " << i << " (='" << argv[i] << "') is invalid.";
+
+            if (handleHelp)
+                printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+
+            return oss.str();
+        }
+
+        std::string paramName, paramValue;
+
+        // read a --my-opt=abc option. This gets transformed
+        // into the parameter "MyOpt" with the value being
+        // "abc"
+        if (argv[i][1] == '-') {
+            // There is nothing after the '-'
+            if (argv[i][2] == 0 || !std::isalpha(argv[i][2]))
+            {
+                std::ostringstream oss;
+                oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
+                    << " is invalid because it does not start with a letter.";
+
+                if (handleHelp)
+                    printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+
+                return oss.str();
+            }
+
+            // copy everything after the "--" into a separate string
+            std::string s(argv[i] + 2);
+
+            // parse argument
+            unsigned j = 0;
+            while (true) {
+                if (j >= s.size()) {
+                    // encountered the end of the string, i.e. we
+                    // have a parameter where the argument is empty
+                    paramName = s;
+                    paramValue = "";
+                    break;
+                }
+                else if (s[j] == '=') {
+                    // we encountered a '=' character. everything
+                    // before is the name of the parameter,
+                    // everything after is the value.
+                    paramName = s.substr(0, j);
+                    paramValue = s.substr(j+1);
+                    break;
+                }
+                else if (s[j] == '-') {
+                    // remove all "-" characters and capitalize the
+                    // character after them
+                    s.erase(j, 1);
+                    if (s.size() == j)
+                    {
+                        std::ostringstream oss;
+                        oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
+                            << " is invalid (ends with a '-' character).";
+
+                        if (handleHelp)
+                            printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                        return oss.str();
+                    }
+                    else if (s[j] == '-')
+                    {
+                        std::ostringstream oss;
+                        oss << "Malformed parameter name in argument " << i << " ('" << argv[i] << "'): "
+                            << "'--' in parameter name.";
+
+                        if (handleHelp)
+                            printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                        return oss.str();
+                    }
+                    s[j] = std::toupper(s[j]);
+                }
+                else if (!std::isalnum(s[j]))
+                {
+                    std::ostringstream oss;
+                    oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
+                        << " is invalid (character '"<<s[j]<<"' is not a letter or digit).";
+
+                    if (handleHelp)
+                        printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                    return oss.str();
+                }
+
+                ++j;
+            }
+        }
+        else {
+            // read a -myOpt abc option for the parameter "MyOpt" with
+            // a value of "abc"
+            paramName = argv[i] + 1;
+
+            if (argc == i + 1 || argv[i+1][0] == '-') {
+                std::ostringstream oss;
+                oss << "No argument given for parameter '" << argv[i] << "'!";
+                if (handleHelp)
+                    printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                return oss.str();
+            }
+
+            paramValue = argv[i+1];
+            ++i; // In the case of '-myOpt abc' each pair counts as two arguments
+        }
+
+        // capitalize first letter of parameter name
+        paramName[0] = std::toupper(paramName[0]);
+
+        // Put the key=value pair into the parameter tree
+        paramTree[paramName] = paramValue;
+    }
+    return "";
 }
 
 /*!
@@ -307,9 +510,9 @@ void printUsage(std::ostream &os = std::cout)
 template <class TypeTag>
 void printValues(std::ostream &os = std::cout)
 {
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = Params::tree();
+    const Dune::ParameterTree &tree = ParamsMeta::tree();
 
     std::list<std::string> runTimeAllKeyList;
     std::list<std::string> runTimeKeyList;
@@ -319,7 +522,7 @@ void printValues(std::ostream &os = std::cout)
     auto keyIt = runTimeAllKeyList.begin();
     const auto &keyEndIt = runTimeAllKeyList.end();
     for (; keyIt != keyEndIt; ++ keyIt) {
-        if (paramRegistry_.find(*keyIt) == paramRegistry_.end()) {
+        if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
             unknownKeyList.push_back(*keyIt);
         }
@@ -331,8 +534,8 @@ void printValues(std::ostream &os = std::cout)
 
     // loop over all registered parameters
     std::list<std::string> compileTimeKeyList;
-    auto paramInfoIt = paramRegistry_.begin();
-    const auto &paramInfoEndIt = paramRegistry_.end();
+    auto paramInfoIt = ParamsMeta::registry().begin();
+    const auto &paramInfoEndIt = ParamsMeta::registry().end();
     for (; paramInfoIt != paramInfoEndIt; ++ paramInfoIt) {
         // check whether the key was specified at run-time
         const auto &keyName = paramInfoIt->first;
@@ -379,9 +582,9 @@ void printValues(std::ostream &os = std::cout)
 template <class TypeTag>
 void printUnused(std::ostream &os = std::cout)
 {
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = Params::tree();
+    const Dune::ParameterTree &tree = ParamsMeta::tree();
     std::list<std::string> runTimeAllKeyList;
     std::list<std::string> unknownKeyList;
 
@@ -389,7 +592,7 @@ void printUnused(std::ostream &os = std::cout)
     auto keyIt = runTimeAllKeyList.begin();
     const auto &keyEndIt = runTimeAllKeyList.end();
     for (; keyIt != keyEndIt; ++ keyIt) {
-        if (paramRegistry_.find(*keyIt) == paramRegistry_.end()) {
+        if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
             unknownKeyList.push_back(*keyIt);
         }
@@ -411,7 +614,7 @@ void printUnused(std::ostream &os = std::cout)
 template <class TypeTag>
 class Param
 {
-    typedef typename GET_PROP(TypeTag, ParameterTree) Params;
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 public:
     template <class ParamType, class PropTag>
     static const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
@@ -456,14 +659,14 @@ private:
             b = &(it->second);
 
         if (b->propertyName != propertyName) {
-            DUNE_THROW(Dune::InvalidStateException,
+            OPM_THROW(std::logic_error,
                        "GET_*_PARAM for parameter '" << paramName
                        << "' called for at least two different properties ('"
                        << b->propertyName << "' and '" << propertyName << "')");
         }
 
         if (b->paramTypeName != paramTypeName) {
-            DUNE_THROW(Dune::InvalidStateException,
+            OPM_THROW(std::logic_error,
                        "GET_*_PARAM for parameter '" << paramName
                        << "' called with at least two different types ("
                        << b->paramTypeName << " and " << paramTypeName << ")");
@@ -477,16 +680,17 @@ private:
         // make sure that the parameter is used consistently. since
         // this is potentially quite expensive, it is only done if
         // debugging code is not explicitly turned off.
-        check_(Dune::className<ParamType>(), propTagName, paramName);
+        check_(Opm::className<ParamType>(), propTagName, paramName);
 #endif
 
+        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
-            if (paramRegistrationOpen_)
-                DUNE_THROW(Ewoms::ParameterException,
+            if (ParamsMeta::registrationOpen())
+                OPM_THROW(std::runtime_error,
                            "Parameters can only retieved after _all_ of them have been registered.");
 
-            if (paramRegistry_.find(paramName) == paramRegistry_.end())
-                DUNE_THROW(Ewoms::ParameterException,
+            if (ParamsMeta::registry().find(paramName) == ParamsMeta::registry().end())
+                OPM_THROW(std::runtime_error,
                            "Accessing parameter " << paramName << " without prior registration is not allowed.");
         }
 
@@ -498,7 +702,7 @@ private:
         // NewtonWriteConvergence = true
         std::string canonicalName(paramName);
 
-        std::string modelParamGroup(GET_PROP_VALUE(TypeTag, ModelParameterGroup));
+        std::string modelParamGroup(GET_PROP_VALUE(TypeTag, ParameterGroupPrefix));
         if (modelParamGroup.size()) {
             canonicalName.insert(0, ".");
             canonicalName.insert(0, modelParamGroup);
@@ -506,7 +710,7 @@ private:
 
         // retrieve actual parameter from the parameter tree
         const ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
-        static ParamType value = Params::tree().template get<ParamType>(canonicalName, defaultValue);
+        static ParamType value = ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue);
 
         return value;
     }
@@ -519,45 +723,49 @@ const ParamType &get(const char *propTagName, const char *paramName, bool errorI
 template <class TypeTag, class ParamType, class PropTag>
 void registerParam(const char *paramName, const char *typeTagName, const char *propertyName, const char *usageString)
 {
-    if (!paramRegistrationOpen_)
-        DUNE_THROW(Dune::InvalidStateException,
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    if (!ParamsMeta::registrationOpen())
+        OPM_THROW(std::logic_error,
                    "Parameter registration was already closed before the parameter " << paramName << " was registered.");
 
-    paramRegFinalizers_.push_back(new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
+    ParamsMeta::registrationFinalizers().push_back(new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
 
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
-    paramInfo.paramTypeName = Dune::className<ParamType>();
-    std::string tmp = Dune::className<TypeTag>();
-    tmp.replace(0, strlen("EWoms::Properties::TTag::"), "");
+    paramInfo.paramTypeName = Opm::className<ParamType>();
+    std::string tmp = Opm::className<TypeTag>();
+    tmp.replace(0, strlen("Opm::Properties::TTag::"), "");
     paramInfo.propertyName = propertyName;
     paramInfo.usageString = usageString;
     std::ostringstream oss;
     oss << GET_PROP_VALUE_(TypeTag, PropTag);
     paramInfo.compileTimeValue = oss.str();
-    if (paramRegistry_.find(paramName) != paramRegistry_.end()) {
+    if (ParamsMeta::registry().find(paramName) != ParamsMeta::registry().end()) {
         // allow to register a parameter twice, but only if the
         // parameter name, type and usage string are exactly the same.
-        if (paramRegistry_[paramName] == paramInfo)
+        if (ParamsMeta::registry()[paramName] == paramInfo)
             return;
-        DUNE_THROW(Dune::InvalidStateException,
+        OPM_THROW(std::logic_error,
                    "Parameter " << paramName << " registered twice with non-matching characteristics.");
     }
-    paramRegistry_[paramName] = paramInfo;
+    std::cout << "register param for " << Opm::className<TypeTag>() << ": " << paramName << "\n";
+    ParamsMeta::registry()[paramName] = paramInfo;
 }
 
+template <class TypeTag>
 void endParamRegistration()
 {
-    if (!paramRegistrationOpen_)
-        DUNE_THROW(Dune::InvalidStateException,
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    if (!ParamsMeta::registrationOpen())
+        OPM_THROW(std::logic_error,
                    "Parameter registration was already closed. It is only possible to close it once.");
 
-    paramRegistrationOpen_ = false;
+    ParamsMeta::registrationOpen() = false;
 
     // loop over all parameters and retrieve their values to make sure
     // that there is no syntax error
-    auto pIt = paramRegFinalizers_.begin();
-    const auto &pEndIt = paramRegFinalizers_.end();
+    auto pIt = ParamsMeta::registrationFinalizers().begin();
+    const auto &pEndIt = ParamsMeta::registrationFinalizers().end();
     for (; pIt != pEndIt; ++ pIt) {
         (*pIt)->retrieve();
         delete *pIt;
@@ -566,7 +774,7 @@ void endParamRegistration()
 //! \endcond
 
 } // namespace Parameters
-} // namespace Ewoms
+} // namespace Opm
 
 
 #endif

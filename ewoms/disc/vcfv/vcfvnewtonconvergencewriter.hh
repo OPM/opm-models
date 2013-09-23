@@ -25,11 +25,11 @@
 #define EWOMS_VCFV_NEWTON_CONVERGENCE_WRITER_HH
 
 #include <ewoms/io/vtkmultiwriter.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(GridView);
@@ -37,7 +37,9 @@ NEW_PROP_TAG(NewtonMethod);
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvModel
  * \ingroup Newton

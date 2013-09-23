@@ -26,26 +26,22 @@
 
 #include <dune/common/parametertree.hh>
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/io/dgfgridcreator.hh>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 ///////////////////////////////////
 // Type tag definitions:
 //
 // NumericModel
 // |
 // +-> ImplicitModel
-// |
-// \-> ExplicitModel
 ///////////////////////////////////
 
 //! Type tag for all models.
-NEW_TYPE_TAG(NumericModel);
+NEW_TYPE_TAG(NumericModel, INHERITS_FROM(ParameterSystem));
 
 //! Type tag for all fully coupled models.
 NEW_TYPE_TAG(ImplicitModel, INHERITS_FROM(NumericModel));
@@ -155,6 +151,6 @@ SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e100);
 SET_SCALAR_PROP(NumericModel, RestartTime, -1e100);
 
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

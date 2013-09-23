@@ -23,7 +23,7 @@
 #ifndef EWOMS_FRACTURE_MAPPER_HH
 #define EWOMS_FRACTURE_MAPPER_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
 #include <algorithm>
 #include <set>

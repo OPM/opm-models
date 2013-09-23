@@ -141,7 +141,7 @@ public:
         // register runtime parameters of the VTK output modules
         Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, EnableHints, "Enable thermodynamic hints");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableHints, "Enable thermodynamic hints");
     }
 
     /*!
@@ -811,7 +811,7 @@ public:
 
 protected:
     static bool enableHints_()
-    { return GET_PARAM(TypeTag, bool, EnableHints); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableHints); }
 
     /*!
      * \brief Register all VTK output modules which make sense for the model.

@@ -25,14 +25,14 @@
 
 #include "vcfvvtkoutputmodule.hh"
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <cstdio>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkMultiPhase);
@@ -63,7 +63,9 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWriteIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePotentialGradients, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -117,17 +119,17 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWritePressures, "Include the phase pressures in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteDensities, "Include the phase densities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteSaturations, "Include the phase saturations in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteMobilities, "Include the phase mobilities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteViscosities, "Include component phase viscosities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses, "Include the average phase mass in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWritePorosity, "Include the porosity in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWritePotentialGradients, "Include the phase pressure potential gradients in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePressures, "Include the phase pressures in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDensities, "Include the phase densities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturations, "Include the phase saturations in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMobilities, "Include the phase mobilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteViscosities, "Include component phase viscosities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses, "Include the average phase mass in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePorosity, "Include the porosity in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePotentialGradients, "Include the phase pressure potential gradients in the VTK output files");
     }
 
     /*!
@@ -310,37 +312,37 @@ public:
 
 private:
     static bool pressureOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWritePressures); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePressures); }
 
     static bool densityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteDensities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDensities); }
 
     static bool saturationOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteSaturations); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturations); }
 
     static bool mobilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteMobilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMobilities); }
 
     static bool relativePermeabilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities); }
 
     static bool viscosityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteViscosities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteViscosities); }
 
     static bool averageMolarMassOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses); }
 
     static bool porosityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWritePorosity); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePorosity); }
 
     static bool intrinsicPermeabilityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities); }
 
     static bool velocityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFilterVelocities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFilterVelocities); }
 
     static bool potentialGradientOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWritePotentialGradients); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePotentialGradients); }
 
     PhaseBuffer pressure_;
     PhaseBuffer density_;

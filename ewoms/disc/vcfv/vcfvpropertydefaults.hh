@@ -48,11 +48,12 @@
 #include <limits>
 
 namespace Ewoms {
-
 // forward declaration
 template<class TypeTag>
 class VcfvModel;
+}
 
+namespace Opm {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Some defaults for very fundamental properties
@@ -102,7 +103,7 @@ SET_PROP(VcfvModel, BorderListCreator)
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 public:
-    typedef Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
+    typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
 
 //! Set the BaseLocalResidual to VcfvLocalResidual

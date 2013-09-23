@@ -26,7 +26,7 @@
 #include "nullconvergencewriter.hh"
 
 #include <ewoms/common/exceptions.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/parallel/mpihelper.hh>
 
@@ -40,7 +40,9 @@ namespace Ewoms {
 // forward declaration of classes
 template <class TypeTag>
 class NewtonMethod;
+}
 
+namespace Opm {
 // forward declaration of property tags
 namespace Properties {
 //! The type tag on which the default properties for the Newton method
@@ -140,7 +142,9 @@ SET_SCALAR_PROP(NewtonMethod, NewtonMaxRelativeError, 1e100); // effectively dis
 SET_INT_PROP(NewtonMethod, NewtonTargetIterations, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxIterations, 18);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup Newton
  * \brief The multi-dimensional Newton method.
@@ -207,16 +211,16 @@ public:
     {
         LinearSolverBackend::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, NewtonVerbose, "Specify whether the Newton method should inform the user about its progress or not");
-        REGISTER_PARAM(TypeTag, bool, NewtonWriteConvergence, "Write the convergence behaviour of the Newton method to a VTK file");
-        REGISTER_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion, "Make the Newton method consider the relative convergence criterion");
-        REGISTER_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion, "Make the Newton method consider the absolute convergence criterion");
-        REGISTER_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative, "Let the Newton method only consider a solution to be converged if the relative _and_ the absolute criterion are fulfilled");
-        REGISTER_PARAM(TypeTag, int, NewtonTargetIterations, "The 'optimimum' number of Newton iterations per time step");
-        REGISTER_PARAM(TypeTag, int, NewtonMaxIterations, "The maximum number of Newton iterations per time step");
-        REGISTER_PARAM(TypeTag, Scalar, NewtonRelativeTolerance, "The maximum relative error between two iterations tolerated by the Newton method");
-        REGISTER_PARAM(TypeTag, Scalar, NewtonMaxRelativeError, "The maximum relative error for which the next iteration of the Newton method is executed");
-        REGISTER_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance, "The maximum residual tolerated by the Newton method");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonVerbose, "Specify whether the Newton method should inform the user about its progress or not");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonWriteConvergence, "Write the convergence behaviour of the Newton method to a VTK file");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion, "Make the Newton method consider the relative convergence criterion");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion, "Make the Newton method consider the absolute convergence criterion");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative, "Let the Newton method only consider a solution to be converged if the relative _and_ the absolute criterion are fulfilled");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NewtonTargetIterations, "The 'optimimum' number of Newton iterations per time step");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NewtonMaxIterations, "The maximum number of Newton iterations per time step");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonRelativeTolerance, "The maximum relative error between two iterations tolerated by the Newton method");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonMaxRelativeError, "The maximum relative error for which the next iteration of the Newton method is executed");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance, "The maximum residual tolerated by the Newton method");
     }
 
     /*!
@@ -473,7 +477,7 @@ protected:
      * \brief Returns true if the Newton method ought to be chatty.
      */
     bool verbose_() const
-    { return GET_PARAM(TypeTag, bool, NewtonVerbose) && comm_.rank() == 0; }
+    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonVerbose) && comm_.rank() == 0; }
 
     /*!
      * \brief Called before the Newton method is applied to an
@@ -485,7 +489,7 @@ protected:
     {
         numIterations_ = 0;
 
-        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
+        if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
             convergenceWriter_.beginTimeStep();
     }
 
@@ -570,11 +574,11 @@ protected:
         // take the other processes into account
         relError_ = comm_.max(relError_);
 
-        if (relError_ > GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError))
+        if (relError_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError))
             DUNE_THROW(NumericalProblem,
                        "Newton: Relative error " << relError_
                        << " is larger than maximum allowed error of "
-                       << GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError));
+                       << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError));
     }
 
     /*!
@@ -631,7 +635,7 @@ protected:
     void writeConvergence_(const SolutionVector &uLastIter,
                            const GlobalEqVector &deltaU)
     {
-        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
+        if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
             convergenceWriter_.beginIteration();
             convergenceWriter_.writeFields(uLastIter, deltaU);
             convergenceWriter_.endIteration();
@@ -694,7 +698,7 @@ protected:
      */
     void end_()
     {
-        if (GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
+        if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence))
             convergenceWriter_.endTimeStep();
     }
 
@@ -726,28 +730,28 @@ protected:
     Scalar relError_;
     Scalar lastRelError_;
     Scalar relTolerance_() const
-    { return GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance); }
+    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance); }
 
     // absolute errors and tolerance
     Scalar absError_;
     Scalar lastAbsError_;
     Scalar absTolerance_() const
-    { return GET_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance); }
+    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance); }
 
     // which criteria do we have to satisfy in order to be converged?
     bool enableRelativeCriterion_() const
-    { return GET_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion); }
     bool enableAbsoluteCriterion_() const
-    { return GET_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion); }
     bool satisfyAbsAndRel_() const
-    { return GET_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative); }
 
     // optimal number of iterations we want to achieve
     int targetIterations_() const
-    { return GET_PARAM(TypeTag, int, NewtonTargetIterations); }
+    { return EWOMS_GET_PARAM(TypeTag, int, NewtonTargetIterations); }
     // maximum number of iterations we do before giving up
     int maxIterations_() const
-    { return GET_PARAM(TypeTag, int, NewtonMaxIterations); }
+    { return EWOMS_GET_PARAM(TypeTag, int, NewtonMaxIterations); }
     // actual number of iterations done so far
     int numIterations_;
 

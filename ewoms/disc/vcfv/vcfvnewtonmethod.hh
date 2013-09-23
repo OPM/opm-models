@@ -27,7 +27,7 @@
 #include "vcfvnewtonconvergencewriter.hh"
 
 #include <ewoms/nonlinear/newtonmethod.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
 namespace Ewoms {
 
@@ -36,7 +36,9 @@ class VcfvNewtonMethod;
 
 template <class TypeTag>
 class VcfvNewtonConvergenceWriter;
+}
 
+namespace Opm {
 namespace Properties {
 //! create a type tag for the VCFV specific Newton method
 NEW_TYPE_TAG(VcfvNewtonMethod, INHERITS_FROM(NewtonMethod));
@@ -78,7 +80,9 @@ SET_TYPE_PROP(VcfvNewtonMethod, NewtonMethod, Ewoms::VcfvNewtonMethod<TypeTag>);
 SET_TYPE_PROP(VcfvNewtonMethod, NewtonConvergenceWriter, Ewoms::VcfvNewtonConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonEnableLineSearch, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvModel
  * \ingroup Newton
@@ -115,7 +119,7 @@ public:
     {
         ParentType::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
     }
 
 protected:
@@ -158,7 +162,7 @@ protected:
         // take the other processes into account
         this->relError_ = this->comm_.max(this->relError_);
 
-        Scalar maxError = GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
+        Scalar maxError = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
         if (this->relError_ > maxError)
             DUNE_THROW(NumericalProblem,
                        "Newton: Relative error " << this->relError_
@@ -311,21 +315,21 @@ protected:
      *        reassembly.
      */
     bool enablePartialReassemble_() const
-    { return GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
 
     /*!
      * \brief Returns true iff the Jacobian assembler recycles the matrix
      *        possible.
      */
     bool enableJacobianRecycling_() const
-    { return GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
 
     /*!
      * \brief Returns true iff line search update proceedure should be
      *        used instead of the normal one.
      */
     bool enableLineSearch_() const
-    { return GET_PARAM(TypeTag, bool, NewtonEnableLineSearch); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableLineSearch); }
 };
 } // namespace Ewoms
 

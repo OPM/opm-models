@@ -130,7 +130,7 @@ public:
         if (enableEnergy)
             Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
 
-        REGISTER_PARAM(TypeTag, Scalar, FlashTolerance, "The maximum tolerance for the flash solver to consider the solution converged");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, FlashTolerance, "The maximum tolerance for the flash solver to consider the solution converged");
     }
 
     /*!

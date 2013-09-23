@@ -28,13 +28,8 @@
 
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
-
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
-
 //! The type tag for the problems using the Stokes equations
 NEW_TYPE_TAG(VcfvStokes, INHERITS_FROM(VcfvModel));
 
@@ -45,10 +40,6 @@ NEW_TYPE_TAG(VcfvStokes, INHERITS_FROM(VcfvModel));
  * sets the \c EnableNavierTerm property to true by default.
  */
 NEW_TYPE_TAG(VcfvNavierStokes, INHERITS_FROM(VcfvStokes));
-
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
 
 NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using a generic name
 NEW_PROP_TAG(Fluid);

@@ -34,7 +34,7 @@
 #include <ewoms/vtk/vcfvvtkdiffusionmodule.hh>
 #include <ewoms/vtk/vcfvvtkenergymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 
 //////////////////////////////////////////////////////////////////

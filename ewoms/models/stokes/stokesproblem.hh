@@ -64,7 +64,7 @@ public:
         : ParentType(timeManager, gridView)
         , gravity_(0)
     {
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim-1]  = -9.81;
     }
 
@@ -75,7 +75,7 @@ public:
     {
         ParentType::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
     }
 
     /*!

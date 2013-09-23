@@ -10,6 +10,9 @@ Notable Differences Between eWoms 2.3 and eWoms 2.4
 - The material laws framework has evolved into a separate module,
   "opm-material". This means that this module must be also present
   when compiling eWoms.
+- The property system has been moved to opm-core, along with some
+  support code. As a consequence, all parameters must now be defined
+  in the namespace Opm::Properties instead of Ewoms::Properties
 
 Notable Differences Between eWoms 2.2 and eWoms 2.3
 ===================================================

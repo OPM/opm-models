@@ -98,7 +98,7 @@ public:
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
-        Scalar flashTolerance = GET_PARAM(TypeTag, Scalar, FlashTolerance);
+        Scalar flashTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, FlashTolerance);
         if (flashTolerance <= 0) {
             // make the tolerance of the flash solver 10 times smaller
             // than the epsilon value used by the newton solver to

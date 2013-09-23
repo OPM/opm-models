@@ -25,13 +25,11 @@
 
 #include "vcfvvtkoutputmodule.hh"
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 // create new type tag for the VTK composition output
 NEW_TYPE_TAG(VtkComposition);
 
@@ -53,7 +51,9 @@ SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -97,13 +97,13 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWriteMassFractions, "Include mass fractions in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions, "Include mole fractions in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions, "Include total mass fractions in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions, "Include total mole fractions in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities, "Include component molarities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities, "Include component fugacities in the VTK output files");
-        REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs, "Include component fugacity coefficients in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMassFractions, "Include mass fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions, "Include mole fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions, "Include total mass fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions, "Include total mole fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities, "Include component molarities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities, "Include component fugacities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs, "Include component fugacity coefficients in the VTK output files");
     }
 
     /*!
@@ -187,25 +187,25 @@ public:
 
 private:
     static bool massFracOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteMassFractions); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMassFractions); }
 
     static bool moleFracOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteMoleFractions); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMoleFractions); }
 
     static bool totalMassFracOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteTotalMassFractions); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMassFractions); }
 
     static bool totalMoleFracOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions); }
 
     static bool molarityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteMolarities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMolarities); }
 
     static bool fugacityOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFugacities); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacities); }
 
     static bool fugacityCoeffOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs); }
 
     PhaseComponentBuffer moleFrac_;
     PhaseComponentBuffer massFrac_;

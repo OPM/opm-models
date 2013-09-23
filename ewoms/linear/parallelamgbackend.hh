@@ -32,7 +32,7 @@
 #include <ewoms/linear/overlappingscalarproduct.hh>
 #include <ewoms/linear/overlappingoperator.hh>
 #include <ewoms/linear/solverpreconditioner.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/istl/solvers.hh>
@@ -52,7 +52,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_TYPE_TAG(ParallelAmgBackend, INHERITS_FROM(ParallelIterativeLinearSolver));
 
@@ -65,7 +65,9 @@ NEW_PROP_TAG(AmgCoarsenTarget);
 //! multi-grid solver
 SET_INT_PROP(ParallelAmgBackend, AmgCoarsenTarget, 5000);
 }
+}
 
+namespace Ewoms {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -136,7 +138,7 @@ public:
     {
         ParallelIterativeSolverBackend<TypeTag>::registerParameters();
 
-        REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget, "The coarsening target for the agglomerations of the AMG preconditioner");
+        EWOMS_REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget, "The coarsening target for the agglomerations of the AMG preconditioner");
     }
 
     /*!
@@ -162,7 +164,7 @@ public:
     {
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0)
-            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         /////////////
         // set-up the overlapping matrix and vector
@@ -210,8 +212,8 @@ public:
             std::cout << "Creating the solver\n";
 
         typedef Ewoms::BiCGSTABSolver<Vector>  SolverType;
-        Scalar linearSolverTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        int maxIterations = GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+        int maxIterations = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
         SolverType solver(fineOperator,
                           scalarProduct,
                           /*preconditioner=*/*amg_,
@@ -240,9 +242,9 @@ public:
         }
 
         // create a residual reduction convergence criterion
-        Scalar linearSolverRelTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
-        Scalar linearSolverFixPointTolerance = GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance)/1e4;
+        Scalar linearSolverRelTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+        Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
+        Scalar linearSolverFixPointTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance)/1e4;
         auto *convCrit = new Ewoms::WeightedResidReductionCriterion<Vector,
                                                                     typename GridView::CollectiveCommunication>
             (problem_.gridView().comm(),
@@ -285,11 +287,11 @@ private:
 
     void prepare_(const Matrix &M)
     {
-        int overlapSize = GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
+        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
 
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0) {
-            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
             if (verbosity > 1)
                 std::cout << "Creating algebraic overlap of size " << overlapSize << "\n";
@@ -382,7 +384,7 @@ private:
 
         int verbosity = 0;
         if (problem_.gridView().comm().rank() == 0)
-            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         int rank = problem_.gridView().comm().rank();
         if (verbosity > 1 && rank == 0)
@@ -398,7 +400,7 @@ private:
         //typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FrobeniusNorm> >
             CoarsenCriterion;
-        int coarsenTarget = GET_PARAM(TypeTag, int, AmgCoarsenTarget);
+        int coarsenTarget = EWOMS_GET_PARAM(TypeTag, int, AmgCoarsenTarget);
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
         coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
         if (verbosity > 0)

@@ -23,7 +23,7 @@
 #ifndef EWOMS_TIME_MANAGER_HH
 #define EWOMS_TIME_MANAGER_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/parallel/mpihelper.hh>
 
 #include <dune/common/timer.hh>

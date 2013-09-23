@@ -31,7 +31,7 @@
 #include <ewoms/linear/overlappingoperator.hh>
 #include <ewoms/linear/solverpreconditioner.hh>
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/istl/solvers.hh>
@@ -46,7 +46,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_TYPE_TAG(ParallelIterativeLinearSolver);
 
@@ -122,7 +122,9 @@ NEW_PROP_TAG(PreconditionerRelaxation);
 //! number of iterations between solver restarts for the GMRES solver
 NEW_PROP_TAG(GMResRestart);
 }
+}
 
+namespace Ewoms {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -200,13 +202,13 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, LinearSolverUseTwoNormReductionCriterion, "Use the reduction of the two-norm of the linear residual as convergence criterion (instead of the reduction of the maximum)");
-        REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
-        REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance, "The maximum allowed weighted maximum of the defect of the linear solver");
-        REGISTER_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance, "The maximum difference between two iterations of the linear solver");
-        REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
-        REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
-        REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, LinearSolverUseTwoNormReductionCriterion, "Use the reduction of the two-norm of the linear residual as convergence criterion (instead of the reduction of the maximum)");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance, "The maximum allowed weighted maximum of the defect of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance, "The maximum difference between two iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
 
         LinearSolverWrapper::registerParameters();
         PreconditionerWrapper::registerParameters();
@@ -301,11 +303,11 @@ public:
             }
         }
 
-        if (!GET_PARAM(TypeTag, bool, LinearSolverUseTwoNormReductionCriterion)) {
+        if ( EWOMS_GET_PARAM(TypeTag, bool, LinearSolverUseTwoNormReductionCriterion)) {
             // create a residual reduction convergence criterion
-            Scalar linearSolverRelTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-            Scalar linearSolverAbsTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
-            Scalar linearSolverFixPointTolerance = GET_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance);
+            Scalar linearSolverRelTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+            Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
+            Scalar linearSolverFixPointTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance);
             auto *convCrit = new Ewoms::WeightedResidReductionCriterion<OverlappingVector,
                                                                         typename GridView::CollectiveCommunication>
                 (problem_.gridView().comm(),
@@ -376,7 +378,7 @@ private:
         }
 
         // create the overlapping Jacobian matrix
-        int overlapSize = GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
+        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix (M,
                                                     borderListCreator.borderList(),
                                                     blackList,
@@ -473,12 +475,12 @@ private:
                         ScalarProduct &parScalarProduct,                \
                         Preconditioner &parPreCond)                     \
     {                                                                   \
-        Scalar tolerance = GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance); \
-        int maxIter = GET_PARAM(TypeTag, int, LinearSolverMaxIterations); \
+        Scalar tolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance); \
+        int maxIter = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations); \
                                                                         \
         int verbosity = 0;                                              \
         if (parOperator.overlap().myRank() == 0)                        \
-            verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity); \
+            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity); \
         solver_ = new ParallelSolver(parOperator,                       \
                                      parScalarProduct,                  \
                                      parPreCond,                        \
@@ -521,14 +523,14 @@ EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Ewoms::BiCGSTABSolver)
                                                                         \
         static void registerParameters()                                \
         {                                                               \
-            REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner"); \
-            REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner"); \
+            EWOMS_REGISTER_PARAM(TypeTag, int, PreconditionerOrder, "The order of the preconditioner"); \
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation, "The relaxation factor of the preconditioner"); \
         }                                                               \
                                                                         \
         void prepare(JacobianMatrix &matrix)                            \
         {                                                               \
-            int order = GET_PARAM(TypeTag, int, PreconditionerOrder);   \
-            Scalar relaxationFactor = GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation); \
+            int order = EWOMS_GET_PARAM(TypeTag, int, PreconditionerOrder);   \
+            Scalar relaxationFactor = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation); \
             seqPreCond_ = new SequentialPreconditioner(matrix, order, relaxationFactor); \
         }                                                               \
                                                                         \
@@ -552,7 +554,9 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
 } // namespace Linear
+}
 
+namespace Opm {
 namespace Properties {
 //! make the linear solver shut up by default
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverVerbosity, 0);
@@ -620,6 +624,6 @@ SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 250);
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

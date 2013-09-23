@@ -129,8 +129,8 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling, "Re-use of the jacobian matrix at the first iteration of the next time step");
-        REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble, "Re-assemble only those degrees of freedom that have changed 'sufficiently' be changed between two Newton iterations");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling, "Re-use of the jacobian matrix at the first iteration of the next time step");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble, "Re-assemble only those degrees of freedom that have changed 'sufficiently' be changed between two Newton iterations");
     }
 
     /*!
@@ -551,9 +551,9 @@ public:
 
 private:
     static bool enableJacobianRecycling_()
-    { return GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
     static bool enablePartialReassemble_()
-    { return GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
 
     Problem &problem_()
     { return *problemPtr_; }

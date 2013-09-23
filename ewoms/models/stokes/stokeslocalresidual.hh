@@ -78,7 +78,7 @@ public:
     {
         ParentType::registerParameters();
 
-        REGISTER_PARAM(TypeTag, bool, EnableNavierTerm, "Enable the Navier term (convective flux term).");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableNavierTerm, "Enable the Navier term (convective flux term).");
     }
 
     /*!
@@ -218,7 +218,7 @@ public:
 
 private:
     static bool enableNavierTerm_()
-    { return GET_PARAM(TypeTag, bool, EnableNavierTerm); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableNavierTerm); }
 };
 
 }

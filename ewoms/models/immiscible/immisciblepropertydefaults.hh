@@ -46,7 +46,7 @@
 #include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 
 //////////////////////////////////////////////////////////////////
@@ -59,34 +59,34 @@ SET_INT_PROP(VcfvImmiscible, NumComponents, GET_PROP_VALUE(TypeTag, NumPhases));
 //! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
 SET_TYPE_PROP(VcfvImmiscible,
               LocalResidual,
-              ImmiscibleLocalResidual<TypeTag>);
+              Ewoms::ImmiscibleLocalResidual<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(VcfvImmiscible, Model, ImmiscibleModel<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, Model, Ewoms::ImmiscibleModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvImmiscible, BaseProblem, VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! Use the Darcy relation by default
 SET_TYPE_PROP(VcfvImmiscible, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvImmiscible, RateVector, ImmiscibleRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, RateVector, Ewoms::ImmiscibleRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvImmiscible, BoundaryRateVector, ImmiscibleBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, BoundaryRateVector, Ewoms::ImmiscibleBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvImmiscible, PrimaryVariables, ImmisciblePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, PrimaryVariables, Ewoms::ImmisciblePrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvImmiscible, VolumeVariables, ImmiscibleVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, VolumeVariables, Ewoms::ImmiscibleVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvImmiscible, FluxVariables, ImmiscibleFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, FluxVariables, Ewoms::ImmiscibleFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal immiscible multi-phase model
-SET_TYPE_PROP(VcfvImmiscible, Indices, ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
+SET_TYPE_PROP(VcfvImmiscible, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
 
 /*!
  * \brief Set the material law to the null law by default.
@@ -170,7 +170,6 @@ public:
 };
 
 }
-
 }
 
 #endif

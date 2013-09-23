@@ -25,7 +25,7 @@
 #define EWOMS_VCFV_MULTIPHASE_FLUX_VARIABLES_HH
 
 #include <opm/core/utility/Spline.hpp>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
@@ -306,7 +306,7 @@ private:
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
         ///////////////
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
@@ -399,7 +399,7 @@ private:
         ///////////////
         // correct the pressure gradients by the gravitational acceleration
         ///////////////
-        if (GET_PARAM(TypeTag, bool, EnableGravity))
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean

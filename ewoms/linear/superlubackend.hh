@@ -31,7 +31,7 @@
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(Problem);
@@ -42,7 +42,9 @@ NEW_PROP_TAG(LinearSolverBackend);
 
 NEW_TYPE_TAG(SuperLULinearSolver);
 }
+}
 
+namespace Ewoms {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -60,14 +62,14 @@ public:
     {}
 
     static void registerParameters()
-    { REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver"); }
+    { EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver"); }
 
     template<class Matrix, class Vector>
     bool solve(const Matrix& A, Vector& x, const Vector& b)
     {
         Vector bTmp(b);
 
-        int verbosity = GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+        int verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
         Dune::InverseOperatorResult result;
         Dune::SuperLU<Matrix> solver(A, verbosity > 0);
         solver.apply(x, bTmp, result);
@@ -91,12 +93,14 @@ private:
 };
 
 } // namespace Linear
+} // namespace Ewoms
 
+namespace Opm {
 namespace Properties {
 SET_INT_PROP(SuperLULinearSolver, LinearSolverVerbosity, 0);
 SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend, Ewoms::Linear::SuperLUBackend<TypeTag>);
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif // HAVE_SUPERLU
 

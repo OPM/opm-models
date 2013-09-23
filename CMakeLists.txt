@@ -124,6 +124,3 @@ EwomsAddTest(obstacle_pvs_restart
 
 # add the tutorial
 EwomsAddTest(tutorial_coupled SOURCES tutorial/tutorial_coupled.cc)
-
-# the tests for the common infrastructure
-EwomsAddTest(test_propertysystem SOURCES tests/common/propertysystem/test_propertysystem.cc DRIVER_ARGS --plain test_propertysystem)

@@ -33,7 +33,7 @@
 #include <ewoms/vtk/vcfvvtkenergymodule.hh>
 #include <ewoms/vtk/vcfvvtkdiffusionmodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 //////////////////////////////////////////////////////////////////
 // Type tags

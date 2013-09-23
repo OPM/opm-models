@@ -26,12 +26,10 @@
 #include "vcfvvtkoutputmodule.hh"
 
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 
-namespace Ewoms
-{
-namespace Properties
-{
+namespace Opm {
+namespace Properties {
 // create new type tag for the VTK temperature output
 NEW_TYPE_TAG(VtkTemperature);
 
@@ -44,7 +42,9 @@ NEW_PROP_TAG(VtkWriteEnthalpies);
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
 }
+}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvVtk
  *
@@ -77,7 +77,7 @@ public:
      */
     static void registerParameters()
     {
-        REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature, "Include the temperature in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature, "Include the temperature in the VTK output files");
     }
 
     /*!
@@ -117,7 +117,7 @@ public:
 
 private:
     static bool temperatureOutput_()
-    { return GET_PARAM(TypeTag, bool, VtkWriteTemperature); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTemperature); }
 
     ScalarBuffer temperature_;
 };

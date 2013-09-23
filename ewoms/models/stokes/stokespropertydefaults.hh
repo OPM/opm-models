@@ -44,13 +44,8 @@
 
 #include <ewoms/linear/superlubackend.hh>
 
-namespace Ewoms {
-
+namespace Opm {
 namespace Properties {
-//////////////////////////////////////////////////////////////////
-// Properties
-//////////////////////////////////////////////////////////////////
-
 SET_PROP(VcfvStokes, NumEq) //!< set the number of equations
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -69,12 +64,12 @@ SET_INT_PROP(VcfvStokes, NumComponents, 1);
 //! Use the Stokes local residual function for the Stokes model
 SET_TYPE_PROP(VcfvStokes,
               LocalResidual,
-              StokesLocalResidual<TypeTag>);
+              Ewoms::StokesLocalResidual<TypeTag>);
 
 //! Use the Stokes local residual function for the Stokes model
 SET_TYPE_PROP(VcfvStokes,
               BaseProblem,
-              StokesProblem<TypeTag>);
+              Ewoms::StokesProblem<TypeTag>);
 
 //! Increase the relative tolerance of the newton method to 10^-7
 SET_SCALAR_PROP(VcfvStokes, NewtonRelativeTolerance, 1e-7);
@@ -86,16 +81,16 @@ SET_TAG_PROP(VcfvStokes, LinearSolver, SuperLULinearSolver);
 #endif
 
 //! the Model property
-SET_TYPE_PROP(VcfvStokes, Model, StokesModel<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, Model, Ewoms::StokesModel<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvStokes, VolumeVariables, StokesVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, VolumeVariables, Ewoms::StokesVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvStokes, FluxVariables, StokesFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, FluxVariables, Ewoms::StokesFluxVariables<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvStokes, BoundaryRateVector, StokesBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, BoundaryRateVector, Ewoms::StokesBoundaryRateVector<TypeTag>);
 
 //! The fluid system to use by default
 SET_PROP(VcfvStokes, FluidSystem)
@@ -114,7 +109,7 @@ public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
-SET_TYPE_PROP(VcfvStokes, Indices, StokesIndices<TypeTag, /*PVOffset=*/0>);
+SET_TYPE_PROP(VcfvStokes, Indices, Ewoms::StokesIndices<TypeTag, /*PVOffset=*/0>);
 
 //! Choose the type of the employed fluid state.
 SET_PROP(VcfvStokes, FluidState)
@@ -150,7 +145,6 @@ SET_BOOL_PROP(VcfvStokes, EnableNavierTerm, false);
 //! Enable the inertial term for the Navier-Stokes model
 SET_BOOL_PROP(VcfvNavierStokes, EnableNavierTerm, true);
 }
-
 }
 
 #endif
