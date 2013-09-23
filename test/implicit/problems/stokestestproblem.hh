@@ -26,8 +26,9 @@
 #define EWOMS_STOKES_TEST_PROBLEM_HH
 
 #include <ewoms/models/stokes/stokesmodel.hh>
-#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
-#include <opm/material/fluidsystems/gasphase.hh>
+
+#include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
+#include <opm/material/fluidsystems/GasPhase.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>

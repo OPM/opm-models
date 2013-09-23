@@ -38,9 +38,10 @@
 
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
-#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
-#include <opm/material/constraintsolvers/ncpflash.hh>
+
+#include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
+#include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 namespace Ewoms {
 namespace Properties {

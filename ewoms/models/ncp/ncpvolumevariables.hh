@@ -29,8 +29,8 @@
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <opm/material/constraintsolvers/ncpflash.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

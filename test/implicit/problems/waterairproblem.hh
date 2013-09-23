@@ -24,16 +24,17 @@
 #ifndef EWOMS_WATER_AIR_PROBLEM_HH
 #define EWOMS_WATER_AIR_PROBLEM_HH
 
-#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <opm/material/heatconduction/somerton.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
+
+#include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/LinearMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedBrooksCorey.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/EffToAbsLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/2pAdapter.hpp>
+#include <opm/material/heatconduction/Somerton.hpp>
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>

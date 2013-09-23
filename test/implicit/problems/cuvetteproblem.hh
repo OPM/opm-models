@@ -25,14 +25,14 @@
 #ifndef EWOMS_CUVETTE_PROBLEM_HH
 #define EWOMS_CUVETTE_PROBLEM_HH
 
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
-#include <opm/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <opm/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <opm/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <opm/material/heatconduction/somerton.hh>
-#include <opm/material/constraintsolvers/misciblemultiphasecomposition.hh>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp>
+#include <opm/material/fluidmatrixinteractions/3p/3pParkerVanGenuchten.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/3pAdapter.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/MpLinearMaterial.hpp>
+#include <opm/material/heatconduction/Somerton.hpp>
+#include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
 
 #include <ewoms/models/pvs/pvsproperties.hh>
 

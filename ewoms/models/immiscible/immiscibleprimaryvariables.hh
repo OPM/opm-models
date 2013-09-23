@@ -24,13 +24,14 @@
 #ifndef EWOMS_IMMISCIBLE_PRIMARY_VARIABLES_HH
 #define EWOMS_IMMISCIBLE_PRIMARY_VARIABLES_HH
 
-#include <dune/common/fvector.hh>
+#include "immiscibleproperties.hh"
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <opm/material/constraintsolvers/immiscibleflash.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
 
-#include "immiscibleproperties.hh"
+#include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+
+#include <dune/common/fvector.hh>
 
 namespace Ewoms {
 

@@ -35,13 +35,12 @@
 #include "stokesfluxvariables.hh"
 #include "stokesboundaryratevector.hh"
 
-#include <opm/material/fluidsystems/gasphase.hh>
-#include <opm/material/fluidsystems/liquidphase.hh>
-#include <opm/material/components/nullcomponent.hh>
-#include <opm/material/heatconduction/fluidconduction.hh>
-
-#include <opm/material/fluidsystems/1pfluidsystem.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidsystems/GasPhase.hpp>
+#include <opm/material/fluidsystems/LiquidPhase.hpp>
+#include <opm/material/components/NullComponent.hpp>
+#include <opm/material/heatconduction/FluidConduction.hpp>
+#include <opm/material/fluidsystems/1pFluidSystem.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <ewoms/linear/superlubackend.hh>
 

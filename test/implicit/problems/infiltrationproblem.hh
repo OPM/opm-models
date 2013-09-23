@@ -26,12 +26,12 @@
 
 #include <ewoms/models/pvs/pvsproperties.hh>
 
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/fluidsystems/h2oairmesitylenefluidsystem.hh>
-#include <opm/material/fluidmatrixinteractions/3p/3pparkervangenuchten.hh>
-#include <opm/material/fluidmatrixinteractions/mp/3padapter.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
-#include <opm/material/heatconduction/somerton.hh>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidsystems/H2OAirMesityleneFluidSystem.hpp>
+#include <opm/material/fluidmatrixinteractions/3p/3pParkerVanGenuchten.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/3pAdapter.hpp>
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
+#include <opm/material/heatconduction/Somerton.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 #include <dune/grid/io/file/dgfparser/dgfs.hh>

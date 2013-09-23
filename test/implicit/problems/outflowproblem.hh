@@ -23,9 +23,10 @@
 #ifndef EWOMS_OUTFLOW_PROBLEM_HH
 #define EWOMS_OUTFLOW_PROBLEM_HH
 
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
-#include <opm/material/fluidsystems/h2on2liquidphasefluidsystem.hh>
+
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidsystems/H2ON2LiquidPhaseFluidSystem.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 

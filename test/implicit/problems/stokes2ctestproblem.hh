@@ -25,7 +25,7 @@
 #define EWOMS_STOKES_2C_TEST_PROBLEM_HH
 
 #include <ewoms/models/stokes/stokesmodel.hh>
-#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
+#include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>

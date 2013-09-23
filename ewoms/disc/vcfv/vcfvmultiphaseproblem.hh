@@ -26,8 +26,9 @@
 
 #include <ewoms/disc/vcfv/vcfvproblem.hh>
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <opm/material/fluidmatrixinteractions/mp/nullmateriallaw.hh>
 #include <ewoms/common/math.hh>
+
+#include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

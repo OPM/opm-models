@@ -24,7 +24,7 @@
 #ifndef EWOMS_CO2_INJECTION_FLASH_HH
 #define EWOMS_CO2_INJECTION_FLASH_HH
 
-#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 namespace Ewoms {
 /*!

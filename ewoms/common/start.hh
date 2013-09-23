@@ -25,7 +25,7 @@
 
 #include "propertysystem.hh"
 #include "parametersystem.hh"
-#include <opm/common/valgrind.hh>
+#include <opm/material/Valgrind.hpp>
 
 #include <ewoms/version.hh>
 #include <ewoms/parallel/mpihelper.hh>

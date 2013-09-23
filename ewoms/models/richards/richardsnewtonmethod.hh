@@ -27,7 +27,7 @@
 #include "richardsproperties.hh"
 
 #include <ewoms/disc/vcfv/vcfvnewtonmethod.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include <dune/common/fvector.hh>
 

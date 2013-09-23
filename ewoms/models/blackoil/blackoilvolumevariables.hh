@@ -27,7 +27,7 @@
 #include "blackoilproperties.hh"
 
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fmatrix.hh>
 

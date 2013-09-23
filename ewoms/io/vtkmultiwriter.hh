@@ -27,7 +27,7 @@
 
 #include "vtknestedfunction.hh"
 
-#include <opm/common/valgrind.hh>
+#include <opm/material/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>

@@ -29,10 +29,11 @@
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
-#include <opm/material/constraintsolvers/misciblemultiphasecomposition.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/common/math.hh>
+
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
+#include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

@@ -28,7 +28,7 @@
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
-#include <opm/common/valgrind.hh>
+#include <opm/material/Valgrind.hpp>
 
 namespace Ewoms {
 

@@ -24,19 +24,20 @@
 #ifndef EWOMS_CO2_INJECTION_PROBLEM_HH
 #define EWOMS_CO2_INJECTION_PROBLEM_HH
 
-#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
-#include <opm/material/fluidsystems/brineco2fluidsystem.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
-#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <opm/material/heatconduction/somerton.hh>
-#include <opm/material/binarycoefficients/brine_co2.hh>
-#include <ewoms/common/statictabulated2dfunction.hh>
 #include <ewoms/models/pvs/pvsproperties.hh>
+
+#include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
+#include <opm/material/fluidsystems/BrineCO2FluidSystem.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/LinearMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedBrooksCorey.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/EffToAbsLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/2pAdapter.hpp>
+#include <opm/material/heatconduction/Somerton.hpp>
+#include <opm/material/binarycoefficients/Brine_CO2.hpp>
+#include <opm/material/StaticTabulated2dFunction.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 

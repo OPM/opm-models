@@ -37,8 +37,9 @@
 
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <opm/material/fluidsystems/blackoilfluidsystem.hh>
-#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
+
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+#include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Ewoms {
 namespace Properties {

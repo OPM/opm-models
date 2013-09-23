@@ -26,8 +26,8 @@
 
 #include "ncpindices.hh"
 
-#include <opm/common/valgrind.hh>
-#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/Valgrind.hpp>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>

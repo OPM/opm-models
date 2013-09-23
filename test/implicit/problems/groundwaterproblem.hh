@@ -26,9 +26,10 @@
 
 #include <ewoms/linear/paralleliterativebackend.hh>
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
-#include <opm/material/components/simpleh2o.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
-#include <opm/material/fluidsystems/liquidphase.hh>
+
+#include <opm/material/components/SimpleH2O.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/fluidsystems/LiquidPhase.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 

@@ -25,7 +25,7 @@
 
 #include <ewoms/models/stokes/stokesmodel.hh>
 #include <ewoms/io/simplexgridcreator.hh>
-#include <opm/material/fluidsystems/h2oairfluidsystem.hh>
+#include <opm/material/fluidsystems/H2OAirFluidSystem.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 #include <dune/common/fvector.hh>

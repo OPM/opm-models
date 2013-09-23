@@ -27,15 +27,15 @@
 #include <ewoms/parallel/mpihelper.hh>
 #include <dune/grid/alugrid.hh>
 
-#include <opm/material/fluidmatrixinteractions/2p/regularizedbrookscorey.hh>
-#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <opm/material/heatconduction/somerton.hh>
-#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <opm/material/components/simpleh2o.hh>
-#include <opm/material/components/dnapl.hh>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedBrooksCorey.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedVanGenuchten.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/LinearMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/EffToAbsLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/2pAdapter.hpp>
+#include <opm/material/heatconduction/Somerton.hpp>
+#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
+#include <opm/material/components/SimpleH2O.hpp>
+#include <opm/material/components/Dnapl.hpp>
 #include <ewoms/io/artgridcreator.hh>
 
 #include <ewoms/models/discretefracture/discretefracturemodel.hh>

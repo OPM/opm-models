@@ -27,8 +27,8 @@
 #include "pvsindices.hh"
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <opm/material/constraintsolvers/ncpflash.hh>
-#include <opm/common/valgrind.hh>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
+#include <opm/material/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 

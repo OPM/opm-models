@@ -26,8 +26,8 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/common/valgrind.hh>
-#include <opm/material/constraintsolvers/ncpflash.hh>
+#include <opm/material/Valgrind.hpp>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "blackoilvolumevariables.hh"
 

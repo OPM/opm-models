@@ -38,9 +38,10 @@
 
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
-#include <opm/material/components/nullcomponent.hh>
-#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <opm/material/heatconduction/dummyheatconductionlaw.hh>
+
+#include <opm/material/components/NullComponent.hpp>
+#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
+#include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Ewoms {
 namespace Properties {

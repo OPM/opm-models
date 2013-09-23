@@ -25,12 +25,13 @@
 #define EWOMS_RICHARDS_LENS_PROBLEM_HH
 
 #include <ewoms/models/richards/richardsmodel.hh>
-#include <opm/material/components/simpleh2o.hh>
-#include <opm/material/fluidsystems/liquidphase.hh>
-#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
+
+#include <opm/material/components/SimpleH2O.hpp>
+#include <opm/material/fluidsystems/LiquidPhase.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedVanGenuchten.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/LinearMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/EffToAbsLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/2pAdapter.hpp>
 
 #include <dune/grid/io/file/dgfparser.hh>
 

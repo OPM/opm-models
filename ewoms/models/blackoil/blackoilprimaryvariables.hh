@@ -26,8 +26,8 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/material/constraintsolvers/immiscibleflash.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
+#include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include "blackoilproperties.hh"
 

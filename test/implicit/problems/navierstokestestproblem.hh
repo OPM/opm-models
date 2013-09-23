@@ -24,10 +24,11 @@
 #ifndef EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
 #define EWOMS_NAVIER_STOKES_TEST_PROBLEM_HH
 
-#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
-#include <opm/material/fluidsystems/gasphase.hh>
-#include <opm/material/components/n2.hh>
 #include <ewoms/models/stokes/stokesmodel.hh>
+
+#include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
+#include <opm/material/fluidsystems/GasPhase.hpp>
+#include <opm/material/components/N2.hpp>
 
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid/2d/alugrid.hh>

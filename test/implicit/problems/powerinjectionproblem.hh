@@ -24,14 +24,14 @@
 #ifndef EWOMS_POWER_INJECTION_PROBLEM_HH
 #define EWOMS_POWER_INJECTION_PROBLEM_HH
 
-#include <opm/material/fluidmatrixinteractions/2p/regularizedvangenuchten.hh>
-#include <opm/material/fluidmatrixinteractions/2p/linearmaterial.hh>
-#include <opm/material/fluidmatrixinteractions/2p/efftoabslaw.hh>
-#include <opm/material/fluidmatrixinteractions/mp/2padapter.hh>
-#include <opm/material/fluidsystems/2pimmisciblefluidsystem.hh>
-#include <opm/material/fluidstates/immisciblefluidstate.hh>
-#include <opm/material/components/simpleh2o.hh>
-#include <opm/material/components/air.hh>
+#include <opm/material/fluidmatrixinteractions/2p/RegularizedVanGenuchten.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/LinearMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/2p/EffToAbsLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/mp/2pAdapter.hpp>
+#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
+#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/components/SimpleH2O.hpp>
+#include <opm/material/components/Air.hpp>
 #include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/io/cubegridcreator.hh>
 

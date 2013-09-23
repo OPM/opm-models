@@ -25,7 +25,7 @@
 #define EWOMS_DYNAMIC_TABULATED_2D_FUNCTION_HH
 
 #include <ewoms/common/exceptions.hh>
-#include <ewoms/common/tabulated2dfunction.hh>
+#include <ewoms/common/Tabulated2dFunction.hpp>
 
 #include <vector>
 

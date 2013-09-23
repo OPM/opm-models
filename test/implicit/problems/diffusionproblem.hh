@@ -25,11 +25,12 @@
 #define EWOMS_POWER_INJECTION_PROBLEM_HH
 
 #include <ewoms/models/ncp/ncpproperties.hh>
-#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <opm/material/fluidsystems/h2on2fluidsystem.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
-#include <opm/material/constraintsolvers/computefromreferencephase.hh>
 #include <ewoms/io/cubegridcreator.hh>
+
+#include <opm/material/fluidmatrixinteractions/mp/MpLinearMaterial.hpp>
+#include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

@@ -24,9 +24,10 @@
 #ifndef EWOMS_RESERVOIR_PROBLEM_HH
 #define EWOMS_RESERVOIR_PROBLEM_HH
 
-#include <opm/material/fluidmatrixinteractions/mp/mplinearmaterial.hh>
-#include <opm/material/fluidstates/compositionalfluidstate.hh>
 #include <ewoms/models/blackoil/blackoilproperties.hh>
+
+#include <opm/material/fluidmatrixinteractions/mp/MpLinearMaterial.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfyasp.hh>
 
