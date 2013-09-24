@@ -748,7 +748,7 @@ void registerParam(const char *paramName, const char *typeTagName, const char *p
         OPM_THROW(std::logic_error,
                    "Parameter " << paramName << " registered twice with non-matching characteristics.");
     }
-    std::cout << "register param for " << Opm::className<TypeTag>() << ": " << paramName << "\n";
+
     ParamsMeta::registry()[paramName] = paramInfo;
 }
 
