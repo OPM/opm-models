@@ -242,7 +242,7 @@ public:
 // that the initial value for the delta vector u is quite
 // close to the final value, a reduction of 6 orders of
 // magnitude in the defect should be sufficient...
-SET_SCALAR_PROP(VcfvModel, LinearSolverRelativeTolerance, 1e-6);
+SET_SCALAR_PROP(VcfvModel, LinearSolverRelativeTolerance, 1e-10);
 
 // the absolute defect of a component tolerated by the linear solver.
 // By default, looking at the absolute defect is "almost" disabled.
