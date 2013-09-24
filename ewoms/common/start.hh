@@ -74,7 +74,7 @@ namespace Ewoms {
  * \param argv Array with the command line argument strings
  */
 template <class TypeTag>
-bool setupParameters_(int argc, char ** argv)
+int setupParameters_(int argc, char ** argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
@@ -121,15 +121,15 @@ bool setupParameters_(int argc, char ** argv)
         if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
         {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "");
-            return /*continueExecution=*/false;
+                Parameters::printUsage<TypeTag>(argv[0], "", /*handleHelp=*/true, std::cout);
+            return /*status=*/2;
         }
     }
 
     // fill the parameter tree with the options from the command line
     std::string s = Parameters::parseCommandLineOptions<TypeTag>(argc, argv);
     if (!s.empty()) {
-        return /*continueExecution=*/false;
+        return /*status=*/1;
     }
 
     std::string paramFileName = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
@@ -147,7 +147,7 @@ bool setupParameters_(int argc, char ** argv)
                 oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
                 Parameters::printUsage<TypeTag>(argv[0], oss.str());
             }
-            return /*continueExecution=*/false;
+            return /*status=*/1;
         }
 
         // read the parameter file.
@@ -158,7 +158,7 @@ bool setupParameters_(int argc, char ** argv)
 
     EWOMS_END_PARAM_REGISTRATION(TypeTag);
 
-    return /*continueExecution=*/true;
+    return /*status=*/0;
 }
 
 //! \endcond
@@ -189,8 +189,11 @@ int start(int argc,
     int myRank = mpiHelper.rank();
 
     try {
-        if (!setupParameters_<TypeTag>(argc, argv))
+        int paramStatus = setupParameters_<TypeTag>(argc, argv);
+        if (paramStatus == 1)
             return 1;
+        if (paramStatus == 2)
+            return 0;
 
         // read the initial time step and the end time
         double tEnd;

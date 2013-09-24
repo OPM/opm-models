@@ -333,7 +333,7 @@ void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &
  * \param progName The name of the program
  */
 template <class TypeTag>
-void printUsage(const std::string &progName, const std::string &errorMsg = "", std::ostream &os = std::cerr)
+void printUsage(const std::string &progName, const std::string &errorMsg = "", bool handleHelp = true, std::ostream &os = std::cerr)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     std::string desc = GET_PROP_VALUE(TypeTag, Description);
@@ -348,6 +348,13 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "", s
         os << desc << "\n";
     os << "\n";
     os << "Recognized options:\n";
+
+    if (handleHelp) {
+        ParamInfo pInfo;
+        pInfo.paramName = "h,--help";
+        pInfo.usageString = "Print this help message and exit";
+        printParamUsage_(os, pInfo);
+    }
 
     auto paramIt = ParamsMeta::registry().begin();
     const auto &paramEndIt = ParamsMeta::registry().end();
@@ -377,7 +384,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
             if (std::string("-h") == argv[i] ||
                 std::string("--help") == argv[i])
             {
-                printUsage<TypeTag>(argv[0], "", std::cout);
+                printUsage<TypeTag>(argv[0], "", handleHelp, std::cout);
                 return "Help called";
             }
         }
@@ -390,7 +397,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
             oss << "Command line argument " << i << " (='" << argv[i] << "') is invalid.";
 
             if (handleHelp)
-                printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
 
             return oss.str();
         }
@@ -409,7 +416,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                     << " is invalid because it does not start with a letter.";
 
                 if (handleHelp)
-                    printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
 
                 return oss.str();
             }
@@ -446,7 +453,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                             << " is invalid (ends with a '-' character).";
 
                         if (handleHelp)
-                            printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
                         return oss.str();
                     }
                     else if (s[j] == '-')
@@ -456,7 +463,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                             << "'--' in parameter name.";
 
                         if (handleHelp)
-                            printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
                         return oss.str();
                     }
                     s[j] = std::toupper(s[j]);
@@ -465,10 +472,10 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                 {
                     std::ostringstream oss;
                     oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                        << " is invalid (character '"<<s[j]<<"' is not a letter or digit).";
+                        << " is invalid (character '"<< s[j]<<"' is not a letter or digit).";
 
                     if (handleHelp)
-                        printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                        printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
                     return oss.str();
                 }
 
@@ -484,7 +491,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                 std::ostringstream oss;
                 oss << "No argument given for parameter '" << argv[i] << "'!";
                 if (handleHelp)
-                    printUsage<TypeTag>(argv[0], oss.str(), std::cerr);
+                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
                 return oss.str();
             }
 
