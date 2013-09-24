@@ -26,9 +26,10 @@
 
 #include <ewoms/disc/vcfv/vcfvproblem.hh>
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <ewoms/common/math.hh>
 
 #include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
+
+#include <opm/core/utility/Average.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -97,7 +98,7 @@ public:
         // you have off-main diagonal entries in your permeabilities!
         for (int i = 0; i < dimWorld; ++i)
             for (int j = 0; j < dimWorld; ++j)
-                result[i][j] = harmonicMean(K1[i][j], K2[i][j]);
+                result[i][j] = Opm::utils::harmonicAverage(K1[i][j], K2[i][j]);
     }
 
     /*!

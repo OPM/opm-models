@@ -26,8 +26,6 @@
 
 #include "vcfvproperties.hh"
 
-#include <ewoms/common/math.hh>
-
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>
 

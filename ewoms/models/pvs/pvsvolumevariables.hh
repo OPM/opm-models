@@ -29,7 +29,6 @@
 #include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/common/math.hh>
 
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
@@ -41,7 +40,6 @@
 #include <iostream>
 
 namespace Ewoms {
-
 /*!
  * \ingroup PvsModel
  * \ingroup VcfvVolumeVariables

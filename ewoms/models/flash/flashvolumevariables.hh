@@ -31,7 +31,6 @@
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
 #include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

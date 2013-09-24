@@ -25,10 +25,9 @@
 #define EWOMS_ART_GRID_CREATOR_HH
 
 #include <ewoms/models/discretefracture/fracturemapper.hh>
-#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
+#include <opm/core/utility/PropertySystem.hpp>
 #include <opm/material/Valgrind.hpp>
-#include <ewoms/common/math.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/gridfactory.hh>

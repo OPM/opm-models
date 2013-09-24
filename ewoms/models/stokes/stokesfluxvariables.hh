@@ -28,8 +28,8 @@
 #include "stokesproperties.hh"
 
 #include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+
 #include <opm/material/Valgrind.hpp>
-#include <ewoms/common/math.hh>
 
 #include <dune/common/fvector.hh>
 
