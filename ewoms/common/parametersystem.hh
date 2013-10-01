@@ -91,19 +91,19 @@
  * EWOMS_GET_PARAM(TypeTag, Scalar, UpwindWeight);
  * \endcode
  */
-#define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)                    \
-    Ewoms::Parameters::get<TypeTag,                                       \
-                         ParamType,                                     \
-                           PTAG(ParamName)>(#ParamName, #ParamName)
+#define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)              \
+    (Ewoms::Parameters::get<TypeTag,                                \
+                            ParamType,                              \
+                            PTAG(ParamName)>(#ParamName, #ParamName))
 
 
 //!\cond SKIP_THIS
-#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                   \
-    Ewoms::Parameters::get<TypeTag,                                       \
-                         ParamType,                                     \
-                         PTAG(ParamName)>(#ParamName,                   \
-                                          #ParamName,                   \
-                                          /*errorIfNotRegistered=*/false)
+#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                 \
+    (Ewoms::Parameters::get<TypeTag,                                    \
+                            ParamType,                                  \
+                            PTAG(ParamName)>(#ParamName,                \
+                                             #ParamName,                \
+                                             /*errorIfNotRegistered=*/false))
 
 namespace Ewoms {
 namespace Parameters {
