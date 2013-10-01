@@ -32,6 +32,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
+#include <opm/core/utility/ClassName.hpp>
+
 #include "vcfvproperties.hh"
 #include "vcfvboundarycontext.hh"
 #include "vcfvconstraintscontext.hh"
@@ -328,7 +330,7 @@ public:
                         int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: The local residual " << Dune::className<Implementation>()
+                   "Not implemented: The local residual " << Opm::className<Implementation>()
                    << " does not implement the required method 'computeStorage()'");
     };
 
@@ -345,7 +347,7 @@ public:
                      int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Dune::className<Implementation>()
+                  "Not implemented: The local residual " << Opm::className<Implementation>()
                   << " does not implement the required method 'computeFlux()'");
     }
 
@@ -361,7 +363,7 @@ public:
                        int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Dune::className<Implementation>()
+                  "Not implemented: The local residual " << Opm::className<Implementation>()
                   << " does not implement the required method 'computeSource()'");
     }
 

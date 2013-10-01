@@ -28,6 +28,7 @@
 #include <opm/core/utility/Exceptions.hpp>
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/PropertySystem.hpp>
+#include <opm/core/utility/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/parallel/mpihelper.hh>
 
@@ -595,7 +596,7 @@ protected:
                          const GlobalEqVector &deltaU)
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The Newton controller (" << Dune::className<Implementation>() << ") "
+                  "Not implemented: The Newton controller (" << Opm::className<Implementation>() << ") "
                   "does not provide a newtonUpdateAbsError() method!");
     }
 
