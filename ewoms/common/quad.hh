@@ -25,7 +25,10 @@
 #if !defined EWOMS_QUAD_HH && HAVE_QUAD
 #define EWOMS_QUAD_HH
 
+#include <opm/core/utility/ClassName.hpp>
+
 #include <cmath>
+#include <string>
 #include <limits>
 #include <iostream>
 
@@ -158,64 +161,18 @@ inline bool isinf(quad val)
 
 } // namespace std
 
-// this is a hack so that Dune's classname.hh does not get
-// included. this is required because GCC 4.6 and earlier does not
-// generate a type_info structure for __float128 which causes the
-// linker to fail.
+// replace Dune::className by Opm::className since the former does not work
+// with __float128
 #define DUNE_CLASSNAME_HH
-
-#include <cstdlib>
-#include <string>
-#include <typeinfo>
-
-#if defined(__GNUC__) && ! defined(__clang__)
-#include <cxxabi.h>
-#endif // #ifdef __GNUC__
-
-namespace Dune
-{
-template <class T>
-class ClassNameHelper_
-{ public:
-    static std::string name()
-    {
-        std::string className = typeid( T ).name();
-#if defined(__GNUC__) && ! defined(__clang__)
-        int status;
-        char *demangled = abi::__cxa_demangle( className.c_str(), 0, 0, &status );
-        if( demangled )
-        {
-          className = demangled;
-          std::free( demangled );
-        }
-#endif // #ifdef __GNUC__
-        return className;
-    }
-};
-
-#if HAVE_QUAD
-// specialize for quad precision floating point values to avoid
-// needing a type_info structure
-template <>
-class ClassNameHelper_<__float128>
-{ public:
-    static std::string name()
-    { return "quad"; }
-};
-#endif
-
+namespace Dune {
 template <class T>
 std::string className()
-{
-    return ClassNameHelper_<T>::name();
-}
+{ return Opm::className<T>(); }
 
 template <class T>
-std::string className(const T &t)
-{
-    return ClassNameHelper_<T>::name();
+std::string className(const T &)
+{ return Opm::className<T>(); }
 }
 
-}
 
 #endif // EWOMS_QUAD_HH
