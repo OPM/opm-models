@@ -25,7 +25,8 @@
 
 #include "nullconvergencewriter.hh"
 
-#include <ewoms/common/exceptions.hh>
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/parallel/mpihelper.hh>
@@ -180,7 +181,7 @@ public:
     {
         if (!enableRelativeCriterion_() && !enableAbsoluteCriterion_())
         {
-            DUNE_THROW(Ewoms::ParameterException,
+            OPM_THROW(std::logic_error,
                        "At least one of NewtonEnableRelativeCriterion or "
                        "NewtonEnableAbsoluteCriterion has to be set to true");
         }
@@ -188,7 +189,7 @@ public:
         else if (satisfyAbsAndRel_() &&
                  (!enableRelativeCriterion_() || !enableAbsoluteCriterion_()))
         {
-            DUNE_THROW(Ewoms::ParameterException,
+            OPM_THROW(std::logic_error,
                        "If you set NewtonSatisfyAbsoluteAndRelative to true, you also must set "
                        "NewtonEnableRelativeCriterion and NewtonEnableAbsoluteCriterion");
 
@@ -511,7 +512,7 @@ protected:
     /*!
      * \brief Solve the linear system of equations \f$\mathbf{A}x - b = 0\f$.
      *
-     * Throws Ewoms::NumericalProblem if the linear solver didn't
+     * Throws Opm::NumericalProblem if the linear solver didn't
      * converge.
      *
      * \param A The matrix of the linear system of equations
@@ -575,10 +576,10 @@ protected:
         relError_ = comm_.max(relError_);
 
         if (relError_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError))
-            DUNE_THROW(NumericalProblem,
-                       "Newton: Relative error " << relError_
-                       << " is larger than maximum allowed error of "
-                       << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError));
+            OPM_THROW(Opm::NumericalProblem,
+                      "Newton: Relative error " << relError_
+                      << " is larger than maximum allowed error of "
+                      << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError));
     }
 
     /*!
@@ -593,9 +594,9 @@ protected:
                          const SolutionVector &uLastIter,
                          const GlobalEqVector &deltaU)
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "The Newton controller (" << Dune::className<Implementation>() << ") "
-                   "does not provide a newtonUpdateAbsError() method!");
+        OPM_THROW(std::logic_error,
+                  "Not implemented: The Newton controller (" << Dune::className<Implementation>() << ") "
+                  "does not provide a newtonUpdateAbsError() method!");
     }
 
     /*!
@@ -618,7 +619,7 @@ protected:
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
-            DUNE_THROW(NumericalProblem, "Non-finite update!");
+            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         for (unsigned i = 0; i < uLastIter.size(); ++i) {
             uCurrentIter[i] = uLastIter[i];

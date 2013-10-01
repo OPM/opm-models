@@ -293,7 +293,7 @@ public:
 
         // some phase must be present
         if (phasePresence_ == 0)
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "Phase state was 0, i.e., no fluid is present");
 
         // set the primary variables which correspond to mole

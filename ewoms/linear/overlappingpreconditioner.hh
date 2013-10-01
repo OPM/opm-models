@@ -25,7 +25,8 @@
 
 #include "overlappingscalarproduct.hh"
 
-#include <ewoms/common/exceptions.hh>
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include <dune/istl/preconditioners.hh>
 
@@ -78,7 +79,7 @@ public:
             x.sync();
         }
         else
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "Preconditioner threw an exception in pre() method on some process.");
 #else
         seqPreCond_.pre(x, y);
@@ -122,7 +123,7 @@ public:
                 x.sync();
             }
             else
-                DUNE_THROW(NumericalProblem,
+                OPM_THROW(Opm::NumericalProblem,
                            "Preconditioner threw an exception on some process.");
         }
         else
@@ -158,7 +159,7 @@ public:
             x.sync();
         }
         else
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "Preconditioner threw an exception in post() method on some process.");
 #else
         seqPreCond_.post(x);

@@ -510,7 +510,7 @@ public:
      *        the sub-control volume.
      */
     Scalar heatCapacitySolid() const
-    { DUNE_THROW(Dune::InvalidStateException, "Method heatCapacitySolid() does not make sense for isothermal models"); }
+    { OPM_THROW(std::logic_error, "Method heatCapacitySolid() does not make sense for isothermal models"); }
 
     /*!
      * \brief Returns the total conductivity capacity
@@ -518,7 +518,7 @@ public:
      *        sub-control volume.
      */
     Scalar heatConductivity() const
-    { DUNE_THROW(Dune::InvalidStateException, "Method heatConductivity() does not make sense for isothermal models"); }
+    { OPM_THROW(std::logic_error, "Method heatConductivity() does not make sense for isothermal models"); }
 
 protected:
     /*!
@@ -660,13 +660,13 @@ public:
      * \brief The temperature gradient times the face normal [K m^2 / m]
      */
     Scalar temperatureGradNormal() const
-    { DUNE_THROW(Dune::InvalidStateException, "Method temperatureGradNormal() does not make sense for isothermal models"); }
+    { OPM_THROW(std::logic_error, "Method temperatureGradNormal() does not make sense for isothermal models"); }
 
     /*!
      * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 / (K/m)]}\f$
      */
     Scalar heatConductivity() const
-    { DUNE_THROW(Dune::InvalidStateException, "Method heatConductivity() does not make sense for isothermal models"); }
+    { OPM_THROW(std::logic_error, "Method heatConductivity() does not make sense for isothermal models"); }
 };
 
 /*!

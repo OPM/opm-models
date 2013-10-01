@@ -193,7 +193,7 @@ public:
             succeeded = 1;
             succeeded = gridView_().comm().min(succeeded);
         }
-        catch (Ewoms::NumericalProblem &e)
+        catch (Opm::NumericalProblem &e)
         {
             std::cout << "rank " << problem_().gridView().comm().rank()
                       << " caught an exception while assembling:" << e.what()
@@ -203,7 +203,7 @@ public:
         }
 
         if (!succeeded) {
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "A process did not succeed in linearizing the system");
         };
 

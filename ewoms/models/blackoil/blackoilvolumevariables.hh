@@ -138,7 +138,7 @@ public:
         Scalar XoO = 1 - XoG;
 
         if (XoG < 0 || XoO < 0) {
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "Only positive values are allowed for the mass fractions "
                        "of the oil and the gas components in the oil phase");
         }

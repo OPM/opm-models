@@ -99,7 +99,7 @@ public:
      * This method MUST be overwritten by the actual problem.
      */
     Scalar temperature() const
-    { DUNE_THROW(Dune::NotImplemented, "Problem does not provide a temperature() method"); }
+    { OPM_THROW(std::logic_error, "Not implemented:Problem does not provide a temperature() method"); }
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase

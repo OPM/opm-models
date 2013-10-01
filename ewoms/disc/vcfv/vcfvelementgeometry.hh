@@ -33,6 +33,9 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+
 #include <vector>
 
 namespace Ewoms {
@@ -99,7 +102,7 @@ public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvGeometry;
 
     static const ScvGeometry &get(int scvIdx)
-    { DUNE_THROW(Dune::NotImplemented, "VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
+    { OPM_THROW(std::logic_error, "Not implemented: VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
 };
 
 ////////////////////
@@ -599,7 +602,7 @@ class VcfvElementGeometry
             rightFace = edgeToFaceHex[1][k];
             break;
         default:
-            DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry :: getFaceIndices for numVertices = " << numVertices);
+            OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry :: getFaceIndices for numVertices = " << numVertices);
             break;
         }
     }
@@ -681,7 +684,7 @@ class VcfvElementGeometry
             rightEdge = faceAndVertexToRightEdgeHex[face][vert];
             break;
         default:
-            DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry :: getFaceIndices for numVertices = " << numVertices);
+            OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry :: getFaceIndices for numVertices = " << numVertices);
             break;
         }
     }
@@ -909,7 +912,7 @@ public:
                                                                    edgeCoord[rightEdge], faceCoord[face], edgeCoord[leftEdge]);
                 }
                 else
-                    DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry for dim = " << dim);
+                    OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry for dim = " << dim);
 
                 boundaryFace[bfIdx].ipGlobal = geometry.global(boundaryFace[bfIdx].ipLocal);
                 boundaryFace[bfIdx].i = vertInElement;
@@ -953,8 +956,8 @@ public:
                 subContVol[vertIdx].localGeometry = &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
         }
         else
-            DUNE_THROW(Dune::NotImplemented,
-                       "SCV geometries for non hexahedron elements");
+            OPM_THROW(std::logic_error,
+                      "Not implemented: SCV geometries for non hexahedron elements");
     }
 
     /*!
@@ -1040,7 +1043,7 @@ private:
                 subContVol[3].volume = quadrilateralArea(subContVol[3].global, edgeCoord[3], elementGlobal, edgeCoord[1]);
                 break;
             default:
-                DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry dim = " << dim << ", numVertices = " << numVertices);
+                OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry dim = " << dim << ", numVertices = " << numVertices);
             }
         }
         else if (dim == 3) {
@@ -1205,11 +1208,11 @@ private:
                                                         edgeCoord[9]);
                 break;
             default:
-                DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry for dim = " << dim << ", numVertices = " << numVertices);
+                OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry for dim = " << dim << ", numVertices = " << numVertices);
             }
         }
         else
-            DUNE_THROW(Dune::NotImplemented, "VcfvElementGeometry for dim = " << dim);
+            OPM_THROW(std::logic_error, "Not implemented:VcfvElementGeometry for dim = " << dim);
     }
 
 };

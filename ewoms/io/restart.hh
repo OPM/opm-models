@@ -171,7 +171,7 @@ public:
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
         if (!inStream_.good()) {
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Restart file '"
                        << fileName_
                        << "' could not be opened properly");
@@ -181,7 +181,7 @@ public:
         inStream_.seekg(0, std::ios::end);
         int pos = inStream_.tellg();
         if (pos == 0) {
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Restart file '"
                        << fileName_
                        << "' is empty");
@@ -208,12 +208,12 @@ public:
     void deserializeSectionBegin(const std::string &cookie)
     {
         if (!inStream_.good())
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Encountered unexpected EOF in restart file.");
         std::string buf;
         std::getline(inStream_, buf);
         if (buf != cookie)
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Could not start section '" << cookie << "'");
     }
 
@@ -226,7 +226,7 @@ public:
         std::getline(inStream_, dummy);
         for (unsigned i = 0; i < dummy.length(); ++i) {
             if (!std::isspace(dummy[i])) {
-                DUNE_THROW(Dune::InvalidStateException,
+                OPM_THROW(std::logic_error,
                            "Encountered unread values while deserializing");
             };
         }
@@ -255,7 +255,7 @@ public:
         const Iterator &endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             if (!inStream_.good()) {
-                DUNE_THROW(Dune::IOError,
+                OPM_THROW(std::runtime_error,
                            "Restart file is corrupted");
             }
 

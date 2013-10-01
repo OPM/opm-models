@@ -164,7 +164,7 @@ protected:
 
         Scalar maxError = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
         if (this->relError_ > maxError)
-            DUNE_THROW(NumericalProblem,
+            OPM_THROW(Opm::NumericalProblem,
                        "Newton: Relative error " << this->relError_
                        << " is larger than maximum allowed error of " << maxError);
     }
@@ -216,7 +216,7 @@ protected:
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
-            DUNE_THROW(NumericalProblem, "Non-finite update!");
+            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_()) {

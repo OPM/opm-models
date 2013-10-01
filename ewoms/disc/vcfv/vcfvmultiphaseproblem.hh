@@ -118,8 +118,8 @@ public:
     const DimMatrix &intrinsicPermeability(const Context &context,
                                            int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::intrinsicPermeability()");
+        OPM_THROW(std::logic_error,
+                   "Not implemented: Problem::intrinsicPermeability()");
     }
 
     /*!
@@ -135,8 +135,8 @@ public:
     Scalar porosity(const Context &context,
                     int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::porosity()");
+        OPM_THROW(std::logic_error,
+                   "Not implemented: Problem::porosity()");
     }
 
     /*!
@@ -152,8 +152,8 @@ public:
     Scalar heatCapacitySolid(const Context &context,
                              int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::heatCapacitySolid()");
+        OPM_THROW(std::logic_error,
+                   "Not implemented: Problem::heatCapacitySolid()");
     }
 
     /*!
@@ -169,8 +169,8 @@ public:
     const HeatConductionLawParams&
     heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::heatConductionParams()");
+        OPM_THROW(std::logic_error,
+                   "Not implemented: Problem::heatConductionParams()");
     }
 
     /*!
@@ -184,8 +184,8 @@ public:
     template <class Context>
     Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::tortuosity()");
+        OPM_THROW(std::logic_error,
+                   "Not implemented: Problem::tortuosity()");
     }
 
     /*!
@@ -200,8 +200,8 @@ public:
     Scalar dispersivity(const Context &context,
                         int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::dispersivity()");
+        OPM_THROW(std::logic_error,
+                  "Not implemented: Problem::dispersivity()");
     }
 
     /*!
@@ -246,7 +246,7 @@ public:
      * no energy equation is used.
      */
     Scalar temperature() const
-    { DUNE_THROW(Dune::NotImplemented, "temperature() method not implemented by the actual problem"); }
+    { OPM_THROW(std::logic_error, "Not implemented:temperature() method not implemented by the actual problem"); }
 
 
     /*!

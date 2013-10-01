@@ -327,8 +327,8 @@ public:
                         int scvIdx,
                         int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "The local residual " << Dune::className<Implementation>()
+        OPM_THROW(std::logic_error,
+                   "Not implemented: The local residual " << Dune::className<Implementation>()
                    << " does not implement the required method 'computeStorage()'");
     };
 
@@ -344,9 +344,9 @@ public:
                      int scvfIdx,
                      int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "The local residual " << Dune::className<Implementation>()
-                   << " does not implement the required method 'computeFlux()'");
+        OPM_THROW(std::logic_error,
+                  "Not implemented: The local residual " << Dune::className<Implementation>()
+                  << " does not implement the required method 'computeFlux()'");
     }
 
     /*!
@@ -360,9 +360,9 @@ public:
                        int scvIdx,
                        int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "The local residual " << Dune::className<Implementation>()
-                   << " does not implement the required method 'computeSource()'");
+        OPM_THROW(std::logic_error,
+                  "Not implemented: The local residual " << Dune::className<Implementation>()
+                  << " does not implement the required method 'computeSource()'");
     }
 
 protected:

@@ -154,21 +154,21 @@ public:
      *        phase in the porous medium.
      */
     Scalar tortuosity(int phaseIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Method tortuosity() does not make sense if diffusion is disabled"); }
+    { OPM_THROW(std::logic_error, "Method tortuosity() does not make sense if diffusion is disabled"); }
 
     /*!
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
     Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Method diffusionCoefficient() does not make sense if diffusion is disabled"); }
+    { OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not make sense if diffusion is disabled"); }
 
     /*!
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
     Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled"); }
+    { OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled"); }
 
 protected:
     /*!
@@ -300,7 +300,7 @@ public:
      * \copydoc Doxygen::compIdxParam
      */
     Scalar moleFractionGradientNormal(int phaseIdx, int compIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Method moleFractionGradient() does not make sense if diffusion is disabled."); }
+    { OPM_THROW(std::logic_error, "Method moleFractionGradient() does not make sense if diffusion is disabled."); }
 
     /*!
      * \brief The effective diffusion coeffcient of a component in a
@@ -310,7 +310,7 @@ public:
      * \copydoc Doxygen::compIdxParam
      */
     Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled."); }
+    { OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled."); }
 };
 
 /*!

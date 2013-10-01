@@ -399,7 +399,7 @@ public:
 
         int vertIdx = this->dofMapper().map(vert);
         if (!outstream.good())
-            DUNE_THROW(Dune::IOError, "Could not serialize vertex " << vertIdx);
+            OPM_THROW(std::runtime_error, "Could not serialize vertex " << vertIdx);
 
         outstream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence() << " ";
     }
@@ -415,7 +415,7 @@ public:
         // read phase presence
         int vertIdx = this->dofMapper().map(vertex);
         if (!instream.good())
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Could not deserialize vertex " << vertIdx);
 
         int tmp;

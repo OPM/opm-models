@@ -182,7 +182,7 @@ public:
     void boundary(BoundaryRateVector &values,
                   const Context &context,
                   int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a boundary() method"); }
+    { OPM_THROW(std::logic_error, "Problem does not provide a boundary() method"); }
 
     /*!
      * \brief Evaluate the constraints for a control volume.
@@ -196,7 +196,7 @@ public:
     void constraints(Constraints &constraints,
                      const Context &context,
                      int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a constraints() method"); }
+    { OPM_THROW(std::logic_error, "Problem does not provide a constraints() method"); }
 
     /*!
      * \brief Evaluate the source term for all phases within a given
@@ -211,7 +211,7 @@ public:
     void source(RateVector &rate,
                 const Context &context,
                 int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a source() method"); }
+    { OPM_THROW(std::logic_error, "Problem does not provide a source() method"); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -225,7 +225,7 @@ public:
     void initial(PrimaryVariables &values,
                  const Context &context,
                  int spaceIdx, int timeIdx) const
-    { DUNE_THROW(Dune::InvalidStateException, "Problem does not provide a initial() method"); }
+    { OPM_THROW(std::logic_error, "Problem does not provide a initial() method"); }
 
     /*!
      * \brief Return how much the domain is extruded at a given sub-control volume.
@@ -304,7 +304,7 @@ public:
                           << nextDt << " seconds\n";
         }
 
-        DUNE_THROW(Dune::MathError,
+        OPM_THROW(std::runtime_error,
                    "Newton solver didn't converge after "
                    << maxFails
                    << " time-step divisions. dt="

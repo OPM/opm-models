@@ -567,7 +567,7 @@ public:
 
         // write phase state
         if (!outstream.good()) {
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "Could not serialize vertex "
                        << vertIdx);
         }
@@ -592,7 +592,7 @@ public:
         int vertIdx = dofMapper().map(vertex);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                DUNE_THROW(Dune::IOError,
+                OPM_THROW(std::runtime_error,
                            "Could not deserialize vertex "
                            << vertIdx);
             instream >> solution_[/*timeIdx=*/0][vertIdx][eqIdx];

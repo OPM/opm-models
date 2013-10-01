@@ -88,7 +88,7 @@ private:
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
-            DUNE_THROW(NumericalProblem, "Non-finite update!");
+            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         // compute the vertex and element colors for partial
         // reassembly

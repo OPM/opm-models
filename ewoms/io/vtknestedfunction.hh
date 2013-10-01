@@ -107,7 +107,7 @@ public:
             idx = mapper_.map(e, imin, codim_);
         }
         else
-            DUNE_THROW(Dune::InvalidStateException,
+            OPM_THROW(std::logic_error,
                        "Only element and vertex based vector "
                        " fields are supported so far.");
 

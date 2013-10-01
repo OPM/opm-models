@@ -89,8 +89,8 @@ public:
     template <class Context>
     Scalar ergunCoefficient(Context &context, int spaceIdx, int timeIdx) const
     {
-        DUNE_THROW(Dune::NotImplemented,
-                   "Problem::ergunCoefficient()");
+        OPM_THROW(std::logic_error,
+                  "Not implemented: Problem::ergunCoefficient()");
     }
 
     /*!
@@ -394,7 +394,7 @@ protected:
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 30)
-                DUNE_THROW(NumericalProblem,
+                OPM_THROW(Opm::NumericalProblem,
                            "Could not determine Forchheimer velocity within "
                            << newtonIter <<" iterations");
             ++newtonIter;

@@ -92,7 +92,7 @@ public:
         Dune::GridFactory<Grid> gridFactory;
         std::ifstream inStream(artFileName);
         if (!inStream.is_open()) {
-            DUNE_THROW(Dune::IOError,
+            OPM_THROW(std::runtime_error,
                        "File '" << artFileName << "' does not exist or is not readable");
         }
         std::string curLine;

@@ -90,13 +90,13 @@ public:
         // the lifetime of the program
         static bool wasInstanciated = false;
         if (wasInstanciated)
-            DUNE_THROW(Dune::InvalidStateException,
+            OPM_THROW(std::logic_error,
                        "Ewoms::MpiHelper may only be instanciated once!");
         wasInstanciated = true;
 
 #if HAVE_MPI
         if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
-            DUNE_THROW(Dune::InvalidStateException,
+            OPM_THROW(std::logic_error,
                        "Initialization of MPI failed!");
 
         MPI_Comm_size(MPI_COMM_WORLD, &size_);
