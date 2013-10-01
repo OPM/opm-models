@@ -26,15 +26,15 @@
 
 #include <opm/core/utility/PropertySystem.hpp>
 
-namespace Ewoms {
-
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(NewtonMethod);
 
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \ingroup Newton
  *

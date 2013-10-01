@@ -34,13 +34,14 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(VelocityModule);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvModel
  *

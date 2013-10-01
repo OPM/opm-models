@@ -28,6 +28,9 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+
 #include <string>
 #include <limits>
 
@@ -108,8 +111,8 @@ public:
         }
         else
             OPM_THROW(std::logic_error,
-                       "Only element and vertex based vector "
-                       " fields are supported so far.");
+                      "Only element and vertex based vector "
+                      " fields are supported so far.");
 
         double val = buf_[idx][mycomp];
         if (std::abs(val) < std::numeric_limits<float>::min())

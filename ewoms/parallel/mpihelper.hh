@@ -25,6 +25,9 @@
 
 #include <dune/common/deprecated.hh>
 
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
+
 // this is a bit hacky, but required for DUNE compatibility
 #ifdef DUNE_MPIHELPER
 #error "You must include this file _before_ DUNE's mpihelper.hh!"

@@ -27,11 +27,12 @@
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Indices);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvDiffusion
  * \class Ewoms::VcfvDiffusionModule

@@ -27,13 +27,14 @@
 #include <opm/core/utility/PropertySystem.hpp>
 #include <opm/material/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(PrimaryVariables);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \brief Class to specify constraints in a VCVF discretization.
  */

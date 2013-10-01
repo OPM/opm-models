@@ -32,14 +32,15 @@
 
 #include "vcfvproperties.hh"
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(EnableSmoothUpwinding);
 NEW_PROP_TAG(MaterialLaw);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(VelocityModule);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \ingroup VcfvModel
  *

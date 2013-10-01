@@ -30,12 +30,13 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Problem);
-}
+}}
 
+namespace Ewoms {
 /*!
  * \ingroup TimeManager
  * \brief Simplify the handling of time dependent problems.

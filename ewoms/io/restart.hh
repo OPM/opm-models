@@ -23,7 +23,8 @@
 #ifndef EWOMS_RESTART_HH
 #define EWOMS_RESTART_HH
 
-#include <dune/common/exceptions.hh>
+#include <opm/core/utility/Exceptions.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include <string>
 #include <fstream>
