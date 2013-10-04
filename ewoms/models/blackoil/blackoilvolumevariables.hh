@@ -140,7 +140,8 @@ public:
         if (XoG < 0 || XoO < 0) {
             OPM_THROW(Opm::NumericalProblem,
                        "Only positive values are allowed for the mass fractions "
-                       "of the oil and the gas components in the oil phase");
+                       "of the oil and the gas components in the oil phase. (X_o^G="
+                      << XoG << ", X_o^O=" << XoO << ")");
         }
 
         // handle undersaturated oil. We interpret negative gas
