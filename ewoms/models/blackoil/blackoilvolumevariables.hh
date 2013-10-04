@@ -120,7 +120,7 @@ public:
         fluidState_.setMoleFraction(gPhaseIdx, gCompIdx, 1.0);
         fluidState_.setMoleFraction(wPhaseIdx, wCompIdx, 1.0);
 
-        // retrieve the relevant black-oil parameters from the fluid
+        // retrieve the relevant parameters from the fluid
         // system.
         Scalar p = fluidState_.pressure(oPhaseIdx);
         Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);

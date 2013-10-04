@@ -330,7 +330,13 @@ public:
             }
             catch (const Dune::Exception &e) {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught exception during linearization: \"" << e.what() << "\"\n";
+                    std::cout << "Newton: Caught Dune exception during linearization: \"" << e.what() << "\"\n";
+                asImp_().failed_();
+                return false;
+            }
+            catch (const Opm::NumericalProblem &e) {
+                if (asImp_().verbose_())
+                    std::cout << "Newton: Caught Opm exception during linearization: \"" << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             };
@@ -393,6 +399,12 @@ public:
                 updateTimer_.stop();
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught exception during update: \"" << e.what() << "\"\n";
+                asImp_().failed_();
+                return false;
+            }
+            catch (const Opm::NumericalProblem &e) {
+                if (asImp_().verbose_())
+                    std::cout << "Newton: Caught Opm exception during linearization: \"" << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             };
