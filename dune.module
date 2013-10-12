@@ -4,7 +4,7 @@
 ################################
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media
-Version: 2.4-git
+Version: 2.4
 Url: http://opm-project.org/ewoms
 Codename: Esmarelda
 MaintainerName: The Open Porous Media Initiative

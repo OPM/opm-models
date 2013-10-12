@@ -5,5 +5,5 @@
 #define EWOMS_VERSION_MINOR    4
 #define EWOMS_VERSION_REVISION 0
 
-#define EWOMS_VERSION "2.4-git"
+#define EWOMS_VERSION "2.4"
 #define EWOMS_CODENAME "Esmarelda"
