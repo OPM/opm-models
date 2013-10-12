@@ -4,9 +4,9 @@
 ################################
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media
-Version: 2.4-git
+Version: 2.5-git
 Url: http://opm-project.org/ewoms
-Codename: Esmarelda
+Codename: Ringo
 MaintainerName: The Open Porous Media Initiative
 Maintainer: opm@opm-project.org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-core opm-material
