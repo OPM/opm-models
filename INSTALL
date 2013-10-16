@@ -1,15 +1,10 @@
 Installation Instructions
 =========================
 
-This file describes how to compile and install eWoms using DUNE's
-standard autotools based build system. If you would like to use the
-alternative CMake based build system, please read the file
-INSTALL.cmake.
-
-eWoms is implemented as an ordinary DUNE module. For a full
-explanation of the DUNE installation process, please read the
-installation notes on the internet [0]. The following introduction is
-meant for the impatient.
+This file describes how to compile and install eWoms. eWoms is
+implemented as an DUNE module within the umbrella of the Open Porous
+Media (OPM) project. As such, it uses the CMake based OPM build
+system.
 
 Getting started
 ---------------
@@ -17,13 +12,13 @@ Getting started
 In order to compile eWoms, you first have to install the following
 DUNE modules so that DUNE's 'dunecontrol' finds them:
  
-  - dune-common        from [1]
-  - dune-geometry      from [1]
-  - dune-grid          from [1]
-  - dune-istl          from [1]
-  - dune-localfuctions from [1]
+  - dune-common        from [0]
+  - dune-geometry      from [0]
+  - dune-grid          from [0]
+  - dune-istl          from [0]
+  - dune-localfuctions from [0]
 
-If you are using Ubuntu 12.10 or newer or Debian Wheezy or newer, you
+If you are using Ubuntu 12.10 or newer (or Debian Wheezy or newer), you
 may install these modules using the standard Debian package management
 tools:
 
@@ -41,8 +36,8 @@ following commands:
 If you use a different Linux distribution or want to live on the
 bleeding edge, you need to download the sources directly from the
 website of the DUNE project. For this, follow the instructions at
-[1]. For eWoms you currently need either the 2.2 release or the latest
-2.3 trunk version.
+[0]. For eWoms, you currently need either the 2.2 release of DUNE or
+the latest 2.3 trunk version.
 
 With option files you can enable options, set compiler flags and
 define paths to external libraries. Exemplary option files are located
@@ -54,15 +49,31 @@ After you've obtained DUNE, compile eWoms using
 
   $PATH_TO_DUNECONTROL/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=ewoms all
   cd $EWOMS_ROOT
-  make check # <- only required if you want to compile the example applications
+  # the lines below are only required if you want to compile the
+  # example applications
+  cmake -DBUILD_TESTING=ON
+  make
 
-A more comprehensive introduction to the DUNE build system can be
-found at [2].
+If you want to build the examples, instead of the last two lines, you
+can also add the '--enable-testing' parameter to CONFIGURE_FLAGS in
+the options file.
+
+Testing
+-------
+
+eWoms uses CTest for regression testing [1]. We encourage you to
+participate - it's easy: If you set up an build directory for eWoms
+with the examples enabled as described above, just run
+
+   ctest -D Experimental
+
+After a while, your results should appear on the eWoms CDash 
+dashboard [2].
 
 Links
 -----
 
-[0] http://www.dune-project.org/doc/installation-notes.html
-[1] http://www.dune-project.org/download.html
-[2] http://www.dune-project.org/doc/buildsystem/buildsystem.pdf
+[0] http://www.dune-project.org/download.html
+[1] http://cmake.org/Wiki/CMake/Testing_With_CTest
+[2] http://opm-project.org/CDash/index.php?project=eWoms
 
