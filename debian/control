@@ -4,7 +4,8 @@ Priority: optional
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
 Build-Depends: debhelper (>= 9),
  automake, autoconf, gfortran, libtool, mpi-default-bin, mpi-default-dev, pkg-config,
- libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0), libdune-localfunctions-dev (>= 2.2.0)
+ libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0), libdune-localfunctions-dev (>= 2.2.0),
+ libopm-core-dev, libopm-material-dev
 Build-Depends-Indep: doxygen, ghostscript, texlive-latex-extra, texlive-latex-recommended, pgf
 Standards-Version: 3.9.3
 Homepage: http://opm-project.org/ewoms

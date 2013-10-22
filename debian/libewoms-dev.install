@@ -1,4 +1,4 @@
-usr/include
-usr/lib/pkgconfig
-usr/lib/dunecontrol
-usr/share/aclocal usr/share/dune
+usr/include/*
+usr/lib/dunecontrol/*
+usr/lib/pkgconfig/*
+usr/share/cmake/*
