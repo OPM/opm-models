@@ -1,4 +1,10 @@
-ewoms (2.3-git) unstable; urgency=low
+ewoms (2013.10-2~precise) precise; urgency=low
+
+  * New release
+
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 22 Oct 2013 12:22:29 +0200
+
+ewoms (2.3~precise); urgency=low
 
   * Initial release
 
