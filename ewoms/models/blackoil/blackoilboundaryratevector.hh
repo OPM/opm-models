@@ -178,6 +178,6 @@ public:
     { (*this) = 0.0; }
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

@@ -169,7 +169,7 @@ public:
                                                 NonwettingPhase> type;
 };
 
-} // end namepace Properties
-} // end namespace Opm
+} // namespace Properties
+} // namespace Opm
 
 #endif

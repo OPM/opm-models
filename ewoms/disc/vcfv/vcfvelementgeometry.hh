@@ -1217,7 +1217,7 @@ private:
 
 };
 
-}
+} // namespace Ewoms
 
 
 #endif

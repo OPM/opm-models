@@ -179,6 +179,6 @@ protected:
         }
     }
 };
-}
+} // namespace Ewoms
 
 #endif

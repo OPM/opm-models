@@ -69,7 +69,7 @@ SET_TYPE_PROP(VcfvDiscreteFracture, FluxVariables, Ewoms::DiscreteFractureFluxVa
 //! For the discrete fracture model, we need to use two-point flux
 //! appoximation or it will converge very poorly
 SET_BOOL_PROP(VcfvDiscreteFracture, UseTwoPointGradients, true);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

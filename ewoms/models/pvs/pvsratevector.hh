@@ -121,6 +121,6 @@ public:
     }
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

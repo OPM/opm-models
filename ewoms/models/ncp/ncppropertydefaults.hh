@@ -155,7 +155,7 @@ SET_SCALAR_PROP(VcfvNcp, NcpSaturationsBaseWeight, 1.0);
 //! The unmodified weight for the fugacity primary variables
 SET_SCALAR_PROP(VcfvNcp, NcpFugacitiesBaseWeight, 1.0);
 
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

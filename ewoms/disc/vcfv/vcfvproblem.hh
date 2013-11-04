@@ -645,6 +645,6 @@ private:
     VtkMultiWriter *resultWriter_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

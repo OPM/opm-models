@@ -162,6 +162,6 @@ private:
     DimVector gravity_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

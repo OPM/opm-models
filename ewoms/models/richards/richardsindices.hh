@@ -46,6 +46,6 @@ struct RichardsIndices
     static const int contiWEqIdx = 0;
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

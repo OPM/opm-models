@@ -144,7 +144,7 @@ SET_BOOL_PROP(VcfvStokes, EnableNavierTerm, false);
 
 //! Enable the inertial term for the Navier-Stokes model
 SET_BOOL_PROP(VcfvNavierStokes, EnableNavierTerm, true);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

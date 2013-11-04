@@ -496,6 +496,6 @@ protected:
 
 template <class TypeTag>
 typename VcfvLocalJacobian<TypeTag>::Scalar VcfvLocalJacobian<TypeTag>::newtonTolerance_;
-}
+} // namespace Ewoms
 
 #endif

@@ -230,7 +230,7 @@ public:
         writer.attachVertexData(velocity, tmp.str(), dimWorld);
     }
 };
-}
+} // namespace Ewoms
 
 #include "stokespropertydefaults.hh"
 

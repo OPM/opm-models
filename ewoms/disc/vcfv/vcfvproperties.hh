@@ -170,8 +170,8 @@ NEW_PROP_TAG(BorderListCreator);
 
 //! The history size required by the time discretization
 NEW_PROP_TAG(TimeDiscHistorySize);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 // \}
 

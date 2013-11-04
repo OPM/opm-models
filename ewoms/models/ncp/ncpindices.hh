@@ -104,6 +104,6 @@ public:
         numPhases - 1;
 };
 
-}
+} // namespace Ewoms
 
 #endif

@@ -161,7 +161,7 @@ public:
 private:
     std::string paramName_;
 };
-}
+} // namespace Parameters
 } // namespace Ewoms
 
 namespace Opm {
@@ -781,7 +781,7 @@ void endParamRegistration()
 //! \endcond
 
 } // namespace Parameters
-} // namespace Opm
+} // namespace Ewoms
 
 
 #endif

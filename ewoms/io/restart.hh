@@ -279,6 +279,6 @@ private:
     std::ifstream inStream_;
     std::ofstream outStream_;
 };
-}
+} // namespace Ewoms
 
 #endif

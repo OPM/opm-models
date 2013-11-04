@@ -239,6 +239,6 @@ private:
     FluidState fluidState_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

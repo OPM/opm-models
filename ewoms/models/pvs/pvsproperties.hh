@@ -69,7 +69,7 @@ NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
 NEW_PROP_TAG(PvsPressureBaseWeight); //!< The basis value for the weight of the pressure primary variable
 NEW_PROP_TAG(PvsSaturationsBaseWeight); //!< The basis value for the weight of the saturation primary variables
 NEW_PROP_TAG(PvsMoleFractionsBaseWeight); //!< The basis value for the weight of the mole fraction primary variables
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

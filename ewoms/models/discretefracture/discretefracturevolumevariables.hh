@@ -218,6 +218,6 @@ protected:
     Scalar fractureRelativePermeabilities_[numPhases];
 };
 
-}
+} // namespace Ewoms
 
 #endif

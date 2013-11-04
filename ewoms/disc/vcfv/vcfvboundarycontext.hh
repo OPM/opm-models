@@ -223,6 +223,6 @@ protected:
     IntersectionIterator intersectionIt_;
 };
 
-} // end namespace Ewoms
+} // namespace Ewoms
 
 #endif

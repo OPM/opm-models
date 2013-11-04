@@ -389,7 +389,7 @@ private:
     mutable std::vector<Scalar> intrinsicPermeability_;
 };
 
-}
+} // namespace Ewoms
 
 #include "ncppropertydefaults.hh"
 

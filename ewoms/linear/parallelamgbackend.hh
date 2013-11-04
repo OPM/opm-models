@@ -64,8 +64,8 @@ NEW_PROP_TAG(AmgCoarsenTarget);
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
 SET_INT_PROP(ParallelAmgBackend, AmgCoarsenTarget, 5000);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 namespace Linear {

@@ -266,7 +266,7 @@ private:
     }
 };
 
-}
+} // namespace Ewoms
 
 #include "flashpropertydefaults.hh"
 

@@ -133,6 +133,6 @@ private:
     Scalar fractureWidth_;
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

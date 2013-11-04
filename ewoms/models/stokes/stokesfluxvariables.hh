@@ -327,6 +327,6 @@ private:
     int outsideIdx_;
 };
 
-} // end namespace
+} // namespace Ewoms
 
 #endif

@@ -62,8 +62,8 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWritePorosity, true);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePotentialGradients, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -362,6 +362,6 @@ private:
     PhaseBuffer potentialWeight_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

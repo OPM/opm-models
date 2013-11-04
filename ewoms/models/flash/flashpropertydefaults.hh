@@ -142,7 +142,7 @@ SET_BOOL_PROP(VcfvFlash, EnableEnergy, false);
 // disable molecular diffusion by default
 SET_BOOL_PROP(VcfvFlash, EnableDiffusion, false);
 
-} // end namespace Properties
-} // end namespace Opm
+} // namespace Properties
+} // namespace Opm
 
 #endif

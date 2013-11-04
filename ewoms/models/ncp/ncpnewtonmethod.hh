@@ -168,6 +168,6 @@ private:
 
     int choppedIterations_;
 };
-}
+} // namespace Ewoms
 
 #endif

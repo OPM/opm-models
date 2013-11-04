@@ -50,8 +50,8 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementContext);
 NEW_PROP_TAG(VtkMultiWriter);
 NEW_PROP_TAG(FluidSystem);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -328,6 +328,6 @@ protected:
     const Problem &problem_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

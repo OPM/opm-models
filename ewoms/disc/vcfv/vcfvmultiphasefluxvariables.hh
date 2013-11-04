@@ -513,6 +513,6 @@ private:
     DimVector potentialGrad_[numPhases];
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

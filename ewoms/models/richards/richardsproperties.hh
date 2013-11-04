@@ -59,7 +59,7 @@ NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
 // \}
-}
-} // end namepace
+} // namespace Properties
+} // namespace Opm
 
 #endif

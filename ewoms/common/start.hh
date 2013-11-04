@@ -61,8 +61,8 @@ NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
-}
-}
+} // namespace Properties
+} // namespace Opm
 //! \cond SKIP_THIS
 
 namespace Ewoms {

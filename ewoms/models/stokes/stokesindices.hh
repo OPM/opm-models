@@ -59,6 +59,6 @@ public:
     static const int moleFrac1Idx = PVOffset + 1; //!< Index of the mole fraction of the _SECOND_ component
     static const int velocity0Idx = PVOffset + numComponents; //!< Index of the first component of the velocity
 };
-} // end namespace
+} // namespace Ewoms
 
 #endif

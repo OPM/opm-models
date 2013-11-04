@@ -207,6 +207,6 @@ private:
     Container &container_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

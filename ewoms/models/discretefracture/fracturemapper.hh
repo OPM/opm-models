@@ -97,6 +97,6 @@ private:
     std::set<unsigned> fractureVertices_;
 };
 
-} // end namespace
+} // namespace Ewoms
 
 #endif // EWOMS_FRACTURE_MAPPER_HH

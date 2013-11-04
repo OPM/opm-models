@@ -36,7 +36,7 @@ class VcfvNewtonMethod;
 
 template <class TypeTag>
 class VcfvNewtonConvergenceWriter;
-}
+} // namespace Ewoms
 
 namespace Opm {
 namespace Properties {
@@ -79,8 +79,8 @@ NEW_PROP_TAG(EnablePartialReassemble);
 SET_TYPE_PROP(VcfvNewtonMethod, NewtonMethod, Ewoms::VcfvNewtonMethod<TypeTag>);
 SET_TYPE_PROP(VcfvNewtonMethod, NewtonConvergenceWriter, Ewoms::VcfvNewtonConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonEnableLineSearch, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!

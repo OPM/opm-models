@@ -255,6 +255,6 @@ SET_SCALAR_PROP(VcfvModel, LinearSolverFixPointTolerance, GET_PROP_VALUE(TypeTag
 SET_INT_PROP(VcfvModel, TimeDiscHistorySize, 2);
 
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

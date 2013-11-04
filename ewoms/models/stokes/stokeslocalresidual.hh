@@ -221,6 +221,6 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableNavierTerm); }
 };
 
-}
+} // namespace Ewoms
 
 #endif

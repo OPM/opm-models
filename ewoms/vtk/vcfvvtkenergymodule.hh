@@ -44,8 +44,8 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteSolidHeatCapacity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteHeatConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -164,6 +164,6 @@ private:
     ScalarBuffer solidHeatCapacity_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

@@ -232,6 +232,6 @@ private:
     Scalar relativePermeability_[numPhases];
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

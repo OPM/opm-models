@@ -552,6 +552,6 @@ private:
     LocalBlockVector internalStorageTerm_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

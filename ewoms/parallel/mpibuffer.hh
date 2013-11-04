@@ -230,6 +230,6 @@ private:
 #endif // HAVE_MPI
 };
 
-}
+} // namespace Ewoms
 
 #endif

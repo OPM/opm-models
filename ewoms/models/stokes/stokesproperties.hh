@@ -52,7 +52,7 @@ NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using th
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether the energy equation is enabled or not
 NEW_PROP_TAG(EnableNavierTerm); //!< Specify whether the model should feature an inertial term or not (default: false)
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

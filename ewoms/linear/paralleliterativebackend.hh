@@ -121,8 +121,8 @@ NEW_PROP_TAG(PreconditionerRelaxation);
 
 //! number of iterations between solver restarts for the GMRES solver
 NEW_PROP_TAG(GMResRestart);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 namespace Linear {
@@ -554,7 +554,7 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
 } // namespace Linear
-}
+} // namespace Ewoms
 
 namespace Opm {
 namespace Properties {

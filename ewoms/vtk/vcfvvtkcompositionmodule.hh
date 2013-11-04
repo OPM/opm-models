@@ -50,8 +50,8 @@ SET_BOOL_PROP(VtkComposition, VtkWriteTotalMoleFractions, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -217,6 +217,6 @@ private:
     PhaseComponentBuffer fugacityCoeff_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

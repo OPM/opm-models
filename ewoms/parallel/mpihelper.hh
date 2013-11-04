@@ -179,7 +179,7 @@ private:
 int MpiHelper::size_ = 1;
 int MpiHelper::rank_ = 0;
 
-}
+} // namespace Ewoms
 
 // this is a bit hacky, but required for DUNE compatibility
 namespace Dune {

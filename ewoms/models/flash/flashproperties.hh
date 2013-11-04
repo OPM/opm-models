@@ -68,7 +68,7 @@ NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered a
 NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
 NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
 NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

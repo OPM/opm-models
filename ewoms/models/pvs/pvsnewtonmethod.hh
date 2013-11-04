@@ -74,6 +74,6 @@ protected:
         this->problem().model().switchPrimaryVars_();
     }
 };
-}
+} // namespace Ewoms
 
 #endif

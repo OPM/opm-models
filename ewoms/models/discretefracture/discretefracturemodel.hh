@@ -81,7 +81,7 @@ protected:
         this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_()));
     }
 };
-}
+} // namespace Ewoms
 
 #include "discretefracturepropertydefaults.hh"
 

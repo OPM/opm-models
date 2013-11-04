@@ -50,8 +50,8 @@ NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridCreator);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(EnableFractures);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -310,6 +310,6 @@ template <class TypeTag>
 typename Ewoms::ArtGridCreator<TypeTag>::GridPointer ArtGridCreator<TypeTag>::gridPtr_;
 template <class TypeTag>
 typename Ewoms::ArtGridCreator<TypeTag>::FractureMapper ArtGridCreator<TypeTag>::fractureMapper_;
-} // end namespace
+} // namespace Ewoms
 
 #endif // EWOMS_ART_GRID_CREATOR_HH

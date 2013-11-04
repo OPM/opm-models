@@ -151,6 +151,6 @@ public:
     }
 };
 
-}
+} // namespace Ewoms
 
 #endif

@@ -174,6 +174,6 @@ private:
     unsigned char pv2eqIdx_[numEq];
 };
 
-}
+} // namespace Ewoms
 
 #endif

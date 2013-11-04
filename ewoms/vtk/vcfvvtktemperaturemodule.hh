@@ -41,8 +41,8 @@ NEW_PROP_TAG(VtkWriteEnthalpies);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -122,6 +122,6 @@ private:
     ScalarBuffer temperature_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

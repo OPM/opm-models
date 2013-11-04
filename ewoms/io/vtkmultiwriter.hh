@@ -475,6 +475,6 @@ private:
 
     std::list<ManagedObject_*> managedObjects_;
 };
-}
+} // namespace Ewoms
 
 #endif

@@ -45,8 +45,8 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -146,6 +146,6 @@ typename SimplexGridCreator<TypeTag>::GridPointer SimplexGridCreator<TypeTag>::s
 
 template <class TypeTag>
 bool SimplexGridCreator<TypeTag>::initialized_ = false;
-}
+} // namespace Ewoms
 
 #endif

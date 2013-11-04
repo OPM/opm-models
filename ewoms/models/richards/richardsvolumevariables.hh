@@ -181,6 +181,6 @@ private:
     Scalar porosity_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

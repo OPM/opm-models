@@ -46,6 +46,6 @@ class BlackOilFluxVariables : public VcfvMultiPhaseFluxVariables<TypeTag>
 {
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

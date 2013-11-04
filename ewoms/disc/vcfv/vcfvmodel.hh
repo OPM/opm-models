@@ -993,6 +993,6 @@ protected:
 
     Dune::BlockVector<Dune::FieldVector<Scalar, 1> > boxVolume_;
 };
-}
+} // namespace Ewoms
 
 #endif

@@ -56,6 +56,6 @@ public:
     static const int conti0EqIdx = PVOffset; //!< Index of the mass conservation equation for the first component
 };
 
-}
+} // namespace Ewoms
 
 #endif

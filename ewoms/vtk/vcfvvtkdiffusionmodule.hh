@@ -43,8 +43,8 @@ NEW_PROP_TAG(VtkWriteEffectiveDiffusionCoefficients);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteTortuosities, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteDiffusionCoefficients, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteEffectiveDiffusionCoefficients, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -149,6 +149,6 @@ private:
     PhaseComponentBuffer effectiveDiffusionCoefficient_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

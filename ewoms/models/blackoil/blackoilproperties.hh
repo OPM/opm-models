@@ -54,7 +54,7 @@ NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about
 NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
 NEW_PROP_TAG(FluidState); //!<The type of the fluid state
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

@@ -36,8 +36,8 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(NewtonMethod);
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!

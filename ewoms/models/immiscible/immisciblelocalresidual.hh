@@ -194,6 +194,6 @@ private:
     { return *static_cast<const Implementation*>(this); }
 };
 
-}
+} // namespace Ewoms
 
 #endif

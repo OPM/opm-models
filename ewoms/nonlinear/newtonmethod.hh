@@ -143,8 +143,8 @@ SET_SCALAR_PROP(NewtonMethod, NewtonAbsoluteTolerance, 1e-5);
 SET_SCALAR_PROP(NewtonMethod, NewtonMaxRelativeError, 1e100); // effectively disabled if not overwritten at run-time
 SET_INT_PROP(NewtonMethod, NewtonTargetIterations, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxIterations, 18);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -787,6 +787,6 @@ private:
     { return *static_cast<const Implementation*>(this); }
 };
 
-}
+} // namespace Ewoms
 
 #endif

@@ -488,6 +488,6 @@ private:
     bool finished_;
     bool verbose_;
 };
-}
+} // namespace Ewoms
 
 #endif

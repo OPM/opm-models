@@ -777,6 +777,6 @@ private:
     Scalar heatConductivity_;
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

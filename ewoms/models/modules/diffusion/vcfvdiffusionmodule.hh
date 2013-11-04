@@ -455,6 +455,6 @@ private:
     Scalar effectiveDiffusionCoefficient_[numPhases][numComponents];
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

@@ -298,7 +298,7 @@ private:
     mutable Scalar referencePressure_;
     mutable std::vector<Scalar> intrinsicPermeability_;
 };
-}
+} // namespace Ewoms
 
 #include "immisciblepropertydefaults.hh"
 

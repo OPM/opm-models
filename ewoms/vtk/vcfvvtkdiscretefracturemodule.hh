@@ -54,8 +54,8 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFracturePorosity, true);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureFilterVelocities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -281,6 +281,6 @@ private:
     PhaseBuffer potentialWeight_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

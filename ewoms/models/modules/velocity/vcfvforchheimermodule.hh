@@ -518,6 +518,6 @@ protected:
     Scalar volumeFlux_[numPhases];
 };
 
-} // end namespace
+} // namespace Ewoms
 
 #endif

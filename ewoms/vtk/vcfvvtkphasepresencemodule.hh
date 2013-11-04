@@ -37,8 +37,8 @@ NEW_TYPE_TAG(VtkPhasePresence);
 NEW_PROP_TAG(VtkWritePhasePresence);
 
 SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -117,6 +117,6 @@ private:
     ScalarBuffer phasePresence_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

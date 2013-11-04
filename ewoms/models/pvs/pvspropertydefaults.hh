@@ -148,7 +148,7 @@ SET_SCALAR_PROP(VcfvPvs, PvsSaturationsBaseWeight, 1.0);
 //! The basis value for the weight of the mole fraction primary variables
 SET_SCALAR_PROP(VcfvPvs, PvsMoleFractionsBaseWeight, 1.0);
 
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

@@ -130,6 +130,6 @@ private:
     int numComp_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

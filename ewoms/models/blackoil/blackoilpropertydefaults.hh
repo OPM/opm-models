@@ -121,7 +121,7 @@ SET_TYPE_PROP(VcfvBlackOil,
 // disable the smooth upwinding method by default
 SET_BOOL_PROP(VcfvBlackOil, EnableSmoothUpwinding, false);
 
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 #endif

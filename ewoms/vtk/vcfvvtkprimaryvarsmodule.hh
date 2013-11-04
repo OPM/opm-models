@@ -39,8 +39,8 @@ NEW_PROP_TAG(VtkWriteProcessRank);
 
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 /*!
@@ -131,6 +131,6 @@ private:
     ScalarBuffer processRank_;
 };
 
-}
+} // namespace Ewoms
 
 #endif

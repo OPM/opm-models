@@ -41,8 +41,8 @@ NEW_PROP_TAG(LinearSolverVerbosity);
 NEW_PROP_TAG(LinearSolverBackend);
 
 NEW_TYPE_TAG(SuperLULinearSolver);
-}
-}
+} // namespace Properties
+} // namespace Opm
 
 namespace Ewoms {
 namespace Linear {

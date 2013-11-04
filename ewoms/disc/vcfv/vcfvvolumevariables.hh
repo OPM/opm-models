@@ -160,6 +160,6 @@ private:
     Scalar extrusionFactor_;
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

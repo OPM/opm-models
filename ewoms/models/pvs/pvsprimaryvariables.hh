@@ -365,6 +365,6 @@ private:
     unsigned char phasePresence_;
 };
 
-} // end namepace
+} // namespace Ewoms
 
 #endif

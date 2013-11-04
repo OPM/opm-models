@@ -142,6 +142,6 @@ private:
     GlobalPosition center_;
 };
 
-}
+} // namespace Ewoms
 
 #endif // EWOMS_QUADRATURE_GEOMETRY_HH
