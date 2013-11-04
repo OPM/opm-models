@@ -43,7 +43,7 @@
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/1pFluidSystem.hpp>
 #include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
-#include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Opm {

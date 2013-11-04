@@ -27,7 +27,7 @@
 #include <ewoms/disc/vcfv/vcfvproblem.hh>
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 
-#include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
 
 #include <opm/core/utility/Average.hpp>
 

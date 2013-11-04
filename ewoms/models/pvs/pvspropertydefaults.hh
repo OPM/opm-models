@@ -40,7 +40,7 @@
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 
-#include <opm/material/fluidmatrixinteractions/mp/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Opm {
