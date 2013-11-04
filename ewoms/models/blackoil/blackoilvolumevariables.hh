@@ -125,7 +125,7 @@ public:
         Scalar p = fluidState_.pressure(oPhaseIdx);
         Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);
         Scalar Bo = FluidSystem::oilFormationVolumeFactor(p);
-        Scalar Rs = FluidSystem::gasFormationFactor(p);
+        Scalar Rs = FluidSystem::gasDissolutionFactor(p);
         Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
         Scalar rhorefg = FluidSystem::surfaceDensity(gPhaseIdx);
         Scalar rhog = rhorefg/Bg;

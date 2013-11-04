@@ -108,7 +108,7 @@ public:
             // gas which is missing to make the oil saturated
             Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
             Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
-            Scalar Rs = FluidSystem::gasFormationFactor(po);
+            Scalar Rs = FluidSystem::gasDissolutionFactor(po);
             Scalar XoGSat = Rs*FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
 
             Scalar rhogDef =
