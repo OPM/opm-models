@@ -43,15 +43,12 @@
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/1pFluidSystem.hpp>
 #include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
-#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Opm {
 namespace Properties {
-
-//////////////////////////////////////////////////////////////////
-// Property defaults
-//////////////////////////////////////////////////////////////////
 SET_INT_PROP(VcfvImmiscible, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq); //!< set the number of equations to the number of phases
 SET_INT_PROP(VcfvImmiscible, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of phases is determined by the fluid system
 SET_INT_PROP(VcfvImmiscible, NumComponents, GET_PROP_VALUE(TypeTag, NumPhases));   //!< Number of chemical species in the system
@@ -91,9 +88,15 @@ SET_TYPE_PROP(VcfvImmiscible, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOff
 /*!
  * \brief Set the material law to the null law by default.
  */
-SET_TYPE_PROP(VcfvImmiscible,
-              MaterialLaw,
-              Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
+SET_PROP(VcfvImmiscible, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+public:
+    typedef Opm::NullMaterial<Traits> type;
+};
 
 /*!
  * \brief Set the property for the material parameters by extracting
@@ -120,9 +123,7 @@ SET_BOOL_PROP(VcfvImmiscible, EnableSmoothUpwinding, false);
 // disable the energy equation by default
 SET_BOOL_PROP(VcfvImmiscible, EnableEnergy, false);
 
-/////////////////////
 // set slightly different properties for the single-phase case
-/////////////////////
 
 //! The fluid system to use by default
 SET_TYPE_PROP(VcfvImmiscibleOnePhase, FluidSystem, Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);

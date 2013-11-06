@@ -40,15 +40,12 @@
 #include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
 #include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
 
-#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 namespace Opm {
 namespace Properties {
-//////////////////////////////////////////////////////////////////
-// Property values
-//////////////////////////////////////////////////////////////////
-
 /*!
  * \brief Set the property for the number of components.
  */
@@ -69,9 +66,15 @@ SET_INT_PROP(VcfvPvs,
 /*!
  * \brief Set the property for the material law to the dummy law.
  */
-SET_TYPE_PROP(VcfvPvs,
-              MaterialLaw,
-              Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases), typename GET_PROP_TYPE(TypeTag, Scalar)>);
+SET_PROP(VcfvPvs, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+public:
+    typedef Opm::NullMaterial<Traits> type;
+};
 
 /*!
  * \brief Set the property for the material parameters by extracting

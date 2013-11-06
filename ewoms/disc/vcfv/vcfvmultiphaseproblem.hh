@@ -27,7 +27,7 @@
 #include <ewoms/disc/vcfv/vcfvproblem.hh>
 #include <ewoms/disc/vcfv/vcfvproperties.hh>
 
-#include <opm/material/fluidmatrixinteractions/NullMaterialLaw.hpp>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 
 #include <opm/core/utility/Average.hpp>
 
@@ -60,8 +60,7 @@ class VcfvMultiPhaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-    typedef typename Opm::NullMaterialLaw<GET_PROP_VALUE(TypeTag, NumPhases),
-                                          typename GET_PROP_TYPE(TypeTag, Scalar)>::Params MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
