@@ -119,7 +119,6 @@ public:
                     molarity = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
                 }
 
-
                 // add advective flux of current component in current
                 // phase
                 (*this)[conti0EqIdx + compIdx] +=

@@ -96,7 +96,6 @@
                             ParamType,                              \
                             PTAG(ParamName)>(#ParamName, #ParamName))
 
-
 //!\cond SKIP_THIS
 #define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                 \
     (Ewoms::Parameters::get<TypeTag,                                    \
@@ -782,6 +781,5 @@ void endParamRegistration()
 
 } // namespace Parameters
 } // namespace Ewoms
-
 
 #endif

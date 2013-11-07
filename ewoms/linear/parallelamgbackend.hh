@@ -221,7 +221,6 @@ public:
                           /*maxSteps=*/maxIterations,
                           verbosity);
 
-
         // use the residual reduction convergence criterion
         OverlappingVector residWeightVec(*overlappingx_), fixPointWeightVec(*overlappingx_);
 

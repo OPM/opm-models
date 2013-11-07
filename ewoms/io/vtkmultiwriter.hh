@@ -118,7 +118,6 @@ public:
             startMultiFile_(multiFileName_);
         }
 
-
         curWriter_ = new VtkWriter(gridView_, Dune::VTK::conforming);
         ++curWriterNum_;
 
@@ -366,7 +365,6 @@ private:
     {
         return (GridView::dimension == 1)?"vtp":"vtu";
     }
-
 
     void startMultiFile_(const std::string &multiFileName)
     {

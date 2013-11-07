@@ -55,8 +55,6 @@ class FlashFluxVariables
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-
-
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     typedef VcfvDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
 

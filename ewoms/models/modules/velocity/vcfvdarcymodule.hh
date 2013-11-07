@@ -273,7 +273,6 @@ private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-
 protected:
     // intrinsic permeability tensor and its square root
     DimMatrix K_;

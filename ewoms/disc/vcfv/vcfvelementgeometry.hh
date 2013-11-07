@@ -176,7 +176,6 @@ public:
     static const ScvGeometry &get(int scvIdx)
     { return scvGeoms_[scvIdx]; }
 
-
     static int init()
     {
         // 2D CUBE
@@ -1218,7 +1217,6 @@ private:
 };
 
 } // namespace Ewoms
-
 
 #endif
 

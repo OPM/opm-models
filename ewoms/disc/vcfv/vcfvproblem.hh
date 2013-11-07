@@ -136,7 +136,6 @@ public:
         updateTime_ = 0.0;
     }
 
-
     /*!
      * \brief Called after the simulation has been finished
      *        sucessfully.

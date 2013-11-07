@@ -121,7 +121,6 @@ public:
                     Valgrind::CheckDefined(molarity);
                 }
 
-
                 Valgrind::CheckDefined(fluxVars.volumeFlux(phaseIdx));
 
                 // add advective flux of current component in current

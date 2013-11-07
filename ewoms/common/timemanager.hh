@@ -261,7 +261,6 @@ public:
      * \}
      */
 
-
     /*!
      * \name Episode management
      * \{
@@ -337,7 +336,6 @@ public:
      */
     bool episodeWillBeOver() const
     { return time() + timeStepSize_ >= episodeStartTime_ + episodeLength()*(1 - 1e-8); }
-
 
     /*!
      * \brief Aligns the time step size to the episode boundary if the

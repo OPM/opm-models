@@ -254,7 +254,6 @@ protected:
         }
     }
 
-
 private:
     Scalar tortuosity_[numPhases];
     Scalar diffusionCoefficient_[numPhases][numComponents];
@@ -394,7 +393,6 @@ protected:
         const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
         const auto &fluidStateInside = volVarsInside.fluidState();
 
-
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = scvf.ipGlobal;
         distVec -= context.element().geometry().global(insideScv.localGeometry->center());
@@ -405,7 +403,6 @@ protected:
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
         assert(dist > 0);
-
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))

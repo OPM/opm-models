@@ -149,7 +149,6 @@ public:
     { return mpiStatus_; }
 #endif // HAVE_MPI
 
-
     /*!
      * \brief Returns the number of data objects in the buffer
      */

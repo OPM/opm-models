@@ -46,7 +46,6 @@ NEW_TYPE_TAG(NumericModel, INHERITS_FROM(ParameterSystem));
 //! Type tag for all fully coupled models.
 NEW_TYPE_TAG(ImplicitModel, INHERITS_FROM(NumericModel));
 
-
 ///////////////////////////////////
 // Property names which are always available:
 //

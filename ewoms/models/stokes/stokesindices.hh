@@ -49,7 +49,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { numComponents = FluidSystem::numComponents };
 
-
 public:
     // Primary variable indices
     static const int conti0EqIdx = PVOffset + 0; //!< Index of the mass balance equation

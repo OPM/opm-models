@@ -78,7 +78,6 @@ namespace Ewoms {
       \{
   */
 
-
   //=====================================================================
   /*!
     \brief Abstract base class for all solvers.
@@ -138,7 +137,6 @@ namespace Ewoms {
   private:
     Dune::shared_ptr<ConvergenceCriterion<X> > convergenceCriterion_;
   };
-
 
   //=====================================================================
   // Implementation of this interface
@@ -311,7 +309,6 @@ namespace Ewoms {
     int _verbose;
   };
 
-
   // all these solvers are taken from the SUMO library
   //! gradient method
   template<class X >
@@ -424,8 +421,6 @@ namespace Ewoms {
     int _maxit;
     int _verbose;
   };
-
-
 
   //! \brief conjugate gradient method
   template<class X>
@@ -688,7 +683,6 @@ public:
             << omega << " <= EPSILON " << EPSILON
             << " after " << it << " iterations");
 
-
         if (it<1)
           p = r;
         else
@@ -899,7 +893,6 @@ public:
         p[0] = 0.0;
         p[1] = 0.0;
         p[2] = 0.0;
-
 
         z /= beta;      // this is w_current
 
@@ -1266,7 +1259,6 @@ public:
         sn = temp * cs;
       }
     }
-
 
     void
     applyPlaneRotation(field_type &dx, field_type &dy, field_type &cs, field_type &sn)

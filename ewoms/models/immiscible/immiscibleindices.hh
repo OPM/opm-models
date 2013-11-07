@@ -56,5 +56,4 @@ public:
 };
 } // namespace Ewoms
 
-
 #endif

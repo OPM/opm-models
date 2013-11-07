@@ -147,7 +147,6 @@ private:
     Container &container_;
 };
 
-
 /*!
  * \brief Provides data handle for parallel communication which takes
  *        the minimum of all values that are attached to vertices

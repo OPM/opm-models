@@ -143,7 +143,6 @@ public:
                 tmp[j] = gradv[axisIdx][j] + gradv[j][axisIdx];
             }
 
-
             // the momentum flux due to viscous forces
             (*this)[momentum0EqIdx + axisIdx] =
                 - insideVolVars.fluidState().viscosity(phaseIdx)

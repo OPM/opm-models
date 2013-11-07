@@ -137,7 +137,6 @@ public:
         VelocityFluxVariables::calculateVelocities_(elemCtx, scvfIdx, timeIdx);
     }
 
-
     /*!
      * \brief Update the flux variables for a given boundary face.
      *

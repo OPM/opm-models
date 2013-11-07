@@ -253,7 +253,6 @@ public:
     Scalar volumeFlux(int phaseIdx) const
     { return volumeFlux_[phaseIdx]; }
 
-
 protected:
     /*!
      * \brief Calculate the filter velocities of all phases
@@ -443,7 +442,6 @@ protected:
 
         Valgrind::CheckDefined(residual);
     }
-
 
     void gradForchheimerResid_(DimVector &residual,
                                DimMatrix &gradResid,

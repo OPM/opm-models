@@ -48,7 +48,6 @@ class OverlappingBlockVector
     typedef Dune::BlockVector<FieldVector> ParentType;
     typedef Dune::BlockVector<FieldVector> BlockVector;
 
-
 public:
     /*!
      * \brief Given a domestic overlap object, create an overlapping

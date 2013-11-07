@@ -174,5 +174,4 @@ std::string className(const T &)
 { return Opm::className<T>(); }
 } // namespace Dune
 
-
 #endif // EWOMS_QUAD_HH

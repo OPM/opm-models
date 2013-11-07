@@ -94,7 +94,6 @@ public:
                            timeIdx);
         ParentType::checkDefined();
 
-
         typename FluidSystem::ParameterCache paramCache;
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
@@ -106,7 +105,6 @@ public:
         }
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
         Valgrind::CheckDefined(sumSat);
-
 
         // set the fluid phase temperature
         EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);

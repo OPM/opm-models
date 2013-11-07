@@ -392,7 +392,6 @@ public:
         }
     }
 
-
     /*!
      * \brief Evaluates the advective energy fluxes over a fracture
      *        which should be attributed to a face of a subcontrol
@@ -412,7 +411,6 @@ public:
         // occupied by the fracture
         flux[energyEqIdx] *=
             1 - fluxVars.fractureWidth()/(2*scvf.normal.two_norm());
-
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -529,7 +527,6 @@ protected:
     static void updateTemperatures_(FluidState &fluidState, const Context &context, int spaceIdx, int timeIdx)
     { fluidState.setTemperature(context.problem().temperature(context, spaceIdx, timeIdx)); }
 
-
     /*!
      * \brief Update the quantities required to calculate
      *        energy fluxes.
@@ -569,7 +566,6 @@ protected:
     {
         fluidState.setTemperature(context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]);
     }
-
 
     /*!
      * \brief Update the quantities required to calculate
@@ -736,7 +732,6 @@ protected:
 
         const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
         const auto &fsInside = volVarsInside.fluidState();
-
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = scvf.ipGlobal;

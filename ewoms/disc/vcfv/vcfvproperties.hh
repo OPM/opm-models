@@ -49,7 +49,6 @@ NEW_TYPE_TAG(VcfvModel, INHERITS_FROM(VcfvNewtonMethod,
                                       ImplicitModel,
                                       VtkPrimaryVars));
 
-
 // set the splices for the vertex-centered finite volume
 // discretization
 NEW_PROP_TAG(LinearSolver);

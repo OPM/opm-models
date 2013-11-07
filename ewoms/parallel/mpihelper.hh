@@ -124,7 +124,6 @@ public:
         return singleton;
     }
 
-
     /*!
      * \brief Return the MPI rank of the running process.
      */

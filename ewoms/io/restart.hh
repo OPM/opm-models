@@ -78,7 +78,6 @@ class Restart {
         return oss.str();
     }
 
-
 public:
     /*!
      * \brief Returns the name of the file which is (de-)serialized.
@@ -156,7 +155,6 @@ public:
     void serializeEnd()
     { outStream_.close(); }
 
-
     /*!
      * \brief Start reading a restart file at a certain simulated
      *        time.
@@ -167,7 +165,6 @@ public:
         fileName_ = restartFileName_(problem.gridView(),
                                      problem.name(),
                                      t);
-
 
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
@@ -232,7 +229,6 @@ public:
             };
         }
     }
-
 
     /*!
      * \brief Deserialize all leaf entities of a codim in a grid.

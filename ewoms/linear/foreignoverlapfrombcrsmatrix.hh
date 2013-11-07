@@ -576,7 +576,6 @@ protected:
             }
         }
 
-
         // make sure all data was send
         peerIt = neighborPeerSet().begin();
         for (; peerIt != peerEndIt; ++peerIt) {

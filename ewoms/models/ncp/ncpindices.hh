@@ -56,7 +56,6 @@ public:
      */
     static const int numEq = numComponents + numPhases + EnergyIndices::numEq_;
 
-
     /*!
      * \brief Index of the equation for the continuity of mass of the
      *        first component.
@@ -65,7 +64,6 @@ public:
      */
     static const int conti0EqIdx =
         PVOffset;
-
 
     /*!
      * \brief Index of the first phase NCP equation.

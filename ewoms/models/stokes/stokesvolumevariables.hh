@@ -168,7 +168,6 @@ public:
         //velocity_ /= fvElemGeom.subContVol[scvIdx].volume;
     }
 
-
     /*!
      * \brief Returns the thermodynamic state of the fluid for the control-volume.
      */

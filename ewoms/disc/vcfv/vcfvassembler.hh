@@ -844,7 +844,6 @@ private:
     // time step size of last assembly
     Scalar oldDt_;
 
-
     // attributes required for partial jacobian reassembly
     std::vector<EntityColor> vertexColor_;
     std::vector<EntityColor> elementColor_;

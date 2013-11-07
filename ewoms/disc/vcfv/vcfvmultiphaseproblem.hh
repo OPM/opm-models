@@ -249,7 +249,6 @@ public:
     Scalar temperature() const
     { OPM_THROW(std::logic_error, "Not implemented:temperature() method not implemented by the actual problem"); }
 
-
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
      *

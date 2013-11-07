@@ -467,7 +467,6 @@ public:
         else
             asImp_().updateFailed();
 
-
 #if HAVE_VALGRIND
         for (size_t i = 0; i < solution(/*timeIdx=*/0).size(); ++i) {
             Valgrind::CheckDefined(solution(/*timeIdx=*/0)[i]);
@@ -484,7 +483,6 @@ public:
      */
     void updateBegin()
     { updateBoundary_(); }
-
 
     /*!
      * \brief Called by the update() method if it was

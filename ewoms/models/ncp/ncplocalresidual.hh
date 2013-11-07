@@ -181,7 +181,6 @@ public:
         Valgrind::CheckDefined(source);
     }
 
-
 private:
     friend class VcfvLocalResidual<TypeTag>;
 

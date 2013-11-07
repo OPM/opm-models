@@ -534,7 +534,6 @@ protected:
         }
     }
 
-
 private:
     Implementation &asImp_()
     {

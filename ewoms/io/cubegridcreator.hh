@@ -137,7 +137,6 @@ public:
     static void deleteGrid()
     { if (initialized_) cubeGrid_.reset(); initialized_ = false; }
 
-
 protected:
     static GridPointer cubeGrid_;
     static bool initialized_;
