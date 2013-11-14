@@ -39,6 +39,7 @@ namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(VelocityModule);
+NEW_PROP_TAG(MaterialLaw);
 }}
 
 namespace Ewoms {
