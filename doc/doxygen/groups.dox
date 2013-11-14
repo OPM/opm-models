@@ -11,13 +11,6 @@
  */
     /*!
      * \ingroup Common
-     * \defgroup PropertySystem Property System
-     * \brief The eWoms Property System
-     *
-     * \copydetails propertysystem.hh
-     */
-    /*!
-     * \ingroup Common
      * \defgroup Startup Startup
      * \brief Helper Routines to Start the Simulation
      */
