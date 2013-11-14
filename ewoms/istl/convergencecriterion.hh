@@ -28,7 +28,7 @@
 #include <iomanip>
 
 namespace Ewoms {
-/*! \addtogroup ISTL_Solvers
+/*! \addtogroup Linear
  * \{
  */
 

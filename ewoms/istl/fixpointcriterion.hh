@@ -28,7 +28,7 @@
 #include <ewoms/parallel/mpihelper.hh>
 
 namespace Ewoms {
-/*! \addtogroup ISTL_Solvers
+/*! \addtogroup Linear
  * \{
  */
 

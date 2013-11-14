@@ -36,74 +36,11 @@
      * \defgroup Linear Linear Solvers
      * \brief Linear Solvers
      */
-    /*!
-     * \ingroup Common
-     * \defgroup Spline Splines
-     * \brief Splines
-     */
-    /*!
-     * \ingroup Common
-     * \defgroup Math Math 
-     * \brief Basic Mathematical Functions
-     */
-    /*!
-     * \ingroup Common
-     * \defgroup Valgrind Valgrind
-     * \brief Valgrind Client Requests
-     */
-    /*!
-     * \ingroup Common
-     * \defgroup Exception Exceptions
-     * \brief C++ Runtime Exceptions
-     */
-
-/****************** Material ******************/
-/*!
- * \defgroup Material Material Properties
- * \brief Material Properties
- */
-    /*!
-     * \ingroup Material
-     * \defgroup Components Components
-     * \brief Components
-     */
-        /*!
-         * \ingroup Components
-         * \defgroup IAPWS IAPWS'97 Water
-         * \brief IAPWS'97 Water
-         *
-         * \copydetails Ewoms::H2O
-         */
-    /*!
-     * \ingroup Material
-     * \defgroup Binarycoefficients Binary Coefficients
-     * \brief Binary Coefficients
-     */
-    /*!
-     * \ingroup Material
-     * \defgroup Fluidsystems Fluid Systems
-     * \brief Fluid Systems
-     */
-    /*!
-     * \ingroup Material
-     * \defgroup fluidmatrixinteractions Fluid-Matrix Interactions
-     * \brief Fluid-Matrix Interactions
-     */
-        /*!
-         * \ingroup fluidmatrixinteractions
-         * \defgroup fluidmatrixinteractionslaws Laws
-         * \brief Relations Describing Fluid-Matrix Interactions
-         */
-         /*!
-         * \ingroup fluidmatrixinteractions
-         * \defgroup fluidmatrixinteractionsparams Parameters
-         * \brief Parameters for the Fluid-Matrix Interaction Laws
-         */
 
 /****************** Fully Implicit ******************/
 /*!
- * \defgroup VcfvModel Vcfv Discretizations
- * \brief Fully Implicit Vertex Centered Finite Volume Scheme
+ * \defgroup VcfvModel Physical Models
+ * \brief Physical Models Based on the Fully Implicit Vertex Centered Finite Volume Discretization
  */
     /*!
      * \ingroup VcfvModel
@@ -201,9 +138,3 @@
            * \defgroup VcfvVtk VTK
            * \brief Various Modules to Write VTK Output
            */
-    /*!
-     * \ingroup VcfvModel
-     * \defgroup VcfvTestProblems Test Problems
-     * \brief Test Problems for the Vcfv Models
-     */
-
