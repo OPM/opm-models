@@ -30,7 +30,7 @@
 #include <iostream>
 
 namespace Ewoms {
-/*! \addtogroup ISTL_Solvers
+/*! \addtogroup Linear
  * \{
  */
 

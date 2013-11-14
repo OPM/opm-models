@@ -71,10 +71,10 @@
 #include <memory>
 
 namespace Ewoms {
-  /** @defgroup ISTL_Solvers Iterative Linear Solvers
-      @ingroup ISTL
+  /**
+      @ingroup Linear
   */
-  /** @addtogroup ISTL_Solvers
+  /** @addtogroup Linear
       \{
   */
 
