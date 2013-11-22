@@ -85,7 +85,7 @@ EwomsAddTest(finger_immiscible SOURCES tests/models/finger_immiscible.cc)
 EwomsAddTest(fracture_discretefracture
   SOURCES tests/models/fracture_discretefracture.cc
   CONDITION ALUGRID_FOUND
-  DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
+  DRIVER_ARGS --simulation fracture_discretefracture)
 EwomsAddTest(groundwater_immiscible SOURCES tests/models/groundwater_immiscible.cc)
 EwomsAddTest(infiltration_pvs SOURCES tests/models/infiltration_pvs.cc)
 EwomsAddTest(lens_immiscible SOURCES tests/models/lens_immiscible.cc)
