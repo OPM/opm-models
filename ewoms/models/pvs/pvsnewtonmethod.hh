@@ -45,8 +45,7 @@ class PvsNewtonMethod : public VcfvNewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    PvsNewtonMethod(Problem &problem)
-        : ParentType(problem)
+    PvsNewtonMethod(Problem &problem) : ParentType(problem)
     {}
 
     /*!
@@ -54,8 +53,8 @@ public:
      */
     bool converged() const
     {
-//        if (this->problem().model().switched())
-//            return false;
+        //        if (this->problem().model().switched())
+        //            return false;
 
         return ParentType::converged();
     }

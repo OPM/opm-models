@@ -36,7 +36,8 @@
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
-}}
+}
+}
 
 namespace Ewoms {
 template <class TypeTag>
@@ -63,7 +64,7 @@ struct VcfvForchheimerVelocityModule
      * \brief Register all run-time parameters for the velocity module.
      */
     static void registerParameters()
-    { }
+    {}
 };
 
 /*!
@@ -77,7 +78,6 @@ class VcfvForchheimerBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-
     /*!
      * \brief Returns the Ergun coefficient.
      *
@@ -95,7 +95,8 @@ public:
     }
 
     /*!
-     * \brief Returns the ratio between the phase mobility \f$k_{r,\alpha}\f$ and its passability
+     * \brief Returns the ratio between the phase mobility \f$k_{r,\alpha}\f$
+     *and its passability
      *        \f$\eta_{r,\alpha}\f$ for a given fluid phase \f$\alpha\f$.
      *
      * The passability coefficient specifies the influence of the
@@ -104,8 +105,12 @@ public:
      * mobility to passability ratio is the inverse of phase' the viscosity.
      */
     template <class Context>
-    Scalar mobilityPassabilityRatio(Context &context, int spaceIdx, int timeIdx, int phaseIdx) const
-    { return 1.0/context.volVars(spaceIdx, timeIdx).fluidState().viscosity(phaseIdx); }
+    Scalar mobilityPassabilityRatio(Context &context, int spaceIdx, int timeIdx,
+                                    int phaseIdx) const
+    {
+        return 1.0 / context.volVars(spaceIdx, timeIdx).fluidState().viscosity(
+                         phaseIdx);
+    }
 };
 
 /*!
@@ -129,13 +134,17 @@ public:
      * influenced.
      */
     Scalar ergunCoefficient() const
-    { return ergunCoefficient_; };
+    {
+        return ergunCoefficient_;
+    };
 
     /*!
      * \brief Returns the passability of a phase.
      */
     Scalar mobilityPassabilityRatio(int phaseIdx) const
-    { return mobilityPassabilityRatio_[phaseIdx]; };
+    {
+        return mobilityPassabilityRatio_[phaseIdx];
+    };
 
 protected:
     void update_(const ElementContext &elemCtx, int scvIdx, int timeIdx)
@@ -144,7 +153,9 @@ protected:
         ergunCoefficient_ = problem.ergunCoefficient(elemCtx, scvIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            mobilityPassabilityRatio_[phaseIdx] = problem.mobilityPassabilityRatio(elemCtx, scvIdx, timeIdx, phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx]
+                = problem.mobilityPassabilityRatio(elemCtx, scvIdx, timeIdx,
+                                                   phaseIdx);
     }
 
 private:
@@ -260,7 +271,8 @@ protected:
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx,
+                              int timeIdx)
     {
         const auto &problem = elemCtx.problem();
 
@@ -278,33 +290,33 @@ protected:
         for (int i = 0; i < dimWorld; ++i)
             sqrtK_[i][i] = std::sqrt(K_[i][i]);
 
-        const DimVector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
+        const DimVector &normal
+            = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Valgrind::CheckDefined(normal);
 
         // obtain the Ergun coefficient from the volume
         // variables. Until a better method comes along, we use
         // arithmetic averaging.
-        ergunCoefficient_ =
-            (volVarsI.ergunCoefficient()
-             + volVarsJ.ergunCoefficient())
-            / 2;
+        ergunCoefficient_
+            = (volVarsI.ergunCoefficient() + volVarsJ.ergunCoefficient()) / 2;
 
         ///////////////
         // calculate the weights of the upstream and the downstream
         // control volumes
         ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            const auto &up = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
+            const auto &up
+                = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
             density_[phaseIdx] = up.fluidState().density(phaseIdx);
             mobility_[phaseIdx] = up.mobility(phaseIdx);
-            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx]
+                = up.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = filterVelocity_[phaseIdx] * normal;
@@ -312,14 +324,14 @@ protected:
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases at the domain boundary
+     * \brief Calculate the filter velocities of all phases at the domain
+     * boundary
      */
     template <class Context, class FluidState>
-    void calculateBoundaryVelocities_(const Context &context,
-                                      int bfIdx,
-                                      int timeIdx,
-                                      const FluidState &fluidState,
-                                      const typename FluidSystem::ParameterCache &paramCache)
+    void calculateBoundaryVelocities_(
+        const Context &context, int bfIdx, int timeIdx,
+        const FluidState &fluidState,
+        const typename FluidSystem::ParameterCache &paramCache)
     {
         const auto &elemCtx = context.elemContext();
         const auto &problem = elemCtx.problem();
@@ -335,9 +347,11 @@ protected:
         for (int i = 0; i < dimWorld; ++i)
             sqrtK_[i][i] = std::sqrt(K_[i][i]);
 
-        DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
+        DimVector normal
+            = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
 
-        const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
+        const auto &matParams
+            = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
 
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
@@ -351,8 +365,7 @@ protected:
         // calculate the weights of the upstream and the downstream
         // control volumes
         ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
@@ -364,16 +377,21 @@ protected:
             if (fsInside.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
                 // the outside of the domain has higher pressure. we
                 // need to calculate the mobility
-                mobility_[phaseIdx] = kr[phaseIdx]/FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-                density_[phaseIdx] = FluidSystem::density(fluidState, paramCache, phaseIdx);
+                mobility_[phaseIdx]
+                    = kr[phaseIdx]
+                      / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+                density_[phaseIdx]
+                    = FluidSystem::density(fluidState, paramCache, phaseIdx);
             }
             else {
                 mobility_[phaseIdx] = volVarsInside.mobility(phaseIdx);
                 density_[phaseIdx] = fsInside.density(phaseIdx);
             }
 
-            // take the mobility/passability ratio of the phase from the inside SCV
-            mobilityPassabilityRatio_[phaseIdx] = volVarsInside.mobilityPassabilityRatio(phaseIdx);
+            // take the mobility/passability ratio of the phase from the inside
+            // SCV
+            mobilityPassabilityRatio_[phaseIdx]
+                = volVarsInside.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = filterVelocity_[phaseIdx] * normal;
@@ -386,17 +404,21 @@ protected:
         DimVector &velocity = filterVelocity_[phaseIdx];
         velocity = 0;
 
-        DimVector deltaV(1e5); // the change of velocity between two consecutive Newton iterations
-        DimVector residual; // the residual (function value that is to be minimized ) of the equation that is to be fulfilled
-        DimMatrix gradResid; // slope of equation that is to be solved
+        DimVector deltaV(1e5); // the change of velocity between two consecutive
+                               // Newton iterations
+        DimVector residual;    // the residual (function value that is to be
+                               // minimized ) of the equation that is to be
+                               // fulfilled
+        DimMatrix gradResid;   // slope of equation that is to be solved
 
-        // search by means of the Newton method for a root of Forchheimer equation
+        // search by means of the Newton method for a root of Forchheimer
+        // equation
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 30)
                 OPM_THROW(Opm::NumericalProblem,
-                           "Could not determine Forchheimer velocity within "
-                           << newtonIter <<" iterations");
+                          "Could not determine Forchheimer velocity within "
+                          << newtonIter << " iterations");
             ++newtonIter;
 
             // calculate the residual and its Jacobian matrix
@@ -406,11 +428,9 @@ protected:
             gradResid.solve(deltaV, residual);
             velocity -= deltaV;
         }
-
     };
 
-    void forchheimerResid_(DimVector &residual,
-                           int phaseIdx) const
+    void forchheimerResid_(DimVector &residual, int phaseIdx) const
     {
         const auto &imp = asImp_();
 
@@ -432,19 +452,16 @@ protected:
 
         // Forchheimer turbulence correction:
         //
-        // residual += \rho_\alpha * mobility_\alpha * C_E / \eta_{r,\alpha} * abs(v_\alpha) * sqrt(K)*v_\alpha
-        sqrtK_.usmv(density
-                    * mobilityPassabilityRatio
-                    * ergunCoefficient_
+        // residual += \rho_\alpha * mobility_\alpha * C_E / \eta_{r,\alpha} *
+        // abs(v_\alpha) * sqrt(K)*v_\alpha
+        sqrtK_.usmv(density * mobilityPassabilityRatio * ergunCoefficient_
                     * velocity.two_norm(),
-                    velocity,
-                    residual);
+                    velocity, residual);
 
         Valgrind::CheckDefined(residual);
     }
 
-    void gradForchheimerResid_(DimVector &residual,
-                               DimMatrix &gradResid,
+    void gradForchheimerResid_(DimVector &residual, DimMatrix &gradResid,
                                int phaseIdx)
     {
         DimVector &velocity = filterVelocity_[phaseIdx];
@@ -453,7 +470,7 @@ protected:
         Scalar eps = 1e-11;
         DimVector tmp;
         for (int i = 0; i < dimWorld; ++i) {
-            Scalar coordEps = std::max(eps, velocity[i]*(1 + eps));
+            Scalar coordEps = std::max(eps, velocity[i] * (1 + eps));
             velocity[i] += coordEps;
             forchheimerResid_(tmp, phaseIdx);
             tmp -= residual;
@@ -473,8 +490,8 @@ protected:
     bool isDiagonal_(const DimMatrix &K) const
     {
         for (int i = 0; i < dimWorld; i++) {
-            for (int j = 0; j < dimWorld; j++){
-                if (i==j)
+            for (int j = 0; j < dimWorld; j++) {
+                if (i == j)
                     continue;
 
                 if (std::abs(K[i][j]) > 1e-25)
@@ -486,10 +503,10 @@ protected:
 
 private:
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
 
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
 protected:
     // intrinsic permeability tensor and its square root

@@ -37,9 +37,9 @@ namespace Linear {
  * \brief An overlap aware preconditioner for any ISTL linear solver.
  */
 template <class SeqPreCond, class Overlap>
-class OverlappingPreconditioner :
-    public Dune::Preconditioner<typename SeqPreCond::domain_type,
-                                typename SeqPreCond::range_type>
+class OverlappingPreconditioner
+    : public Dune::Preconditioner<typename SeqPreCond::domain_type,
+                                  typename SeqPreCond::range_type>
 {
 public:
     typedef typename SeqPreCond::domain_type domain_type;
@@ -49,29 +49,31 @@ public:
 
     OverlappingPreconditioner(SeqPreCond &seqPreCond, const Overlap &overlap)
         : seqPreCond_(seqPreCond), overlap_(&overlap)
-    { }
+    {}
 
     void pre(domain_type &x, range_type &y)
     {
 #if HAVE_MPI
         short success;
-        try {
+        try
+        {
             seqPreCond_.pre(x, y);
             short localSuccess = 1;
-            MPI_Allreduce(&localSuccess, // source buffer
-                          &success, // destination buffer
-                          1, // number of objects in buffers
-                          MPI_SHORT, // data type
-                          MPI_MIN, // operation
+            MPI_Allreduce(&localSuccess,   // source buffer
+                          &success,        // destination buffer
+                          1,               // number of objects in buffers
+                          MPI_SHORT,       // data type
+                          MPI_MIN,         // operation
                           MPI_COMM_WORLD); // communicator
         }
-        catch (...) {
+        catch (...)
+        {
             short localSuccess = 0;
-            MPI_Allreduce(&localSuccess, // source buffer
-                          &success, // destination buffer
-                          1, // number of objects in buffers
-                          MPI_SHORT, // data type
-                          MPI_MIN, // operation
+            MPI_Allreduce(&localSuccess,   // source buffer
+                          &success,        // destination buffer
+                          1,               // number of objects in buffers
+                          MPI_SHORT,       // data type
+                          MPI_MIN,         // operation
                           MPI_COMM_WORLD); // communicator
         }
 
@@ -79,8 +81,9 @@ public:
             x.sync();
         }
         else
-            OPM_THROW(Opm::NumericalProblem,
-                       "Preconditioner threw an exception in pre() method on some process.");
+            OPM_THROW(Opm::NumericalProblem, "Preconditioner threw an "
+                                             "exception in pre() method on "
+                                             "some process.");
 #else
         seqPreCond_.pre(x, y);
 #endif
@@ -98,24 +101,26 @@ public:
             // sequential preconditioner on one process throws an
             // exception
             short success;
-            try {
+            try
+            {
                 // execute the sequential preconditioner
                 seqPreCond_.apply(x, d);
                 short localSuccess = 1;
-                MPI_Allreduce(&localSuccess, // source buffer
-                              &success, // destination buffer
-                              1, // number of objects in buffers
-                              MPI_SHORT, // data type
-                              MPI_MIN, // operation
+                MPI_Allreduce(&localSuccess,   // source buffer
+                              &success,        // destination buffer
+                              1,               // number of objects in buffers
+                              MPI_SHORT,       // data type
+                              MPI_MIN,         // operation
                               MPI_COMM_WORLD); // communicator
             }
-            catch (...) {
+            catch (...)
+            {
                 short localSuccess = 0;
-                MPI_Allreduce(&localSuccess, // source buffer
-                              &success, // destination buffer
-                              1, // number of objects in buffers
-                              MPI_SHORT, // data type
-                              MPI_MIN, // operation
+                MPI_Allreduce(&localSuccess,   // source buffer
+                              &success,        // destination buffer
+                              1,               // number of objects in buffers
+                              MPI_SHORT,       // data type
+                              MPI_MIN,         // operation
                               MPI_COMM_WORLD); // communicator
             }
 
@@ -124,7 +129,7 @@ public:
             }
             else
                 OPM_THROW(Opm::NumericalProblem,
-                           "Preconditioner threw an exception on some process.");
+                          "Preconditioner threw an exception on some process.");
         }
         else
 #endif // HAVE_MPI
@@ -135,23 +140,25 @@ public:
     {
 #if HAVE_MPI
         short success;
-        try {
+        try
+        {
             seqPreCond_.post(x);
             short localSuccess = 1;
-            MPI_Allreduce(&localSuccess, // source buffer
-                          &success, // destination buffer
-                          1, // number of objects in buffers
-                          MPI_SHORT, // data type
-                          MPI_MIN, // operation
+            MPI_Allreduce(&localSuccess,   // source buffer
+                          &success,        // destination buffer
+                          1,               // number of objects in buffers
+                          MPI_SHORT,       // data type
+                          MPI_MIN,         // operation
                           MPI_COMM_WORLD); // communicator
         }
-        catch (...) {
+        catch (...)
+        {
             short localSuccess = 0;
-            MPI_Allreduce(&localSuccess, // source buffer
-                          &success, // destination buffer
-                          1, // number of objects in buffers
-                          MPI_SHORT, // data type
-                          MPI_MIN, // operation
+            MPI_Allreduce(&localSuccess,   // source buffer
+                          &success,        // destination buffer
+                          1,               // number of objects in buffers
+                          MPI_SHORT,       // data type
+                          MPI_MIN,         // operation
                           MPI_COMM_WORLD); // communicator
         }
 
@@ -159,8 +166,9 @@ public:
             x.sync();
         }
         else
-            OPM_THROW(Opm::NumericalProblem,
-                       "Preconditioner threw an exception in post() method on some process.");
+            OPM_THROW(Opm::NumericalProblem, "Preconditioner threw an "
+                                             "exception in post() method on "
+                                             "some process.");
 #else
         seqPreCond_.post(x);
 #endif

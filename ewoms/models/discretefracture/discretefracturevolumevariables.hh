@@ -39,8 +39,7 @@ namespace Ewoms {
  *        model.
  */
 template <class TypeTag>
-class DiscreteFractureVolumeVariables
-    : public ImmiscibleVolumeVariables<TypeTag>
+class DiscreteFractureVolumeVariables : public ImmiscibleVolumeVariables<TypeTag>
 {
     typedef ImmiscibleVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -52,30 +51,25 @@ class DiscreteFractureVolumeVariables
     enum { numPhases = FluidSystem::numPhases };
     enum { dimWorld = GridView::dimensionworld };
 
-    static_assert(dimWorld == 2,
-                  "The fracture module currently is only implemented for the 2D case!");
-    static_assert(numPhases == 2,
-                  "The fracture module currently is only implemented for two fluid phases!");
+    static_assert(dimWorld == 2, "The fracture module currently is only "
+                                 "implemented for the 2D case!");
+    static_assert(numPhases == 2, "The fracture module currently is only "
+                                  "implemented for two fluid phases!");
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { wPhaseIdx = MaterialLaw::wPhaseIdx };
     enum { nPhaseIdx = MaterialLaw::nPhaseIdx };
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef Opm::ImmiscibleFluidState<Scalar,
-                                        FluidSystem,
-                                        /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
+                                      /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
      * \copydoc VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
@@ -97,22 +91,24 @@ public:
         // retrieve the facture width and intrinsic permeability from
         // the problem
         fracturePorosity_ = problem.fracturePorosity(elemCtx, scvIdx, timeIdx);
-        fractureIntrinsicPermeability_ = problem.fractureIntrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        fractureIntrinsicPermeability_
+            = problem.fractureIntrinsicPermeability(elemCtx, scvIdx, timeIdx);
 
         // compute the fracture volume for the current sub-control
         // volume. note, that we don't take overlaps of fractures into
         // account for this.
         fractureVolume_ = 0;
         const auto &scvPos = elemCtx.pos(scvIdx, timeIdx);
-        for (int scv2Idx = 0; scv2Idx < elemCtx.numScv(); ++ scv2Idx) {
+        for (int scv2Idx = 0; scv2Idx < elemCtx.numScv(); ++scv2Idx) {
             int globalVertex2Idx = elemCtx.globalSpaceIndex(scv2Idx, timeIdx);
 
-            if (scvIdx == scv2Idx ||
-                !fractureMapper.isFractureEdge(globalVertexIdx, globalVertex2Idx))
+            if (scvIdx == scv2Idx
+                || !fractureMapper.isFractureEdge(globalVertexIdx,
+                                                  globalVertex2Idx))
                 continue;
 
-            Scalar fractureWidth =
-                problem.fractureWidth(elemCtx, scvIdx, scv2Idx, timeIdx);
+            Scalar fractureWidth
+                = problem.fractureWidth(elemCtx, scvIdx, scv2Idx, timeIdx);
 
             auto distVec = elemCtx.pos(scv2Idx, timeIdx);
             distVec -= scvPos;
@@ -125,7 +121,7 @@ public:
             // width needs to divided by 2. Also, only half of the
             // edge is located in the current control volume, so its
             // length also needs to divided by 2.
-            fractureVolume_ += (fractureWidth/2)*(edgeLength/2);
+            fractureVolume_ += (fractureWidth / 2) * (edgeLength / 2);
         }
 
         //////////
@@ -139,18 +135,21 @@ public:
 
         // ask the problem for the material law parameters of the
         // fracture.
-        const auto &fractureMatParams = problem.fractureMaterialLawParams(elemCtx, scvIdx, timeIdx);
+        const auto &fractureMatParams
+            = problem.fractureMaterialLawParams(elemCtx, scvIdx, timeIdx);
 
         // calculate the fracture saturations which would be required
         // to be consistent with the pressures
         Scalar saturations[numPhases];
-        MaterialLaw::saturations(saturations, fractureMatParams, fractureFluidState_);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+        MaterialLaw::saturations(saturations, fractureMatParams,
+                                 fractureFluidState_);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fractureFluidState_.setSaturation(phaseIdx, saturations[phaseIdx]);
 
         // Make sure that the wetting saturation in the fracture does
         // not get negative
-        Scalar SwFracture = std::max(0.0, fractureFluidState_.saturation(wPhaseIdx));
+        Scalar SwFracture
+            = std::max(0.0, fractureFluidState_.saturation(wPhaseIdx));
         fractureFluidState_.setSaturation(wPhaseIdx, SwFracture);
         fractureFluidState_.setSaturation(nPhaseIdx, 1 - SwFracture);
 
@@ -181,7 +180,10 @@ public:
      * \param phaseIdx The phase index
      */
     Scalar fractureMobility(int phaseIdx) const
-    { return fractureRelativePermeabilities_[phaseIdx]/fractureFluidState_.viscosity(phaseIdx); }
+    {
+        return fractureRelativePermeabilities_[phaseIdx]
+               / fractureFluidState_.viscosity(phaseIdx);
+    }
 
     /*!
      * \brief Returns the average porosity within the fracture.

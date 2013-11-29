@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set ts=4 sw=2 et sts=2:
 /*****************************************************************************
  *   Copyright (C) 2012-2013 by Andreas Lauser                               *
@@ -51,122 +51,114 @@ namespace Ewoms {
 template <class Vector, class CollectiveCommunication>
 class FixPointCriterion : public ConvergenceCriterion<Vector>
 {
-  typedef typename Vector::field_type Scalar;
-  typedef typename Vector::block_type BlockType;
+    typedef typename Vector::field_type Scalar;
+    typedef typename Vector::block_type BlockType;
 
 public:
-  FixPointCriterion(const CollectiveCommunication &comm)
-    : comm_(comm)
-  { }
+    FixPointCriterion(const CollectiveCommunication &comm) : comm_(comm)
+    {}
 
-  FixPointCriterion(const CollectiveCommunication &comm, const Vector &weightVec, Scalar reduction)
-    : comm_(comm)
-    , weightVec_(weightVec)
-    , tolerance_(reduction)
-  { }
+    FixPointCriterion(const CollectiveCommunication &comm,
+                      const Vector &weightVec, Scalar reduction)
+        : comm_(comm), weightVec_(weightVec), tolerance_(reduction)
+    {}
 
-  /*!
-   * \brief Sets the relative weight of a primary variable
-   *
-   * For the FixPointCriterion, the error of the solution is defined
-   * as
-   * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
-   *
-   * where \f$\delta = x^k - x^{k + 1} \f$ is the difference between
-   * two consequtive iterative solution vectors \f$x^k\f$ and \f$x^{k + 1}\f$
-   * and \f$w_i\f$ is the weight of the \f$i\f$-th degree of freedom.
-   *
-   * This method is specific to the FixPointCriterion.
-   *
-   * \param weightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
-   *                  with the relative weights of the degrees of freedom
-   */
-  void setWeight(const Vector &weightVec)
-  {
-    weightVec_ = weightVec;
-  }
+    /*!
+     * \brief Sets the relative weight of a primary variable
+     *
+     * For the FixPointCriterion, the error of the solution is defined
+     * as
+     * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
+     *
+     * where \f$\delta = x^k - x^{k + 1} \f$ is the difference between
+     * two consequtive iterative solution vectors \f$x^k\f$ and \f$x^{k + 1}\f$
+     * and \f$w_i\f$ is the weight of the \f$i\f$-th degree of freedom.
+     *
+     * This method is specific to the FixPointCriterion.
+     *
+     * \param weightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
+     *                  with the relative weights of the degrees of freedom
+     */
+    void setWeight(const Vector &weightVec)
+    { weightVec_ = weightVec; }
 
-  /*!
-   * \brief Return the relative weight of a primary variable
-   *
-   * For the FixPointCriterion, the error of the solution is defined
-   * as
-   * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
-   *
-   * where \f$\delta = x^k - x^{k + 1} \f$ is the difference between
-   * two consequtive iterative solution vectors \f$x^k\f$ and \f$x^{k + 1}\f$
-   * and \f$w_i\f$ is the weight of the \f$i\f$-th degree of freedom.
-   *
-   * This method is specific to the FixPointCriterion.
-   *
-   * \param outerIdx The index of the outer vector (i.e. Dune::BlockVector)
-   * \param innerIdx The index of the inner vector (i.e. Dune::FieldVector)
-   */
-  Scalar weight(int outerIdx, int innerIdx) const
-  {
-    return (weightVec_.size() == 0)?1.0:weightVec_[outerIdx][innerIdx];
-  }
+    /*!
+     * \brief Return the relative weight of a primary variable
+     *
+     * For the FixPointCriterion, the error of the solution is defined
+     * as
+     * \f[ e^k = \max_i\{ \left| w_i \delta^k_i \right| \}\;, \f]
+     *
+     * where \f$\delta = x^k - x^{k + 1} \f$ is the difference between
+     * two consequtive iterative solution vectors \f$x^k\f$ and \f$x^{k + 1}\f$
+     * and \f$w_i\f$ is the weight of the \f$i\f$-th degree of freedom.
+     *
+     * This method is specific to the FixPointCriterion.
+     *
+     * \param outerIdx The index of the outer vector (i.e. Dune::BlockVector)
+     * \param innerIdx The index of the inner vector (i.e. Dune::FieldVector)
+     */
+    Scalar weight(int outerIdx, int innerIdx) const
+    { return (weightVec_.size() == 0) ? 1.0 : weightVec_[outerIdx][innerIdx]; }
 
-  /*!
-   * \brief Set the maximum allowed weighted maximum difference between two iterations
-   */
-  void setTolerance(Scalar tol)
-  {
-    tolerance_ = tol;
-  }
+    /*!
+     * \brief Set the maximum allowed weighted maximum difference between two
+     * iterations
+     */
+    void setTolerance(Scalar tol)
+    { tolerance_ = tol; }
 
-  /*!
-   * \brief Return the maximum allowed weighted maximum difference between two iterations
-   */
-  Scalar tolerance() const
-  {
-    return tolerance_;
-  }
+    /*!
+     * \brief Return the maximum allowed weighted maximum difference between two
+     * iterations
+     */
+    Scalar tolerance() const
+    { return tolerance_; }
 
-  /*!
-   * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
-   */
-  void setInitial(const Vector &curSol,
-                  const Vector &curResid)
-  {
-    lastSol_ = curSol;
-    delta_ = 1000*tolerance_;
-  }
-
-  /*!
-   * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
-   */
-  void update(const Vector &curSol,
-              const Vector &curResid)
-  {
-    assert(curSol.size() == lastSol_.size());
-
-    delta_ = 0.0;
-    for (size_t i = 0; i < curSol.size(); ++i) {
-      for (size_t j = 0; j < BlockType::dimension; ++j) {
-        delta_ = std::max<Scalar>(delta_, weight(i, j)*std::abs(curSol[i][j] - lastSol_[i][j]));
-      }
+    /*!
+     * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
+     */
+    void setInitial(const Vector &curSol, const Vector &curResid)
+    {
+        lastSol_ = curSol;
+        delta_ = 1000 * tolerance_;
     }
 
-    delta_ = comm_.max(delta_);
-    lastSol_ = curSol;
-  }
+    /*!
+     * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
+     */
+    void update(const Vector &curSol, const Vector &curResid)
+    {
+        assert(curSol.size() == lastSol_.size());
 
-  /*!
-   * \copydoc ConvergenceCriterion::converged()
-   */
-  bool converged() const
-  {
-    return delta_ < tolerance();
-  }
+        delta_ = 0.0;
+        for (size_t i = 0; i < curSol.size(); ++i) {
+            for (size_t j = 0; j < BlockType::dimension; ++j) {
+                delta_ = std::max<Scalar>(delta_, weight(i, j)
+                                                  * std::abs(curSol[i][j]
+                                                             - lastSol_[i][j]));
+            }
+        }
+
+        delta_ = comm_.max(delta_);
+        lastSol_ = curSol;
+    }
+
+    /*!
+     * \copydoc ConvergenceCriterion::converged()
+     */
+    bool converged() const
+    { return delta_ < tolerance(); }
 
 private:
-  const CollectiveCommunication &comm_;
+    const CollectiveCommunication &comm_;
 
-  Vector lastSol_; // solution of the last iteration
-  Vector weightVec_; // solution of the last iteration
-  Scalar delta_; // the maximum of the absolute weighted difference of the last two iterations
-  Scalar tolerance_; // the maximum allowed delta for the solution to be considered converged
+    Vector lastSol_;   // solution of the last iteration
+    Vector weightVec_; // solution of the last iteration
+    Scalar delta_;     // the maximum of the absolute weighted difference of the
+                       // last two iterations
+    Scalar tolerance_; // the maximum allowed delta for the solution to be
+                       // considered converged
 };
 
 //! \} end documentation
@@ -174,4 +166,3 @@ private:
 } // end namespace Ewoms
 
 #endif
-

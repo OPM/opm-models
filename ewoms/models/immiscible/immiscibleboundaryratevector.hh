@@ -34,11 +34,11 @@ namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Implements a boundary vector for the fully implicit immiscible multi-phase model.
+ * \brief Implements a boundary vector for the fully implicit immiscible
+ *multi-phase model.
  */
 template <class TypeTag>
-class ImmiscibleBoundaryRateVector
-    : public GET_PROP_TYPE(TypeTag, RateVector)
+class ImmiscibleBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -54,9 +54,8 @@ class ImmiscibleBoundaryRateVector
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    ImmiscibleBoundaryRateVector()
-        : ParentType()
-    { }
+    ImmiscibleBoundaryRateVector() : ParentType()
+    {}
 
     /*!
      * \brief Constructor that assigns all entries to a scalar value.
@@ -64,9 +63,8 @@ public:
      * \param value The scalar value to which all components of the
      *              boundary rate vector will be set.
      */
-    ImmiscibleBoundaryRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    ImmiscibleBoundaryRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
      * \brief Copy constructor
@@ -75,20 +73,21 @@ public:
      */
     ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \brief Specify a free-flow boundary
      *
-     * \param context The execution context for which the boundary rate should be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param context The execution context for which the boundary rate should
+     *be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space
+     *index).
      * \param timeIdx The index used by the time discretization.
-     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state of the
+     *system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context,
-                     int bfIdx,
-                     int timeIdx,
+    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
                      const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
@@ -102,40 +101,41 @@ public:
         // advective fluxes of all components in all phases
         ////////
         (*this) = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar density;
-            if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+            if (fluidState.pressure(phaseIdx)
+                > insideVolVars.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
                 density = insideVolVars.fluidState().density(phaseIdx);
 
             // add advective flux of current component in current
             // phase
-            (*this)[conti0EqIdx + phaseIdx] +=
-                fluxVars.volumeFlux(phaseIdx)
-                * density;
+            (*this)[conti0EqIdx + phaseIdx] += fluxVars.volumeFlux(phaseIdx)
+                                               * density;
 
             if (enableEnergy) {
                 Scalar specificEnthalpy;
-                if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
-                    specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+                if (fluidState.pressure(phaseIdx)
+                    > insideVolVars.fluidState().pressure(phaseIdx))
+                    specificEnthalpy
+                        = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
                 else
-                    specificEnthalpy = insideVolVars.fluidState().enthalpy(phaseIdx);
+                    specificEnthalpy
+                        = insideVolVars.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate =
-                    density
-                    * fluxVars.volumeFlux(phaseIdx)
-                    * specificEnthalpy;
+                Scalar enthalpyRate = density * fluxVars.volumeFlux(phaseIdx)
+                                      * specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
 
-        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(fluxVars));
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(
+                                                   fluxVars));
 
 #ifndef NDEBUG
-        for (int i = 0; i < numEq; ++ i) {
+        for (int i = 0; i < numEq; ++i) {
             Valgrind::CheckDefined((*this)[i]);
         };
         Valgrind::CheckDefined(*this);
@@ -152,16 +152,14 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context,
-                   int bfIdx,
-                   int timeIdx,
+    void setInFlow(const Context &context, int bfIdx, int timeIdx,
                    const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::min<Scalar>(0.0, val);
         };
@@ -177,16 +175,14 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context,
-                    int bfIdx,
-                    int timeIdx,
+    void setOutFlow(const Context &context, int bfIdx, int timeIdx,
                     const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the same direction as the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::max<Scalar>(0.0, val);
         };

@@ -40,7 +40,8 @@ namespace Ewoms {
  *
  * \brief A compositional multi-phase model based on flash-calculations
  *
- * \brief A generic compositional multi-phase model using primary-variable switching.
+ * \brief A generic compositional multi-phase model using primary-variable
+ *switching.
  *
  * This model assumes a flow of \f$M \geq 1\f$ fluid phases
  * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
@@ -48,19 +49,21 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
+ *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
  * means of the equation
  * \f[
  * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
- * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha \right\}
  * - q^\kappa = 0 \;.
  * \f]
  *
@@ -90,8 +93,8 @@ namespace Ewoms {
  *   \f$c^\kappa = \sum_\alpha S_\alpha x_\alpha^\kappa \rho_{mol, \alpha}\f$
  * - The absolute temperature $T$ in Kelvins if the energy equation enabled.
  */
-template<class TypeTag>
-class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
+template <class TypeTag>
+class FlashModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
 
@@ -113,7 +116,8 @@ class FlashModel: public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -130,7 +134,9 @@ public:
         if (enableEnergy)
             Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, FlashTolerance, "The maximum tolerance for the flash solver to consider the solution converged");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, FlashTolerance,
+                             "The maximum tolerance for the flash solver to "
+                             "consider the solution converged");
     }
 
     /*!
@@ -149,8 +155,10 @@ public:
             return tmp;
 
         std::ostringstream oss;
-        if (Indices::cTot0Idx <= pvIdx && pvIdx < Indices::cTot0Idx + numComponents)
-            oss << "c_tot," << FluidSystem::componentName(/*compIdx=*/pvIdx - Indices::cTot0Idx);
+        if (Indices::cTot0Idx <= pvIdx && pvIdx < Indices::cTot0Idx
+                                                  + numComponents)
+            oss << "c_tot," << FluidSystem::componentName(/*compIdx=*/pvIdx
+                                                          - Indices::cTot0Idx);
         else
             assert(false);
 
@@ -167,7 +175,8 @@ public:
             return tmp;
 
         std::ostringstream oss;
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents) {
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
+                                                     + numComponents) {
             int compIdx = eqIdx - Indices::conti0EqIdx;
             oss << "continuity^" << FluidSystem::componentName(compIdx);
         }
@@ -199,14 +208,10 @@ public:
                     continue; // ignore ghost and overlap elements
 
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      scvIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *=
-                    fvElemGeom.subContVol[scvIdx].volume
-                    * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
+                                                      /*timeIdx=*/0, phaseIdx);
+                tmp *= fvElemGeom.subContVol[scvIdx].volume
+                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -219,7 +224,8 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp
+            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
         if (tmp > 0)
             return tmp;
 
@@ -256,13 +262,18 @@ private:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
 };
 

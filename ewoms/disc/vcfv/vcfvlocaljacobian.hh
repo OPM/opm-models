@@ -47,26 +47,29 @@ namespace Ewoms {
  * - if the value of this property is smaller than 0, backward
  *   differences are used, i.e.:
  *   \f[
- \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
+ \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x -
+ \epsilon)}{\epsilon}
  *   \f]
  *
  * - if the value of this property is 0, central
  *   differences are used, i.e.:
  *   \f[
- \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
+ \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x -
+ \epsilon)}{2 \epsilon}
  *   \f]
  *
  * - if the value of this property is larger than 0, forward
  *   differences are used, i.e.:
  *   \f[
- \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
+ \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) -
+ f(x)}{\epsilon}
  *   \f]
  *
  * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$
  * is the value of a sub-control volume's primary variable at the
  * evaluation point and \f$\epsilon\f$ is a small value larger than 0.
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvLocalJacobian
 {
 private:
@@ -77,11 +80,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    enum {
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
-
-        historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize)
-    };
+    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    static const int historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize);
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
@@ -102,20 +102,22 @@ public:
     VcfvLocalJacobian()
     {
         internalElemContext_ = 0;
-        newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
+        newtonTolerance_
+            = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
     }
 
     ~VcfvLocalJacobian()
-    {
-        delete internalElemContext_;
-    }
+    { delete internalElemContext_; }
 
     /*!
      * \brief Register all run-time parameters for the local jacobian.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod, "The method used for numeric differentiation (-1: backward differences, 0: central differences, 1: forward differences)");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod,
+                             "The method used for numeric differentiation (-1: "
+                             "backward differences, 0: central differences, 1: "
+                             "forward differences)");
     }
 
     /*!
@@ -167,8 +169,7 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
             for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
-                model_().setHint(elemCtx.volVars(scvIdx, timeIdx),
-                                 globalIdx,
+                model_().setHint(elemCtx.volVars(scvIdx, timeIdx), globalIdx,
                                  timeIdx);
         }
 
@@ -191,9 +192,7 @@ public:
         int numScv = elemCtx.numScv();
         for (int scvIdx = 0; scvIdx < numScv; scvIdx++) {
             for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
-                asImp_().evalPartialDerivative_(elemCtx,
-                                                scvIdx,
-                                                pvIdx);
+                asImp_().evalPartialDerivative_(elemCtx, scvIdx, pvIdx);
 
                 // update the local stiffness matrix with the current
                 // partial derivatives
@@ -202,7 +201,7 @@ public:
         }
 
         // restore flux variables.
-        //elemCtx.restoreScvfVars(); // not necessary
+        // elemCtx.restoreScvfVars(); // not necessary
     }
 
     /*!
@@ -223,15 +222,14 @@ public:
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
      */
-    Scalar numericEpsilon(const ElementContext &elemCtx,
-                          int scvIdx,
+    Scalar numericEpsilon(const ElementContext &elemCtx, int scvIdx,
                           int pvIdx) const
     {
         int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
         Valgrind::CheckDefined(pvWeight);
 
-        return baseEpsilon()/pvWeight;
+        return baseEpsilon() / pvWeight;
     }
 
     /*!
@@ -247,16 +245,20 @@ public:
     { return localResidual_; }
 
     /*!
-     * \brief Returns the local Jacobian matrix of the residual of a sub-control volume.
+     * \brief Returns the local Jacobian matrix of the residual of a sub-control
+     *volume.
      *
-     * \param domainScvIdx The local index of the sub control volume which contains the independents
-     * \param rangeScvIdx The local index of the sub control volume which contains the local residual
+     * \param domainScvIdx The local index of the sub control volume which
+     *contains the independents
+     * \param rangeScvIdx The local index of the sub control volume which
+     *contains the local residual
      */
     const MatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
-     * \brief Returns the local Jacobian matrix the storage term of a sub-control volume.
+     * \brief Returns the local Jacobian matrix the storage term of a
+     *sub-control volume.
      *
      * \param scvIdx The local index of sub control volume
      */
@@ -281,9 +283,9 @@ public:
 
 protected:
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
     const Problem &problem_() const
     { return *problemPtr_; }
@@ -320,12 +322,12 @@ protected:
     void reset_(const ElementContext &elemCtx)
     {
         int numScv = elemCtx.numScv();
-        for (int i = 0; i < numScv; ++ i) {
+        for (int i = 0; i < numScv; ++i) {
             residual_[i] = 0.0;
             residualStorage_[i] = 0.0;
 
             jacobianStorage_[i] = 0.0;
-            for (int j = 0; j < numScv; ++ j) {
+            for (int j = 0; j < numScv; ++j) {
                 jacobian_[i][j] = 0.0;
             }
         }
@@ -346,19 +348,22 @@ protected:
      * - if the value of this property is smaller than 0, backward
      *   differences are used, i.e.:
      *   \f[
-         \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
+         \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x -
+     \epsilon)}{\epsilon}
      *   \f]
      *
      * - if the value of this property is 0, central
      *   differences are used, i.e.:
      *   \f[
-           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
+           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x
+     - \epsilon)}{2 \epsilon}
      *   \f]
      *
      * - if the value of this property is larger than 0, forward
      *   differences are used, i.e.:
      *   \f[
-           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
+           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) -
+     f(x)}{\epsilon}
      *   \f]
      *
      * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$
@@ -375,9 +380,7 @@ protected:
      *              for which the partial derivative ought to be
      *              calculated
      */
-    void evalPartialDerivative_(ElementContext &elemCtx,
-                                int scvIdx,
-                                int pvIdx)
+    void evalPartialDerivative_(ElementContext &elemCtx, int scvIdx, int pvIdx)
     {
         // save all quantities which depend on the specified primary
         // variable at the given sub control volume
@@ -453,24 +456,24 @@ protected:
      *        partial derivatives of all equations in regard to the
      *        primary variable 'pvIdx' at vertex 'scvIdx' .
      */
-    void updateLocalJacobian_(const ElementContext &elemCtx,
-                              int scvIdx,
+    void updateLocalJacobian_(const ElementContext &elemCtx, int scvIdx,
                               int pvIdx)
     {
         // store the derivative of the storage term
         for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
-            jacobianStorage_[scvIdx][eqIdx][pvIdx] = derivStorage_[scvIdx][eqIdx];
+            jacobianStorage_[scvIdx][eqIdx][pvIdx]
+                = derivStorage_[scvIdx][eqIdx];
         }
 
         int numScv = elemCtx.numScv();
-        for (int eqScvIdx = 0; eqScvIdx < numScv; eqScvIdx++)
-        {
+        for (int eqScvIdx = 0; eqScvIdx < numScv; eqScvIdx++) {
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
                 // A[eqScvIdx][scvIdx][eqIdx][pvIdx] is the rate of
                 // change of the residual of equation 'eqIdx' at
                 // vertex 'eqScvIdx' depending on the primary variable
                 // 'pvIdx' at vertex 'scvIdx'.
-                jacobian_[eqScvIdx][scvIdx][eqIdx][pvIdx] = derivResidual_[eqScvIdx][eqIdx];
+                jacobian_[eqScvIdx][scvIdx][eqIdx][pvIdx]
+                    = derivResidual_[eqScvIdx][eqIdx];
                 Valgrind::CheckDefined(jacobian_[eqScvIdx][scvIdx][eqIdx][pvIdx]);
             }
         }
@@ -495,7 +498,8 @@ protected:
 };
 
 template <class TypeTag>
-typename VcfvLocalJacobian<TypeTag>::Scalar VcfvLocalJacobian<TypeTag>::newtonTolerance_;
+typename VcfvLocalJacobian<TypeTag>::Scalar
+VcfvLocalJacobian<TypeTag>::newtonTolerance_;
 } // namespace Ewoms
 
 #endif

@@ -56,11 +56,10 @@ class VcfvNewtonConvergenceWriter
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
-    typedef Ewoms::VtkMultiWriter<GridView>  VtkMultiWriter;
+    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
 public:
-    VcfvNewtonConvergenceWriter(NewtonMethod &nm)
-        : newtonMethod_(nm)
+    VcfvNewtonConvergenceWriter(NewtonMethod &nm) : newtonMethod_(nm)
     {
         timeStepIdx_ = 0;
         iteration_ = 0;
@@ -86,9 +85,11 @@ public:
      */
     void beginIteration()
     {
-        ++ iteration_;
+        ++iteration_;
         if (!vtkMultiWriter_)
-            vtkMultiWriter_ = new VtkMultiWriter(newtonMethod_.problem().gridView(), "convergence");
+            vtkMultiWriter_
+                = new VtkMultiWriter(newtonMethod_.problem().gridView(),
+                                     "convergence");
         vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
     }
 
@@ -104,13 +105,17 @@ public:
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
     {
-        try {
-            newtonMethod_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
+        try
+        {
+            newtonMethod_.problem().model().addConvergenceVtkFields(
+                *vtkMultiWriter_, uLastIter, deltaU);
         }
-        catch (...) {
-            std::cout << "oops: exception thrown on rank " << newtonMethod_.problem().gridView().comm().rank() << " while writing the convergence\n";
+        catch (...)
+        {
+            std::cout << "oops: exception thrown on rank "
+                      << newtonMethod_.problem().gridView().comm().rank()
+                      << " while writing the convergence\n";
         };
-
     }
 
     /*!

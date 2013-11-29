@@ -60,17 +60,14 @@ public:
     typedef typename ParentType::block_type block_type;
 
     // no real copying done at the moment
-    OverlappingBCRSMatrix(const OverlappingBCRSMatrix &M)
-        : ParentType(M)
-    {
-    }
+    OverlappingBCRSMatrix(const OverlappingBCRSMatrix &M) : ParentType(M)
+    {}
 
-    OverlappingBCRSMatrix(const BCRSMatrix &M,
-                          const BorderList &borderList,
-                          const std::set<Index> &blackList,
-                          int overlapSize)
+    OverlappingBCRSMatrix(const BCRSMatrix &M, const BorderList &borderList,
+                          const std::set<Index> &blackList, int overlapSize)
     {
-        overlap_ = std::shared_ptr<Overlap>(new Overlap(M, borderList, blackList, overlapSize));
+        overlap_ = std::shared_ptr<Overlap>(
+            new Overlap(M, borderList, blackList, overlapSize));
         myRank_ = 0;
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
@@ -158,7 +155,7 @@ public:
 
         int numLocal = overlap_->numLocal();
         int numDomestic = overlap_->numDomestic();
-        for (int domRowIdx = numLocal; domRowIdx < numDomestic; ++ domRowIdx) {
+        for (int domRowIdx = numLocal; domRowIdx < numDomestic; ++domRowIdx) {
             if (overlap_->isFront(domRowIdx)) {
                 // set the front rows to a diagonal 1
                 (*this)[domRowIdx] = 0.0;
@@ -196,7 +193,9 @@ public:
             }
             std::cout << "\n";
         };
-        Dune::printSparseMatrix(std::cout, *static_cast<const BCRSMatrix*>(this), "M", "row");
+        Dune::printSparseMatrix(std::cout,
+                                *static_cast<const BCRSMatrix *>(this), "M",
+                                "row");
     }
 
 private:
@@ -224,7 +223,7 @@ private:
                         break;
                     }
 
-                    ++ myColIt;
+                    ++myColIt;
                 }
             }
         }
@@ -381,11 +380,12 @@ private:
                 else if (!overlap_->peerHasIndex(peerRank, localColIdx)) {
                     continue;
                 }
-                ++ j;
+                ++j;
             }
 
             (*rowSizesSendBuff_[peerRank])[i] = j;
-            (*rowIndicesSendBuff_[peerRank])[i] = overlap_->domesticToGlobal(localRowIdx);
+            (*rowIndicesSendBuff_[peerRank])[i]
+                = overlap_->domesticToGlobal(localRowIdx);
             numEntries += j;
             ++i;
         }
@@ -449,7 +449,7 @@ private:
         // calculate the total number of indices which are send by the
         // peer
         int totalIndices = 0;
-        for (Index i = 0; i < numOverlapRows; ++ i) {
+        for (Index i = 0; i < numOverlapRows; ++i) {
             totalIndices += (*rowSizesRecvBuff_[peerRank])[i];
         }
 
@@ -467,7 +467,7 @@ private:
 
         // add the entries to the global entry map
         int k = 0;
-        for (Index i = 0; i < numOverlapRows; ++ i) {
+        for (Index i = 0; i < numOverlapRows; ++i) {
             int domRowIdx = (*rowIndicesRecvBuff_[peerRank])[i];
             for (Index j = 0; j < (*rowSizesRecvBuff_[peerRank])[i]; ++j) {
                 int domColIdx = (*entryIndicesRecvBuff_[peerRank])[k];
@@ -557,12 +557,12 @@ private:
             ColIt colIt = (*this)[domRowIdx].begin();
             for (unsigned j = 0; j < mpiRowSizesSendBuff[i]; ++j) {
                 Index domColIdx = mpiColIndicesSendBuff[k];
-                for (; colIt.index() < domColIdx; ++colIt)
-                { };
+                for (; colIt.index() < domColIdx; ++colIt) {
+                };
                 assert(colIt.index() == domColIdx);
 
                 mpiSendBuff[k] = (*colIt);
-                ++ k;
+                ++k;
             }
         }
 
@@ -589,7 +589,7 @@ private:
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
                 (*this)[domRowIdx][domColIdx] += mpiRecvBuff[k];
-                ++ k;
+                ++k;
             }
         }
 #endif // HAVE_MPI
@@ -602,7 +602,8 @@ private:
 
         MpiBuffer<Index> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
         MpiBuffer<size_t> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
-        MpiBuffer<Index> &mpiColIndicesRecvBuff = *entryIndicesRecvBuff_[peerRank];
+        MpiBuffer<Index> &mpiColIndicesRecvBuff
+            = *entryIndicesRecvBuff_[peerRank];
 
         mpiRecvBuff.receive(peerRank);
 
@@ -613,13 +614,12 @@ private:
             for (int j = 0; j < mpiRowSizesRecvBuff[i]; ++j) {
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
-                if (!overlap_->iAmMasterOf(domRowIdx) ||
-                    !overlap_->iAmMasterOf(domColIdx))
-                {
+                if (!overlap_->iAmMasterOf(domRowIdx)
+                    || !overlap_->iAmMasterOf(domColIdx)) {
                     (*this)[domRowIdx][domColIdx] = mpiRecvBuff[k];
                 }
 
-                ++ k;
+                ++k;
             }
         }
 #endif // HAVE_MPI
@@ -636,17 +636,17 @@ private:
     Entries entries_;
     std::shared_ptr<Overlap> overlap_;
 
-    std::map<ProcessRank, MpiBuffer<size_t>* > numRowsSendBuff_;
-    std::map<ProcessRank, MpiBuffer<size_t>* > rowSizesSendBuff_;
-    std::map<ProcessRank, MpiBuffer<Index>* > rowIndicesSendBuff_;
-    std::map<ProcessRank, MpiBuffer<Index>* > entryIndicesSendBuff_;
-    std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t> *> numRowsSendBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t> *> rowSizesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> rowIndicesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> entryIndicesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<block_type> *> entryValuesSendBuff_;
 
     std::map<ProcessRank, MpiBuffer<size_t> > numRowsRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<size_t>* > rowSizesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<Index>* > rowIndicesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<Index>* > entryIndicesRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<block_type>* > entryValuesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<size_t> *> rowSizesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> rowIndicesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> entryIndicesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<block_type> *> entryValuesRecvBuff_;
 };
 
 } // namespace Linear

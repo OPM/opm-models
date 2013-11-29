@@ -43,9 +43,8 @@ namespace Ewoms {
  * \brief The local residual function for problems using the
  *        Stokes VCVF discretization.
  */
-template<class TypeTag>
-class StokesLocalResidual
-    : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+template <class TypeTag>
+class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -58,11 +57,9 @@ class StokesLocalResidual
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    enum {
-        dimWorld = GridView::dimensionworld,
-        phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex),
-        numComponents = FluidSystem::numComponents
-    };
+    enum { dimWorld = GridView::dimensionworld };
+    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { numComponents = FluidSystem::numComponents };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
@@ -78,43 +75,40 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableNavierTerm, "Enable the Navier term (convective flux term).");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableNavierTerm,
+                             "Enable the Navier term (convective flux term).");
     }
 
     /*!
      * \copydoc VcfvLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
+                        int scvIdx, int timeIdx) const
     {
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         // mass storage
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            storage[conti0EqIdx + compIdx] =
-                fs.molarity(phaseIdx, compIdx);
+            storage[conti0EqIdx + compIdx] = fs.molarity(phaseIdx, compIdx);
         Valgrind::CheckDefined(storage);
 
         // momentum balance
-        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            storage[momentum0EqIdx + axisIdx] =
-                fs.density(phaseIdx) * volVars.velocity()[axisIdx];
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            storage[momentum0EqIdx + axisIdx] = fs.density(phaseIdx)
+                                                * volVars.velocity()[axisIdx];
         Valgrind::CheckDefined(storage);
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx),
+                                      phaseIdx);
         Valgrind::CheckDefined(storage);
     }
 
     /*!
      * \copydoc VcfvLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -126,15 +120,14 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void addAdvectiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
         // data attached to upstream vertex
-        const VolumeVariables &up = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
+        const VolumeVariables &up
+            = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
 
         auto normal = fluxVars.normal();
         Scalar faceArea = normal.two_norm();
@@ -143,14 +136,13 @@ public:
         // mass fluxes
         Scalar vTimesN = fluxVars.velocity() * normal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            flux[conti0EqIdx + compIdx] =
-                up.fluidState().molarity(phaseIdx, compIdx)
-                * vTimesN;
+            flux[conti0EqIdx + compIdx]
+                = up.fluidState().molarity(phaseIdx, compIdx) * vTimesN;
 
         // momentum flux
-        Scalar mu = up.fluidState().viscosity(phaseIdx) + fluxVars.eddyViscosity();
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-        {
+        Scalar mu = up.fluidState().viscosity(phaseIdx)
+                    + fluxVars.eddyViscosity();
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // deal with the surface forces, i.e. the $\div[ \mu
             // (\grad[v] + \grad[v^T])]$ term on the right hand side
             // of the equation
@@ -160,15 +152,14 @@ public:
                 tmp[j] += fluxVars.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
 
-            flux[momentum0EqIdx + axisIdx] = - mu * (tmp * normal);
+            flux[momentum0EqIdx + axisIdx] = -mu * (tmp * normal);
 
             // this adds the convective momentum flux term $rho v
             // div[v]$ to the Stokes equation, transforming it to
             // Navier-Stokes.
             if (enableNavierTerm_()) {
-                flux[momentum0EqIdx + axisIdx] +=
-                    up.velocity()[axisIdx]
-                    * (up.velocity() * normal);
+                flux[momentum0EqIdx + axisIdx] += up.velocity()[axisIdx]
+                                                  * (up.velocity() * normal);
             }
         }
 
@@ -180,10 +171,8 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void addDiffusiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         // heat conduction
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -192,10 +181,8 @@ public:
     /*!
      * \copydoc VcfvLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
+    void computeSource(RateVector &source, const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx) const
     {
         assert(timeIdx == 0);
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
@@ -212,8 +199,9 @@ public:
         Valgrind::CheckDefined(density);
 
         // deal with the pressure and volume terms
-        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            source[momentum0EqIdx + axisIdx] += gradp[axisIdx] - density*gravity[axisIdx];
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            source[momentum0EqIdx + axisIdx] += gradp[axisIdx]
+                                                - density * gravity[axisIdx];
     }
 
 private:

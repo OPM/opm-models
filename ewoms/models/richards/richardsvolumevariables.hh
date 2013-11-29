@@ -42,8 +42,8 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class RichardsVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
 
@@ -73,21 +73,20 @@ public:
     /*!
      * \copydoc VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
         assert(!FluidSystem::isLiquid(nPhaseIdx));
 
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+        fluidState_.setTemperature(
+            elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const typename MaterialLaw::Params &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         /////////
@@ -104,7 +103,8 @@ public:
         // reference pressure if the medium is fully
         // saturated by the wetting phase
         Scalar pW = priVars[pressureWIdx];
-        Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
+        Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, scvIdx,
+                                                                 /*timeIdx=*/0),
                              pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
         /////////
@@ -134,7 +134,8 @@ public:
         //////////
         // specify the other parameters
         //////////
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
         porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
 
         // intrinsic permeability
@@ -172,7 +173,9 @@ public:
      * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
+    {
+        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+    }
 
 private:
     FluidState fluidState_;

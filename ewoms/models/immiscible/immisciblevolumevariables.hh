@@ -44,9 +44,10 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class ImmiscibleVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public VcfvEnergyVolumeVariables<TypeTag,
+                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
 
@@ -69,33 +70,32 @@ class ImmiscibleVolumeVariables
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
     typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
-    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
+                                      /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
      * \copydoc VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
+                                                   timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const typename MaterialLaw::Params &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         Valgrind::CheckDefined(priVars);
 
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-            fluidState_.setSaturation(phaseIdx, priVars[saturation0Idx + phaseIdx]);
+            fluidState_.setSaturation(phaseIdx,
+                                      priVars[saturation0Idx + phaseIdx]);
             sumSat += priVars[saturation0Idx + phaseIdx];
         }
         fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
@@ -114,7 +114,8 @@ public:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu
+                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
 
             // compute and set the density
@@ -123,7 +124,8 @@ public:
         }
 
         // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
@@ -133,7 +135,8 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
+                                       timeIdx);
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
@@ -146,7 +149,8 @@ public:
     { return fluidState_; }
 
     /*!
-     * \brief Returns the intrinsic permeability tensor for the sub-control volume
+     * \brief Returns the intrinsic permeability tensor for the sub-control
+     * volume
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
@@ -167,7 +171,9 @@ public:
      * \copydetails Doxygen::phaseIdxParam
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
+    {
+        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+    }
 
     /*!
      * \brief Returns the average porosity within the control volume.

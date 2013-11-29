@@ -48,11 +48,13 @@ namespace Ewoms {
  * default, it solves the momentum balance of the time-dependent Stokes
  * equations, i.e.
  * \f[
- * \frac{\partial \left(\varrho\,\mathbf{v}\right)}{\partial t}
+ * \frac{\partial \left(\varrho\,\mathbf{v}\right)}
+ {\partial t}
  * + \boldsymbol{\nabla} p
  * - \nabla \cdot
  * \left(
- * \mu \left(\boldsymbol{\nabla} \mathbf{v} + \boldsymbol{\nabla} \mathbf{v}^T\right)
+ * \mu \left(\boldsymbol{\nabla} \mathbf{v} + \boldsymbol{\nabla}
+ *\mathbf{v}^T\right)
  * \right)
  * - \varrho\,\mathbf{g}
  * = 0\;,
@@ -70,7 +72,8 @@ namespace Ewoms {
  * included into the momentum conservation equations which allows to
  * capture turbolent flow regimes. This additional term is given by
  *  \f[
- * \varrho \left(\mathbf{v} \cdot \boldsymbol{\nabla} \right) \mathbf{v} \;.
+ * \varrho \left(\mathbf{v} \cdot \boldsymbol{\nabla} \right) \mathbf
+ {v} \;.
  * \f]
  *
  * These equations are discretized by a fully-coupled vertex-centered
@@ -80,7 +83,7 @@ namespace Ewoms {
  * unphysical oscillations in the calculated solution. We intend to
  * use a more appropriate discretization scheme in the future, though.
  */
-template<class TypeTag>
+template <class TypeTag>
 class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -112,9 +115,12 @@ public:
         std::ostringstream oss;
         if (pvIdx == Indices::pressureIdx)
             oss << "pressure";
-        else if (Indices::moleFrac1Idx <= pvIdx && pvIdx < Indices::moleFrac1Idx + numComponents - 1)
-            oss << "moleFraction^" << FluidSystem::componentName(pvIdx - Indices::moleFrac1Idx + 1);
-        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx + dimWorld)
+        else if (Indices::moleFrac1Idx <= pvIdx && pvIdx < Indices::moleFrac1Idx
+                                                           + numComponents - 1)
+            oss << "moleFraction^"
+                << FluidSystem::componentName(pvIdx - Indices::moleFrac1Idx + 1);
+        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx
+                                                           + dimWorld)
             oss << "velocity_" << pvIdx - Indices::velocity0Idx;
         else
             assert(false);
@@ -128,9 +134,12 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
-            oss << "continuity^" << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
-        else if (Indices::momentum0EqIdx <= eqIdx && eqIdx < Indices::momentum0EqIdx + dimWorld)
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
+                                                     + numComponents)
+            oss << "continuity^"
+                << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
+        else if (Indices::momentum0EqIdx <= eqIdx
+                 && eqIdx < Indices::momentum0EqIdx + dimWorld)
             oss << "momentum_" << eqIdx - Indices::momentum0EqIdx;
         else
             assert(false);
@@ -150,7 +159,7 @@ public:
             // use a pressure gradient of 1e3 Pa/m an intrinisc
             // permeability of 1e-12 as reference (basically, a highly
             // permeable sand stone filled with liquid water.)
-            static const Scalar KRef = 1e-12; // [m^2]
+            static const Scalar KRef = 1e-12;   // [m^2]
             static const Scalar pGradRef = 1e3; // [Pa / m]
             Scalar V = this->boxVolume(globalVertexIdx);
 
@@ -175,7 +184,9 @@ public:
         ScalarField &density = *writer.allocateManagedBuffer(numVertices);
         ScalarField &temperature = *writer.allocateManagedBuffer(numVertices);
         ScalarField &viscosity = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity = *writer.template allocateManagedBuffer<double, dimWorld> (numVertices);
+        VelocityField &velocity
+            = *writer.template allocateManagedBuffer<double, dimWorld>(
+                   numVertices);
         ScalarField *moleFraction[numComponents];
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             moleFraction[compIdx] = writer.allocateManagedBuffer(numVertices);
@@ -185,15 +196,15 @@ public:
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
+        for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateAll(*elemIt);
 
             int numScv = elemCtx.numScv();
-            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            {
-                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
-                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
+            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
+                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/scvIdx,
+                                                         /*timeIdx=*/0);
+                const auto &volVars
+                    = elemCtx.volVars(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
                 const auto &fluidState = volVars.fluidState();
 
                 pressure[globalIdx] = fluidState.pressure(phaseIdx);
@@ -203,30 +214,38 @@ public:
                 velocity[globalIdx] = volVars.velocityCenter();
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                    (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
+                    (*moleFraction[compIdx])[globalIdx]
+                        = fluidState.moleFraction(phaseIdx, compIdx);
             };
         }
 
         std::ostringstream tmp;
 
-        tmp.str(""); tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
+        tmp.str("");
+        tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(pressure, tmp.str());
 
-        tmp.str(""); tmp << "density_" << FluidSystem::phaseName(phaseIdx);
+        tmp.str("");
+        tmp << "density_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(density, tmp.str());
 
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            tmp.str(""); tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^" << FluidSystem::componentName(compIdx);
+            tmp.str("");
+            tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^"
+                << FluidSystem::componentName(compIdx);
             writer.attachVertexData(*moleFraction[compIdx], tmp.str());
         }
 
-        tmp.str(""); tmp << "temperature_" << FluidSystem::phaseName(phaseIdx);
+        tmp.str("");
+        tmp << "temperature_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(temperature, tmp.str());
 
-        tmp.str(""); tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
+        tmp.str("");
+        tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(viscosity, tmp.str());
 
-        tmp.str(""); tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
+        tmp.str("");
+        tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
         writer.attachVertexData(velocity, tmp.str(), dimWorld);
     }
 };

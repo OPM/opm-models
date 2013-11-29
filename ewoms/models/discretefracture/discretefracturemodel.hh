@@ -48,14 +48,15 @@ namespace Ewoms {
  *
  * \sa ImmiscibleModel
  */
-template<class TypeTag>
+template <class TypeTag>
 class DiscreteFractureModel : public ImmiscibleModel<TypeTag>
 {
     typedef ImmiscibleModel<TypeTag> ParentType;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -78,7 +79,8 @@ protected:
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_()));
     }
 };
 } // namespace Ewoms

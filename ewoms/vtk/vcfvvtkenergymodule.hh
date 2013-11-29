@@ -60,7 +60,7 @@ namespace Ewoms {
  * - Specific heat capacity of the solid phase
  * - Lumped heat conductivity (solid phase plus all fluid phases)
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkEnergyModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -79,20 +79,26 @@ class VcfvVtkEnergyModule : public VcfvVtkOutputModule<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
 public:
-    VcfvVtkEnergyModule(const Problem &problem)
-        : ParentType(problem)
-    {
-    }
+    VcfvVtkEnergyModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity, "Include the specific heat capacities of rock matrix in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity, "Include the lumped heat conductivity of the medium in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies, "Include the specific enthalpy of the phases in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies, "Include the specific internal energy of the phases in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity,
+                             "Include the specific heat capacities of rock "
+                             "matrix in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity,
+                             "Include the lumped heat conductivity of the "
+                             "medium in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies,
+                             "Include the specific enthalpy of the phases in "
+                             "the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteInternalEnergies,
+                             "Include the specific internal energy of the "
+                             "phases in the VTK output files");
     }
 
     /*!
@@ -101,11 +107,15 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (enthalpyOutput_()) this->resizePhaseBuffer_(enthalpy_);
-        if (internalEnergyOutput_()) this->resizePhaseBuffer_(internalEnergy_);
+        if (enthalpyOutput_())
+            this->resizePhaseBuffer_(enthalpy_);
+        if (internalEnergyOutput_())
+            this->resizePhaseBuffer_(internalEnergy_);
 
-        if (solidHeatCapacityOutput_()) this->resizeScalarBuffer_(solidHeatCapacity_);
-        if (heatConductivityOutput_()) this->resizeScalarBuffer_(heatConductivity_);
+        if (solidHeatCapacityOutput_())
+            this->resizeScalarBuffer_(solidHeatCapacity_);
+        if (heatConductivityOutput_())
+            this->resizeScalarBuffer_(heatConductivity_);
     }
 
     /*!
@@ -122,12 +132,16 @@ public:
             const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fluidState();
 
-            if (solidHeatCapacityOutput_()) solidHeatCapacity_[I] = volVars.heatCapacitySolid();
-            if (heatConductivityOutput_()) heatConductivity_[I] = volVars.heatConductivity();
+            if (solidHeatCapacityOutput_())
+                solidHeatCapacity_[I] = volVars.heatCapacitySolid();
+            if (heatConductivityOutput_())
+                heatConductivity_[I] = volVars.heatConductivity();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (enthalpyOutput_()) enthalpy_[phaseIdx][I] = fs.enthalpy(phaseIdx);
-                if (internalEnergyOutput_()) internalEnergy_[phaseIdx][I] = fs.internalEnergy(phaseIdx);
+                if (enthalpyOutput_())
+                    enthalpy_[phaseIdx][I] = fs.enthalpy(phaseIdx);
+                if (internalEnergyOutput_())
+                    internalEnergy_[phaseIdx][I] = fs.internalEnergy(phaseIdx);
             }
         }
     }
@@ -137,11 +151,18 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (solidHeatCapacityOutput_()) this->commitScalarBuffer_(writer, "heatCapacitySolid", solidHeatCapacity_);
-        if (heatConductivityOutput_()) this->commitScalarBuffer_(writer, "heatConductivity", heatConductivity_);
+        if (solidHeatCapacityOutput_())
+            this->commitScalarBuffer_(writer, "heatCapacitySolid",
+                                      solidHeatCapacity_);
+        if (heatConductivityOutput_())
+            this->commitScalarBuffer_(writer, "heatConductivity",
+                                      heatConductivity_);
 
-        if (enthalpyOutput_()) this->commitPhaseBuffer_(writer, "enthalpy_%s", enthalpy_);
-        if (internalEnergyOutput_()) this->commitPhaseBuffer_(writer, "internalEnergy_%s", internalEnergy_);
+        if (enthalpyOutput_())
+            this->commitPhaseBuffer_(writer, "enthalpy_%s", enthalpy_);
+        if (internalEnergyOutput_())
+            this->commitPhaseBuffer_(writer, "internalEnergy_%s",
+                                     internalEnergy_);
     }
 
 private:

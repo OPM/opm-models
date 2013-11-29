@@ -44,12 +44,14 @@ namespace Ewoms {
  * This model implements multi-phase flow of \f$M > 0\f$ immiscible
  * fluids \f$\alpha\f$. By default, the standard multi-phase Darcy
  * approach is used to determine the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
+ *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -71,7 +73,7 @@ namespace Ewoms {
  * - The absolute temperature \f$T\f$ in Kelvin if energy is conserved
  *   via the energy equation
  */
-template<class TypeTag >
+template <class TypeTag>
 class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
@@ -97,7 +99,8 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -141,7 +144,8 @@ public:
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
-        else if (Indices::saturation0Idx <= pvIdx && pvIdx < Indices::saturation0Idx + numPhases - 1) {
+        else if (Indices::saturation0Idx <= pvIdx
+                 && pvIdx < Indices::saturation0Idx + numPhases - 1) {
             int phaseIdx = pvIdx - Indices::saturation0Idx;
             oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
         }
@@ -162,8 +166,10 @@ public:
 
         std::ostringstream oss;
 
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
-            oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
+                                                     + numComponents)
+            oss << "conti_"
+                << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
 
@@ -201,12 +207,9 @@ public:
                 const auto &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      scvIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *= scv.volume*volVars.extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
+                                                      /*timeIdx=*/0, phaseIdx);
+                tmp *= scv.volume * volVars.extrusionFactor();
                 storage += tmp;
             }
         };
@@ -221,7 +224,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ = this->solution(
+            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!
@@ -232,7 +236,8 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
-            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
@@ -242,7 +247,8 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(asImp_(), globalVertexIdx, pvIdx);
+        Scalar tmp
+            = EnergyModule::primaryVarWeight(asImp_(), globalVertexIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -252,9 +258,10 @@ public:
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
+            Scalar r
+                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
 
-            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
+            return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
         return 1.0;
     }
@@ -284,16 +291,19 @@ protected:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
 
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
 private:
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
     mutable Scalar referencePressure_;
     mutable std::vector<Scalar> intrinsicPermeability_;

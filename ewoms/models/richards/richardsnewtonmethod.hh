@@ -56,21 +56,16 @@ class RichardsNewtonMethod : public VcfvNewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum {
-        dim = GridView::dimension,
-        pressureWIdx = Indices::pressureWIdx,
-
-        numPhases = FluidSystem::numPhases,
-
-        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
-        nPhaseIdx = 1 - wPhaseIdx
-    };
+    enum { dim = GridView::dimension };
+    enum { pressureWIdx = Indices::pressureWIdx };
+    enum { numPhases = FluidSystem::numPhases };
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { nPhaseIdx = 1 - wPhaseIdx };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    RichardsNewtonMethod(Problem &problem)
-        : ParentType(problem)
+    RichardsNewtonMethod(Problem &problem) : ParentType(problem)
     {}
 
 protected:
@@ -80,8 +75,7 @@ protected:
     /*!
      * \copydoc VcfvNewtonMethod::update_
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
+    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
     {
         const auto &assembler = this->problem().model().jacobianAssembler();
@@ -89,8 +83,7 @@ protected:
 
         ParentType::update_(uCurrentIter, uLastIter, deltaU);
 
-        if (!this->enableLineSearch_())
-        {
+        if (!this->enableLineSearch_()) {
             // do not clamp anything after 5 iterations
             if (this->numIterations_ > 4)
                 return;
@@ -99,9 +92,9 @@ protected:
             ElementContext elemCtx(problem);
 
             ElementIterator elemIt = problem.gridView().template begin<0>();
-            const ElementIterator &elemEndIt = problem.gridView().template end<0>();
-            for (; elemIt != elemEndIt; ++elemIt)
-            {
+            const ElementIterator &elemEndIt
+                = problem.gridView().template end<0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
                 if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
                     // don't look at green elements, since they
                     // probably have not changed much anyways
@@ -117,19 +110,23 @@ protected:
                         continue;
 
                     // calculate the old wetting phase saturation
-                    const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, scvIdx, /*timeIdx=*/0);
+                    const MaterialLawParams &matParams
+                        = problem.materialLawParams(elemCtx, scvIdx,
+                                                    /*timeIdx=*/0);
 
                     Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
                     // set the temperatures
-                    Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx, /*timeIdx=*/0);
+                    Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx,
+                                                             /*timeIdx=*/0);
                     fs.setTemperature(T);
 
                     /////////
                     // calculate the phase pressures of the previous iteration
                     /////////
 
-                    // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
+                    // first, we have to find the minimum capillary pressure
+                    // (i.e. Sw = 0)
                     fs.setSaturation(wPhaseIdx, 1.0);
                     fs.setSaturation(nPhaseIdx, 0.0);
                     PhaseVector pC;
@@ -139,8 +136,10 @@ protected:
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
                     Scalar pWOld = uLastIter[globI][pressureWIdx];
-                    Scalar pNOld = std::max(problem.referencePressure(elemCtx, scvIdx, /*timeIdx=*/0),
-                                            pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                    Scalar pNOld
+                        = std::max(problem.referencePressure(elemCtx, scvIdx,
+                                                             /*timeIdx=*/0),
+                                   pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
                     /////////
                     // find the saturations of the previous iteration

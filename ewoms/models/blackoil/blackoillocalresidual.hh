@@ -36,7 +36,7 @@ namespace Ewoms {
  * \brief Calculates the local residual of the black oil
  *        VCVF discretization.
  */
-template<class TypeTag>
+template <class TypeTag>
 class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
@@ -46,20 +46,16 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    enum {
-        conti0EqIdx = Indices::conti0EqIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-        numComponents = GET_PROP_VALUE(TypeTag, NumComponents)
-    };
+    enum { conti0EqIdx = Indices::conti0EqIdx,
+           numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+           numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:
     /*!
      * \copydoc VcfvLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
+                        int scvIdx, int timeIdx) const
     {
         // retrieve the volume variables for the SCV at the specified
         // point in time
@@ -68,10 +64,10 @@ public:
         storage = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                storage[conti0EqIdx + compIdx] +=
-                    volVars.porosity()
-                    * volVars.fluidState().saturation(phaseIdx)
-                    * volVars.fluidState().molarity(phaseIdx, compIdx);
+                storage[conti0EqIdx + compIdx]
+                    += volVars.porosity()
+                       * volVars.fluidState().saturation(phaseIdx)
+                       * volVars.fluidState().molarity(phaseIdx, compIdx);
             }
         }
     }
@@ -79,25 +75,25 @@ public:
     /*!
      * \copydoc VcfvLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const FluxVariables &evalPointFluxVars
+            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
-                const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
+                const VolumeVariables &up
+                    = elemCtx.volVars(upIdx, /*timeIdx=*/0);
 
                 // add advective flux of current component in current
                 // phase
-                flux[conti0EqIdx + compIdx] +=
-                    fluxVars.volumeFlux(phaseIdx)
-                    * up.fluidState().molarity(phaseIdx, compIdx);
+                flux[conti0EqIdx + compIdx]
+                    += fluxVars.volumeFlux(phaseIdx)
+                       * up.fluidState().molarity(phaseIdx, compIdx);
             }
         }
     }
@@ -105,10 +101,8 @@ public:
     /*!
      * \copydoc VcfvLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
+    void computeSource(RateVector &source, const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx) const
     {
         // retrieve the source term intrinsic to the problem
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);

@@ -51,18 +51,17 @@ public:
     /*!
      * \brief Default constructor
      */
-    DiscreteFracturePrimaryVariables()
-        : ParentType()
-    { }
+    DiscreteFracturePrimaryVariables() : ParentType()
+    {}
 
     /*!
      * \brief Constructor with assignment from scalar
      *
-     * \param value The scalar value to which all entries of the vector will be set.
+     * \param value The scalar value to which all entries of the vector will be
+     *set.
      */
-    DiscreteFracturePrimaryVariables(Scalar value)
-        : ParentType(value)
-    { }
+    DiscreteFracturePrimaryVariables(Scalar value) : ParentType(value)
+    {}
 
     /*!
      * \brief Copy constructor
@@ -71,7 +70,7 @@ public:
      */
     DiscreteFracturePrimaryVariables(const DiscreteFracturePrimaryVariables &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \brief Directly retrieve the primary variables from an
@@ -90,7 +89,8 @@ public:
                                  const MaterialLawParams &matParams)
     {
         FluidState matrixFluidState;
-        fractureToMatrixFluidState_(matrixFluidState, fractureFluidState, matParams);
+        fractureToMatrixFluidState_(matrixFluidState, fractureFluidState,
+                                    matParams);
 
         ParentType::assignNaive(matrixFluidState);
     }

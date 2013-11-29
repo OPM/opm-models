@@ -36,9 +36,10 @@ namespace Ewoms {
  * \ingroup PvsModel
  *
  * \brief Element-wise calculation of the local residual for the
- *        compositional multi-phase primary variable switching VCVF discretization.
+ *        compositional multi-phase primary variable switching VCVF
+ *discretization.
  */
-template<class TypeTag>
+template <class TypeTag>
 class PvsLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -54,57 +55,49 @@ class PvsLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
     typedef VcfvDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
-    enum  { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
-    void addPhaseStorage(EqVector &storage,
-                         const ElementContext &elemCtx,
-                         int scvIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
+                         int scvIdx, int timeIdx, int phaseIdx) const
     {
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         // compute storage term of all components within all phases
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-        {
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             int eqIdx = conti0EqIdx + compIdx;
-            storage[eqIdx] +=
-                fs.molarity(phaseIdx, compIdx)
-                * fs.saturation(phaseIdx)
-                * volVars.porosity();
+            storage[eqIdx] += fs.molarity(phaseIdx, compIdx)
+                              * fs.saturation(phaseIdx) * volVars.porosity();
         }
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx), phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx),
+                                      phaseIdx);
     }
 
     /*!
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
+                        int scvIdx, int timeIdx) const
     {
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage,
+                                          elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
      * \copydoc ImmiscibleLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -117,35 +110,35 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void addAdvectiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars
+            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream vertices
             // of the current phase
-            const VolumeVariables &up = elemCtx.volVars(evalPointFluxVars.upstreamIndex(phaseIdx), timeIdx);
-            const VolumeVariables &dn = elemCtx.volVars(evalPointFluxVars.downstreamIndex(phaseIdx), timeIdx);
+            const VolumeVariables &up
+                = elemCtx.volVars(evalPointFluxVars.upstreamIndex(phaseIdx),
+                                  timeIdx);
+            const VolumeVariables &dn
+                = elemCtx.volVars(evalPointFluxVars.downstreamIndex(phaseIdx),
+                                  timeIdx);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 int eqIdx = conti0EqIdx + compIdx;
 
-                flux[eqIdx] +=
-                    fluxVars.volumeFlux(phaseIdx)
-                    *(fluxVars.upstreamWeight(phaseIdx)
-                      * up.fluidState().molarity(phaseIdx, compIdx)
-                      +
-                      fluxVars.downstreamWeight(phaseIdx)
-                      * dn.fluidState().molarity(phaseIdx, compIdx));
+                flux[eqIdx]
+                    += fluxVars.volumeFlux(phaseIdx)
+                       * (fluxVars.upstreamWeight(phaseIdx)
+                          * up.fluidState().molarity(phaseIdx, compIdx)
+                          + fluxVars.downstreamWeight(phaseIdx)
+                            * dn.fluidState().molarity(phaseIdx, compIdx));
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }
@@ -157,10 +150,8 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void addDiffusiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -169,10 +160,8 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
+    void computeSource(RateVector &source, const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx) const
     {
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);

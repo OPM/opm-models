@@ -64,13 +64,16 @@ NEW_PROP_TAG(ModelParameterGroup);
 //! Property which provides a GridCreator (manages grids)
 NEW_PROP_TAG(GridCreator);
 
-//! Property provides the name of the file from which the grid ought to be loaded from
+//! Property provides the name of the file from which the grid ought to be
+//! loaded from
 NEW_PROP_TAG(GridFile);
 
-//! Property which tells the GridCreator how often the grid should be refined after creation.
+//! Property which tells the GridCreator how often the grid should be refined
+//! after creation.
 NEW_PROP_TAG(GridGlobalRefinements);
 
-//! Property provides the name of the file from which the additional runtime parameters should to be loaded from
+//! Property provides the name of the file from which the additional runtime
+//! parameters should to be loaded from
 NEW_PROP_TAG(ParameterFile);
 
 /*!
@@ -131,7 +134,8 @@ SET_STRING_PROP(NumericModel, GridFile, "");
 //! Set a value for the ParameterFile property
 SET_STRING_PROP(NumericModel, ParameterFile, "");
 
-//! Set the number of refinement levels of the grid to 0. This does not belong here, strictly speaking.
+//! Set the number of refinement levels of the grid to 0. This does not belong
+//! here, strictly speaking.
 SET_INT_PROP(NumericModel, GridGlobalRefinements, 0);
 
 //! By default, print the properties on startup

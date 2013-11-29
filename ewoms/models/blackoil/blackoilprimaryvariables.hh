@@ -41,7 +41,7 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -64,26 +64,26 @@ class BlackOilPrimaryVariables
     enum { gCompIdx = FluidSystem::gCompIdx };
 
     static_assert(numPhases == 3, "The black-oil model has three phases!");
-    static_assert(numComponents == 3, "The black-oil model has three components!");
+    static_assert(numComponents == 3,
+                  "The black-oil model has three components!");
 
 public:
-    BlackOilPrimaryVariables()
-        : ParentType()
+    BlackOilPrimaryVariables() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    BlackOilPrimaryVariables(Scalar value)
-        : ParentType(value)
-    { }
+    BlackOilPrimaryVariables(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
+     * ImmisciblePrimaryVariables &)
      */
     BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignNaive
@@ -99,7 +99,8 @@ public:
 
         // check whether the oil is undersaturated
         Scalar po = fluidState.pressure(oPhaseIdx);
-        Scalar poSat = FluidSystem::oilSaturationPressure(fluidState.massFraction(oPhaseIdx, gCompIdx));
+        Scalar poSat = FluidSystem::oilSaturationPressure(
+            fluidState.massFraction(oPhaseIdx, gCompIdx));
         if (po > poSat) {
             // use a "negative saturation" of the gas phase to
             // compensate
@@ -107,20 +108,20 @@ public:
             // calculate the "mass per cubic meter of pore space" of
             // gas which is missing to make the oil saturated
             Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
-            Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
+            Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx) / Bo;
             Scalar Rs = FluidSystem::gasDissolutionFactor(po);
-            Scalar XoGSat = Rs*FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
+            Scalar XoGSat = Rs * FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
 
-            Scalar rhogDef =
-                fluidState.saturation(oPhaseIdx)
-                * rhoo
-                * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));
+            Scalar rhogDef
+                = fluidState.saturation(oPhaseIdx) * rhoo
+                  * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));
 
             Scalar Bg = FluidSystem::gasFormationVolumeFactor(po);
-            Scalar rhog = FluidSystem::surfaceDensity(gPhaseIdx)/Bg;
+            Scalar rhog = FluidSystem::surfaceDensity(gPhaseIdx) / Bg;
 
-            saturation[gPhaseIdx] = - rhogDef/rhog;
-            saturation[oPhaseIdx] = 1 - saturation[wPhaseIdx] - saturation[gPhaseIdx];
+            saturation[gPhaseIdx] = -rhogDef / rhog;
+            saturation[oPhaseIdx] = 1 - saturation[wPhaseIdx]
+                                    - saturation[gPhaseIdx];
         }
 
         (*this)[saturation0Idx] = saturation[/*phaseIdx=*/0];

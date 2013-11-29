@@ -36,7 +36,8 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices
-    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases),
+                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
 
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -48,11 +49,16 @@ public:
     static const int numEq = numPhases + EnergyIndices::numEq_;
 
     // Primary variable indices
-    static const int pressure0Idx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
-    static const int saturation0Idx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
+    static const int pressure0Idx
+        = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure
+                        //(depending on formulation) in a solution vector
+    static const int saturation0Idx
+        = PVOffset
+          + 1; //!< Index of the saturation of the non-wetting/wetting phase
 
     // indices of the equations
-    static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
+    static const int conti0EqIdx
+        = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
 } // namespace Ewoms
 

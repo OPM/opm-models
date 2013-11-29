@@ -58,10 +58,10 @@ public:
     /*!
      * \copydoc VcfvNewtonMethod::VcfvNewtonMethod(Problem &)
      */
-    NcpNewtonMethod(Problem &problem)
-        : ParentType(problem)
+    NcpNewtonMethod(Problem &problem) : ParentType(problem)
     {
-        choppedIterations_ = EWOMS_GET_PARAM(TypeTag, int, NewtonChoppedIterations);
+        choppedIterations_
+            = EWOMS_GET_PARAM(TypeTag, int, NewtonChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     }
 
@@ -72,7 +72,9 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations, "The number of Newton iterations for which the update gets limited");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations,
+                             "The number of Newton iterations for which the "
+                             "update gets limited");
     }
 
 private:
@@ -82,8 +84,7 @@ private:
     /*!
      * \copydoc VcfvNewtonMethod::update_
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
+    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
     {
         // make sure not to swallow non-finite values at this point
@@ -93,11 +94,14 @@ private:
         // compute the vertex and element colors for partial
         // reassembly
         if (this->enablePartialReassemble_()) {
-            const Scalar minReasmTol = 1e-2*this->relTolerance_();
-            const Scalar maxReasmTol = 1e1*this->relTolerance_();
-            Scalar reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, this->relError_/1e4));
+            const Scalar minReasmTol = 1e-2 * this->relTolerance_();
+            const Scalar maxReasmTol = 1e1 * this->relTolerance_();
+            Scalar reassembleTol
+                = std::max(minReasmTol,
+                           std::min(maxReasmTol, this->relError_ / 1e4));
 
-            this->model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
+            this->model_().jacobianAssembler().updateDiscrepancy(uLastIter,
+                                                                 deltaU);
             this->model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
@@ -136,16 +140,16 @@ private:
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent
                 // fugacity coefficients)
-                Scalar minPhi = this->problem().model().minActivityCoeff(i, compIdx);
+                Scalar minPhi
+                    = this->problem().model().minActivityCoeff(i, compIdx);
                 Scalar maxDelta = 0.7 * minPhi;
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
 
                 // do not allow mole fractions lager than 101% or
                 // smaller than -1%
-                val = std::max(-0.01*minPhi, val);
-                val = std::min(1.01*minPhi, val);
-
+                val = std::max(-0.01 * minPhi, val);
+                val = std::min(1.01 * minPhi, val);
             }
         }
     }
@@ -156,7 +160,7 @@ private:
     void pressureChop_(Scalar &val, Scalar oldVal) const
     {
         // limit pressure updates to 20% per iteration
-        clampValue_(val, oldVal*0.8, oldVal*1.2);
+        clampValue_(val, oldVal * 0.8, oldVal * 1.2);
     }
 
     void saturationChop_(Scalar &val, Scalar oldVal) const

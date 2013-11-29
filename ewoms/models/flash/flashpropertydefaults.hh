@@ -21,7 +21,8 @@
  * \ingroup FlashModel
  *
  * \brief Defines default values for the properties required by the
- *        compositional multi-phase VCVF discretization based on flash calculations.
+ *        compositional multi-phase VCVF discretization based on flash
+ *calculations.
  */
 #ifndef EWOMS_FLASH_PROPERTY_DEFAULTS_HH
 #define EWOMS_FLASH_PROPERTY_DEFAULTS_HH
@@ -49,19 +50,19 @@ namespace Properties {
 /*!
  * \brief Set the property for the number of components.
  */
-SET_INT_PROP(VcfvFlash, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(VcfvFlash, NumComponents,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
  */
-SET_INT_PROP(VcfvFlash, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
+SET_INT_PROP(VcfvFlash, NumPhases,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(VcfvFlash,
-             NumEq,
-             GET_PROP_TYPE(TypeTag, Indices)::numEq);
+SET_INT_PROP(VcfvFlash, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
@@ -72,6 +73,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+
 public:
     typedef Opm::NullMaterial<Traits> type;
 };
@@ -80,29 +82,23 @@ public:
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvFlash,
-              MaterialLawParams,
+SET_TYPE_PROP(VcfvFlash, MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvFlash,
-              HeatConductionLaw,
+SET_TYPE_PROP(VcfvFlash, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvFlash,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvFlash, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the FlashLocalResidual function for the flash model
-SET_TYPE_PROP(VcfvFlash,
-              LocalResidual,
-              Ewoms::FlashLocalResidual<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, LocalResidual, Ewoms::FlashLocalResidual<TypeTag>);
 
 //! Use the NCP flash solver by default
-SET_TYPE_PROP(VcfvFlash,
-              FlashSolver,
+SET_TYPE_PROP(VcfvFlash, FlashSolver,
               Opm::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
                             typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
@@ -125,7 +121,8 @@ SET_TYPE_PROP(VcfvFlash, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>
 SET_TYPE_PROP(VcfvFlash, RateVector, Ewoms::FlashRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvFlash, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvFlash, BoundaryRateVector,
+              Ewoms::FlashBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
 SET_TYPE_PROP(VcfvFlash, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);

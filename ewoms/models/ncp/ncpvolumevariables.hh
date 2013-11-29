@@ -45,10 +45,12 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class NcpVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public VcfvDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public VcfvDiffusionVolumeVariables<TypeTag,
+                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
+      public VcfvEnergyVolumeVariables<TypeTag,
+                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
 
@@ -58,7 +60,8 @@ class NcpVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver) CompositionFromFugacitiesSolver;
+    typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver)
+        CompositionFromFugacitiesSolver;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
 
@@ -71,27 +74,25 @@ class NcpVolumeVariables
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::CompositionalFluidState<Scalar, FluidSystem,
+                                         /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
+    DiffusionVolumeVariables;
     typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
 public:
     NcpVolumeVariables()
-    { }
+    {}
 
     /*!
      * \brief VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::ParameterCache paramCache;
@@ -101,25 +102,28 @@ public:
         Scalar sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
             sumSat += priVars[saturation0Idx + phaseIdx];
-            fluidState_.setSaturation(phaseIdx, priVars[saturation0Idx + phaseIdx]);
+            fluidState_.setSaturation(phaseIdx,
+                                      priVars[saturation0Idx + phaseIdx]);
         }
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
         Valgrind::CheckDefined(sumSat);
 
         // set the fluid phase temperature
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
+                                                   timeIdx);
 
         // retrieve capillary pressure parameters
         const auto &problem = elemCtx.problem();
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const MaterialLawParams &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         // calculate capillary pressures
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
         // add to the pressure of the first fluid phase
         Scalar pressure0 = priVars[pressure0Idx];
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
-            fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx]
+                                                           - capPress[0]));
 
         ComponentVector fug;
         // retrieve component fugacities
@@ -133,18 +137,22 @@ public:
             if (hint) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
-                    Scalar moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
+                    Scalar moleFracIJ
+                        = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
                     // set initial guess of the component's mole fraction
                     fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
                 }
             }
             else // !hint
-                CompositionFromFugacitiesSolver::guessInitial(fluidState_, paramCache, phaseIdx, fug);
+                CompositionFromFugacitiesSolver::guessInitial(fluidState_,
+                                                              paramCache,
+                                                              phaseIdx, fug);
 
             // calculate the phase composition from the component
             // fugacities
-            CompositionFromFugacitiesSolver::solve(fluidState_, paramCache, phaseIdx, fug);
+            CompositionFromFugacitiesSolver::solve(fluidState_, paramCache,
+                                                   phaseIdx, fug);
         }
 
         // porosity
@@ -153,13 +161,13 @@ public:
 
         // relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_,
-                                            materialParams,
-                                            fluidState_);
+                                            materialParams, fluidState_);
 
         // dynamic viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // viscosities
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu
+                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
@@ -170,10 +178,12 @@ public:
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
+                                       timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
+                                          scvIdx, timeIdx);
 
         checkDefined();
     }
@@ -200,7 +210,7 @@ public:
      * \brief ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState_.viscosity(phaseIdx); }
+    { return relativePermeability(phaseIdx) / fluidState_.viscosity(phaseIdx); }
 
     /*!
      * \brief ImmiscibleVolumeVariables::porosity

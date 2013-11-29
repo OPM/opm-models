@@ -45,8 +45,8 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class ImmiscibleFluxVariables
-    : public VcfvMultiPhaseFluxVariables<TypeTag>
-    , public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public VcfvMultiPhaseFluxVariables<TypeTag>,
+      public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -61,9 +61,7 @@ public:
      * \copydoc VcfvMultiPhaseFluxVariables::registerParameters()
      */
     static void registerParameters()
-    {
-        MultiPhaseFluxVariables::registerParameters();
-    }
+    { MultiPhaseFluxVariables::registerParameters(); }
 
     /*!
      * \copydoc VcfvMultiPhaseFluxVariables::update()
@@ -78,17 +76,12 @@ public:
      * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary()
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context,
-                        int bfIdx,
-                        int timeIdx,
+    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context,
-                                                bfIdx,
-                                                timeIdx,
-                                                fluidState,
-                                                paramCache);
+        MultiPhaseFluxVariables::updateBoundary(context, bfIdx, timeIdx,
+                                                fluidState, paramCache);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };

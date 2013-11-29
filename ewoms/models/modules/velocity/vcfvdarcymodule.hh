@@ -36,7 +36,8 @@
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
-}}
+}
+}
 
 namespace Ewoms {
 template <class TypeTag>
@@ -63,7 +64,7 @@ struct VcfvDarcyVelocityModule
      * \brief Register all run-time parameters for the velocity module.
      */
     static void registerParameters()
-    { }
+    {}
 };
 
 /*!
@@ -73,7 +74,8 @@ struct VcfvDarcyVelocityModule
  */
 template <class TypeTag>
 class VcfvDarcyBaseProblem
-{ };
+{
+};
 
 /*!
  * \ingroup VcfvDarcyVelocity
@@ -83,9 +85,10 @@ template <class TypeTag>
 class VcfvDarcyVolumeVariables
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
 protected:
     void update_(const ElementContext &elemCtx, int scvIdx, int timeIdx)
-    { }
+    {}
 };
 
 /*!
@@ -168,7 +171,8 @@ protected:
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx,
+                              int timeIdx)
     {
         const auto &problem = elemCtx.problem();
 
@@ -181,22 +185,23 @@ protected:
         problem.meanK(K_, Ki, Kj);
         Valgrind::CheckDefined(K_);
 
-        const DimVector &normal = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
+        const DimVector &normal
+            = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].normal;
         Valgrind::CheckDefined(normal);
 
         ///////////////
         // calculate the weights of the upstream and the downstream
         // control volumes
         ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            const auto &up = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
+            const auto &up
+                = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
             mobility_[phaseIdx] = up.mobility(phaseIdx);
 
             calculateDarcyVelocity_(phaseIdx);
@@ -205,14 +210,14 @@ protected:
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases at the domain boundary
+     * \brief Calculate the filter velocities of all phases at the domain
+     * boundary
      */
     template <class Context, class FluidState>
-    void calculateBoundaryVelocities_(const Context &context,
-                                      int bfIdx,
-                                      int timeIdx,
-                                      const FluidState &fluidState,
-                                      const typename FluidSystem::ParameterCache &paramCache)
+    void calculateBoundaryVelocities_(
+        const Context &context, int bfIdx, int timeIdx,
+        const FluidState &fluidState,
+        const typename FluidSystem::ParameterCache &paramCache)
     {
         const auto &elemCtx = context.elemContext();
         const auto &problem = elemCtx.problem();
@@ -223,9 +228,11 @@ protected:
         // calculate the intrinsic permeability
         K_ = volVarsInside.intrinsicPermeability();
 
-        DimVector normal = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
+        DimVector normal
+            = context.fvElemGeom(timeIdx).boundaryFace[bfIdx].normal;
 
-        const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
+        const auto &matParams
+            = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
 
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
@@ -234,8 +241,7 @@ protected:
         // calculate the weights of the upstream and the downstream
         // control volumes
         ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!context.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
@@ -247,7 +253,9 @@ protected:
             if (fsInside.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
                 // the outside of the domain has higher pressure. we
                 // need to calculate the mobility
-                mobility_[phaseIdx] = kr[phaseIdx]/FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+                mobility_[phaseIdx]
+                    = kr[phaseIdx]
+                      / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             }
             else {
                 mobility_[phaseIdx] = volVarsInside.mobility(phaseIdx);
@@ -263,15 +271,15 @@ protected:
         // calculate the "prelimanary" filter velocity not
         // taking the mobility into account
         K_.mv(asImp_().potentialGrad(phaseIdx), filterVelocity_[phaseIdx]);
-        filterVelocity_[phaseIdx] *= - mobility_[phaseIdx];
+        filterVelocity_[phaseIdx] *= -mobility_[phaseIdx];
     };
 
 private:
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
 
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
 protected:
     // intrinsic permeability tensor and its square root

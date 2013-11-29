@@ -36,7 +36,7 @@ namespace Ewoms {
  *
  * \brief Represents all quantities which available for calculating constraints
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvConstraintsContext
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -56,7 +56,7 @@ public:
      */
     explicit VcfvConstraintsContext(const ElementContext &elemCtx)
         : elemCtx_(elemCtx)
-    { }
+    {}
 
     /*!
      * \copydoc Ewoms::VcfvElementContext::problem()

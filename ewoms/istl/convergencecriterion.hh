@@ -34,88 +34,87 @@ namespace Ewoms {
 
 /*!
  * \file
- * \brief Define some base class for the convergence criteria of the linear solvers of DUNE-ISTL.
+ * \brief Define some base class for the convergence criteria of the linear
+ * solvers of DUNE-ISTL.
  */
 
 /*!
- * \brief Base class for all convergence criteria which only defines an virtual API.
+ * \brief Base class for all convergence criteria which only defines an virtual
+ * API.
  */
 template <class Vector>
 class ConvergenceCriterion
 {
-  typedef typename Vector::field_type Scalar;
+    typedef typename Vector::field_type Scalar;
+
 public:
-  /*!
-   * \brief Destructor.
-   *
-   * In the ConvergenceCriterion it does not do anything, but it is
-   * required to be declared virtual.
-   */
-  virtual ~ConvergenceCriterion()
-  {}
+    /*!
+     * \brief Destructor.
+     *
+     * In the ConvergenceCriterion it does not do anything, but it is
+     * required to be declared virtual.
+     */
+    virtual ~ConvergenceCriterion()
+    {}
 
-  /*!
-   * \brief Set the initial solution of the linear system of equations.
-   *
-   * This version of the method does NOT take the two-norm of the
-   * residual as argument. If the two-norm of the defect is available
-   * for the linear solver, the version of the update() method with it
-   * should be called.
-   *
-   * \param curSol The current iterative solution of the linear system
-   *               of equations
-   * \param curResid The residual vector of the current iterative
-   *                 solution of the linear system of equations
-   */
-  virtual void setInitial(const Vector &curSol,
-                          const Vector &curResid) = 0;
+    /*!
+     * \brief Set the initial solution of the linear system of equations.
+     *
+     * This version of the method does NOT take the two-norm of the
+     * residual as argument. If the two-norm of the defect is available
+     * for the linear solver, the version of the update() method with it
+     * should be called.
+     *
+     * \param curSol The current iterative solution of the linear system
+     *               of equations
+     * \param curResid The residual vector of the current iterative
+     *                 solution of the linear system of equations
+     */
+    virtual void setInitial(const Vector &curSol, const Vector &curResid) = 0;
 
-  /*!
-   * \brief Update the internal members of the convergence criterion
-   *        with the current solution.
-   *
-   * This version of the method does NOT take the two-norm of the
-   * residual as argument. If the two-norm of the defect is available
-   * for the linear solver, the version of the update() method with it
-   * should be called.
-   *
-   * \param curSol The current iterative solution of the linear system
-   *               of equations
-   * \param curResid The residual vector of the current iterative
-   *                 solution of the linear system of equations
-   */
-  virtual void update(const Vector &curSol,
-                      const Vector &curResid) = 0;
+    /*!
+     * \brief Update the internal members of the convergence criterion
+     *        with the current solution.
+     *
+     * This version of the method does NOT take the two-norm of the
+     * residual as argument. If the two-norm of the defect is available
+     * for the linear solver, the version of the update() method with it
+     * should be called.
+     *
+     * \param curSol The current iterative solution of the linear system
+     *               of equations
+     * \param curResid The residual vector of the current iterative
+     *                 solution of the linear system of equations
+     */
+    virtual void update(const Vector &curSol, const Vector &curResid) = 0;
 
-  /*!
-   * \brief Returns true if and only if the convergence criterion is
-   *        met.
-   */
-  virtual bool converged() const = 0;
+    /*!
+     * \brief Returns true if and only if the convergence criterion is
+     *        met.
+     */
+    virtual bool converged() const = 0;
 
-  /*!
-   * \brief Prints the initial information about the convergence behaviour.
-   *
-   * This method is called after setInitial() if the solver thinks
-   * it's a good idea to be verbose. In practice, "printing the
-   * initial information" means printing column headers and the
-   * initial state.
-   *
-   * \param os The output stream to which the message gets written.
-   */
-  virtual void printInitial(std::ostream &os=std::cout) const
-  { };
+    /*!
+     * \brief Prints the initial information about the convergence behaviour.
+     *
+     * This method is called after setInitial() if the solver thinks
+     * it's a good idea to be verbose. In practice, "printing the
+     * initial information" means printing column headers and the
+     * initial state.
+     *
+     * \param os The output stream to which the message gets written.
+     */
+    virtual void printInitial(std::ostream &os = std::cout) const {};
 
-  /*!
-   * \brief Prints the information about the convergence behaviour for
-   *        the current iteration.
-   *
-   * \param iter The iteration number. The semantics of this parameter
-   *             are chosen by the linear solver.
-   * \param os The output stream to which the message gets written.
-   */
-  virtual void print(Scalar iter, std::ostream &os=std::cout) const
-  { };
+    /*!
+     * \brief Prints the information about the convergence behaviour for
+     *        the current iteration.
+     *
+     * \param iter The iteration number. The semantics of this parameter
+     *             are chosen by the linear solver.
+     * \param os The output stream to which the message gets written.
+     */
+    virtual void print(Scalar iter, std::ostream &os = std::cout) const {};
 };
 
 //! \} end documentation

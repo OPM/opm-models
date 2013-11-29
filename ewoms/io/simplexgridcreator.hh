@@ -57,7 +57,7 @@ template <class TypeTag>
 class SimplexGridCreator
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Grid)  Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef Dune::shared_ptr<Grid> GridPointer;
 
     typedef typename Grid::ctype CoordScalar;
@@ -70,16 +70,24 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeX, "The size of the domain in x direction");
-        EWOMS_REGISTER_PARAM(TypeTag, int, CellsX, "The number of intervalls in x direction");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements,
+                             "The number of global refinements of the grid "
+                             "executed after it was loaded");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeX,
+                             "The size of the domain in x direction");
+        EWOMS_REGISTER_PARAM(TypeTag, int, CellsX,
+                             "The number of intervalls in x direction");
         if (dimWorld > 1) {
-            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY, "The size of the domain in y direction");
-            EWOMS_REGISTER_PARAM(TypeTag, int, CellsY, "The number of intervalls in y direction");
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY,
+                                 "The size of the domain in y direction");
+            EWOMS_REGISTER_PARAM(TypeTag, int, CellsY,
+                                 "The number of intervalls in y direction");
         }
         if (dimWorld > 2) {
-            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ, "The size of the domain in z direction");
-            EWOMS_REGISTER_PARAM(TypeTag, int, CellsZ, "The number of intervalls in z direction");
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ,
+                                 "The size of the domain in z direction");
+            EWOMS_REGISTER_PARAM(TypeTag, int, CellsZ,
+                                 "The number of intervalls in z direction");
         }
     }
 
@@ -88,28 +96,30 @@ public:
      */
     static void makeGrid()
     {
-        Dune::array<unsigned, dimWorld > cellRes;
+        Dune::array<unsigned, dimWorld> cellRes;
         GlobalPosition upperRight;
         GlobalPosition lowerLeft;
 
         lowerLeft[0] = 0.0;
         upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
         cellRes[0] = EWOMS_GET_PARAM(TypeTag, int, CellsX);
-        if (dimWorld > 1)
-        {
+        if (dimWorld > 1) {
             lowerLeft[1] = 0.0;
             upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
             cellRes[1] = EWOMS_GET_PARAM(TypeTag, int, CellsY);
         }
-        if (dimWorld > 2)
-        {
+        if (dimWorld > 2) {
             lowerLeft[2] = 0.0;
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        unsigned numRefinments
+            = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft, upperRight, cellRes);
+        simplexGrid_
+            = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft,
+                                                                   upperRight,
+                                                                   cellRes);
         simplexGrid_->globalRefine(numRefinments);
 
         initialized_ = true;
@@ -131,10 +141,15 @@ public:
     /*!
      * \brief Destroys the grid
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     *MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { if (initialized_) simplexGrid_.reset(); initialized_ = false; }
+    {
+        if (initialized_)
+            simplexGrid_.reset();
+        initialized_ = false;
+    }
 
 private:
     static bool initialized_;
@@ -142,7 +157,8 @@ private:
 };
 
 template <class TypeTag>
-typename SimplexGridCreator<TypeTag>::GridPointer SimplexGridCreator<TypeTag>::simplexGrid_;
+typename SimplexGridCreator<TypeTag>::GridPointer
+SimplexGridCreator<TypeTag>::simplexGrid_;
 
 template <class TypeTag>
 bool SimplexGridCreator<TypeTag>::initialized_ = false;

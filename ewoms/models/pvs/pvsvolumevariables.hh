@@ -50,10 +50,12 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class PvsVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public VcfvDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public VcfvDiffusionVolumeVariables<TypeTag,
+                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
+      public VcfvEnergyVolumeVariables<TypeTag,
+                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
 
@@ -74,14 +76,17 @@ class PvsVolumeVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem> MiscibleMultiPhaseComposition;
-    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem> ComputeFromReferencePhase;
+    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem>
+    MiscibleMultiPhaseComposition;
+    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem>
+    ComputeFromReferencePhase;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
+    DiffusionVolumeVariables;
     typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
@@ -91,14 +96,11 @@ public:
     /*!
      * \copydoc ImmiscibleVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
+                                                   timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -107,8 +109,9 @@ public:
         // set the saturations
         /////////////
         Scalar sumSat = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx));
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            fluidState_.setSaturation(phaseIdx,
+                                      priVars.explicitSaturationValue(phaseIdx));
             Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
             sumSat += fluidState_.saturation(phaseIdx);
         }
@@ -121,15 +124,15 @@ public:
         /////////////
 
         // calculate capillary pressure
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const MaterialLawParams &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
         // set the absolute phase pressures in the fluid state
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx,
-                                   priVars[pressure0Idx] + (pC[phaseIdx] - pC[0]));
+            fluidState_.setPressure(phaseIdx, priVars[pressure0Idx]
+                                              + (pC[phaseIdx] - pC[0]));
 
         /////////////
         // calculate the phase compositions
@@ -140,7 +143,7 @@ public:
         int numNonPresentPhases = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!priVars.phaseIsPresent(phaseIdx))
-                ++ numNonPresentPhases;
+                ++numNonPresentPhases;
         }
 
         // now comes the tricky part: calculate phase compositions
@@ -160,15 +163,15 @@ public:
             // calculate the composition of the remaining phases (as
             // well as the densities of all phases). this is the job
             // of the "ComputeFromReferencePhase" constraint solver
-            ComputeFromReferencePhase::solve(fluidState_,
-                                             paramCache,
+            ComputeFromReferencePhase::solve(fluidState_, paramCache,
                                              lowestPresentPhaseIdx,
                                              /*setViscosity=*/true,
                                              /*setEnthalpy=*/false);
         }
         else {
             // create the auxiliary constraints
-            int numAuxConstraints = numComponents + numNonPresentPhases - numPhases;
+            int numAuxConstraints = numComponents + numNonPresentPhases
+                                    - numPhases;
             Opm::MMPCAuxConstraint<Scalar> auxConstraints[numComponents];
 
             int auxIdx = 0;
@@ -180,28 +183,28 @@ public:
                     switchPhaseIdx += 1;
 
                 if (!priVars.phaseIsPresent(switchPhaseIdx)) {
-                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
+                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx,
+                                               priVars[switch0Idx + switchIdx]);
                     ++auxIdx;
                 }
             }
 
             for (; auxIdx < numAuxConstraints; ++auxIdx, ++switchIdx) {
                 int compIdx = numPhases - numNonPresentPhases + auxIdx;
-                auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx, priVars[switch0Idx + switchIdx]);
+                auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx,
+                                           priVars[switch0Idx + switchIdx]);
             }
 
             // both phases are present, i.e. phase compositions are a
             // result of the the gas <-> liquid equilibrium. This is
             // the job of the "MiscibleMultiPhaseComposition"
             // constraint solver
-            MiscibleMultiPhaseComposition::solve(fluidState_,
-                                                 paramCache,
+            MiscibleMultiPhaseComposition::solve(fluidState_, paramCache,
                                                  priVars.phasePresence(),
                                                  auxConstraints,
                                                  numAuxConstraints,
                                                  /*setViscosity=*/true,
                                                  /*setEnthalpy=*/false);
-
         }
 
         // make valgrind happy and set an enthalpy
@@ -216,7 +219,8 @@ public:
 
         // calculate relative permeabilities
         fluidState_.checkDefined();
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
@@ -230,10 +234,12 @@ public:
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
+                                       timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
+                                          scvIdx, timeIdx);
     }
 
     /*!
@@ -258,7 +264,9 @@ public:
      * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
+    {
+        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+    }
 
     /*!
      * \copydoc ImmiscibleVolumeVariables::porosity

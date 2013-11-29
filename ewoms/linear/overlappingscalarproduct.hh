@@ -36,34 +36,35 @@ namespace Linear {
  * \brief An overlap aware ISTL scalar product.
  */
 template <class OverlappingBlockVector, class Overlap>
-class OverlappingScalarProduct : public Dune::ScalarProduct<OverlappingBlockVector>
+class OverlappingScalarProduct
+    : public Dune::ScalarProduct<OverlappingBlockVector>
 {
 public:
     typedef typename OverlappingBlockVector::field_type field_type;
 
     enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingScalarProduct(const Overlap &overlap)
-        : overlap_(overlap)
+    OverlappingScalarProduct(const Overlap &overlap) : overlap_(overlap)
     {}
 
-    field_type dot(const OverlappingBlockVector &x, const OverlappingBlockVector &y)
+    field_type dot(const OverlappingBlockVector &x,
+                   const OverlappingBlockVector &y)
     {
         double sum = 0;
         int n = overlap_.numLocal();
         for (int i = 0; i < n; ++i) {
             if (overlap_.iAmMasterOf(i))
-                sum += x[i]*y[i];
+                sum += x[i] * y[i];
         };
 
         // compute the global sum
         double sumGlobal = 0.0;
 #if HAVE_MPI
-        MPI_Allreduce(&sum, // source buffer
-                      &sumGlobal, // destination buffer
-                      1, // number of objects in buffers
-                      MPI_DOUBLE, // data type
-                      MPI_SUM, // operation
+        MPI_Allreduce(&sum,            // source buffer
+                      &sumGlobal,      // destination buffer
+                      1,               // number of objects in buffers
+                      MPI_DOUBLE,      // data type
+                      MPI_SUM,         // operation
                       MPI_COMM_WORLD); // communicator
 #else
         sumGlobal = sum;

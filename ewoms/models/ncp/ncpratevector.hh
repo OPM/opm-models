@@ -32,8 +32,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms
-{
+namespace Ewoms {
 /*!
  * \ingroup NcpModel
  *
@@ -45,7 +44,7 @@ namespace Ewoms
 template <class TypeTag>
 class NcpRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -58,24 +57,23 @@ class NcpRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+
 public:
-    NcpRateVector()
-        : ParentType()
+    NcpRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    NcpRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    NcpRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
+     * ImmiscibleRateVector &)
      */
-    NcpRateVector(const NcpRateVector &value)
-        : ParentType(value)
-    { }
+    NcpRateVector(const NcpRateVector &value) : ParentType(value)
+    {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
@@ -95,31 +93,25 @@ public:
      * \copydoc ImmiscibleRateVector::setMolarRate
      */
     void setMolarRate(const ParentType &value)
-    {
-        ParentType::operator=(value);
-    }
+    { ParentType::operator=(value); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
     void setEnthalpyRate(Scalar rate)
-    {
-        EnergyModule::setEnthalpyRate(*this, rate);
-    }
+    { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState,
-                           int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
         *this = 0.0;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx] =
-                fluidState.molarity(phaseIdx, compIdx)
-                * volume;
+            (*this)[conti0EqIdx + compIdx]
+                = fluidState.molarity(phaseIdx, compIdx) * volume;
         }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);

@@ -37,7 +37,7 @@ namespace Ewoms {
  * \brief Calculates the local residual of the immiscible multi-phase
  *        VCVF discretization.
  */
-template<class TypeTag>
+template <class TypeTag>
 class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
@@ -49,12 +49,9 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    enum {
-        conti0EqIdx = Indices::conti0EqIdx,
-        numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-
-        enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy)
-    };
+    enum { conti0EqIdx = Indices::conti0EqIdx,
+           numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
+           enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
@@ -67,21 +64,17 @@ public:
      * \copydetails Doxygen::vcfvScvCtxParams
      * \copydetails Doxygen::phaseIdxParam
      */
-    void addPhaseStorage(EqVector &storage,
-                         const ElementContext &elemCtx,
-                         int scvIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
+                         int scvIdx, int timeIdx, int phaseIdx) const
     {
         // retrieve the volume variables for the SCV at the specified
         // point in time
         const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
-        storage[conti0EqIdx + phaseIdx] =
-            volVars.porosity()
-            * fs.saturation(phaseIdx)
-            * fs.density(phaseIdx);
+        storage[conti0EqIdx + phaseIdx] = volVars.porosity()
+                                          * fs.saturation(phaseIdx)
+                                          * fs.density(phaseIdx);
 
         EnergyModule::addPhaseStorage(storage, volVars, phaseIdx);
     }
@@ -89,25 +82,22 @@ public:
     /*!
      * \copydoc VcfvLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
+                        int scvIdx, int timeIdx) const
     {
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(scvIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage,
+                                          elemCtx.volVars(scvIdx, timeIdx));
     }
 
     /*!
      * \copydoc VcfvLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         flux = 0;
         asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -120,19 +110,17 @@ public:
      *
      * \copydetails computeFlux
      */
-    void addAdvectiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const FluxVariables &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const FluxVariables &evalPointFluxVars
+            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream vertices
             // of the current phase. The upstream decision has to be
             // made using the evaluation point and *not* the current
@@ -144,9 +132,8 @@ public:
 
             // add advective flux of current component in current
             // phase
-            flux[conti0EqIdx + phaseIdx] +=
-                fluxVars.volumeFlux(phaseIdx)
-                * up.fluidState().density(phaseIdx);
+            flux[conti0EqIdx + phaseIdx] += fluxVars.volumeFlux(phaseIdx)
+                                            * up.fluidState().density(phaseIdx);
         }
 
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -162,10 +149,8 @@ public:
      *
      * \copydetails computeFlux
      */
-    void addDiffusiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
+                          int scvfIdx, int timeIdx) const
     {
         // no diffusive mass fluxes for the immiscible model
 
@@ -179,10 +164,8 @@ public:
      * By default, this method only asks the problem to specify a
      * source term.
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
+    void computeSource(RateVector &source, const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx) const
     {
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
@@ -191,7 +174,7 @@ public:
 
 private:
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 };
 
 } // namespace Ewoms

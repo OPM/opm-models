@@ -55,19 +55,21 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
+ *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
  * means of the equation
  * \f[
  * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
- * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha \right\}
  * - q^\kappa = 0 \;.
  * \f]
  *
@@ -80,12 +82,14 @@ namespace Ewoms {
  *
  * Also, if a fluid phase may be present at a given spatial location
  * its saturation must be non-negative:
- * \f[ \forall \alpha: \sum_\kappa x_\alpha^\kappa = 1 \implies S_\alpha \geq 0 \f]
+ * \f[ \forall \alpha: \sum_\kappa x_\alpha^\kappa = 1 \implies S_\alpha \geq 0
+ *\f]
  *
  * Since at any given spatial location, a phase is always either
  * present or not present, one of the strict equalities on the
  * right hand side is always true, i.e.
- * \f[ \forall \alpha: S_\alpha \left( \sum_\kappa x_\alpha^\kappa - 1 \right) = 0 \f]
+ * \f[ \forall \alpha: S_\alpha \left( \sum_\kappa x_\alpha^\kappa - 1 \right) =
+ *0 \f]
  * always holds.
  *
  * These three equations constitute a non-linear complementarity
@@ -95,9 +99,11 @@ namespace Ewoms {
  *
  * Several non-linear complementarity functions have been suggested,
  * e.g. the Fischer-Burmeister function
- * \f[ \Phi(a,b) = a + b - \sqrt{a^2 + b^2} \;. \f]
+ * \f[ \Phi(a,b) = a + b - \sqrt
+ {a^2 + b^2} \;. \f]
  * This model uses
- * \f[ \Phi(a,b) = \min \{a,  b \}\;, \f]
+ * \f[ \Phi(a,b) = \min \
+ {a,  b \}\;, \f]
  * because of its piecewise linearity.
  *
  * These equations are then discretized using a fully-implicit vertex
@@ -111,9 +117,8 @@ namespace Ewoms {
  * - The saturations of the first \f$M-1\f$ phases \f$S_1, \dots, S_{M-1}\f$
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
-template<class TypeTag>
-class NcpModel
-    : public GET_PROP_TYPE(TypeTag, BaseModel)
+template <class TypeTag>
+class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
 
@@ -145,7 +150,8 @@ class NcpModel
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -200,14 +206,10 @@ public:
 
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      scvIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *=
-                    fvElemGeom.subContVol[scvIdx].volume
-                    * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
+                                                      /*timeIdx=*/0, phaseIdx);
+                tmp *= fvElemGeom.subContVol[scvIdx].volume
+                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -233,10 +235,13 @@ public:
         std::ostringstream oss;
         if (pvIdx == pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        else if (saturation0Idx <= pvIdx && pvIdx < saturation0Idx + (numPhases - 1))
-            oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - saturation0Idx);
+        else if (saturation0Idx <= pvIdx && pvIdx < saturation0Idx
+                                                    + (numPhases - 1))
+            oss << "saturation_"
+                << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - saturation0Idx);
         else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents)
-            oss << "fugacity^" << FluidSystem::componentName(pvIdx - fugacity0Idx);
+            oss << "fugacity^"
+                << FluidSystem::componentName(pvIdx - fugacity0Idx);
         else
             assert(false);
 
@@ -254,9 +259,11 @@ public:
 
         std::ostringstream oss;
         if (conti0EqIdx <= eqIdx && eqIdx < conti0EqIdx + numComponents)
-            oss << "continuity^" << FluidSystem::componentName(eqIdx - conti0EqIdx);
+            oss << "continuity^"
+                << FluidSystem::componentName(eqIdx - conti0EqIdx);
         else if (ncp0EqIdx <= eqIdx && eqIdx < ncp0EqIdx + numPhases)
-            oss << "ncp_" << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - ncp0EqIdx);
+            oss << "ncp_"
+                << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - ncp0EqIdx);
         else
             assert(false);
 
@@ -270,7 +277,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ = this->solution(
+            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!
@@ -281,18 +289,20 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
-            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    const auto &fs = elemCtx.volVars(scvIdx, /*timeIdx=*/0).fluidState();
+                    const auto &fs
+                        = elemCtx.volVars(scvIdx, /*timeIdx=*/0).fluidState();
 
-                    minActivityCoeff_[globalIdx][compIdx] =
-                        std::min(minActivityCoeff_[globalIdx][compIdx],
-                                 fs.fugacityCoefficient(phaseIdx, compIdx)
-                                 * fs.pressure(phaseIdx) );
+                    minActivityCoeff_[globalIdx][compIdx]
+                        = std::min(minActivityCoeff_[globalIdx][compIdx],
+                                   fs.fugacityCoefficient(phaseIdx, compIdx)
+                                   * fs.pressure(phaseIdx));
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 };
             };
@@ -304,7 +314,8 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp
+            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -314,8 +325,10 @@ public:
             assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[globalVertexIdx][compIdx]);
-            static const Scalar fugacityBaseWeight = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
-            return fugacityBaseWeight / minActivityCoeff_[globalVertexIdx][compIdx];
+            static const Scalar fugacityBaseWeight
+                = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
+            return fugacityBaseWeight
+                   / minActivityCoeff_[globalVertexIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
@@ -323,17 +336,21 @@ public:
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
+            Scalar r
+                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
 
-            static const Scalar pressureBaseWeight = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
-            return std::max(pressureBaseWeight/referencePressure_, pGradRef * KRef/muRef / r);
+            static const Scalar pressureBaseWeight
+                = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
+            return std::max(pressureBaseWeight / referencePressure_,
+                            pGradRef * KRef / muRef / r);
         }
 
         DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
         assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
 
         // saturation
-        static const Scalar saturationsBaseWeight = GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
+        static const Scalar saturationsBaseWeight
+            = GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
         return saturationsBaseWeight;
     }
 
@@ -359,10 +376,12 @@ public:
     }
 
     /*!
-     * \brief Returns the smallest activity coefficient of a component for the most
+     * \brief Returns the smallest activity coefficient of a component for the
+     *most
      *        current solution at a vertex.
      *
-     * \param globalVertexIdx The global index of the vertex (i.e. finite volume) of interest.
+     * \param globalVertexIdx The global index of the vertex (i.e. finite
+     *volume) of interest.
      * \param compIdx The index of the component of interest.
      */
     Scalar minActivityCoeff(int globalVertexIdx, int compIdx) const
@@ -375,13 +394,18 @@ private:
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
     mutable Scalar referencePressure_;

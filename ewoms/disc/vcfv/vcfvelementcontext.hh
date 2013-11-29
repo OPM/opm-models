@@ -38,7 +38,7 @@ namespace Ewoms {
  * \brief This class stores an array of VolumeVariables objects, one
  *        volume variables object for each of the element's vertices
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvElementContext
 {
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -48,7 +48,8 @@ class VcfvElementContext
     // the history size of the time discretization in number of steps
     enum { timeDiscHistorySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize) };
 
-    struct ScvStore_ {
+    struct ScvStore_
+    {
         VolumeVariables volVars[timeDiscHistorySize];
         PrimaryVariables priVars[timeDiscHistorySize];
         const VolumeVariables *hint[timeDiscHistorySize];
@@ -122,7 +123,7 @@ public:
      */
     void updateAllScvVars()
     {
-        for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
+        for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++timeIdx)
             updateScvVars(timeIdx);
         scvIdxSaved_ = -1;
     }
@@ -152,7 +153,8 @@ public:
 
         // update gradients
         for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
-            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, scvIdx, timeIdx);
+            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(
+                /*context=*/*this, scvIdx, timeIdx);
         }
     }
 
@@ -174,7 +176,8 @@ public:
         // update SCV gradients
         int nScv = numScv();
         for (int scvIdx = 0; scvIdx < nScv; scvIdx++) {
-            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, scvIdx, timeIdx);
+            scvVars_[scvIdx].volVars[timeIdx].updateScvGradients(
+                /*context=*/*this, scvIdx, timeIdx);
         }
     }
 
@@ -187,7 +190,7 @@ public:
         scvfVarsEval_ = &scvfVars_;
 
         for (int scvfIdx = 0; scvfIdx < numScvf(); scvfIdx++) {
-            scvfVars_[scvfIdx].update(/*context=*/ *this,
+            scvfVars_[scvfIdx].update(/*context=*/*this,
                                       /*localIndex=*/scvfIdx,
                                       /*timeIdx=*/0);
         }
@@ -205,7 +208,7 @@ public:
         scvfVarsEval_ = &scvfVars_;
 
         for (int scvfIdx = 0; scvfIdx < numScvf(); scvfIdx++) {
-            scvfVars_[scvfIdx].update(/*context=*/ *this,
+            scvfVars_[scvfIdx].update(/*context=*/*this,
                                       /*localIndex=*/scvfIdx,
                                       /*timeIdx=*/timeIdx);
         }
@@ -242,7 +245,8 @@ public:
     { return fvElemGeom_.numVertices; }
 
     /*!
-     * \brief Return the number of sub-control volume faces of the current element.
+     * \brief Return the number of sub-control volume faces of the current
+     * element.
      */
     int numScvf() const
     { return fvElemGeom_.numEdges; }
@@ -302,7 +306,7 @@ public:
      */
     void restoreScvfVars()
     {
-        //scvfVarsSaved_ = scvfVars_; // not needed
+        // scvfVarsSaved_ = scvfVars_; // not needed
 
         // change evaluation point
         scvfVarsEval_ = &scvfVars_;
@@ -432,10 +436,12 @@ public:
     }
 
 protected:
-    void updateSingleScvVars_(const PrimaryVariables &priVars, int scvIdx, int timeIdx)
+    void updateSingleScvVars_(const PrimaryVariables &priVars, int scvIdx,
+                              int timeIdx)
     {
         scvVars_[scvIdx].priVars[timeIdx] = priVars;
-        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this, scvIdx, timeIdx);
+        scvVars_[scvIdx].volVars[timeIdx].update(/*context=*/*this, scvIdx,
+                                                 timeIdx);
     }
 
     ScvVarsVector scvVars_;

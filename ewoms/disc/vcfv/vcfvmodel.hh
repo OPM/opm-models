@@ -50,7 +50,7 @@ namespace Ewoms {
  * \brief The base class for the vertex centered finite volume
  *        discretization scheme.
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvModel
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
@@ -69,11 +69,9 @@ class VcfvModel
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
 
-    enum {
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
-        historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
-        dim = GridView::dimension
-    };
+    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    static const int historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize);
+    static const int dim = GridView::dimension;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
@@ -141,7 +139,8 @@ public:
         // register runtime parameters of the VTK output modules
         Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableHints, "Enable thermodynamic hints");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableHints,
+                             "Enable thermodynamic hints");
     }
 
     /*!
@@ -173,8 +172,7 @@ public:
                 hints_[timeIdx].resize(nVerts);
                 hintsUsable_[timeIdx].resize(nVerts);
                 std::fill(hintsUsable_[timeIdx].begin(),
-                          hintsUsable_[timeIdx].end(),
-                          false);
+                          hintsUsable_[timeIdx].end(), false);
             }
         }
 
@@ -204,9 +202,7 @@ public:
      */
     const VolumeVariables *hint(int globalIdx, int timeIdx) const
     {
-        if (!enableHints_() ||
-            !hintsUsable_[timeIdx][globalIdx])
-        {
+        if (!enableHints_() || !hintsUsable_[timeIdx][globalIdx]) {
             return 0;
         }
 
@@ -222,9 +218,7 @@ public:
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void setHint(const VolumeVariables &hint,
-                 int globalIdx,
-                 int timeIdx) const
+    void setHint(const VolumeVariables &hint, int globalIdx, int timeIdx) const
     {
         if (!enableHints_())
             return;
@@ -243,7 +237,7 @@ public:
      */
     void shiftHints(int numSlots = 1)
     {
-        for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx)
+        for (int timeIdx = 0; timeIdx < historySize - numSlots; ++timeIdx)
             hints_[timeIdx + numSlots] = hints_[timeIdx];
     }
 
@@ -254,8 +248,7 @@ public:
      * \param dest Stores the result
      * \param u The solution for which the residual ought to be calculated
      */
-    Scalar globalResidual(GlobalEqVector &dest,
-                          const SolutionVector &u) const
+    Scalar globalResidual(GlobalEqVector &dest, const SolutionVector &u) const
     {
         SolutionVector tmp(solution(/*timeIdx=*/0));
         solution_[/*timeIdx=*/0] = u;
@@ -293,8 +286,8 @@ public:
         };
 
         // add up the residuals on the process borders
-        GridCommHandleSum<EqVector, GlobalEqVector, VertexMapper, /*commCodim=*/dim>
-            sumHandle(dest, vertexMapper());
+        GridCommHandleSum<EqVector, GlobalEqVector, VertexMapper,
+                          /*commCodim=*/dim> sumHandle(dest, vertexMapper());
         gridView().communicate(sumHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
                                Dune::ForwardCommunication);
@@ -347,7 +340,8 @@ public:
     { return boxVolume_[globalIdx][0]; }
 
     /*!
-     * \brief Reference to the solution at a given history index as a block vector.
+     * \brief Reference to the solution at a given history index as a block
+     *vector.
      *
      * \param timeIdx The index of the solution used by the time discretization.
      */
@@ -409,8 +403,9 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar absPv = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
-        return 1.0/std::max(absPv, 1.0);
+        Scalar absPv
+            = std::abs(this->solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
+        return 1.0 / std::max(absPv, 1.0);
     }
 
     /*!
@@ -431,16 +426,15 @@ public:
      * \param pv1 The first vector of primary variables
      * \param pv2 The second vector of primary variables
      */
-    Scalar relativeErrorVertex(int vertexIdx,
-                               const PrimaryVariables &pv1,
+    Scalar relativeErrorVertex(int vertexIdx, const PrimaryVariables &pv1,
                                const PrimaryVariables &pv2) const
     {
         Scalar result = 0.0;
         for (int j = 0; j < numEq; ++j) {
             Scalar weight = asImp_().primaryVarWeight(vertexIdx, j);
-            Scalar eqErr = std::abs((pv1[j] - pv2[j])*weight);
-            //Scalar eqErr = std::abs(pv1[j] - pv2[j]);
-            //eqErr *= std::max<Scalar>(1.0, std::abs(pv1[j] + pv2[j])/2);
+            Scalar eqErr = std::abs((pv1[j] - pv2[j]) * weight);
+            // Scalar eqErr = std::abs(pv1[j] - pv2[j]);
+            // eqErr *= std::max<Scalar>(1.0, std::abs(pv1[j] + pv2[j])/2);
 
             result = std::max(result, eqErr);
         }
@@ -490,7 +484,7 @@ public:
      *        model can overload.
      */
     void updateSuccessful()
-    { }
+    {}
 
     /*!
      * \brief Called by the update() method if it was
@@ -558,16 +552,14 @@ public:
      * \param vert The DUNE Codim<dim> entity which's data should be
      *             serialized
      */
-    void serializeEntity(std::ostream &outstream,
-                         const Vertex &vert)
+    void serializeEntity(std::ostream &outstream, const Vertex &vert)
     {
         int vertIdx = dofMapper().map(vert);
 
         // write phase state
         if (!outstream.good()) {
-            OPM_THROW(std::runtime_error,
-                       "Could not serialize vertex "
-                       << vertIdx);
+            OPM_THROW(std::runtime_error, "Could not serialize vertex "
+                                          << vertIdx);
         }
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -584,15 +576,13 @@ public:
      * \param vertex The DUNE Codim<dim> entity which's data should be
      *               deserialized
      */
-    void deserializeEntity(std::istream &instream,
-                           const Vertex &vertex)
+    void deserializeEntity(std::istream &instream, const Vertex &vertex)
     {
         int vertIdx = dofMapper().map(vertex);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                OPM_THROW(std::runtime_error,
-                           "Could not deserialize vertex "
-                           << vertIdx);
+                OPM_THROW(std::runtime_error, "Could not deserialize vertex "
+                                              << vertIdx);
             instream >> solution_[/*timeIdx=*/0][vertIdx][eqIdx];
         }
     }
@@ -628,7 +618,7 @@ public:
      * \brief Resets the Jacobian matrix assembler, so that the
      *        boundary types can be altered.
      */
-    void resetJacobianAssembler ()
+    void resetJacobianAssembler()
     {
         delete jacAsm_;
         jacAsm_ = new JacobianAssembler;
@@ -639,7 +629,8 @@ public:
      * \brief Return whether a degree of freedom is located on the
      *        domain boundary.
      *
-     * \param globalIdx The global space index of the degree of freedom of interest.
+     * \param globalIdx The global space index of the degree of freedom of
+     *interest.
      */
     bool onBoundary(int globalIdx) const
     { return onBoundary_[globalIdx]; }
@@ -681,7 +672,7 @@ public:
      * \copydetails Doxygen::vcfvElemCtxParam
      */
     void updatePVWeights(const ElementContext &elemCtx) const
-    { }
+    {}
 
     /*!
      * \brief Add the vector fields for analysing the convergence of
@@ -689,13 +680,14 @@ public:
      *
      * \tparam MultiWriter The type of the VTK multi writer
      *
-     * \param writer  The VTK multi writer object on which the fields should be added.
+     * \param writer  The VTK multi writer object on which the fields should be
+     *added.
      * \param u       The solution function
-     * \param deltaU  The delta of the solution function before and after the Newton update
+     * \param deltaU  The delta of the solution function before and after the
+     *Newton update
      */
     template <class MultiWriter>
-    void addConvergenceVtkFields(MultiWriter &writer,
-                                 const SolutionVector &u,
+    void addConvergenceVtkFields(MultiWriter &writer, const SolutionVector &u,
                                  const GlobalEqVector &deltaU) const
     {
         typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
@@ -705,14 +697,14 @@ public:
 
         // create the required scalar fields
         unsigned numVertices = this->gridView_().size(dim);
-        //unsigned numElements = this->gridView_().size(0);
+        // unsigned numElements = this->gridView_().size(0);
 
         // global defect of the two auxiliary equations
-        ScalarField* def[numEq];
-        ScalarField* delta[numEq];
-        ScalarField* priVars[numEq];
-        ScalarField* priVarWeight[numEq];
-        ScalarField* relError = writer.allocateManagedBuffer(numVertices);
+        ScalarField *def[numEq];
+        ScalarField *delta[numEq];
+        ScalarField *priVars[numEq];
+        ScalarField *priVarWeight[numEq];
+        ScalarField *relError = writer.allocateManagedBuffer(numVertices);
         for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
             priVars[pvIdx] = writer.allocateManagedBuffer(numVertices);
             priVarWeight[pvIdx] = writer.allocateManagedBuffer(numVertices);
@@ -722,39 +714,41 @@ public:
 
         VertexIterator vIt = this->gridView_().template begin<dim>();
         VertexIterator vEndIt = this->gridView_().template end<dim>();
-        for (; vIt != vEndIt; ++ vIt)
-        {
+        for (; vIt != vEndIt; ++vIt) {
             int globalIdx = vertexMapper().map(*vIt);
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
                 (*priVars[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
-                (*priVarWeight[pvIdx])[globalIdx] = asImp_().primaryVarWeight(globalIdx, pvIdx);
-                (*delta[pvIdx])[globalIdx] =
-                    - deltaU[globalIdx][pvIdx];
+                (*priVarWeight[pvIdx])[globalIdx]
+                    = asImp_().primaryVarWeight(globalIdx, pvIdx);
+                (*delta[pvIdx])[globalIdx] = -deltaU[globalIdx][pvIdx];
                 (*def[pvIdx])[globalIdx] = globalResid[globalIdx][pvIdx];
             }
 
             PrimaryVariables uOld(u[globalIdx]);
             PrimaryVariables uNew(uOld);
             uNew -= deltaU[globalIdx];
-            (*relError)[globalIdx] = asImp_().relativeErrorVertex(globalIdx,
-                                                                  uOld,
-                                                                  uNew);
+            (*relError)[globalIdx]
+                = asImp_().relativeErrorVertex(globalIdx, uOld, uNew);
         }
 
         writer.attachVertexData(*relError, "relative Error");
 
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
-            oss.str(""); oss << "priVar_" << asImp_().primaryVarName(i);
+            oss.str("");
+            oss << "priVar_" << asImp_().primaryVarName(i);
             writer.attachVertexData(*priVars[i], oss.str());
 
-            oss.str(""); oss << "delta_" << asImp_().primaryVarName(i);
+            oss.str("");
+            oss << "delta_" << asImp_().primaryVarName(i);
             writer.attachVertexData(*delta[i], oss.str());
 
-            oss.str(""); oss << "weight_" << asImp_().primaryVarName(i);
+            oss.str("");
+            oss << "weight_" << asImp_().primaryVarName(i);
             writer.attachVertexData(*priVarWeight[i], oss.str());
 
-            oss.str(""); oss << "defect_" << asImp_().eqName(i);
+            oss.str("");
+            oss << "defect_" << asImp_().eqName(i);
             writer.attachVertexData(*def[i], oss.str());
         }
 
@@ -762,7 +756,8 @@ public:
     }
 
     /*!
-     * \brief Append the quantities relevant for the current solution to a VTK multi writer.
+     * \brief Append the quantities relevant for the current solution to a VTK
+     *multi writer.
      *
      * This should be overwritten by the actual model if any secondary
      * variables should be written out. Read: This should _always_ be
@@ -785,8 +780,7 @@ public:
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
+        for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
             elemCtx.updateScvfVars(/*timeIdx=*/0);
@@ -821,7 +815,8 @@ protected:
     void registerVtkModules_()
     {
         // add the VTK output modules available on all model
-        auto *vtkMod = new Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>(this->problem_());
+        auto *vtkMod
+            = new Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>(this->problem_());
         this->vtkOutputModules_.push_back(vtkMod);
     }
 
@@ -868,13 +863,13 @@ protected:
             // retrieve the reference element for the current element
             const Element &elem = *elemIt;
             Dune::GeometryType geoType = elem.geometry().type();
-            const ReferenceElement &refElement = ReferenceElements::general(geoType);
+            const ReferenceElement &refElement
+                = ReferenceElements::general(geoType);
 
             // loop over all intersections of the element
             IntersectionIterator isIt = gridView_().ibegin(elem);
             const IntersectionIterator &endIt = gridView_().iend(elem);
-            for (; isIt != endIt; ++isIt)
-            {
+            for (; isIt != endIt; ++isIt) {
                 // do nothing if the face is _not_ on the boundary
                 if (!isIt->boundary())
                     continue;
@@ -882,22 +877,22 @@ protected:
                 // loop over all vertices of the intersection
                 int faceIdx = isIt->indexInInside();
                 int numFaceVerts = refElement.size(faceIdx, 1, dim);
-                for (int faceVertIdx = 0;
-                     faceVertIdx < numFaceVerts;
-                     ++faceVertIdx)
-                {
+                for (int faceVertIdx = 0; faceVertIdx < numFaceVerts;
+                     ++faceVertIdx) {
                     // find the local element index of the face's
                     // vertex
-                    int scvIdx = refElement.subEntity(/*entityIdx=*/faceIdx,
-                                                   /*entityCodim=*/1,
-                                                   /*subEntityIdx=*/faceVertIdx,
-                                                   /*subEntityCodim=*/dim);
-                    int globalIdx = vertexMapper().map(*elemIt, scvIdx, /*codim=*/dim);
+                    int scvIdx
+                        = refElement.subEntity(/*entityIdx=*/faceIdx,
+                                               /*entityCodim=*/1,
+                                               /*subEntityIdx=*/faceVertIdx,
+                                               /*subEntityCodim=*/dim);
+                    int globalIdx
+                        = vertexMapper().map(*elemIt, scvIdx, /*codim=*/dim);
 
                     onBoundary_[globalIdx] = true;
                 } // loop over intersection's vertices
-            } // loop over intersections
-        } // loop over elements
+            }     // loop over intersections
+        }         // loop over elements
     }
 
     /*!
@@ -924,23 +919,19 @@ protected:
             elemCtx.updateFVElemGeom(*it);
 
             // loop over all element vertices, i.e. sub control volumes
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
-            {
+            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
                 // map the local vertex index to the global one
-                int globalIdx = vertexMapper().map(*it,
-                                                   scvIdx,
-                                                   dim);
+                int globalIdx = vertexMapper().map(*it, scvIdx, dim);
 
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
-                problem_().initial(uCur[globalIdx],
-                                   elemCtx,
-                                   scvIdx,
+                problem_().initial(uCur[globalIdx], elemCtx, scvIdx,
                                    /*timeIdx=*/0);
                 Valgrind::CheckDefined(uCur[globalIdx]);
 
-                boxVolume_[globalIdx] +=
-                    elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume;
+                boxVolume_[globalIdx] += elemCtx.fvElemGeom(/*timeIdx=*/0)
+                                             .subContVol[scvIdx]
+                                             .volume;
             }
         }
 
@@ -948,7 +939,8 @@ protected:
         GridCommHandleSum<Dune::FieldVector<Scalar, 1>,
                           Dune::BlockVector<Dune::FieldVector<Scalar, 1> >,
                           VertexMapper,
-                          /*commCodim=*/dim> sumVolumeHandle(boxVolume_, vertexMapper());
+                          /*commCodim=*/dim> sumVolumeHandle(boxVolume_,
+                                                             vertexMapper());
         gridView().communicate(sumVolumeHandle,
                                Dune::InteriorBorder_InteriorBorder_Interface,
                                Dune::ForwardCommunication);
@@ -966,9 +958,9 @@ protected:
     { return gridView_().comm().rank() == 0; }
 
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
     // the problem we want to solve. defines the constitutive
     // relations, matxerial laws, etc.
@@ -987,7 +979,7 @@ protected:
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
 
-    std::list<VcfvVtkOutputModule<TypeTag>*> vtkOutputModules_;
+    std::list<VcfvVtkOutputModule<TypeTag> *> vtkOutputModules_;
 
     Dune::BlockVector<Dune::FieldVector<Scalar, 1> > boxVolume_;
 };

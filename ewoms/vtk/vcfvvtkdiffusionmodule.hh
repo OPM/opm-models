@@ -31,7 +31,8 @@
 
 namespace Opm {
 namespace Properties {
-// create new type tag for the VTK output of the quantities for molecular diffusion
+// create new type tag for the VTK output of the quantities for molecular
+// diffusion
 NEW_TYPE_TAG(VtkDiffusion);
 
 // create the property tags needed for the diffusion module
@@ -55,9 +56,10 @@ namespace Ewoms {
  *
  * This module deals with the following quantities:
  * - Molecular diffusion coefficients of all components in all fluid phases
- * - Effective molecular diffusion coefficients of the porous medium of all components in all fluid phases
+ * - Effective molecular diffusion coefficients of the porous medium of all
+ *components in all fluid phases
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkDiffusionModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -76,18 +78,24 @@ class VcfvVtkDiffusionModule : public VcfvVtkOutputModule<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:
-    VcfvVtkDiffusionModule(const Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvVtkDiffusionModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTortuosities, "Include the tortuosity for each phase in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients, "Include the molecular diffusion coefficients in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients, "Include the effective molecular diffusion coefficients the medium in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTortuosities,
+                             "Include the tortuosity for each phase in the VTK "
+                             "output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients,
+                             "Include the molecular diffusion coefficients in "
+                             "the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool,
+                             VtkWriteEffectiveDiffusionCoefficients,
+                             "Include the effective molecular diffusion "
+                             "coefficients the medium in the VTK output files");
     }
 
     /*!
@@ -96,9 +104,12 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (tortuosityOutput_()) this->resizePhaseBuffer_(tortuosity_);
-        if (diffusionCoefficientOutput_()) this->resizePhaseComponentBuffer_(diffusionCoefficient_);
-        if (effectiveDiffusionCoefficientOutput_()) this->resizePhaseComponentBuffer_(effectiveDiffusionCoefficient_);
+        if (tortuosityOutput_())
+            this->resizePhaseBuffer_(tortuosity_);
+        if (diffusionCoefficientOutput_())
+            this->resizePhaseComponentBuffer_(diffusionCoefficient_);
+        if (effectiveDiffusionCoefficientOutput_())
+            this->resizePhaseComponentBuffer_(effectiveDiffusionCoefficient_);
     }
 
     /*!
@@ -115,10 +126,16 @@ public:
             const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (tortuosityOutput_()) tortuosity_[phaseIdx][I] = volVars.tortuosity(phaseIdx);
+                if (tortuosityOutput_())
+                    tortuosity_[phaseIdx][I] = volVars.tortuosity(phaseIdx);
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    if (diffusionCoefficientOutput_()) diffusionCoefficient_[phaseIdx][compIdx][I] = volVars.diffusionCoefficient(phaseIdx, compIdx);
-                    if (effectiveDiffusionCoefficientOutput_()) effectiveDiffusionCoefficient_[phaseIdx][compIdx][I] = volVars.effectiveDiffusionCoefficient(phaseIdx, compIdx);
+                    if (diffusionCoefficientOutput_())
+                        diffusionCoefficient_[phaseIdx][compIdx][I]
+                            = volVars.diffusionCoefficient(phaseIdx, compIdx);
+                    if (effectiveDiffusionCoefficientOutput_())
+                        effectiveDiffusionCoefficient_[phaseIdx][compIdx][I]
+                            = volVars.effectiveDiffusionCoefficient(phaseIdx,
+                                                                    compIdx);
                 }
             }
         }
@@ -129,9 +146,15 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (tortuosityOutput_()) this->commitPhaseBuffer_(writer, "tortuosity", tortuosity_);
-        if (diffusionCoefficientOutput_()) this->commitPhaseComponentBuffer_(writer, "diffusionCoefficient", diffusionCoefficient_);
-        if (effectiveDiffusionCoefficientOutput_()) this->commitPhaseComponentBuffer_(writer, "effectiveDiffusionCoefficient", effectiveDiffusionCoefficient_);
+        if (tortuosityOutput_())
+            this->commitPhaseBuffer_(writer, "tortuosity", tortuosity_);
+        if (diffusionCoefficientOutput_())
+            this->commitPhaseComponentBuffer_(writer, "diffusionCoefficient",
+                                              diffusionCoefficient_);
+        if (effectiveDiffusionCoefficientOutput_())
+            this->commitPhaseComponentBuffer_(writer,
+                                              "effectiveDiffusionCoefficient",
+                                              effectiveDiffusionCoefficient_);
     }
 
 private:
@@ -142,7 +165,10 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients); }
 
     static bool effectiveDiffusionCoefficientOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients); }
+    {
+        return EWOMS_GET_PARAM(TypeTag, bool,
+                               VtkWriteEffectiveDiffusionCoefficients);
+    }
 
     PhaseBuffer tortuosity_;
     PhaseComponentBuffer diffusionCoefficient_;

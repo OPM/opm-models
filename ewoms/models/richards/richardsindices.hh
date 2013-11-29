@@ -28,7 +28,8 @@ namespace Ewoms {
 
 /*!
  * \ingroup RichardsModel
- * \brief Indices for the primary variables/conservation equations of the Richards model.
+ * \brief Indices for the primary variables/conservation equations of the
+ * Richards model.
  */
 struct RichardsIndices
 {

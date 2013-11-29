@@ -46,8 +46,8 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class StokesVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    : public VcfvVolumeVariables<TypeTag>,
+      public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -78,7 +78,8 @@ public:
     {
         ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
+                                                   timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
@@ -93,7 +94,8 @@ public:
         // set the phase composition
         Scalar sumx = 0;
         for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
-            fluidState_.setMoleFraction(phaseIdx, compIdx, priVars[moleFrac1Idx + compIdx - 1]);
+            fluidState_.setMoleFraction(phaseIdx, compIdx,
+                                        priVars[moleFrac1Idx + compIdx - 1]);
             sumx += priVars[moleFrac1Idx + compIdx - 1];
         }
         fluidState_.setMoleFraction(phaseIdx, 0, 1 - sumx);
@@ -103,16 +105,15 @@ public:
         paramCache.updateAll(fluidState_);
 
         fluidState_.setDensity(phaseIdx,
-                               FluidSystem::density(fluidState_,
-                                                    paramCache,
+                               FluidSystem::density(fluidState_, paramCache,
                                                     phaseIdx));
         fluidState_.setViscosity(phaseIdx,
-                                 FluidSystem::viscosity(fluidState_,
-                                                        paramCache,
+                                 FluidSystem::viscosity(fluidState_, paramCache,
                                                         phaseIdx));
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
+                                       timeIdx);
 
         // the effective velocity of the control volume
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
@@ -126,13 +127,15 @@ public:
     /*!
      * \copydoc VcfvVolumeVariables::updateScvGradients
      */
-    void updateScvGradients(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void updateScvGradients(const ElementContext &elemCtx, int scvIdx,
+                            int timeIdx)
     {
         // calculate the pressure gradient at the SCV using finite
         // element gradients
         pressureGrad_ = 0.0;
         for (int i = 0; i < elemCtx.numScv(); ++i) {
-            const auto &feGrad = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
+            const auto &feGrad
+                = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
             DimVector tmp(feGrad);
             tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
 
@@ -140,36 +143,39 @@ public:
         }
 
         // integrate the velocity over the sub-control volume
-        //const auto &elemGeom = elemCtx.element().geometry();
+        // const auto &elemGeom = elemCtx.element().geometry();
         const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
         const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
 
         Dune::GeometryType geomType = scvLocalGeom.type();
         static const int quadratureOrder = 2;
-        const auto &rule = Dune::QuadratureRules<Scalar,dimWorld>::rule(geomType, quadratureOrder);
+        const auto &rule
+            = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType,
+                                                            quadratureOrder);
 
         // integrate the veloc over the sub-control volume
         velocity_ = 0.0;
-        for (auto it = rule.begin(); it != rule.end(); ++ it)
-        {
+        for (auto it = rule.begin(); it != rule.end(); ++it) {
             const auto &posScvLocal = it->position();
             const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
 
-            DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
+            DimVector velocityAtPos
+                = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
             Scalar detjac = 1.0;
-            //scvLocalGeom.integrationElement(posScvLocal) *
-            //elemGeom.integrationElement(posElemLocal);
-            velocity_.axpy(weight * detjac,  velocityAtPos);
+            // scvLocalGeom.integrationElement(posScvLocal) *
+            // elemGeom.integrationElement(posElemLocal);
+            velocity_.axpy(weight * detjac, velocityAtPos);
         }
 
         // since we want the average velocity, we have to divide the
         // integrated value by the volume of the SCV
-        //velocity_ /= fvElemGeom.subContVol[scvIdx].volume;
+        // velocity_ /= fvElemGeom.subContVol[scvIdx].volume;
     }
 
     /*!
-     * \brief Returns the thermodynamic state of the fluid for the control-volume.
+     * \brief Returns the thermodynamic state of the fluid for the
+     * control-volume.
      */
     const FluidState &fluidState() const
     { return fluidState_; }
@@ -211,12 +217,11 @@ public:
     { return gravity_; }
 
 private:
-    DimVector velocityAtPos_(const ElementContext elemCtx,
-                          int timeIdx,
-                          const LocalPosition &localPos) const
+    DimVector velocityAtPos_(const ElementContext elemCtx, int timeIdx,
+                             const LocalPosition &localPos) const
     {
-        const auto &localFiniteElement =
-            elemCtx.fvElemGeom(timeIdx).localFiniteElement();
+        const auto &localFiniteElement
+            = elemCtx.fvElemGeom(timeIdx).localFiniteElement();
 
         typedef Dune::FieldVector<Scalar, 1> ShapeValue;
         std::vector<ShapeValue> shapeValue;
@@ -225,7 +230,8 @@ private:
 
         DimVector result(0.0);
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
-            result.axpy(shapeValue[scvIdx][0], elemCtx.volVars(scvIdx, timeIdx).velocityCenter());
+            result.axpy(shapeValue[scvIdx][0],
+                        elemCtx.volVars(scvIdx, timeIdx).velocityCenter());
         }
 
         return result;

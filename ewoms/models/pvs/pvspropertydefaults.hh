@@ -49,7 +49,8 @@ namespace Properties {
 /*!
  * \brief Set the property for the number of components.
  */
-SET_INT_PROP(VcfvPvs, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(VcfvPvs, NumComponents,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
@@ -59,9 +60,7 @@ SET_INT_PROP(VcfvPvs, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases)
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(VcfvPvs,
-             NumEq,
-             GET_PROP_TYPE(TypeTag, Indices)::numEq);
+SET_INT_PROP(VcfvPvs, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
@@ -72,6 +71,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+
 public:
     typedef Opm::NullMaterial<Traits> type;
 };
@@ -80,25 +80,20 @@ public:
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvPvs,
-              MaterialLawParams,
+SET_TYPE_PROP(VcfvPvs, MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvPvs,
-              HeatConductionLaw,
+SET_TYPE_PROP(VcfvPvs, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvPvs,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvPvs, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the PVS local jacobian operator for the PVS model
-SET_TYPE_PROP(VcfvPvs,
-              LocalResidual,
-              Ewoms::PvsLocalResidual<TypeTag>);
+SET_TYPE_PROP(VcfvPvs, LocalResidual, Ewoms::PvsLocalResidual<TypeTag>);
 
 //! Use the Darcy relation by default
 SET_TYPE_PROP(VcfvPvs, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);

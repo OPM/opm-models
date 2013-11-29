@@ -32,7 +32,8 @@ NEW_PROP_TAG(NewtonMethod);
 
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-}}
+}
+}
 
 namespace Ewoms {
 /*!
@@ -50,21 +51,21 @@ class NullConvergenceWriter
 
 public:
     NullConvergenceWriter(NewtonMethod &method)
-    { }
+    {}
 
     /*!
      * \brief Called by the Newton method before the actual algorithm
      *        is started for any given timestep.
      */
     void beginTimeStep()
-    { }
+    {}
 
     /*!
      * \brief Called by the Newton method before an iteration of the
      *        Newton algorithm is started.
      */
     void beginIteration()
-    { }
+    {}
 
     /*!
      * \brief Write the Newton update to disk.
@@ -77,14 +78,14 @@ public:
      */
     void writeFields(const SolutionVector &uLastIter,
                      const GlobalEqVector &deltaU)
-    { }
+    {}
 
     /*!
      * \brief Called by the Newton method after an iteration of the
      *        Newton algorithm has been completed.
      */
     void endIteration()
-    { }
+    {}
 
     /*!
      * \brief Called by the Newton method after Newton algorithm
@@ -94,7 +95,7 @@ public:
      * converged or not.
      */
     void endTimeStep()
-    { }
+    {}
 };
 
 } // namespace Ewoms

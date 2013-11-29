@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set ts=4 sw=2 et sts=2:
 /*****************************************************************************
  *   Copyright (C) 2012-2013 by Andreas Lauser                               *
@@ -43,72 +43,64 @@ namespace Ewoms {
  * as
  * \f[ e^k = \frac{\left| A x_k - b \right|}{\left| A x_0 - b \right|}\;, \f]
  */
-template<class Vector>
+template <class Vector>
 class ResidReductionCriterion : public ConvergenceCriterion<Vector>
 {
-  typedef typename Vector::field_type Scalar;
+    typedef typename Vector::field_type Scalar;
 
 public:
-  ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct)
-    : scalarProduct_(scalarProduct)
-  {}
+    ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct)
+        : scalarProduct_(scalarProduct)
+    {}
 
-  ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct, Scalar reduction)
-    : scalarProduct_(scalarProduct)
-    , defectReduction_(reduction)
-  {}
+    ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct,
+                            Scalar reduction)
+        : scalarProduct_(scalarProduct), defectReduction_(reduction)
+    {}
 
-  /*!
-   * \brief Set the maximum allowed weighted maximum of the reduction of the linear residual.
-   */
-  void setTolerance(Scalar tol)
-  {
-    defectReduction_ = tol;
-  }
+    /*!
+     * \brief Set the maximum allowed weighted maximum of the reduction of the
+     * linear residual.
+     */
+    void setTolerance(Scalar tol)
+    { defectReduction_ = tol; }
 
-  /*!
-   * \brief Return the maximum allowed weighted maximum of the reduction of the linear residual.
-   */
-  Scalar tolerance() const
-  {
-    return defectReduction_;
-  }
+    /*!
+     * \brief Return the maximum allowed weighted maximum of the reduction of
+     * the linear residual.
+     */
+    Scalar tolerance() const
+    { return defectReduction_; }
 
-  /*!
-   * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
-   */
-  void setInitial(const Vector &curSol,
-                  const Vector &curResid)
-  {
-    // make sure that we don't allow an initial error of 0 to avoid
-    // divisions by zero
-    initialDefect_ = std::max(scalarProduct_.norm(curResid), 1e-20);
-    curDefect_ = initialDefect_;
-  }
+    /*!
+     * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
+     */
+    void setInitial(const Vector &curSol, const Vector &curResid)
+    {
+        // make sure that we don't allow an initial error of 0 to avoid
+        // divisions by zero
+        initialDefect_ = std::max(scalarProduct_.norm(curResid), 1e-20);
+        curDefect_ = initialDefect_;
+    }
 
-  /*!
-   * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
-   */
-  void update(const Vector &curSol,
-              const Vector &curResid)
-  {
-    curDefect_ = scalarProduct_.norm(curResid);
-  }
+    /*!
+     * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
+     */
+    void update(const Vector &curSol, const Vector &curResid)
+    { curDefect_ = scalarProduct_.norm(curResid); }
 
-  /*!
-   * \copydoc ConvergenceCriterion::converged()
-   */
-  bool converged() const
-  {
-    return curDefect_ <= tolerance();
-  }
+    /*!
+     * \copydoc ConvergenceCriterion::converged()
+     */
+    bool converged() const
+    { return curDefect_ <= tolerance(); }
 
 private:
-  Dune::ScalarProduct<Vector> &scalarProduct_;
+    Dune::ScalarProduct<Vector> &scalarProduct_;
 
-  Scalar initialDefect_;
-  Scalar curDefect_;
-  Scalar defectReduction_;
+    Scalar initialDefect_;
+    Scalar curDefect_;
+    Scalar defectReduction_;
 };
 
 //! \} end documentation

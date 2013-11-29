@@ -45,26 +45,31 @@ namespace Properties {
 //! The class for the model
 SET_TYPE_PROP(VcfvDiscreteFracture, Model, Ewoms::DiscreteFractureModel<TypeTag>);
 
-//! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
-SET_TYPE_PROP(VcfvDiscreteFracture,
-              LocalResidual,
+//! Use the immiscible multi-phase local jacobian operator for the immiscible
+// multi-phase model
+SET_TYPE_PROP(VcfvDiscreteFracture, LocalResidual,
               Ewoms::DiscreteFractureLocalResidual<TypeTag>);
 
 //! The type of the base base class for actual problems.
 // TODO!?
-//SET_TYPE_PROP(VcfvDiscreteFracture, BaseProblem, DiscreteFractureBaseProblem<TypeTag>);
+// SET_TYPE_PROP(VcfvDiscreteFracture, BaseProblem,
+// DiscreteFractureBaseProblem<TypeTag>);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvDiscreteFracture, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(VcfvDiscreteFracture, VelocityModule,
+              Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvDiscreteFracture, PrimaryVariables, Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvDiscreteFracture, PrimaryVariables,
+              Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvDiscreteFracture, VolumeVariables, Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvDiscreteFracture, VolumeVariables,
+              Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvDiscreteFracture, FluxVariables, Ewoms::DiscreteFractureFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvDiscreteFracture, FluxVariables,
+              Ewoms::DiscreteFractureFluxVariables<TypeTag>);
 
 //! For the discrete fracture model, we need to use two-point flux
 //! appoximation or it will converge very poorly

@@ -51,24 +51,23 @@ namespace Ewoms {
  * simplifies writing datasets consisting of multiple files. (i.e.
  * multiple time steps or grid refinements within a time step.)
  */
-template<class GridView>
+template <class GridView>
 class VtkMultiWriter
 {
     enum { dim = GridView::dimension };
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout>
+    VertexMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
+    ElementMapper;
 
 public:
     typedef Dune::VTKWriter<GridView> VtkWriter;
-    VtkMultiWriter(const GridView &gridView,
-                   const std::string &simName = "",
+    VtkMultiWriter(const GridView &gridView, const std::string &simName = "",
                    std::string multiFileName = "")
-        : gridView_(gridView)
-        , elementMapper_(gridView)
-        , vertexMapper_(gridView)
+        : gridView_(gridView), elementMapper_(gridView), vertexMapper_(gridView)
     {
-        simName_ = (simName.empty())?"sim":simName;
+        simName_ = (simName.empty()) ? "sim" : simName;
         multiFileName_ = multiFileName;
         if (multiFileName_.empty()) {
             multiFileName_ = simName_;
@@ -132,12 +131,13 @@ public:
      * been written by to disk.
      */
     template <class Scalar, int nComp>
-    Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > *allocateManagedBuffer(int nEntities)
+    Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > *
+    allocateManagedBuffer(int nEntities)
     {
         typedef Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > VectorField;
 
-        ManagedVectorField_<VectorField> *vfs =
-            new ManagedVectorField_<VectorField>(nEntities);
+        ManagedVectorField_<VectorField> *vfs
+            = new ManagedVectorField_<VectorField>(nEntities);
         managedObjects_.push_back(vfs);
         return &(vfs->vf);
     }
@@ -146,9 +146,11 @@ public:
     //       contemporary compilers which support default template
     //       arguments for function templates
     template <class Scalar>
-    Dune::BlockVector<Dune::FieldVector<Scalar, 1> > *allocateManagedBuffer(int nEntities)
+    Dune::BlockVector<Dune::FieldVector<Scalar, 1> > *
+    allocateManagedBuffer(int nEntities)
     { return allocateManagedBuffer<Scalar, 1>(nEntities); }
-    Dune::BlockVector<Dune::FieldVector<double, 1> > *allocateManagedBuffer(int nEntities)
+    Dune::BlockVector<Dune::FieldVector<double, 1> > *
+    allocateManagedBuffer(int nEntities)
     { return allocateManagedBuffer<double, 1>(nEntities); }
 
     /*!
@@ -169,18 +171,14 @@ public:
      * method and endWrite() results in _undefined behaviour_.
      */
     template <class DataBuffer>
-    void attachVertexData(DataBuffer &buf, std::string name, int nComps=1)
+    void attachVertexData(DataBuffer &buf, std::string name, int nComps = 1)
     {
         sanitizeBuffer_(buf, nComps);
 
         typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkNestedFunction<GridView, VertexMapper, DataBuffer> VtkFn;
-        FunctionPtr fnPtr(new VtkFn(name,
-                                    gridView_,
-                                    vertexMapper_,
-                                    buf,
-                                    /*codim=*/dim,
-                                    nComps));
+        FunctionPtr fnPtr(new VtkFn(name, gridView_, vertexMapper_, buf,
+                                    /*codim=*/dim, nComps));
         curWriter_->addVertexData(fnPtr);
     }
 
@@ -206,12 +204,8 @@ public:
 
         typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkNestedFunction<GridView, ElementMapper, DataBuffer> VtkFn;
-        FunctionPtr fnPtr(new VtkFn(name,
-                                    gridView_,
-                                    elementMapper_,
-                                    buf,
-                                    /*codim=*/0,
-                                    nComps));
+        FunctionPtr fnPtr(new VtkFn(name, gridView_, elementMapper_, buf,
+                                    /*codim=*/0, nComps));
         curWriter_->addCellData(fnPtr);
     }
 
@@ -242,12 +236,11 @@ public:
             // determine name to write into the multi-file for the
             // current time step
             multiFile_.precision(16);
-            multiFile_ << "   <DataSet timestep=\""
-                       << curTime_
-                       << "\" file=\"" << fileName << "\"/>\n";
+            multiFile_ << "   <DataSet timestep=\"" << curTime_ << "\" file=\""
+                       << fileName << "\"/>\n";
         }
         else
-            -- curWriterNum_;
+            --curWriterNum_;
 
         // discard managed objects and the current VTK writer
         delete curWriter_;
@@ -338,7 +331,8 @@ private:
     std::string fileName_()
     {
         std::ostringstream oss;
-        oss << simName_ << "-" << std::setw(5) << std::setfill('0') << curWriterNum_;
+        oss << simName_ << "-" << std::setw(5) << std::setfill('0')
+            << curWriterNum_;
         return oss.str();
     }
 
@@ -346,25 +340,23 @@ private:
     {
         if (commSize_ > 1) {
             std::ostringstream oss;
-            oss << "s" << std::setw(4) << std::setfill('0') << commSize_
-                << "-p" << std::setw(4) << std::setfill('0') << rank
-                << "-" << simName_ << "-"
-                << std::setw(5) << curWriterNum_;
+            oss << "s" << std::setw(4) << std::setfill('0') << commSize_ << "-p"
+                << std::setw(4) << std::setfill('0') << rank << "-" << simName_
+                << "-" << std::setw(5) << curWriterNum_;
             return oss.str();
 
             return oss.str();
         }
         else {
             std::ostringstream oss;
-            oss << simName_ << "-" << std::setw(5) << std::setfill('0') << curWriterNum_;
+            oss << simName_ << "-" << std::setw(5) << std::setfill('0')
+                << curWriterNum_;
             return oss.str();
         }
     }
 
     std::string fileSuffix_()
-    {
-        return (GridView::dimension == 1)?"vtp":"vtu";
-    }
+    { return (GridView::dimension == 1) ? "vtp" : "vtu"; }
 
     void startMultiFile_(const std::string &multiFileName)
     {
@@ -372,13 +364,12 @@ private:
         if (commRank_ == 0) {
             // generate one meta vtk-file holding the individual time steps
             multiFile_.open(multiFileName.c_str());
-            multiFile_ <<
-                "<?xml version=\"1.0\"?>\n"
-                "<VTKFile type=\"Collection\"\n"
-                "         version=\"0.1\"\n"
-                "         byte_order=\"LittleEndian\"\n"
-                "         compressor=\"vtkZLibDataCompressor\">\n"
-                " <Collection>\n";
+            multiFile_ << "<?xml version=\"1.0\"?>\n"
+                          "<VTKFile type=\"Collection\"\n"
+                          "         version=\"0.1\"\n"
+                          "         byte_order=\"LittleEndian\"\n"
+                          "         compressor=\"vtkZLibDataCompressor\">\n"
+                          " <Collection>\n";
         }
     }
 
@@ -388,9 +379,8 @@ private:
         if (commRank_ == 0) {
             // make sure that we always have a working meta file
             std::ofstream::pos_type pos = multiFile_.tellp();
-            multiFile_ <<
-                " </Collection>\n"
-                "</VTKFile>\n";
+            multiFile_ << " </Collection>\n"
+                          "</VTKFile>\n";
             multiFile_.seekp(pos);
             multiFile_.flush();
         }
@@ -407,9 +397,7 @@ private:
 
                 // set values which are too small to 0 to avoid
                 // problems with paraview
-                if (std::abs(b[i][j])
-                    < std::numeric_limits<float>::min())
-                {
+                if (std::abs(b[i][j]) < std::numeric_limits<float>::min()) {
                     b[i][j] = 0.0;
                 }
             }
@@ -447,9 +435,8 @@ private:
     class ManagedVectorField_ : public ManagedObject_
     {
     public:
-        ManagedVectorField_(int size)
-            : vf(size)
-        { }
+        ManagedVectorField_(int size) : vf(size)
+        {}
         VF vf;
     };
     // end hack
@@ -471,7 +458,7 @@ private:
     std::string curOutFileName_;
     int curWriterNum_;
 
-    std::list<ManagedObject_*> managedObjects_;
+    std::list<ManagedObject_ *> managedObjects_;
 };
 } // namespace Ewoms
 

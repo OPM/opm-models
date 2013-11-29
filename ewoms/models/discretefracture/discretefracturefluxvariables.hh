@@ -40,8 +40,7 @@ namespace Ewoms {
  *        finite volume for the discrete-fracture immiscible multi-phase model.
  */
 template <class TypeTag>
-class DiscreteFractureFluxVariables
-    : public ImmiscibleFluxVariables<TypeTag>
+class DiscreteFractureFluxVariables : public ImmiscibleFluxVariables<TypeTag>
 {
     typedef ImmiscibleFluxVariables<TypeTag> ParentType;
 
@@ -89,10 +88,12 @@ public:
         distDirection /= distDirection.two_norm();
 
         const auto &problem = elemCtx.problem();
-        fractureWidth_ = problem.fractureWidth(elemCtx, insideScvIdx, outsideScvIdx, timeIdx);
+        fractureWidth_ = problem.fractureWidth(elemCtx, insideScvIdx,
+                                               outsideScvIdx, timeIdx);
         assert(fractureWidth_ < scvf.normal.two_norm());
 
-        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars
+            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             const auto &pGrad = fluxVars.potentialGrad(phaseIdx);
@@ -101,15 +102,16 @@ public:
             const auto &up = elemCtx.volVars(upstreamIdx, timeIdx);
 
             // multiply with the fracture mobility of the upstream vertex
-            fractureIntrinsicPermeability_.mv(pGrad, fractureFilterVelocity_[phaseIdx]);
+            fractureIntrinsicPermeability_.mv(pGrad,
+                                              fractureFilterVelocity_[phaseIdx]);
             fractureFilterVelocity_[phaseIdx] *= -up.fractureMobility(phaseIdx);
 
             // divide the volume flux by two. This is required because
             // a fracture is always shared by two sub-control-volume
             // faces.
-            fractureVolumeFlux_[phaseIdx] =
-                (fractureFilterVelocity_[phaseIdx]*distDirection)
-                * fractureWidth_/2.0;
+            fractureVolumeFlux_[phaseIdx]
+                = (fractureFilterVelocity_[phaseIdx] * distDirection)
+                  * fractureWidth_ / 2.0;
         }
     }
 

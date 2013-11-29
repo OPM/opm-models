@@ -59,9 +59,7 @@ SET_INT_PROP(VcfvRichards, NumComponents, 2);
 SET_INT_PROP(VcfvRichards, LiquidPhaseIndex, 0);
 
 //! The local residual operator
-SET_TYPE_PROP(VcfvRichards,
-              LocalResidual,
-              Ewoms::RichardsLocalResidual<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, LocalResidual, Ewoms::RichardsLocalResidual<TypeTag>);
 
 //! The global model used
 SET_TYPE_PROP(VcfvRichards, Model, Ewoms::RichardsModel<TypeTag>);
@@ -73,13 +71,16 @@ SET_TYPE_PROP(VcfvRichards, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 SET_TYPE_PROP(VcfvRichards, RateVector, Ewoms::RichardsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvRichards, BoundaryRateVector, Ewoms::RichardsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, BoundaryRateVector,
+              Ewoms::RichardsBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvRichards, PrimaryVariables, Ewoms::RichardsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, PrimaryVariables,
+              Ewoms::RichardsPrimaryVariables<TypeTag>);
 
 //! The class for the volume averaged quantities
-SET_TYPE_PROP(VcfvRichards, VolumeVariables, Ewoms::RichardsVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, VolumeVariables,
+              Ewoms::RichardsVolumeVariables<TypeTag>);
 
 //! The class for the quantities required for the flux calculation
 SET_TYPE_PROP(VcfvRichards, FluxVariables, Ewoms::RichardsFluxVariables<TypeTag>);
@@ -98,23 +99,21 @@ SET_TYPE_PROP(VcfvRichards, Indices, Ewoms::RichardsIndices);
  *
  * By default this is just retrieved from the material law.
  */
-SET_TYPE_PROP(VcfvRichards,
-              MaterialLawParams,
+SET_TYPE_PROP(VcfvRichards, MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvRichards,
-              HeatConductionLaw,
+SET_TYPE_PROP(VcfvRichards, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvRichards,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvRichards, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvRichards, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(VcfvRichards, VelocityModule,
+              Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 /*!
  * \brief The wetting phase used.
@@ -127,8 +126,10 @@ SET_TYPE_PROP(VcfvRichards, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeT
  * wetting phase.
  */
 SET_PROP(VcfvRichards, WettingPhase)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
@@ -142,8 +143,10 @@ public:
  * Richards model does not conserve the non-wetting phase.
  */
 SET_PROP(VcfvRichards, NonwettingPhase)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::GasPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
@@ -158,15 +161,15 @@ public:
  * model only makes very limited sense.
  */
 SET_PROP(VcfvRichards, FluidSystem)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
 
 public:
-    typedef Opm::FluidSystems::TwoPImmiscible<Scalar,
-                                                WettingPhase,
-                                                NonwettingPhase> type;
+    typedef Opm::FluidSystems::TwoPImmiscible<Scalar, WettingPhase,
+                                              NonwettingPhase> type;
 };
 
 } // namespace Properties

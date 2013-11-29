@@ -57,15 +57,17 @@ class SuperLUBackend
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
 public:
-    SuperLUBackend(const Problem& problem)
-        : problem_(problem)
+    SuperLUBackend(const Problem &problem) : problem_(problem)
     {}
 
     static void registerParameters()
-    { EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver"); }
+    {
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity,
+                             "The verbosity level of the linear solver");
+    }
 
-    template<class Matrix, class Vector>
-    bool solve(const Matrix& A, Vector& x, const Vector& b)
+    template <class Matrix, class Vector>
+    bool solve(const Matrix &A, Vector &x, const Vector &b)
     {
         Vector bTmp(b);
 
@@ -89,7 +91,7 @@ public:
     }
 
 private:
-    const Problem& problem_;
+    const Problem &problem_;
 };
 
 } // namespace Linear
@@ -98,7 +100,8 @@ private:
 namespace Opm {
 namespace Properties {
 SET_INT_PROP(SuperLULinearSolver, LinearSolverVerbosity, 0);
-SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend, Ewoms::Linear::SuperLUBackend<TypeTag>);
+SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend,
+              Ewoms::Linear::SuperLUBackend<TypeTag>);
 } // namespace Properties
 } // namespace Opm
 

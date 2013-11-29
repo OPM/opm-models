@@ -34,7 +34,8 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Problem);
-}}
+}
+}
 
 namespace Ewoms {
 /*!
@@ -59,14 +60,14 @@ class TimeManager
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
-    TimeManager(const TimeManager&)
+    TimeManager(const TimeManager &)
     {}
+
 public:
     TimeManager(bool verbose = true)
     {
-        verbose_ =
-            verbose &&
-            Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
+        verbose_ = verbose
+                   && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
         episodeIdx_ = 0;
         episodeStartTime_ = 0;
@@ -85,26 +86,23 @@ public:
      * \brief Registers all runtime parameters used by the simulation.
      */
     static void registerParameters()
-    {
-        Problem::registerParameters();
-    }
+    { Problem::registerParameters(); }
 
     /*!
      * \brief Initialize the model and problem and write the initial
      *        condition to disk.
      *
      * \param problem The physical problem which needs to be solved
-     * \param tStart The start time \f$\mathrm{[s]}\f$ of the simulation (typically 0)
+     * \param tStart The start time \f$\mathrm{[s]}\f$ of the simulation
+     *(typically 0)
      * \param dtInitial The initial time step size \f$\mathrm{[s]}\f$
-     * \param tEnd The time at which the simulation is finished \f$\mathrm{[s]}\f$
+     * \param tEnd The time at which the simulation is finished
+     *\f$\mathrm{[s]}\f$
      * \param restart Specifies whether a restart file should be
      *                loaded or if the problem should provide the
      *                initial condition.
      */
-    void init(Problem &problem,
-              Scalar tStart,
-              Scalar dtInitial,
-              Scalar tEnd,
+    void init(Problem &problem, Scalar tStart, Scalar dtInitial, Scalar tEnd,
               bool restart = false)
     {
         problem_ = &problem;
@@ -113,16 +111,16 @@ public:
         endTime_ = tEnd;
 
         if (verbose_)
-            std::cout << "Initializing problem \"" << problem_->name() << "\"\n";
+            std::cout << "Initializing problem \"" << problem_->name()
+                      << "\"\n";
 
         // initialize the problem
         problem_->init();
 
         // restart problem if necessary
-        if(restart)
+        if (restart)
             problem_->restart(tStart);
-        else
-        {
+        else {
             // write initial condition (if problem is not restarted)
             time_ -= timeStepSize_;
             if (problem_->shouldWriteOutput())
@@ -152,18 +150,23 @@ public:
      * \param stepIdx The new time step index
      */
     void setTime(Scalar t, int stepIdx)
-    { time_ = t; timeStepIdx_ = stepIdx; }
+    {
+        time_ = t;
+        timeStepIdx_ = stepIdx;
+    }
 
     /*!
      * \brief Return the time \f$\mathrm{[s]}\f$ before the time integration.
-     * To get the time after the time integration you have to add timeStepSize() to
+     * To get the time after the time integration you have to add timeStepSize()
+     * to
      * time().
      */
     Scalar time() const
     { return time_; }
 
     /*!
-     * \brief Returns the number of (simulated) seconds which the simulation runs.
+     * \brief Returns the number of (simulated) seconds which the simulation
+     * runs.
      */
     Scalar endTime() const
     { return endTime_; }
@@ -180,7 +183,7 @@ public:
      * \brief Returns the current wall time (cpu time).
      */
     double wallTime() const
-    {  return timer_.elapsed(); }
+    { return timer_.elapsed(); }
 
     /*!
      * \brief Set the current time step size to a given value.
@@ -193,9 +196,7 @@ public:
      * \param dt The new value for the time step size \f$\mathrm{[s]}\f$
      */
     void setTimeStepSize(Scalar dt)
-    {
-        timeStepSize_ = dt;
-    }
+    { timeStepSize_ = dt; }
 
     /*!
      * \brief Returns the time step length \f$\mathrm{[s]}\f$ so that we
@@ -207,7 +208,8 @@ public:
         Scalar dtMax = std::max(1e-9, maxTimeStepSize());
         Scalar dt = std::max(1e-9, timeStepSize_);
 
-        return std::min(dt, dtMax);;
+        return std::min(dt, dtMax);
+        ;
     }
 
     /*!
@@ -234,14 +236,17 @@ public:
      * if the end time is reached.
      */
     bool finished() const
-    { return finished_ || time() + std::max(std::abs(time()), timeStepSize_)*1e-8 >= endTime(); }
+    {
+        return finished_ || time() + std::max(std::abs(time()), timeStepSize_)
+                                     * 1e-8 >= endTime();
+    }
 
     /*!
      * \brief Returns true if the simulation is finished after the
      *        time level is incremented by the current time step size.
      */
     bool willBeFinished() const
-    { return finished_ || time() + timeStepSize_*(1 + 1e-8) >= endTime(); }
+    { return finished_ || time() + timeStepSize_ * (1 + 1e-8) >= endTime(); }
 
     /*!
      * \brief Aligns dt to the episode boundary or the end time of the
@@ -252,9 +257,8 @@ public:
         if (finished())
             return 0.0;
 
-        return
-            std::min(episodeMaxTimeStepSize(),
-                     std::max<Scalar>(0.0, endTime() - time()));
+        return std::min(episodeMaxTimeStepSize(),
+                        std::max<Scalar>(0.0, endTime() - time()));
     }
 
     /*
@@ -272,10 +276,9 @@ public:
      * \param tStart Time when the episode began \f$\mathrm{[s]}\f$
      * \param len    Length of the episode \f$\mathrm{[s]}\f$
      */
-    void startNextEpisode(Scalar tStart,
-                          Scalar len)
+    void startNextEpisode(Scalar tStart, Scalar len)
     {
-        ++ episodeIdx_;
+        ++episodeIdx_;
         episodeStartTime_ = tStart;
         episodeLength_ = len;
     }
@@ -284,11 +287,12 @@ public:
      * \brief Start the next episode, but don't change the episode
      *        identifier.
      *
-     * \param len  Length of the episode \f$\mathrm{[s]}\f$, infinite if not specified.
+     * \param len  Length of the episode \f$\mathrm{[s]}\f$, infinite if not
+     *specified.
      */
     void startNextEpisode(Scalar len = 1e100)
     {
-        ++ episodeIdx_;
+        ++episodeIdx_;
         episodeStartTime_ = time_;
         episodeLength_ = len;
     }
@@ -335,7 +339,10 @@ public:
      *        after the current time step.
      */
     bool episodeWillBeOver() const
-    { return time() + timeStepSize_ >= episodeStartTime_ + episodeLength()*(1 - 1e-8); }
+    {
+        return time() + timeStepSize_ >= episodeStartTime_ + episodeLength()
+                                                             * (1 - 1e-8);
+    }
 
     /*!
      * \brief Aligns the time step size to the episode boundary if the
@@ -352,9 +359,8 @@ public:
 
         // make sure that we don't exceed the end of the
         // current episode.
-        return
-            std::max<Scalar>(0.0,
-                             episodeLength() - (time() - episodeStartTime()));
+        return std::max<Scalar>(0.0, episodeLength()
+                                     - (time() - episodeStartTime()));
     }
 
     /*
@@ -372,8 +378,7 @@ public:
         timer_.reset();
 
         // do the time steps
-        while (!finished())
-        {
+        while (!finished()) {
             // pre-process the current solution
             problem_->preTimeStep();
 
@@ -396,12 +401,10 @@ public:
             ++timeStepIdx_;
 
             if (verbose_) {
-                std::cout
-                    << "Time step "<<timeStepIndex()<<" done. "
-                    << "Wall time:"<<timer_.elapsed()
-                    <<", time:"<<time()
-                    <<", time step size:"<<dt
-                    <<"\n";
+                std::cout << "Time step " << timeStepIndex() << " done. "
+                          << "Wall time:" << timer_.elapsed()
+                          << ", time:" << time() << ", time step size:" << dt
+                          << "\n";
             }
 
             // write restart file if mandated by the problem
@@ -410,11 +413,10 @@ public:
 
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
-                //define what to do at the end of an episode in the problem
+                // define what to do at the end of an episode in the problem
                 problem_->episodeEnd();
             }
-            else
-            {
+            else {
                 // notify the problem that the timestep is done and ask it
                 // for a suggestion for the next timestep size
                 // set the time step size for the next step
@@ -432,7 +434,8 @@ public:
     /*!
      * \brief Write the time manager's state to a restart file.
      *
-     * \tparam Restarter The type of the object which takes care to serialize data
+     * \tparam Restarter The type of the object which takes care to serialize
+     *data
      *
      * \param res The serializer object
      */
@@ -440,10 +443,8 @@ public:
     void serialize(Restarter &res)
     {
         res.serializeSectionBegin("TimeManager");
-        res.serializeStream() << episodeIdx_ << " "
-                              << episodeStartTime_ << " "
-                              << episodeLength_ << " "
-                              << time_ << " "
+        res.serializeStream() << episodeIdx_ << " " << episodeStartTime_ << " "
+                              << episodeLength_ << " " << time_ << " "
                               << timeStepIdx_ << " ";
         res.serializeSectionEnd();
     }
@@ -451,7 +452,8 @@ public:
     /*!
      * \brief Read the time manager's state from a restart file.
      *
-     * \tparam Restarter The type of the object which takes care to deserialize data
+     * \tparam Restarter The type of the object which takes care to deserialize
+     *data
      *
      * \param res The deserializer object
      */
@@ -459,11 +461,8 @@ public:
     void deserialize(Restarter &res)
     {
         res.deserializeSectionBegin("TimeManager");
-        res.deserializeStream() >> episodeIdx_
-                                >> episodeStartTime_
-                                >> episodeLength_
-                                >> time_
-                                >> timeStepIdx_;
+        res.deserializeStream() >> episodeIdx_ >> episodeStartTime_
+            >> episodeLength_ >> time_ >> timeStepIdx_;
         res.deserializeSectionEnd();
     }
 

@@ -45,9 +45,8 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for models based on the VCFV-scheme
-NEW_TYPE_TAG(VcfvModel, INHERITS_FROM(VcfvNewtonMethod,
-                                      ImplicitModel,
-                                      VtkPrimaryVars));
+NEW_TYPE_TAG(VcfvModel,
+             INHERITS_FROM(VcfvNewtonMethod, ImplicitModel, VtkPrimaryVars));
 
 // set the splices for the vertex-centered finite volume
 // discretization
@@ -64,37 +63,50 @@ SET_TAG_PROP(VcfvModel, LinearSolver, ParallelIterativeLinearSolver);
 NEW_PROP_TAG(Grid);     //!< The type of the DUNE grid
 NEW_PROP_TAG(GridView); //!< The type of the grid view
 
-NEW_PROP_TAG(FvElementGeometry); //! The type of the finite-volume geometry in the VCVF discretization
+NEW_PROP_TAG(FvElementGeometry); //! The type of the finite-volume geometry in
+// the VCVF discretization
 
-NEW_PROP_TAG(Problem); //!< The type of the problem
-NEW_PROP_TAG(BaseProblem);   //!< The type of the base class for all problems which use this model
-NEW_PROP_TAG(BaseModel); //!< The type of the base class of the model
-NEW_PROP_TAG(Model); //!< The type of the model
-NEW_PROP_TAG(NumEq); //!< Number of equations in the system of PDEs
-NEW_PROP_TAG(BaseLocalResidual); //!< The type of the base class of the local residual
+NEW_PROP_TAG(Problem);     //!< The type of the problem
+NEW_PROP_TAG(BaseProblem); //!< The type of the base class for all problems
+// which use this model
+NEW_PROP_TAG(BaseModel);         //!< The type of the base class of the model
+NEW_PROP_TAG(Model);             //!< The type of the model
+NEW_PROP_TAG(NumEq);             //!< Number of equations in the system of PDEs
+NEW_PROP_TAG(BaseLocalResidual); //!< The type of the base class of the local
+// residual
 NEW_PROP_TAG(LocalResidual); //!< The type of the local residual function
 NEW_PROP_TAG(LocalJacobian); //!< The type of the local jacobian operator
 
 NEW_PROP_TAG(JacobianAssembler); //!< Assembles the global jacobian matrix
-NEW_PROP_TAG(JacobianMatrix); //!< Type of the global jacobian matrix
+NEW_PROP_TAG(JacobianMatrix);    //!< Type of the global jacobian matrix
 
-NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation (usually at a given spatial location)
-NEW_PROP_TAG(ElementEqVector); //!< Vector containing a quantity of for equation on a single element
-NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation on the whole grid
+NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation
+                        //(usually at a given spatial location)
+NEW_PROP_TAG(ElementEqVector); //!< Vector containing a quantity of for equation
+// on a single element
+NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation
+// on the whole grid
 
-NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of quantities
-NEW_PROP_TAG(BoundaryRateVector); //!< Type of object for specifying boundary conditions
-NEW_PROP_TAG(Constraints); //!< The class which represents a constraint degree of freedom
+NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of
+// quantities
+NEW_PROP_TAG(BoundaryRateVector); //!< Type of object for specifying boundary
+// conditions
+NEW_PROP_TAG(Constraints); //!< The class which represents a constraint degree
+// of freedom
 
-NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variables of the grid
+NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variables of
+// the grid
 
-NEW_PROP_TAG(PrimaryVariables); //!< A vector of primary variables within a sub-control volume
-NEW_PROP_TAG(VolumeVariables);  //!< The secondary variables within a sub-control volume
-NEW_PROP_TAG(ElementContext); //!< The secondary variables of all sub-control volumes in an element
+NEW_PROP_TAG(PrimaryVariables); //!< A vector of primary variables within a
+// sub-control volume
+NEW_PROP_TAG(VolumeVariables); //!< The secondary variables within a sub-control
+// volume
+NEW_PROP_TAG(ElementContext); //!< The secondary variables of all sub-control
+// volumes in an element
 NEW_PROP_TAG(FluxVariables); //!< Data required to calculate a flux over a face
 
 // high level simulation control
-NEW_PROP_TAG(TimeManager);  //!< Manages the simulation time
+NEW_PROP_TAG(TimeManager); //!< Manages the simulation time
 
 //! Specify whether the jacobian matrix of the last iteration of a
 //! time step should be re-used as the jacobian of the first iteration
@@ -164,7 +176,8 @@ NEW_PROP_TAG(ElementMapper);
 //! mapper for degrees of freedom
 NEW_PROP_TAG(DofMapper);
 
-//! The class which marks the border indices. (Required for the algebraic overlap stuff.)
+//! The class which marks the border indices. (Required for the algebraic
+// overlap stuff.)
 NEW_PROP_TAG(BorderListCreator);
 
 //! The history size required by the time discretization

@@ -54,7 +54,8 @@ namespace Properties {
  *
  * We just forward the number from the fluid system.
  */
-SET_INT_PROP(VcfvNcp, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(VcfvNcp, NumComponents,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
@@ -67,24 +68,23 @@ SET_INT_PROP(VcfvNcp, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases)
 /*!
  * \brief Set the property for the number of equations and primary variables.
  */
-SET_INT_PROP(VcfvNcp, NumEq,GET_PROP_TYPE(TypeTag, Indices)::numEq);
+SET_INT_PROP(VcfvNcp, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvNcp, MaterialLawParams, typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
+SET_TYPE_PROP(VcfvNcp, MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvNcp,
-              HeatConductionLaw,
+SET_TYPE_PROP(VcfvNcp, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvNcp,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvNcp, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 /*!
@@ -102,9 +102,7 @@ public:
 };
 
 //! Use the Ncp local jacobian operator for the compositional NCP model
-SET_TYPE_PROP(VcfvNcp,
-              LocalResidual,
-              Ewoms::NcpLocalResidual<TypeTag>);
+SET_TYPE_PROP(VcfvNcp, LocalResidual, Ewoms::NcpLocalResidual<TypeTag>);
 
 //! Use the Darcy relation by default
 SET_TYPE_PROP(VcfvNcp, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);

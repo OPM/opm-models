@@ -42,7 +42,8 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The generic type tag for problems using the immiscible multi-phase model
-NEW_TYPE_TAG(VcfvImmiscible, INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkTemperature, VtkEnergy));
+NEW_TYPE_TAG(VcfvImmiscible,
+             INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkTemperature, VtkEnergy));
 //! The type tag for single-phase immiscible problems
 NEW_TYPE_TAG(VcfvImmiscibleOnePhase, INHERITS_FROM(VcfvImmiscible));
 //! The type tag for two-phase immiscible problems
@@ -52,23 +53,30 @@ NEW_TYPE_TAG(VcfvImmiscibleTwoPhase, INHERITS_FROM(VcfvImmiscible));
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
-NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
-NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
-NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
+NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents); //!< Number of chemical species in the system
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the
+// problem
+NEW_PROP_TAG(Indices);           //!< Enumerations used by the model
+NEW_PROP_TAG(MaterialLaw);       //!< The material law which ought to be used
+                                 //(extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from
+// the spatial parameters)
+NEW_PROP_TAG(HeatConductionLaw);       //!< The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law
+// for heat conduction
+NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about
+// the phases
+NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as
+// a conservation quantity or not
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
+// method should be used
 
 //! Specifies the relation used for velocity
 NEW_PROP_TAG(VelocityModule);
 
 // these properties only make sense for the VcfvImmiscibleTwoPhase type tag
-NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
+NEW_PROP_TAG(WettingPhase);    //!< The wetting phase for two-phase models
 NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
 
 // these properties only make sense for the VcfvImmiscibleOnePhase type tag

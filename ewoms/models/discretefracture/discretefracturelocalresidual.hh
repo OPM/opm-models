@@ -34,9 +34,8 @@ namespace Ewoms {
  * \brief Calculates the local residual of the discrete fracture
  *        immiscible multi-phase model.
  */
-template<class TypeTag>
-class DiscreteFractureLocalResidual
-    : public ImmiscibleLocalResidual<TypeTag>
+template <class TypeTag>
+class DiscreteFractureLocalResidual : public ImmiscibleLocalResidual<TypeTag>
 {
     typedef ImmiscibleLocalResidual<TypeTag> ParentType;
 
@@ -61,14 +60,12 @@ public:
      * \copydetails Doxygen::vcfvScvCtxParams
      * \copydetails Doxygen::phaseIdxParam
      */
-    void addPhaseStorage(EqVector &storage,
-                         const ElementContext &elemCtx,
-                         int scvIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
+                         int scvIdx, int timeIdx, int phaseIdx) const
     {
         EqVector phaseStorage(0.0);
-        ParentType::addPhaseStorage(phaseStorage, elemCtx, scvIdx, timeIdx, phaseIdx);
+        ParentType::addPhaseStorage(phaseStorage, elemCtx, scvIdx, timeIdx,
+                                    phaseIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
@@ -85,18 +82,18 @@ public:
         const auto &scv = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx];
 
         // reduce the matrix storage by the fracture volume
-        phaseStorage *= 1 - volVars.fractureVolume()/scv.volume;
+        phaseStorage *= 1 - volVars.fractureVolume() / scv.volume;
 
         // add the storage term inside the fractures
         const auto &fsFracture = volVars.fractureFluidState();
 
-        phaseStorage[conti0EqIdx + phaseIdx] =
-            volVars.fracturePorosity()*
-            fsFracture.saturation(phaseIdx) *
-            fsFracture.density(phaseIdx) *
-            volVars.fractureVolume()/scv.volume;
+        phaseStorage[conti0EqIdx + phaseIdx]
+            = volVars.fracturePorosity() * fsFracture.saturation(phaseIdx)
+              * fsFracture.density(phaseIdx) * volVars.fractureVolume()
+              / scv.volume;
 
-        EnergyModule::addFracturePhaseStorage(phaseStorage, volVars, scv, phaseIdx);
+        EnergyModule::addFracturePhaseStorage(phaseStorage, volVars, scv,
+                                              phaseIdx);
 
         // add the result to the overall storage term
         storage += phaseStorage;
@@ -105,15 +102,14 @@ public:
     /*!
      * \copydoc VcfvLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         ParentType::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &evalPointFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &evalPointFluxVars
+            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
         int i = fluxVars.insideIndex();
         int j = fluxVars.outsideIndex();
@@ -137,14 +133,15 @@ public:
             // face that is occupied by the fracture. As usual, the
             // fracture is shared between two SCVs, so the its width
             // needs to be divided by two.
-            flux[conti0EqIdx + phaseIdx] *= 1 - fluxVars.fractureWidth()/(2*scvfArea);
+            flux[conti0EqIdx + phaseIdx] *= 1 - fluxVars.fractureWidth()
+                                                / (2 * scvfArea);
 
             // vertex data of the upstream and the downstream vertices
             int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
             const auto &up = elemCtx.volVars(upIdx, timeIdx);
-            flux[conti0EqIdx + phaseIdx] +=
-                fluxVars.fractureVolumeFlux(phaseIdx)
-                * up.fractureFluidState().density(phaseIdx);
+            flux[conti0EqIdx + phaseIdx]
+                += fluxVars.fractureVolumeFlux(phaseIdx)
+                   * up.fractureFluidState().density(phaseIdx);
         }
 
         EnergyModule::handleFractureFlux(flux, elemCtx, scvfIdx, timeIdx);

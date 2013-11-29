@@ -30,13 +30,15 @@
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Indices);
-}}
+}
+}
 
 namespace Ewoms {
 /*!
  * \ingroup VcfvDiffusion
  * \class Ewoms::VcfvDiffusionModule
- * \brief Provides the auxiliary methods required for consideration of the diffusion equation.
+ * \brief Provides the auxiliary methods required for consideration of the
+ * diffusion equation.
  */
 template <class TypeTag, bool enableDiffusion>
 class VcfvDiffusionModule;
@@ -57,18 +59,16 @@ public:
      * \brief Register all run-time parameters for the diffusion module.
      */
     static void registerParameters()
-    { }
+    {}
 
     /*!
      * \brief Adds the diffusive mass flux flux to the flux vector
      *        over the face of a sub-control volume.
       */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux,
-                                 const Context &context,
-                                 int spaceIdx,
-                                 int timeIdx)
-    { }
+    static void addDiffusiveFlux(RateVector &flux, const Context &context,
+                                 int spaceIdx, int timeIdx)
+    {}
 };
 
 /*!
@@ -91,36 +91,36 @@ public:
      * \brief Register all run-time parameters for the diffusion module.
      */
     static void registerParameters()
-    { }
+    {}
 
     /*!
      * \brief Adds the mass flux due to molecular diffusion to the
      *        flux vector over the face of a sub-control volume.
      */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux,
-                                 const Context &context,
-                                 int spaceIdx,
-                                 int timeIdx)
+    static void addDiffusiveFlux(RateVector &flux, const Context &context,
+                                 int spaceIdx, int timeIdx)
     {
         const auto &fluxVars = context.fluxVars(spaceIdx, timeIdx);
 
-        const auto &fluidStateI = context.volVars(fluxVars.insideIndex(), timeIdx).fluidState();
-        const auto &fluidStateJ = context.volVars(fluxVars.outsideIndex(), timeIdx).fluidState();
+        const auto &fluidStateI
+            = context.volVars(fluxVars.insideIndex(), timeIdx).fluidState();
+        const auto &fluidStateJ
+            = context.volVars(fluxVars.outsideIndex(), timeIdx).fluidState();
 
         RateVector molarRate(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // arithmetic mean of the phase's molar density
-            Scalar rhoMolar =
-                (fluidStateI.molarDensity(phaseIdx)
-                 + fluidStateJ.molarDensity(phaseIdx))/2;
+            Scalar rhoMolar = (fluidStateI.molarDensity(phaseIdx)
+                               + fluidStateJ.molarDensity(phaseIdx)) / 2;
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 // mass flux due to molecular diffusion
-                molarRate[conti0EqIdx + compIdx] +=
-                    - rhoMolar
-                    * fluxVars.moleFractionGradientNormal(phaseIdx, compIdx)
-                    * fluxVars.effectiveDiffusionCoefficient(phaseIdx, compIdx);
+                molarRate[conti0EqIdx + compIdx]
+                    += -rhoMolar
+                       * fluxVars.moleFractionGradientNormal(phaseIdx, compIdx)
+                       * fluxVars.effectiveDiffusionCoefficient(phaseIdx,
+                                                                compIdx);
         }
 
         flux += molarRate;
@@ -155,21 +155,31 @@ public:
      *        phase in the porous medium.
      */
     Scalar tortuosity(int phaseIdx) const
-    { OPM_THROW(std::logic_error, "Method tortuosity() does not make sense if diffusion is disabled"); }
+    {
+        OPM_THROW(std::logic_error, "Method tortuosity() does not make sense "
+                                    "if diffusion is disabled");
+    }
 
     /*!
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
     Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
-    { OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not make sense if diffusion is disabled"); }
+    {
+        OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not "
+                                    "make sense if diffusion is disabled");
+    }
 
     /*!
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
     Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled"); }
+    {
+        OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
+                                    "does not make sense if diffusion is "
+                                    "disabled");
+    }
 
 protected:
     /*!
@@ -177,12 +187,9 @@ protected:
      *        mass fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fs,
-                 ParameterCache &paramCache,
-                 const ElementContext &elemCtx,
-                 int scvIdx,
-                 int timeIdx)
-    { }
+    void update_(FluidState &fs, ParameterCache &paramCache,
+                 const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    {}
 };
 
 /*!
@@ -220,7 +227,7 @@ public:
      *        the porous medium for a component in a phase.
      */
     Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { return tortuosity_[phaseIdx]*diffusionCoefficient_[phaseIdx][compIdx]; }
+    { return tortuosity_[phaseIdx] * diffusionCoefficient_[phaseIdx][compIdx]; }
 
 protected:
     /*!
@@ -228,11 +235,8 @@ protected:
      *        mass fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fluidState,
-                 ParameterCache &paramCache,
-                 const ElementContext &elemCtx,
-                 int scvIdx,
-                 int timeIdx)
+    void update_(FluidState &fluidState, ParameterCache &paramCache,
+                 const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
         const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
@@ -243,13 +247,17 @@ protected:
             // TODO: let the problem do this (this is a constitutive
             // relation of which the model should be free of from the
             // abstraction POV!)
-            tortuosity_[phaseIdx] =
-                1.0/(volVars.porosity() * volVars.porosity())
-                * std::pow(std::max(0.0001, volVars.porosity() * volVars.fluidState().saturation(phaseIdx)), 7.0/3);
+            tortuosity_[phaseIdx]
+                = 1.0 / (volVars.porosity() * volVars.porosity())
+                  * std::pow(std::max(0.0001, volVars.porosity()
+                                              * volVars.fluidState().saturation(
+                                                    phaseIdx)),
+                             7.0 / 3);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                diffusionCoefficient_[phaseIdx][compIdx] =
-                    FluidSystem::diffusionCoefficient(fluidState, paramCache, phaseIdx, compIdx);
+                diffusionCoefficient_[phaseIdx][compIdx]
+                    = FluidSystem::diffusionCoefficient(fluidState, paramCache,
+                                                        phaseIdx, compIdx);
             }
         }
     }
@@ -283,14 +291,12 @@ protected:
      *        the diffusive mass fluxes.
      */
     void update_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
-    { }
+    {}
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context,
-                         int bfIdx,
-                         int timeIdx,
+    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
                          const FluidState &fluidState)
-    { }
+    {}
 
 public:
     /*!
@@ -300,7 +306,10 @@ public:
      * \copydoc Doxygen::compIdxParam
      */
     Scalar moleFractionGradientNormal(int phaseIdx, int compIdx) const
-    { OPM_THROW(std::logic_error, "Method moleFractionGradient() does not make sense if diffusion is disabled."); }
+    {
+        OPM_THROW(std::logic_error, "Method moleFractionGradient() does not "
+                                    "make sense if diffusion is disabled.");
+    }
 
     /*!
      * \brief The effective diffusion coeffcient of a component in a
@@ -310,7 +319,11 @@ public:
      * \copydoc Doxygen::compIdxParam
      */
     Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
-    { OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() does not make sense if diffusion is disabled."); }
+    {
+        OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
+                                    "does not make sense if diffusion is "
+                                    "disabled.");
+    }
 };
 
 /*!
@@ -339,8 +352,10 @@ protected:
         const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
-        const auto &volVarsInside = elemCtx.volVars(fluxVars.insideIndex(), timeIdx);
-        const auto &volVarsOutside = elemCtx.volVars(fluxVars.outsideIndex(), timeIdx);
+        const auto &volVarsInside
+            = elemCtx.volVars(fluxVars.insideIndex(), timeIdx);
+        const auto &volVarsOutside
+            = elemCtx.volVars(fluxVars.outsideIndex(), timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
@@ -352,8 +367,7 @@ protected:
 
                 // calculate mole fraction gradient using finite element
                 // gradients
-                for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++)
-                {
+                for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
                     const auto &feGrad = scvf.grad[scvIdx];
                     const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
 
@@ -362,25 +376,28 @@ protected:
                     moleFractionGradient += tmp;
                 }
 
-                moleFractionGradientNormal_[phaseIdx][compIdx] =
-                    scvf.normal*moleFractionGradient;
-                Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
+                moleFractionGradientNormal_[phaseIdx][compIdx]
+                    = scvf.normal * moleFractionGradient;
+                Valgrind::CheckDefined(
+                    moleFractionGradientNormal_[phaseIdx][compIdx]);
 
                 // use the arithmetic average for the effective
                 // diffusion coefficients.
-                effectiveDiffusionCoefficient_[phaseIdx][compIdx] =
-                    (volVarsInside.effectiveDiffusionCoefficient(phaseIdx, compIdx)
-                     + volVarsOutside.effectiveDiffusionCoefficient(phaseIdx, compIdx))/2;
+                effectiveDiffusionCoefficient_[phaseIdx][compIdx]
+                    = (volVarsInside.effectiveDiffusionCoefficient(phaseIdx,
+                                                                   compIdx)
+                       + volVarsOutside.effectiveDiffusionCoefficient(phaseIdx,
+                                                                      compIdx))
+                      / 2;
 
-                Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
+                Valgrind::CheckDefined(
+                    effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
             }
         }
     }
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context,
-                         int bfIdx,
-                         int timeIdx,
+    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
                          const FluidState &fluidState)
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
@@ -388,17 +405,20 @@ protected:
 
         const auto &elemCtx = context.elemContext();
         int insideScvIdx = scvf.i;
-        const auto &insideScv = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx];
+        const auto &insideScv
+            = elemCtx.fvElemGeom(timeIdx).subContVol[insideScvIdx];
 
         const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
         const auto &fluidStateInside = volVarsInside.fluidState();
 
-        // distance between the center of the SCV and center of the boundary face
+        // distance between the center of the SCV and center of the boundary
+        // face
         DimVector distVec = scvf.ipGlobal;
-        distVec -= context.element().geometry().global(insideScv.localGeometry->center());
+        distVec -= context.element().geometry().global(
+            insideScv.localGeometry->center());
 
         const DimVector &n = scvf.normal;
-        Scalar dist = (distVec * n)/n.two_norm();
+        Scalar dist = (distVec * n) / n.two_norm();
 
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
@@ -413,16 +433,21 @@ protected:
 
                 // calculate mole fraction gradient using two-point
                 // gradients
-                moleFractionGradientNormal_[phaseIdx][compIdx] =
-                    (fluidState.moleFraction(phaseIdx, compIdx) -
-                     fluidStateInside.moleFraction(phaseIdx, compIdx))/dist;
-                Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
+                moleFractionGradientNormal_[phaseIdx][compIdx]
+                    = (fluidState.moleFraction(phaseIdx, compIdx)
+                       - fluidStateInside.moleFraction(phaseIdx, compIdx))
+                      / dist;
+                Valgrind::CheckDefined(
+                    moleFractionGradientNormal_[phaseIdx][compIdx]);
 
-                // use effective diffusion coefficients of the interior finite volume.
-                effectiveDiffusionCoefficient_[phaseIdx][compIdx] =
-                    volVarsInside.effectiveDiffusionCoefficient(phaseIdx, compIdx);
+                // use effective diffusion coefficients of the interior finite
+                // volume.
+                effectiveDiffusionCoefficient_[phaseIdx][compIdx]
+                    = volVarsInside.effectiveDiffusionCoefficient(phaseIdx,
+                                                                  compIdx);
 
-                Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
+                Valgrind::CheckDefined(
+                    effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
             }
         }
     }

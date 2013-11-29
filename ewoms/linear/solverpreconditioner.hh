@@ -59,12 +59,9 @@ public:
         Scalar tolerance = 1e-6;
         int maxIter = 10;
         int verbosity = 0;
-        innerSolver_ = new InnerSolver(*innerOperator_,
-                                       *innerScalarProduct_,
-                                       *innerPreCond_,
-                                       tolerance,
-                                       maxIter,
-                                       verbosity);
+        innerSolver_
+            = new InnerSolver(*innerOperator_, *innerScalarProduct_,
+                              *innerPreCond_, tolerance, maxIter, verbosity);
     }
 
     ~SolverPreconditioner()

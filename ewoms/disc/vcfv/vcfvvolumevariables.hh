@@ -70,7 +70,7 @@ public:
      * \brief Register all run-time parameters for the volume variables.
      */
     static void registerParameters()
-    { }
+    {}
 
     /*!
      * \brief Sets the evaluation point used by the local jacobian.
@@ -91,7 +91,7 @@ public:
      * The evaluation point is only used by semi-smooth models.
      */
     const Implementation &evalPoint() const
-    { return (evalPoint_ == 0)?asImp_():*evalPoint_; }
+    { return (evalPoint_ == 0) ? asImp_() : *evalPoint_; }
 
     /*!
      * \brief Update all quantities for a given control volume.
@@ -102,11 +102,10 @@ public:
      * \param timeIdx The index for the time discretization for which
      *                the volume variables should be calculated
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, scvIdx, timeIdx);
+        extrusionFactor_
+            = elemCtx.problem().extrusionFactor(elemCtx, scvIdx, timeIdx);
     }
 
     /*!
@@ -118,10 +117,9 @@ public:
      * \param timeIdx The index for the time discretization for which
      *                the volume variables should be calculated
      */
-    void updateScvGradients(const ElementContext &elemCtx,
-                            int scvIdx,
+    void updateScvGradients(const ElementContext &elemCtx, int scvIdx,
                             int timeIdx)
-    { }
+    {}
 
     /*!
      * \brief Return how much the sub-control volume is extruded.
@@ -150,9 +148,9 @@ public:
 
 private:
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
 
     // the evaluation point of the local jacobian
     const Implementation *evalPoint_;

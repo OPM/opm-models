@@ -41,45 +41,52 @@ namespace Linear {
  *        freedom.
  */
 template <class GridView, class ElementMapper>
-class ElementBorderListFromGrid : public Dune::CommDataHandleIF<ElementBorderListFromGrid<GridView, ElementMapper>,
-                                                               int >
+class ElementBorderListFromGrid
+    : public Dune::CommDataHandleIF<ElementBorderListFromGrid<GridView, ElementMapper>,
+                                    int>
 {
 public:
-    ElementBorderListFromGrid(const GridView &gridView,
-                              const ElementMapper &map)
+    ElementBorderListFromGrid(const GridView &gridView, const ElementMapper &map)
         : gridView_(gridView), map_(map)
     {
-        gridView.communicate(*this,
-                             Dune::InteriorBorder_All_Interface,
+        gridView.communicate(*this, Dune::InteriorBorder_All_Interface,
                              Dune::BackwardCommunication);
     }
 
     // data handle methods
-    bool contains (int dim, int codim) const
+    bool contains(int dim, int codim) const
     { return codim == 0; }
 
     bool fixedsize(int dim, int codim) const
     { return true; }
 
-    template<class EntityType>
+    template <class EntityType>
     size_t size(const EntityType &e) const
     { return 2; }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
         buff.write(gridView_.comm().rank());
         buff.write(map_.map(e));
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
         BorderIndex bIdx;
 
         bIdx.localIdx = map_.map(e);
-        { int tmp; buff.read(tmp); bIdx.peerRank = tmp; }
-        { int tmp; buff.read(tmp); bIdx.peerIdx = tmp; }
+        {
+            int tmp;
+            buff.read(tmp);
+            bIdx.peerRank = tmp;
+        }
+        {
+            int tmp;
+            buff.read(tmp);
+            bIdx.peerIdx = tmp;
+        }
         bIdx.borderDistance = 1;
 
         borderList_.push_back(bIdx);

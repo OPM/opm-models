@@ -59,9 +59,7 @@ public:
     }
 
     ~MpiBuffer()
-    {
-        delete[] data_;
-    }
+    { delete[] data_; }
 
     /*!
      * \brief Set the size of the buffer
@@ -77,16 +75,11 @@ public:
     /*!
      * \brief Send the buffer asyncronously to a peer process.
      */
-    void send(int peerRank, bool setNoAccess=true)
+    void send(int peerRank, bool setNoAccess = true)
     {
 #if HAVE_MPI
-        MPI_Isend(data_,
-                  mpiDataSize_,
-                  mpiDataType_,
-                  peerRank,
-                  0, // tag
-                  MPI_COMM_WORLD,
-                  &mpiRequest_);
+        MPI_Isend(data_, mpiDataSize_, mpiDataType_, peerRank, 0, // tag
+                  MPI_COMM_WORLD, &mpiRequest_);
 #endif
     }
 
@@ -106,14 +99,9 @@ public:
     void receive(int peerRank)
     {
 #if HAVE_MPI
-        MPI_Recv(data_,
-                 mpiDataSize_,
-                 mpiDataType_,
-                 peerRank,
-                 0, // tag
-                 MPI_COMM_WORLD,
-                 &mpiStatus_);
-        assert(! mpiStatus_.MPI_ERROR);
+        MPI_Recv(data_, mpiDataSize_, mpiDataType_, peerRank, 0, // tag
+                 MPI_COMM_WORLD, &mpiStatus_);
+        assert(!mpiStatus_.MPI_ERROR);
 #endif // HAVE_MPI
     }
 

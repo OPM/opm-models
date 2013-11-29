@@ -48,31 +48,21 @@ class VtkNestedFunction : public Dune::VTKFunction<GridView>
     typedef typename GridView::template Codim<0>::Entity Element;
 
 public:
-    VtkNestedFunction(std::string name,
-                      const GridView &gridView,
-                      const Mapper &mapper,
-                      const Buffer &buf,
-                      int codim,
+    VtkNestedFunction(std::string name, const GridView &gridView,
+                      const Mapper &mapper, const Buffer &buf, int codim,
                       int numComp)
-        : name_(name)
-        , gridView_(gridView)
-        , mapper_(mapper)
-        , buf_(buf)
-        , codim_(codim)
-        , numComp_(numComp)
-    {
-        assert(int(buf_.size()) == mapper_.size());
-    }
+        : name_(name), gridView_(gridView), mapper_(mapper), buf_(buf),
+          codim_(codim), numComp_(numComp)
+    { assert(int(buf_.size()) == mapper_.size()); }
 
-    virtual std::string name () const
+    virtual std::string name() const
     { return name_; }
 
     virtual int ncomps() const
     { return numComp_; }
 
-    virtual double evaluate(int mycomp,
-                            const Element &e,
-                            const Dune::FieldVector< ctype, dim > &xi) const
+    virtual double evaluate(int mycomp, const Element &e,
+                            const Dune::FieldVector<ctype, dim> &xi) const
     {
         int idx;
         if (codim_ == 0) {
@@ -82,25 +72,23 @@ public:
         else if (codim_ == dim) {
             // find vertex which is closest to xi in local
             // coordinates. This code is based on Dune::P1VTKFunction
-            double min=1e100;
-            int imin=-1;
+            double min = 1e100;
+            int imin = -1;
             Dune::GeometryType gt = e.type();
             int n = e.template count<dim>();
-            for (int i=0; i < n; ++i)
-            {
+            for (int i = 0; i < n; ++i) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-                Dune::FieldVector<ctype,dim> local =
-                    Dune::ReferenceElements<ctype,dim>::general(gt)
-                    .position(i,dim);
+                Dune::FieldVector<ctype, dim> local
+                    = Dune::ReferenceElements<ctype, dim>::general(gt)
+                          .position(i, dim);
 #else
-                Dune::FieldVector<ctype,dim> local =
-                    Dune::GenericReferenceElements<ctype,dim>::general(gt)
-                    .position(i,dim);
+                Dune::FieldVector<ctype, dim> local
+                    = Dune::GenericReferenceElements<ctype, dim>::general(gt)
+                          .position(i, dim);
 #endif
 
                 local -= xi;
-                if (local.infinity_norm()<min)
-                {
+                if (local.infinity_norm() < min) {
                     min = local.infinity_norm();
                     imin = i;
                 }
@@ -110,9 +98,8 @@ public:
             idx = mapper_.map(e, imin, codim_);
         }
         else
-            OPM_THROW(std::logic_error,
-                      "Only element and vertex based vector "
-                      " fields are supported so far.");
+            OPM_THROW(std::logic_error, "Only element and vertex based vector "
+                                        " fields are supported so far.");
 
         double val = buf_[idx][mycomp];
         if (std::abs(val) < std::numeric_limits<float>::min())

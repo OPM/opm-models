@@ -72,7 +72,7 @@ namespace Ewoms {
 class MpiHelper
 {
 public:
-    enum{
+    enum {
 #if HAVE_MPI
         isFake = false //!< Returns whether MPI is really available or not
 #else
@@ -80,7 +80,7 @@ public:
 #endif
     };
 
-    /// The type of the MPI communicator object
+/// The type of the MPI communicator object
 #if HAVE_MPI
     typedef MPI_Comm MPICommunicator;
 #else
@@ -94,13 +94,12 @@ public:
         static bool wasInstanciated = false;
         if (wasInstanciated)
             OPM_THROW(std::logic_error,
-                       "Ewoms::MpiHelper may only be instanciated once!");
+                      "Ewoms::MpiHelper may only be instanciated once!");
         wasInstanciated = true;
 
 #if HAVE_MPI
         if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
-            OPM_THROW(std::logic_error,
-                       "Initialization of MPI failed!");
+            OPM_THROW(std::logic_error, "Initialization of MPI failed!");
 
         MPI_Comm_size(MPI_COMM_WORLD, &size_);
         MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
@@ -117,7 +116,8 @@ public:
     /*!
      * \brief The deprecated singleton DUNE interface
      */
-    DUNE_DEPRECATED_MSG("Construct an instance of this class in your main function instead!")
+    DUNE_DEPRECATED_MSG(
+        "Construct an instance of this class in your main function instead!")
     static MpiHelper &instance(int &argc, char **&argv)
     {
         static MpiHelper singleton(argc, argv);
@@ -166,11 +166,14 @@ public:
      * \brief Returns an object which can be used for collective
      * communications.
      */
-    static Dune::CollectiveCommunication<MPICommunicator> getCollectiveCommunication()
-    { return Dune::CollectiveCommunication<MPICommunicator>(getCommunicator()); }
+    static Dune::CollectiveCommunication<MPICommunicator>
+    getCollectiveCommunication()
+    {
+        return Dune::CollectiveCommunication<MPICommunicator>(getCommunicator());
+    }
 
 private:
-    MpiHelper& operator=(const MpiHelper);
+    MpiHelper &operator=(const MpiHelper);
     static int size_;
     static int rank_;
 };
@@ -182,7 +185,7 @@ int MpiHelper::rank_ = 0;
 
 // this is a bit hacky, but required for DUNE compatibility
 namespace Dune {
-    typedef Ewoms::MpiHelper MPIHelper;
+typedef Ewoms::MpiHelper MPIHelper;
 }
 
 #endif

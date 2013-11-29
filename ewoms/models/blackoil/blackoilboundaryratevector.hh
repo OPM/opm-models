@@ -37,8 +37,7 @@ namespace Ewoms {
  * \brief Implements a boundary vector for the fully implicit black-oil model.
  */
 template <class TypeTag>
-class BlackOilBoundaryRateVector
-    : public GET_PROP_TYPE(TypeTag, RateVector)
+class BlackOilBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -55,31 +54,29 @@ public:
     /*!
      * \brief Default constructor
      */
-    BlackOilBoundaryRateVector()
-        : ParentType()
-    { }
+    BlackOilBoundaryRateVector() : ParentType()
+    {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
+     * \copydoc
+     * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    BlackOilBoundaryRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    BlackOilBoundaryRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const
+     * ImmiscibleBoundaryRateVector &)
      */
     BlackOilBoundaryRateVector(const BlackOilBoundaryRateVector &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context,
-                     int bfIdx,
-                     int timeIdx,
+    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
                      const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
@@ -93,40 +90,40 @@ public:
         // advective fluxes of all components in all phases
         ////////
         (*this) = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-        {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar meanMBoundary = 0;
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                meanMBoundary += fluidState.moleFraction(phaseIdx, compIdx)*FluidSystem::molarMass(compIdx);
+                meanMBoundary += fluidState.moleFraction(phaseIdx, compIdx)
+                                 * FluidSystem::molarMass(compIdx);
 
             Scalar density;
-            if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx))
+            if (fluidState.pressure(phaseIdx)
+                > insideVolVars.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
                 density = insideVolVars.fluidState().density(phaseIdx);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar molarity;
-                if (fluidState.pressure(phaseIdx) > insideVolVars.fluidState().pressure(phaseIdx)) {
-                    molarity =
-                        fluidState.moleFraction(phaseIdx, compIdx)
-                        * density / meanMBoundary;
+                if (fluidState.pressure(phaseIdx)
+                    > insideVolVars.fluidState().pressure(phaseIdx)) {
+                    molarity = fluidState.moleFraction(phaseIdx, compIdx)
+                               * density / meanMBoundary;
                 }
-                else  {
-                    molarity = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
+                else {
+                    molarity
+                        = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
                 }
 
                 // add advective flux of current component in current
                 // phase
-                (*this)[conti0EqIdx + compIdx] +=
-                    fluxVars.volumeFlux(phaseIdx)
-                    * molarity;
+                (*this)[conti0EqIdx + compIdx] += fluxVars.volumeFlux(phaseIdx)
+                                                  * molarity;
             }
         }
 
 #ifndef NDEBUG
-        for (int i = 0; i < numEq; ++ i) {
+        for (int i = 0; i < numEq; ++i) {
             Valgrind::CheckDefined((*this)[i]);
         };
         Valgrind::CheckDefined(*this);
@@ -137,16 +134,14 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setInFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context,
-                   int bfIdx,
-                   int timeIdx,
+    void setInFlow(const Context &context, int bfIdx, int timeIdx,
                    const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::min<Scalar>(0.0, val);
         };
@@ -156,16 +151,14 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setOutFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context,
-                    int bfIdx,
-                    int timeIdx,
+    void setOutFlow(const Context &context, int bfIdx, int timeIdx,
                     const FluidState &fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the same direction as the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::max<Scalar>(0.0, val);
         };

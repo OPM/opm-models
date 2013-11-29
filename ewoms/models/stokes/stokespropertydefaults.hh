@@ -52,7 +52,8 @@ SET_PROP(VcfvStokes, NumEq) //!< set the number of equations
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    static const int value = GridView::dimensionworld + FluidSystem::numComponents;
+    static const int value = GridView::dimensionworld
+                             + FluidSystem::numComponents;
 };
 
 //! the number of phases
@@ -62,14 +63,10 @@ SET_INT_PROP(VcfvStokes, NumPhases, 1);
 SET_INT_PROP(VcfvStokes, NumComponents, 1);
 
 //! Use the Stokes local residual function for the Stokes model
-SET_TYPE_PROP(VcfvStokes,
-              LocalResidual,
-              Ewoms::StokesLocalResidual<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, LocalResidual, Ewoms::StokesLocalResidual<TypeTag>);
 
 //! Use the Stokes local residual function for the Stokes model
-SET_TYPE_PROP(VcfvStokes,
-              BaseProblem,
-              Ewoms::StokesProblem<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, BaseProblem, Ewoms::StokesProblem<TypeTag>);
 
 //! Increase the relative tolerance of the newton method to 10^-7
 SET_SCALAR_PROP(VcfvStokes, NewtonRelativeTolerance, 1e-7);
@@ -77,7 +74,8 @@ SET_SCALAR_PROP(VcfvStokes, NewtonRelativeTolerance, 1e-7);
 #if HAVE_SUPERLU
 SET_TAG_PROP(VcfvStokes, LinearSolver, SuperLULinearSolver);
 #else
-#warning "No SuperLU installed. SuperLU is the recommended linear solver for the Stokes models."
+#warning "No SuperLU installed. SuperLU is the recommended linear "
+"solver for the Stokes models."
 #endif
 
 //! the Model property
@@ -90,21 +88,26 @@ SET_TYPE_PROP(VcfvStokes, VolumeVariables, Ewoms::StokesVolumeVariables<TypeTag>
 SET_TYPE_PROP(VcfvStokes, FluxVariables, Ewoms::StokesFluxVariables<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvStokes, BoundaryRateVector, Ewoms::StokesBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvStokes, BoundaryRateVector,
+              Ewoms::StokesBoundaryRateVector<TypeTag>);
 
 //! The fluid system to use by default
 SET_PROP(VcfvStokes, FluidSystem)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::FluidSystems::OneP<Scalar, Fluid> type;
 };
 
 //! The fluid that is used in the single-phase fluidsystem.
 SET_PROP(VcfvStokes, Fluid)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
@@ -116,24 +119,25 @@ SET_PROP(VcfvStokes, FluidState)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
 public:
     typedef Opm::CompositionalFluidState<Scalar, FluidSystem> type;
 };
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvStokes,
-              HeatConductionLaw,
-              Opm::FluidHeatConduction<typename GET_PROP_TYPE(TypeTag, FluidSystem),
-                                         typename GET_PROP_TYPE(TypeTag, Scalar),
-                                         GET_PROP_VALUE(TypeTag, StokesPhaseIndex)>);
+SET_TYPE_PROP(
+    VcfvStokes, HeatConductionLaw,
+    Opm::FluidHeatConduction<typename GET_PROP_TYPE(TypeTag, FluidSystem),
+                             typename GET_PROP_TYPE(TypeTag, Scalar),
+                             GET_PROP_VALUE(TypeTag, StokesPhaseIndex)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvStokes,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvStokes, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
-//! Set the phaseIndex per default to zero (important for two-phase fluidsystems).
+//! Set the phaseIndex per default to zero (important for two-phase
+// fluidsystems).
 SET_INT_PROP(VcfvStokes, StokesPhaseIndex, 0);
 
 //! Disable the energy equation by default

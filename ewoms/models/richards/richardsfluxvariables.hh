@@ -39,7 +39,8 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class RichardsFluxVariables : public VcfvMultiPhaseFluxVariables<TypeTag>
-{ };
+{
+};
 
 } // namespace Ewoms
 

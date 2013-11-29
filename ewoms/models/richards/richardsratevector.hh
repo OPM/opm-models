@@ -44,7 +44,7 @@ namespace Ewoms {
 template <class TypeTag>
 class RichardsRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -59,31 +59,27 @@ class RichardsRateVector
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
 public:
-    RichardsRateVector()
-        : ParentType()
+    RichardsRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    RichardsRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    RichardsRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
+     * ImmiscibleRateVector &)
      */
-    RichardsRateVector(const RichardsRateVector &value)
-        : ParentType(value)
-    { }
+    RichardsRateVector(const RichardsRateVector &value) : ParentType(value)
+    {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType &value)
-    {
-        ParentType::operator=(value);
-    }
+    { ParentType::operator=(value); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate
@@ -108,15 +104,14 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState,
-                           int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[contiWEqIdx + compIdx] =
-                fluidState.density(phaseIdx)
-                * fluidState.massFraction(phaseIdx, /*compIdx=*/wPhaseIdx)
-                * volume;
+            (*this)[contiWEqIdx + compIdx]
+                = fluidState.density(phaseIdx)
+                  * fluidState.massFraction(phaseIdx, /*compIdx=*/wPhaseIdx)
+                  * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

@@ -41,8 +41,8 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class BlackOilVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
@@ -75,27 +75,25 @@ public:
     /*!
      * \copydoc VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
 
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+        fluidState_.setTemperature(
+            elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const typename MaterialLaw::Params &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
 
         // update the saturations
         Scalar sumSat = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++ phaseIdx) {
-            fluidState_.setSaturation(phaseIdx, priVars[saturation0Idx + phaseIdx]);
+        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+            fluidState_.setSaturation(phaseIdx,
+                                      priVars[saturation0Idx + phaseIdx]);
             sumSat += priVars[saturation0Idx + phaseIdx];
         }
         fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
@@ -104,7 +102,7 @@ public:
         Scalar p0 = priVars[0];
         Scalar pC[numPhases];
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
         }
 
@@ -113,7 +111,7 @@ public:
         // components and calculate the composition of the liquid oil
         // phase from the gas formation factor plus the gas/oil
         // formation volume factors and the reference densities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
         // set composition of gas and water phases
@@ -126,21 +124,22 @@ public:
         Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);
         Scalar Bo = FluidSystem::oilFormationVolumeFactor(p);
         Scalar Rs = FluidSystem::gasDissolutionFactor(p);
-        Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/Bo;
+        Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx) / Bo;
         Scalar rhorefg = FluidSystem::surfaceDensity(gPhaseIdx);
-        Scalar rhog = rhorefg/Bg;
+        Scalar rhog = rhorefg / Bg;
         Scalar MG = FluidSystem::molarMass(gPhaseIdx);
         Scalar MO = FluidSystem::molarMass(oPhaseIdx);
 
         // calculate composition of oil phase in terms of mass
         // fractions.
-        Scalar XoG = Rs*rhorefg / rhoo;
+        Scalar XoG = Rs * rhorefg / rhoo;
         Scalar XoO = 1 - XoG;
 
         if (XoG < 0 || XoO < 0) {
             OPM_THROW(Opm::NumericalProblem,
-                       "Only positive values are allowed for the mass fractions "
-                       "of the oil and the gas components in the oil phase. (X_o^G="
+                      "Only positive values are allowed for the mass fractions "
+                      "of the oil and the gas components in the oil phase. "
+                      "(X_o^G="
                       << XoG << ", X_o^O=" << XoO << ")");
         }
 
@@ -156,18 +155,19 @@ public:
             if (So > 0) {
                 // Calculate the total partial mass density of the gas and
                 // oil components in the saturated oil phase
-                Scalar rho_oGSat = So*XoG*rhoo;
+                Scalar rho_oGSat = So * XoG * rhoo;
 
                 // Calculate the amount of gas that cannot be subtracted
                 // from the oil and thus needs to be accounted for in the
                 // gas saturation
-                Scalar rho_GInPhase = std::max(0.0, std::abs(Sg)*rhog - rho_oGSat);
+                Scalar rho_GInPhase
+                    = std::max(0.0, std::abs(Sg) * rhog - rho_oGSat);
 
                 // calculate the composition of the undersaturated oil phase
-                Scalar rho_oG = std::max(0.0, rho_oGSat - std::abs(Sg)*rhog);
+                Scalar rho_oG = std::max(0.0, rho_oGSat - std::abs(Sg) * rhog);
 
                 // convert to mass fractions
-                XoG = rho_oG/(So*rhoo);
+                XoG = rho_oG / (So * rhoo);
                 XoO = 1 - XoG;
 
                 // calculate the bubble pressure of the oil with the new
@@ -175,12 +175,14 @@ public:
                 Scalar pBubb = FluidSystem::oilSaturationPressure(XoG);
 
                 // calculate the density of the oil at the saturation pressure
-                rhoo = FluidSystem::surfaceDensity(oPhaseIdx)/FluidSystem::oilFormationVolumeFactor(p);
+                rhoo = FluidSystem::surfaceDensity(oPhaseIdx)
+                       / FluidSystem::oilFormationVolumeFactor(p);
                 // compress to the actual pressure of the system
-                rhoo *= 1.0 + FluidSystem::oilCompressibility() * (fluidState_.pressure(oPhaseIdx) - pBubb);
+                rhoo *= 1.0 + FluidSystem::oilCompressibility()
+                              * (fluidState_.pressure(oPhaseIdx) - pBubb);
 
                 // convert the "residual gas" into a saturation
-                Sg = - rho_GInPhase/rhog;
+                Sg = -rho_GInPhase / rhog;
             }
 
             // update the saturations. Gas phase is not present!
@@ -189,8 +191,8 @@ public:
         }
 
         // convert mass to mole fractions
-        Scalar avgMolarMass = MO/(1 + XoG*(MO/MG - 1));
-        Scalar xoG = XoG*avgMolarMass/MG;
+        Scalar avgMolarMass = MO / (1 + XoG * (MO / MG - 1));
+        Scalar xoG = XoG * avgMolarMass / MG;
         Scalar xoO = 1 - xoG;
 
         // set the oil-phase composition
@@ -203,18 +205,22 @@ public:
         rhoo = FluidSystem::density(fluidState_, paramCache, oPhaseIdx);
 
         // set the phase densities for the phases
-        fluidState_.setDensity(wPhaseIdx, FluidSystem::density(fluidState_, paramCache, wPhaseIdx));
+        fluidState_.setDensity(wPhaseIdx,
+                               FluidSystem::density(fluidState_, paramCache,
+                                                    wPhaseIdx));
         fluidState_.setDensity(gPhaseIdx, rhog);
         fluidState_.setDensity(oPhaseIdx, rhoo);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu
+                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
         // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
         // retrieve the porosity from the problem
@@ -249,7 +255,9 @@ public:
      * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
+    {
+        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+    }
 
     /*!
      * \copydoc ImmiscibleVolumeVariables::porosity

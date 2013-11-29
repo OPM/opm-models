@@ -59,7 +59,8 @@ NEW_TYPE_TAG(ParallelAmgBackend, INHERITS_FROM(ParallelIterativeLinearSolver));
 NEW_PROP_TAG(AmgCoarsenTarget);
 
 // use the AMG preconditioner wrapper.
-//NEW_PROP_TAG(ParallelAmgBackend, PreconditionerWrapper, ParallelAmgPreconditionerWrapper);
+// NEW_PROP_TAG(ParallelAmgBackend, PreconditionerWrapper,
+// ParallelAmgPreconditionerWrapper);
 
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
@@ -95,24 +96,24 @@ class ParallelAmgBackend
 
     // define the smoother used for the AMG and specify its
     // arguments
-    typedef Dune::SeqSOR<Matrix,Vector,Vector> SequentialSmoother;
-    //typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
-    //typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
-    //typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
-    //typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
+    typedef Dune::SeqSOR<Matrix, Vector, Vector> SequentialSmoother;
+// typedef Dune::SeqSSOR<Matrix,Vector,Vector> SequentialSmoother;
+// typedef Dune::SeqJac<Matrix,Vector,Vector> SequentialSmoother;
+// typedef Dune::SeqILU0<Matrix,Vector,Vector> SequentialSmoother;
+// typedef Dune::SeqILUn<Matrix,Vector,Vector> SequentialSmoother;
 
 #if HAVE_MPI
-    typedef Dune::OwnerOverlapCopyCommunication<Ewoms::Linear::Index> OwnerOverlapCopyCommunication;
-    typedef Dune::OverlappingSchwarzOperator<Matrix,
-                                             Vector,
-                                             Vector,
-                                             OwnerOverlapCopyCommunication> FineOperator;
-    typedef Dune::OverlappingSchwarzScalarProduct<Vector,OwnerOverlapCopyCommunication> FineScalarProduct;
-    typedef Dune::BlockPreconditioner<Vector,
-                                      Vector,
-                                      OwnerOverlapCopyCommunication,
+    typedef Dune::OwnerOverlapCopyCommunication<Ewoms::Linear::Index>
+    OwnerOverlapCopyCommunication;
+    typedef Dune::OverlappingSchwarzOperator<Matrix, Vector, Vector,
+                                             OwnerOverlapCopyCommunication>
+    FineOperator;
+    typedef Dune::OverlappingSchwarzScalarProduct<Vector, OwnerOverlapCopyCommunication>
+    FineScalarProduct;
+    typedef Dune::BlockPreconditioner<Vector, Vector, OwnerOverlapCopyCommunication,
                                       SequentialSmoother> ParallelSmoother;
-    typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother, OwnerOverlapCopyCommunication> AMG;
+    typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother,
+                           OwnerOverlapCopyCommunication> AMG;
 #else
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> FineOperator;
     typedef Dune::SeqScalarProduct<Vector> FineScalarProduct;
@@ -121,8 +122,7 @@ class ParallelAmgBackend
 #endif
 
 public:
-    ParallelAmgBackend(const Problem &problem)
-        : problem_(problem)
+    ParallelAmgBackend(const Problem &problem) : problem_(problem)
     {
         overlappingMatrix_ = nullptr;
         overlappingb_ = nullptr;
@@ -138,7 +138,9 @@ public:
     {
         ParallelIterativeSolverBackend<TypeTag>::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget, "The coarsening target for the agglomerations of the AMG preconditioner");
+        EWOMS_REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget,
+                             "The coarsening target for the agglomerations of "
+                             "the AMG preconditioner");
     }
 
     /*!
@@ -187,10 +189,10 @@ public:
 
         (*overlappingx_) = 0.0;
 
-        /////////////
-        // set-up the AMG preconditioner
-        /////////////
-        // create the parallel scalar product and the parallel operator
+/////////////
+// set-up the AMG preconditioner
+/////////////
+// create the parallel scalar product and the parallel operator
 #if HAVE_MPI
         FineOperator fineOperator(*overlappingMatrix_, *istlComm_);
 #else
@@ -211,18 +213,18 @@ public:
         if (verbosity > 1 && problem_.gridView().comm().rank() == 0)
             std::cout << "Creating the solver\n";
 
-        typedef Ewoms::BiCGSTABSolver<Vector>  SolverType;
-        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        int maxIterations = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
-        SolverType solver(fineOperator,
-                          scalarProduct,
-                          /*preconditioner=*/*amg_,
-                          linearSolverTolerance,
-                          /*maxSteps=*/maxIterations,
-                          verbosity);
+        typedef Ewoms::BiCGSTABSolver<Vector> SolverType;
+        Scalar linearSolverTolerance
+            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+        int maxIterations
+            = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+        SolverType solver(fineOperator, scalarProduct,
+                          /*preconditioner=*/*amg_, linearSolverTolerance,
+                          /*maxSteps=*/maxIterations, verbosity);
 
         // use the residual reduction convergence criterion
-        OverlappingVector residWeightVec(*overlappingx_), fixPointWeightVec(*overlappingx_);
+        OverlappingVector residWeightVec(*overlappingx_),
+            fixPointWeightVec(*overlappingx_);
 
         // set the default weight of the row to 0 (-> do not consider
         // the row when calculating the error)
@@ -231,39 +233,47 @@ public:
 
         // for rows local to the current peer, ping the model for their
         // relative weight
-        const auto &foreignOverlap = overlappingMatrix_->overlap().foreignOverlap();
-        for (unsigned localIdx = 0; localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
+        const auto &foreignOverlap
+            = overlappingMatrix_->overlap().foreignOverlap();
+        for (unsigned localIdx = 0;
+             localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
             int nativeIdx = foreignOverlap.localToNative(localIdx);
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                residWeightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
-                fixPointWeightVec[localIdx][eqIdx] = this->problem_.model().primaryVarWeight(nativeIdx, eqIdx);
+                residWeightVec[localIdx][eqIdx]
+                    = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+                fixPointWeightVec[localIdx][eqIdx]
+                    = this->problem_.model().primaryVarWeight(nativeIdx, eqIdx);
             }
         }
 
         // create a residual reduction convergence criterion
-        Scalar linearSolverRelTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
-        Scalar linearSolverFixPointTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance)/1e4;
-        auto *convCrit = new Ewoms::WeightedResidReductionCriterion<Vector,
-                                                                    typename GridView::CollectiveCommunication>
-            (problem_.gridView().comm(),
-             fixPointWeightVec,
-             residWeightVec,
-             linearSolverFixPointTolerance,
-             linearSolverRelTolerance,
-             linearSolverAbsTolerance);
+        Scalar linearSolverRelTolerance
+            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
+        Scalar linearSolverAbsTolerance
+            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
+        Scalar linearSolverFixPointTolerance
+            = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance) / 1e4;
+        auto *convCrit = new Ewoms::
+            WeightedResidReductionCriterion<Vector,
+                                            typename GridView::CollectiveCommunication>(
+                problem_.gridView().comm(), fixPointWeightVec, residWeightVec,
+                linearSolverFixPointTolerance, linearSolverRelTolerance,
+                linearSolverAbsTolerance);
 
         // tell the linear solver to use it
         typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+        solver.setConvergenceCriterion(
+            Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         Dune::InverseOperatorResult result;
         int solverSucceeded = 1;
-        try {
+        try
+        {
             solver.apply(*overlappingx_, *overlappingb_, result);
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
-        catch (const Dune::Exception &e) {
+        catch (const Dune::Exception &e)
+        {
             solverSucceeded = 0;
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
@@ -279,10 +289,10 @@ public:
 
 private:
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
 
     const Implementation &asImp_() const
-    { return *static_cast<const Implementation*>(this); }
+    { return *static_cast<const Implementation *>(this); }
 
     void prepare_(const Matrix &M)
     {
@@ -293,20 +303,20 @@ private:
             verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
             if (verbosity > 1)
-                std::cout << "Creating algebraic overlap of size " << overlapSize << "\n";
+                std::cout << "Creating algebraic overlap of size "
+                          << overlapSize << "\n";
         }
 
-        Linear::VertexBorderListFromGrid<GridView, VertexMapper>
-            borderListCreator(problem_.gridView(), problem_.vertexMapper());
+        Linear::VertexBorderListFromGrid<GridView, VertexMapper> borderListCreator(
+            problem_.gridView(), problem_.vertexMapper());
 
         // blacklist all entries that belong to ghost and overlap vertices
         std::set<Ewoms::Linear::Index> blackList;
         auto vIt = problem_.gridView().template begin<dimWorld>();
         const auto &vEndIt = problem_.gridView().template end<dimWorld>();
         for (; vIt != vEndIt; ++vIt) {
-            if (vIt->partitionType() != Dune::InteriorEntity &&
-                vIt->partitionType() != Dune::BorderEntity)
-            {
+            if (vIt->partitionType() != Dune::InteriorEntity
+                && vIt->partitionType() != Dune::BorderEntity) {
                 // we blacklist everything except interior and border
                 // vertices
                 blackList.insert(problem_.vertexMapper().map(*vIt));
@@ -314,10 +324,9 @@ private:
         }
 
         // create the overlapping Jacobian matrix
-        overlappingMatrix_ = new OverlappingMatrix (M,
-                                                borderListCreator.borderList(),
-                                                blackList,
-                                                overlapSize);
+        overlappingMatrix_
+            = new OverlappingMatrix(M, borderListCreator.borderList(),
+                                    blackList, overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution
@@ -349,8 +358,7 @@ private:
 
 #if HAVE_MPI
     template <class ParallelIndexSet>
-    void setupAmgIndexSet(const Overlap &overlap,
-                          ParallelIndexSet &istlIndices)
+    void setupAmgIndexSet(const Overlap &overlap, ParallelIndexSet &istlIndices)
     {
         typedef Dune::OwnerOverlapCopyAttributeSet GridAttributes;
         typedef Dune::OwnerOverlapCopyAttributeSet::AttributeSet GridAttributeSet;
@@ -358,19 +366,19 @@ private:
         // create DUNE's ParallelIndexSet from a domestic overlap
         istlIndices.beginResize();
         for (int curIdx = 0; curIdx < overlap.numDomestic(); ++curIdx) {
-            GridAttributeSet gridFlag =
-                overlap.iAmMasterOf(curIdx)
-                ? GridAttributes::owner
-                : GridAttributes::copy;
+            GridAttributeSet gridFlag = overlap.iAmMasterOf(curIdx)
+                                            ? GridAttributes::owner
+                                            : GridAttributes::copy;
 
             // an index is used by other processes if it is in the
             // domestic or in the foreign overlap.
             bool isShared = overlap.isInOverlap(curIdx);
 
-            assert(curIdx == int(overlap.globalToDomestic(overlap.domesticToGlobal(curIdx))));
+            assert(curIdx == int(overlap.globalToDomestic(
+                                 overlap.domesticToGlobal(curIdx))));
             istlIndices.add(/*globalIdx=*/overlap.domesticToGlobal(curIdx),
-                            Dune::ParallelLocalIndex<GridAttributeSet>(curIdx, gridFlag, isShared));
-
+                            Dune::ParallelLocalIndex<GridAttributeSet>(
+                                curIdx, gridFlag, isShared));
         }
         istlIndices.endResize();
     }
@@ -389,38 +397,40 @@ private:
         if (verbosity > 1 && rank == 0)
             std::cout << "Setting up the AMG preconditioner\n";
 
-        typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;
+        typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments
+        SmootherArgs;
 
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1.0;
 
-        // specify the coarsen criterion
-        //typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FirstDiagonal> >
-        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,Dune::Amg::FrobeniusNorm> >
+        // specify the coarsen criterion:
+        //
+        // typedef
+        // Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix,
+        //                             Dune::Amg::FirstDiagonal>>
+        typedef Dune::Amg::
+            CoarsenCriterion<Dune::Amg::SymmetricCriterion<Matrix, Dune::Amg::FrobeniusNorm> >
             CoarsenCriterion;
         int coarsenTarget = EWOMS_GET_PARAM(TypeTag, int, AmgCoarsenTarget);
         CoarsenCriterion coarsenCriterion(/*maxLevel=*/15, coarsenTarget);
-        coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension, /*aggregateSizePerDim=*/3);
+        coarsenCriterion.setDefaultValuesAnisotropic(GridView::dimension,
+                                                     /*aggregateSizePerDim=*/3);
         if (verbosity > 0)
             coarsenCriterion.setDebugLevel(1);
         else
             coarsenCriterion.setDebugLevel(0); // make the AMG shut up
-        coarsenCriterion.setMinCoarsenRate(1.05); // reduce the minium coarsen rate (default is 1.2)
-        //coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
+        coarsenCriterion.setMinCoarsenRate(
+            1.05); // reduce the minium coarsen rate (default is 1.2)
+        // coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
         coarsenCriterion.setAccumulate(Dune::Amg::atOnceAccu);
         coarsenCriterion.setSkipIsolated(false);
 
-        // instantiate the AMG preconditioner
+// instantiate the AMG preconditioner
 #if HAVE_MPI
-        amg_ = new AMG(fineOperator,
-                       coarsenCriterion,
-                       smootherArgs,
-                       *istlComm_);
+        amg_ = new AMG(fineOperator, coarsenCriterion, smootherArgs, *istlComm_);
 #else
-        amg_ = new AMG(fineOperator,
-                       coarsenCriterion,
-                       smootherArgs);
+        amg_ = new AMG(fineOperator, coarsenCriterion, smootherArgs);
 #endif
     };
 

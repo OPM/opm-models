@@ -46,7 +46,7 @@ namespace Ewoms {
  *
  * \brief VTK output module for the fluid composition
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkPhasePresenceModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -62,16 +62,17 @@ class VcfvVtkPhasePresenceModule : public VcfvVtkOutputModule<TypeTag>
     enum { dim = GridView::dimension };
 
 public:
-    VcfvVtkPhasePresenceModule(const Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvVtkPhasePresenceModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence, "Include the phase presence pseudo primary variable in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence,
+                             "Include the phase presence pseudo primary "
+                             "variable in the VTK output files");
     }
 
     /*!
@@ -80,7 +81,8 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (phasePresenceOutput_()) this->resizeScalarBuffer_(phasePresence_);
+        if (phasePresenceOutput_())
+            this->resizeScalarBuffer_(phasePresence_);
     }
 
     /*!
@@ -96,7 +98,8 @@ public:
         const auto &elem = elemCtx.element();
         for (int i = 0; i < elemCtx.numScv(); ++i) {
             // calculate the phase presence
-            int phasePresence = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
+            int phasePresence
+                = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
             int I = vertexMapper.map(elem, i, dim);
             phasePresence_[I] = phasePresence;
         }
@@ -107,7 +110,8 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (phasePresenceOutput_()) this->commitScalarBuffer_(writer, "phase presence", phasePresence_);
+        if (phasePresenceOutput_())
+            this->commitScalarBuffer_(writer, "phase presence", phasePresence_);
     }
 
 private:

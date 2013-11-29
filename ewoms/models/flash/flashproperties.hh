@@ -42,32 +42,40 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(VcfvFlash, INHERITS_FROM(VcfvModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy, VtkDiffusion));
+NEW_TYPE_TAG(VcfvFlash, INHERITS_FROM(VcfvModel, VtkPhasePresence,
+                                      VtkMultiPhase, VtkComposition,
+                                      VtkTemperature, VtkEnergy, VtkDiffusion));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
-NEW_PROP_TAG(FlashSolver); //!< The type of the flash constraint solver
-NEW_PROP_TAG(FlashTolerance); //!< The maximum accepted error of the flash solver
+NEW_PROP_TAG(NumPhases);      //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents);  //!< Number of fluid components in the system
+NEW_PROP_TAG(Indices);        //!< Enumerations used by the model
+NEW_PROP_TAG(FluidSystem);    //!< Provides the thermodynamic relations
+NEW_PROP_TAG(FlashSolver);    //!< The type of the flash constraint solver
+NEW_PROP_TAG(FlashTolerance); //!< The maximum accepted error of the flash
+// solver
 
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
+NEW_PROP_TAG(MaterialLaw);       //!< The material law which ought to be used
 NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
 
-NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
+NEW_PROP_TAG(HeatConductionLaw); //!< The heat conduction law which ought to be
+// used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat
+// conduction law
 
 //! Specifies the relation used for velocity
 NEW_PROP_TAG(VelocityModule);
 
-NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered as a conservation quantity or not
+NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered
+// as a conservation quantity or not
 NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
-NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
+NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the
+// problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
+// method should be used
 } // namespace Properties
 } // namespace Opm
 

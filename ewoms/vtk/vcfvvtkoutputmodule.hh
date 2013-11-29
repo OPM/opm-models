@@ -60,7 +60,7 @@ namespace Ewoms {
  * This class also provides some convenience methods for buffer
  * management and is the base class for all other VTK writer modules.
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkOutputModule
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -83,10 +83,8 @@ public:
     typedef std::array<ScalarBuffer, numComponents> ComponentBuffer;
     typedef std::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
 
-    VcfvVtkOutputModule(const Problem &problem)
-        : problem_(problem)
-    {
-    }
+    VcfvVtkOutputModule(const Problem &problem) : problem_(problem)
+    {}
 
     virtual ~VcfvVtkOutputModule()
     {}
@@ -112,8 +110,7 @@ protected:
     /*!
      * \brief Allocate the space for a buffer storing a scalar quantity
      */
-    void resizeScalarBuffer_(ScalarBuffer &buffer,
-                             bool vertexCentered = true)
+    void resizeScalarBuffer_(ScalarBuffer &buffer, bool vertexCentered = true)
     {
         Scalar n;
         if (vertexCentered)
@@ -129,8 +126,7 @@ protected:
      * \brief Allocate the space for a buffer storing a equation specific
      *        quantity
      */
-    void resizeEqBuffer_(EqBuffer &buffer,
-                         bool vertexCentered = true)
+    void resizeEqBuffer_(EqBuffer &buffer, bool vertexCentered = true)
     {
         Scalar n;
         if (vertexCentered)
@@ -148,8 +144,7 @@ protected:
      * \brief Allocate the space for a buffer storing a phase-specific
      *        quantity
      */
-    void resizePhaseBuffer_(PhaseBuffer &buffer,
-                            bool vertexCentered = true)
+    void resizePhaseBuffer_(PhaseBuffer &buffer, bool vertexCentered = true)
     {
         Scalar n;
         if (vertexCentered)
@@ -207,10 +202,8 @@ protected:
      * \brief Add a phase-specific buffer to the VTK result file.
      */
     template <class MultiWriter>
-    void commitScalarBuffer_(MultiWriter &writer,
-                             const char *name,
-                             ScalarBuffer &buffer,
-                             bool vertexCentered = true)
+    void commitScalarBuffer_(MultiWriter &writer, const char *name,
+                             ScalarBuffer &buffer, bool vertexCentered = true)
     {
         if (vertexCentered)
             writer.attachVertexData(buffer, name, 1);
@@ -219,13 +212,12 @@ protected:
     }
 
     /*!
-     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     * \brief Add a buffer with as many variables as PDEs to the VTK result
+     * file.
      */
     template <class MultiWriter>
-    void commitPriVarsBuffer_(MultiWriter &writer,
-                              const char *pattern,
-                              EqBuffer &buffer,
-                              bool vertexCentered = true)
+    void commitPriVarsBuffer_(MultiWriter &writer, const char *pattern,
+                              EqBuffer &buffer, bool vertexCentered = true)
     {
         char name[512];
         for (int i = 0; i < numEq; ++i) {
@@ -240,13 +232,12 @@ protected:
     }
 
     /*!
-     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     * \brief Add a buffer with as many variables as PDEs to the VTK result
+     * file.
      */
     template <class MultiWriter>
-    void commitEqBuffer_(MultiWriter &writer,
-                         const char *pattern,
-                         EqBuffer &buffer,
-                         bool vertexCentered = true)
+    void commitEqBuffer_(MultiWriter &writer, const char *pattern,
+                         EqBuffer &buffer, bool vertexCentered = true)
     {
         char name[512];
         for (int i = 0; i < numEq; ++i) {
@@ -265,10 +256,8 @@ protected:
      * \brief Add a phase-specific buffer to the VTK result file.
      */
     template <class MultiWriter>
-    void commitPhaseBuffer_(MultiWriter &writer,
-                            const char *pattern,
-                            PhaseBuffer &buffer,
-                            bool vertexCentered = true)
+    void commitPhaseBuffer_(MultiWriter &writer, const char *pattern,
+                            PhaseBuffer &buffer, bool vertexCentered = true)
     {
         char name[512];
         for (int i = 0; i < numPhases; ++i) {
@@ -285,8 +274,7 @@ protected:
      * \brief Add a component-specific buffer to the VTK result file.
      */
     template <class MultiWriter>
-    void commitComponentBuffer_(MultiWriter &writer,
-                                const char *pattern,
+    void commitComponentBuffer_(MultiWriter &writer, const char *pattern,
                                 ComponentBuffer &buffer,
                                 bool vertexCentered = true)
     {
@@ -305,16 +293,14 @@ protected:
      * \brief Add a phase and component specific quantities to the output.
      */
     template <class MultiWriter>
-    void commitPhaseComponentBuffer_(MultiWriter &writer,
-                                     const char *pattern,
+    void commitPhaseComponentBuffer_(MultiWriter &writer, const char *pattern,
                                      PhaseComponentBuffer &buffer,
                                      bool vertexCentered = true)
     {
         char name[512];
-        for (int i= 0; i < numPhases; ++i) {
+        for (int i = 0; i < numPhases; ++i) {
             for (int j = 0; j < numComponents; ++j) {
-                snprintf(name, 512, pattern,
-                         FluidSystem::phaseName(i),
+                snprintf(name, 512, pattern, FluidSystem::phaseName(i),
                          FluidSystem::componentName(j));
 
                 if (vertexCentered)

@@ -45,12 +45,12 @@ namespace Linear {
  *       entity.
  */
 template <class GridView, class VertexMapper>
-class VertexBorderListFromGrid : public Dune::CommDataHandleIF<VertexBorderListFromGrid<GridView, VertexMapper>,
-                                                               int >
+class VertexBorderListFromGrid
+    : public Dune::CommDataHandleIF<VertexBorderListFromGrid<GridView, VertexMapper>,
+                                    int>
 {
 public:
-    VertexBorderListFromGrid(const GridView &gridView,
-                             const VertexMapper &map)
+    VertexBorderListFromGrid(const GridView &gridView, const VertexMapper &map)
         : gridView_(gridView), map_(map)
     {
         gridView.communicate(*this,
@@ -59,31 +59,39 @@ public:
     }
 
     // data handle methods
-    bool contains (int dim, int codim) const
+    bool contains(int dim, int codim) const
     { return dim == codim; }
 
     bool fixedsize(int dim, int codim) const
     { return true; }
 
-    template<class EntityType>
+    template <class EntityType>
     size_t size(const EntityType &e) const
     { return 2; }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
         buff.write(gridView_.comm().rank());
         buff.write(map_.map(e));
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
         BorderIndex bIdx;
 
         bIdx.localIdx = map_.map(e);
-        { int tmp; buff.read(tmp); bIdx.peerRank = tmp; }
-        { int tmp; buff.read(tmp); bIdx.peerIdx = tmp; }
+        {
+            int tmp;
+            buff.read(tmp);
+            bIdx.peerRank = tmp;
+        }
+        {
+            int tmp;
+            buff.read(tmp);
+            bIdx.peerIdx = tmp;
+        }
         bIdx.borderDistance = 0;
 
         borderList_.push_back(bIdx);

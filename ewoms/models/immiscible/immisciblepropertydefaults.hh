@@ -49,13 +49,22 @@
 
 namespace Opm {
 namespace Properties {
-SET_INT_PROP(VcfvImmiscible, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq); //!< set the number of equations to the number of phases
-SET_INT_PROP(VcfvImmiscible, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of phases is determined by the fluid system
-SET_INT_PROP(VcfvImmiscible, NumComponents, GET_PROP_VALUE(TypeTag, NumPhases));   //!< Number of chemical species in the system
+SET_INT_PROP(VcfvImmiscible, NumEq,
+             GET_PROP_TYPE(TypeTag, Indices)::numEq); //!< set the number of
+// equations to the number
+// of phases
+SET_INT_PROP(VcfvImmiscible, NumPhases,
+             GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of
+// phases is
+// determined by
+// the fluid system
+SET_INT_PROP(VcfvImmiscible, NumComponents,
+             GET_PROP_VALUE(TypeTag, NumPhases)); //!< Number of chemical
+// species in the system
 
-//! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
-SET_TYPE_PROP(VcfvImmiscible,
-              LocalResidual,
+//! Use the immiscible multi-phase local jacobian operator for the immiscible
+// multi-phase model
+SET_TYPE_PROP(VcfvImmiscible, LocalResidual,
               Ewoms::ImmiscibleLocalResidual<TypeTag>);
 
 //! the Model property
@@ -65,25 +74,31 @@ SET_TYPE_PROP(VcfvImmiscible, Model, Ewoms::ImmiscibleModel<TypeTag>);
 SET_TYPE_PROP(VcfvImmiscible, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvImmiscible, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, VelocityModule,
+              Ewoms::VcfvDarcyVelocityModule<TypeTag>);
 
 //! the RateVector property
 SET_TYPE_PROP(VcfvImmiscible, RateVector, Ewoms::ImmiscibleRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvImmiscible, BoundaryRateVector, Ewoms::ImmiscibleBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, BoundaryRateVector,
+              Ewoms::ImmiscibleBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvImmiscible, PrimaryVariables, Ewoms::ImmisciblePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, PrimaryVariables,
+              Ewoms::ImmisciblePrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvImmiscible, VolumeVariables, Ewoms::ImmiscibleVolumeVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, VolumeVariables,
+              Ewoms::ImmiscibleVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvImmiscible, FluxVariables, Ewoms::ImmiscibleFluxVariables<TypeTag>);
+SET_TYPE_PROP(VcfvImmiscible, FluxVariables,
+              Ewoms::ImmiscibleFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal immiscible multi-phase model
-SET_TYPE_PROP(VcfvImmiscible, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
+SET_TYPE_PROP(VcfvImmiscible, Indices,
+              Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
 
 /*!
  * \brief Set the material law to the null law by default.
@@ -94,6 +109,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+
 public:
     typedef Opm::NullMaterial<Traits> type;
 };
@@ -102,19 +118,16 @@ public:
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvImmiscible,
-              MaterialLawParams,
+SET_TYPE_PROP(VcfvImmiscible, MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvImmiscible,
-              HeatConductionLaw,
+SET_TYPE_PROP(VcfvImmiscible, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvImmiscible,
-              HeatConductionLawParams,
+SET_TYPE_PROP(VcfvImmiscible, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 // disable the smooth upwinding method by default
@@ -126,11 +139,15 @@ SET_BOOL_PROP(VcfvImmiscible, EnableEnergy, false);
 // set slightly different properties for the single-phase case
 
 //! The fluid system to use by default
-SET_TYPE_PROP(VcfvImmiscibleOnePhase, FluidSystem, Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
+SET_TYPE_PROP(VcfvImmiscibleOnePhase, FluidSystem,
+              Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar),
+                                      typename GET_PROP_TYPE(TypeTag, Fluid)>);
 
 SET_PROP(VcfvImmiscibleOnePhase, Fluid)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
@@ -145,29 +162,33 @@ SET_BOOL_PROP(VcfvImmiscibleOnePhase, VtkWriteRelativePermeabilities, false);
 // set slightly different properties for the two-phase case
 /////////////////////
 SET_PROP(VcfvImmiscibleTwoPhase, WettingPhase)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 SET_PROP(VcfvImmiscibleTwoPhase, NonwettingPhase)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 public:
     typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
 };
 
 SET_PROP(VcfvImmiscibleTwoPhase, FluidSystem)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
 
 public:
-    typedef Opm::FluidSystems::TwoPImmiscible<Scalar,
-                                                WettingPhase,
-                                                NonwettingPhase> type;
+    typedef Opm::FluidSystems::TwoPImmiscible<Scalar, WettingPhase,
+                                              NonwettingPhase> type;
 };
 
 } // namespace Properties

@@ -48,7 +48,7 @@ namespace Ewoms {
  *
  * \brief VTK output module for the fluid composition
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkPrimaryVarsModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -66,17 +66,20 @@ class VcfvVtkPrimaryVarsModule : public VcfvVtkOutputModule<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    VcfvVtkPrimaryVarsModule(const Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvVtkPrimaryVarsModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars, "Include the primary variables in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank, "Include the MPI process rank in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars,
+                             "Include the primary variables in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank,
+                             "Include the MPI process rank in the VTK output "
+                             "files");
     }
 
     /*!
@@ -85,8 +88,10 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (primaryVarsOutput_()) this->resizeEqBuffer_(primaryVars_);
-        if (processRankOutput_()) this->resizeScalarBuffer_(processRank_, /*vertexCentered=*/false);
+        if (primaryVarsOutput_())
+            this->resizeEqBuffer_(primaryVars_);
+        if (processRankOutput_())
+            this->resizeScalarBuffer_(processRank_, /*vertexCentered=*/false);
     }
 
     /*!
@@ -100,14 +105,16 @@ public:
         const auto &elem = elemCtx.element();
 
         auto elemIdx = elementMapper.map(elemCtx.element());
-        if (processRankOutput_()) processRank_[elemIdx] = this->problem_.gridView().comm().rank();
+        if (processRankOutput_())
+            processRank_[elemIdx] = this->problem_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numScv(); ++i) {
 
             int I = vertexMapper.map(elem, i, dim);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if (primaryVarsOutput_()) primaryVars_[eqIdx][I] = priVars[eqIdx];
+                if (primaryVarsOutput_())
+                    primaryVars_[eqIdx][I] = priVars[eqIdx];
             }
         }
     }
@@ -117,8 +124,11 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
-        if (processRankOutput_()) this->commitScalarBuffer_(writer, "process rank", processRank_, /*vertexCentered=*/false);
+        if (primaryVarsOutput_())
+            this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
+        if (processRankOutput_())
+            this->commitScalarBuffer_(writer, "process rank", processRank_,
+                                      /*vertexCentered=*/false);
     }
 
 private:

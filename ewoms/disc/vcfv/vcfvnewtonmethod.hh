@@ -77,7 +77,8 @@ NEW_PROP_TAG(EnablePartialReassemble);
 
 // set default values
 SET_TYPE_PROP(VcfvNewtonMethod, NewtonMethod, Ewoms::VcfvNewtonMethod<TypeTag>);
-SET_TYPE_PROP(VcfvNewtonMethod, NewtonConvergenceWriter, Ewoms::VcfvNewtonConvergenceWriter<TypeTag>);
+SET_TYPE_PROP(VcfvNewtonMethod, NewtonConvergenceWriter,
+              Ewoms::VcfvNewtonConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonEnableLineSearch, false);
 } // namespace Properties
 } // namespace Opm
@@ -108,9 +109,8 @@ class VcfvNewtonMethod : public NewtonMethod<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    VcfvNewtonMethod(Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvNewtonMethod(Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters of the Newton method.
@@ -119,7 +119,9 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch,
+                             "Use the line-search update method for the Newton "
+                             "method (warning: slow!)");
     }
 
 protected:
@@ -152,21 +154,22 @@ protected:
             PrimaryVariables uNewI = uLastIter[i];
             uNewI -= deltaU[i];
 
-            Scalar vertError = model_().relativeErrorVertex(i,
-                                                            uLastIter[i],
-                                                            uNewI);
+            Scalar vertError
+                = model_().relativeErrorVertex(i, uLastIter[i], uNewI);
             this->relError_ = std::max(this->relError_, vertError);
-
         }
 
         // take the other processes into account
         this->relError_ = this->comm_.max(this->relError_);
 
-        Scalar maxError = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
+        Scalar maxError
+            = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
         if (this->relError_ > maxError)
             OPM_THROW(Opm::NumericalProblem,
-                       "Newton: Relative error " << this->relError_
-                       << " is larger than maximum allowed error of " << maxError);
+                      "Newton: Relative error "
+                      << this->relError_
+                      << " is larger than maximum allowed error of "
+                      << maxError);
     }
 
     /*!
@@ -210,8 +213,7 @@ protected:
      *               system of equations. This parameter also stores
      *               the updated solution.
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
+    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
     {
         // make sure not to swallow non-finite values at this point
@@ -220,13 +222,14 @@ protected:
 
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_()) {
-            Scalar minReasmTol = 10*this->relTolerance_();
+            Scalar minReasmTol = 10 * this->relTolerance_();
             Scalar maxReasmTol = 1e-4;
 
             // rationale: the newton method has quadratic convergene1
-            Scalar reassembleTol = this->relError_*this->relError_;
-            reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
-            //Scalar reassembleTol = minReasmTol;
+            Scalar reassembleTol = this->relError_ * this->relError_;
+            reassembleTol
+                = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
+            // Scalar reassembleTol = minReasmTol;
 
             model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
             model_().jacobianAssembler().computeColors(reassembleTol);
@@ -249,26 +252,27 @@ protected:
                            const SolutionVector &uLastIter,
                            const GlobalEqVector &deltaU)
     {
-       Scalar lambda = 1.0;
-       GlobalEqVector tmp(uLastIter.size());
+        Scalar lambda = 1.0;
+        GlobalEqVector tmp(uLastIter.size());
 
-       while (true) {
-           for (unsigned i = 0; i < uCurrentIter.size(); ++i) {
-               for (int j = 0; j < numEq; ++j) {
-                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
-               }
-           }
+        while (true) {
+            for (unsigned i = 0; i < uCurrentIter.size(); ++i) {
+                for (int j = 0; j < numEq; ++j) {
+                    uCurrentIter[i][j] = uLastIter[i][j] - lambda * deltaU[i][j];
+                }
+            }
 
-           // calculate the residual of the current solution
-           updateAbsError_(uCurrentIter, uLastIter, deltaU);
-           if (this->absError_ < this->lastAbsError_ || lambda <= 1.0/8) {
-               this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"  << this->absError_ << "@lambda=" << lambda;
-               return;
-           }
+            // calculate the residual of the current solution
+            updateAbsError_(uCurrentIter, uLastIter, deltaU);
+            if (this->absError_ < this->lastAbsError_ || lambda <= 1.0 / 8) {
+                this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"
+                                   << this->absError_ << "@lambda=" << lambda;
+                return;
+            }
 
-           // try with a smaller update
-           lambda /= 2.0;
-       }
+            // try with a smaller update
+            lambda /= 2.0;
+        }
     }
 
     /*!

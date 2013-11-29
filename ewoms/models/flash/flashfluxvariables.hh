@@ -46,9 +46,10 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class FlashFluxVariables
-    : public VcfvMultiPhaseFluxVariables<TypeTag>
-    , public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    , public VcfvDiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+    : public VcfvMultiPhaseFluxVariables<TypeTag>,
+      public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>,
+      public VcfvDiffusionFluxVariables<TypeTag,
+                                        GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
     typedef VcfvMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
 
@@ -76,18 +77,14 @@ public:
      * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context,
-                        int bfIdx,
-                        int timeIdx,
+    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context,
-                                                bfIdx,
-                                                timeIdx,
-                                                fluidState,
-                                                paramCache);
-        DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
+        MultiPhaseFluxVariables::updateBoundary(context, bfIdx, timeIdx,
+                                                fluidState, paramCache);
+        DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx,
+                                                fluidState);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };

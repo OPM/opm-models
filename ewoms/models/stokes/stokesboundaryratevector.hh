@@ -36,11 +36,11 @@ namespace Ewoms {
 /*!
  * \ingroup StokesModel
  *
- * \brief Implements a boundary vector for the fully implicit (Navier-)Stokes model.
+ * \brief Implements a boundary vector for the fully implicit (Navier-)Stokes
+ *model.
  */
 template <class TypeTag>
-class StokesBoundaryRateVector
-    : public GET_PROP_TYPE(TypeTag, RateVector)
+class StokesBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -60,54 +60,55 @@ class StokesBoundaryRateVector
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    StokesBoundaryRateVector()
-        : ParentType()
-    { }
+    StokesBoundaryRateVector() : ParentType()
+    {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
+     * \copydoc
+     * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    StokesBoundaryRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    StokesBoundaryRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const
+     * ImmiscibleBoundaryRateVector &)
      */
     StokesBoundaryRateVector(const StokesBoundaryRateVector &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \param velocity The velocity vector [m/s] at the boundary.
      *
-     * \param context The execution context for which the boundary rate should be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param context The execution context for which the boundary rate should
+     *be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space
+     *index).
      * \param timeIdx The index used by the time discretization.
      * \param velocity The velocity vector [m/s] at the boundary.
-     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state of the
+     *system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context,
-                     int bfIdx,
-                     int timeIdx,
-                     const DimVector &velocity,
-                     const FluidState &fluidState)
+    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
+                     const DimVector &velocity, const FluidState &fluidState)
     {
         const auto &fvElemGeom = context.fvElemGeom(timeIdx);
         const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
 
         int insideScvIdx = context.insideScvIndex(bfIdx, timeIdx);
-        //const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
+        // const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         // the outer unit normal
         auto normal = scvf.normal;
         normal /= normal.two_norm();
 
-        // distance between the center of the SCV and center of the boundary face
-        DimVector distVec
-            = context.element().geometry().global(fvElemGeom.subContVol[insideScvIdx].localGeometry->center());
+        // distance between the center of the SCV and center of the boundary
+        // face
+        DimVector distVec = context.element().geometry().global(
+            fvElemGeom.subContVol[insideScvIdx].localGeometry->center());
         const auto &scvPos = context.element().geometry().corner(insideScvIdx);
         distVec.axpy(-1, scvPos);
         Scalar dist = std::abs(distVec * normal);
@@ -117,22 +118,22 @@ public:
             // Approximation of the pressure gradient at the boundary
             // segment's integration point.
             gradv[axisIdx] = normal;
-            gradv[axisIdx] *= (velocity[axisIdx] - insideVolVars.velocity()[axisIdx])/dist;
+            gradv[axisIdx] *= (velocity[axisIdx]
+                               - insideVolVars.velocity()[axisIdx]) / dist;
             Valgrind::CheckDefined(gradv[axisIdx]);
         }
 
         // specify the mass fluxes over the boundary
-        Scalar volumeFlux = velocity*normal;
+        Scalar volumeFlux = velocity * normal;
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);
         Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx] =
-                volumeFlux
-                * molarDensity
-                * fluidState.moleFraction(phaseIdx, compIdx);
+            (*this)[conti0EqIdx + compIdx]
+                = volumeFlux * molarDensity
+                  * fluidState.moleFraction(phaseIdx, compIdx);
         }
 
         // calculate the momentum flux over the boundary
@@ -144,9 +145,9 @@ public:
             }
 
             // the momentum flux due to viscous forces
-            (*this)[momentum0EqIdx + axisIdx] =
-                - insideVolVars.fluidState().viscosity(phaseIdx)
-                * (tmp * normal);
+            (*this)[momentum0EqIdx + axisIdx]
+                = -insideVolVars.fluidState().viscosity(phaseIdx)
+                  * (tmp * normal);
         }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volumeFlux);
@@ -155,18 +156,18 @@ public:
     /*!
      * \brief Set a in-flow boundary in the (Navier-)Stoke model
      *
-     * \param context The execution context for which the boundary rate should be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space index).
+     * \param context The execution context for which the boundary rate should
+     *be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space
+     *index).
      * \param timeIdx The index used by the time discretization.
      * \param velocity The velocity vector [m/s] at the boundary.
-     * \param fluidState The repesentation of the thermodynamic state of the system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state of the
+     *system on the integration point of the boundary segment.
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context,
-                   int bfIdx,
-                   int timeIdx,
-                   const DimVector &velocity,
-                   const FluidState &fluidState)
+    void setInFlow(const Context &context, int bfIdx, int timeIdx,
+                   const DimVector &velocity, const FluidState &fluidState)
     {
         const auto &volVars = context.volVars(bfIdx, timeIdx);
 
@@ -174,11 +175,13 @@ public:
 
         // don't let mass flow out
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::min(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx]
+                = std::min(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow out
-        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::min(0.0, (*this)[momentum0EqIdx + axisIdx]);
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            (*this)[momentum0EqIdx + axisIdx]
+                = std::min(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!
@@ -187,9 +190,7 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setOutFlow(const Context &context,
-                    int spaceIdx,
-                    int timeIdx)
+    void setOutFlow(const Context &context, int spaceIdx, int timeIdx)
     {
         const auto &volVars = context.volVars(spaceIdx, timeIdx);
 
@@ -200,11 +201,13 @@ public:
 
         // don't let mass flow in
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx]
+                = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow in
-        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
+        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+            (*this)[momentum0EqIdx + axisIdx]
+                = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!
@@ -213,9 +216,7 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setNoFlow(const Context &context,
-                   int spaceIdx,
-                   int timeIdx)
+    void setNoFlow(const Context &context, int spaceIdx, int timeIdx)
     {
         static DimVector v0(0.0);
 
@@ -224,8 +225,7 @@ public:
 
         // no flow of mass and no slip for the momentum
         setFreeFlow(context, spaceIdx, timeIdx,
-                    /*velocity = */v0,
-                    fluidState);
+                    /*velocity = */ v0, fluidState);
     }
 };
 

@@ -71,13 +71,13 @@ class ArtGridCreator
     typedef std::shared_ptr<Grid> GridPointer;
 
 public:
-
     /*!
      * \brief Register all run-time parameters for the grid creator.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile,
+                             "The file name of the DGF file to load");
     }
 
     /*!
@@ -86,7 +86,8 @@ public:
     static void makeGrid()
     {
         enum ParseMode { Vertex, Edge, Element, Finished };
-        const std::string artFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
+        const std::string artFileName
+            = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
         std::vector<GlobalPosition> vertexPos;
         std::vector<std::pair<int, int> > edges;
         std::vector<std::pair<int, int> > fractureEdges;
@@ -94,7 +95,8 @@ public:
         std::ifstream inStream(artFileName);
         if (!inStream.is_open()) {
             OPM_THROW(std::runtime_error,
-                       "File '" << artFileName << "' does not exist or is not readable");
+                      "File '" << artFileName
+                               << "' does not exist or is not readable");
         }
         std::string curLine;
         ParseMode curParseMode = Vertex;
@@ -109,15 +111,17 @@ public:
 
             // remove leading whitespace
             unsigned numLeadingSpaces = 0;
-            while (curLine.size() > numLeadingSpaces && std::isspace(curLine[numLeadingSpaces]))
-                ++ numLeadingSpaces;
+            while (curLine.size() > numLeadingSpaces
+                   && std::isspace(curLine[numLeadingSpaces]))
+                ++numLeadingSpaces;
             curLine = curLine.substr(numLeadingSpaces,
                                      curLine.size() - numLeadingSpaces);
 
             // remove trailing whitespace
             unsigned numTrailingSpaces = 0;
-            while (curLine.size() > numTrailingSpaces && std::isspace(curLine[curLine.size() - numTrailingSpaces]))
-                ++ numTrailingSpaces;
+            while (curLine.size() > numTrailingSpaces
+                   && std::isspace(curLine[curLine.size() - numTrailingSpaces]))
+                ++numTrailingSpaces;
             curLine = curLine.substr(0, curLine.size() - numTrailingSpaces);
 
             // a section of the file is finished, go to the next one
@@ -166,7 +170,8 @@ public:
                     vertIndices.push_back(tmp);
                     assert(tmp < vertexPos.size());
                 }
-                assert(vertIndices.size() == 2); // an edge always has two indices
+                assert(vertIndices.size()
+                       == 2); // an edge always has two indices
 
                 std::pair<int, int> edge(vertIndices[0], vertIndices[1]);
                 edges.push_back(edge);
@@ -195,7 +200,8 @@ public:
                     edgeIndices.push_back(tmp);
                     assert(tmp < edges.size());
                 }
-                assert(edgeIndices.size() == 3); // so far, we only support triangles
+                assert(edgeIndices.size()
+                       == 3); // so far, we only support triangles
 
                 // extract the vertex indices of the element
                 std::vector<unsigned int> vertIndices;
@@ -236,11 +242,12 @@ public:
                     std::swap(vertIndices[2], vertIndices[1]);
 
                 // insert the element into the dune grid
-                gridFactory.insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2),
-                                          vertIndices);
+                gridFactory.insertElement(
+                    Dune::GeometryType(Dune::GeometryType::simplex, 2),
+                    vertIndices);
             }
             else if (curParseMode == Finished) {
-                assert(curLine.size()==0);
+                assert(curLine.size() == 0);
             }
         }
 
@@ -251,8 +258,10 @@ public:
         /////
 
         // first create a map of the dune to ART vertex indices
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView, Dune::MCMGVertexLayout > VertexMapper;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView,
+                                                          Dune::MCMGVertexLayout>
+        VertexMapper;
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
         VertexMapper vertexMapper(gridPtr_->leafGridView());
 #else
         VertexMapper vertexMapper(gridPtr_->leafView());
@@ -270,7 +279,7 @@ public:
         // add all fracture edges (using DUNE indices)
         auto feIt = fractureEdges.begin();
         const auto &feEndIt = fractureEdges.end();
-        for (; feIt != feEndIt; ++ feIt) {
+        for (; feIt != feEndIt; ++feIt) {
             fractureMapper_.addFractureEdge(artToDuneVertexIndex[feIt->first],
                                             artToDuneVertexIndex[feIt->second]);
         }
@@ -280,14 +289,18 @@ public:
      * \brief Returns a reference to the grid.
      */
     static Grid &grid()
-    { return *gridPtr_; };
+    {
+        return *gridPtr_;
+    };
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
      *        computation.
      */
     static void loadBalance()
-    { gridPtr_->loadBalance(); };
+    {
+        gridPtr_->loadBalance();
+    };
 
     /*!
      * \brief Destroys the grid
@@ -296,7 +309,7 @@ public:
      * MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { gridPtr_ = GridPointer((Grid*) 0); }
+    { gridPtr_ = GridPointer((Grid *)0); }
 
     /*!
      * \brief Returns the fracture mapper
@@ -314,7 +327,8 @@ private:
 template <class TypeTag>
 typename Ewoms::ArtGridCreator<TypeTag>::GridPointer ArtGridCreator<TypeTag>::gridPtr_;
 template <class TypeTag>
-typename Ewoms::ArtGridCreator<TypeTag>::FractureMapper ArtGridCreator<TypeTag>::fractureMapper_;
+typename Ewoms::ArtGridCreator<TypeTag>::FractureMapper
+ArtGridCreator<TypeTag>::fractureMapper_;
 } // namespace Ewoms
 
 #endif // EWOMS_ART_GRID_CREATOR_HH

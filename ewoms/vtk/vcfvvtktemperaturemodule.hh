@@ -51,7 +51,7 @@ namespace Ewoms {
  * \brief VTK output module for the temperature in which assume
  *        thermal equilibrium
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkTemperatureModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -67,17 +67,16 @@ class VcfvVtkTemperatureModule : public VcfvVtkOutputModule<TypeTag>
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
 public:
-    VcfvVtkTemperatureModule(const Problem &problem)
-        : ParentType(problem)
-    {
-    }
+    VcfvVtkTemperatureModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature, "Include the temperature in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature,
+                             "Include the temperature in the VTK output files");
     }
 
     /*!
@@ -86,7 +85,8 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (temperatureOutput_()) this->resizeScalarBuffer_(temperature_);
+        if (temperatureOutput_())
+            this->resizeScalarBuffer_(temperature_);
     }
 
     /*!
@@ -103,7 +103,8 @@ public:
             const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fluidState();
 
-            if (temperatureOutput_()) temperature_[I] = fs.temperature(/*phaseIdx=*/0);
+            if (temperatureOutput_())
+                temperature_[I] = fs.temperature(/*phaseIdx=*/0);
         }
     }
 
@@ -112,7 +113,8 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (temperatureOutput_()) this->commitScalarBuffer_(writer, "temperature", temperature_);
+        if (temperatureOutput_())
+            this->commitScalarBuffer_(writer, "temperature", temperature_);
     }
 
 private:

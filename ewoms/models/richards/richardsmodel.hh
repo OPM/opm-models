@@ -92,7 +92,7 @@ namespace Ewoms {
  * uniquely inverted, i.e. it is not possible to set the capillary
  * pressure to zero if the Richards model ought to be used!
  */
-template<class TypeTag >
+template <class TypeTag>
 class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
@@ -175,9 +175,10 @@ public:
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
+            Scalar r
+                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
 
-            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
+            return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
 
         return 1;
@@ -202,7 +203,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
+        referencePressure_ = this->solution(
+            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
     }
 
     /*!
@@ -213,7 +215,8 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
-            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
@@ -232,8 +235,10 @@ private:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
     }
 
     mutable Scalar referencePressure_;

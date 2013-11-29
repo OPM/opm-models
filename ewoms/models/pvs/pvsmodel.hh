@@ -40,7 +40,8 @@ namespace Ewoms {
 /*!
  * \ingroup PvsModel
  *
- * \brief A generic compositional multi-phase model using primary-variable switching.
+ * \brief A generic compositional multi-phase model using primary-variable
+ switching.
  *
  * This model assumes a flow of \f$M \geq 1\f$ fluid phases
  * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
@@ -48,19 +49,21 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
+ Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
  * means of the equation
  * \f[
  * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
- * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha \right\}
  * - q^\kappa = 0 \;.
  * \f]
  *
@@ -135,7 +138,7 @@ namespace Ewoms {
  * centered finite volume scheme as spatial and the implicit Euler
  * method as temporal discretization.
  */
-template<class TypeTag>
+template <class TypeTag>
 class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
@@ -165,7 +168,8 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -183,7 +187,9 @@ public:
         if (enableEnergy)
             Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, int, PvsVerbosity, "The verbosity level of the primary variable switching model");
+        EWOMS_REGISTER_PARAM(TypeTag, int, PvsVerbosity,
+                             "The verbosity level of the primary variable "
+                             "switching model");
     }
 
     /*!
@@ -217,10 +223,11 @@ public:
         std::ostringstream oss;
         if (pvIdx == Indices::pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        else if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx + numPhases - 1)
+        else if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx
+                                                         + numPhases - 1)
             oss << "switch_" << pvIdx - Indices::switch0Idx;
-        else if (Indices::switch0Idx + numPhases - 1 <= pvIdx &&
-                 pvIdx < Indices::switch0Idx + numComponents - 1)
+        else if (Indices::switch0Idx + numPhases - 1 <= pvIdx
+                 && pvIdx < Indices::switch0Idx + numComponents - 1)
             oss << "auxMoleFrac^" << FluidSystem::componentName(pvIdx);
         else
             assert(false);
@@ -238,7 +245,8 @@ public:
             return s;
 
         std::ostringstream oss;
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents) {
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
+                                                     + numComponents) {
             int compIdx = eqIdx - Indices::conti0EqIdx;
             oss << "continuity^" << FluidSystem::componentName(compIdx);
         }
@@ -270,14 +278,10 @@ public:
 
             for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      scvIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *=
-                    fvElemGeom.subContVol[scvIdx].volume
-                    * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
+                                                      /*timeIdx=*/0, phaseIdx);
+                tmp *= fvElemGeom.subContVol[scvIdx].volume
+                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -301,7 +305,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ = this->solution(
+            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!
@@ -310,7 +315,8 @@ public:
     void updatePVWeights(const ElementContext &elemCtx) const
     {
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
 
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
             intrinsicPermeability_[globalIdx] = K[0][0];
@@ -322,7 +328,8 @@ public:
      */
     Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
     {
-        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp
+            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -333,15 +340,18 @@ public:
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
+            Scalar r
+                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
 
-            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
+            return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
 
-        if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx + numPhases - 1) {
-            int phaseIdx = pvIdx -Indices::switch0Idx;
+        if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx
+                                                    + numPhases - 1) {
+            int phaseIdx = pvIdx - Indices::switch0Idx;
 
-            if (!this->solution(/*timeIdx=*/0)[globalVertexIdx].phaseIsPresent(phaseIdx))
+            if (!this->solution(/*timeIdx=*/0)[globalVertexIdx]
+                     .phaseIsPresent(phaseIdx))
                 // for saturations, the weight is always 1
                 return 1;
 
@@ -398,9 +408,11 @@ public:
 
         int vertIdx = this->dofMapper().map(vert);
         if (!outstream.good())
-            OPM_THROW(std::runtime_error, "Could not serialize vertex " << vertIdx);
+            OPM_THROW(std::runtime_error, "Could not serialize vertex "
+                                          << vertIdx);
 
-        outstream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence() << " ";
+        outstream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence()
+                  << " ";
     }
 
     /*!
@@ -414,8 +426,8 @@ public:
         // read phase presence
         int vertIdx = this->dofMapper().map(vertex);
         if (!instream.good())
-            OPM_THROW(std::runtime_error,
-                       "Could not deserialize vertex " << vertIdx);
+            OPM_THROW(std::runtime_error, "Could not deserialize vertex "
+                                          << vertIdx);
 
         int tmp;
         instream >> tmp;
@@ -439,12 +451,10 @@ public:
 
         ElementIterator elemIt = this->gridView_().template begin<0>();
         ElementIterator elemEndIt = this->gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
+        for (; elemIt != elemEndIt; ++elemIt) {
             bool fvElemGeomUpdated = false;
             int numScv = elemIt->template count<dim>();
-            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
-            {
+            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
                 int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
 
                 if (visited[globalIdx])
@@ -459,10 +469,10 @@ public:
                 // compute the volume variables of the current
                 // sub-control volume
                 auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
-                elemCtx.updateScvVars(priVars,
-                                       scvIdx,
-                                       /*timeIdx=*/0);
-                const VolumeVariables &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
+                elemCtx.updateScvVars(priVars, scvIdx,
+                                      /*timeIdx=*/0);
+                const VolumeVariables &volVars
+                    = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
 
                 // evaluate primary variable switch
                 short oldPhasePresence = priVars.phasePresence();
@@ -471,16 +481,13 @@ public:
                 // from the current fluid state
                 priVars.assignNaive(volVars.fluidState());
 
-                if (oldPhasePresence != priVars.phasePresence())
-                {
+                if (oldPhasePresence != priVars.phasePresence()) {
                     if (verbosity_ > 1)
-                        printSwitchedPhases_(elemCtx,
-                                             scvIdx,
+                        printSwitchedPhases_(elemCtx, scvIdx,
                                              volVars.fluidState(),
-                                             oldPhasePresence,
-                                             priVars);
+                                             oldPhasePresence, priVars);
                     this->jacobianAssembler().markVertexRed(globalIdx);
-                    ++ numSwitched_;
+                    ++numSwitched_;
                 }
             }
         }
@@ -491,17 +498,16 @@ public:
         numSwitched_ = this->gridView_().comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
-            this->problem_().newtonMethod().endIterMsg() << ", num switched=" << numSwitched_;
+            this->problem_().newtonMethod().endIterMsg()
+                << ", num switched=" << numSwitched_;
     }
 
 private:
     friend class VcfvModel<TypeTag>;
 
     template <class FluidState>
-    void printSwitchedPhases_(const ElementContext &elemCtx,
-                              int scvIdx,
-                              const FluidState &fs,
-                              int oldPhasePresence,
+    void printSwitchedPhases_(const ElementContext &elemCtx, int scvIdx,
+                              const FluidState &fs, int oldPhasePresence,
                               const PrimaryVariables &newPv) const
     {
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -537,14 +543,20 @@ private:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkPhasePresenceModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkPhasePresenceModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
     }
 
     mutable Scalar referencePressure_;
@@ -557,7 +569,6 @@ private:
     // verbosity of the model
     int verbosity_;
 };
-
 }
 
 #include "pvspropertydefaults.hh"

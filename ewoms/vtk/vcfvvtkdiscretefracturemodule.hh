@@ -51,7 +51,8 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureSaturations, true);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureMobilities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureRelativePermeabilities, true);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFracturePorosity, true);
-SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities, false);
+SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities,
+              false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureFilterVelocities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
 } // namespace Properties
@@ -71,7 +72,7 @@ namespace Ewoms {
  * - Porosity of the medium in the fracture
  * - Norm of the intrinsic permeability of the medium in the fracture
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkDiscreteFractureModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -96,22 +97,36 @@ class VcfvVtkDiscreteFractureModule : public VcfvVtkOutputModule<TypeTag>
     typedef std::array<VelocityField, numPhases> PhaseVectorField;
 
 public:
-    VcfvVtkDiscreteFractureModule(const Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvVtkDiscreteFractureModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
-     * \brief Register all run-time parameters for the multi-phase VTK output module.
+     * \brief Register all run-time parameters for the multi-phase VTK output
+     * module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureSaturations, "Include the phase saturations in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureMobilities, "Include the phase mobilities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFracturePorosity, "Include the porosity in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction, "Add the fraction of the total volume which is occupied by fractures in the VTK output");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureSaturations,
+                             "Include the phase saturations in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureMobilities,
+                             "Include the phase mobilities in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool,
+                             VtkWriteFractureRelativePermeabilities,
+                             "Include the phase relative permeabilities in the "
+                             "VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFracturePorosity,
+                             "Include the porosity in the VTK output files");
+        EWOMS_REGISTER_PARAM(
+            TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities,
+            "Include the intrinsic permeability in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities,
+                             "Include in the filter velocities of the phases "
+                             "the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction,
+                             "Add the fraction of the total volume which is "
+                             "occupied by fractures in the VTK output");
     }
 
     /*!
@@ -120,17 +135,23 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (saturationOutput_()) this->resizePhaseBuffer_(saturation_);
-        if (mobilityOutput_()) this->resizePhaseBuffer_(mobility_);
-        if (relativePermeabilityOutput_()) this->resizePhaseBuffer_(relativePermeability_);
+        if (saturationOutput_())
+            this->resizePhaseBuffer_(saturation_);
+        if (mobilityOutput_())
+            this->resizePhaseBuffer_(mobility_);
+        if (relativePermeabilityOutput_())
+            this->resizePhaseBuffer_(relativePermeability_);
 
-        if (porosityOutput_()) this->resizeScalarBuffer_(porosity_);
-        if (intrinsicPermeabilityOutput_()) this->resizeScalarBuffer_(intrinsicPermeability_);
-        if (volumeFractionOutput_()) this->resizeScalarBuffer_(volumeFraction_);
+        if (porosityOutput_())
+            this->resizeScalarBuffer_(porosity_);
+        if (intrinsicPermeabilityOutput_())
+            this->resizeScalarBuffer_(intrinsicPermeability_);
+        if (volumeFractionOutput_())
+            this->resizeScalarBuffer_(volumeFraction_);
 
         if (velocityOutput_()) {
             Scalar nVerts = this->problem_.gridView().size(dim);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 velocity_[phaseIdx].resize(nVerts);
                 velocity_[phaseIdx] = 0;
             }
@@ -156,23 +177,29 @@ public:
             const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
             const auto &fs = volVars.fractureFluidState();
 
-            if (porosityOutput_()) porosity_[I] = volVars.fracturePorosity();
+            if (porosityOutput_())
+                porosity_[I] = volVars.fracturePorosity();
             if (intrinsicPermeabilityOutput_()) {
                 const auto &K = volVars.fractureIntrinsicPermeability();
                 intrinsicPermeability_[I] = K[0][0];
             }
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (saturationOutput_()) saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
-                if (mobilityOutput_()) mobility_[phaseIdx][I] = volVars.fractureMobility(phaseIdx);
-                if (relativePermeabilityOutput_()) relativePermeability_[phaseIdx][I] = volVars.fractureRelativePermeability(phaseIdx);
-                if (volumeFractionOutput_()) volumeFraction_[I] += volVars.fractureVolume();
+                if (saturationOutput_())
+                    saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
+                if (mobilityOutput_())
+                    mobility_[phaseIdx][I] = volVars.fractureMobility(phaseIdx);
+                if (relativePermeabilityOutput_())
+                    relativePermeability_[phaseIdx][I]
+                        = volVars.fractureRelativePermeability(phaseIdx);
+                if (volumeFractionOutput_())
+                    volumeFraction_[I] += volVars.fractureVolume();
             }
         }
 
         if (velocityOutput_()) {
             // calculate velocities if requested by the problem
-            for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++ scvfIdx) {
+            for (int scvfIdx = 0; scvfIdx < elemCtx.numScvf(); ++scvfIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
 
                 int i = fluxVars.insideIndex();
@@ -185,12 +212,15 @@ public:
                     continue;
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight = std::max(1e-16, std::abs(fluxVars.fractureVolumeFlux(phaseIdx)));
+                    Scalar weight
+                        = std::max(1e-16, std::abs(fluxVars.fractureVolumeFlux(
+                                              phaseIdx)));
                     Valgrind::CheckDefined(fluxVars.extrusionFactor());
                     assert(fluxVars.extrusionFactor() > 0);
                     weight *= fluxVars.extrusionFactor();
 
-                    Dune::FieldVector<Scalar, dim> v(fluxVars.fractureFilterVelocity(phaseIdx));
+                    Dune::FieldVector<Scalar, dim> v(
+                        fluxVars.fractureFilterVelocity(phaseIdx));
                     v *= weight;
 
                     velocity_[phaseIdx][I] += v;
@@ -199,7 +229,7 @@ public:
                     velocityWeight_[phaseIdx][I] += weight;
                     velocityWeight_[phaseIdx][J] += weight;
                 } // end for all phases
-            } // end for all faces
+            }     // end for all faces
         }
     }
 
@@ -208,17 +238,27 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (saturationOutput_()) this->commitPhaseBuffer_(writer, "fractureSaturation_%s", saturation_);
-        if (mobilityOutput_()) this->commitPhaseBuffer_(writer, "fractureMobility_%s", mobility_);
-        if (relativePermeabilityOutput_()) this->commitPhaseBuffer_(writer, "fractureRelativePerm_%s", relativePermeability_);
+        if (saturationOutput_())
+            this->commitPhaseBuffer_(writer, "fractureSaturation_%s",
+                                     saturation_);
+        if (mobilityOutput_())
+            this->commitPhaseBuffer_(writer, "fractureMobility_%s", mobility_);
+        if (relativePermeabilityOutput_())
+            this->commitPhaseBuffer_(writer, "fractureRelativePerm_%s",
+                                     relativePermeability_);
 
-        if (porosityOutput_()) this->commitScalarBuffer_(writer, "fracturePorosity", porosity_);
-        if (intrinsicPermeabilityOutput_()) this->commitScalarBuffer_(writer, "fractureIntrinsicPerm", intrinsicPermeability_);
+        if (porosityOutput_())
+            this->commitScalarBuffer_(writer, "fracturePorosity", porosity_);
+        if (intrinsicPermeabilityOutput_())
+            this->commitScalarBuffer_(writer, "fractureIntrinsicPerm",
+                                      intrinsicPermeability_);
         if (volumeFractionOutput_()) {
-            // divide the fracture volume by the total volume of the finite volumes
-            for (unsigned I = 0; I < volumeFraction_.size(); ++ I)
+            // divide the fracture volume by the total volume of the finite
+            // volumes
+            for (unsigned I = 0; I < volumeFraction_.size(); ++I)
                 volumeFraction_[I] /= this->problem_.model().boxVolume(I);
-            this->commitScalarBuffer_(writer, "fractureVolumeFraction", volumeFraction_);
+            this->commitScalarBuffer_(writer, "fractureVolumeFraction",
+                                      volumeFraction_);
         }
 
         if (velocityOutput_()) {
@@ -228,14 +268,14 @@ public:
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int i = 0; i < nVerts; ++i)
-                    velocity_[phaseIdx][i] /= std::max<Scalar>(1e-20, velocityWeight_[phaseIdx][i]);
+                    velocity_[phaseIdx][i]
+                        /= std::max<Scalar>(1e-20, velocityWeight_[phaseIdx][i]);
                 // commit the phase velocity
                 char name[512];
-                snprintf(name, 512, "fractureFilterVelocity_%s", FluidSystem::phaseName(phaseIdx));
+                snprintf(name, 512, "fractureFilterVelocity_%s",
+                         FluidSystem::phaseName(phaseIdx));
 
-                writer.attachVertexData(velocity_[phaseIdx],
-                                        name,
-                                        dim);
+                writer.attachVertexData(velocity_[phaseIdx], name, dim);
             }
         }
     }
@@ -248,13 +288,19 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureMobilities); }
 
     static bool relativePermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities); }
+    {
+        return EWOMS_GET_PARAM(TypeTag, bool,
+                               VtkWriteFractureRelativePermeabilities);
+    }
 
     static bool porosityOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFracturePorosity); }
 
     static bool intrinsicPermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities); }
+    {
+        return EWOMS_GET_PARAM(TypeTag, bool,
+                               VtkWriteFractureIntrinsicPermeabilities);
+    }
 
     static bool volumeFractionOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction); }

@@ -48,7 +48,7 @@ namespace Ewoms {
  *
  * \copydetails Doxygen::typeTagTParam
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvLocalResidual
 {
 private:
@@ -73,7 +73,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag,
+                                   BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
@@ -92,16 +93,16 @@ private:
 
 public:
     VcfvLocalResidual()
-    { }
+    {}
 
     ~VcfvLocalResidual()
-    { }
+    {}
 
     /*!
      * \brief Register all run-time parameters for the local residual.
      */
     static void registerParameters()
-    { }
+    {}
 
     /*!
      * \brief Return the result of the eval() call using internal
@@ -179,8 +180,7 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::vcfvElemCtxParam
      */
-    void eval(LocalBlockVector &residual,
-              LocalBlockVector &storage,
+    void eval(LocalBlockVector &residual, LocalBlockVector &storage,
               const ElementContext &elemCtx) const
     {
         residual = 0.0;
@@ -190,7 +190,7 @@ public:
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
+        for (int i = 0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // HAVE_VALGRIND
 
@@ -198,7 +198,7 @@ public:
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
+        for (int i = 0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++)
             Valgrind::CheckDefined(residual[i]);
 #endif // !defined NDEBUG && HAVE_VALGRIND
 
@@ -209,7 +209,7 @@ public:
         asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++) {
+        for (int i = 0; i < elemCtx.fvElemGeom(/*timeIdx=*/0).numVertices; i++) {
             Valgrind::CheckDefined(residual[i]);
         }
 #endif // HAVE_VALGRIND
@@ -226,14 +226,11 @@ public:
      * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(const ElementContext &elemCtx,
-                     int timeIdx)
+    void evalStorage(const ElementContext &elemCtx, int timeIdx)
     {
         int numScv = elemCtx.numScv();
         internalStorageTerm_.resize(numScv);
-        evalStorage(internalStorageTerm_,
-                    elemCtx,
-                    timeIdx);
+        evalStorage(internalStorageTerm_, elemCtx, timeIdx);
     }
 
     /*!
@@ -248,22 +245,17 @@ public:
      * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(LocalBlockVector &storage,
-                     const ElementContext &elemCtx,
+    void evalStorage(LocalBlockVector &storage, const ElementContext &elemCtx,
                      int timeIdx) const
     {
         // calculate the amount of conservation each quantity inside
         // all sub control volumes
-        for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
-        {
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
             storage[scvIdx] = 0.0;
-            asImp_().computeStorage(storage[scvIdx],
-                                    elemCtx,
-                                    scvIdx,
-                                    timeIdx);
-            storage[scvIdx] *=
-                elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume
-                * elemCtx.volVars(scvIdx, timeIdx).extrusionFactor();
+            asImp_().computeStorage(storage[scvIdx], elemCtx, scvIdx, timeIdx);
+            storage[scvIdx]
+                *= elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].volume
+                   * elemCtx.volVars(scvIdx, timeIdx).extrusionFactor();
         }
     }
 
@@ -274,17 +266,14 @@ public:
      * \copydetails Doxygen::vcfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalFluxes(LocalBlockVector &residual,
-                    const ElementContext &elemCtx,
+    void evalFluxes(LocalBlockVector &residual, const ElementContext &elemCtx,
                     int timeIdx) const
     {
         RateVector flux;
 
         // calculate the mass flux over the sub-control volume faces
-        for (int scvfIdx = 0;
-             scvfIdx < elemCtx.fvElemGeom(timeIdx).numEdges;
-             scvfIdx++)
-        {
+        for (int scvfIdx = 0; scvfIdx < elemCtx.fvElemGeom(timeIdx).numEdges;
+             scvfIdx++) {
             int i = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].i;
             int j = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx].j;
 
@@ -324,14 +313,13 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::vcfvScvCtxParams
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int scvIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
+                        int scvIdx, int timeIdx) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: The local residual " << Opm::className<Implementation>()
-                   << " does not implement the required method 'computeStorage()'");
+        OPM_THROW(std::logic_error, "Not implemented: The local residual "
+                                    << Opm::className<Implementation>()
+                                    << " does not implement the required "
+                                       "method 'computeStorage()'");
     };
 
     /*!
@@ -341,13 +329,12 @@ public:
      * \copydetails Doxygen::areaFluxParam
      * \copydetails Doxygen::vcfvScvfCtxParams
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
+                     int scvfIdx, int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Opm::className<Implementation>()
+                  "Not implemented: The local residual "
+                  << Opm::className<Implementation>()
                   << " does not implement the required method 'computeFlux()'");
     }
 
@@ -357,24 +344,21 @@ public:
      * \copydoc Doxygen::sourceParam
      * \copydoc Doxygen::vcfvScvCtxParams
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int scvIdx,
-                       int timeIdx) const
+    void computeSource(RateVector &source, const ElementContext &elemCtx,
+                       int scvIdx, int timeIdx) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Opm::className<Implementation>()
-                  << " does not implement the required method 'computeSource()'");
+        OPM_THROW(std::logic_error, "Not implemented: The local residual "
+                                    << Opm::className<Implementation>()
+                                    << " does not implement the required "
+                                       "method 'computeSource()'");
     }
 
 protected:
     /*!
      * \brief Evaluate the boundary conditions of an element.
      */
-    void evalBoundary_(LocalBlockVector &residual,
-                       LocalBlockVector &storage,
-                       const ElementContext &elemCtx,
-                       int timeIdx) const
+    void evalBoundary_(LocalBlockVector &residual, LocalBlockVector &storage,
+                       const ElementContext &elemCtx, int timeIdx) const
     {
         if (!elemCtx.onBoundary())
             return;
@@ -387,8 +371,7 @@ protected:
         const GridView &gridView = elemCtx.gridView();
         IntersectionIterator &isIt = boundaryCtx.intersectionIt();
         const IntersectionIterator &endIt = gridView.iend(elem);
-        for (; isIt != endIt; ++isIt)
-        {
+        for (; isIt != endIt; ++isIt) {
             // handle only faces on the boundary
             if (!isIt->boundary())
                 continue;
@@ -397,18 +380,14 @@ protected:
             // face
             int faceIdx = isIt->indexInInside();
             int numFaceVerts = refElement.size(faceIdx, 1, dim);
-            for (int faceVertIdx = 0;
-                 faceVertIdx < numFaceVerts;
-                 ++faceVertIdx)
-            {
-                int boundaryFaceIdx =
-                    elemCtx.fvElemGeom(timeIdx).boundaryFaceIndex(faceIdx, faceVertIdx);
+            for (int faceVertIdx = 0; faceVertIdx < numFaceVerts; ++faceVertIdx) {
+                int boundaryFaceIdx
+                    = elemCtx.fvElemGeom(timeIdx)
+                          .boundaryFaceIndex(faceIdx, faceVertIdx);
 
                 // add the residual of all vertices of the boundary
                 // segment
-                evalBoundarySegment_(residual,
-                                     boundaryCtx,
-                                     boundaryFaceIdx,
+                evalBoundarySegment_(residual, boundaryCtx, boundaryFaceIdx,
                                      timeIdx);
             }
         }
@@ -420,22 +399,21 @@ protected:
      */
     void evalBoundarySegment_(LocalBlockVector &residual,
                               const BoundaryContext &boundaryCtx,
-                              int boundaryFaceIdx,
-                              int timeIdx) const
+                              int boundaryFaceIdx, int timeIdx) const
     {
         BoundaryRateVector values;
 
         Valgrind::SetUndefined(values);
-        boundaryCtx.problem().boundary(values,
-                                       boundaryCtx,
-                                       boundaryFaceIdx,
+        boundaryCtx.problem().boundary(values, boundaryCtx, boundaryFaceIdx,
                                        timeIdx);
         Valgrind::CheckDefined(values);
 
         int scvIdx = boundaryCtx.insideScvIndex(boundaryFaceIdx, timeIdx);
-        values *=
-            boundaryCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
-            * boundaryCtx.elemContext().volVars(scvIdx, timeIdx).extrusionFactor();
+        values
+            *= boundaryCtx.fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].area
+               * boundaryCtx.elemContext()
+                     .volVars(scvIdx, timeIdx)
+                     .extrusionFactor();
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             residual[scvIdx][eqIdx] += values[eqIdx];
@@ -445,10 +423,8 @@ protected:
     /*!
      * \brief Set the values of the constraint volumes of the current element.
      */
-    void evalConstraints_(LocalBlockVector &residual,
-                          LocalBlockVector &storage,
-                          const ElementContext &elemCtx,
-                          int timeIdx) const
+    void evalConstraints_(LocalBlockVector &residual, LocalBlockVector &storage,
+                          const ElementContext &elemCtx, int timeIdx) const
     {
         if (!GET_PROP_VALUE(TypeTag, EnableConstraints))
             return;
@@ -465,7 +441,8 @@ protected:
                 continue;
 
             // enforce the constraints
-            const PrimaryVariables &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+            const PrimaryVariables &priVars
+                = elemCtx.primaryVars(scvIdx, timeIdx);
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (!constraints.isConstraint(eqIdx))
                     continue;
@@ -486,20 +463,19 @@ protected:
      *        to the local residual of all sub-control volumes of the
      *        current element.
      */
-    void evalVolumeTerms_(LocalBlockVector &residual,
-                          LocalBlockVector &storage,
+    void evalVolumeTerms_(LocalBlockVector &residual, LocalBlockVector &storage,
                           const ElementContext &elemCtx) const
     {
         EqVector tmp(0), tmp2(0);
         RateVector sourceRate;
 
         // evaluate the volume terms (storage + source terms)
-        for (int scvIdx=0; scvIdx < elemCtx.numScv(); scvIdx++)
-        {
-            Scalar extrusionFactor =
-                elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
-            Scalar scvVolume =
-                elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume * extrusionFactor;
+        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
+            Scalar extrusionFactor
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+            Scalar scvVolume
+                = elemCtx.fvElemGeom(/*timeIdx=*/0).subContVol[scvIdx].volume
+                  * extrusionFactor;
 
             // mass balance within the element. this is the
             // \f$\frac{m}{\partial t}\f$ term if using implicit
@@ -507,13 +483,9 @@ protected:
             //
             // TODO (?): we might need a more explicit way for
             // doing the time discretization...
-            asImp_().computeStorage(tmp,
-                                    elemCtx,
-                                    scvIdx,
+            asImp_().computeStorage(tmp, elemCtx, scvIdx,
                                     /*timeIdx=*/0);
-            asImp_().computeStorage(tmp2,
-                                    elemCtx,
-                                    scvIdx,
+            asImp_().computeStorage(tmp2, elemCtx, scvIdx,
                                     /*timeIdx=*/1);
 
             tmp -= tmp2;
@@ -537,14 +509,14 @@ protected:
 private:
     Implementation &asImp_()
     {
-      assert(static_cast<Implementation*>(this) != 0);
-      return *static_cast<Implementation*>(this);
+        assert(static_cast<Implementation *>(this) != 0);
+        return *static_cast<Implementation *>(this);
     }
 
     const Implementation &asImp_() const
     {
-      assert(static_cast<const Implementation*>(this) != 0);
-      return *static_cast<const Implementation*>(this);
+        assert(static_cast<const Implementation *>(this) != 0);
+        return *static_cast<const Implementation *>(this);
     }
 
     LocalBlockVector internalResidual_;

@@ -49,7 +49,7 @@ namespace Ewoms {
 template <class TypeTag>
 class FlashPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -65,25 +65,25 @@ class FlashPrimaryVariables
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    EnergyModule;
 
 public:
-    FlashPrimaryVariables()
-        : ParentType()
+    FlashPrimaryVariables() : ParentType()
     { Valgrind::SetDefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    FlashPrimaryVariables(Scalar value)
-        : ParentType(value)
+    FlashPrimaryVariables(Scalar value) : ParentType(value)
     {
         Valgrind::CheckDefined(value);
         Valgrind::SetDefined(*this);
     }
 
     /*!
-     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
+     * ImmisciblePrimaryVariables &)
      */
     FlashPrimaryVariables(const FlashPrimaryVariables &value)
         : ParentType(value)
@@ -117,11 +117,11 @@ public:
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
         // determine the phase presence.
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-                this->operator[](cTot0Idx + compIdx) +=
-                    fluidState.molarity(phaseIdx,compIdx)
-                    * fluidState.saturation(phaseIdx);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                this->operator[](cTot0Idx + compIdx)
+                    += fluidState.molarity(phaseIdx, compIdx)
+                       * fluidState.saturation(phaseIdx);
             }
         }
     }
@@ -133,9 +133,9 @@ public:
      */
     void print(std::ostream &os = std::cout) const
     {
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            os << "(c_tot," << FluidSystem::componentName(compIdx)
-               << " = " << this->operator[](cTot0Idx + compIdx);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            os << "(c_tot," << FluidSystem::componentName(compIdx) << " = "
+               << this->operator[](cTot0Idx + compIdx);
         };
         os << ")";
     }

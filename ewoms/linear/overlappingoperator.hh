@@ -31,11 +31,9 @@ namespace Linear {
 /*!
  * \brief An overlap aware linear operator usable by ISTL.
  */
-template<class OverlappingMatrix, class DomainVector, class RangeVector>
-class OverlappingOperator :
-    public Dune::AssembledLinearOperator<OverlappingMatrix,
-                                         DomainVector,
-                                         RangeVector>
+template <class OverlappingMatrix, class DomainVector, class RangeVector>
+class OverlappingOperator
+    : public Dune::AssembledLinearOperator<OverlappingMatrix, DomainVector, RangeVector>
 {
     typedef typename OverlappingMatrix::Overlap Overlap;
 
@@ -44,29 +42,29 @@ public:
     typedef DomainVector domain_type;
     typedef typename domain_type::field_type field_type;
 
-    //redefine the category, that is the only difference
-    enum {category=Dune::SolverCategory::overlapping};
+    // redefine the category, that is the only difference
+    enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingOperator (const OverlappingMatrix& A)
-        : A_(A)
-    { }
+    OverlappingOperator(const OverlappingMatrix &A) : A_(A)
+    {}
 
     //! apply operator to x:  \f$ y = A(x) \f$
-    virtual void apply (const DomainVector& x, RangeVector& y) const
+    virtual void apply(const DomainVector &x, RangeVector &y) const
     {
-        A_.mv(x,y);
+        A_.mv(x, y);
         y.syncFront();
     }
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
-    virtual void applyscaleadd(field_type alpha, const DomainVector& x, RangeVector& y) const
+    virtual void applyscaleadd(field_type alpha, const DomainVector &x,
+                               RangeVector &y) const
     {
         A_.usmv(alpha, x, y);
         y.syncFront();
     }
 
     //! returns the matrix
-    virtual const OverlappingMatrix& getmat() const
+    virtual const OverlappingMatrix &getmat() const
     { return A_; }
 
     const Overlap &overlap() const

@@ -46,7 +46,7 @@ namespace Ewoms {
  *       extruded by \f$1 m\f$ and 1D grids are assumed to have a
  *       cross section of \f$1m \times 1m\f$.
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvProblem
 {
 private:
@@ -65,14 +65,12 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
+    typedef typename GET_PROP_TYPE(TypeTag,
+                                   BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
 
-    enum {
-        dim = GridView::dimension,
-        dimWorld = GridView::dimensionworld
-    };
+    enum { dim = GridView::dimension, dimWorld = GridView::dimensionworld };
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<dim>::Entity Vertex;
@@ -93,16 +91,11 @@ public:
      *                 used (normally the leaf grid view)
      */
     VcfvProblem(TimeManager &timeManager, const GridView &gridView)
-        : gridView_(gridView)
-        , bboxMin_(std::numeric_limits<double>::max())
-        , bboxMax_(-std::numeric_limits<double>::max())
-        , elementMapper_(gridView)
-        , vertexMapper_(gridView)
-        , timeManager_(&timeManager)
-        , newtonMethod_(asImp_())
-    {
-        init_();
-    }
+        : gridView_(gridView), bboxMin_(std::numeric_limits<double>::max()),
+          bboxMax_(-std::numeric_limits<double>::max()),
+          elementMapper_(gridView), vertexMapper_(gridView),
+          timeManager_(&timeManager), newtonMethod_(asImp_())
+    { init_(); }
 
     ~VcfvProblem()
     { delete resultWriter_; }
@@ -114,9 +107,15 @@ public:
     static void registerParameters()
     {
         Model::registerParameters();
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
-        EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize,
+                             "The maximum size to which all time steps are "
+                             "limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize,
+                             "The minimum size to which all time steps are "
+                             "limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions,
+                             "The maximum number of divisions by two of the "
+                             "timestep size before the simulation bails out");
     }
 
     /*!
@@ -143,14 +142,19 @@ public:
     void finalize()
     {
         if (gridView().comm().rank() == 0) {
-            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
+            Scalar totalTime
+                = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
             int numCores = this->gridView().comm().size();
-            std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
-                      << "Timing receipt [s] (solve total/assemble/linear solve/update): "
-                      << totalTime  << " (" << totalTime*numCores << " cummulative, " << numCores <<" processes) / "
-                      << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
-                      << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
-                      << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
+            std::cout << "Simulation of problem '" << asImp_().name()
+                      << "' finished.\n"
+                      << "Timing receipt [s] (solve total/assemble/linear "
+                         "solve/update): " << totalTime << " ("
+                      << totalTime * numCores << " cummulative, " << numCores
+                      << " processes) / " << assembleTime_ << " ("
+                      << assembleTime_ / totalTime * 100 << "%) / "
+                      << solveTime_ << " (" << solveTime_ / totalTime * 100
+                      << "%) / " << updateTime_ << " ("
+                      << updateTime_ / totalTime * 100 << "%)"
                       << "\n";
         }
     }
@@ -173,61 +177,80 @@ public:
      * \brief Evaluate the boundary conditions for a boundary segment.
      *
      * \param values Stores the fluxes over the boundary segment.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param context The object representing the execution context from which
+     *this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void boundary(BoundaryRateVector &values,
-                  const Context &context,
+    void boundary(BoundaryRateVector &values, const Context &context,
                   int spaceIdx, int timeIdx) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a boundary() method"); }
+    {
+        OPM_THROW(std::logic_error,
+                  "Problem does not provide a boundary() method");
+    }
 
     /*!
      * \brief Evaluate the constraints for a control volume.
      *
-     * \param constraints Stores the values of the primary variables at a given spatial and temporal location.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param constraints Stores the values of the primary variables at a given
+     *spatial and temporal location.
+     * \param context The object representing the execution context from which
+     *this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void constraints(Constraints &constraints,
-                     const Context &context,
+    void constraints(Constraints &constraints, const Context &context,
                      int spaceIdx, int timeIdx) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a constraints() method"); }
+    {
+        OPM_THROW(std::logic_error,
+                  "Problem does not provide a constraints() method");
+    }
 
     /*!
      * \brief Evaluate the source term for all phases within a given
      *        sub-control-volume.
      *
-     * \param rate Stores the values of the volumetric creation/anihilition rates of the conserved quantities.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param rate Stores the values of the volumetric creation/anihilition
+     *rates of the conserved quantities.
+     * \param context The object representing the execution context from which
+     *this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void source(RateVector &rate,
-                const Context &context,
-                int spaceIdx, int timeIdx) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a source() method"); }
+    void source(RateVector &rate, const Context &context, int spaceIdx,
+                int timeIdx) const
+    {
+        OPM_THROW(std::logic_error,
+                  "Problem does not provide a source() method");
+    }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
      *
      * \param values Stores the primary variables.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param context The object representing the execution context from which
+     *this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void initial(PrimaryVariables &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a initial() method"); }
+    void initial(PrimaryVariables &values, const Context &context, int spaceIdx,
+                 int timeIdx) const
+    {
+        OPM_THROW(std::logic_error,
+                  "Problem does not provide a initial() method");
+    }
 
     /*!
-     * \brief Return how much the domain is extruded at a given sub-control volume.
+     * \brief Return how much the domain is extruded at a given sub-control
+     *volume.
      *
      * This means the factor by which a lower-dimensional (1D or 2D)
      * entity needs to be expanded to get a full dimensional cell. The
@@ -235,13 +258,14 @@ public:
      * thought as pipes with a cross section of 1 m^2 and 2D problems
      * are assumed to extend 1 m to the back.
      *
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param context The object representing the execution context from which
+     *this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    Scalar extrusionFactor(const Context &context,
-                           int spaceIdx, int timeIdx) const
+    Scalar extrusionFactor(const Context &context, int spaceIdx, int timeIdx) const
     { return asImp_().extrusionFactor(); }
 
     Scalar extrusionFactor() const
@@ -264,16 +288,17 @@ public:
      */
     void timeIntegration()
     {
-        const int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
-        const Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
+        const int maxFails
+            = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
+        const Scalar minTimeStepSize
+            = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
 
         // if the time step size of the time manager is smaller than
         // the specified minimum size and we're not going to finish
         // the simulation or an episode, try with the minimum size.
-        if (timeManager().timeStepSize() < minTimeStepSize &&
-            !timeManager().episodeWillBeOver() &&
-            !timeManager().willBeFinished())
-        {
+        if (timeManager().timeStepSize() < minTimeStepSize
+            && !timeManager().episodeWillBeOver()
+            && !timeManager().willBeFinished()) {
             timeManager().setTimeStepSize(minTimeStepSize);
         }
 
@@ -299,15 +324,14 @@ public:
             // update failed
             if (gridView().comm().rank() == 0)
                 std::cout << "Newton solver did not converge with "
-                          << "dt=" << dt << " seconds. Retrying with time step of "
-                          << nextDt << " seconds\n";
+                          << "dt=" << dt
+                          << " seconds. Retrying with time step of " << nextDt
+                          << " seconds\n";
         }
 
-        OPM_THROW(std::runtime_error,
-                   "Newton solver didn't converge after "
-                   << maxFails
-                   << " time-step divisions. dt="
-                   << timeManager().timeStepSize());
+        OPM_THROW(std::runtime_error, "Newton solver didn't converge after "
+                                      << maxFails << " time-step divisions. dt="
+                                      << timeManager().timeStepSize());
     }
 
     /*!
@@ -330,7 +354,8 @@ public:
     Scalar nextTimeStepSize()
     {
         return std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
-                        newtonMethod_.suggestTimeStepSize(timeManager().timeStepSize()));
+                        newtonMethod_.suggestTimeStepSize(
+                            timeManager().timeStepSize()));
     }
 
     /*!
@@ -343,8 +368,8 @@ public:
      */
     bool shouldWriteRestartFile() const
     {
-        return timeManager().timeStepIndex() > 0 &&
-            (timeManager().timeStepIndex() % 10 == 0);
+        return timeManager().timeStepIndex() > 0
+               && (timeManager().timeStepIndex() % 10 == 0);
     }
 
     /*!
@@ -363,7 +388,7 @@ public:
      *        do some post processing on the solution.
      */
     void postTimeStep()
-    { }
+    {}
 
     /*!
      * \brief Called by the time manager after everything which can be
@@ -486,7 +511,8 @@ public:
         res.serializeBegin(asImp_());
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
-                      << ", time step size: " << asImp_().timeManager().timeStepSize() << "\n";
+                      << ", time step size: "
+                      << asImp_().timeManager().timeStepSize() << "\n";
 
         timeManager().serialize(res);
         asImp_().serialize(res);
@@ -559,14 +585,16 @@ public:
      * \brief Write the relevant secondary variables of the current
      *        solution into an VTK output file.
      *
-     * \param verbose If true, then a message will be printed to stdout if a file is written
+     * \param verbose If true, then a message will be printed to stdout if a
+     *file is written
      */
     void writeOutput(bool verbose = true)
     {
         // write the current result to disk
         if (asImp_().shouldWriteOutput()) {
             if (verbose && gridView().comm().rank() == 0)
-                std::cout << "Writing result file for \"" << asImp_().name() << "\"\n";
+                std::cout << "Writing result file for \"" << asImp_().name()
+                          << "\"\n";
 
             // calculate the time _after_ the time was updated
             Scalar t = timeManager().time() + timeManager().timeStepSize();
@@ -591,10 +619,12 @@ private:
         // calculate the bounding box of the local partition of the grid view
         VertexIterator vIt = gridView_.template begin<dim>();
         const VertexIterator vEndIt = gridView_.template end<dim>();
-        for (; vIt!=vEndIt; ++vIt) {
-            for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+        for (; vIt != vEndIt; ++vIt) {
+            for (int i = 0; i < dim; i++) {
+                bboxMin_[i]
+                    = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
+                bboxMax_[i]
+                    = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
             }
         }
 
@@ -612,10 +642,13 @@ private:
 
     // makes sure that the result writer exists
     void createResultWriter_()
-    { if (!resultWriter_) resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name()); }
+    {
+        if (!resultWriter_)
+            resultWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+    }
 
     //! Returns the applied VTK-writer for the output
-    VtkMultiWriter& resultWriter()
+    VtkMultiWriter &resultWriter()
     {
         createResultWriter_();
         return *resultWriter_;

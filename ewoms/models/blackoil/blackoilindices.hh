@@ -31,15 +31,20 @@ namespace Ewoms {
  *
  * \brief The primary variable and equation indices for the black-oil model.
  */
-template <int PVOffset=0>
+template <int PVOffset = 0>
 struct BlackOilIndices
 {
     // Primary variable indices
-    static const int pressure0Idx = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure (depending on formulation) in a solution vector
-    static const int saturation0Idx = PVOffset + 1; //!< Index of the saturation of the non-wetting/wetting phase
+    static const int pressure0Idx
+        = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure
+                        //(depending on formulation) in a solution vector
+    static const int saturation0Idx
+        = PVOffset
+          + 1; //!< Index of the saturation of the non-wetting/wetting phase
 
     // indices of the equations
-    static const int conti0EqIdx = PVOffset + 0; //!< Index of the continuity equation of the first phase
+    static const int conti0EqIdx
+        = PVOffset + 0; //!< Index of the continuity equation of the first phase
 };
 
 } // namespace Ewoms

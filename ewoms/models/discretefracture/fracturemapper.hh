@@ -33,13 +33,14 @@ namespace Ewoms {
 /*!
  * \brief Stores the topology of fractures.
  */
-template<class TypeTag>
+template <class TypeTag>
 class FractureMapper
 {
-    struct FractureEdge {
+    struct FractureEdge
+    {
         FractureEdge(int edgeVertex1Idx, int edgeVertex2Idx)
-            : i_(std::min(edgeVertex1Idx, edgeVertex2Idx))
-            , j_(std::max(edgeVertex1Idx, edgeVertex2Idx))
+            : i_(std::min(edgeVertex1Idx, edgeVertex2Idx)),
+              j_(std::max(edgeVertex1Idx, edgeVertex2Idx))
         {}
 
         bool operator<(const FractureEdge &e) const
@@ -57,7 +58,7 @@ public:
      * \brief Constructor
      */
     FractureMapper()
-    { }
+    {}
 
     /*!
      * \brief Marks an edge as having a fracture.

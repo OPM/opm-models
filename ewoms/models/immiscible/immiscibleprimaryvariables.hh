@@ -47,7 +47,7 @@ namespace Ewoms {
 template <class TypeTag>
 class ImmisciblePrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -69,26 +69,24 @@ class ImmisciblePrimaryVariables
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
-    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    EnergyModule;
 
 public:
     /*!
      * \brief Default constructor
      */
-    ImmisciblePrimaryVariables()
-        : ParentType()
-    {
-        Valgrind::SetUndefined(*this);
-    }
+    ImmisciblePrimaryVariables() : ParentType()
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      *
-     * \param value The scalar value to which all entries of the vector will be set.
+     * \param value The scalar value to which all entries of the vector will be
+     *set.
      */
-    ImmisciblePrimaryVariables(Scalar value)
-        : ParentType(value)
-    { }
+    ImmisciblePrimaryVariables(Scalar value) : ParentType(value)
+    {}
 
     /*!
      * \brief Copy constructor
@@ -97,7 +95,7 @@ public:
      */
     ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state
@@ -125,18 +123,20 @@ public:
                                 bool isInEquilibrium = false)
     {
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                globalMolarities[compIdx] +=
-                    fluidState.molarity(phaseIdx, compIdx)
-                    * fluidState.saturation(phaseIdx);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                globalMolarities[compIdx]
+                    += fluidState.molarity(phaseIdx, compIdx)
+                       * fluidState.saturation(phaseIdx);
             }
         }
 
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
-        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache,
+                                                     matParams,
+                                                     globalMolarities);
 
         assignNaive(fsFlash);
     }
@@ -165,13 +165,13 @@ public:
         EnergyModule::setPriVarTemperatures(asImp_(), fluidState);
 
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++ phaseIdx)
+        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
 
 private:
     Implementation &asImp_()
-    { return *static_cast<Implementation*>(this); }
+    { return *static_cast<Implementation *>(this); }
 };
 
 } // namespace Ewoms

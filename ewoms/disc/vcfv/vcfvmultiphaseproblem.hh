@@ -40,7 +40,8 @@ NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(VelocityModule);
 NEW_PROP_TAG(MaterialLaw);
-}}
+}
+}
 
 namespace Ewoms {
 /*!
@@ -49,10 +50,10 @@ namespace Ewoms {
  * \brief The base class for the problems of VCVF discretizations which deal
  *        with a multi-phase flow through a porous medium.
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvMultiPhaseProblem
-    : public VcfvProblem<TypeTag>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityBaseProblem
+    : public VcfvProblem<TypeTag>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityBaseProblem
 {
     typedef Ewoms::VcfvProblem<TypeTag> ParentType;
 
@@ -60,8 +61,10 @@ class VcfvMultiPhaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
-    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams)
+        HeatConductionLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag,
+                                   MaterialLaw)::Params MaterialLawParams;
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -81,7 +84,9 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity,
+                             "Use the gravity correction for the pressure "
+                             "gradients.");
     };
 
     /*!
@@ -91,9 +96,7 @@ public:
      * \param K1 intrinsic permeability of the first node
      * \param K2 intrinsic permeability of the second node
      */
-    void meanK(DimMatrix &result,
-               const DimMatrix &K1,
-               const DimMatrix &K2) const
+    void meanK(DimMatrix &result, const DimMatrix &K1, const DimMatrix &K2) const
     {
         // entry-wise harmonic mean. this is almost certainly wrong if
         // you have off-main diagonal entries in your permeabilities!
@@ -108,7 +111,8 @@ public:
     // \{
 
     /*!
-     * \brief Returns the intrinsic permeability tensor \f$[m^2]\f$ at a given position
+     * \brief Returns the intrinsic permeability tensor \f$[m^2]\f$ at a given
+     *position
      *
      * \param context Reference to the object which represents the
      *                current execution context.
@@ -116,11 +120,11 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimMatrix &intrinsicPermeability(const Context &context,
-                                           int spaceIdx, int timeIdx) const
+    const DimMatrix &intrinsicPermeability(const Context &context, int spaceIdx,
+                                           int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::intrinsicPermeability()");
+                  "Not implemented: Problem::intrinsicPermeability()");
     }
 
     /*!
@@ -133,12 +137,8 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar porosity(const Context &context,
-                    int spaceIdx, int timeIdx) const
-    {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::porosity()");
-    }
+    Scalar porosity(const Context &context, int spaceIdx, int timeIdx) const
+    { OPM_THROW(std::logic_error, "Not implemented: Problem::porosity()"); }
 
     /*!
      * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
@@ -150,11 +150,11 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context,
-                             int spaceIdx, int timeIdx) const
+    Scalar heatCapacitySolid(const Context &context, int spaceIdx,
+                             int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::heatCapacitySolid()");
+                  "Not implemented: Problem::heatCapacitySolid()");
     }
 
     /*!
@@ -167,11 +167,11 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const HeatConductionLawParams&
+    const HeatConductionLawParams &
     heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::heatConductionParams()");
+                  "Not implemented: Problem::heatConductionParams()");
     }
 
     /*!
@@ -184,10 +184,7 @@ public:
      */
     template <class Context>
     Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
-    {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::tortuosity()");
-    }
+    { OPM_THROW(std::logic_error, "Not implemented: Problem::tortuosity()"); }
 
     /*!
      * \brief Define the dispersivity.
@@ -198,15 +195,12 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar dispersivity(const Context &context,
-                        int spaceIdx, int timeIdx) const
-    {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: Problem::dispersivity()");
-    }
+    Scalar dispersivity(const Context &context, int spaceIdx, int timeIdx) const
+    { OPM_THROW(std::logic_error, "Not implemented: Problem::dispersivity()"); }
 
     /*!
-     * \brief Returns the material law parameters \f$\mathrm{[K]}\f$ within a control volume.
+     * \brief Returns the material law parameters \f$\mathrm{[K]}\f$ within a
+     *control volume.
      *
      * If you get a compiler error at this method, you set the
      * MaterialLaw property to something different than
@@ -219,15 +213,16 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const MaterialLawParams &
-    materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    const MaterialLawParams &materialLawParams(const Context &context,
+                                               int spaceIdx, int timeIdx) const
     {
         static MaterialLawParams dummy;
         return dummy;
     }
 
     /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control volume.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ within a control
+     *volume.
      *
      * \param context Reference to the object which represents the
      *                current execution context.
@@ -235,19 +230,22 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar temperature(const Context &context,
-                       int spaceIdx, int timeIdx) const
+    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
     { return asImp_().temperature(); }
 
     /*!
-     * \brief Returns the temperature \f$\mathrm{[K]}\f$ for an isothermal problem.
+     * \brief Returns the temperature \f$\mathrm{[K]}\f$ for an isothermal
+     *problem.
      *
      * This is not specific to the discretization. By default it just
      * throws an exception so it must be overloaded by the problem if
      * no energy equation is used.
      */
     Scalar temperature() const
-    { OPM_THROW(std::logic_error, "Not implemented:temperature() method not implemented by the actual problem"); }
+    {
+        OPM_THROW(std::logic_error, "Not implemented:temperature() method not "
+                                    "implemented by the actual problem");
+    }
 
     /*!
      * \brief Returns the acceleration due to gravity \f$\mathrm{[m/s^2]}\f$.
@@ -258,8 +256,8 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimVector &gravity(const Context &context,
-                             int spaceIdx, int timeIdx) const
+    const DimVector &gravity(const Context &context, int spaceIdx,
+                             int timeIdx) const
     { return asImp_().gravity(); }
 
     /*!
@@ -309,7 +307,7 @@ private:
     {
         gravity_ = 0.0;
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
-            gravity_[dimWorld-1]  = -9.81;
+            gravity_[dimWorld - 1] = -9.81;
     }
 };
 

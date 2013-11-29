@@ -45,7 +45,7 @@ namespace Ewoms {
 template <class TypeTag>
 class PvsRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -60,23 +60,21 @@ class PvsRateVector
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    PvsRateVector()
-        : ParentType()
+    PvsRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    PvsRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    PvsRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector&)
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
+     * ImmiscibleRateVector&)
      */
-    PvsRateVector(const PvsRateVector &value)
-        : ParentType(value)
-    { }
+    PvsRateVector(const PvsRateVector &value) : ParentType(value)
+    {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
@@ -107,15 +105,13 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState,
-                           int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] =
-                fluidState.density(phaseIdx, compIdx)
-                * fluidState.moleFraction(phaseIdx, compIdx)
-                * volume;
+            (*this)[conti0EqIdx + compIdx]
+                = fluidState.density(phaseIdx, compIdx)
+                  * fluidState.moleFraction(phaseIdx, compIdx) * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

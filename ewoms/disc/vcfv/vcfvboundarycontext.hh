@@ -36,7 +36,7 @@ namespace Ewoms {
  *
  * \brief Represents all quantities which available on boundary segments
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvBoundaryContext
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -64,9 +64,8 @@ public:
      * \brief The constructor.
      */
     explicit VcfvBoundaryContext(const ElementContext &elemCtx)
-        : elemCtx_(elemCtx)
-        , intersectionIt_(gridView().ibegin(element()))
-    { }
+        : elemCtx_(elemCtx), intersectionIt_(gridView().ibegin(element()))
+    {}
 
     /*!
      * \copydoc Ewoms::VcfvElementContext::problem()
@@ -145,13 +144,18 @@ public:
     { return fvElemGeom(timeIdx).boundaryFace[boundaryFaceIdx].ipGlobal; }
 
     /*!
-     * \brief Return the position of a control volume's center in global coordinates.
+     * \brief Return the position of a control volume's center in global
+     *coordinates.
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
     const GlobalPosition &cvCenter(int boundaryFaceIdx, int timeIdx) const
-    { return fvElemGeom(timeIdx).subContVol[insideScvIndex(boundaryFaceIdx, timeIdx)].global; }
+    {
+        return fvElemGeom(timeIdx)
+            .subContVol[insideScvIndex(boundaryFaceIdx, timeIdx)]
+            .global;
+    }
 
     /*!
      * \brief Return the local sub-control volume index of the
@@ -171,7 +175,10 @@ public:
      * \param timeIdx The index of the solution used by the time discretization
      */
     int globalSpaceIndex(int boundaryFaceIdx, int timeIdx) const
-    { return elemCtx_.globalSpaceIndex(insideScvIndex(boundaryFaceIdx, timeIdx), timeIdx); }
+    {
+        return elemCtx_.globalSpaceIndex(insideScvIndex(boundaryFaceIdx, timeIdx),
+                                         timeIdx);
+    }
 
     /*!
      * \brief Return the volume variables for the finite volume in the

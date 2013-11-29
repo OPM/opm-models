@@ -35,15 +35,14 @@ namespace Ewoms {
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleSum
-    : public Dune::CommDataHandleIF< GridCommHandleSum<FieldType, Container, EntityMapper, commCodim>,
-                                     FieldType >
+    : public Dune::CommDataHandleIF<GridCommHandleSum<FieldType, Container,
+                                                      EntityMapper, commCodim>,
+                                    FieldType>
 {
 public:
-    GridCommHandleSum(Container &container,
-                      const EntityMapper &mapper)
-        : mapper_(mapper)
-        , container_(container)
-    { }
+    GridCommHandleSum(Container &container, const EntityMapper &mapper)
+        : mapper_(mapper), container_(container)
+    {}
 
     bool contains(int dim, int codim) const
     {
@@ -59,21 +58,21 @@ public:
         return true;
     }
 
-    template<class EntityType>
-    size_t size (const EntityType &e) const
+    template <class EntityType>
+    size_t size(const EntityType &e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
         int vertIdx = mapper_.map(e);
         buff.write(container_[vertIdx]);
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
         int vertIdx = mapper_.map(e);
@@ -94,15 +93,14 @@ private:
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMax
-    : public Dune::CommDataHandleIF< GridCommHandleMax<FieldType, Container, EntityMapper, commCodim>,
-                                     FieldType >
+    : public Dune::CommDataHandleIF<GridCommHandleMax<FieldType, Container,
+                                                      EntityMapper, commCodim>,
+                                    FieldType>
 {
 public:
-    GridCommHandleMax(Container &container,
-                    const EntityMapper &mapper)
-        : mapper_(mapper)
-        , container_(container)
-    { }
+    GridCommHandleMax(Container &container, const EntityMapper &mapper)
+        : mapper_(mapper), container_(container)
+    {}
 
     bool contains(int dim, int codim) const
     {
@@ -118,21 +116,21 @@ public:
         return true;
     }
 
-    template<class EntityType>
-    size_t size (const EntityType &e) const
+    template <class EntityType>
+    size_t size(const EntityType &e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
         int vertIdx = mapper_.map(e);
         buff.write(container_[vertIdx]);
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
         int vertIdx = mapper_.map(e);
@@ -153,15 +151,14 @@ private:
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMin
-    : public Dune::CommDataHandleIF< GridCommHandleMin<FieldType, Container, EntityMapper, commCodim>,
-                                     FieldType >
+    : public Dune::CommDataHandleIF<GridCommHandleMin<FieldType, Container,
+                                                      EntityMapper, commCodim>,
+                                    FieldType>
 {
 public:
-    GridCommHandleMin(Container &container,
-                 const EntityMapper &mapper)
-        : mapper_(mapper)
-        , container_(container)
-    { }
+    GridCommHandleMin(Container &container, const EntityMapper &mapper)
+        : mapper_(mapper), container_(container)
+    {}
 
     bool contains(int dim, int codim) const
     {
@@ -177,21 +174,21 @@ public:
         return true;
     }
 
-    template<class EntityType>
-    size_t size (const EntityType &e) const
+    template <class EntityType>
+    size_t size(const EntityType &e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
         int vertIdx = mapper_.map(e);
         buff.write(container_[vertIdx]);
     }
 
-    template<class MessageBufferImp, class EntityType>
+    template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
         int vertIdx = mapper_.map(e);

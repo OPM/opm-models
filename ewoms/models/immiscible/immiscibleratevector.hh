@@ -31,8 +31,7 @@
 
 #include "immisciblevolumevariables.hh"
 
-namespace Ewoms
-{
+namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
  *
@@ -44,7 +43,7 @@ namespace Ewoms
 template <class TypeTag>
 class ImmiscibleRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -63,27 +62,25 @@ public:
     /*!
      * \brief Default constructor
      */
-    ImmiscibleRateVector()
-        : ParentType()
+    ImmiscibleRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar
      *
-     * \param value The scalar value to which all entries of the vector will be set.
+     * \param value The scalar value to which all entries of the vector will be
+     *set.
      */
-    ImmiscibleRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    ImmiscibleRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
      * \brief Copy constructor
      *
      * \param value The rate vector that will be duplicated.
      */
-    ImmiscibleRateVector(const ImmiscibleRateVector &value)
-        : ParentType(value)
-    { }
+    ImmiscibleRateVector(const ImmiscibleRateVector &value) : ParentType(value)
+    {}
 
     /*!
      * \brief Set a mass rate of the conservation quantities.
@@ -104,7 +101,8 @@ public:
      * means that it must be set to the desired value in the
      * parameter.
      *
-     * \param value The molar rate in \f$[mol/(m^2\,s)]\f$ (unit for areal fluxes)
+     * \param value The molar rate in \f$[mol/(m^2\,s)]\f$ (unit for areal
+     *fluxes)
      */
     void setMolarRate(const ParentType &value)
     {
@@ -122,7 +120,8 @@ public:
      *
      * If the energy equation is not enabled, this method is a no-op.
      *
-     * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$ (unit for areal fluxes)
+     * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$ (unit for areal
+     *fluxes)
      */
     void setEnthalpyRate(Scalar rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
@@ -143,15 +142,13 @@ public:
      *               \f$[m^3/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState,
-                           int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] =
-                fluidState.density(phaseIdx, compIdx)
-                * fluidState.massFraction(phaseIdx, compIdx)
-                * volume;
+            (*this)[conti0EqIdx + compIdx]
+                = fluidState.density(phaseIdx, compIdx)
+                  * fluidState.massFraction(phaseIdx, compIdx) * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

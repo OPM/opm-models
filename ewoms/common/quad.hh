@@ -38,8 +38,7 @@ extern "C" {
 
 typedef __float128 quad;
 
-namespace std
-{
+namespace std {
 
 // provide the numeric limits for the quad precision type
 template <>
@@ -54,9 +53,9 @@ public:
     { return FLT128_MAX; }
 
     // number of bits in mantissa
-    static const int  digits = FLT128_MANT_DIG;
+    static const int digits = FLT128_MANT_DIG;
     // number of decimal digits
-    static const int  digits10 = FLT128_DIG;
+    static const int digits10 = FLT128_DIG;
     static const bool is_signed = true;
     static const bool is_integer = false;
     static const bool is_exact = false;
@@ -77,7 +76,9 @@ public:
     static const float_denorm_style has_denorm = denorm_present;
     static const bool has_denorm_loss = false;
     static quad infinity() throw()
-    { return __builtin_huge_valq(); };
+    {
+        return __builtin_huge_valq();
+    };
     static quad quiet_NaN() throw()
     { return __builtin_nan(""); }
     static quad signaling_NaN() throw()
@@ -90,16 +91,15 @@ public:
     static const bool is_modulo = false;
 
     static const bool traps = std::numeric_limits<double>::traps;
-    static const bool tinyness_before = std::numeric_limits<double>::tinyness_before;
+    static const bool tinyness_before
+        = std::numeric_limits<double>::tinyness_before;
     static const float_round_style round_style = round_to_nearest;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const quad &val)
-{
-    return (os << double(val));
-}
+inline std::ostream &operator<<(std::ostream &os, const quad &val)
+{ return (os << double(val)); }
 
-inline std::istream& operator>>(std::istream& is, quad &val)
+inline std::istream &operator>>(std::istream &is, quad &val)
 {
     double tmp;
     std::istream &ret = (is >> tmp);
@@ -108,7 +108,7 @@ inline std::istream& operator>>(std::istream& is, quad &val)
 }
 
 inline quad abs(quad val)
-{ return (val < 0)?-val:val; }
+{ return (val < 0) ? -val : val; }
 
 inline quad floor(quad val)
 { return floorq(val); }
@@ -117,10 +117,10 @@ inline quad ceil(quad val)
 { return ceilq(val); }
 
 inline quad max(quad a, quad b)
-{ return (a>b)?a:b; }
+{ return (a > b) ? a : b; }
 
 inline quad min(quad a, quad b)
-{ return (a<b)?a:b; }
+{ return (a < b) ? a : b; }
 
 inline quad sqrt(quad val)
 { return sqrtq(val); }

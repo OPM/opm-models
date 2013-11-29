@@ -53,7 +53,8 @@ typedef unsigned BorderDistance;
 /*!
  * \brief This structure stores an index and a process rank
  */
-struct IndexRank {
+struct IndexRank
+{
     Index index;
     ProcessRank rank;
 };
@@ -62,7 +63,8 @@ struct IndexRank {
  * \brief This structure stores a local index on a peer process and a
  *        global index.
  */
-struct PeerIndexGlobalIndex {
+struct PeerIndexGlobalIndex
+{
     Index peerIdx;
     Index globalIdx;
 };
@@ -71,7 +73,8 @@ struct PeerIndexGlobalIndex {
  * \brief This structure stores an index, a process rank, and the
  *        distance of the degree of freedom to the process border.
  */
-struct IndexRankDist {
+struct IndexRankDist
+{
     Index index;
     ProcessRank peerRank;
     BorderDistance borderDistance;

@@ -41,34 +41,45 @@ namespace Properties {
 //////////////////////////////////////////////////////////////////
 
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(VcfvPvs, INHERITS_FROM(VcfvModel, VtkPhasePresence, VtkMultiPhase, VtkComposition, VtkTemperature, VtkEnergy, VtkDiffusion));
+NEW_TYPE_TAG(VcfvPvs, INHERITS_FROM(VcfvModel, VtkPhasePresence, VtkMultiPhase,
+                                    VtkComposition, VtkTemperature, VtkEnergy,
+                                    VtkDiffusion));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
-NEW_PROP_TAG(PvsVerbosity); //!< The verbosity of the model (0 -> do not print anything, 2 -> spam stdout a lot)
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
+NEW_PROP_TAG(PvsVerbosity);  //!< The verbosity of the model (0 -> do not print
+// anything, 2 -> spam stdout a lot)
+NEW_PROP_TAG(Indices);     //!< Enumerations used by the model
 NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
 
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used
+NEW_PROP_TAG(MaterialLaw);       //!< The material law which ought to be used
 NEW_PROP_TAG(MaterialLawParams); //!< The parameters of the material law
 
-NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
+NEW_PROP_TAG(HeatConductionLaw); //!< The heat conduction law which ought to be
+// used
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat
+// conduction law
 
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
 
-NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
-NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy is considered as a conservation quantity or not
+NEW_PROP_TAG(EnableGravity); //!< Specifies whether gravity is considered in the
+// problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
+// method should be used
+NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy is considered as a
+// conservation quantity or not
 NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
 
-NEW_PROP_TAG(PvsPressureBaseWeight); //!< The basis value for the weight of the pressure primary variable
-NEW_PROP_TAG(PvsSaturationsBaseWeight); //!< The basis value for the weight of the saturation primary variables
-NEW_PROP_TAG(PvsMoleFractionsBaseWeight); //!< The basis value for the weight of the mole fraction primary variables
+NEW_PROP_TAG(PvsPressureBaseWeight); //!< The basis value for the weight of the
+// pressure primary variable
+NEW_PROP_TAG(PvsSaturationsBaseWeight); //!< The basis value for the weight of
+// the saturation primary variables
+NEW_PROP_TAG(PvsMoleFractionsBaseWeight); //!< The basis value for the weight of
+// the mole fraction primary variables
 } // namespace Properties
 } // namespace Opm
 

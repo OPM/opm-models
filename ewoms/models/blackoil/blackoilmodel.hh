@@ -74,7 +74,7 @@ namespace Ewoms {
  *
  * \f[
  * \sum_\alpha \frac{\partial\;\phi c_\alpha^\kappa S_\alpha }{\partial t}
- * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha  \right\}
+ * - \sum_\alpha \mathrm{div} \left\{ c_\alpha^\kappa \mathbf{v}_\alpha \right\}
  * - q^\kappa = 0 \;,
  * \f]
  * where \f$\mathrm{v}_\alpha\f$ is the filter velocity of the phase
@@ -82,19 +82,21 @@ namespace Ewoms {
  *
  * By default \f$\mathrm{v}_\alpha\f$ is determined by using the
  * standard multi-phase Darcy approach, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K} \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
+ *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The primary variables used by this model are:
  * - The pressure of the phase with the lowest index
  * - The two saturations of the phases with the lowest indices
  */
-template<class TypeTag >
+template <class TypeTag>
 class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
     typedef VcfvModel<TypeTag> ParentType;
@@ -112,7 +114,8 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
 public:
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF discretization.
+     * \brief Register all run-time parameters for the immiscible VCVF
+     * discretization.
      */
     static void registerParameters()
     {
@@ -152,9 +155,11 @@ public:
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
-        else if (Indices::saturation0Idx <= pvIdx && pvIdx <= Indices::saturation0Idx + numPhases - 1) {
+        else if (Indices::saturation0Idx <= pvIdx
+                 && pvIdx <= Indices::saturation0Idx + numPhases - 1) {
             int phaseIdx = pvIdx - Indices::saturation0Idx;
-            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);;
+            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
+            ;
         }
         else
             assert(false);
@@ -169,8 +174,10 @@ public:
     {
         std::ostringstream oss;
 
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
-            oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
+                                                     + numComponents)
+            oss << "conti_"
+                << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
 
@@ -188,9 +195,10 @@ public:
             Scalar KRef = intrinsicPermeability_[globalVertexIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalVertexIdx), 1.0/dimWorld);
+            Scalar r
+                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
 
-            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
+            return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
 
         return 1;
@@ -215,7 +223,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ = this->solution(
+            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!
@@ -226,7 +235,8 @@ public:
         for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
 
-            const auto &K = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K
+                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
@@ -239,10 +249,14 @@ protected:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
-        this->vtkOutputModules_.push_back(new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
     }
 
     mutable Scalar referencePressure_;

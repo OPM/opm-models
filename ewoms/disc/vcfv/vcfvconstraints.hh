@@ -32,7 +32,8 @@ namespace Properties {
 NEW_PROP_TAG(PrimaryVariables);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
-}}
+}
+}
 
 namespace Ewoms {
 /*!
@@ -50,12 +51,12 @@ public:
     VcfvConstraints()
     { reset(); }
 
-//! \cond SKIP
+    //! \cond SKIP
     /*!
      * \brief Use the assignment operators from Dune::FieldVector
      */
     using ParentType::operator=;
-//! \endcond
+    //! \endcond
 
     /*!
      * \brief Reset the constraints types.
@@ -65,7 +66,7 @@ public:
      */
     void reset()
     {
-        for (int i=0; i < numEq; ++i) {
+        for (int i = 0; i < numEq; ++i) {
             constraintInfo_[i].isConstraint = 0;
 
             eq2pvIdx_[i] = i;
@@ -101,13 +102,13 @@ public:
      */
     void setAllConstraint()
     {
-        for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             constraintInfo_[eqIdx].isConstraint = 1;
 
             eq2pvIdx_[eqIdx] = eqIdx;
             pv2eqIdx_[eqIdx] = eqIdx;
         }
-        //Valgrind::SetDefined(constraintInfo_[eqIdx]);
+        // Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
@@ -123,7 +124,7 @@ public:
         setConstraint(eqIdx, pvIdx);
         ParentType::operator[](pvIdx) = value;
 
-        //Valgrind::SetDefined(constraintInfo_);
+        // Valgrind::SetDefined(constraintInfo_);
     }
 
     /*!
@@ -141,7 +142,7 @@ public:
         eq2pvIdx_[eqIdx] = pvIdx;
         pv2eqIdx_[pvIdx] = eqIdx;
 
-        //Valgrind::SetDefined(constraintInfo_[eqIdx]);
+        // Valgrind::SetDefined(constraintInfo_[eqIdx]);
     }
 
     /*!
@@ -166,7 +167,8 @@ public:
 
 private:
     // this is a bitfield structure!
-    struct __attribute__((__packed__)) {
+    struct __attribute__((__packed__))
+    {
         unsigned char isConstraint : 1;
     } constraintInfo_[numEq];
 

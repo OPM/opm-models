@@ -61,8 +61,9 @@
  *                    "Relative weight of the upwind node.");
  * \endcode
  */
-#define  EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
-    Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, #TypeTag, #ParamName, Description)
+#define EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
+    Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(     \
+        #ParamName, #TypeTag, #ParamName, Description)
 
 /*!
  * \ingroup Parameter
@@ -73,7 +74,7 @@
  * \c END_PARAM_REGISTRATION, a <tt>std::logic_error</tt> exception
  * will be thrown.
  */
-#define EWOMS_END_PARAM_REGISTRATION(TypeTag)             \
+#define EWOMS_END_PARAM_REGISTRATION(TypeTag)                                  \
     Ewoms::Parameters::endParamRegistration<TypeTag>()
 
 /*!
@@ -91,18 +92,15 @@
  * EWOMS_GET_PARAM(TypeTag, Scalar, UpwindWeight);
  * \endcode
  */
-#define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)              \
-    (Ewoms::Parameters::get<TypeTag,                                \
-                            ParamType,                              \
-                            PTAG(ParamName)>(#ParamName, #ParamName))
+#define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)                         \
+    (Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(#ParamName,   \
+                                                                 #ParamName))
 
 //!\cond SKIP_THIS
-#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                 \
-    (Ewoms::Parameters::get<TypeTag,                                    \
-                            ParamType,                                  \
-                            PTAG(ParamName)>(#ParamName,                \
-                                             #ParamName,                \
-                                             /*errorIfNotRegistered=*/false))
+#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                        \
+    (Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(              \
+        #ParamName, #ParamName,                                                \
+        /*errorIfNotRegistered=*/false))
 
 namespace Ewoms {
 namespace Parameters {
@@ -118,24 +116,25 @@ struct ParamInfo
 
     bool operator==(const ParamInfo &other)
     {
-        return
-            other.paramName == paramName &&
-            other.paramTypeName == paramTypeName &&
-            other.typeTagName == typeTagName &&
-            other.propertyName == propertyName &&
-            other.usageString == usageString &&
-            other.compileTimeValue == compileTimeValue;
+        return other.paramName == paramName
+               && other.paramTypeName == paramTypeName
+               && other.typeTagName == typeTagName
+               && other.propertyName == propertyName
+               && other.usageString == usageString
+               && other.compileTimeValue == compileTimeValue;
     }
 };
 
 // forward declaration
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true);
+const ParamType &get(const char *propTagName, const char *paramName,
+                     bool errorIfNotRegistered = true);
 
 class ParamRegFinalizerBase_
 {
 public:
-    virtual ~ParamRegFinalizerBase_() {}
+    virtual ~ParamRegFinalizerBase_()
+    {}
     virtual void retrieve() = 0;
 };
 
@@ -143,18 +142,17 @@ template <class TypeTag, class ParamType, class PropTag>
 class ParamRegFinalizer_ : public ParamRegFinalizerBase_
 {
 public:
-    ParamRegFinalizer_(const std::string &paramName)
-        : paramName_(paramName)
+    ParamRegFinalizer_(const std::string &paramName) : paramName_(paramName)
     {}
 
     void retrieve()
     {
         // retrieve the parameter once to make sure that its value does
         // not contain a syntax error.
-        ParamType __attribute__((unused)) dummy =
-            get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
-                                             paramName_.data(),
-                                             /*errorIfNotRegistered=*/true);
+        ParamType __attribute__((unused)) dummy
+            = get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
+                                               paramName_.data(),
+                                               /*errorIfNotRegistered=*/true);
     }
 
 private:
@@ -190,9 +188,10 @@ SET_PROP(ParameterSystem, ParameterMetaData)
         return obj_;
     }
 
-    static std::list<Ewoms::Parameters::ParamRegFinalizerBase_*> &registrationFinalizers()
+    static std::list<Ewoms::Parameters::ParamRegFinalizerBase_ *> &
+    registrationFinalizers()
     {
-        static std::list<Ewoms::Parameters::ParamRegFinalizerBase_*> obj_;
+        static std::list<Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
         return obj_;
     }
 
@@ -218,7 +217,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     // convert the CamelCase name to a command line --parameter-name.
     std::string cmdLineName = "-";
     const std::string camelCaseName = paramInfo.paramName;
-    for (unsigned i = 0; i < camelCaseName.size(); ++ i) {
+    for (unsigned i = 0; i < camelCaseName.size(); ++i) {
         if (isupper(camelCaseName[i]))
             cmdLineName += "-";
         cmdLineName += tolower(camelCaseName[i]);
@@ -229,17 +228,18 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     paramMessage += cmdLineName;
 
     // add the =VALUE_TYPE part
-    if (paramInfo.paramTypeName == "std::string" || paramInfo.paramTypeName == "const char *")
+    if (paramInfo.paramTypeName == "std::string"
+        || paramInfo.paramTypeName == "const char *")
         paramMessage += "=STRING";
-    else if (paramInfo.paramTypeName == "float" ||
-             paramInfo.paramTypeName == "double" ||
-             paramInfo.paramTypeName == "long double" ||
-             paramInfo.paramTypeName == "quad")
+    else if (paramInfo.paramTypeName == "float"
+             || paramInfo.paramTypeName == "double"
+             || paramInfo.paramTypeName == "long double"
+             || paramInfo.paramTypeName == "quad")
         paramMessage += "=SCALAR";
-    else if (paramInfo.paramTypeName == "int" ||
-             paramInfo.paramTypeName == "unsigned int" ||
-             paramInfo.paramTypeName == "short" ||
-             paramInfo.paramTypeName == "unsigned short")
+    else if (paramInfo.paramTypeName == "int"
+             || paramInfo.paramTypeName == "unsigned int"
+             || paramInfo.paramTypeName == "short"
+             || paramInfo.paramTypeName == "unsigned short")
         paramMessage += "=INTEGER";
     else if (paramInfo.paramTypeName == "bool")
         paramMessage += "=BOOLEAN";
@@ -256,7 +256,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     while (paramMessage.size() < 50)
         paramMessage += " ";
 
-    // append the parameter usage string. For this we break lines after 100 characters.
+    // append the parameter usage string.
     paramMessage += paramInfo.usageString;
     paramMessage += "\n";
 
@@ -266,7 +266,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
 
 void getFlattenedKeyList_(std::list<std::string> &dest,
                           const Dune::ParameterTree &tree,
-                          const std::string &prefix="")
+                          const std::string &prefix = "")
 {
     // add the keys of the current sub-structure
     auto keyIt = tree.getValueKeys().begin();
@@ -309,7 +309,8 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
 
 // print the values of a list of parameters
 template <class TypeTag>
-void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &keyList)
+void printCompileTimeParamList_(std::ostream &os,
+                                const std::list<std::string> &keyList)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
@@ -332,7 +333,8 @@ void printCompileTimeParamList_(std::ostream &os, const std::list<std::string> &
  * \param progName The name of the program
  */
 template <class TypeTag>
-void printUsage(const std::string &progName, const std::string &errorMsg = "", bool handleHelp = true, std::ostream &os = std::cerr)
+void printUsage(const std::string &progName, const std::string &errorMsg = "",
+                bool handleHelp = true, std::ostream &os = std::cerr)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     std::string desc = GET_PROP_VALUE(TypeTag, Description);
@@ -357,7 +359,7 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "", b
 
     auto paramIt = ParamsMeta::registry().begin();
     const auto &paramEndIt = ParamsMeta::registry().end();
-    for (; paramIt != paramEndIt; ++ paramIt) {
+    for (; paramIt != paramEndIt; ++paramIt) {
         printParamUsage_(os, paramIt->second);
     }
 }
@@ -368,21 +370,25 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "", b
  *
  * This function does some basic syntax checks.
  *
- * \param argc The number of parameters passed by the operating system to the main() function
- * \param argv The array of strings passed by the operating system to the main() function
- * \param handleHelp Set to true if the function should deal with the -h and --help parameters
- * \return Empty string if everything worked out. Otherwise the thing that could not be read.
+ * \param argc The number of parameters passed by the operating system to the
+ *             main() function
+ * \param argv The array of strings passed by the operating system to the main()
+ *             function
+ * \param handleHelp Set to true if the function should deal with the -h and
+ *                   --help parameters
+ * \return Empty string if everything worked out. Otherwise the thing that could
+ *         not be read.
  */
 template <class TypeTag>
 std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = true)
 {
-    Dune::ParameterTree &paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
+    Dune::ParameterTree &paramTree
+        = GET_PROP(TypeTag, ParameterMetaData)::tree();
 
     if (handleHelp) {
         for (int i = 1; i < argc; ++i) {
-            if (std::string("-h") == argv[i] ||
-                std::string("--help") == argv[i])
-            {
+            if (std::string("-h") == argv[i]
+                || std::string("--help") == argv[i]) {
                 printUsage<TypeTag>(argv[0], "", handleHelp, std::cout);
                 return "Help called";
             }
@@ -393,7 +399,8 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
     for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
             std::ostringstream oss;
-            oss << "Command line argument " << i << " (='" << argv[i] << "') is invalid.";
+            oss << "Command line argument " << i
+                << " (='" << argv[i] << "') is invalid.";
 
             if (handleHelp)
                 printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
@@ -408,14 +415,15 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
         // "abc"
         if (argv[i][1] == '-') {
             // There is nothing after the '-'
-            if (argv[i][2] == 0 || !std::isalpha(argv[i][2]))
-            {
+            if (argv[i][2] == 0 || !std::isalpha(argv[i][2])) {
                 std::ostringstream oss;
-                oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                    << " is invalid because it does not start with a letter.";
+                oss << "Parameter name of argument " << i
+                    << " ('" << argv[i] << "') "
+                    << "is invalid because it does not start with a letter.";
 
                 if (handleHelp)
-                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
+                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp,
+                                        std::cerr);
 
                 return oss.str();
             }
@@ -438,43 +446,47 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                     // before is the name of the parameter,
                     // everything after is the value.
                     paramName = s.substr(0, j);
-                    paramValue = s.substr(j+1);
+                    paramValue = s.substr(j + 1);
                     break;
                 }
                 else if (s[j] == '-') {
                     // remove all "-" characters and capitalize the
                     // character after them
                     s.erase(j, 1);
-                    if (s.size() == j)
-                    {
+                    if (s.size() == j) {
                         std::ostringstream oss;
-                        oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
+                        oss << "Parameter name of argument " << i
+                            << " ('" << argv[i] << "')"
                             << " is invalid (ends with a '-' character).";
 
                         if (handleHelp)
-                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
+                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp,
+                                                std::cerr);
                         return oss.str();
                     }
-                    else if (s[j] == '-')
-                    {
+                    else if (s[j] == '-') {
                         std::ostringstream oss;
-                        oss << "Malformed parameter name in argument " << i << " ('" << argv[i] << "'): "
+                        oss << "Malformed parameter name in argument " << i
+                            << " ('" << argv[i] << "'): "
                             << "'--' in parameter name.";
 
                         if (handleHelp)
-                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
+                            printUsage<TypeTag>(argv[0], oss.str(), handleHelp,
+                                                std::cerr);
                         return oss.str();
                     }
                     s[j] = std::toupper(s[j]);
                 }
-                else if (!std::isalnum(s[j]))
-                {
+                else if (!std::isalnum(s[j])) {
                     std::ostringstream oss;
-                    oss << "Parameter name of argument " << i << " ('" << argv[i] << "')"
-                        << " is invalid (character '"<< s[j]<<"' is not a letter or digit).";
+                    oss << "Parameter name of argument " << i
+                        << " ('" << argv[i] << "')"
+                        << " is invalid (character '" << s[j]
+                        << "' is not a letter or digit).";
 
                     if (handleHelp)
-                        printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
+                        printUsage<TypeTag>(argv[0], oss.str(), handleHelp,
+                                            std::cerr);
                     return oss.str();
                 }
 
@@ -486,16 +498,18 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
             // a value of "abc"
             paramName = argv[i] + 1;
 
-            if (argc == i + 1 || argv[i+1][0] == '-') {
+            if (argc == i + 1 || argv[i + 1][0] == '-') {
                 std::ostringstream oss;
                 oss << "No argument given for parameter '" << argv[i] << "'!";
                 if (handleHelp)
-                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp, std::cerr);
+                    printUsage<TypeTag>(argv[0], oss.str(), handleHelp,
+                                        std::cerr);
                 return oss.str();
             }
 
-            paramValue = argv[i+1];
-            ++i; // In the case of '-myOpt abc' each pair counts as two arguments
+            paramValue = argv[i + 1];
+            ++i; // In the case of '-myOpt abc' each pair counts as two
+                 // arguments
         }
 
         // capitalize first letter of parameter name
@@ -527,7 +541,7 @@ void printValues(std::ostream &os = std::cout)
     getFlattenedKeyList_(runTimeAllKeyList, tree);
     auto keyIt = runTimeAllKeyList.begin();
     const auto &keyEndIt = runTimeAllKeyList.end();
-    for (; keyIt != keyEndIt; ++ keyIt) {
+    for (; keyIt != keyEndIt; ++keyIt) {
         if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
             unknownKeyList.push_back(*keyIt);
@@ -542,7 +556,7 @@ void printValues(std::ostream &os = std::cout)
     std::list<std::string> compileTimeKeyList;
     auto paramInfoIt = ParamsMeta::registry().begin();
     const auto &paramInfoEndIt = ParamsMeta::registry().end();
-    for (; paramInfoIt != paramInfoEndIt; ++ paramInfoIt) {
+    for (; paramInfoIt != paramInfoEndIt; ++paramInfoIt) {
         // check whether the key was specified at run-time
         const auto &keyName = paramInfoIt->first;
         if (tree.hasKey(keyName))
@@ -597,7 +611,7 @@ void printUnused(std::ostream &os = std::cout)
     getFlattenedKeyList_(runTimeAllKeyList, tree);
     auto keyIt = runTimeAllKeyList.begin();
     const auto &keyEndIt = runTimeAllKeyList.end();
-    for (; keyIt != keyEndIt; ++ keyIt) {
+    for (; keyIt != keyEndIt; ++keyIt) {
         if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
             unknownKeyList.push_back(*keyIt);
@@ -621,16 +635,21 @@ template <class TypeTag>
 class Param
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+
 public:
     template <class ParamType, class PropTag>
-    static const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
+    static const ParamType &get(const char *propTagName, const char *paramName,
+                                bool errorIfNotRegistered = true)
     {
-        static const ParamType &value = retrieve_<ParamType, PropTag>(propTagName, paramName, errorIfNotRegistered);
+        static const ParamType &value
+            = retrieve_<ParamType, PropTag>(propTagName, paramName,
+                                            errorIfNotRegistered);
         return value;
     }
 
 private:
-    struct Blubb {
+    struct Blubb
+    {
         std::string propertyName;
         std::string paramTypeName;
         std::string groupName;
@@ -645,16 +664,14 @@ private:
     };
 
     static void check_(const std::string &paramTypeName,
-                       const std::string &propertyName,
-                       const char *paramName)
+                       const std::string &propertyName, const char *paramName)
     {
         typedef std::unordered_map<std::string, Blubb> StaticData;
         static StaticData staticData;
 
         typename StaticData::iterator it = staticData.find(paramName);
         Blubb *b;
-        if (it == staticData.end())
-        {
+        if (it == staticData.end()) {
             Blubb a;
             a.propertyName = propertyName;
             a.paramTypeName = paramTypeName;
@@ -666,21 +683,25 @@ private:
 
         if (b->propertyName != propertyName) {
             OPM_THROW(std::logic_error,
-                       "GET_*_PARAM for parameter '" << paramName
-                       << "' called for at least two different properties ('"
-                       << b->propertyName << "' and '" << propertyName << "')");
+                      "GET_*_PARAM for parameter '"
+                      << paramName
+                      << "' called for at least two different properties ('"
+                      << b->propertyName << "' and '" << propertyName << "')");
         }
 
         if (b->paramTypeName != paramTypeName) {
             OPM_THROW(std::logic_error,
-                       "GET_*_PARAM for parameter '" << paramName
-                       << "' called with at least two different types ("
-                       << b->paramTypeName << " and " << paramTypeName << ")");
+                      "GET_*_PARAM for parameter '"
+                      << paramName
+                      << "' called with at least two different types ("
+                      << b->paramTypeName << " and " << paramTypeName << ")");
         }
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType &retrieve_(const char *propTagName, const char *paramName, bool errorIfNotRegistered=true)
+    static const ParamType &retrieve_(const char *propTagName,
+                                      const char *paramName,
+                                      bool errorIfNotRegistered = true)
     {
 #ifndef NDEBUG
         // make sure that the parameter is used consistently. since
@@ -692,12 +713,15 @@ private:
         typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
-                OPM_THROW(std::runtime_error,
-                           "Parameters can only retieved after _all_ of them have been registered.");
+                OPM_THROW(std::runtime_error, "Parameters can only retieved "
+                                              "after _all_ of them have been "
+                                              "registered.");
 
             if (ParamsMeta::registry().find(paramName) == ParamsMeta::registry().end())
                 OPM_THROW(std::runtime_error,
-                           "Accessing parameter " << paramName << " without prior registration is not allowed.");
+                          "Accessing parameter "
+                          << paramName
+                          << " without prior registration is not allowed.");
         }
 
         // prefix the parameter name by the model's GroupName. E.g. If
@@ -708,7 +732,8 @@ private:
         // NewtonWriteConvergence = true
         std::string canonicalName(paramName);
 
-        std::string modelParamGroup(GET_PROP_VALUE(TypeTag, ParameterGroupPrefix));
+        std::string modelParamGroup(GET_PROP_VALUE(TypeTag,
+                                                   ParameterGroupPrefix));
         if (modelParamGroup.size()) {
             canonicalName.insert(0, ".");
             canonicalName.insert(0, modelParamGroup);
@@ -716,25 +741,35 @@ private:
 
         // retrieve actual parameter from the parameter tree
         const ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
-        static ParamType value = ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue);
+        static ParamType value
+            = ParamsMeta::tree().template get<ParamType>(canonicalName,
+                                                         defaultValue);
 
         return value;
     }
 };
 
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName, bool errorIfNotRegistered)
-{ return Param<TypeTag>::template get<ParamType, PropTag>(propTagName, paramName, errorIfNotRegistered); }
+const ParamType &get(const char *propTagName, const char *paramName,
+                     bool errorIfNotRegistered)
+{
+    return Param<TypeTag>::template get<ParamType, PropTag>(propTagName,
+                                                            paramName,
+                                                            errorIfNotRegistered);
+}
 
 template <class TypeTag, class ParamType, class PropTag>
-void registerParam(const char *paramName, const char *typeTagName, const char *propertyName, const char *usageString)
+void registerParam(const char *paramName, const char *typeTagName,
+                   const char *propertyName, const char *usageString)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
         OPM_THROW(std::logic_error,
-                   "Parameter registration was already closed before the parameter " << paramName << " was registered.");
+                  "Parameter registration was already closed before "
+                  "the parameter '" << paramName << "' was registered.");
 
-    ParamsMeta::registrationFinalizers().push_back(new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
+    ParamsMeta::registrationFinalizers().push_back(
+        new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
 
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
@@ -752,7 +787,8 @@ void registerParam(const char *paramName, const char *typeTagName, const char *p
         if (ParamsMeta::registry()[paramName] == paramInfo)
             return;
         OPM_THROW(std::logic_error,
-                   "Parameter " << paramName << " registered twice with non-matching characteristics.");
+                  "Parameter " << paramName
+                  << " registered twice with non-matching characteristics.");
     }
 
     ParamsMeta::registry()[paramName] = paramInfo;
@@ -763,8 +799,9 @@ void endParamRegistration()
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
-        OPM_THROW(std::logic_error,
-                   "Parameter registration was already closed. It is only possible to close it once.");
+        OPM_THROW(std::logic_error, "Parameter registration was already "
+                                    "closed. It is only possible to close it "
+                                    "once.");
 
     ParamsMeta::registrationOpen() = false;
 
@@ -772,7 +809,7 @@ void endParamRegistration()
     // that there is no syntax error
     auto pIt = ParamsMeta::registrationFinalizers().begin();
     const auto &pEndIt = ParamsMeta::registrationFinalizers().end();
-    for (; pIt != pEndIt; ++ pIt) {
+    for (; pIt != pEndIt; ++pIt) {
         (*pIt)->retrieve();
         delete *pIt;
     }

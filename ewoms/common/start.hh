@@ -74,7 +74,7 @@ namespace Ewoms {
  * \param argv Array with the command line argument strings
  */
 template <class TypeTag>
-int setupParameters_(int argc, char ** argv)
+int setupParameters_(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
@@ -90,24 +90,22 @@ int setupParameters_(int argc, char ** argv)
     ////////////////////////////////////////////////////////////
     // Register all parameters
     ////////////////////////////////////////////////////////////
-    EWOMS_REGISTER_PARAM(TypeTag, std::string,
-                         ParameterFile,
-                         "An .ini file which contains a set of run-time parameters");
-    EWOMS_REGISTER_PARAM(TypeTag, int,
-                         PrintProperties,
-                         "Print the values of the compile time properties at the start of the simulation");
-    EWOMS_REGISTER_PARAM(TypeTag, int,
-                         PrintParameters,
-                         "Print the values of the run-time parameters at the start of the simulation");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
-                         EndTime,
+    EWOMS_REGISTER_PARAM(TypeTag, std::string, ParameterFile,
+                         "An .ini file which contains a set of run-time "
+                         "parameters");
+    EWOMS_REGISTER_PARAM(TypeTag, int, PrintProperties,
+                         "Print the values of the compile time properties at "
+                         "the start of the simulation");
+    EWOMS_REGISTER_PARAM(TypeTag, int, PrintParameters,
+                         "Print the values of the run-time parameters at the "
+                         "start of the simulation");
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar, EndTime,
                          "The time at which the simulation is finished [s]");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
-                         InitialTimeStepSize,
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar, InitialTimeStepSize,
                          "The size of the initial time step [s]");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar,
-                         RestartTime,
-                         "The time time at which a simulation restart should be attempted [s]");
+    EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestartTime,
+                         "The time time at which a simulation restart should "
+                         "be attempted [s]");
 
     GridCreator::registerParameters();
     TimeManager::registerParameters();
@@ -118,10 +116,10 @@ int setupParameters_(int argc, char ** argv)
 
     // check whether the user wanted to see the help message
     for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i])
-        {
+        if (std::string("--help") == argv[i] || std::string("-h") == argv[i]) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "", /*handleHelp=*/true, std::cout);
+                Parameters::printUsage<TypeTag>(argv[0], "",
+                                                /*handleHelp=*/true, std::cout);
             return /*status=*/2;
         }
     }
@@ -132,7 +130,8 @@ int setupParameters_(int argc, char ** argv)
         return /*status=*/1;
     }
 
-    std::string paramFileName = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
+    std::string paramFileName
+        = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
     if (paramFileName != "") {
         ////////////////////////////////////////////////////////////
         // add the parameters specified using an .ini file
@@ -141,10 +140,11 @@ int setupParameters_(int argc, char ** argv)
         // check whether the parameter file is readable.
         std::ifstream tmp;
         tmp.open(paramFileName.c_str());
-        if (!tmp.is_open()){
+        if (!tmp.is_open()) {
             std::ostringstream oss;
             if (myRank == 0) {
-                oss << "Parameter file \"" << paramFileName << "\" is does not exist or is not readable.";
+                oss << "Parameter file \"" << paramFileName
+                    << "\" is does not exist or is not readable.";
                 Parameters::printUsage<TypeTag>(argv[0], oss.str());
             }
             return /*status=*/1;
@@ -175,8 +175,7 @@ int setupParameters_(int argc, char ** argv)
  * \param argv The array of the command line arguments
  */
 template <class TypeTag>
-int start(int argc,
-          char **argv)
+int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
@@ -188,7 +187,8 @@ int start(int argc,
 
     int myRank = mpiHelper.rank();
 
-    try {
+    try
+    {
         int paramStatus = setupParameters_<TypeTag>(argc, argv);
         if (paramStatus == 1)
             return 1;
@@ -202,14 +202,17 @@ int start(int argc,
         tEnd = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         if (tEnd < -1e50) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "Mandatory parameter '--end-time' not specified!");
+                Parameters::printUsage<TypeTag>(
+                    argv[0], "Mandatory parameter '--end-time' not specified!");
             return 1;
         }
 
         dt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         if (dt < -1e50) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "Mandatory parameter '--initial-time-step-size' not specified!");
+                Parameters::printUsage<TypeTag>(
+                    argv[0], "Mandatory parameter '--initial-time-step-size' "
+                             "not specified!");
             return 1;
         }
 
@@ -222,13 +225,12 @@ int start(int argc,
             restartTime = 0.0;
 
         if (myRank == 0)
-            std::cout
-                << "eWoms " << EWOMS_VERSION
+            std::cout << "eWoms " << EWOMS_VERSION
 #ifdef EWOMS_CODENAME
-                << " (\"" << EWOMS_CODENAME << "\")"
+                      << " (\"" << EWOMS_CODENAME << "\")"
 #endif
-                <<" will now start the trip. "
-                << "Please sit back, relax and enjoy the ride.\n";
+                      << " will now start the trip. "
+                      << "Please sit back, relax and enjoy the ride.\n";
 
         // print the parameters if requested
         int printParams = EWOMS_GET_PARAM(TypeTag, int, PrintParameters);
@@ -253,14 +255,18 @@ int start(int argc,
         }
 
         // try to create a grid (from the given grid file)
-        if (myRank ==  0) std::cout << "Creating the grid\n";
-        try { GridCreator::makeGrid(); }
-        catch (const Dune::Exception &e) {
+        if (myRank == 0)
+            std::cout << "Creating the grid\n";
+        try
+        { GridCreator::makeGrid(); }
+        catch (const Dune::Exception &e)
+        {
             std::cout << __FILE__ << ":" << __LINE__ << ":"
                       << " Creation of the grid failed: " << e.what() << "\n";
             return 1;
         }
-        if (myRank ==  0) std::cout << "Distributing the grid\n";
+        if (myRank == 0)
+            std::cout << "Distributing the grid\n";
         GridCreator::loadBalance();
 
         // instantiate and run the concrete problem. make sure to
@@ -274,26 +280,29 @@ int start(int argc,
         }
 
         if (myRank == 0) {
-            std::cout
-                << "eWoms reached the destination. "
-                << "If it took a wrong corner, change your booking and try again.\n";
+            std::cout << "eWoms reached the destination. "
+                      << "If it took a wrong corner, change your booking and "
+                         "try again.\n";
         }
         GridCreator::deleteGrid();
         return 0;
     }
-    catch (std::runtime_error &e) {
+    catch (std::runtime_error &e)
+    {
         if (myRank == 0)
             std::cout << e.what() << ". Abort!\n";
         GridCreator::deleteGrid();
         return 1;
     }
-    catch (Dune::Exception &e) {
+    catch (Dune::Exception &e)
+    {
         if (myRank == 0)
             std::cout << "Dune reported an error: " << e.what() << std::endl;
         GridCreator::deleteGrid();
         return 2;
     }
-    catch (...) {
+    catch (...)
+    {
         if (myRank == 0)
             std::cout << "Unknown exception thrown!\n";
         GridCreator::deleteGrid();

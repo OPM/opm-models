@@ -36,7 +36,8 @@ namespace Ewoms {
 /*!
  * \ingroup RichardsModel
  *
- * \brief Represents the primary variables used in the Richards VCVF discretization.
+ * \brief Represents the primary variables used in the Richards VCVF
+ *discretization.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -44,7 +45,7 @@ namespace Ewoms {
 template <class TypeTag>
 class RichardsPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -59,10 +60,8 @@ class RichardsPrimaryVariables
     // primary variable indices
     enum { pressureWIdx = Indices::pressureWIdx };
 
-    enum {
-        wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex),
-        nPhaseIdx = 1 - wPhaseIdx
-    };
+    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { nPhaseIdx = 1 - wPhaseIdx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -75,25 +74,22 @@ class RichardsPrimaryVariables
     typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
 
 public:
-    RichardsPrimaryVariables()
-        : ParentType()
-    {
-        Valgrind::SetUndefined(*this);
-    }
+    RichardsPrimaryVariables() : ParentType()
+    { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    RichardsPrimaryVariables(Scalar value)
-        : ParentType(value)
-    { }
+    RichardsPrimaryVariables(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
+     * ImmisciblePrimaryVariables &)
      */
     RichardsPrimaryVariables(const RichardsPrimaryVariables &value)
         : ParentType(value)
-    { }
+    {}
 
     /*!
      * \brief Set the primary variables with the wetting phase
@@ -104,9 +100,7 @@ public:
      * \param Sw The saturation of the wetting phase []
      * \param matParams The capillary pressure law parameters
      */
-    void assignImmiscibleFromWetting(Scalar T,
-                                     Scalar pw,
-                                     Scalar Sw,
+    void assignImmiscibleFromWetting(Scalar T, Scalar pw, Scalar Sw,
                                      const MaterialLawParams &matParams)
     {
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
@@ -134,9 +128,7 @@ public:
      * \param Sn The saturation of the non-wetting phase []
      * \param matParams The capillary pressure law parameters
      */
-    void assignImmiscibleFromNonWetting(Scalar T,
-                                        Scalar pn,
-                                        Scalar Sn,
+    void assignImmiscibleFromNonWetting(Scalar T, Scalar pn, Scalar Sn,
                                         const MaterialLawParams &matParams)
     {
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
@@ -164,18 +156,20 @@ public:
                                 bool isInEquilibrium = false)
     {
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                globalMolarities[compIdx] +=
-                    fluidState.molarity(phaseIdx, compIdx)
-                    * fluidState.saturation(phaseIdx);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                globalMolarities[compIdx]
+                    += fluidState.molarity(phaseIdx, compIdx)
+                       * fluidState.saturation(phaseIdx);
             }
         }
 
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
-        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache,
+                                                     matParams,
+                                                     globalMolarities);
 
         assignNaive(fsFlash);
     }

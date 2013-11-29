@@ -56,8 +56,11 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile, "The file name of the DGF file to load");
-        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements, "The number of global refinements of the grid executed after it was loaded");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile,
+                             "The file name of the DGF file to load");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, GridGlobalRefinements,
+                             "The number of global refinements of the grid "
+                             "executed after it was loaded");
     }
 
     /*!
@@ -65,10 +68,13 @@ public:
      */
     static void makeGrid()
     {
-        const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
-        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        const std::string dgfFileName
+            = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
+        unsigned numRefinments
+            = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
+        gridPtr_ = GridPointer(dgfFileName.c_str(),
+                               Dune::MPIHelper::getCommunicator());
         if (numRefinments > 0)
             gridPtr_->globalRefine(numRefinments);
         initialized_ = true;
@@ -98,10 +104,15 @@ public:
     /*!
      * \brief Destroys the grid
      *
-     * This is required to guarantee that the grid is deleted before MPI_Comm_free is called.
+     * This is required to guarantee that the grid is deleted before
+     *MPI_Comm_free is called.
      */
     static void deleteGrid()
-    { if (initialized_) delete gridPtr_.release(); initialized_ = false; }
+    {
+        if (initialized_)
+            delete gridPtr_.release();
+        initialized_ = false;
+    }
 
 private:
     static GridPointer gridPtr_;

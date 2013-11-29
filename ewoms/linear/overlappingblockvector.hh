@@ -42,8 +42,7 @@ namespace Linear {
  * \brief An overlap aware block vector.
  */
 template <class FieldVector, class Overlap>
-class OverlappingBlockVector
-    : public Dune::BlockVector<FieldVector>
+class OverlappingBlockVector : public Dune::BlockVector<FieldVector>
 {
     typedef Dune::BlockVector<FieldVector> ParentType;
     typedef Dune::BlockVector<FieldVector> BlockVector;
@@ -54,30 +53,24 @@ public:
      *        block vector coherent to it.
      */
     OverlappingBlockVector(const Overlap &overlap)
-        : ParentType(overlap.numDomestic())
-        , overlap_(&overlap)
-    {
-        createBuffers_();
-    }
+        : ParentType(overlap.numDomestic()), overlap_(&overlap)
+    { createBuffers_(); }
 
     /*!
      * \brief Copy constructor.
      */
     OverlappingBlockVector(const OverlappingBlockVector &obv)
-        : ParentType(obv)
-        , numIndicesSendBuff_(obv.numIndicesSendBuff_)
-        , indicesSendBuff_(obv.indicesSendBuff_)
-        , indicesRecvBuff_(obv.indicesRecvBuff_)
-        , valuesSendBuff_(obv.valuesSendBuff_)
-        , valuesRecvBuff_(obv.valuesRecvBuff_)
-        , numFrontIndicesSendBuff_(obv.numFrontIndicesSendBuff_)
-        , frontIndicesSendBuff_(obv.frontIndicesSendBuff_)
-        , frontIndicesRecvBuff_(obv.frontIndicesRecvBuff_)
-        , frontValuesSendBuff_(obv.frontValuesSendBuff_)
-        , frontValuesRecvBuff_(obv.frontValuesRecvBuff_)
-        , overlap_(obv.overlap_)
-    {
-    }
+        : ParentType(obv), numIndicesSendBuff_(obv.numIndicesSendBuff_),
+          indicesSendBuff_(obv.indicesSendBuff_),
+          indicesRecvBuff_(obv.indicesRecvBuff_),
+          valuesSendBuff_(obv.valuesSendBuff_),
+          valuesRecvBuff_(obv.valuesRecvBuff_),
+          numFrontIndicesSendBuff_(obv.numFrontIndicesSendBuff_),
+          frontIndicesSendBuff_(obv.frontIndicesSendBuff_),
+          frontIndicesRecvBuff_(obv.frontIndicesRecvBuff_),
+          frontValuesSendBuff_(obv.frontValuesSendBuff_),
+          frontValuesRecvBuff_(obv.frontValuesRecvBuff_), overlap_(obv.overlap_)
+    {}
 
     /*!
      * \brief Default constructor.
@@ -85,12 +78,12 @@ public:
     OverlappingBlockVector()
     {}
 
-//! \cond SKIP
+    //! \cond SKIP
     /*!
      * \brief Recycle the assignment operators of Dune::BlockVector
      */
     using ParentType::operator=;
-//! \endcond
+    //! \endcond
 
     /*!
      * \brief Assignment operator.
@@ -123,7 +116,7 @@ public:
 
         // assign the local rows from the non-overlapping block vector
         const auto &foreignOverlap = overlap_->foreignOverlap();
-        for (int localRowIdx = 0; localRowIdx < numLocal; ++localRowIdx)  {
+        for (int localRowIdx = 0; localRowIdx < numLocal; ++localRowIdx) {
             int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
             (*this)[localRowIdx] = nbv[nativeRowIdx];
         };
@@ -287,7 +280,8 @@ public:
     void print() const
     {
         for (int i = 0; i < this->size(); ++i) {
-            std::cout << "row " << i << (overlap_->isLocal(i)?" ":"*") << ": " << (*this)[i] << "\n";
+            std::cout << "row " << i << (overlap_->isLocal(i) ? " " : "*")
+                      << ": " << (*this)[i] << "\n";
         };
     }
 
@@ -304,11 +298,15 @@ private:
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
 
-            const auto &foreignOverlap = overlap_->foreignOverlapWithPeer(peerRank);
+            const auto &foreignOverlap
+                = overlap_->foreignOverlapWithPeer(peerRank);
             int numEntries = foreignOverlap.size();
-            numIndicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            indicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numEntries));
-            valuesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numEntries));
+            numIndicesSendBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
+            indicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
+                new MpiBuffer<Index>(numEntries));
+            valuesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(
+                new MpiBuffer<FieldVector>(numEntries));
 
             // fill the indices buffer with global indices
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
@@ -338,8 +336,10 @@ private:
             int numRows = numRowsRecvBuff[0];
 
             // then, create the MPI buffers
-            indicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numRows));
-            valuesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numRows));
+            indicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
+                new MpiBuffer<Index>(numRows));
+            valuesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(
+                new MpiBuffer<FieldVector>(numRows));
             MpiBuffer<Index> &indicesRecvBuff = *indicesRecvBuff_[peerRank];
 
             // next, receive the actual indices
@@ -365,7 +365,8 @@ private:
             // domestic ones
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
             for (unsigned i = 0; i < indicesSendBuff.size(); ++i) {
-                indicesSendBuff[i] = overlap_->globalToDomestic(indicesSendBuff[i]);
+                indicesSendBuff[i]
+                    = overlap_->globalToDomestic(indicesSendBuff[i]);
             }
         }
 
@@ -375,13 +376,19 @@ private:
             int peerRank = *peerIt;
 
             int numFrontEntries = overlap_->foreignOverlap().numFront(peerRank);
-            const auto &foreignOverlap = overlap_->foreignOverlapWithPeer(peerRank);
-            numFrontIndicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            frontIndicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numFrontEntries));
-            frontValuesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numFrontEntries));
+            const auto &foreignOverlap
+                = overlap_->foreignOverlapWithPeer(peerRank);
+            numFrontIndicesSendBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
+            frontIndicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
+                new MpiBuffer<Index>(numFrontEntries));
+            frontValuesSendBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<FieldVector> >(
+                    new MpiBuffer<FieldVector>(numFrontEntries));
 
             // fill the indices buffer with global indices
-            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
+            MpiBuffer<Index> &frontIndicesSendBuff
+                = *frontIndicesSendBuff_[peerRank];
             auto ovlpIt = foreignOverlap.begin();
             const auto &ovlpEndIt = foreignOverlap.end();
             int i = 0;
@@ -413,9 +420,13 @@ private:
             int numFrontRows = numFrontRowsRecvBuff[0];
 
             // then, create the MPI buffers
-            frontIndicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numFrontRows));
-            frontValuesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numFrontRows));
-            MpiBuffer<Index> &frontIndicesRecvBuff = *frontIndicesRecvBuff_[peerRank];
+            frontIndicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
+                new MpiBuffer<Index>(numFrontRows));
+            frontValuesRecvBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<FieldVector> >(
+                    new MpiBuffer<FieldVector>(numFrontRows));
+            MpiBuffer<Index> &frontIndicesRecvBuff
+                = *frontIndicesRecvBuff_[peerRank];
 
             // next, receive the actual indices
             frontIndicesRecvBuff.receive(peerRank);
@@ -438,9 +449,11 @@ private:
 
             // convert the global indices of the send buffer to
             // domestic ones
-            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
+            MpiBuffer<Index> &frontIndicesSendBuff
+                = *frontIndicesSendBuff_[peerRank];
             for (unsigned i = 0; i < frontIndicesSendBuff.size(); ++i) {
-                frontIndicesSendBuff[i] = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
+                frontIndicesSendBuff[i]
+                    = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
             }
         }
 #endif // HAVE_MPI
@@ -451,7 +464,7 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *indicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *valuesSendBuff_[peerRank];
-        for (unsigned i = 0; i < indices.size(); ++ i) {
+        for (unsigned i = 0; i < indices.size(); ++i) {
             values[i] = (*this)[indices[i]];
         }
 
@@ -476,7 +489,7 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *frontIndicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *frontValuesSendBuff_[peerRank];
-        for (Index i = 0; i < indices.size(); ++ i)
+        for (Index i = 0; i < indices.size(); ++i)
             values[i] = (*this)[indices[i]];
 
         values.send(peerRank);
@@ -567,8 +580,10 @@ private:
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<int> > > numFrontIndicesSendBuff_;
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<Index> > > frontIndicesSendBuff_;
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<Index> > > frontIndicesRecvBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > > frontValuesSendBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > > frontValuesRecvBuff_;
+    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > >
+    frontValuesSendBuff_;
+    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > >
+    frontValuesRecvBuff_;
 
     const Overlap *overlap_;
 };

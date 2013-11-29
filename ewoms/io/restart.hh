@@ -36,7 +36,8 @@ namespace Ewoms {
 /*!
  * \brief Load or save a state of a problem to/from the harddisk.
  */
-class Restart {
+class Restart
+{
     /*!
      * \brief Create a magic cookie for restart files, so that it is
      *        unlikely to load a restart file for an incorrectly.
@@ -44,23 +45,23 @@ class Restart {
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView &gridView)
     {
-        const std::string gridName = "blubb"; //gridView.grid().name();
+        const std::string gridName = "blubb"; // gridView.grid().name();
         const int dim = GridView::dimension;
 
         int numVertices = gridView.size(dim);
         int numElements = gridView.size(0);
-        int numEdges = gridView.size(dim-1);
+        int numEdges = gridView.size(dim - 1);
         int numCPUs = gridView.comm().size();
         int rank = gridView.comm().rank();
 
         std::ostringstream oss;
         oss << "eWoms restart file: "
-            << "gridName='"<<gridName<<"' "
-            << "numCPUs="<<numCPUs<<" "
-            << "myRank="<<rank<<" "
-            << "numElements="<<numElements<<" "
-            << "numEdges="<<numEdges<<" "
-            << "numVertices="<<numVertices;
+            << "gridName='" << gridName << "' "
+            << "numCPUs=" << numCPUs << " "
+            << "myRank=" << rank << " "
+            << "numElements=" << numElements << " "
+            << "numEdges=" << numEdges << " "
+            << "numVertices=" << numVertices;
         return oss.str();
     }
 
@@ -74,7 +75,7 @@ class Restart {
     {
         int rank = gridView.comm().rank();
         std::ostringstream oss;
-        oss << simName<<"_time="<<t<<"_rank="<<rank<<".ers";
+        oss << simName << "_time=" << t << "_rank=" << rank << ".ers";
         return oss.str();
     }
 
@@ -92,8 +93,7 @@ public:
     void serializeBegin(Problem &problem)
     {
         const std::string magicCookie = magicRestartCookie_(problem.gridView());
-        fileName_ = restartFileName_(problem.gridView(),
-                                     problem.name(),
+        fileName_ = restartFileName_(problem.gridView(), problem.name(),
                                      problem.timeManager().time());
 
         // open output file and write magic cookie
@@ -128,8 +128,7 @@ public:
      * The actual work is done by Serializer::serialize(Entity)
      */
     template <int codim, class Serializer, class GridView>
-    void serializeEntities(Serializer &serializer,
-                           const GridView &gridView)
+    void serializeEntities(Serializer &serializer, const GridView &gridView)
     {
         std::ostringstream oss;
         oss << "Entities: Codim " << codim;
@@ -162,32 +161,26 @@ public:
     template <class Problem>
     void deserializeBegin(Problem &problem, double t)
     {
-        fileName_ = restartFileName_(problem.gridView(),
-                                     problem.name(),
-                                     t);
+        fileName_ = restartFileName_(problem.gridView(), problem.name(), t);
 
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
         if (!inStream_.good()) {
-            OPM_THROW(std::runtime_error,
-                       "Restart file '"
-                       << fileName_
-                       << "' could not be opened properly");
+            OPM_THROW(std::runtime_error, "Restart file '"
+                                          << fileName_
+                                          << "' could not be opened properly");
         }
 
         // make sure that we don't open an empty file
         inStream_.seekg(0, std::ios::end);
         int pos = inStream_.tellg();
         if (pos == 0) {
-            OPM_THROW(std::runtime_error,
-                       "Restart file '"
-                       << fileName_
-                       << "' is empty");
+            OPM_THROW(std::runtime_error, "Restart file '" << fileName_
+                                                           << "' is empty");
         }
         inStream_.seekg(0, std::ios::beg);
 
-        const std::string magicCookie =
-            magicRestartCookie_(problem.gridView());
+        const std::string magicCookie = magicRestartCookie_(problem.gridView());
 
         deserializeSectionBegin(magicCookie);
         deserializeSectionEnd();
@@ -207,12 +200,12 @@ public:
     {
         if (!inStream_.good())
             OPM_THROW(std::runtime_error,
-                       "Encountered unexpected EOF in restart file.");
+                      "Encountered unexpected EOF in restart file.");
         std::string buf;
         std::getline(inStream_, buf);
         if (buf != cookie)
-            OPM_THROW(std::runtime_error,
-                       "Could not start section '" << cookie << "'");
+            OPM_THROW(std::runtime_error, "Could not start section '" << cookie
+                                                                      << "'");
     }
 
     /*!
@@ -225,7 +218,7 @@ public:
         for (unsigned i = 0; i < dummy.length(); ++i) {
             if (!std::isspace(dummy[i])) {
                 OPM_THROW(std::logic_error,
-                           "Encountered unread values while deserializing");
+                          "Encountered unread values while deserializing");
             };
         }
     }
@@ -236,8 +229,7 @@ public:
      * The actual work is done by Deserializer::deserialize(Entity)
      */
     template <int codim, class Deserializer, class GridView>
-    void deserializeEntities(Deserializer &deserializer,
-                             const GridView &gridView)
+    void deserializeEntities(Deserializer &deserializer, const GridView &gridView)
     {
         std::ostringstream oss;
         oss << "Entities: Codim " << codim;
@@ -252,8 +244,7 @@ public:
         const Iterator &endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             if (!inStream_.good()) {
-                OPM_THROW(std::runtime_error,
-                           "Restart file is corrupted");
+                OPM_THROW(std::runtime_error, "Restart file is corrupted");
             }
 
             std::getline(inStream_, curLine);

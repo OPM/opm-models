@@ -46,7 +46,7 @@ namespace Ewoms {
 template <class TypeTag>
 class NcpPrimaryVariables
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -71,23 +71,21 @@ class NcpPrimaryVariables
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:
-    NcpPrimaryVariables()
-        : ParentType()
-    { }
+    NcpPrimaryVariables() : ParentType()
+    {}
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
-    NcpPrimaryVariables(Scalar value)
-        : ParentType(value)
-    { }
+    NcpPrimaryVariables(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
+     * ImmisciblePrimaryVariables &)
      */
-    NcpPrimaryVariables(const NcpPrimaryVariables &value)
-        : ParentType(value)
-    { }
+    NcpPrimaryVariables(const NcpPrimaryVariables &value) : ParentType(value)
+    {}
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
@@ -120,18 +118,20 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                globalMolarities[compIdx] +=
-                    fluidState.saturation(phaseIdx)*fluidState.molarity(phaseIdx, compIdx);
+                globalMolarities[compIdx]
+                    += fluidState.saturation(phaseIdx)
+                       * fluidState.molarity(phaseIdx, compIdx);
             }
         }
 
         // use the externally given fluid state as initial value for
         // the flash calculation
         fsFlash.assign(fluidState);
-        //NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
+        // NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
 
         // run the flash calculation
-        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams,
+                                              globalMolarities);
 
         // use the result to assign the primary variables
         assignNaive(fsFlash);
@@ -149,8 +149,8 @@ public:
 
         // assign fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[fugacity0Idx + compIdx] =
-                fluidState.fugacity(/*phaseIdx=*/0, compIdx);
+            (*this)[fugacity0Idx + compIdx]
+                = fluidState.fugacity(/*phaseIdx=*/0, compIdx);
         }
 
         // assign pressure of first phase
@@ -160,7 +160,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
- };
+};
 
 } // namespace Ewoms
 

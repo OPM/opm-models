@@ -66,8 +66,10 @@ public:
 #if HAVE_MPI
         {
             int tmp;
-            MPI_Comm_rank(MPI_COMM_WORLD, &tmp); myRank_ = tmp;
-            MPI_Comm_size(MPI_COMM_WORLD, &tmp); mpiSize_ = tmp;
+            MPI_Comm_rank(MPI_COMM_WORLD, &tmp);
+            myRank_ = tmp;
+            MPI_Comm_size(MPI_COMM_WORLD, &tmp);
+            mpiSize_ = tmp;
         }
 #endif
 
@@ -111,9 +113,7 @@ public:
      * plus its copies of indices in the overlap regions
      */
     int numDomestic() const
-    {
-        return numDomestic_;
-    }
+    { return numDomestic_; }
 
     /*!
      * \brief Add an index to the domestic<->global mapping.
@@ -136,13 +136,12 @@ public:
         PeerIndexGlobalIndex sendBuf;
         sendBuf.peerIdx = peerLocalIdx;
         sendBuf.globalIdx = domesticToGlobal(domesticIdx);
-        MPI_Send(&sendBuf, // buff
+        MPI_Send(&sendBuf,                     // buff
                  sizeof(PeerIndexGlobalIndex), // count
-                 MPI_BYTE, // data type
-                 peerRank,
-                 0, // tag
-                 MPI_COMM_WORLD); // communicator
-#endif // HAVE_MPI
+                 MPI_BYTE,                     // data type
+                 peerRank, 0,                  // tag
+                 MPI_COMM_WORLD);              // communicator
+#endif                                         // HAVE_MPI
     }
 
     /*!
@@ -153,13 +152,12 @@ public:
     {
 #if HAVE_MPI
         PeerIndexGlobalIndex recvBuf;
-        MPI_Recv(&recvBuf, // buff
+        MPI_Recv(&recvBuf,                     // buff
                  sizeof(PeerIndexGlobalIndex), // count
-                 MPI_BYTE, // data type
-                 peerRank,
-                 0, // tag
-                 MPI_COMM_WORLD, // communicator
-                 MPI_STATUS_IGNORE); // status
+                 MPI_BYTE,                     // data type
+                 peerRank, 0,                  // tag
+                 MPI_COMM_WORLD,               // communicator
+                 MPI_STATUS_IGNORE);           // status
 
         int domesticIdx = foreignOverlap_.nativeToLocal(recvBuf.peerIdx);
         int globalIdx = recvBuf.globalIdx;
@@ -179,12 +177,12 @@ public:
      */
     void print() const
     {
-        std::cout << "(domestic index, global index, domestic->global->domestic) list for rank " <<
-            myRank_ << "\n";
+        std::cout << "(domestic index, global index, "
+                     "domestic->global->domestic) list for rank " << myRank_
+                  << "\n";
 
-        for (int domIdx = 0; domIdx < domesticToGlobal_.size(); ++ domIdx) {
-            std::cout << "(" << domIdx
-                      << ", " << domesticToGlobal(domIdx)
+        for (int domIdx = 0; domIdx < domesticToGlobal_.size(); ++domIdx) {
+            std::cout << "(" << domIdx << ", " << domesticToGlobal(domIdx)
                       << ", " << globalToDomestic(domesticToGlobal(domIdx))
                       << ") ";
         };
@@ -211,11 +209,10 @@ protected:
             // all other ranks retrieve their offset from the next
             // lower rank
             MPI_Recv(&domesticOffset_, // buffer
-                     1, // count
-                     MPI_INT, // data type
-                     myRank_ - 1,
-                     0, // tag
-                     MPI_COMM_WORLD, // communicator
+                     1,                // count
+                     MPI_INT,          // data type
+                     myRank_ - 1, 0,   // tag
+                     MPI_COMM_WORLD,   // communicator
                      MPI_STATUS_IGNORE);
         }
 
@@ -227,18 +224,18 @@ protected:
                 continue;
 
             addIndex(i, domesticOffset_ + numMaster);
-            ++ numMaster;
+            ++numMaster;
         }
 
         if (myRank_ < mpiSize_ - 1) {
             // send the domestic offset plus the number of master
             // indices to the process which is one rank higher
             int tmp = domesticOffset_ + numMaster;
-            MPI_Send(&tmp, // buff
-                     1, // count
-                     MPI_INT, // data type
-                     myRank_ + 1, // peer rank
-                     0, // tag
+            MPI_Send(&tmp,            // buff
+                     1,               // count
+                     MPI_INT,         // data type
+                     myRank_ + 1,     // peer rank
+                     0,               // tag
                      MPI_COMM_WORLD); // communicator
         };
 
@@ -310,7 +307,8 @@ protected:
 
             int nativeIdx = borderIt->localIdx;
             int localIdx = foreignOverlap_.nativeToLocal(nativeIdx);
-            if (localIdx >= 0 && foreignOverlap_.masterRank(localIdx) == borderPeer) {
+            if (localIdx >= 0 && foreignOverlap_.masterRank(localIdx)
+                                 == borderPeer) {
                 receiveBorderIndex(borderPeer);
             }
         }

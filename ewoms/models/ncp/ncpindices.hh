@@ -37,10 +37,9 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset = 0>
 struct NcpIndices
-    : public VcfvEnergyIndices<PVOffset
-                                        + GET_PROP_VALUE(TypeTag, NumComponents)
-                                        + GET_PROP_VALUE(TypeTag, NumPhases),
-                                        GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents)
+                               + GET_PROP_VALUE(TypeTag, NumPhases),
+                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -48,7 +47,8 @@ private:
     enum { numComponents = FluidSystem::numComponents };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
+    typedef VcfvEnergyIndices<PVOffset + numComponents + numPhases,
+                              enableEnergy> EnergyIndices;
 
 public:
     /*!
@@ -62,17 +62,14 @@ public:
      *
      * numComponents equations follow...
      */
-    static const int conti0EqIdx =
-        PVOffset;
+    static const int conti0EqIdx = PVOffset;
 
     /*!
      * \brief Index of the first phase NCP equation.
      *
      * The index for the remaining phases are consecutive.
      */
-    static const int ncp0EqIdx =
-        conti0EqIdx +
-        numComponents;
+    static const int ncp0EqIdx = conti0EqIdx + numComponents;
 
     /*!
      * \brief Index of the primary variable for the fugacity of the
@@ -80,8 +77,7 @@ public:
      *
      * numComponents primary variables follow...
      */
-    static const int fugacity0Idx =
-        PVOffset;
+    static const int fugacity0Idx = PVOffset;
 
     /*!
      * \brief Index of the saturation of the first phase in a vector
@@ -90,16 +86,13 @@ public:
      * The following (numPhases - 1) primary variables represent the
      * saturations for the phases [1, ..., numPhases - 1]
      */
-    static const int saturation0Idx =
-        fugacity0Idx + numComponents;
+    static const int saturation0Idx = fugacity0Idx + numComponents;
 
     /*!
      * \brief Index of the first phase' pressure in a vector of
      *        primary variables.
      */
-    static const int pressure0Idx =
-        saturation0Idx +
-        numPhases - 1;
+    static const int pressure0Idx = saturation0Idx + numPhases - 1;
 };
 
 } // namespace Ewoms

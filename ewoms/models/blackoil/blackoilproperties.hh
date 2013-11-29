@@ -34,26 +34,33 @@
 namespace Opm {
 namespace Properties {
 //! The type tag for the black-oil problems
-NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkBlackOil, VtkMultiPhase, VtkComposition, VtkTemperature));
+NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkBlackOil, VtkMultiPhase,
+                                         VtkComposition, VtkTemperature));
 
 //////////////////////////////////////////////////////////////////
 // Property tags
 //////////////////////////////////////////////////////////////////
 
-NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
+NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents); //!< Number of chemical species in the system
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the
+// problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
+// method should be used
+NEW_PROP_TAG(Indices);            //!< Enumerations used by the model
 NEW_PROP_TAG(BlackOilFluidState); //!< The fluid state used by the model
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
-NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
-NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
-NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG(FluidState); //!<The phases state
+NEW_PROP_TAG(MaterialLaw);        //!< The material law which ought to be used
+                                  //(extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLawParams);  //!< The context material law (extracted from
+// the spatial parameters)
+NEW_PROP_TAG(HeatConductionLaw);       //!< The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law
+// for heat conduction
+NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about
+// the phases
+NEW_PROP_TAG(FluidState);     //!<The phases state
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
-NEW_PROP_TAG(FluidState); //!<The type of the fluid state
+NEW_PROP_TAG(FluidState);     //!<The type of the fluid state
 } // namespace Properties
 } // namespace Opm
 

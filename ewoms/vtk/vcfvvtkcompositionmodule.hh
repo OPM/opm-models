@@ -66,7 +66,7 @@ namespace Ewoms {
  * - Fugacity of all components
  * - FugacityCoefficient of all components in all phases
  */
-template<class TypeTag>
+template <class TypeTag>
 class VcfvVtkCompositionModule : public VcfvVtkOutputModule<TypeTag>
 {
     typedef VcfvVtkOutputModule<TypeTag> ParentType;
@@ -78,7 +78,6 @@ class VcfvVtkCompositionModule : public VcfvVtkOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     enum { dim = GridView::dimension };
-
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
@@ -88,22 +87,33 @@ class VcfvVtkCompositionModule : public VcfvVtkOutputModule<TypeTag>
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
 
 public:
-    VcfvVtkCompositionModule(const Problem &problem)
-        : ParentType(problem)
-    { }
+    VcfvVtkCompositionModule(const Problem &problem) : ParentType(problem)
+    {}
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMassFractions, "Include mass fractions in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions, "Include mole fractions in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions, "Include total mass fractions in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions, "Include total mole fractions in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities, "Include component molarities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities, "Include component fugacities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs, "Include component fugacity coefficients in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMassFractions,
+                             "Include mass fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions,
+                             "Include mole fractions in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions,
+                             "Include total mass fractions in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions,
+                             "Include total mole fractions in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities,
+                             "Include component molarities in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities,
+                             "Include component fugacities in the VTK output "
+                             "files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs,
+                             "Include component fugacity coefficients in the "
+                             "VTK output files");
     }
 
     /*!
@@ -112,14 +122,21 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (moleFracOutput_()) this->resizePhaseComponentBuffer_(moleFrac_);
-        if (massFracOutput_()) this->resizePhaseComponentBuffer_(massFrac_);
-        if (totalMassFracOutput_()) this->resizeComponentBuffer_(totalMassFrac_);
-        if (totalMoleFracOutput_()) this->resizeComponentBuffer_(totalMoleFrac_);
-        if (molarityOutput_()) this->resizePhaseComponentBuffer_(molarity_);
+        if (moleFracOutput_())
+            this->resizePhaseComponentBuffer_(moleFrac_);
+        if (massFracOutput_())
+            this->resizePhaseComponentBuffer_(massFrac_);
+        if (totalMassFracOutput_())
+            this->resizeComponentBuffer_(totalMassFrac_);
+        if (totalMoleFracOutput_())
+            this->resizeComponentBuffer_(totalMoleFrac_);
+        if (molarityOutput_())
+            this->resizePhaseComponentBuffer_(molarity_);
 
-        if (fugacityOutput_()) this->resizeComponentBuffer_(fugacity_);
-        if (fugacityCoeffOutput_()) this->resizePhaseComponentBuffer_(fugacityCoeff_);
+        if (fugacityOutput_())
+            this->resizeComponentBuffer_(fugacity_);
+        if (fugacityCoeffOutput_())
+            this->resizePhaseComponentBuffer_(fugacityCoeff_);
     }
 
     /*!
@@ -138,11 +155,19 @@ public:
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    if (moleFracOutput_()) moleFrac_[phaseIdx][compIdx][I] = fs.moleFraction(phaseIdx, compIdx);
-                    if (massFracOutput_()) massFrac_[phaseIdx][compIdx][I] = fs.massFraction(phaseIdx, compIdx);
-                    if (molarityOutput_()) molarity_[phaseIdx][compIdx][I] = fs.molarity(phaseIdx, compIdx);
+                    if (moleFracOutput_())
+                        moleFrac_[phaseIdx][compIdx][I]
+                            = fs.moleFraction(phaseIdx, compIdx);
+                    if (massFracOutput_())
+                        massFrac_[phaseIdx][compIdx][I]
+                            = fs.massFraction(phaseIdx, compIdx);
+                    if (molarityOutput_())
+                        molarity_[phaseIdx][compIdx][I]
+                            = fs.molarity(phaseIdx, compIdx);
 
-                    if (fugacityCoeffOutput_()) fugacityCoeff_[phaseIdx][compIdx][I] = fs.fugacityCoefficient(phaseIdx, compIdx);
+                    if (fugacityCoeffOutput_())
+                        fugacityCoeff_[phaseIdx][compIdx][I]
+                            = fs.fugacityCoefficient(phaseIdx, compIdx);
                 }
             }
 
@@ -151,21 +176,29 @@ public:
                     Scalar compMass = 0;
                     Scalar totalMass = 0;
                     for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                        totalMass += fs.density(phaseIdx)*fs.saturation(phaseIdx);
-                        compMass += fs.density(phaseIdx)*fs.saturation(phaseIdx)*fs.massFraction(phaseIdx, compIdx);
+                        totalMass += fs.density(phaseIdx)
+                                     * fs.saturation(phaseIdx);
+                        compMass += fs.density(phaseIdx)
+                                    * fs.saturation(phaseIdx)
+                                    * fs.massFraction(phaseIdx, compIdx);
                     }
-                    totalMassFrac_[compIdx][I] = compMass/totalMass;
+                    totalMassFrac_[compIdx][I] = compMass / totalMass;
                 }
                 if (totalMoleFracOutput_()) {
                     Scalar compMoles = 0;
                     Scalar totalMoles = 0;
                     for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                        totalMoles += fs.molarDensity(phaseIdx)*fs.saturation(phaseIdx);
-                        compMoles += fs.molarDensity(phaseIdx)*fs.saturation(phaseIdx)*fs.moleFraction(phaseIdx, compIdx);
+                        totalMoles += fs.molarDensity(phaseIdx)
+                                      * fs.saturation(phaseIdx);
+                        compMoles += fs.molarDensity(phaseIdx)
+                                     * fs.saturation(phaseIdx)
+                                     * fs.moleFraction(phaseIdx, compIdx);
                     }
-                    totalMoleFrac_[compIdx][I] = compMoles/totalMoles;
+                    totalMoleFrac_[compIdx][I] = compMoles / totalMoles;
                 }
-                if (fugacityOutput_()) fugacity_[compIdx][I] = volVars.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
+                if (fugacityOutput_())
+                    fugacity_[compIdx][I]
+                        = volVars.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
             }
         }
     }
@@ -175,14 +208,27 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (moleFracOutput_()) this->commitPhaseComponentBuffer_(writer, "moleFrac_%s^%s", moleFrac_);
-        if (massFracOutput_()) this->commitPhaseComponentBuffer_(writer, "massFrac_%s^%s", massFrac_);
-        if (molarityOutput_()) this->commitPhaseComponentBuffer_(writer, "molarity_%s^%s", molarity_);
-        if (totalMassFracOutput_()) this->commitComponentBuffer_(writer, "totalMassFrac^%s", totalMassFrac_);
-        if (totalMoleFracOutput_()) this->commitComponentBuffer_(writer, "totalMoleFrac^%s", totalMoleFrac_);
+        if (moleFracOutput_())
+            this->commitPhaseComponentBuffer_(writer, "moleFrac_%s^%s",
+                                              moleFrac_);
+        if (massFracOutput_())
+            this->commitPhaseComponentBuffer_(writer, "massFrac_%s^%s",
+                                              massFrac_);
+        if (molarityOutput_())
+            this->commitPhaseComponentBuffer_(writer, "molarity_%s^%s",
+                                              molarity_);
+        if (totalMassFracOutput_())
+            this->commitComponentBuffer_(writer, "totalMassFrac^%s",
+                                         totalMassFrac_);
+        if (totalMoleFracOutput_())
+            this->commitComponentBuffer_(writer, "totalMoleFrac^%s",
+                                         totalMoleFrac_);
 
-        if (fugacityOutput_()) this->commitComponentBuffer_(writer, "fugacity^%s", fugacity_);
-        if (fugacityCoeffOutput_()) this->commitPhaseComponentBuffer_(writer, "fugacityCoeff_%s^%s", fugacityCoeff_);
+        if (fugacityOutput_())
+            this->commitComponentBuffer_(writer, "fugacity^%s", fugacity_);
+        if (fugacityCoeffOutput_())
+            this->commitPhaseComponentBuffer_(writer, "fugacityCoeff_%s^%s",
+                                              fugacityCoeff_);
     }
 
 private:

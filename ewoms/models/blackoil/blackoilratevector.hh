@@ -36,7 +36,8 @@ namespace Ewoms {
 /*!
  * \ingroup BlackOilVcfvModel
  *
- * \brief Implements a vector representing mass, molar or volumetric rates for the black oil model.
+ * \brief Implements a vector representing mass, molar or volumetric rates for
+ *the black oil model.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.
@@ -44,7 +45,7 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilRateVector
     : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq) >
+                               GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -55,24 +56,23 @@ class BlackOilRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
+
 public:
-    BlackOilRateVector()
-        : ParentType()
+    BlackOilRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    BlackOilRateVector(Scalar value)
-        : ParentType(value)
-    { }
+    BlackOilRateVector(Scalar value) : ParentType(value)
+    {}
 
     /*!
-     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector &)
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
+     * ImmiscibleRateVector &)
      */
-    BlackOilRateVector(const BlackOilRateVector &value)
-        : ParentType(value)
-    { }
+    BlackOilRateVector(const BlackOilRateVector &value) : ParentType(value)
+    {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
@@ -98,15 +98,13 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState,
-                           int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] =
-                fluidState.density(phaseIdx, compIdx)
-                * fluidState.massFraction(phaseIdx, compIdx)
-                * volume;
+            (*this)[conti0EqIdx + compIdx]
+                = fluidState.density(phaseIdx, compIdx)
+                  * fluidState.massFraction(phaseIdx, compIdx) * volume;
     }
 };
 

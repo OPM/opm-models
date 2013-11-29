@@ -46,10 +46,12 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class FlashVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>
-    , public VcfvDiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public VcfvVolumeVariables<TypeTag>,
+      public VcfvDiffusionVolumeVariables<TypeTag,
+                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
+      public VcfvEnergyVolumeVariables<TypeTag,
+                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
+      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
     typedef VcfvVolumeVariables<TypeTag> ParentType;
 
@@ -76,24 +78,23 @@ class FlashVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
+    DiffusionVolumeVariables;
     typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem, /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::CompositionalFluidState<Scalar, FluidSystem,
+                                         /*storeEnthalpy=*/enableEnergy> FluidState;
 
     /*!
      * \copydoc VcfvVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx,
-                int scvIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           scvIdx,
-                           timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
+                                                   timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -103,9 +104,9 @@ public:
             // than the epsilon value used by the newton solver to
             // calculate the partial derivatives
             const auto &model = elemCtx.model();
-            flashTolerance =
-                model.localJacobian().baseEpsilon()
-                / (100*18e-3); // assume the molar weight of water
+            flashTolerance
+                = model.localJacobian().baseEpsilon()
+                  / (100 * 18e-3); // assume the molar weight of water
         }
 
         // extract the total molar densities of the components
@@ -127,13 +128,16 @@ public:
             FlashSolver::guessInitial(fluidState_, paramCache, cTotal);
 
         // compute the phase compositions, densities and pressures
-        const MaterialLawParams &materialParams =
-            problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
+        const MaterialLawParams &materialParams
+            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache,
+                                                 materialParams, cTotal,
+                                                 flashTolerance);
 
         // set the phase viscosities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar mu
+                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
@@ -142,7 +146,8 @@ public:
         /////////////
 
         // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
@@ -156,10 +161,12 @@ public:
         VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
+                                       timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
+                                          scvIdx, timeIdx);
     }
 
     /*!
@@ -184,7 +191,9 @@ public:
      * \copydoc ImmiscibleVolumeVariables::mobility
      */
     Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx)/fluidState().viscosity(phaseIdx); }
+    {
+        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+    }
 
     /*!
      * \copydoc ImmiscibleVolumeVariables::porosity

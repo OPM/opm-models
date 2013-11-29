@@ -67,7 +67,7 @@ public:
      * \brief Register all run-time parameters for the flux variables.
      */
     static void registerParameters()
-    { }
+    {}
 
     /*!
      * \brief Update all quantities which are required on an
@@ -79,13 +79,12 @@ public:
      * \param isBoundaryFace Specifies whether the sub-control-volume
      *                       face is on the domain boundary or not.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace = false)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx,
+                bool isBoundaryFace = false)
     {
         const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
-        const auto &scvf =
-            isBoundaryFace?
-            fvGeom.boundaryFace[scvfIdx]:
-            fvGeom.subContVolFace[scvfIdx];
+        const auto &scvf = isBoundaryFace ? fvGeom.boundaryFace[scvfIdx]
+                                          : fvGeom.subContVolFace[scvfIdx];
 
         insideIdx_ = scvf.i;
         outsideIdx_ = scvf.j;
@@ -107,24 +106,16 @@ public:
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             velocityGrad_[dimIdx] = 0.0;
 
-        for (int idx = 0; idx < elemCtx.numScv(); idx++)
-        {
+        for (int idx = 0; idx < elemCtx.numScv(); idx++) {
             const auto &volVars = elemCtx.volVars(idx, timeIdx);
             const auto &fluidState = volVars.fluidState();
 
             // phase density and viscosity at IP
-            density_ +=
-                fluidState.density(phaseIdx)
-                * scvf.shapeValue[idx];
-            molarDensity_ +=
-                fluidState.molarDensity(phaseIdx)
-                * scvf.shapeValue[idx];
-            viscosity_ +=
-                fluidState.viscosity(phaseIdx)
-                * scvf.shapeValue[idx];
-            pressure_ +=
-                fluidState.pressure(phaseIdx)
-                * scvf.shapeValue[idx];
+            density_ += fluidState.density(phaseIdx) * scvf.shapeValue[idx];
+            molarDensity_ += fluidState.molarDensity(phaseIdx)
+                             * scvf.shapeValue[idx];
+            viscosity_ += fluidState.viscosity(phaseIdx) * scvf.shapeValue[idx];
+            pressure_ += fluidState.pressure(phaseIdx) * scvf.shapeValue[idx];
 
             // velocity at the IP (fluxes)
             DimVector velocityTimesShapeValue = volVars.velocityCenter();
@@ -143,8 +134,7 @@ public:
             pressureGrad_ -= tmp;
 
             // the velocity gradients
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            {
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
                 tmp = scvf.grad[idx];
                 tmp *= volVars.velocityCenter()[dimIdx];
                 velocityGrad_[dimIdx] += tmp;
@@ -174,13 +164,12 @@ public:
      * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context,
-                        int bfIdx,
-                        int timeIdx,
+    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        update(context, bfIdx, timeIdx, fluidState, paramCache, /*isOnBoundary=*/true);
+        update(context, bfIdx, timeIdx, fluidState, paramCache,
+               /*isOnBoundary=*/true);
     }
 
     /*!
@@ -191,14 +180,16 @@ public:
     { return pressure_; }
 
     /*!
-     * \brief Return the mass density \f$ \mathrm{[kg/m^3]} \f$ at the integration
+     * \brief Return the mass density \f$ \mathrm{[kg/m^3]} \f$ at the
+     * integration
      *        point.
      */
     Scalar density() const
     { return density_; }
 
     /*!
-     * \brief Return the molar density \f$ \mathrm{[mol/m^3]} \f$ at the integration point.
+     * \brief Return the molar density \f$ \mathrm{[mol/m^3]} \f$ at the
+     * integration point.
      */
     Scalar molarDensity() const
     { return molarDensity_; }
@@ -235,9 +226,9 @@ public:
     Scalar eddyViscosity() const
     { return 0; }
 
-     /*!
-     * \brief Return the eddy diffusivity (if implemented).
-     */
+    /*!
+    * \brief Return the eddy diffusivity (if implemented).
+    */
     Scalar eddyDiffusivity() const
     { return 0; }
 
@@ -272,13 +263,15 @@ public:
     { return downstreamIdx_; }
 
     /*!
-     * \brief Return the local index of the sub-control volume which is located in negative normal direction.
+     * \brief Return the local index of the sub-control volume which is located
+     * in negative normal direction.
      */
     int insideIndex() const
     { return insideIdx_; }
 
     /*!
-     * \brief Return the local index of the sub-control volume which is located in negative normal direction.
+     * \brief Return the local index of the sub-control volume which is located
+     * in negative normal direction.
      */
     int outsideIndex() const
     { return outsideIdx_; }

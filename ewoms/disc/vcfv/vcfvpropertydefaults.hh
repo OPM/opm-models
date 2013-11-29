@@ -20,7 +20,8 @@
  * \file
  * \ingroup VcfvModel
  *
- * \brief Defines defaults for the common properties of the VCVF discretizations.
+ * \brief Defines defaults for the common properties of the VCVF
+ *discretizations.
  */
 #ifndef EWOMS_VCFV_PROPERTY_DEFAULTS_HH
 #define EWOMS_VCFV_PROPERTY_DEFAULTS_HH
@@ -49,7 +50,7 @@
 
 namespace Ewoms {
 // forward declaration
-template<class TypeTag>
+template <class TypeTag>
 class VcfvModel;
 }
 
@@ -67,8 +68,7 @@ SET_TYPE_PROP(VcfvModel, TimeManager, Ewoms::TimeManager<TypeTag>);
 //////////////////////////////////////////////////////////////////
 
 //! Use the leaf grid view if not defined otherwise
-SET_TYPE_PROP(VcfvModel,
-              GridView,
+SET_TYPE_PROP(VcfvModel, GridView,
               typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
 
 //! Set the default for the ElementGeometry
@@ -83,25 +83,28 @@ public:
 };
 
 //! Mapper for the grid view's vertices.
-SET_TYPE_PROP(VcfvModel,
-              VertexMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView),
+SET_TYPE_PROP(VcfvModel, VertexMapper,
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(
+                                                            TypeTag, GridView),
                                                         Dune::MCMGVertexLayout>);
 
 //! Mapper for the grid view's elements.
-SET_TYPE_PROP(VcfvModel,
-              ElementMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView),
+SET_TYPE_PROP(VcfvModel, ElementMapper,
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(
+                                                            TypeTag, GridView),
                                                         Dune::MCMGElementLayout>);
 
 //! Mapper for the degrees of freedoms.
-SET_TYPE_PROP(VcfvModel, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
+SET_TYPE_PROP(VcfvModel, DofMapper,
+              typename GET_PROP_TYPE(TypeTag, VertexMapper));
 
 //! marks the border indices (required for the algebraic overlap stuff)
 SET_PROP(VcfvModel, BorderListCreator)
-{ private:
+{
+private:
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
 public:
     typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
@@ -122,8 +125,7 @@ SET_INT_PROP(VcfvModel, MaxTimeStepDivisions, 10);
 /*!
  * \brief A vector of quanties, each for one equation.
  */
-SET_TYPE_PROP(VcfvModel,
-              EqVector,
+SET_TYPE_PROP(VcfvModel, EqVector,
               Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                 GET_PROP_VALUE(TypeTag, NumEq)>);
 
@@ -132,15 +134,12 @@ SET_TYPE_PROP(VcfvModel,
  *
  * E.g. Neumann fluxes or source terms
  */
-SET_TYPE_PROP(VcfvModel,
-              RateVector,
-              typename GET_PROP_TYPE(TypeTag, EqVector));
+SET_TYPE_PROP(VcfvModel, RateVector, typename GET_PROP_TYPE(TypeTag, EqVector));
 
 /*!
  * \brief Type of object for specifying boundary conditions.
  */
-SET_TYPE_PROP(VcfvModel,
-              BoundaryRateVector,
+SET_TYPE_PROP(VcfvModel, BoundaryRateVector,
               typename GET_PROP_TYPE(TypeTag, RateVector));
 
 /*!
@@ -151,30 +150,26 @@ SET_TYPE_PROP(VcfvModel, Constraints, Ewoms::VcfvConstraints<TypeTag>);
 /*!
  * \brief The type for storing a residual for an element.
  */
-SET_TYPE_PROP(VcfvModel,
-              ElementEqVector,
+SET_TYPE_PROP(VcfvModel, ElementEqVector,
               Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
 
 /*!
  * \brief The type for storing a residual for the whole grid.
  */
-SET_TYPE_PROP(VcfvModel,
-              GlobalEqVector,
+SET_TYPE_PROP(VcfvModel, GlobalEqVector,
               Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
 
 /*!
  * \brief An object representing a local set of primary variables.
  */
-SET_TYPE_PROP(VcfvModel,
-              PrimaryVariables,
+SET_TYPE_PROP(VcfvModel, PrimaryVariables,
               Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
                                 GET_PROP_VALUE(TypeTag, NumEq)>);
 
 /*!
  * \brief The type of a solution for the whole grid at a fixed time.
  */
-SET_TYPE_PROP(VcfvModel,
-              SolutionVector,
+SET_TYPE_PROP(VcfvModel, SolutionVector,
               Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
 
 /*!
@@ -233,6 +228,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef typename Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
+
 public:
     typedef typename Dune::BCRSMatrix<MatrixBlock> type;
 };
@@ -248,8 +244,10 @@ SET_SCALAR_PROP(VcfvModel, LinearSolverRelativeTolerance, 1e-10);
 // By default, looking at the absolute defect is "almost" disabled.
 SET_SCALAR_PROP(VcfvModel, LinearSolverAbsoluteTolerance, 1e-30);
 
-//! set the default for the accepted fix-point tolerance (we use 0 to disable considering the fix-point tolerance)
-SET_SCALAR_PROP(VcfvModel, LinearSolverFixPointTolerance, GET_PROP_VALUE(TypeTag, NewtonRelativeTolerance)/100);
+//! set the default for the accepted fix-point tolerance (we use 0 to disable
+// considering the fix-point tolerance)
+SET_SCALAR_PROP(VcfvModel, LinearSolverFixPointTolerance,
+                GET_PROP_VALUE(TypeTag, NewtonRelativeTolerance) / 100);
 
 //! Set the history size of the time discretiuation to 2 (for implicit euler)
 SET_INT_PROP(VcfvModel, TimeDiscHistorySize, 2);
