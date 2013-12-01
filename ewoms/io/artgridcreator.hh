@@ -32,6 +32,7 @@
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/gridfactory.hh>
 
+#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -251,7 +252,11 @@ public:
 
         // first create a map of the dune to ART vertex indices
         typedef Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView, Dune::MCMGVertexLayout > VertexMapper;
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+        VertexMapper vertexMapper(gridPtr_->leafGridView());
+#else
         VertexMapper vertexMapper(gridPtr_->leafView());
+#endif
         std::vector<int> artToDuneVertexIndex(vertexPos.size());
         const auto gridView = gridPtr_->leafView();
         auto vIt = gridView.template begin</*codim=*/2>();
