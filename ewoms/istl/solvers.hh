@@ -1,36 +1,36 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set ts=4 sw=2 et sts=2:
-/*****************************************************************************
- *   Copyright (C) 2004-2012 by Christian Engwer                             *
- *   Copyright (C) 2005-2011 by Markus Blatt                                 *
- *   Copyright (C) 2007 by Robert Kloefkorn                                  *
- *   Copyright (C) 2004-2006 by Peter Bastian                                *
- *   Copyright (C) 2010 by Jorrit Fahlke                                     *
- *   Copyright (C) 2007-2012 by Oliver Sander                                *
- *   Copyright (C) 2012 by Andreas Lauser                                    *
- *                                                                           *
- *   This program is free software: you can redistribute it and/or modify    *
- *   it under the terms of the GNU General Public License as published by    *
- *   the Free Software Foundation, version 2.                                *
- *                                                                           *
- *   As a special exception, you may use the DUNE library without            *
- *   restriction.  Specifically, if other files instantiate templates or     *
- *   use macros or inline functions from one or more of the DUNE source      *
- *   files, or you compile one or more of the DUNE source files and link     *
- *   them with other files to produce an executable, this does not by        *
- *   itself cause the resulting executable to be covered by the GNU          *
- *   General Public License.  This exception does not however invalidate     *
- *   any other reasons why the executable file might be covered by the       *
- *   GNU General Public License.                                             *
- *                                                                           *
- *   This program is distributed in the hope that it will be useful,         *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of          *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           *
- *   GNU General Public License for more details.                            *
- *                                                                           *
- *   You should have received a copy of the GNU General Public License       *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.   *
- *****************************************************************************/
+/*
+  Copyright (C) 2004-2012 by Christian Engwer
+  Copyright (C) 2005-2011 by Markus Blatt
+  Copyright (C) 2007 by Robert Kloefkorn
+  Copyright (C) 2004-2006 by Peter Bastian
+  Copyright (C) 2010 by Jorrit Fahlke
+  Copyright (C) 2007-2012 by Oliver Sander
+  Copyright (C) 2012 by Andreas Lauser
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, version 2.
+
+  As a special exception, you may use the DUNE library without
+  restriction.  Specifically, if other files instantiate templates or
+  use macros or inline functions from one or more of the DUNE source
+  files, or you compile one or more of the DUNE source files and link
+  them with other files to produce an executable, this does not by
+  itself cause the resulting executable to be covered by the GNU
+  General Public License.  This exception does not however invalidate
+  any other reasons why the executable file might be covered by the
+  GNU General Public License.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /*!
  * \file
  *
@@ -71,7 +71,7 @@
 #include <memory>
 
 namespace Ewoms {
-/**
+/*
     @ingroup Linear
 */
 /** @addtogroup Linear

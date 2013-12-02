@@ -1,4 +1,4 @@
-/**
+/*
  * Current API level (for use with DUNE_VERSION_xxx):
  */
 #define EWOMS_VERSION_MAJOR 2
