@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
+  Copyright (C) 2009-2011 by Bernd Flemisch
 
   This file is part of the Open Porous Media project (OPM).
 
