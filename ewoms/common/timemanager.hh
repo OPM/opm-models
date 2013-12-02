@@ -94,10 +94,10 @@ public:
      *
      * \param problem The physical problem which needs to be solved
      * \param tStart The start time \f$\mathrm{[s]}\f$ of the simulation
-     *(typically 0)
+     *               (typically 0)
      * \param dtInitial The initial time step size \f$\mathrm{[s]}\f$
      * \param tEnd The time at which the simulation is finished
-     *\f$\mathrm{[s]}\f$
+     *             \f$\mathrm{[s]}\f$
      * \param restart Specifies whether a restart file should be
      *                loaded or if the problem should provide the
      *                initial condition.
@@ -158,15 +158,14 @@ public:
     /*!
      * \brief Return the time \f$\mathrm{[s]}\f$ before the time integration.
      * To get the time after the time integration you have to add timeStepSize()
-     * to
-     * time().
+     * to time().
      */
     Scalar time() const
     { return time_; }
 
     /*!
      * \brief Returns the number of (simulated) seconds which the simulation
-     * runs.
+     *        runs.
      */
     Scalar endTime() const
     { return endTime_; }
@@ -209,7 +208,6 @@ public:
         Scalar dt = std::max(1e-9, timeStepSize_);
 
         return std::min(dt, dtMax);
-        ;
     }
 
     /*!
@@ -237,8 +235,8 @@ public:
      */
     bool finished() const
     {
-        return finished_ || time() + std::max(std::abs(time()), timeStepSize_)
-                                     * 1e-8 >= endTime();
+        return finished_
+            || time() + std::max(std::abs(time()), timeStepSize_)* 1e-8 >= endTime();
     }
 
     /*!
@@ -287,8 +285,8 @@ public:
      * \brief Start the next episode, but don't change the episode
      *        identifier.
      *
-     * \param len  Length of the episode \f$\mathrm{[s]}\f$, infinite if not
-     *specified.
+     * \param len Length of the episode \f$\mathrm{[s]}\f$, infinite if not
+     *            specified.
      */
     void startNextEpisode(Scalar len = 1e100)
     {
@@ -435,8 +433,7 @@ public:
      * \brief Write the time manager's state to a restart file.
      *
      * \tparam Restarter The type of the object which takes care to serialize
-     *data
-     *
+     *                   data
      * \param res The serializer object
      */
     template <class Restarter>
@@ -453,8 +450,7 @@ public:
      * \brief Read the time manager's state from a restart file.
      *
      * \tparam Restarter The type of the object which takes care to deserialize
-     *data
-     *
+     *                   data
      * \param res The deserializer object
      */
     template <class Restarter>

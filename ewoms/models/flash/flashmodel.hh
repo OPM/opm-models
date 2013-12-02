@@ -40,23 +40,23 @@ namespace Ewoms {
  *
  * \brief A compositional multi-phase model based on flash-calculations
  *
- * \brief A generic compositional multi-phase model using primary-variable
- *switching.
- *
  * This model assumes a flow of \f$M \geq 1\f$ fluid phases
  * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
  * M\f$ chemical species (denoted by the upper index \f$\kappa\f$).
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
- *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[
+ * \mathbf{v}_\alpha =
+ * - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ * \left(\mathbf{grad}\, p_\alpha
+ *       - \varrho_{\alpha} \mathbf{g} \right) \;,
+ * \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
- *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -101,6 +101,7 @@ class FlashModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -115,6 +116,10 @@ class FlashModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
+    FlashModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -194,9 +199,9 @@ public:
         storage = 0;
         EqVector tmp;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_().template end<0>();
+        ElementContext elemCtx(this->problem_);
+        ElementIterator elemIt = this->gridView_.template begin<0>();
+        const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateFVElemGeom(*elemIt);
             elemCtx.updateScvVars(/*timeIdx=*/0);
@@ -216,7 +221,7 @@ public:
             }
         };
 
-        storage = this->gridView_().comm().sum(storage);
+        storage = this->gridView_.comm().sum(storage);
     }
 
     /*!
@@ -263,17 +268,17 @@ private:
 
         // add the VTK output modules meaninful for the model
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
         if (enableDiffusion)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
     }
 };
 

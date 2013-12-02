@@ -49,7 +49,7 @@ namespace Ewoms {
  * equations, i.e.
  * \f[
  * \frac{\partial \left(\varrho\,\mathbf{v}\right)}
- {\partial t}
+ *      {\partial t}
  * + \boldsymbol{\nabla} p
  * - \nabla \cdot
  * \left(
@@ -72,8 +72,8 @@ namespace Ewoms {
  * included into the momentum conservation equations which allows to
  * capture turbolent flow regimes. This additional term is given by
  *  \f[
- * \varrho \left(\mathbf{v} \cdot \boldsymbol{\nabla} \right) \mathbf
- {v} \;.
+ * \varrho \left(\mathbf{v} \cdot \boldsymbol{\nabla} \right)
+ * \mathbf{v} \;.
  * \f]
  *
  * These equations are discretized by a fully-coupled vertex-centered
@@ -86,8 +86,10 @@ namespace Ewoms {
 template <class TypeTag>
 class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, BaseModel) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -99,6 +101,10 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
+    StokesModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Returns true iff a fluid phase is used by the model.
      *
@@ -179,7 +185,7 @@ public:
         typedef Dune::BlockVector<Dune::FieldVector<double, dimWorld> > VelocityField;
 
         // create the required scalar fields
-        unsigned numVertices = this->gridView_().size(dimWorld);
+        unsigned numVertices = this->gridView_.size(dimWorld);
         ScalarField &pressure = *writer.allocateManagedBuffer(numVertices);
         ScalarField &density = *writer.allocateManagedBuffer(numVertices);
         ScalarField &temperature = *writer.allocateManagedBuffer(numVertices);
@@ -192,7 +198,7 @@ public:
             moleFraction[compIdx] = writer.allocateManagedBuffer(numVertices);
 
         // iterate over grid
-        ElementContext elemCtx(this->problem_());
+        ElementContext elemCtx(this->problem_);
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();

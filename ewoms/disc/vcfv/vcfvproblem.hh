@@ -91,10 +91,14 @@ public:
      *                 used (normally the leaf grid view)
      */
     VcfvProblem(TimeManager &timeManager, const GridView &gridView)
-        : gridView_(gridView), bboxMin_(std::numeric_limits<double>::max()),
+        : gridView_(gridView),
+          bboxMin_(std::numeric_limits<double>::max()),
           bboxMax_(-std::numeric_limits<double>::max()),
-          elementMapper_(gridView), vertexMapper_(gridView),
-          timeManager_(&timeManager), newtonMethod_(asImp_())
+          elementMapper_(gridView),
+          vertexMapper_(gridView),
+          timeManager_(&timeManager),
+          model_(asImp_()),
+          newtonMethod_(asImp_())
     { init_(); }
 
     ~VcfvProblem()
@@ -128,7 +132,7 @@ public:
     void init()
     {
         // set the initial condition of the model
-        model().init(asImp_());
+        model().init();
 
         assembleTime_ = 0.0;
         solveTime_ = 0.0;
@@ -669,11 +673,8 @@ private:
     VertexMapper vertexMapper_;
 
     TimeManager *timeManager_;
-
     Model model_;
-
     NewtonMethod newtonMethod_;
-
     VtkMultiWriter *resultWriter_;
 };
 

@@ -55,14 +55,15 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
- *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[
+ *   \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *   \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;,
+ * \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
- *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -88,8 +89,9 @@ namespace Ewoms {
  * Since at any given spatial location, a phase is always either
  * present or not present, one of the strict equalities on the
  * right hand side is always true, i.e.
- * \f[ \forall \alpha: S_\alpha \left( \sum_\kappa x_\alpha^\kappa - 1 \right) =
- *0 \f]
+ * \f[
+ * \forall \alpha: S_\alpha \left( \sum_\kappa x_\alpha^\kappa - 1 \right) = 0
+ * \f]
  * always holds.
  *
  * These three equations constitute a non-linear complementarity
@@ -99,11 +101,9 @@ namespace Ewoms {
  *
  * Several non-linear complementarity functions have been suggested,
  * e.g. the Fischer-Burmeister function
- * \f[ \Phi(a,b) = a + b - \sqrt
- {a^2 + b^2} \;. \f]
+ * \f[ \Phi(a,b) = a + b - \sqrt{a^2 + b^2} \;. \f]
  * This model uses
- * \f[ \Phi(a,b) = \min \
- {a,  b \}\;, \f]
+ * \f[ \Phi(a,b) = \min \{a,  b \}\;, \f]
  * because of its piecewise linearity.
  *
  * These equations are then discretized using a fully-implicit vertex
@@ -149,6 +149,10 @@ class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef VcfvDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:
+    NcpModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -175,9 +179,9 @@ public:
     /*!
      * \copydoc VcfvModel::init
      */
-    void init(Problem &problem)
+    void init()
     {
-        ParentType::init(problem);
+        ParentType::init();
         minActivityCoeff_.resize(this->numDofs());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
 
@@ -192,9 +196,9 @@ public:
         storage = 0;
         EqVector tmp;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_().template end<0>();
+        ElementContext elemCtx(this->problem_);
+        ElementIterator elemIt = this->gridView_.template begin<0>();
+        const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
@@ -214,7 +218,7 @@ public:
             }
         };
 
-        storage = this->gridView_().comm().sum(storage);
+        storage = this->gridView_.comm().sum(storage);
     }
 
     /*!
@@ -395,17 +399,17 @@ private:
         ParentType::registerVtkModules_();
 
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
         if (enableDiffusion)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

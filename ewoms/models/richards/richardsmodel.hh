@@ -108,6 +108,10 @@ class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     enum { dimWorld = GridView::dimensionworld };
 
 public:
+    RichardsModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \copydoc VcfvModel::registerParameters
      */
@@ -123,9 +127,9 @@ public:
     /*!
      * \copydoc VcfvModel::init
      */
-    void init(Problem &problem)
+    void init()
     {
-        ParentType::init(problem);
+        ParentType::init();
 
         intrinsicPermeability_.resize(this->numDofs());
     }
@@ -236,9 +240,9 @@ private:
 
         // add the VTK output modules available on all model
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

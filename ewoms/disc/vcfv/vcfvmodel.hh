@@ -102,7 +102,9 @@ public:
     // this constructor required to be explicitly specified because
     // we've defined a constructor above which deletes all implicitly
     // generated constructors in C++.
-    VcfvModel()
+    VcfvModel(Problem &problem)
+        : problem_(problem)
+        , gridView_(problem.gridView())
     {}
 
     ~VcfvModel()
@@ -148,10 +150,8 @@ public:
      *
      * \copydetails Doxygen::problemParam
      */
-    void init(Problem &problem)
+    void init()
     {
-        problemPtr_ = &problem;
-
         updateBoundary_();
 
         int nDofs = asImp_().numDofs();
@@ -159,15 +159,15 @@ public:
             solution_[timeIdx].resize(nDofs);
         boxVolume_.resize(nDofs);
 
-        localJacobian_.init(problem_());
+        localJacobian_.init(problem_);
         jacAsm_ = new JacobianAssembler();
-        jacAsm_->init(problem_());
+        jacAsm_->init(problem_);
 
         asImp_().applyInitialSolution_();
 
         // resize the hint vectors
         if (enableHints_()) {
-            int nVerts = gridView_().size(dim);
+            int nVerts = gridView_.size(dim);
             for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
                 hints_[timeIdx].resize(nVerts);
                 hintsUsable_[timeIdx].resize(nVerts);
@@ -269,9 +269,9 @@ public:
 
         LocalBlockVector residual, storageTerm;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = gridView_().template begin<0>();
-        const ElementIterator elemEndIt = gridView_().template end<0>();
+        ElementContext elemCtx(problem_);
+        ElementIterator elemIt = gridView_.template begin<0>();
+        const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateAll(*elemIt);
             residual.resize(elemCtx.numScv());
@@ -312,9 +312,9 @@ public:
     {
         storage = 0;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = gridView_().template begin<0>();
-        const ElementIterator elemEndIt = gridView_().template end<0>();
+        ElementContext elemCtx(problem_);
+        ElementIterator elemIt = gridView_.template begin<0>();
+        const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
@@ -327,7 +327,7 @@ public:
                 storage += localResidual().storageTerm()[i];
         };
 
-        storage = gridView_().comm().sum(storage);
+        storage = gridView_.comm().sum(storage);
     }
 
     /*!
@@ -527,7 +527,7 @@ public:
      */
     template <class Restarter>
     void serialize(Restarter &res)
-    { res.template serializeEntities<dim>(asImp_(), this->gridView_()); }
+    { res.template serializeEntities<dim>(asImp_(), gridView_); }
 
     /*!
      * \brief Deserializes the state of the model.
@@ -539,7 +539,7 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-        res.template deserializeEntities<dim>(asImp_(), this->gridView_());
+        res.template deserializeEntities<dim>(asImp_(), gridView_);
         solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
     }
 
@@ -591,7 +591,7 @@ public:
      * \brief Returns the number of global degrees of freedoms (DOFs)
      */
     size_t numDofs() const
-    { return gridView_().size(dim); }
+    { return gridView_.size(dim); }
 
     /*!
      * \brief Mapper for the entities where degrees of freedoms are
@@ -600,19 +600,19 @@ public:
      * This usually means a mapper for vertices.
      */
     const DofMapper &dofMapper() const
-    { return problem_().vertexMapper(); }
+    { return problem_.vertexMapper(); }
 
     /*!
      * \brief Mapper for vertices to indices.
      */
     const VertexMapper &vertexMapper() const
-    { return problem_().vertexMapper(); }
+    { return problem_.vertexMapper(); }
 
     /*!
      * \brief Mapper for elements to indices.
      */
     const ElementMapper &elementMapper() const
-    { return problem_().elementMapper(); }
+    { return problem_.elementMapper(); }
 
     /*!
      * \brief Resets the Jacobian matrix assembler, so that the
@@ -622,7 +622,7 @@ public:
     {
         delete jacAsm_;
         jacAsm_ = new JacobianAssembler;
-        jacAsm_->init(problem_());
+        jacAsm_->init(problem_);
     }
 
     /*!
@@ -696,8 +696,8 @@ public:
         asImp_().globalResidual(globalResid, u);
 
         // create the required scalar fields
-        unsigned numVertices = this->gridView_().size(dim);
-        // unsigned numElements = this->gridView_().size(0);
+        unsigned numVertices = gridView_.size(dim);
+        // unsigned numElements = gridView_.size(0);
 
         // global defect of the two auxiliary equations
         ScalarField *def[numEq];
@@ -712,8 +712,8 @@ public:
             def[pvIdx] = writer.allocateManagedBuffer(numVertices);
         }
 
-        VertexIterator vIt = this->gridView_().template begin<dim>();
-        VertexIterator vEndIt = this->gridView_().template end<dim>();
+        VertexIterator vIt = gridView_.template begin<dim>();
+        VertexIterator vEndIt = gridView_.template end<dim>();
         for (; vIt != vEndIt; ++vIt) {
             int globalIdx = vertexMapper().map(*vIt);
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
@@ -776,7 +776,7 @@ public:
             (*modIt)->allocBuffers(writer);
 
         // iterate over grid
-        ElementContext elemCtx(this->problem_());
+        ElementContext elemCtx(problem_);
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
@@ -799,7 +799,7 @@ public:
      * \brief Reference to the grid view of the spatial domain.
      */
     const GridView &gridView() const
-    { return problem_().gridView(); }
+    { return problem_.gridView(); }
 
 protected:
     static bool enableHints_()
@@ -816,26 +816,9 @@ protected:
     {
         // add the VTK output modules available on all model
         auto *vtkMod
-            = new Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>(this->problem_());
+            = new Ewoms::VcfvVtkPrimaryVarsModule<TypeTag>(problem_);
         this->vtkOutputModules_.push_back(vtkMod);
     }
-
-    /*!
-     * \brief A reference to the problem on which the model is applied.
-     */
-    Problem &problem_()
-    { return *problemPtr_; }
-    /*!
-     * \copydoc problem_()
-     */
-    const Problem &problem_() const
-    { return *problemPtr_; }
-
-    /*!
-     * \brief Reference to the grid view of the spatial domain.
-     */
-    const GridView &gridView_() const
-    { return problem_().gridView(); }
 
     /*!
      * \brief Reference to the local residal object
@@ -853,8 +836,8 @@ protected:
         onBoundary_.resize(numDofs());
 
         // loop over all elements of the grid
-        ElementIterator elemIt = gridView_().template begin<0>();
-        const ElementIterator elemEndIt = gridView_().template end<0>();
+        ElementIterator elemIt = gridView_.template begin<0>();
+        const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             // do nothing if the element does not have boundary intersections
             if (!elemIt->hasBoundaryIntersections())
@@ -867,8 +850,8 @@ protected:
                 = ReferenceElements::general(geoType);
 
             // loop over all intersections of the element
-            IntersectionIterator isIt = gridView_().ibegin(elem);
-            const IntersectionIterator &endIt = gridView_().iend(elem);
+            IntersectionIterator isIt = gridView_.ibegin(elem);
+            const IntersectionIterator &endIt = gridView_.iend(elem);
             for (; isIt != endIt; ++isIt) {
                 // do nothing if the face is _not_ on the boundary
                 if (!isIt->boundary())
@@ -905,15 +888,15 @@ protected:
         uCur = Scalar(0.0);
         boxVolume_ = Scalar(0.0);
 
-        ElementContext elemCtx(this->problem_());
+        ElementContext elemCtx(problem_);
 
         // iterate through leaf grid and evaluate initial
         // condition at the center of each sub control volume
         //
         // TODO: the initial condition needs to be unique for
         // each vertex. we should think about the API...
-        ElementIterator it = gridView_().template begin<0>();
-        const ElementIterator &eendit = gridView_().template end<0>();
+        ElementIterator it = gridView_.template begin<0>();
+        const ElementIterator &eendit = gridView_.template end<0>();
         for (; it != eendit; ++it) {
             // deal with the current element
             elemCtx.updateFVElemGeom(*it);
@@ -925,7 +908,7 @@ protected:
 
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
-                problem_().initial(uCur[globalIdx], elemCtx, scvIdx,
+                problem_.initial(uCur[globalIdx], elemCtx, scvIdx,
                                    /*timeIdx=*/0);
                 Valgrind::CheckDefined(uCur[globalIdx]);
 
@@ -955,7 +938,7 @@ protected:
      * \brief Returns whether messages should be printed
      */
     bool verbose_() const
-    { return gridView_().comm().rank() == 0; }
+    { return gridView_.comm().rank() == 0; }
 
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
@@ -964,7 +947,8 @@ protected:
 
     // the problem we want to solve. defines the constitutive
     // relations, matxerial laws, etc.
-    Problem *problemPtr_;
+    Problem &problem_;
+    GridView gridView_;
 
     // calculates the local jacobian matrix for a given element
     LocalJacobian localJacobian_;

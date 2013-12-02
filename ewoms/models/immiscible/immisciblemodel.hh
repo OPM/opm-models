@@ -44,14 +44,17 @@ namespace Ewoms {
  * This model implements multi-phase flow of \f$M > 0\f$ immiscible
  * fluids \f$\alpha\f$. By default, the standard multi-phase Darcy
  * approach is used to determine the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
- *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[
+ * \mathbf{v}_\alpha =
+ * - \frac{k_{r\alpha}}{\mu_\alpha}
+ * \mathbf{K}\left(\mathbf{grad}\, p_\alpha -
+ *                 \varrho_{\alpha} \mathbf{g} \right) \;,
+ * \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
- *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -98,6 +101,10 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
+    ImmiscibleModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -117,9 +124,9 @@ public:
     /*!
      * \copydoc VcfvModel::init
      */
-    void init(Problem &problem)
+    void init()
     {
-        ParentType::init(problem);
+        ParentType::init();
 
         intrinsicPermeability_.resize(this->numDofs());
     }
@@ -190,9 +197,9 @@ public:
         storage = 0;
         EqVector tmp;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_().template end<0>();
+        ElementContext elemCtx(this->problem_);
+        ElementIterator elemIt = this->gridView_.template begin<0>();
+        const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
@@ -214,7 +221,7 @@ public:
             }
         };
 
-        storage = this->gridView_().comm().sum(storage);
+        storage = this->gridView_.comm().sum(storage);
     }
 
     /*!
@@ -292,13 +299,13 @@ protected:
 
         // add the VTK output modules available on all model
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
 
         if (enableEnergy)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
     }
 
 private:

@@ -34,7 +34,7 @@ namespace Ewoms {
 
 /*!
  * \ingroup BlackOilVcfvModel
- * \brief A fully-implicit black-oil flow model using the VCVF discretization.
+ * \brief A fully-implicit black-oil flow model using the VCFV discretization.
  *
  * The black-oil model is a three-phase, three-component model widely
  * used for oil reservoir simulation.  The phases are denoted by lower
@@ -88,8 +88,7 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
- *Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The primary variables used by this model are:
@@ -113,6 +112,10 @@ class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     enum { numComponents = FluidSystem::numComponents };
 
 public:
+    BlackOilModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -131,9 +134,9 @@ public:
     /*!
      * \copydoc VcfvModel::init
      */
-    void init(Problem &problem)
+    void init()
     {
-        ParentType::init(problem);
+        ParentType::init();
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
         intrinsicPermeability_.resize(this->numDofs());
@@ -250,13 +253,13 @@ protected:
 
         // add the VTK output modules available on all model
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

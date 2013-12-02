@@ -41,7 +41,7 @@ namespace Ewoms {
  * \ingroup PvsModel
  *
  * \brief A generic compositional multi-phase model using primary-variable
- switching.
+ *        switching.
  *
  * This model assumes a flow of \f$M \geq 1\f$ fluid phases
  * \f$\alpha\f$, each of which is assumed to be a mixture \f$N \geq
@@ -49,14 +49,15 @@ namespace Ewoms {
  *
  * By default, the standard multi-phase Darcy approach is used to determine
  * the velocity, i.e.
- * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
- \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
+ * \f[
+ *  \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
+ *  \left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;,
+ * \f]
  * although the actual approach which is used can be specified via the
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule,
- Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -71,13 +72,13 @@ namespace Ewoms {
  * also required. This model uses the primary variable switching
  * assumptions, which are given by:
  * \f[
-  0 \stackrel{!}{=}
-  f_\alpha = \left\{
-  \begin{array}{cl}
-    S_\alpha & \quad \text{if phase }\alpha\text{ is not present} \\
-    1 - \sum_\kappa x_\alpha^\kappa & \quad \text{else}
-  \end{array}
-  \right.
+ * 0 \stackrel{!}{=}
+ *  f_\alpha = \left\{
+ *  \begin{array}{cl}
+ *    S_\alpha & \quad \text{if phase }\alpha\text{ is not present} \    \
+ *    1 - \sum_\kappa x_\alpha^\kappa & \quad \text{else}
+ *  \end{array}
+ *  \right.
  * \f]
  *
  * To make this approach applicable, a pseudo primary variable
@@ -89,13 +90,11 @@ namespace Ewoms {
  * following rules are used for this update procedure:
  *
  * <ul>
-
  * <li>If phase \f$\alpha\f$ is present according to the pseudo
  *     primary variable, but \f$S_\alpha < 0\f$ after the Newton
  *     update, consider the phase \f$\alpha\f$ disappeared for the
  *     next iteration and use the set of primary variables which
  *     correspond to the new phase presence.</li>
-
  * <li>If phase \f$\alpha\f$ is not present according to the pseudo
  *     primary variable, but the sum of the component mole fractions
  *     in the phase is larger than 1, i.e. \f$\sum_\kappa
@@ -103,7 +102,6 @@ namespace Ewoms {
  *     in the the next iteration and update the set of primary
  *     variables to make it consistent with the new phase
  *     presence.</li>
- *
  * <li>In all other cases don't modify the phase presence for phase
  *     \f$\alpha\f$.</li>
  *
@@ -167,6 +165,10 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
+    PvsModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -195,12 +197,12 @@ public:
     /*!
      * \copydoc VcfvModel::init
      */
-    void init(Problem &problem)
+    void init()
     {
         verbosity_ = EWOMS_GET_PARAM(TypeTag, int, PvsVerbosity);
         numSwitched_ = 0;
 
-        ParentType::init(problem);
+        ParentType::init();
 
         intrinsicPermeability_.resize(this->numDofs());
     }
@@ -264,9 +266,9 @@ public:
         storage = 0;
         EqVector tmp;
 
-        ElementContext elemCtx(this->problem_());
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_().template end<0>();
+        ElementContext elemCtx(this->problem_);
+        ElementIterator elemIt = this->gridView_.template begin<0>();
+        const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
@@ -286,7 +288,7 @@ public:
             }
         };
 
-        storage = this->gridView_().comm().sum(storage);
+        storage = this->gridView_.comm().sum(storage);
     }
 
     /*!
@@ -447,10 +449,10 @@ public:
         numSwitched_ = 0;
 
         std::vector<bool> visited(this->numDofs(), false);
-        ElementContext elemCtx(this->problem_());
+        ElementContext elemCtx(this->problem_);
 
-        ElementIterator elemIt = this->gridView_().template begin<0>();
-        ElementIterator elemEndIt = this->gridView_().template end<0>();
+        ElementIterator elemIt = this->gridView_.template begin<0>();
+        ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             bool fvElemGeomUpdated = false;
             int numScv = elemIt->template count<dim>();
@@ -495,10 +497,10 @@ public:
         // make sure that if there was a variable switch in an
         // other partition we will also set the switch flag
         // for our partition.
-        numSwitched_ = this->gridView_().comm().sum(numSwitched_);
+        numSwitched_ = this->gridView_.comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
-            this->problem_().newtonMethod().endIterMsg()
+            this->problem_.newtonMethod().endIterMsg()
                 << ", num switched=" << numSwitched_;
     }
 
@@ -544,19 +546,19 @@ private:
 
         // add the VTK output modules meaninful for the model
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkPhasePresenceModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkPhasePresenceModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
         if (enableDiffusion)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
             this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_()));
+                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

@@ -52,8 +52,13 @@ template <class TypeTag>
 class DiscreteFractureModel : public ImmiscibleModel<TypeTag>
 {
     typedef ImmiscibleModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
 public:
+    DiscreteFractureModel(Problem &problem)
+        : ParentType(problem)
+    {}
+
     /*!
      * \brief Register all run-time parameters for the immiscible VCVF
      * discretization.
@@ -80,7 +85,7 @@ protected:
         ParentType::registerVtkModules_();
 
         this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_()));
+            new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_));
     }
 };
 } // namespace Ewoms
