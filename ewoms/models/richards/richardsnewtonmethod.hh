@@ -28,7 +28,6 @@
 
 #include "richardsproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvnewtonmethod.hh>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include <dune/common/fvector.hh>
@@ -41,9 +40,9 @@ namespace Ewoms {
  * \brief A Richards model specific Newton method.
  */
 template <class TypeTag>
-class RichardsNewtonMethod : public VcfvNewtonMethod<TypeTag>
+class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
-    typedef VcfvNewtonMethod<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -70,12 +69,15 @@ public:
     RichardsNewtonMethod(Problem &problem) : ParentType(problem)
     {}
 
+    // HACK necessary for GCC 4.4
+/*
 protected:
     friend class NewtonMethod<TypeTag>;
-    friend class VcfvNewtonMethod<TypeTag>;
+    friend ParentType;
+*/
 
     /*!
-     * \copydoc VcfvNewtonMethod::update_
+     * \copydoc FvBaseNewtonMethod::update_
      */
     void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
@@ -102,25 +104,22 @@ protected:
                     // probably have not changed much anyways
                     continue;
 
-                elemCtx.updateFVElemGeom(*elemIt);
+                elemCtx.updateStencil(*elemIt);
 
-                for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-                    int globI = problem.vertexMapper().map(*elemIt, scvIdx, dim);
-                    if (assembler.vertexColor(globI) == JacobianAssembler::Green)
-                        // don't limit at green vertices, since they
+                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+                    int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                    if (assembler.dofColor(globI) == JacobianAssembler::Green)
+                        // don't limit at green DOFs, since they
                         // probably have not changed much anyways
                         continue;
 
                     // calculate the old wetting phase saturation
-                    const MaterialLawParams &matParams
-                        = problem.materialLawParams(elemCtx, scvIdx,
-                                                    /*timeIdx=*/0);
+                    const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
 
                     Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
                     // set the temperatures
-                    Scalar T = elemCtx.problem().temperature(elemCtx, scvIdx,
-                                                             /*timeIdx=*/0);
+                    Scalar T = elemCtx.problem().temperature(elemCtx, dofIdx, /*timeIdx=*/0);
                     fs.setTemperature(T);
 
                     /////////
@@ -138,10 +137,8 @@ protected:
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
                     Scalar pWOld = uLastIter[globI][pressureWIdx];
-                    Scalar pNOld
-                        = std::max(problem.referencePressure(elemCtx, scvIdx,
-                                                             /*timeIdx=*/0),
-                                   pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                    Scalar pNOld = std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
+                                            pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
                     /////////
                     // find the saturations of the previous iteration

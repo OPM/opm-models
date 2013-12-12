@@ -6,7 +6,6 @@ CXX_WARNING_OPTS=" \
     -Wno-cast-align"
 
 CXX_OPTS=" \
-    -fno-strict-aliasing \
     -fstrict-overflow \
     -ffast-math \
     -fno-finite-math-only \

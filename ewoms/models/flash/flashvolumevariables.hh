@@ -29,9 +29,8 @@
 #include "flashproperties.hh"
 #include "flashindices.hh"
 
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fvector.hh>
@@ -41,21 +40,19 @@ namespace Ewoms {
 
 /*!
  * \ingroup FlashModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are constant within a finite
  *        volume for the flash-based compositional multi-phase model.
  */
 template <class TypeTag>
 class FlashVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public VcfvDiffusionVolumeVariables<TypeTag,
-                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
-      public VcfvEnergyVolumeVariables<TypeTag,
-                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
-      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -80,9 +77,8 @@ class FlashVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
-    DiffusionVolumeVariables;
-    typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -90,15 +86,18 @@ public:
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
 
     /*!
-     * \copydoc VcfvVolumeVariables::update
+     * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx,
+                int dofIdx,
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
-                                                   timeIdx);
+        ParentType::update(elemCtx,
+                           dofIdx,
+                           timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
         Scalar flashTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, FlashTolerance);
         if (flashTolerance <= 0) {
@@ -117,7 +116,7 @@ public:
             cTotal[compIdx] = priVars[cTot0Idx + compIdx];
 
         typename FluidSystem::ParameterCache paramCache;
-        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
+        const auto *hint = elemCtx.hint(dofIdx, timeIdx);
         if (hint) {
             // use the same fluid state as the one of the hint, but
             // make sure that we don't overwrite the temperature
@@ -130,11 +129,9 @@ public:
             FlashSolver::guessInitial(fluidState_, paramCache, cTotal);
 
         // compute the phase compositions, densities and pressures
-        const MaterialLawParams &materialParams
-            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache,
-                                                 materialParams, cTotal,
-                                                 flashTolerance);
+        const MaterialLawParams &materialParams =
+            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -153,22 +150,20 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
         // intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
-                                       timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
-                                          scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
     }
 
     /*!

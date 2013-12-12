@@ -20,50 +20,37 @@
 */
 /*!
  * \file
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
  * \brief Declares the properties required by the black oil model.
  */
 #ifndef EWOMS_BLACK_OIL_PROPERTIES_HH
 #define EWOMS_BLACK_OIL_PROPERTIES_HH
 
-#include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <ewoms/vtk/vcfvvtkmultiphasemodule.hh>
-#include <ewoms/vtk/vcfvvtkcompositionmodule.hh>
-#include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
-#include <ewoms/vtk/vcfvvtkblackoilmodule.hh>
+#include <ewoms/models/common/multiphasebasemodel.hh>
+
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkblackoilmodule.hh>
 
 namespace Opm {
 namespace Properties {
 //! The type tag for the black-oil problems
-NEW_TYPE_TAG(VcfvBlackOil, INHERITS_FROM(VcfvModel, VtkBlackOil, VtkMultiPhase,
-                                         VtkComposition, VtkTemperature));
+NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel, VtkBlackOil, VtkComposition));
 
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
-
-NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents); //!< Number of chemical species in the system
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the
-// problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
-// method should be used
-NEW_PROP_TAG(Indices);            //!< Enumerations used by the model
+NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
+NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
+NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
+NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding method should be used
+NEW_PROP_TAG(Indices); //!< Enumerations used by the model
 NEW_PROP_TAG(BlackOilFluidState); //!< The fluid state used by the model
-NEW_PROP_TAG(MaterialLaw);        //!< The material law which ought to be used
-                                  //(extracted from the spatial parameters)
-NEW_PROP_TAG(MaterialLawParams);  //!< The context material law (extracted from
-// the spatial parameters)
-NEW_PROP_TAG(HeatConductionLaw);       //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law
-// for heat conduction
-NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about
-// the phases
-NEW_PROP_TAG(FluidState);     //!<The phases state
+NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
+NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
+NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
+NEW_PROP_TAG(FluidState); //!<The phases state
 NEW_PROP_TAG(VelocityModule); //!< Specifies the relation used for velocity
-NEW_PROP_TAG(FluidState);     //!<The type of the fluid state
-} // namespace Properties
-} // namespace Opm
+NEW_PROP_TAG(FluidState); //!<The type of the fluid state
+}} // namespace Properties, Opm
 
 #endif

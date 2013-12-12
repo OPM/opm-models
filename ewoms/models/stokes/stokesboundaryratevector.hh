@@ -58,7 +58,7 @@ class StokesBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
@@ -96,21 +96,19 @@ public:
     void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
                      const DimVector &velocity, const FluidState &fluidState)
     {
-        const auto &fvElemGeom = context.fvElemGeom(timeIdx);
-        const auto &scvf = fvElemGeom.boundaryFace[bfIdx];
+        const auto &stencil = context.stencil(timeIdx);
+        const auto &scvf = stencil.boundaryFace(bfIdx);
 
-        int insideScvIdx = context.insideScvIndex(bfIdx, timeIdx);
-        // const auto &insideScv = fvElemGeom.subContVol[insideScvIdx];
+        int insideScvIdx = context.interiorScvIndex(bfIdx, timeIdx);
+        //const auto &insideScv = stencil.subControlVolume(insideScvIdx);
         const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
 
         // the outer unit normal
-        auto normal = scvf.normal;
-        normal /= normal.two_norm();
+        const auto &normal = scvf.normal();
 
-        // distance between the center of the SCV and center of the boundary
-        // face
-        DimVector distVec = context.element().geometry().global(
-            fvElemGeom.subContVol[insideScvIdx].localGeometry->center());
+        // distance between the center of the SCV and center of the boundary face
+        DimVector distVec
+            = stencil.subControlVolume(insideScvIdx).geometry().center();
         const auto &scvPos = context.element().geometry().corner(insideScvIdx);
         distVec.axpy(-1, scvPos);
         Scalar dist = std::abs(distVec * normal);
@@ -126,7 +124,7 @@ public:
         }
 
         // specify the mass fluxes over the boundary
-        Scalar volumeFlux = velocity * normal;
+        Scalar volumeFlux = (velocity*normal);
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);

@@ -29,8 +29,7 @@
 
 #include "stokesproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 #include <dune/geometry/quadraturerules.hh>
 
@@ -41,17 +40,17 @@
 namespace Ewoms {
 
 /*!
- * \ingroup VCFVStokesModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup StokesModel
+ * \ingroup VolumeVariables
  * \brief Contains the quantities which are are constant within a
- *        finite volume in the Stokes VCVF discretization.
+ *        finite volume in the Stokes model.
  */
 template <class TypeTag>
 class StokesVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public VcfvEnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -70,20 +69,19 @@ class StokesVolumeVariables
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
-    typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     /*!
-     * \copydoc VcfvVolumeVariables::update
+     * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
-                                                   timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
         Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
 
@@ -114,8 +112,7 @@ public:
                                                         phaseIdx));
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
-                                       timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // the effective velocity of the control volume
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
@@ -127,27 +124,27 @@ public:
     }
 
     /*!
-     * \copydoc VcfvVolumeVariables::updateScvGradients
+     * \copydoc VolumeVariables::updateScvGradients
      */
-    void updateScvGradients(const ElementContext &elemCtx, int scvIdx,
-                            int timeIdx)
+    void updateScvGradients(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
         // calculate the pressure gradient at the SCV using finite
         // element gradients
         pressureGrad_ = 0.0;
-        for (int i = 0; i < elemCtx.numScv(); ++i) {
-            const auto &feGrad
-                = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx].gradCenter[i];
+        for (int i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
+            const auto &feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
+            Valgrind::CheckDefined(feGrad);
             DimVector tmp(feGrad);
             tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
+            Valgrind::CheckDefined(tmp);
 
             pressureGrad_ += tmp;
         }
 
         // integrate the velocity over the sub-control volume
         // const auto &elemGeom = elemCtx.element().geometry();
-        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
-        const auto &scvLocalGeom = *fvElemGeom.subContVol[scvIdx].localGeometry;
+        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto &scvLocalGeom = stencil.subControlVolume(dofIdx).localGeometry();
 
         Dune::GeometryType geomType = scvLocalGeom.type();
         static const int quadratureOrder = 2;
@@ -172,7 +169,7 @@ public:
 
         // since we want the average velocity, we have to divide the
         // integrated value by the volume of the SCV
-        // velocity_ /= fvElemGeom.subContVol[scvIdx].volume;
+        //velocity_ /= stencil.subControlVolume(dofIdx).volume;
     }
 
     /*!
@@ -219,11 +216,14 @@ public:
     { return gravity_; }
 
 private:
-    DimVector velocityAtPos_(const ElementContext elemCtx, int timeIdx,
+    DimVector velocityAtPos_(const ElementContext elemCtx,
+                             int timeIdx,
                              const LocalPosition &localPos) const
     {
-        const auto &localFiniteElement
-            = elemCtx.fvElemGeom(timeIdx).localFiniteElement();
+        auto &feCache =
+            elemCtx.gradientCalculator().localFiniteElementCache();
+        const auto &localFiniteElement =
+            feCache.get(elemCtx.element().type());
 
         typedef Dune::FieldVector<Scalar, 1> ShapeValue;
         std::vector<ShapeValue> shapeValue;
@@ -231,9 +231,8 @@ private:
         localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
 
         DimVector result(0.0);
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); scvIdx++) {
-            result.axpy(shapeValue[scvIdx][0],
-                        elemCtx.volVars(scvIdx, timeIdx).velocityCenter());
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++) {
+            result.axpy(shapeValue[dofIdx][0], elemCtx.volVars(dofIdx, timeIdx).velocityCenter());
         }
 
         return result;

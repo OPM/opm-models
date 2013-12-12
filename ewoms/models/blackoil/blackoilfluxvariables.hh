@@ -28,13 +28,11 @@
 
 #include "blackoilproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
-
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
- * \ingroup VCFVFluxVariables
+ * \ingroup BlackOilModel
+ * \ingroup FluxVariables
  *
  * \brief This template class contains the data which is required to
  *        calculate the fluxes of the fluid phases over a face of a
@@ -44,9 +42,9 @@ namespace Ewoms {
  * the intergration point, etc.
  */
 template <class TypeTag>
-class BlackOilFluxVariables : public VcfvMultiPhaseFluxVariables<TypeTag>
-{
-};
+class BlackOilFluxVariables
+    : public MultiPhaseBaseFluxVariables<TypeTag>
+{};
 
 } // namespace Ewoms
 

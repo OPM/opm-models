@@ -28,7 +28,7 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/Valgrind.hpp>
 
 namespace Ewoms {
@@ -38,7 +38,7 @@ namespace Ewoms {
  *
  * \brief Implements a rate vector on the boundary for the fully
  *        implicit compositional multi-phase primary variable
- *        switching compositional VCVF discretization.
+ *        switching compositional model.
  */
 template <class TypeTag>
 class PvsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
@@ -55,7 +55,7 @@ class PvsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsBoundaryRateVector() : ParentType()

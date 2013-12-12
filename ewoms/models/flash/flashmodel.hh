@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2010-2013 by Andreas Lauser
+  Copyright (C) 2011-2013 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -28,15 +28,13 @@
 
 #include "flashproperties.hh"
 
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <sstream>
 #include <string>
 
 namespace Ewoms {
-
 /*!
  * \ingroup FlashModel
  *
@@ -58,7 +56,7 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -96,9 +94,9 @@ namespace Ewoms {
  * - The absolute temperature $T$ in Kelvins if the energy equation enabled.
  */
 template <class TypeTag>
-class FlashModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class FlashModel: public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -115,7 +113,7 @@ class FlashModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     FlashModel(Problem &problem)
@@ -123,23 +121,20 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the immiscible model.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkCompositionModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
+        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VcfvVtkDiffusionModule<TypeTag>::registerParameters();
+            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
+            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, FlashTolerance,
                              "The maximum tolerance for the flash solver to "
@@ -147,13 +142,13 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     std::string name() const
     { return "flash"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -173,7 +168,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -205,20 +200,24 @@ public:
         ElementIterator elemIt = this->gridView_.template begin<0>();
         const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*timeIdx=*/0);
+            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateVolVars(/*timeIdx=*/0);
 
-            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 if (elemIt->partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
 
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
-                                                      /*timeIdx=*/0, phaseIdx);
-                tmp *= fvElemGeom.subContVol[scvIdx].volume
-                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp,
+                                                      elemCtx,
+                                                      dofIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *=
+                    stencil.subControlVolume(dofIdx).volume()
+                    * elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -227,12 +226,11 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        Scalar tmp
-            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         if (tmp > 0)
             return tmp;
 
@@ -247,11 +245,11 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqWeight
+     * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
-        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
             return tmp;
 
@@ -261,26 +259,16 @@ public:
         return FluidSystem::molarMass(compIdx);
     }
 
-private:
-    friend class VcfvModel<TypeTag>;
-
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 };
 

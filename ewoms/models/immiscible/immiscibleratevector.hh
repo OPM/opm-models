@@ -58,7 +58,7 @@ class ImmiscibleRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!

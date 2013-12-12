@@ -154,12 +154,14 @@ public:
     Scalar absResidTolerance() const
     { return absResidTolerance_; }
 
-    /*!
-     * \brief Returns the reduction of the weighted maximum of the
-     *        residual compared to the initial solution.
-     */
-    Scalar residAccuracy() const
-    { return residError_ / initialResidError_; }
+  /*!
+   * \brief Returns the reduction of the weighted maximum of the
+   *        residual compared to the initial solution.
+   */
+  Scalar residAccuracy() const
+  {
+    return residError_;
+  }
 
     /*!
      * \brief Sets the fix-point tolerance.
@@ -209,17 +211,17 @@ public:
         updateErrors_(curSol, curResid);
     }
 
-    /*!
-     * \copydoc ConvergenceCriterion::converged()
-     */
-    bool converged() const
-    {
-        // we're converged if the solution is better than the tolerance
-        // fix-point and residual tolerance.
-        return fixPointAccuracy() < fixPointTolerance()
-               && (residAccuracy() <= residReductionTolerance()
-                   || residError_ <= absResidTolerance_);
-    }
+  /*!
+   * \copydoc ConvergenceCriterion::converged()
+   */
+  bool converged() const
+  {
+    // we're converged if the solution is better than the tolerance
+    // fix-point and residual tolerance.
+    return fixPointAccuracy() < fixPointTolerance() &&
+           ( residAccuracy() <= initialResidError_*residReductionTolerance() ||
+             residError_ <= absResidTolerance_);
+  }
 
     /*!
      * \copydoc ConvergenceCriterion::printInitial()

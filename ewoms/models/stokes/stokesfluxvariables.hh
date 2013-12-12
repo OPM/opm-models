@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2009-2013 by Andreas Lauser
+  Copyright (C) 2011-2013 by Andreas Lauser
   Copyright (C) 2012 by Klaus Mosthaf
 
   This file is part of the Open Porous Media project (OPM).
@@ -29,7 +29,8 @@
 
 #include "stokesproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/Valgrind.hpp>
 
@@ -38,19 +39,19 @@
 namespace Ewoms {
 
 /*!
- * \ingroup VCFVStokesModel
- * \ingroup VCFVFluxVariables
+ * \ingroup StokesModel
+ * \ingroup FluxVariables
  *
  * \brief Contains the data which is required to calculate the mass
  *        and momentum fluxes over the face of a sub-control volume
- *        for the Stokes VCVF discretization.
+ *        for the Stokes model.
  *
  * This means pressure gradients, phase densities, viscosities, etc.
  * at the integration point of the sub-control-volume face
  */
 template <class TypeTag>
 class StokesFluxVariables
-    : public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -62,7 +63,7 @@ class StokesFluxVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef VcfvEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!
@@ -84,72 +85,68 @@ public:
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx,
                 bool isBoundaryFace = false)
     {
-        const auto &fvGeom = elemCtx.fvElemGeom(timeIdx);
-        const auto &scvf = isBoundaryFace ? fvGeom.boundaryFace[scvfIdx]
-                                          : fvGeom.subContVolFace[scvfIdx];
+        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto &scvf =
+            isBoundaryFace?
+            stencil.boundaryFace(scvfIdx):
+            stencil.interiorFace(scvfIdx);
 
-        insideIdx_ = scvf.i;
-        outsideIdx_ = scvf.j;
+        insideIdx_ = scvf.interiorIndex();
+        outsideIdx_ = scvf.exteriorIndex();
 
         onBoundary_ = isBoundaryFace;
-        normal_ = scvf.normal;
+        normal_ = scvf.normal();
         Valgrind::CheckDefined(normal_);
 
         // calculate gradients and secondary variables at IPs
-        DimVector tmp(0.0);
-        density_ = Scalar(0);
-        molarDensity_ = Scalar(0);
-        viscosity_ = Scalar(0);
-        pressure_ = Scalar(0);
-        volumeFlux_ = Scalar(0);
-        velocity_ = Scalar(0);
-        pressureGrad_ = Scalar(0);
+        const auto& gradCalc = elemCtx.gradientCalculator();
+        PressureCallback<TypeTag> pressureCallback(elemCtx);
+        DensityCallback<TypeTag> densityCallback(elemCtx);
+        MolarDensityCallback<TypeTag> molarDensityCallback(elemCtx);
+        ViscosityCallback<TypeTag> viscosityCallback(elemCtx);
+        VelocityCallback<TypeTag> velocityCallback(elemCtx);
+        VelocityComponentCallback<TypeTag> velocityComponentCallback(elemCtx);
 
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            velocityGrad_[dimIdx] = 0.0;
+        pressureCallback.setPhaseIndex(0);
+        densityCallback.setPhaseIndex(0);
+        molarDensityCallback.setPhaseIndex(0);
+        viscosityCallback.setPhaseIndex(0);
 
-        for (int idx = 0; idx < elemCtx.numScv(); idx++) {
-            const auto &volVars = elemCtx.volVars(idx, timeIdx);
-            const auto &fluidState = volVars.fluidState();
+        pressure_ = gradCalc.calculateValue(elemCtx,
+                                            scvfIdx,
+                                            pressureCallback);
+        gradCalc.calculateGradient(pressureGrad_,
+                                   elemCtx,
+                                   scvfIdx,
+                                   pressureCallback);
+        density_ = gradCalc.calculateValue(elemCtx,
+                                           scvfIdx,
+                                           densityCallback);
+        molarDensity_ = gradCalc.calculateValue(elemCtx,
+                                                scvfIdx,
+                                                molarDensityCallback);
+        viscosity_ = gradCalc.calculateValue(elemCtx,
+                                             scvfIdx,
+                                             viscosityCallback);
+        velocity_ =
+            gradCalc.template calculateValue<VelocityCallback<TypeTag>, DimVector>(elemCtx,
+                                                                                   scvfIdx,
+                                                                                   velocityCallback);
 
-            // phase density and viscosity at IP
-            density_ += fluidState.density(phaseIdx) * scvf.shapeValue[idx];
-            molarDensity_ += fluidState.molarDensity(phaseIdx)
-                             * scvf.shapeValue[idx];
-            viscosity_ += fluidState.viscosity(phaseIdx) * scvf.shapeValue[idx];
-            pressure_ += fluidState.pressure(phaseIdx) * scvf.shapeValue[idx];
-
-            // velocity at the IP (fluxes)
-            DimVector velocityTimesShapeValue = volVars.velocityCenter();
-            velocityTimesShapeValue *= scvf.shapeValue[idx];
-            Valgrind::CheckDefined(scvf.shapeValue[idx]);
-            velocity_ += velocityTimesShapeValue;
-
-            // the pressure gradient
-            tmp = scvf.grad[idx];
-            tmp *= fluidState.pressure(phaseIdx);
-            pressureGrad_ += tmp;
-            // take gravity into account
-            tmp = elemCtx.problem().gravity(elemCtx, idx, timeIdx);
-            tmp *= density_;
-            // pressure gradient including influence of gravity
-            pressureGrad_ -= tmp;
-
-            // the velocity gradients
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
-                tmp = scvf.grad[idx];
-                tmp *= volVars.velocityCenter()[dimIdx];
-                velocityGrad_[dimIdx] += tmp;
-            }
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            velocityComponentCallback.setDimIndex(dimIdx);
+            gradCalc.calculateGradient(velocityGrad_[dimIdx],
+                                       elemCtx,
+                                       scvfIdx,
+                                       velocityComponentCallback);
         }
-        Valgrind::CheckDefined(velocity_);
 
-        volumeFlux_ = velocity_ * normal_;
+        volumeFlux_ = (velocity_ * normal_);
         Valgrind::CheckDefined(volumeFlux_);
 
-        // set the upstream and downstream vertices
-        upstreamIdx_ = scvf.i;
-        downstreamIdx_ = scvf.j;
+        // set the upstream and downstream DOFs
+        upstreamIdx_ = scvf.interiorIndex();
+        downstreamIdx_ = scvf.exteriorIndex();
         if (volumeFlux_ < 0)
             std::swap(upstreamIdx_, downstreamIdx_);
 
@@ -163,7 +160,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary
+     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
@@ -268,14 +265,14 @@ public:
      * \brief Return the local index of the sub-control volume which is located
      * in negative normal direction.
      */
-    int insideIndex() const
+    int interiorIndex() const
     { return insideIdx_; }
 
     /*!
      * \brief Return the local index of the sub-control volume which is located
      * in negative normal direction.
      */
-    int outsideIndex() const
+    int exteriorIndex() const
     { return outsideIdx_; }
 
     /*!
@@ -313,9 +310,9 @@ private:
     DimVector pressureGrad_;
     DimVector velocityGrad_[dimWorld];
 
-    // local index of the upwind vertex
+    // local index of the upstream dof
     int upstreamIdx_;
-    // local index of the downwind vertex
+    // local index of the downstream dof
     int downstreamIdx_;
 
     int insideIdx_;

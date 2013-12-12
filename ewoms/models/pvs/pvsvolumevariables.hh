@@ -28,9 +28,8 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
 
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>
@@ -44,22 +43,20 @@
 namespace Ewoms {
 /*!
  * \ingroup PvsModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the compositional multi-phase primary
- *        variable switching VCVF discretization.
+ *        variable switching model.
  */
 template <class TypeTag>
 class PvsVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public VcfvDiffusionVolumeVariables<TypeTag,
-                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
-      public VcfvEnergyVolumeVariables<TypeTag,
-                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
-      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -87,9 +84,8 @@ class PvsVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
-    DiffusionVolumeVariables;
-    typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -98,13 +94,16 @@ public:
     /*!
      * \copydoc ImmiscibleVolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx,
+                int dofIdx,
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
-                                                   timeIdx);
+        ParentType::update(elemCtx,
+                           dofIdx,
+                           timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
 
         /////////////
@@ -126,8 +125,8 @@ public:
         /////////////
 
         // calculate capillary pressure
-        const MaterialLawParams &materialParams
-            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const MaterialLawParams &materialParams =
+            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
@@ -226,22 +225,20 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
         // intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
-                                       timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
-                                          scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
     }
 
     /*!

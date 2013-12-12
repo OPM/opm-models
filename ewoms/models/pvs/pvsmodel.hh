@@ -28,9 +28,8 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <iostream>
 #include <sstream>
@@ -59,7 +58,7 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -133,15 +132,11 @@ namespace Ewoms {
  *     variables.</li>
  *
  * </ul>
- *
- * This model is then discretized using a fully-coupled vertex
- * centered finite volume scheme as spatial and the implicit Euler
- * method as temporal discretization.
  */
 template <class TypeTag>
-class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class PvsModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -162,9 +157,10 @@ class PvsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename GridView::template Codim<dim>::Entity Vertex;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsModel(Problem &problem)
@@ -172,24 +168,21 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the PVS compositional model.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkPhasePresenceModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkCompositionModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
+        Ewoms::VtkPhasePresenceModule<TypeTag>::registerParameters();
+        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VcfvVtkDiffusionModule<TypeTag>::registerParameters();
+            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
+            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, int, PvsVerbosity,
                              "The verbosity level of the primary variable "
@@ -197,7 +190,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::init
+     * \copydoc FvBaseDiscretization::init
      */
     void init()
     {
@@ -206,17 +199,17 @@ public:
 
         ParentType::init();
 
-        intrinsicPermeability_.resize(this->numDofs());
+        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     std::string name() const
     { return "pvs"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -240,7 +233,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -275,17 +268,21 @@ public:
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
 
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*timeIdx=*/0);
+            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateVolVars(/*timeIdx=*/0);
 
-            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
-                                                      /*timeIdx=*/0, phaseIdx);
-                tmp *= fvElemGeom.subContVol[scvIdx].volume
-                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp,
+                                                      elemCtx,
+                                                      dofIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *=
+                    stencil.subControlVolume(dofIdx).volume()
+                    * elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -294,7 +291,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateFailed
+     * \copydoc FvBaseDiscretization::updateFailed
      */
     void updateFailed()
     {
@@ -303,7 +300,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateBegin
+     * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
     {
@@ -314,26 +311,24 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updatePVWeights
+     * \copydoc FvBaseDiscretization::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            const auto &K
-                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
 
-            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        Scalar tmp
-            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -341,11 +336,10 @@ public:
         if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
-            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            Scalar KRef = intrinsicPermeability_[globalDofIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r
-                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
+            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
 
             return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
@@ -354,8 +348,7 @@ public:
                                                     + numPhases - 1) {
             int phaseIdx = pvIdx - Indices::switch0Idx;
 
-            if (!this->solution(/*timeIdx=*/0)[globalVertexIdx]
-                     .phaseIsPresent(phaseIdx))
+            if (!this->solution(/*timeIdx=*/0)[globalDofIdx].phaseIsPresent(phaseIdx))
                 // for saturations, the weight is always 1
                 return 1;
 
@@ -370,11 +363,11 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqWeight
+     * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
-        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
             // energy related equation
             return tmp;
@@ -387,7 +380,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::advanceTimeLevel
+     * \copydoc FvBaseDiscretization::advanceTimeLevel
      */
     void advanceTimeLevel()
     {
@@ -403,40 +396,40 @@ public:
     { return numSwitched_ > 0; }
 
     /*!
-     * \copydoc VcfvModel::serializeEntity
+     * \copydoc FvBaseDiscretization::serializeEntity
      */
-    void serializeEntity(std::ostream &outstream, const Vertex &vert)
+    template <class DofEntity>
+    void serializeEntity(std::ostream &outstream, const DofEntity &dofEntity)
     {
         // write primary variables
-        ParentType::serializeEntity(outstream, vert);
+        ParentType::serializeEntity(outstream, dofEntity);
 
-        int vertIdx = this->dofMapper().map(vert);
+        int dofIdx = this->dofMapper().map(dofEntity);
         if (!outstream.good())
-            OPM_THROW(std::runtime_error, "Could not serialize vertex "
-                                          << vertIdx);
+            OPM_THROW(std::runtime_error, "Could not serialize DOF " << dofIdx);
 
-        outstream << this->solution(/*timeIdx=*/0)[vertIdx].phasePresence()
-                  << " ";
+        outstream << this->solution(/*timeIdx=*/0)[dofIdx].phasePresence() << " ";
     }
 
     /*!
-     * \copydoc VcfvModel::deserializeEntity
+     * \copydoc FvBaseDiscretization::deserializeEntity
      */
-    void deserializeEntity(std::istream &instream, const Vertex &vertex)
+    template <class DofEntity>
+    void deserializeEntity(std::istream &instream, const DofEntity &dofEntity)
     {
         // read primary variables
-        ParentType::deserializeEntity(instream, vertex);
+        ParentType::deserializeEntity(instream, dofEntity);
 
         // read phase presence
-        int vertIdx = this->dofMapper().map(vertex);
+        int dofIdx = this->dofMapper().map(dofEntity);
         if (!instream.good())
-            OPM_THROW(std::runtime_error, "Could not deserialize vertex "
-                                          << vertIdx);
+            OPM_THROW(std::runtime_error,
+                       "Could not deserialize DOF " << dofIdx);
 
         int tmp;
         instream >> tmp;
-        this->solution(/*timeIdx=*/0)[vertIdx].setPhasePresence(tmp);
-        this->solution(/*timeIdx=*/1)[vertIdx].setPhasePresence(tmp);
+        this->solution(/*timeIdx=*/0)[dofIdx].setPhasePresence(tmp);
+        this->solution(/*timeIdx=*/1)[dofIdx].setPhasePresence(tmp);
     }
 
     /*!
@@ -450,33 +443,28 @@ public:
     {
         numSwitched_ = 0;
 
-        std::vector<bool> visited(this->numDofs(), false);
+        std::vector<bool> visited(this->numDof(), false);
         ElementContext elemCtx(this->problem_);
 
         ElementIterator elemIt = this->gridView_.template begin<0>();
         ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            bool fvElemGeomUpdated = false;
-            int numScv = elemIt->template count<dim>();
-            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
-                int globalIdx = this->vertexMapper().map(*elemIt, scvIdx, dim);
+            elemCtx.updateStencil(*elemIt);
+
+            int numDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
+            for (int dofIdx = 0; dofIdx < numDof; ++dofIdx)
+            {
+                int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
                 if (visited[globalIdx])
                     continue;
                 visited[globalIdx] = true;
 
-                if (!fvElemGeomUpdated) {
-                    fvElemGeomUpdated = true;
-                    elemCtx.updateFVElemGeom(*elemIt);
-                }
-
                 // compute the volume variables of the current
                 // sub-control volume
                 auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
-                elemCtx.updateScvVars(priVars, scvIdx,
-                                      /*timeIdx=*/0);
-                const VolumeVariables &volVars
-                    = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
+                elemCtx.updateVolVars(priVars, dofIdx, /*timeIdx=*/0);
+                const VolumeVariables &volVars = elemCtx.volVars(dofIdx, /*timeIdx=*/0);
 
                 // evaluate primary variable switch
                 short oldPhasePresence = priVars.phasePresence();
@@ -487,10 +475,12 @@ public:
 
                 if (oldPhasePresence != priVars.phasePresence()) {
                     if (verbosity_ > 1)
-                        printSwitchedPhases_(elemCtx, scvIdx,
+                        printSwitchedPhases_(elemCtx,
+                                             dofIdx,
                                              volVars.fluidState(),
-                                             oldPhasePresence, priVars);
-                    this->jacobianAssembler().markVertexRed(globalIdx);
+                                             oldPhasePresence,
+                                             priVars);
+                    this->jacobianAssembler().markDofRed(globalIdx);
                     ++numSwitched_;
                 }
             }
@@ -506,12 +496,11 @@ public:
                 << ", num switched=" << numSwitched_;
     }
 
-private:
-    friend class VcfvModel<TypeTag>;
-
     template <class FluidState>
-    void printSwitchedPhases_(const ElementContext &elemCtx, int scvIdx,
-                              const FluidState &fs, int oldPhasePresence,
+    void printSwitchedPhases_(const ElementContext &elemCtx,
+                              int dofIdx,
+                              const FluidState &fs,
+                              int oldPhasePresence,
                               const PrimaryVariables &newPv) const
     {
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -520,7 +509,7 @@ private:
             if (oldPhasePresent == newPhasePresent)
                 continue;
 
-            const auto &pos = elemCtx.pos(scvIdx, /*timeIdx=*/0);
+            const auto &pos = elemCtx.pos(dofIdx, /*timeIdx=*/0);
             if (oldPhasePresent && !newPhasePresent) {
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
                           << "' phase disappears at position " << pos
@@ -547,20 +536,12 @@ private:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkPhasePresenceModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkPhasePresenceModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

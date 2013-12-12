@@ -34,8 +34,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup DiscreteFractureVcfvModel
- * \ingroup VCFVFluxVariables
+ * \ingroup DiscreteFractureModel
+ * \ingroup FluxVariables
  *
  * \brief This class provides the data all quantities that are required to
  *        calculate the fluxes of the fluid phases over a face of a
@@ -59,17 +59,17 @@ class DiscreteFractureFluxVariables : public ImmiscibleFluxVariables<TypeTag>
 
 public:
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::update()
+     * \copydoc MultiPhaseBaseFluxVariables::update()
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &fvElemGeom = elemCtx.fvElemGeom(timeIdx);
-        const auto &scvf = fvElemGeom.subContVolFace[scvfIdx];
-        int insideScvIdx = scvf.i;
-        int outsideScvIdx = scvf.j;
+        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto &scvf = stencil.interiorFace(scvfIdx);
+        int insideScvIdx = scvf.interiorIndex();
+        int outsideScvIdx = scvf.exteriorIndex();
 
         int globalI = elemCtx.globalSpaceIndex(insideScvIdx, timeIdx);
         int globalJ = elemCtx.globalSpaceIndex(outsideScvIdx, timeIdx);
@@ -92,7 +92,7 @@ public:
         const auto &problem = elemCtx.problem();
         fractureWidth_ = problem.fractureWidth(elemCtx, insideScvIdx,
                                                outsideScvIdx, timeIdx);
-        assert(fractureWidth_ < scvf.normal.two_norm());
+        assert(fractureWidth_ < scvf.area());
 
         const auto &evalPointFluxVars
             = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
@@ -113,7 +113,7 @@ public:
             // faces.
             fractureVolumeFlux_[phaseIdx]
                 = (fractureFilterVelocity_[phaseIdx] * distDirection)
-                  * fractureWidth_ / 2.0;
+                  * (fractureWidth_ / 2.0) / scvf.area();
         }
     }
 

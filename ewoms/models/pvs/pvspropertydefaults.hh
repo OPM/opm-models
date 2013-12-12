@@ -39,8 +39,8 @@
 #include "pvsindices.hh"
 #include "pvsproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
+#include <ewoms/models/common/multiphasebaseproblem.hh>
+#include <ewoms/models/modules/velocity.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
@@ -51,23 +51,24 @@ namespace Properties {
 /*!
  * \brief Set the property for the number of components.
  */
-SET_INT_PROP(VcfvPvs, NumComponents,
-             GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(PvsModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
  */
-SET_INT_PROP(VcfvPvs, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
+SET_INT_PROP(PvsModel, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(VcfvPvs, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
+SET_INT_PROP(PvsModel,
+             NumEq,
+             GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
  */
-SET_PROP(VcfvPvs, MaterialLaw)
+SET_PROP(PvsModel, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -82,73 +83,76 @@ public:
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvPvs, MaterialLawParams,
+SET_TYPE_PROP(PvsModel,
+              MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvPvs, HeatConductionLaw,
+SET_TYPE_PROP(PvsModel,
+              HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvPvs, HeatConductionLawParams,
+SET_TYPE_PROP(PvsModel,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the PVS local jacobian operator for the PVS model
-SET_TYPE_PROP(VcfvPvs, LocalResidual, Ewoms::PvsLocalResidual<TypeTag>);
+SET_TYPE_PROP(PvsModel,
+              LocalResidual,
+              Ewoms::PvsLocalResidual<TypeTag>);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvPvs, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(PvsModel, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
 
 //! Use the PVS specific newton method for the PVS model
-SET_TYPE_PROP(VcfvPvs, NewtonMethod, Ewoms::PvsNewtonMethod<TypeTag>);
+SET_TYPE_PROP(PvsModel, NewtonMethod, Ewoms::PvsNewtonMethod<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(VcfvPvs, Model, Ewoms::PvsModel<TypeTag>);
+SET_TYPE_PROP(PvsModel, Model, Ewoms::PvsModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvPvs, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(PvsModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvPvs, PrimaryVariables, Ewoms::PvsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(PvsModel, PrimaryVariables, Ewoms::PvsPrimaryVariables<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvPvs, RateVector, Ewoms::PvsRateVector<TypeTag>);
+SET_TYPE_PROP(PvsModel, RateVector, Ewoms::PvsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvPvs, BoundaryRateVector, Ewoms::PvsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(PvsModel, BoundaryRateVector, Ewoms::PvsBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvPvs, VolumeVariables, Ewoms::PvsVolumeVariables<TypeTag>);
+SET_TYPE_PROP(PvsModel, VolumeVariables, Ewoms::PvsVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvPvs, FluxVariables, Ewoms::PvsFluxVariables<TypeTag>);
+SET_TYPE_PROP(PvsModel, FluxVariables, Ewoms::PvsFluxVariables<TypeTag>);
 
 //! The indices required by the isothermal PVS model
-SET_TYPE_PROP(VcfvPvs, Indices, Ewoms::PvsIndices<TypeTag, /*PVIdx=*/0>);
+SET_TYPE_PROP(PvsModel, Indices, Ewoms::PvsIndices<TypeTag, /*PVIdx=*/0>);
 
 // disable the smooth upwinding method by default
-SET_BOOL_PROP(VcfvPvs, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(PvsModel, EnableSmoothUpwinding, false);
 
 // set the model to a medium verbosity
-SET_INT_PROP(VcfvPvs, PvsVerbosity, 1);
+SET_INT_PROP(PvsModel, PvsVerbosity, 1);
 
 // disable the energy equation by default
-SET_BOOL_PROP(VcfvPvs, EnableEnergy, false);
+SET_BOOL_PROP(PvsModel, EnableEnergy, false);
 
 // disable molecular diffusion by default
-SET_BOOL_PROP(VcfvPvs, EnableDiffusion, false);
+SET_BOOL_PROP(PvsModel, EnableDiffusion, false);
 
 //! The basis value for the weight of the pressure primary variable
-SET_SCALAR_PROP(VcfvPvs, PvsPressureBaseWeight, 1.0);
+SET_SCALAR_PROP(PvsModel, PvsPressureBaseWeight, 1.0);
 
 //! The basis value for the weight of the saturation primary variables
-SET_SCALAR_PROP(VcfvPvs, PvsSaturationsBaseWeight, 1.0);
+SET_SCALAR_PROP(PvsModel, PvsSaturationsBaseWeight, 1.0);
 
 //! The basis value for the weight of the mole fraction primary variables
-SET_SCALAR_PROP(VcfvPvs, PvsMoleFractionsBaseWeight, 1.0);
-
-} // namespace Properties
-} // namespace Opm
+SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
+}} // namespace Properties, Opm
 
 #endif

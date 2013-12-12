@@ -309,8 +309,8 @@ public:
     /*!
      * \brief Run the Newton method.
      *
-     * The implementation is responsible
-     * for all the strategic decisions.
+     * The actual implementation can influence all the strategic
+     * decisions via callbacks using static polymorphism.
      */
     bool apply()
     {
@@ -343,10 +343,6 @@ public:
                 std::cout.flush();
             }
 
-            ///////////////
-            // assemble
-            ///////////////
-
             // linearize the problem at the current solution
             try
             {
@@ -357,26 +353,22 @@ public:
             catch (const Dune::Exception &e)
             {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Dune exception during "
-                                 "linearization: \"" << e.what() << "\"\n";
+                    std::cout << "Newton: Caught Dune exception during linearization: \""
+                              << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             }
             catch (const Opm::NumericalProblem &e)
             {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Opm exception during "
-                                 "linearization: \"" << e.what() << "\"\n";
+                    std::cout << "Newton: Caught Opm exception during linearization: \""
+                              << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             };
 
-            ///////////////
-            // linear solve
-            ///////////////
-
             // Clear the current line using an ansi escape
-            // sequence.  for an explanation see
+            // sequence.  For an explanation see
             // http://en.wikipedia.org/wiki/ANSI_escape_code
             const char clearRemainingLine[] = { 0x1b, '[', 'K', 0 };
 
@@ -402,9 +394,7 @@ public:
             }
             solveTimer_.stop();
 
-            ///////////////
-            // update
-            ///////////////
+            // update the solution
             if (asImp_().verbose_()) {
                 std::cout << "\rUpdate: x^(k+1) = x^k - deltax^k";
                 std::cout << clearRemainingLine;
@@ -436,8 +426,8 @@ public:
             catch (const Opm::NumericalProblem &e)
             {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Opm exception during "
-                                 "linearization: \"" << e.what() << "\"\n";
+                    std::cout << "Newton: Caught Opm exception during linearization: \""
+                              << e.what() << "\"\n";
                 asImp_().failed_();
                 return false;
             };
@@ -447,8 +437,8 @@ public:
         asImp_().end_();
 
         if (asImp_().verbose_()) {
-            Scalar elapsedTot = assembleTimer_.elapsed() + solveTimer_.elapsed()
-                                + updateTimer_.elapsed();
+            Scalar elapsedTot =
+                assembleTimer_.elapsed() + solveTimer_.elapsed() + updateTimer_.elapsed();
             std::cout << "Assemble/solve/update time: "
                       << assembleTimer_.elapsed() << "("
                       << 100 * assembleTimer_.elapsed() / elapsedTot << "%)/"

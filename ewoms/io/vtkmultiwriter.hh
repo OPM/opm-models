@@ -185,7 +185,7 @@ public:
     }
 
     /*!
-     * \brief Add a cell centered quantity to the output.
+     * \brief Add a element centered quantity to the output.
      *
      * If the buffer is managed by the VtkMultiWriter, it must have
      * been created using createField() and may not be used by
@@ -200,7 +200,7 @@ public:
      * method and endWrite() results in _undefined behaviour_.
      */
     template <class DataBuffer>
-    void attachCellData(DataBuffer &buf, std::string name, int nComps = 1)
+    void attachElementData(DataBuffer &buf, std::string name, int nComps = 1)
     {
         sanitizeBuffer_(buf, nComps);
 

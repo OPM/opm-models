@@ -26,16 +26,14 @@
 #ifndef EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
 #define EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
 
-#include "immiscibleproperties.hh"
+#include "immisciblepropertydefaults.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
-
 /*!
- * \ingroup ImmiscibleVcfvModel
- * \ingroup VCFVFluxVariables
+ * \ingroup ImmiscibleModel
+ * \ingroup FluxVariables
  *
  * \brief This class provides the data all quantities that are required to
  *        calculate the fluxes of the fluid phases over a face of a
@@ -46,43 +44,44 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class ImmiscibleFluxVariables
-    : public VcfvMultiPhaseFluxVariables<TypeTag>,
-      public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public MultiPhaseBaseFluxVariables<TypeTag>
+    , public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
+    typedef MultiPhaseBaseFluxVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
-    typedef VcfvEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::registerParameters()
+     * \copydoc MultiPhaseBaseFluxVariables::registerParameters()
      */
     static void registerParameters()
-    { MultiPhaseFluxVariables::registerParameters(); }
+    {
+        ParentType::registerParameters();
+    }
 
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::update()
+     * \copydoc MultiPhaseBaseFluxVariables::update()
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
+        ParentType::update(elemCtx, scvfIdx, timeIdx);
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary()
+     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary()
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context, bfIdx, timeIdx,
-                                                fluidState, paramCache);
+        ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };

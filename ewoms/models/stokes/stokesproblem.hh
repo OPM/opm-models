@@ -28,24 +28,23 @@
 #define EWOMS_STOKES_PROBLEM_HH
 
 #include "stokesproperties.hh"
-
-#include <ewoms/disc/vcfv/vcfvproblem.hh>
+#include <ewoms/disc/common/fvbaseproblem.hh>
 
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
 
 /*!
- * \ingroup VCFVStokesProblems
- * \brief Base class for all problems which use the Stokes VCVF discretization.
+ * \ingroup StokesProblems
+ * \brief Base class for all problems which use the Stokes model.
  *
  * This implements gravity (if desired) and a function returning the
  *temperature.
  */
 template <class TypeTag>
-class StokesProblem : public VcfvProblem<TypeTag>
+class StokesProblem : public Ewoms::FvBaseProblem<TypeTag>
 {
-    typedef VcfvProblem<TypeTag> ParentType;
+    typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
@@ -60,7 +59,7 @@ class StokesProblem : public VcfvProblem<TypeTag>
 
 public:
     /*!
-     * \copydoc VcfvProblem::VcfvProblem(TimeManager &, const GridView &)
+     * \copydoc FvBaseProblem::FvBaseProblem(TimeManager &, const GridView &)
      */
     StokesProblem(TimeManager &timeManager, const GridView &gridView)
         : ParentType(timeManager, gridView), gravity_(0)

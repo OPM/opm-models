@@ -29,9 +29,8 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -46,8 +45,8 @@ namespace Ewoms {
 /*!
  * \ingroup NcpModel
  *
- * \brief A fully implicit model compositional multi-phase model using
- *        vertex centered finite volumes.
+ * \brief A compositional multi-phase model based on non-linear
+ *        complementarity functions.
  *
  * This model implements a \f$M\f$-phase flow of a fluid mixture
  * composed of \f$N\f$ chemical species. The phases are denoted by
@@ -66,7 +65,7 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -121,9 +120,10 @@ namespace Ewoms {
  * - Temperature \f$T\f$ if the energy equation is enabled
  */
 template <class TypeTag>
-class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class NcpModel
+    : public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -148,8 +148,8 @@ class NcpModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
-    typedef VcfvDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:
     NcpModel(Problem &problem)
@@ -157,8 +157,7 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the immiscible model.
      */
     static void registerParameters()
     {
@@ -168,27 +167,25 @@ public:
         EnergyModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkCompositionModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
+        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VcfvVtkDiffusionModule<TypeTag>::registerParameters();
+            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
+            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
-     * \copydoc VcfvModel::init
+     * \copydoc FvBaseDiscretization::init
      */
     void init()
     {
         ParentType::init();
-        minActivityCoeff_.resize(this->numDofs());
+        minActivityCoeff_.resize(this->numDof());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
 
-        intrinsicPermeability_.resize(this->numDofs());
+        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
@@ -206,17 +203,21 @@ public:
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
 
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*timeIdx=*/0);
+            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateVolVars(/*timeIdx=*/0);
 
-            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
-                                                      /*timeIdx=*/0, phaseIdx);
-                tmp *= fvElemGeom.subContVol[scvIdx].volume
-                       * elemCtx.volVars(scvIdx, /*timeIdx=*/0).extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp,
+                                                      elemCtx,
+                                                      dofIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *=
+                    stencil.subControlVolume(dofIdx).volume()
+                    * elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
                 storage += tmp;
             }
         };
@@ -225,13 +226,13 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     const char *name() const
     { return "ncp"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -256,7 +257,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -278,7 +279,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateBegin
+     * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
     {
@@ -289,22 +290,20 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updatePVWeights
+     * \copydoc FvBaseDiscretization::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-            const auto &K
-                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    const auto &fs
-                        = elemCtx.volVars(scvIdx, /*timeIdx=*/0).fluidState();
+                    const auto &fs = elemCtx.volVars(dofIdx, /*timeIdx=*/0).fluidState();
 
                     minActivityCoeff_[globalIdx][compIdx]
                         = std::min(minActivityCoeff_[globalIdx][compIdx],
@@ -317,12 +316,11 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        Scalar tmp
-            = EnergyModule::primaryVarWeight(*this, globalVertexIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
@@ -331,20 +329,17 @@ public:
             int compIdx = pvIdx - fugacity0Idx;
             assert(0 <= compIdx && compIdx <= numComponents);
 
-            Valgrind::CheckDefined(minActivityCoeff_[globalVertexIdx][compIdx]);
-            static const Scalar fugacityBaseWeight
-                = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
-            return fugacityBaseWeight
-                   / minActivityCoeff_[globalVertexIdx][compIdx];
+            Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
+            static const Scalar fugacityBaseWeight = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
+            return fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
-            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            Scalar KRef = intrinsicPermeability_[globalDofIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r
-                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
+            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
 
             static const Scalar pressureBaseWeight
                 = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
@@ -362,11 +357,11 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqWeight
+     * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
-        Scalar tmp = EnergyModule::eqWeight(*this, globalVertexIdx, eqIdx);
+        Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
             // energy related equation
             return tmp;
@@ -384,35 +379,26 @@ public:
 
     /*!
      * \brief Returns the smallest activity coefficient of a component for the
-     *most
-     *        current solution at a vertex.
+     *        most current solution at a vertex.
      *
-     * \param globalVertexIdx The global index of the vertex (i.e. finite
-     *volume) of interest.
+     * \param globalDofIdx The global index of the vertex (i.e. finite volume) of interest.
      * \param compIdx The index of the component of interest.
      */
-    Scalar minActivityCoeff(int globalVertexIdx, int compIdx) const
-    { return minActivityCoeff_[globalVertexIdx][compIdx]; }
+    Scalar minActivityCoeff(int globalDofIdx, int compIdx) const
+    { return minActivityCoeff_[globalDofIdx][compIdx]; }
 
-private:
-    friend class VcfvModel<TypeTag>;
-
+    /*!
+     * \internal
+     */
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

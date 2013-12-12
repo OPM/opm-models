@@ -30,7 +30,7 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -40,7 +40,7 @@ namespace Ewoms {
  * \ingroup NcpModel
  *
  * \brief Represents the primary variables used by the compositional
- *        multi-phase NCP VCVF discretization.
+ *        multi-phase NCP model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -68,7 +68,7 @@ class NcpPrimaryVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 

@@ -36,7 +36,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
  * \brief Represents the primary variables used by the black-oil model.
  */

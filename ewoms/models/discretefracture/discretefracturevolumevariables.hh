@@ -33,8 +33,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup DiscreteFractureVcfvModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup DiscreteFractureModel
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the discret fracture immiscible multi-phase
@@ -67,19 +67,19 @@ class DiscreteFractureVolumeVariables : public ImmiscibleVolumeVariables<TypeTag
 
 public:
     /*!
-     * \copydoc VcfvVolumeVariables::update
+     * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
-        int globalVertexIdx = elemCtx.globalSpaceIndex(scvIdx, timeIdx);
+        int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
 
         // do nothing if there is no fracture within the current finite
         // volume
-        if (!fractureMapper.isFractureVertex(globalVertexIdx)) {
+        if (!fractureMapper.isFractureVertex(globalDofIdx)) {
             fractureVolume_ = 0;
             return;
         }
@@ -92,37 +92,35 @@ public:
 
         // retrieve the facture width and intrinsic permeability from
         // the problem
-        fracturePorosity_ = problem.fracturePorosity(elemCtx, scvIdx, timeIdx);
-        fractureIntrinsicPermeability_
-            = problem.fractureIntrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        fracturePorosity_ = problem.fracturePorosity(elemCtx, dofIdx, timeIdx);
+        fractureIntrinsicPermeability_ = problem.fractureIntrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // compute the fracture volume for the current sub-control
         // volume. note, that we don't take overlaps of fractures into
         // account for this.
         fractureVolume_ = 0;
-        const auto &scvPos = elemCtx.pos(scvIdx, timeIdx);
-        for (int scv2Idx = 0; scv2Idx < elemCtx.numScv(); ++scv2Idx) {
-            int globalVertex2Idx = elemCtx.globalSpaceIndex(scv2Idx, timeIdx);
+        const auto &dofPos = elemCtx.pos(dofIdx, timeIdx);
+        for (int dof2Idx = 0; dof2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ dof2Idx) {
+            int globalVertex2Idx = elemCtx.globalSpaceIndex(dof2Idx, timeIdx);
 
-            if (scvIdx == scv2Idx
-                || !fractureMapper.isFractureEdge(globalVertexIdx,
-                                                  globalVertex2Idx))
+            if (dofIdx == dof2Idx ||
+                !fractureMapper.isFractureEdge(globalDofIdx, globalVertex2Idx))
                 continue;
 
-            Scalar fractureWidth
-                = problem.fractureWidth(elemCtx, scvIdx, scv2Idx, timeIdx);
+            Scalar fractureWidth =
+                problem.fractureWidth(elemCtx, dofIdx, dof2Idx, timeIdx);
 
-            auto distVec = elemCtx.pos(scv2Idx, timeIdx);
-            distVec -= scvPos;
+            auto distVec = elemCtx.pos(dof2Idx, timeIdx);
+            distVec -= dofPos;
 
             Scalar edgeLength = distVec.two_norm();
 
-            // the fracture is always adjacent to two SCVs of the
-            // control volume, so when calculating the volume of the
-            // fracture which gets attributed to one SCV, the fracture
-            // width needs to divided by 2. Also, only half of the
-            // edge is located in the current control volume, so its
-            // length also needs to divided by 2.
+            // the fracture is always adjacent to two sub-control
+            // volumes of the control volume, so when calculating the
+            // volume of the fracture which gets attributed to one
+            // SCV, the fracture width needs to divided by 2. Also,
+            // only half of the edge is located in the current control
+            // volume, so its length also needs to divided by 2.
             fractureVolume_ += (fractureWidth / 2) * (edgeLength / 2);
         }
 
@@ -137,8 +135,7 @@ public:
 
         // ask the problem for the material law parameters of the
         // fracture.
-        const auto &fractureMatParams
-            = problem.fractureMaterialLawParams(elemCtx, scvIdx, timeIdx);
+        const auto &fractureMatParams = problem.fractureMaterialLawParams(elemCtx, dofIdx, timeIdx);
 
         // calculate the fracture saturations which would be required
         // to be consistent with the pressures

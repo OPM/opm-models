@@ -28,7 +28,7 @@
 
 #include "pvsindices.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/Valgrind.hpp>
 
@@ -59,7 +59,7 @@ class PvsRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsRateVector() : ParentType()

@@ -31,7 +31,7 @@
 #include "stokesfluxvariables.hh"
 #include "stokesproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <opm/material/Valgrind.hpp>
 
 #include <dune/grid/common/grid.hh>
 #include <dune/common/fvector.hh>
@@ -39,16 +39,17 @@
 namespace Ewoms {
 
 /*!
- * \ingroup VCFVStokesModel
- * \ingroup VcfvLocalResidual
+ * \ingroup StokesModel
+ * \ingroup LocalResidual
  *
  * \brief The local residual function for problems using the
- *        Stokes VCVF discretization.
+ *        Stokes model.
  */
-template <class TypeTag>
-class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+template<class TypeTag>
+class StokesLocalResidual
+    : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BaseLocalResidual) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -66,7 +67,7 @@ class StokesLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
@@ -82,32 +83,35 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeStorage
+     * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
-                        int scvIdx, int timeIdx) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int dofIdx,
+                        int timeIdx) const
     {
-        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         // mass storage
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             storage[conti0EqIdx + compIdx] = fs.molarity(phaseIdx, compIdx);
+        }
         Valgrind::CheckDefined(storage);
 
         // momentum balance
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            storage[momentum0EqIdx + axisIdx] = fs.density(phaseIdx)
-                                                * volVars.velocity()[axisIdx];
+        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
+            storage[momentum0EqIdx + axisIdx] =
+                fs.density(phaseIdx) * volVars.velocity()[axisIdx];
+        }
         Valgrind::CheckDefined(storage);
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx),
-                                      phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(dofIdx, timeIdx), phaseIdx);
         Valgrind::CheckDefined(storage);
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeFlux
+     * \copydoc FvBaseLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
@@ -127,13 +131,11 @@ public:
     {
         const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
-        // data attached to upstream vertex
+        // data attached to upstream DOF
         const VolumeVariables &up
             = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
 
         auto normal = fluxVars.normal();
-        Scalar faceArea = normal.two_norm();
-        normal /= faceArea;
 
         // mass fluxes
         Scalar vTimesN = fluxVars.velocity() * normal;
@@ -165,8 +167,6 @@ public:
             }
         }
 
-        flux *= faceArea;
-
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
@@ -181,20 +181,28 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeSource
+     * \copydoc FvBaseLocalResidual::computeSource
      */
-    void computeSource(RateVector &source, const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx) const
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int dofIdx,
+                       int timeIdx) const
     {
         assert(timeIdx == 0);
-        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        Valgrind::SetUndefined(source);
+        elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
+        Valgrind::CheckDefined(source);
 
         const auto &gravity = volVars.gravity();
         const auto &gradp = volVars.pressureGradient();
         Scalar density = volVars.fluidState().density(phaseIdx);
+
+        assert(std::isfinite(gradp.two_norm()));
+        assert(std::isfinite(density));
+        assert(std::isfinite(source.two_norm()));
 
         Valgrind::CheckDefined(gravity);
         Valgrind::CheckDefined(gradp);

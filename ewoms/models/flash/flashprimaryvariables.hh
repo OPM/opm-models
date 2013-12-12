@@ -28,7 +28,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
@@ -67,8 +67,7 @@ class FlashPrimaryVariables
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     FlashPrimaryVariables() : ParentType()

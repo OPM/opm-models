@@ -27,11 +27,11 @@
 #define EWOMS_STOKES_INDICES_HH
 
 #include "stokesproperties.hh"
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 /*!
- * \ingroup VCFVStokesModel
+ * \ingroup StokesModel
  *
  * \brief The primary variable and equation indices of the
  *        (Navier-)Stokes model.
@@ -40,9 +40,10 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 class StokesIndices
-    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents)
-                               + GET_PROP_TYPE(TypeTag, GridView)::dimensionworld,
-                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset
+                                        + GET_PROP_VALUE(TypeTag, NumComponents)
+                                        + GET_PROP_TYPE(TypeTag, GridView)::dimensionworld,
+                                        GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

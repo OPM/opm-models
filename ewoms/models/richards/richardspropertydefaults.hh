@@ -24,7 +24,7 @@
  * \ingroup RichardsModel
  *
  * \brief Contains the default definitions for the properties required
- *        by the Richards VCVF discretization.
+ *        by the Richards model.
  */
 #ifndef EWOMS_RICHARDS_PROPERTY_DEFAULTS_HH
 #define EWOMS_RICHARDS_PROPERTY_DEFAULTS_HH
@@ -39,8 +39,8 @@
 #include "richardsproperties.hh"
 #include "richardsnewtonmethod.hh"
 
-#include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
-#include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
+#include <ewoms/models/common/multiphasebaseproblem.hh>
+#include <ewoms/models/modules/velocity.hh>
 
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
@@ -52,71 +52,72 @@ namespace Properties {
 // Properties values
 //////////////////////////////////////////////////////////////////
 //! Number of equations required by the model
-SET_INT_PROP(VcfvRichards, NumEq, 1);
+SET_INT_PROP(Richards, NumEq, 1);
 //! Number of fluid phases considered
-SET_INT_PROP(VcfvRichards, NumPhases, 2);
+SET_INT_PROP(Richards, NumPhases, 2);
 //! Number of components considered
-SET_INT_PROP(VcfvRichards, NumComponents, 2);
+SET_INT_PROP(Richards, NumComponents, 2);
 
 //! By default, assume that the first phase is the liquid one
-SET_INT_PROP(VcfvRichards, LiquidPhaseIndex, 0);
+SET_INT_PROP(Richards, LiquidPhaseIndex, 0);
 
 //! The local residual operator
-SET_TYPE_PROP(VcfvRichards, LocalResidual, Ewoms::RichardsLocalResidual<TypeTag>);
+SET_TYPE_PROP(Richards,
+              LocalResidual,
+              Ewoms::RichardsLocalResidual<TypeTag>);
 
 //! The global model used
-SET_TYPE_PROP(VcfvRichards, Model, Ewoms::RichardsModel<TypeTag>);
+SET_TYPE_PROP(Richards, Model, Ewoms::RichardsModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvRichards, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(Richards, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvRichards, RateVector, Ewoms::RichardsRateVector<TypeTag>);
+SET_TYPE_PROP(Richards, RateVector, Ewoms::RichardsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvRichards, BoundaryRateVector,
-              Ewoms::RichardsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(Richards, BoundaryRateVector, Ewoms::RichardsBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvRichards, PrimaryVariables,
-              Ewoms::RichardsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(Richards, PrimaryVariables, Ewoms::RichardsPrimaryVariables<TypeTag>);
 
 //! The class for the volume averaged quantities
-SET_TYPE_PROP(VcfvRichards, VolumeVariables,
-              Ewoms::RichardsVolumeVariables<TypeTag>);
+SET_TYPE_PROP(Richards, VolumeVariables, Ewoms::RichardsVolumeVariables<TypeTag>);
 
 //! The class for the quantities required for the flux calculation
-SET_TYPE_PROP(VcfvRichards, FluxVariables, Ewoms::RichardsFluxVariables<TypeTag>);
+SET_TYPE_PROP(Richards, FluxVariables, Ewoms::RichardsFluxVariables<TypeTag>);
 
 //! The class of the Newton method
-SET_TYPE_PROP(VcfvRichards, NewtonMethod, Ewoms::RichardsNewtonMethod<TypeTag>);
+SET_TYPE_PROP(Richards, NewtonMethod, Ewoms::RichardsNewtonMethod<TypeTag>);
 
 // disable the smooth upwinding method by default
-SET_BOOL_PROP(VcfvRichards, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(Richards, EnableSmoothUpwinding, false);
 
 //! The class with all index definitions for the model
-SET_TYPE_PROP(VcfvRichards, Indices, Ewoms::RichardsIndices);
+SET_TYPE_PROP(Richards, Indices, Ewoms::RichardsIndices);
 
 /*!
  * \brief Set type of the parameter objects for the material law
  *
  * By default this is just retrieved from the material law.
  */
-SET_TYPE_PROP(VcfvRichards, MaterialLawParams,
+SET_TYPE_PROP(Richards,
+              MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvRichards, HeatConductionLaw,
+SET_TYPE_PROP(Richards,
+              HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvRichards, HeatConductionLawParams,
+SET_TYPE_PROP(Richards,
+              HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvRichards, VelocityModule,
-              Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(Richards, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
 
 /*!
  * \brief The wetting phase used.
@@ -128,7 +129,7 @@ SET_TYPE_PROP(VcfvRichards, VelocityModule,
  * of the liquid phase is _much_ lower than the viscosity of the
  * wetting phase.
  */
-SET_PROP(VcfvRichards, WettingPhase)
+SET_PROP(Richards, WettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -145,7 +146,7 @@ public:
  * specified by the problem for the Richards model to work because the
  * Richards model does not conserve the non-wetting phase.
  */
-SET_PROP(VcfvRichards, NonwettingPhase)
+SET_PROP(Richards, NonwettingPhase)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -163,7 +164,7 @@ public:
  * using different fluid systems in conjunction with the Richards
  * model only makes very limited sense.
  */
-SET_PROP(VcfvRichards, FluidSystem)
+SET_PROP(Richards, FluidSystem)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

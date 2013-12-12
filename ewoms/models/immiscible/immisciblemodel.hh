@@ -30,7 +30,7 @@
 #include "immiscibleproperties.hh"
 #include "immisciblelocalresidual.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <dune/common/unused.hh>
 
@@ -39,7 +39,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup ImmiscibleVcfvModel
+ * \ingroup ImmiscibleModel
  * \brief A fully-implicit multi-phase flow model which assumes
  *        immiscibility of the phases.
  *
@@ -56,7 +56,7 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -67,10 +67,6 @@ namespace Ewoms {
  * - q_\alpha = 0 \;.
  * \f]
  *
- * These equations are discretized by a fully-coupled vertex centered
- * finite volume scheme as spatial and the implicit Euler method as
- * time discretization.
- *
  * The model uses the following primary variables:
  * - The pressure \f$p_0\f$ in Pascal of the phase with the lowest index
  * - The saturations \f$S_\alpha\f$ of the \f$M - 1\f$ phases that
@@ -79,9 +75,9 @@ namespace Ewoms {
  *   via the energy equation
  */
 template <class TypeTag>
-class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class ImmiscibleModel : public Ewoms::MultiPhaseBaseModel<TypeTag>
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef Ewoms::MultiPhaseBaseModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
@@ -100,7 +96,7 @@ class ImmiscibleModel : public GET_PROP_TYPE(TypeTag, BaseModel)
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     ImmiscibleModel(Problem &problem)
@@ -108,39 +104,34 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the immiscible model.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
-        // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
-
         if (enableEnergy)
-            Ewoms::VcfvVtkEnergyModule<TypeTag>::registerParameters();
+            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
-     * \copydoc VcfvModel::init
+     * \copydoc FvBaseDiscretization::init
      */
     void init()
     {
         ParentType::init();
 
-        intrinsicPermeability_.resize(this->numDofs());
+        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     const char *name() const
     { return "immiscible"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -165,7 +156,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -206,19 +197,22 @@ public:
             if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
 
-            elemCtx.updateFVElemGeom(*elemIt);
-            elemCtx.updateScvVars(/*timeIdx=*/0);
+            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateVolVars(/*timeIdx=*/0);
 
-            const auto &fvElemGeom = elemCtx.fvElemGeom(/*timeIdx=*/0);
+            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-            for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-                const auto &scv = fvElemGeom.subContVol[scvIdx];
-                const auto &volVars = elemCtx.volVars(scvIdx, /*timeIdx=*/0);
+            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+                const auto &scv = stencil.subControlVolume(dofIdx);
+                const auto &volVars = elemCtx.volVars(dofIdx, /*timeIdx=*/0);
 
                 tmp = 0;
-                this->localResidual().addPhaseStorage(tmp, elemCtx, scvIdx,
-                                                      /*timeIdx=*/0, phaseIdx);
-                tmp *= scv.volume * volVars.extrusionFactor();
+                this->localResidual().addPhaseStorage(tmp,
+                                                      elemCtx,
+                                                      dofIdx,
+                                                      /*timeIdx=*/0,
+                                                      phaseIdx);
+                tmp *= scv.volume()*volVars.extrusionFactor();
                 storage += tmp;
             }
         };
@@ -227,7 +221,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateBegin
+     * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
     {
@@ -238,37 +232,34 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updatePVWeights
+     * \copydoc FvBaseDiscretization::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-            const auto &K
-                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
     /*!
-     * \copydetails VcfvModel::primaryVarWeight
+     * \copydetails FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        Scalar tmp
-            = EnergyModule::primaryVarWeight(asImp_(), globalVertexIdx, pvIdx);
+        Scalar tmp = EnergyModule::primaryVarWeight(asImp_(), globalDofIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
             return tmp;
         if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
-            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            Scalar KRef = intrinsicPermeability_[globalDofIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r
-                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
+            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
 
             return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
@@ -276,11 +267,11 @@ public:
     }
 
     /*!
-     * \copydetails VcfvModel::eqWeight
+     * \copydetails FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
-        Scalar tmp = EnergyModule::eqWeight(asImp_(), globalVertexIdx, eqIdx);
+        Scalar tmp = EnergyModule::eqWeight(asImp_(), globalDofIdx, eqIdx);
         if (tmp > 0)
             // energy related equation
             return tmp;
@@ -292,22 +283,12 @@ public:
         return 1.0;
     }
 
-protected:
-    friend class VcfvModel<TypeTag>;
-
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
-        // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
-
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(
-                new Ewoms::VcfvVtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
 private:

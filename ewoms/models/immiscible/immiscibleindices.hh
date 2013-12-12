@@ -27,24 +27,22 @@
 #define EWOMS_IMMISCIBLE_INDICES_HH
 
 #include "immiscibleproperties.hh"
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 
 /*!
- * \ingroup ImmiscibleVcfvModel
+ * \ingroup ImmiscibleModel
  *
  * \brief The indices for the isothermal multi-phase model.
  */
 template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices
-    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases),
-                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
-
+    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
+    typedef Ewoms::EnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
 
 public:
     // number of equations/primary variables

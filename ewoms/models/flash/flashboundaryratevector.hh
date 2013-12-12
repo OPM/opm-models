@@ -28,7 +28,7 @@
 
 #include "flashproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/Valgrind.hpp>
 
 namespace Ewoms {
@@ -55,7 +55,7 @@ class FlashBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     FlashBoundaryRateVector() : ParentType()

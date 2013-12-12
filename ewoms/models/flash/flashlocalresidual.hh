@@ -28,19 +28,18 @@
 
 #include "flashproperties.hh"
 
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 /*!
  * \ingroup FlashModel
  *
  * \brief Calculates the local residual of the compositional multi-phase
- *        VCVF discretization based on flash calculations.
+ *        model based on flash calculations.
  */
 template <class TypeTag>
-class FlashLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -53,19 +52,22 @@ class FlashLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef VcfvDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
-    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
-                         int scvIdx, int timeIdx, int phaseIdx) const
+    void addPhaseStorage(EqVector &storage,
+                         const ElementContext &elemCtx,
+                         int dofIdx,
+                         int timeIdx,
+                         int phaseIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
         const auto &fs = volVars.fluidState();
 
         // compute storage term of all components within all phases
@@ -75,26 +77,26 @@ public:
                               * fs.saturation(phaseIdx) * volVars.porosity();
         }
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx),
-                                      phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(dofIdx, timeIdx), phaseIdx);
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeStorage
+     * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
-                        int scvIdx, int timeIdx) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int dofIdx,
+                        int timeIdx) const
     {
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+            addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage,
-                                          elemCtx.volVars(scvIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(dofIdx, timeIdx));
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeFlux
+     * \copydoc FvBaseLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
@@ -121,7 +123,7 @@ public:
         // advective fluxes of all components in all phases
         ////////
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // data attached to upstream and the downstream vertices
+            // data attached to upstream and the downstream DOFs
             // of the current phase
             const VolumeVariables &up
                 = elemCtx.volVars(evalPointFluxVars.upstreamIndex(phaseIdx),
@@ -160,11 +162,13 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeSource
      */
-    void computeSource(RateVector &source, const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx) const
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int dofIdx,
+                       int timeIdx) const
     {
         Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
 };

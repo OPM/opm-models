@@ -23,8 +23,8 @@
  * \file
  * \copydoc Ewoms::Linear::ParallelIterativeSolverBackend
  */
-#ifndef EWOMS_PARALLEL_ITERATIVE_SOLVER_HH
-#define EWOMS_PARALLEL_ITERATIVE_SOLVER_HH
+#ifndef EWOMS_PARALLEL_ITERATIVE_BACKEND_HH
+#define EWOMS_PARALLEL_ITERATIVE_BACKEND_HH
 
 #include <ewoms/linear/overlappingbcrsmatrix.hh>
 #include <ewoms/linear/overlappingblockvector.hh>
@@ -213,27 +213,10 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(
-            TypeTag, bool, LinearSolverUseTwoNormReductionCriterion,
-            "Use the reduction of the two-norm of the linear residual as "
-            "convergence criterion (instead of the reduction of the maximum)");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance,
-                             "The maximum allowed weighted difference between "
-                             "two iterations of the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance,
-                             "The maximum allowed weighted maximum of the "
-                             "defect of the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance,
-                             "The maximum difference between two iterations of "
-                             "the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize,
-                             "The size of the algebraic overlap for the linear "
-                             "solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
-                             "The maximum number of iterations of the linear "
-                             "solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity,
-                             "The verbosity level of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
 
         LinearSolverWrapper::registerParameters();
         PreconditionerWrapper::registerParameters();
@@ -283,7 +266,6 @@ public:
         int preconditionerIsReady = 1;
         try
         {
-            // run the solver
             // update sequential preconditioner
             precWrapper_.prepare(*overlappingMatrix_);
         }
@@ -313,55 +295,7 @@ public:
         ParallelOperator parOperator(*overlappingMatrix_);
 
         // run the linear solver and have some fun
-        auto &solver
-            = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
-
-        // use the residual reduction convergence criterion
-        OverlappingVector residWeightVec(*overlappingx_),
-            fixPointWeightVec(*overlappingx_);
-
-        // set the default weight of the row to 0 (-> do not consider
-        // the row when calculating the error)
-        residWeightVec = 0.0;
-        fixPointWeightVec = 0.0;
-
-        // for rows local to the current peer, ping the model for their
-        // relative weight
-        const auto &foreignOverlap
-            = overlappingMatrix_->overlap().foreignOverlap();
-        for (unsigned localIdx = 0;
-             localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
-            int nativeIdx = foreignOverlap.localToNative(localIdx);
-            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                residWeightVec[localIdx][eqIdx]
-                    = this->problem_.model().eqWeight(nativeIdx, eqIdx);
-                fixPointWeightVec[localIdx][eqIdx]
-                    = this->problem_.model().primaryVarWeight(nativeIdx, eqIdx);
-            }
-        }
-
-        if (EWOMS_GET_PARAM(TypeTag, bool,
-                            LinearSolverUseTwoNormReductionCriterion)) {
-            // create a residual reduction convergence criterion
-            Scalar linearSolverRelTolerance
-                = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-            Scalar linearSolverAbsTolerance
-                = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
-            Scalar linearSolverFixPointTolerance
-                = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverFixPointTolerance);
-            auto *convCrit = new Ewoms::
-                WeightedResidReductionCriterion<OverlappingVector,
-                                                typename GridView::CollectiveCommunication>(
-                    problem_.gridView().comm(), fixPointWeightVec,
-                    residWeightVec, linearSolverFixPointTolerance,
-                    linearSolverRelTolerance, linearSolverAbsTolerance);
-
-            // tell the linear solver to use it
-            typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-            solver.setConvergenceCriterion(
-                Dune::shared_ptr<ConvergenceCriterion>(convCrit));
-        }
-
+        auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
         Dune::InverseOperatorResult result;
         int solverSucceeded = 1;
         try

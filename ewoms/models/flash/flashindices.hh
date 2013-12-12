@@ -27,7 +27,7 @@
 #define EWOMS_FLASH_INDICES_HH
 
 #include "flashproperties.hh"
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 
@@ -41,12 +41,11 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 class FlashIndices
-    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents),
-                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
+    typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
     // number of equations/primary variables

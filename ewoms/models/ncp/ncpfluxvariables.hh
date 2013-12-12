@@ -27,15 +27,14 @@
 #define EWOMS_NCP_FLUX_VARIABLES_HH
 
 #include <ewoms/models/ncp/ncpproperties.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
+#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
 
 namespace Ewoms {
 
 /*!
  * \ingroup NcpModel
- * \ingroup VCFVFluxVariables
+ * \ingroup FluxVariables
  *
  * \brief This template class contains the data which is required to
  *        calculate all fluxes of components over a face of a finite
@@ -46,42 +45,41 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class NcpFluxVariables
-    : public VcfvMultiPhaseFluxVariables<TypeTag>,
-      public VcfvEnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>,
-      public VcfvDiffusionFluxVariables<TypeTag,
-                                        GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+    : public MultiPhaseBaseFluxVariables<TypeTag>
+    , public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public DiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
-    typedef VcfvMultiPhaseFluxVariables<TypeTag> MultiPhaseFluxVariables;
+    typedef MultiPhaseBaseFluxVariables<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef VcfvDiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
+    typedef Ewoms::DiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
 
 public:
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::update
+     * \copydoc MultiPhaseBaseFluxVariables::update
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        MultiPhaseFluxVariables::update(elemCtx, scvfIdx, timeIdx);
+        ParentType::update(elemCtx, scvfIdx, timeIdx);
         DiffusionFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
         EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \copydoc VcfvMultiPhaseFluxVariables::updateBoundary
+     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
                         typename FluidSystem::ParameterCache &paramCache)
     {
-        MultiPhaseFluxVariables::updateBoundary(context, bfIdx, timeIdx,
+        ParentType::updateBoundary(context, bfIdx, timeIdx,
                                                 fluidState, paramCache);
         DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx,
                                                 fluidState);

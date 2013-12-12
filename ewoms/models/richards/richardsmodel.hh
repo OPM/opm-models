@@ -28,8 +28,6 @@
 
 #include "richardslocalresidual.hh"
 
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
-
 #include <dune/common/unused.hh>
 
 #include <sstream>
@@ -95,9 +93,9 @@ namespace Ewoms {
  * pressure to zero if the Richards model ought to be used!
  */
 template <class TypeTag>
-class RichardsModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class RichardsModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -115,35 +113,31 @@ public:
     {}
 
     /*!
-     * \copydoc VcfvModel::registerParameters
+     * \copydoc FvBaseDiscretization::registerParameters
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
-
-        // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
     }
 
     /*!
-     * \copydoc VcfvModel::init
+     * \copydoc FvBaseDiscretization::init
      */
     void init()
     {
         ParentType::init();
 
-        intrinsicPermeability_.resize(this->numDofs());
+        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     std::string name() const
     { return "richards"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -157,7 +151,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -171,18 +165,17 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
         if (Indices::pressureWIdx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
-            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            Scalar KRef = intrinsicPermeability_[globalDofIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r
-                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
+            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
 
             return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
         }
@@ -191,9 +184,9 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqWeight
+     * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
         int DUNE_UNUSED compIdx = eqIdx - Indices::contiWEqIdx;
         assert(0 <= compIdx && compIdx <= FluidSystem::numPhases);
@@ -203,48 +196,37 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateBegin
+     * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(
-            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
     }
 
     /*!
-     * \copydoc VcfvModel::updatePVWeights
+     * \copydoc FvBaseDiscretization::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-            const auto &K
-                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
     /*!
-     * \copydoc VcfvModel::phaseIsConsidered
+     * \copydoc FvBaseDiscretization::phaseIsConsidered
      */
     bool phaseIsConsidered(int phaseIdx) const
     { return phaseIdx == wPhaseIdx; }
 
-private:
-    friend class VcfvModel<TypeTag>;
-
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
-
-        // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

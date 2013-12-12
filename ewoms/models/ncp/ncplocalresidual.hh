@@ -29,22 +29,20 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvlocalresidual.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 /*!
  * \ingroup NcpModel
  *
- * \brief Compositional multi-phase NCP-model specific details needed
- *        to approximately calculate the local defect in the
- *        vertex-centered finite volume scheme.
+ * \brief Details needed to calculate the local residual in the
+ *        compositional multi-phase NCP-model .
  */
 template <class TypeTag>
-class NcpLocalResidual : public VcfvLocalResidual<TypeTag>
+class NcpLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
-    typedef VcfvLocalResidual<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -58,10 +56,10 @@ class NcpLocalResidual : public VcfvLocalResidual<TypeTag>
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef VcfvDiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dune::BlockVector<EqVector> LocalBlockVector;
 
@@ -69,10 +67,13 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
-    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
-                         int scvIdx, int timeIdx, int phaseIdx) const
+    void addPhaseStorage(EqVector &storage,
+                         const ElementContext &elemCtx,
+                         int dofIdx,
+                         int timeIdx,
+                         int phaseIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
         const auto &fluidState = volVars.fluidState();
 
         // compute storage term of all components within all phases
@@ -83,22 +84,22 @@ public:
                               * volVars.porosity();
         }
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(scvIdx, timeIdx),
-                                      phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(dofIdx, timeIdx), phaseIdx);
     }
 
     /*!
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
-                        int scvIdx, int timeIdx) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int dofIdx,
+                        int timeIdx) const
     {
         storage = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            addPhaseStorage(storage, elemCtx, scvIdx, timeIdx, phaseIdx);
+            addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage,
-                                          elemCtx.volVars(scvIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(dofIdx, timeIdx));
     }
 
     /*!
@@ -158,21 +159,21 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeSource
+     * \copydoc FvBaseLocalResidual::computeSource
      *
      * By default, this method only asks the problem to specify a
      * source term.
      */
-    void computeSource(RateVector &source, const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx) const
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int dofIdx,
+                       int timeIdx) const
     {
         Valgrind::SetUndefined(source);
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(source);
     }
 
-private:
-    friend class VcfvLocalResidual<TypeTag>;
 
     /*!
      * \brief Set the values of the constraint volumes of the current element.
@@ -182,10 +183,10 @@ private:
                           const ElementContext &elemCtx, int timeIdx) const
     {
         // set the auxiliary functions
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
+        for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                residual[scvIdx][ncp0EqIdx + phaseIdx]
-                    = phaseNcp_(elemCtx, scvIdx, timeIdx, phaseIdx);
+                residual[dofIdx][ncp0EqIdx + phaseIdx] =
+                    phaseNcp_(elemCtx, dofIdx, timeIdx, phaseIdx);
             }
         }
 
@@ -196,12 +197,13 @@ private:
     /*!
      * \brief Returns the value of the NCP-function for a phase.
      */
-    Scalar phaseNcp_(const ElementContext &elemCtx, int scvIdx, int timeIdx,
+    Scalar phaseNcp_(const ElementContext &elemCtx,
+                     int dofIdx,
+                     int timeIdx,
                      int phaseIdx) const
     {
-        const auto &fluidStateEval
-            = elemCtx.evalPointVolVars(scvIdx, timeIdx).fluidState();
-        const auto &fluidState = elemCtx.volVars(scvIdx, timeIdx).fluidState();
+        const auto &fluidStateEval = elemCtx.evalPointVolVars(dofIdx, timeIdx).fluidState();
+        const auto &fluidState = elemCtx.volVars(dofIdx, timeIdx).fluidState();
 
         Scalar aEval = phaseNotPresentIneq_(fluidStateEval, phaseIdx);
         Scalar bEval = phasePresentIneq_(fluidStateEval, phaseIdx);

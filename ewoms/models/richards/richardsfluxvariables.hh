@@ -28,19 +28,18 @@
 
 #include "richardsproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
-
 namespace Ewoms {
 
 /*!
  * \ingroup RichardsModel
- * \ingroup VCFVFluxVariables
+ * \ingroup FluxVariables
  *
  * \brief Calculates and stores the data which is required to
  *        calculate the flux of fluid over a face of a finite volume.
  */
 template <class TypeTag>
-class RichardsFluxVariables : public VcfvMultiPhaseFluxVariables<TypeTag>
+class RichardsFluxVariables
+    : public MultiPhaseBaseFluxVariables<TypeTag>
 {
 };
 

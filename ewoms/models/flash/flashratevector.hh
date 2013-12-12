@@ -28,7 +28,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/Valgrind.hpp>
 
@@ -55,8 +55,7 @@ class FlashRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
-    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     FlashRateVector() : ParentType()

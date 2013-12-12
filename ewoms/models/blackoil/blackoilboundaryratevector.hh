@@ -34,7 +34,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
  * \brief Implements a boundary vector for the fully implicit black-oil model.
  */

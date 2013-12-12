@@ -26,8 +26,6 @@
 #ifndef EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
 #define EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
 
-#include <ewoms/disc/vcfv/vcfvlocalresidual.hh>
-
 #include "richardsvolumevariables.hh"
 
 #include "richardsfluxvariables.hh"
@@ -36,11 +34,10 @@ namespace Ewoms {
 
 /*!
  * \ingroup RichardsModel
- * \brief Element-wise calculation of the residual for the Richards VCVF
- * discretization.
+ * \brief Element-wise calculation of the residual for the Richards model.
  */
 template <class TypeTag>
-class RichardsLocalResidual : public VcfvLocalResidual<TypeTag>
+class RichardsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -55,10 +52,12 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
-                        int scvIdx, int timeIdx) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int dofIdx,
+                        int timeIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
         storage[contiWEqIdx] = volVars.fluidState().density(wPhaseIdx)
@@ -76,7 +75,7 @@ public:
         // const auto &fluxVarsEval = elemCtx.fluxVars(scvfIdx, timeIdx);
         const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
 
-        // data attached to upstream and the downstream vertices
+        // data attached to upstream and the downstream DOFs
         // of the current phase
         const VolumeVariables &up
             = elemCtx.volVars(fluxVarsEval.upstreamIndex(wPhaseIdx), timeIdx);
@@ -93,9 +92,16 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeSource
      */
-    void computeSource(RateVector &source, const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx) const
-    { elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx); }
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int dofIdx,
+                       int timeIdx) const
+    {
+        elemCtx.problem().source(source,
+                                 elemCtx,
+                                 dofIdx,
+                                 timeIdx);
+    }
 };
 
 } // namespace Ewoms

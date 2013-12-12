@@ -2,6 +2,7 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2010-2013 by Andreas Lauser
+  Copyright (C) 2011 by Markus Wolff
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -23,8 +24,7 @@
  * \ingroup FlashModel
  *
  * \brief Defines default values for the properties required by the
- *        compositional multi-phase VCVF discretization based on flash
- *calculations.
+ *        compositional multi-phase model based on flash calculations.
  */
 #ifndef EWOMS_FLASH_PROPERTY_DEFAULTS_HH
 #define EWOMS_FLASH_PROPERTY_DEFAULTS_HH
@@ -39,8 +39,8 @@
 #include "flashindices.hh"
 #include "flashproperties.hh"
 
-#include <ewoms/models/modules/velocity/vcfvvelocitymodules.hh>
-#include <ewoms/disc/vcfv/vcfvmultiphaseproblem.hh>
+#include <ewoms/models/modules/velocity.hh>
+#include <ewoms/models/common/multiphasebaseproblem.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
@@ -52,24 +52,22 @@ namespace Properties {
 /*!
  * \brief Set the property for the number of components.
  */
-SET_INT_PROP(VcfvFlash, NumComponents,
-             GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
+SET_INT_PROP(FlashModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 /*!
  * \brief Set the property for the number of fluid phases.
  */
-SET_INT_PROP(VcfvFlash, NumPhases,
-             GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
+SET_INT_PROP(FlashModel, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases);
 
 /*!
  * \brief Set the number of PDEs to the number of compontents
  */
-SET_INT_PROP(VcfvFlash, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
+SET_INT_PROP(FlashModel, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq);
 
 /*!
  * \brief Set the property for the material law to the dummy law.
  */
-SET_PROP(VcfvFlash, MaterialLaw)
+SET_PROP(FlashModel, MaterialLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -84,67 +82,66 @@ public:
  * \brief Set the property for the material parameters by extracting
  *        it from the material law.
  */
-SET_TYPE_PROP(VcfvFlash, MaterialLawParams,
+SET_TYPE_PROP(FlashModel,
+              MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
 //! set the heat conduction law to a dummy one by default
-SET_TYPE_PROP(VcfvFlash, HeatConductionLaw,
+SET_TYPE_PROP(FlashModel, HeatConductionLaw,
               Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself
-SET_TYPE_PROP(VcfvFlash, HeatConductionLawParams,
+SET_TYPE_PROP(FlashModel, HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
 //! Use the FlashLocalResidual function for the flash model
-SET_TYPE_PROP(VcfvFlash, LocalResidual, Ewoms::FlashLocalResidual<TypeTag>);
+SET_TYPE_PROP(FlashModel, LocalResidual,
+              Ewoms::FlashLocalResidual<TypeTag>);
 
 //! Use the NCP flash solver by default
-SET_TYPE_PROP(VcfvFlash, FlashSolver,
+SET_TYPE_PROP(FlashModel, FlashSolver,
               Opm::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
                             typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 //! Let the flash solver choose its tolerance by default
-SET_SCALAR_PROP(VcfvFlash, FlashTolerance, 0.0);
+SET_SCALAR_PROP(FlashModel, FlashTolerance, 0.0);
 
 //! the Model property
-SET_TYPE_PROP(VcfvFlash, Model, Ewoms::FlashModel<TypeTag>);
+SET_TYPE_PROP(FlashModel, Model, Ewoms::FlashModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(VcfvFlash, BaseProblem, Ewoms::VcfvMultiPhaseProblem<TypeTag>);
+SET_TYPE_PROP(FlashModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
 
 //! Use the Darcy relation by default
-SET_TYPE_PROP(VcfvFlash, VelocityModule, Ewoms::VcfvDarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(FlashModel, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(VcfvFlash, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(FlashModel, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(VcfvFlash, RateVector, Ewoms::FlashRateVector<TypeTag>);
+SET_TYPE_PROP(FlashModel, RateVector, Ewoms::FlashRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(VcfvFlash, BoundaryRateVector,
-              Ewoms::FlashBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(FlashModel, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(VcfvFlash, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);
+SET_TYPE_PROP(FlashModel, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
-SET_TYPE_PROP(VcfvFlash, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
+SET_TYPE_PROP(FlashModel, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
 
 //! The indices required by the flash-baseed isothermal compositional model
-SET_TYPE_PROP(VcfvFlash, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
+SET_TYPE_PROP(FlashModel, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
 
 // disable the smooth upwinding method by default
-SET_BOOL_PROP(VcfvFlash, EnableSmoothUpwinding, false);
+SET_BOOL_PROP(FlashModel, EnableSmoothUpwinding, false);
 
 // use an isothermal model by default
-SET_BOOL_PROP(VcfvFlash, EnableEnergy, false);
+SET_BOOL_PROP(FlashModel, EnableEnergy, false);
 
 // disable molecular diffusion by default
-SET_BOOL_PROP(VcfvFlash, EnableDiffusion, false);
-
-} // namespace Properties
-} // namespace Opm
+SET_BOOL_PROP(FlashModel, EnableDiffusion, false);
+}} // namespace Properties, Opm
 
 #endif

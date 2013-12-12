@@ -28,18 +28,14 @@
 
 #include "blackoilproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
-
 namespace Ewoms {
-
 /*!
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
- * \brief Calculates the local residual of the black oil
- *        VCVF discretization.
+ * \brief Calculates the local residual of the black oil model.
  */
 template <class TypeTag>
-class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
+class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -54,14 +50,16 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, BaseLocalResidual)
 
 public:
     /*!
-     * \copydoc VcfvLocalResidual::computeStorage
+     * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage, const ElementContext &elemCtx,
-                        int scvIdx, int timeIdx) const
+    void computeStorage(EqVector &storage,
+                        const ElementContext &elemCtx,
+                        int dofIdx,
+                        int timeIdx) const
     {
         // retrieve the volume variables for the SCV at the specified
         // point in time
-        const VolumeVariables &volVars = elemCtx.volVars(scvIdx, timeIdx);
+        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
 
         storage = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -75,7 +73,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeFlux
+     * \copydoc FvBaseLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
@@ -101,13 +99,15 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeSource
+     * \copydoc FvBaseLocalResidual::computeSource
      */
-    void computeSource(RateVector &source, const ElementContext &elemCtx,
-                       int scvIdx, int timeIdx) const
+    void computeSource(RateVector &source,
+                       const ElementContext &elemCtx,
+                       int dofIdx,
+                       int timeIdx) const
     {
         // retrieve the source term intrinsic to the problem
-        elemCtx.problem().source(source, elemCtx, scvIdx, timeIdx);
+        elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
     }
 };
 

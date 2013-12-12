@@ -38,8 +38,7 @@ namespace Ewoms {
 /*!
  * \ingroup RichardsModel
  *
- * \brief Represents the primary variables used in the Richards VCVF
- *discretization.
+ * \brief Represents the primary variables used in the Richards model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.

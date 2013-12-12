@@ -20,7 +20,7 @@
 */
 /*!
  * \file
- * \ingroup DiscreteFractureVcfvModel
+ * \ingroup DiscreteFractureModel
  *
  * \brief Defines the properties required for the immiscible
  *        multi-phase model which considers discrete fractures.
@@ -30,14 +30,14 @@
 
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
 
-#include <ewoms/vtk/vcfvvtkdiscretefracturemodule.hh>
+#include <ewoms/vtk/vtkdiscretefracturemodule.hh>
 
 namespace Opm {
 namespace Properties {
 //! The generic type tag for problems using the immiscible multi-phase model
-NEW_TYPE_TAG(VcfvDiscreteFracture,
-             INHERITS_FROM(VcfvImmiscibleTwoPhase, VtkDiscreteFracture));
-} // namespace Properties
-} // namespace Opm
+NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDiscreteFracture));
+
+NEW_PROP_TAG(UseTwoPointGradients);
+}}
 
 #endif

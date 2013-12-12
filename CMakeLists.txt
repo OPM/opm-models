@@ -58,7 +58,7 @@ endmacro (tests_hook)
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-file(GLOB grids "tests/models/grids/*.dgf" "tests/models/grids/*.art")
+file(GLOB grids "tests/grids/*.dgf" "tests/grids/*.art")
 foreach(file ${grids})
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach()
@@ -68,56 +68,64 @@ include(EwomsAddTest)
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs
-EwomsAddTest(waterair_pvs_ni SOURCES tests/models/waterair_pvs_ni.cc)
-EwomsAddTest(co2injection_immiscible SOURCES tests/models/co2injection_immiscible.cc)
-EwomsAddTest(co2injection_flash SOURCES tests/models/co2injection_flash.cc)
-EwomsAddTest(co2injection_ncp SOURCES tests/models/co2injection_ncp.cc)
-EwomsAddTest(co2injection_pvs SOURCES tests/models/co2injection_pvs.cc)
-EwomsAddTest(co2injection_immiscible_ni SOURCES tests/models/co2injection_immiscible_ni.cc)
-EwomsAddTest(co2injection_flash_ni SOURCES tests/models/co2injection_flash_ni.cc)
-EwomsAddTest(co2injection_ncp_ni SOURCES tests/models/co2injection_ncp_ni.cc)
-EwomsAddTest(co2injection_pvs_ni SOURCES tests/models/co2injection_pvs_ni.cc)
-EwomsAddTest(cuvette_pvs SOURCES tests/models/cuvette_pvs.cc)
-EwomsAddTest(diffusion_flash SOURCES tests/models/diffusion_flash.cc)
-EwomsAddTest(diffusion_ncp SOURCES tests/models/diffusion_ncp.cc)
-EwomsAddTest(diffusion_pvs SOURCES tests/models/diffusion_pvs.cc)
-EwomsAddTest(finger_immiscible SOURCES tests/models/finger_immiscible.cc)
+EwomsAddTest(waterair_pvs_ni SOURCES tests/waterair_pvs_ni.cc)
+EwomsAddTest(co2injection_immiscible_vcfv SOURCES tests/co2injection_immiscible_vcfv.cc)
+EwomsAddTest(co2injection_flash_vcfv SOURCES tests/co2injection_flash_vcfv.cc)
+EwomsAddTest(co2injection_ncp_vcfv SOURCES tests/co2injection_ncp_vcfv.cc)
+EwomsAddTest(co2injection_pvs_vcfv SOURCES tests/co2injection_pvs_vcfv.cc)
+EwomsAddTest(co2injection_immiscible_ni_vcfv SOURCES tests/co2injection_immiscible_ni_vcfv.cc)
+EwomsAddTest(co2injection_flash_ni_vcfv SOURCES tests/co2injection_flash_ni_vcfv.cc)
+EwomsAddTest(co2injection_ncp_ni_vcfv SOURCES tests/co2injection_ncp_ni_vcfv.cc)
+EwomsAddTest(co2injection_pvs_ni_vcfv SOURCES tests/co2injection_pvs_ni_vcfv.cc)
+EwomsAddTest(co2injection_immiscible_ecfv SOURCES tests/co2injection_immiscible_ecfv.cc)
+EwomsAddTest(co2injection_flash_ecfv SOURCES tests/co2injection_flash_ecfv.cc)
+EwomsAddTest(co2injection_ncp_ecfv SOURCES tests/co2injection_ncp_ecfv.cc)
+EwomsAddTest(co2injection_pvs_ecfv SOURCES tests/co2injection_pvs_ecfv.cc)
+EwomsAddTest(co2injection_immiscible_ni_ecfv SOURCES tests/co2injection_immiscible_ni_ecfv.cc)
+EwomsAddTest(co2injection_flash_ni_ecfv SOURCES tests/co2injection_flash_ni_ecfv.cc)
+EwomsAddTest(co2injection_ncp_ni_ecfv SOURCES tests/co2injection_ncp_ni_ecfv.cc)
+EwomsAddTest(co2injection_pvs_ni_ecfv SOURCES tests/co2injection_pvs_ni_ecfv.cc)
+EwomsAddTest(cuvette_pvs SOURCES tests/cuvette_pvs.cc)
+EwomsAddTest(diffusion_flash SOURCES tests/diffusion_flash.cc)
+EwomsAddTest(diffusion_ncp SOURCES tests/diffusion_ncp.cc)
+EwomsAddTest(diffusion_pvs SOURCES tests/diffusion_pvs.cc)
+EwomsAddTest(finger_immiscible SOURCES tests/finger_immiscible.cc CONDITION ALUGRID_FOUND)
 EwomsAddTest(fracture_discretefracture
-  SOURCES tests/models/fracture_discretefracture.cc
+  SOURCES tests/fracture_discretefracture.cc
   CONDITION ALUGRID_FOUND
   DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
-EwomsAddTest(groundwater_immiscible SOURCES tests/models/groundwater_immiscible.cc)
-EwomsAddTest(infiltration_pvs SOURCES tests/models/infiltration_pvs.cc)
-EwomsAddTest(lens_immiscible SOURCES tests/models/lens_immiscible.cc)
-EwomsAddTest(lens_richards SOURCES tests/models/lens_richards.cc)
-EwomsAddTest(obstacle_immiscible SOURCES tests/models/obstacle_immiscible.cc)
-EwomsAddTest(obstacle_ncp SOURCES tests/models/obstacle_ncp.cc)
-EwomsAddTest(obstacle_pvs SOURCES tests/models/obstacle_pvs.cc)
-EwomsAddTest(outflow_pvs SOURCES tests/models/outflow_pvs.cc)
-EwomsAddTest(powerinjection_darcy SOURCES tests/models/powerinjection_darcy.cc)
-EwomsAddTest(powerinjection_forchheimer SOURCES tests/models/powerinjection_forchheimer.cc)
-EwomsAddTest(reservoir_blackoil SOURCES tests/models/reservoir_blackoil.cc)
-EwomsAddTest(test_navierstokes SOURCES tests/models/test_navierstokes.cc CONDITION ALUGRID_FOUND AND SUPERLU_FOUND)
-EwomsAddTest(test_quadrature SOURCES tests/models/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
-EwomsAddTest(test_stokes SOURCES tests/models/test_stokes.cc CONDITION SUPERLU_FOUND)
-EwomsAddTest(test_stokes2c SOURCES tests/models/test_stokes2c.cc CONDITION SUPERLU_FOUND)
-EwomsAddTest(test_stokesni SOURCES tests/models/test_stokesni.cc CONDITION SUPERLU_FOUND)
+EwomsAddTest(groundwater_immiscible SOURCES tests/groundwater_immiscible.cc)
+EwomsAddTest(infiltration_pvs SOURCES tests/infiltration_pvs.cc)
+EwomsAddTest(lens_immiscible SOURCES tests/lens_immiscible.cc)
+EwomsAddTest(lens_richards SOURCES tests/lens_richards.cc)
+EwomsAddTest(obstacle_immiscible SOURCES tests/obstacle_immiscible.cc)
+EwomsAddTest(obstacle_ncp SOURCES tests/obstacle_ncp.cc)
+EwomsAddTest(obstacle_pvs SOURCES tests/obstacle_pvs.cc)
+EwomsAddTest(outflow_pvs SOURCES tests/outflow_pvs.cc)
+EwomsAddTest(powerinjection_darcy SOURCES tests/powerinjection_darcy.cc)
+EwomsAddTest(powerinjection_forchheimer SOURCES tests/powerinjection_forchheimer.cc)
+EwomsAddTest(reservoir_blackoil SOURCES tests/reservoir_blackoil.cc)
+EwomsAddTest(test_navierstokes SOURCES tests/test_navierstokes.cc CONDITION ALUGRID_FOUND AND SUPERLU_FOUND)
+EwomsAddTest(test_quadrature SOURCES tests/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
+EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
+EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
 
 EwomsAddTest(obstacle_immiscible_parallel
-  SOURCES tests/models/obstacle_immiscible.cc
+  SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
 
 EwomsAddTest(obstacle_immiscible_parameters
-  SOURCES tests/models/obstacle_immiscible.cc
+  SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
   DRIVER_ARGS --parameters obstacle_immiscible)
 
 EwomsAddTest(obstacle_pvs_restart
-  SOURCES tests/models/obstacle_pvs.cc
+  SOURCES tests/obstacle_pvs.cc
   EXE_NAME obstacle_pvs
   NO_COMPILE
   DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=12000)

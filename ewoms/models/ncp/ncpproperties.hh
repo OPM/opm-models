@@ -23,17 +23,16 @@
  * \ingroup NcpModel
  *
  * \brief Declares the properties required for the NCP compositional
- *        multi-phase VCVF discretization.
+ *        multi-phase model.
  */
 #ifndef EWOMS_NCP_PROPERTIES_HH
 #define EWOMS_NCP_PROPERTIES_HH
 
-#include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <ewoms/vtk/vcfvvtkmultiphasemodule.hh>
-#include <ewoms/vtk/vcfvvtkcompositionmodule.hh>
-#include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
-#include <ewoms/vtk/vcfvvtkenergymodule.hh>
-#include <ewoms/vtk/vcfvvtkdiffusionmodule.hh>
+#include <ewoms/models/common/multiphasebasemodel.hh>
+
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/vtk/vtkdiffusionmodule.hh>
 
 namespace Opm {
 namespace Properties {
@@ -44,38 +43,7 @@ namespace Properties {
 /*!
  * \brief Define the type tag for the compositional NCP model.
  */
-NEW_TYPE_TAG(VcfvNcp, INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkComposition,
-                                    VtkTemperature, VtkEnergy, VtkDiffusion));
-
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
-NEW_PROP_TAG(NumPhases);     //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents); //!< Number of fluid components in the system
-NEW_PROP_TAG(Indices);       //!< Enumerations used by the model
-
-NEW_PROP_TAG(NcpPressureBaseWeight); //!< The unmodified weight for the pressure
-// primary variable
-NEW_PROP_TAG(NcpSaturationsBaseWeight); //!< The weight for the saturation
-// primary variables
-NEW_PROP_TAG(NcpFugacitiesBaseWeight); //!< The unmodified weight for the
-// fugacity primary variables
-
-NEW_PROP_TAG(MaterialLaw);       //!< The material law which ought to be used
-                                 //(extracted from the soil)
-NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from
-// the soil)
-
-NEW_PROP_TAG(HeatConductionLaw);       //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law
-// for heat conduction
-
-//! The compositional twophase system of fluids which is considered
-NEW_PROP_TAG(FluidSystem);
-
-//! The themodynamic constraint solver which calculates the
-//! composition of any phase given all component fugacities.
-NEW_PROP_TAG(CompositionFromFugacitiesSolver);
+NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
 
 //! Enable the energy equation?
 NEW_PROP_TAG(EnableEnergy);
@@ -83,17 +51,16 @@ NEW_PROP_TAG(EnableEnergy);
 //! Enable diffusive fluxes?
 NEW_PROP_TAG(EnableDiffusion);
 
-//! Enable gravity?
-NEW_PROP_TAG(EnableGravity);
+NEW_PROP_TAG(NcpPressureBaseWeight); //!< The unmodified weight for the pressure primary variable
+NEW_PROP_TAG(NcpSaturationsBaseWeight); //!< The weight for the saturation primary variables
+NEW_PROP_TAG(NcpFugacitiesBaseWeight); //!< The unmodified weight for the fugacity primary variables
 
-//! Use the smooth upwinding method?
-NEW_PROP_TAG(EnableSmoothUpwinding);
-
-//! Specifies the relation used for velocity
-NEW_PROP_TAG(VelocityModule);
+//! The themodynamic constraint solver which calculates the
+//! composition of any phase given all component fugacities.
+NEW_PROP_TAG(NcpCompositionFromFugacitiesSolver);
 
 //! Number of Newton iterations per time step where the update gets chopped?
-NEW_PROP_TAG(NewtonChoppedIterations);
+NEW_PROP_TAG(NcpNewtonNumChoppedIterations);
 } // namespace Properties
 } // namespace Opm
 

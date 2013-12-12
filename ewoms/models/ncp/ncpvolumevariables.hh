@@ -28,9 +28,8 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/models/modules/diffusion/vcfvdiffusionmodule.hh>
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
+#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/modules/diffusionmodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
@@ -40,21 +39,19 @@
 namespace Ewoms {
 /*!
  * \ingroup NcpModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the compositional multi-phase NCP model.
  */
 template <class TypeTag>
 class NcpVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public VcfvDiffusionVolumeVariables<TypeTag,
-                                          GET_PROP_VALUE(TypeTag, EnableDiffusion)>,
-      public VcfvEnergyVolumeVariables<TypeTag,
-                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
-      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -62,7 +59,7 @@ class NcpVolumeVariables
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, CompositionFromFugacitiesSolver)
+    typedef typename GET_PROP_TYPE(TypeTag, NcpCompositionFromFugacitiesSolver)
         CompositionFromFugacitiesSolver;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
@@ -80,9 +77,8 @@ class NcpVolumeVariables
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef VcfvDiffusionVolumeVariables<TypeTag, enableDiffusion>
-    DiffusionVolumeVariables;
-    typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
+    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
 
 public:
@@ -90,15 +86,19 @@ public:
     {}
 
     /*!
-     * \brief VcfvVolumeVariables::update
+     * \brief VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx,
+                int dofIdx,
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx,
+                           dofIdx,
+                           timeIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::ParameterCache paramCache;
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         // set the phase saturations
         Scalar sumSat = 0;
@@ -111,13 +111,12 @@ public:
         Valgrind::CheckDefined(sumSat);
 
         // set the fluid phase temperature
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
-                                                   timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // retrieve capillary pressure parameters
         const auto &problem = elemCtx.problem();
-        const MaterialLawParams &materialParams
-            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
+        const MaterialLawParams &materialParams =
+            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         // calculate capillary pressures
         Scalar capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
@@ -133,7 +132,7 @@ public:
             fug[compIdx] = priVars[fugacity0Idx + compIdx];
 
         // calculate phase compositions
-        const auto *hint = elemCtx.hint(scvIdx, timeIdx);
+        const auto *hint = elemCtx.hint(dofIdx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
             if (hint) {
@@ -158,7 +157,7 @@ public:
         }
 
         // porosity
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(porosity_);
 
         // relative permeabilities
@@ -174,18 +173,16 @@ public:
         }
 
         // intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
-                                       timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx,
-                                          scvIdx, timeIdx);
+        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         checkDefined();
     }
@@ -221,7 +218,7 @@ public:
     { return porosity_; }
 
     /*!
-     * \brief VcfvVolumeVariables::checkDefined
+     * \brief VolumeVariables::checkDefined
      */
     void checkDefined() const
     {

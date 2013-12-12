@@ -28,20 +28,18 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvnewtonmethod.hh>
-
 #include <algorithm>
 
 namespace Ewoms {
 
 /*!
  * \ingroup Newton
- * \brief A newton solver specific to the NCP model.
+ * \brief A Newton solver specific to the NCP model.
  */
 template <class TypeTag>
-class NcpNewtonMethod : public VcfvNewtonMethod<TypeTag>
+class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
-    typedef VcfvNewtonMethod<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
@@ -58,12 +56,12 @@ class NcpNewtonMethod : public VcfvNewtonMethod<TypeTag>
 
 public:
     /*!
-     * \copydoc VcfvNewtonMethod::VcfvNewtonMethod(Problem &)
+     * \copydoc FvBaseNewtonMethod::FvBaseNewtonMethod(Problem &)
      */
     NcpNewtonMethod(Problem &problem) : ParentType(problem)
     {
         choppedIterations_
-            = EWOMS_GET_PARAM(TypeTag, int, NewtonChoppedIterations);
+            = EWOMS_GET_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     }
 
@@ -74,17 +72,20 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, int, NewtonChoppedIterations,
+        EWOMS_REGISTER_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations,
                              "The number of Newton iterations for which the "
                              "update gets limited");
     }
 
+    // HACK: this is necessary since GCC 4.4 does not support
+    // befriending typedefs...
+/*
 private:
     friend class NewtonMethod<TypeTag>;
-    friend class VcfvNewtonMethod<TypeTag>;
-
+    friend class ParentType;
+*/
     /*!
-     * \copydoc VcfvNewtonMethod::update_
+     * \copydoc FvBaseNewtonMethod::update_
      */
     void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
@@ -93,8 +94,7 @@ private:
         if (!std::isfinite(deltaU.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        // compute the vertex and element colors for partial
-        // reassembly
+        // compute the DOF and element colors for partial reassembly
         if (this->enablePartialReassemble_()) {
             const Scalar minReasmTol = 1e-2 * this->relTolerance_();
             const Scalar maxReasmTol = 1e1 * this->relTolerance_();
@@ -124,6 +124,7 @@ private:
         }
     }
 
+private:
     void chopUpdate_(SolutionVector &uCurrentIter,
                      const SolutionVector &uLastIter)
     {

@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2011-2013 by Andreas Lauser
+  Copyright (C) 2010-2013 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -31,7 +31,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup DiscreteFractureVcfvModel
+ * \ingroup DiscreteFractureModel
  *
  * \brief Calculates the local residual of the discrete fracture
  *        immiscible multi-phase model.
@@ -51,7 +51,7 @@ class DiscreteFractureLocalResidual : public ImmiscibleLocalResidual<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -59,40 +59,43 @@ public:
      *        mass) within a single fluid phase
      *
      * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::vcfvScvCtxParams
+     * \copydetails Doxygen::dofCtxParams
      * \copydetails Doxygen::phaseIdxParam
      */
-    void addPhaseStorage(EqVector &storage, const ElementContext &elemCtx,
-                         int scvIdx, int timeIdx, int phaseIdx) const
+    void addPhaseStorage(EqVector &storage,
+                         const ElementContext &elemCtx,
+                         int dofIdx,
+                         int timeIdx,
+                         int phaseIdx) const
     {
         EqVector phaseStorage(0.0);
-        ParentType::addPhaseStorage(phaseStorage, elemCtx, scvIdx, timeIdx,
-                                    phaseIdx);
+        ParentType::addPhaseStorage(phaseStorage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
-        int globalIdx = elemCtx.globalSpaceIndex(scvIdx, timeIdx);
+        int globalIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
 
-        if (true || !fractureMapper.isFractureVertex(globalIdx)) {
+        if (!fractureMapper.isFractureVertex(globalIdx)) {
             // don't do anything in addition to the immiscible model
             // for finite volumes that do not feature fractures
             storage += phaseStorage;
             return;
         }
 
-        const auto &volVars = elemCtx.volVars(scvIdx, timeIdx);
-        const auto &scv = elemCtx.fvElemGeom(timeIdx).subContVol[scvIdx];
+        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
+        const auto &scv = elemCtx.stencil(timeIdx).subControlVolume(dofIdx);
 
         // reduce the matrix storage by the fracture volume
-        phaseStorage *= 1 - volVars.fractureVolume() / scv.volume;
+        phaseStorage *= 1 - volVars.fractureVolume()/scv.volume();
 
         // add the storage term inside the fractures
         const auto &fsFracture = volVars.fractureFluidState();
 
-        phaseStorage[conti0EqIdx + phaseIdx]
-            = volVars.fracturePorosity() * fsFracture.saturation(phaseIdx)
-              * fsFracture.density(phaseIdx) * volVars.fractureVolume()
-              / scv.volume;
+        phaseStorage[conti0EqIdx + phaseIdx] +=
+            volVars.fracturePorosity()*
+            fsFracture.saturation(phaseIdx) *
+            fsFracture.density(phaseIdx) *
+            volVars.fractureVolume()/scv.volume();
 
         EnergyModule::addFracturePhaseStorage(phaseStorage, volVars, scv,
                                               phaseIdx);
@@ -102,7 +105,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvLocalResidual::computeFlux
+     * \copydoc FvBaseLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
@@ -113,8 +116,8 @@ public:
         const auto &evalPointFluxVars
             = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
 
-        int i = fluxVars.insideIndex();
-        int j = fluxVars.outsideIndex();
+        int i = fluxVars.interiorIndex();
+        int j = fluxVars.exteriorIndex();
         int I = elemCtx.globalSpaceIndex(i, timeIdx);
         int J = elemCtx.globalSpaceIndex(j, timeIdx);
         const auto &fractureMapper = elemCtx.problem().fractureMapper();
@@ -123,8 +126,8 @@ public:
             // fracture
             return;
 
-        const auto &scvf = elemCtx.fvElemGeom(timeIdx).subContVolFace[scvfIdx];
-        Scalar scvfArea = scvf.normal.two_norm();
+        const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
+        Scalar scvfArea = scvf.area();
 
         // advective mass fluxes of all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -138,7 +141,7 @@ public:
             flux[conti0EqIdx + phaseIdx] *= 1 - fluxVars.fractureWidth()
                                                 / (2 * scvfArea);
 
-            // vertex data of the upstream and the downstream vertices
+            // volume variables of the upstream and the downstream DOFs
             int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
             const auto &up = elemCtx.volVars(upIdx, timeIdx);
             flux[conti0EqIdx + phaseIdx]

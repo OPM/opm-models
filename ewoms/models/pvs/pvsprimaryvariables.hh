@@ -28,7 +28,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
@@ -43,7 +43,7 @@ namespace Ewoms {
  * \ingroup PvsModel
  *
  * \brief Represents the primary variables used in the primary
- *        variable switching compositional VCVF discretization.
+ *        variable switching compositional model.
  *
  * This class is basically a Dune::FieldVector which can retrieve its
  * contents from an aribitatry fluid state.
@@ -73,7 +73,7 @@ class PvsPrimaryVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:

@@ -30,7 +30,6 @@
 
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
-#include <ewoms/disc/vcfv/vcfvmultiphasefluxvariables.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -58,7 +57,7 @@ class NcpRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     NcpRateVector() : ParentType()

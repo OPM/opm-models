@@ -28,8 +28,6 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvnewtonmethod.hh>
-
 namespace Ewoms {
 
 /*!
@@ -37,12 +35,12 @@ namespace Ewoms {
  * \ingroup PvsModel
  *
  * \brief A newton solver which is specific to the compositional
- *        multi-phase PVS VCVF discretization.
+ *        multi-phase PVS model.
  */
 template <class TypeTag>
-class PvsNewtonMethod : public VcfvNewtonMethod<TypeTag>
+class PvsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
-    typedef VcfvNewtonMethod<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
@@ -61,9 +59,13 @@ public:
         return ParentType::converged();
     }
 
+    // HACK which is necessary because GCC 4.4 does not support
+    // being a friend of typedefs
+/*
 protected:
     friend class NewtonMethod<TypeTag>;
-    friend class VcfvNewtonMethod<TypeTag>;
+    friend class ParentType;
+*/
 
     /*!
      * \copydoc NewtonMethod::endIteration_

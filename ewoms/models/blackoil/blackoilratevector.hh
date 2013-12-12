@@ -36,7 +36,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
  * \brief Implements a vector representing mass, molar or volumetric rates for
  *the black oil model.

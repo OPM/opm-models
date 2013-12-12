@@ -1,8 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2010-2013 by Andreas Lauser
-  Copyright (C) 2012 by Christoph Grueninger
+  Copyright (C) 2011-2013 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -31,8 +30,6 @@
 #include "stokesproblem.hh"
 #include "stokesproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvmodel.hh>
-
 #include <dune/common/fvector.hh>
 
 #include <sstream>
@@ -41,10 +38,9 @@
 namespace Ewoms {
 
 /*!
- * \ingroup VCFVStokesModel
+ * \ingroup StokesModel
  *
- * \brief Fully-implicit discretization of the Navier-Stokes equations
- *        using the vertex-centered finite volume scheme.
+ * \brief A model for the Navier-Stokes equations.
  *
  * This model implements Navier-Stokes flow of a single fluid. By
  * default, it solves the momentum balance of the time-dependent Stokes
@@ -86,9 +82,9 @@ namespace Ewoms {
  * use a more appropriate discretization scheme in the future, though.
  */
 template <class TypeTag>
-class StokesModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, BaseModel) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -116,7 +112,7 @@ public:
     { return phaseIdxQueried == phaseIdx; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -137,7 +133,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
@@ -156,9 +152,9 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
         // for stokes flow the pressure gradients are often quite
         // small, so we need higher precision for pressure. TODO: find
@@ -169,7 +165,7 @@ public:
             // permeable sand stone filled with liquid water.)
             static const Scalar KRef = 1e-12;   // [m^2]
             static const Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalVertexIdx);
+            Scalar V = this->boxVolume(globalDofIdx);
 
             return std::max(1e-5, pGradRef * KRef / V);
         }
@@ -178,7 +174,7 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::addOutputVtkFields
+     * \copydoc FvBaseDiscretization::addOutputVtkFields
      */
     template <class MultiWriter>
     void addOutputVtkFields(MultiWriter &writer) const
@@ -207,12 +203,11 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             elemCtx.updateAll(*elemIt);
 
-            int numScv = elemCtx.numScv();
-            for (int scvIdx = 0; scvIdx < numScv; ++scvIdx) {
-                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/scvIdx,
-                                                         /*timeIdx=*/0);
-                const auto &volVars
-                    = elemCtx.volVars(/*spaceIdx=*/scvIdx, /*timeIdx=*/0);
+            int numScv = elemCtx.numDof(/*timeIdx=*/0);
+            for (int dofIdx = 0; dofIdx < numScv; ++dofIdx)
+            {
+                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
                 const auto &fluidState = volVars.fluidState();
 
                 pressure[globalIdx] = fluidState.pressure(phaseIdx);

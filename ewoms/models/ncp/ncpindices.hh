@@ -27,7 +27,7 @@
 #define EWOMS_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 namespace Ewoms {
 
@@ -39,9 +39,10 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset = 0>
 struct NcpIndices
-    : public VcfvEnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents)
-                               + GET_PROP_VALUE(TypeTag, NumPhases),
-                               GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset
+                           + GET_PROP_VALUE(TypeTag, NumComponents)
+                           + GET_PROP_VALUE(TypeTag, NumPhases),
+                           GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -49,8 +50,7 @@ private:
     enum { numComponents = FluidSystem::numComponents };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef VcfvEnergyIndices<PVOffset + numComponents + numPhases,
-                              enableEnergy> EnergyIndices;
+    typedef Ewoms::EnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
 
 public:
     /*!

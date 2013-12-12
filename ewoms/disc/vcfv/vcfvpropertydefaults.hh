@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2009-2013 by Andreas Lauser
+  Copyright (C) 2012-2013 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -20,241 +20,69 @@
 */
 /*!
  * \file
- * \ingroup VcfvModel
+ * \ingroup VcfvDiscretization
  *
- * \brief Defines defaults for the common properties of the VCVF
- *discretizations.
+ * \brief Defines defaults for the common properties of the VCFV discretizations.
  */
 #ifndef EWOMS_VCFV_PROPERTY_DEFAULTS_HH
 #define EWOMS_VCFV_PROPERTY_DEFAULTS_HH
 
 #include "vcfvproperties.hh"
-#include "vcfvassembler.hh"
-#include "vcfvmodel.hh"
-#include "vcfvelementgeometry.hh"
-#include "vcfvlocalresidual.hh"
-#include "vcfvlocaljacobian.hh"
-#include "vcfvelementcontext.hh"
-#include "vcfvvolumevariables.hh"
-#include "vcfvconstraints.hh"
-#include "vcfvconstraintscontext.hh"
-#include "vcfvnewtonmethod.hh"
+#include "vcfvdiscretization.hh"
+#include "vcfvstencil.hh"
+#include "vcfvgradientcalculator.hh"
+#include "vcfvgridcommhandlefactory.hh"
+#include "vcfvvtkoutputmodule.hh"
 
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
-
-#include <ewoms/nonlinear/newtonmethod.hh>
-#include <ewoms/common/timemanager.hh>
-
-#include <dune/common/fvector.hh>
-#include <dune/common/fmatrix.hh>
-
-#include <limits>
+#include <ewoms/disc/common/fvbasepropertydefaults.hh>
 
 namespace Ewoms {
-// forward declaration
 template <class TypeTag>
-class VcfvModel;
+class VcfvDiscretization;
 }
 
 namespace Opm {
 namespace Properties {
-//////////////////////////////////////////////////////////////////
-// Some defaults for very fundamental properties
-//////////////////////////////////////////////////////////////////
-
-//! Set the default type for the time manager
-SET_TYPE_PROP(VcfvModel, TimeManager, Ewoms::TimeManager<TypeTag>);
-
-//////////////////////////////////////////////////////////////////
-// Properties
-//////////////////////////////////////////////////////////////////
-
-//! Use the leaf grid view if not defined otherwise
-SET_TYPE_PROP(VcfvModel, GridView,
-              typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
-
-//! Set the default for the ElementGeometry
-SET_PROP(VcfvModel, FvElementGeometry)
+//! Set the stencil
+SET_PROP(VcfvDiscretization, Stencil)
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::ctype CoordScalar;
 
 public:
-    typedef Ewoms::VcfvElementGeometry<Scalar, GridView> type;
+    typedef Ewoms::VcfvStencil<CoordScalar, GridView> type;
 };
 
-//! Mapper for the grid view's vertices.
-SET_TYPE_PROP(VcfvModel, VertexMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(
-                                                            TypeTag, GridView),
-                                                        Dune::MCMGVertexLayout>);
-
-//! Mapper for the grid view's elements.
-SET_TYPE_PROP(VcfvModel, ElementMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(
-                                                            TypeTag, GridView),
-                                                        Dune::MCMGElementLayout>);
-
 //! Mapper for the degrees of freedoms.
-SET_TYPE_PROP(VcfvModel, DofMapper,
-              typename GET_PROP_TYPE(TypeTag, VertexMapper));
+SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
 
-//! marks the border indices (required for the algebraic overlap stuff)
-SET_PROP(VcfvModel, BorderListCreator)
-{
-private:
+//! The concrete class which manages the spatial discretization
+SET_TYPE_PROP(VcfvDiscretization, Discretization, Ewoms::VcfvDiscretization<TypeTag>);
+
+//! The base class for the VTK output modules (decides whether to write element or vertex based fields)
+SET_TYPE_PROP(VcfvDiscretization, DiscVtkOutputModule, Ewoms::VcfvVtkOutputModule<TypeTag>);
+
+//! Calculates the gradient of any quantity given the index of a flux approximation point
+SET_TYPE_PROP(VcfvDiscretization, GradientCalculator, Ewoms::VcfvGradientCalculator<TypeTag>);
+
+//! The class to create grid communication handles
+SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory, Ewoms::VcfvGridCommHandleFactory<TypeTag>);
+
+//! Use P1-finite element gradients by default for the vertex centered
+//! finite volume scheme.
+SET_BOOL_PROP(VcfvDiscretization, UseTwoPointGradients, false);
+
+//! Set the border list creator for vertices
+SET_PROP(VcfvDiscretization, BorderListCreator)
+{ private:
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
 public:
     typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
 
-//! Set the BaseLocalResidual to VcfvLocalResidual
-SET_TYPE_PROP(VcfvModel, BaseLocalResidual, Ewoms::VcfvLocalResidual<TypeTag>);
-
-//! Set the BaseModel to VcfvModel
-SET_TYPE_PROP(VcfvModel, BaseModel, Ewoms::VcfvModel<TypeTag>);
-
-//! The local jacobian operator for the VCVF discretization
-SET_TYPE_PROP(VcfvModel, LocalJacobian, Ewoms::VcfvLocalJacobian<TypeTag>);
-
-//! The maximum allowed number of timestep divisions for the
-//! Newton solver
-SET_INT_PROP(VcfvModel, MaxTimeStepDivisions, 10);
-
-/*!
- * \brief A vector of quanties, each for one equation.
- */
-SET_TYPE_PROP(VcfvModel, EqVector,
-              Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                                GET_PROP_VALUE(TypeTag, NumEq)>);
-
-/*!
- * \brief A vector for mass/energy rates.
- *
- * E.g. Neumann fluxes or source terms
- */
-SET_TYPE_PROP(VcfvModel, RateVector, typename GET_PROP_TYPE(TypeTag, EqVector));
-
-/*!
- * \brief Type of object for specifying boundary conditions.
- */
-SET_TYPE_PROP(VcfvModel, BoundaryRateVector,
-              typename GET_PROP_TYPE(TypeTag, RateVector));
-
-/*!
- * \brief The class which represents constraints.
- */
-SET_TYPE_PROP(VcfvModel, Constraints, Ewoms::VcfvConstraints<TypeTag>);
-
-/*!
- * \brief The type for storing a residual for an element.
- */
-SET_TYPE_PROP(VcfvModel, ElementEqVector,
-              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
-
-/*!
- * \brief The type for storing a residual for the whole grid.
- */
-SET_TYPE_PROP(VcfvModel, GlobalEqVector,
-              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, EqVector)>);
-
-/*!
- * \brief An object representing a local set of primary variables.
- */
-SET_TYPE_PROP(VcfvModel, PrimaryVariables,
-              Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                                GET_PROP_VALUE(TypeTag, NumEq)>);
-
-/*!
- * \brief The type of a solution for the whole grid at a fixed time.
- */
-SET_TYPE_PROP(VcfvModel, SolutionVector,
-              Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
-
-/*!
- * \brief The volume variable class.
- *
- * This should almost certainly be overloaded by the model...
- */
-SET_TYPE_PROP(VcfvModel, VolumeVariables, Ewoms::VcfvVolumeVariables<TypeTag>);
-
-/*!
- * \brief An array of secondary variable containers.
- */
-SET_TYPE_PROP(VcfvModel, ElementContext, Ewoms::VcfvElementContext<TypeTag>);
-
-/*!
- * \brief Assembler for the global jacobian matrix.
- */
-SET_TYPE_PROP(VcfvModel, JacobianAssembler, Ewoms::VcfvAssembler<TypeTag>);
-
-//! use an unlimited time step size by default
-#if 0
-// requires GCC 4.6 and above to call the constexpr function of
-// numeric_limits
-SET_SCALAR_PROP(VcfvModel, MaxTimeStepSize, std::numeric_limits<Scalar>::infinity());
-#else
-SET_SCALAR_PROP(VcfvModel, MaxTimeStepSize, 1e100);
-#endif
-//! By default, accept any time step larger than zero
-SET_SCALAR_PROP(VcfvModel, MinTimeStepSize, 0.0);
-
-//! The base epsilon value for finite difference calculations
-SET_SCALAR_PROP(VcfvModel, BaseEpsilon, 9.123e-11);
-
-//! use forward differences to calculate the jacobian by default
-SET_INT_PROP(VcfvModel, NumericDifferenceMethod, +1);
-
-//! do not use hints by default
-SET_BOOL_PROP(VcfvModel, EnableHints, false);
-
-//! use FE gradients by default
-SET_BOOL_PROP(VcfvModel, UseTwoPointGradients, false);
-
-// disable jacobian matrix recycling by default
-SET_BOOL_PROP(VcfvModel, EnableJacobianRecycling, false);
-
-// disable partial reassembling by default
-SET_BOOL_PROP(VcfvModel, EnablePartialReassemble, false);
-
-// disable constraints by default
-SET_BOOL_PROP(VcfvModel, EnableConstraints, false);
-
-//! Set the type of a global jacobian matrix from the solution types
-SET_PROP(VcfvModel, JacobianMatrix)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef typename Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
-
-public:
-    typedef typename Dune::BCRSMatrix<MatrixBlock> type;
-};
-
-// if the deflection of the newton method is large, we do not
-// need to solve the linear approximation accurately. Assuming
-// that the initial value for the delta vector u is quite
-// close to the final value, a reduction of 6 orders of
-// magnitude in the defect should be sufficient...
-SET_SCALAR_PROP(VcfvModel, LinearSolverRelativeTolerance, 1e-10);
-
-// the absolute defect of a component tolerated by the linear solver.
-// By default, looking at the absolute defect is "almost" disabled.
-SET_SCALAR_PROP(VcfvModel, LinearSolverAbsoluteTolerance, 1e-30);
-
-//! set the default for the accepted fix-point tolerance (we use 0 to disable
-// considering the fix-point tolerance)
-SET_SCALAR_PROP(VcfvModel, LinearSolverFixPointTolerance,
-                GET_PROP_VALUE(TypeTag, NewtonRelativeTolerance) / 100);
-
-//! Set the history size of the time discretiuation to 2 (for implicit euler)
-SET_INT_PROP(VcfvModel, TimeDiscHistorySize, 2);
-
-} // namespace Properties
-} // namespace Opm
+}} // namespace Opm, Properties
 
 #endif

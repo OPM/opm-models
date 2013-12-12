@@ -20,19 +20,19 @@
 */
 /*!
  * \file
- * \ingroup VCFVStokesModel
+ * \ingroup StokesModel
  *
- * \brief Declares the properties required by the Stokes VCVF discretization.
+ * \brief Declares the properties required by the Stokes model.
  */
 #ifndef EWOMS_STOKES_PROPERTIES_HH
 #define EWOMS_STOKES_PROPERTIES_HH
 
-#include <ewoms/disc/vcfv/vcfvproperties.hh>
+#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
 
 namespace Opm {
 namespace Properties {
 //! The type tag for the problems using the Stokes equations
-NEW_TYPE_TAG(VcfvStokes, INHERITS_FROM(VcfvModel));
+NEW_TYPE_TAG(StokesModel, INHERITS_FROM(VcfvDiscretization));
 
 /*!
  * \brief The type tag for the problems using the Navier-Stokes equations.
@@ -40,10 +40,10 @@ NEW_TYPE_TAG(VcfvStokes, INHERITS_FROM(VcfvModel));
  * Basically this just takes everything from the Stokes model, but
  * sets the \c EnableNavierTerm property to true by default.
  */
-NEW_TYPE_TAG(VcfvNavierStokes, INHERITS_FROM(VcfvStokes));
+NEW_TYPE_TAG(NavierStokesModel, INHERITS_FROM(StokesModel));
 
 NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using
-// a generic name
+                       //!< a generic name
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);
 NEW_PROP_TAG(FluidState);
@@ -51,13 +51,13 @@ NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(StokesPhaseIndex); //!< The index of the considered fluid phase
 NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using
-// the stokes model
+                           //!< the stokes model
 NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the
-// problem
+                             //!< problem
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether the energy equation is enabled
-// or not
+                            //!< or not
 NEW_PROP_TAG(EnableNavierTerm); //!< Specify whether the model should feature an
-// inertial term or not (default: false)
+                                //!< inertial term or not (default: false)
 } // namespace Properties
 } // namespace Opm
 

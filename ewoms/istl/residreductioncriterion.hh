@@ -67,12 +67,13 @@ public:
     void setTolerance(Scalar tol)
     { defectReduction_ = tol; }
 
-    /*!
-     * \brief Return the maximum allowed weighted maximum of the reduction of
-     * the linear residual.
-     */
-    Scalar tolerance() const
-    { return defectReduction_; }
+  /*!
+   * \brief Return the maximum allowed weighted maximum of the reduction of the linear residual.
+   */
+  Scalar tolerance() const
+  {
+    return initialDefect_*defectReduction_;
+  }
 
     /*!
      * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
@@ -96,6 +97,34 @@ public:
      */
     bool converged() const
     { return curDefect_ <= tolerance(); }
+
+
+  /*!
+   * \copydoc ConvergenceCriterion::printInitial()
+   */
+  void printInitial(std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << " Iter ";
+    os << std::setw(20) << " Defect ";
+    os << std::setw(20) << " Reduction ";
+    os << std::endl;
+
+    os << std::setw(20) << 0 << " ";
+    os << std::setw(20) << curDefect_ << " ";
+    os << std::setw(20) << defectReduction_ << " ";
+    os << std::endl;
+  }
+
+  /*!
+   * \copydoc ConvergenceCriterion::print()
+   */
+  void print(Scalar iter, std::ostream &os=std::cout) const
+  {
+    os << std::setw(20) << iter << " ";
+    os << std::setw(20) << curDefect_ << " ";
+    os << std::setw(20) << defectReduction_ << " ";
+    os << std::endl;
+  };
 
 private:
     Dune::ScalarProduct<Vector> &scalarProduct_;

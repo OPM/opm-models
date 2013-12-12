@@ -28,8 +28,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
+#include <ewoms/models/modules/energymodule.hh>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include <dune/common/fvector.hh>
@@ -38,20 +37,19 @@
 namespace Ewoms {
 
 /*!
- * \ingroup ImmiscibleVcfvModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup ImmiscibleModel
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume for the immiscible multi-phase model.
  */
 template <class TypeTag>
 class ImmiscibleVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public VcfvEnergyVolumeVariables<TypeTag,
-                                       GET_PROP_VALUE(TypeTag, EnableEnergy)>,
-      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -71,27 +69,30 @@ class ImmiscibleVolumeVariables
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef VcfvEnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
     typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
-     * \copydoc VcfvVolumeVariables::update
+     * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx,
+                int dofIdx,
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx,
+                           dofIdx,
+                           timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, scvIdx,
-                                                   timeIdx);
+        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams
-            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const typename MaterialLaw::Params &materialParams =
+            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         Valgrind::CheckDefined(priVars);
 
         Scalar sumSat = 0;
@@ -131,17 +132,16 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
 
         // intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, scvIdx,
-                                       timeIdx);
+        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!

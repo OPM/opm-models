@@ -34,7 +34,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup DiscreteFractureVcfvModel
+ * \ingroup DiscreteFractureModel
  * \brief A fully-implicit multi-phase flow model which assumes
  *        immiscibility of the phases and is able to include fractures
  *        in the domain.
@@ -62,32 +62,27 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the immiscible model.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>::registerParameters();
+        Ewoms::VtkDiscreteFractureModule<TypeTag>::registerParameters();
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     const char *name() const
     { return "discretefracture"; }
-
-protected:
-    friend class VcfvModel<TypeTag>;
 
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkDiscreteFractureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->problem_));
     }
 };
 } // namespace Ewoms

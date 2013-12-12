@@ -28,26 +28,23 @@
 
 #include "blackoilproperties.hh"
 
-#include <ewoms/disc/vcfv/vcfvvolumevariables.hh>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-
 #include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
 /*!
- * \ingroup BlackOilVcfvModel
- * \ingroup VcfvVolumeVariables
+ * \ingroup BlackOilModel
+ * \ingroup VolumeVariables
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the black-oil model.
  */
 template <class TypeTag>
 class BlackOilVolumeVariables
-    : public VcfvVolumeVariables<TypeTag>,
-      public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
-
+    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
 {
-    typedef VcfvVolumeVariables<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -75,21 +72,24 @@ class BlackOilVolumeVariables
 
 public:
     /*!
-     * \copydoc VcfvVolumeVariables::update
+     * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int scvIdx, int timeIdx)
+    void update(const ElementContext &elemCtx,
+                int dofIdx,
+                int timeIdx)
     {
-        ParentType::update(elemCtx, scvIdx, timeIdx);
+        ParentType::update(elemCtx,
+                           dofIdx,
+                           timeIdx);
 
-        fluidState_.setTemperature(
-            elemCtx.problem().temperature(elemCtx, scvIdx, timeIdx));
+        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams
-            = problem.materialLawParams(elemCtx, scvIdx, timeIdx);
-        const auto &priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const typename MaterialLaw::Params &materialParams =
+            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         // update the saturations
         Scalar sumSat = 0.0;
@@ -226,13 +226,13 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // retrieve the porosity from the problem
-        porosity_ = problem.porosity(elemCtx, scvIdx, timeIdx);
+        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
 
         // intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, scvIdx, timeIdx);
+        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, scvIdx, timeIdx);
+        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!

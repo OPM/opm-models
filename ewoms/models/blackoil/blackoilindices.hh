@@ -29,7 +29,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
+ * \ingroup BlackOilModel
  *
  * \brief The primary variable and equation indices for the black-oil model.
  */

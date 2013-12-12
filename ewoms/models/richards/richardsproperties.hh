@@ -27,48 +27,20 @@
 #ifndef EWOMS_RICHARDS_PROPERTIES_HH
 #define EWOMS_RICHARDS_PROPERTIES_HH
 
-#include <ewoms/disc/vcfv/vcfvproperties.hh>
-#include <ewoms/vtk/vcfvvtkmultiphasemodule.hh>
-#include <ewoms/vtk/vcfvvtktemperaturemodule.hh>
+#include <ewoms/models/common/multiphasebasemodel.hh>
 
 // \{
 namespace Opm {
 namespace Properties {
-
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
-
 //! The type tag for problems discretized using the Richards model
-NEW_TYPE_TAG(VcfvRichards,
-             INHERITS_FROM(VcfvModel, VtkMultiPhase, VtkTemperature));
+NEW_TYPE_TAG(Richards, INHERITS_FROM(MultiPhaseBaseModel));
 
-//////////////////////////////////////////////////////////////////
-// Property tags
-//////////////////////////////////////////////////////////////////
+NEW_PROP_TAG(LiquidPhaseIndex); //!< Index of the fluid which represents the wetting phase
 
-NEW_PROP_TAG(NumPhases);         //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents);     //!< Number of components in the system
-NEW_PROP_TAG(Indices);           //!< Enumerations used by the model
-NEW_PROP_TAG(MaterialLaw);       //!< The material law which ought to be used
-NEW_PROP_TAG(MaterialLawParams); //!< The type of the parameter object for the
-// material law
-NEW_PROP_TAG(HeatConductionLaw);       //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law
-// for heat conduction
-NEW_PROP_TAG(FluidSystem); //!< The fluid system to be used for the Richards
-// model
-NEW_PROP_TAG(LiquidPhaseIndex); //!< Index of the fluid which represents the
-// wetting phase
-NEW_PROP_TAG(WettingPhase);    //!< Fluid which represents the wetting phase
-NEW_PROP_TAG(NonwettingPhase); //!< Fluid which represents the non-wetting phase
-NEW_PROP_TAG(VelocityModule);  //!< Specifies the relation used for velocity
-NEW_PROP_TAG(EnableGravity);   //!< Returns whether gravity is considered in the
-// problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specifies whether the smooth upwinding
-// method should be used
+NEW_PROP_TAG(FluidSystem); //!< The fluid system used for the problem
+NEW_PROP_TAG(WettingPhase); //!< The component which constitutes the wetting phase of the problem
+NEW_PROP_TAG(NonwettingPhase); //!< The component which constitutes the non-wetting phase of the problem
 // \}
-} // namespace Properties
-} // namespace Opm
+}} // namespace Properties, Opm
 
 #endif

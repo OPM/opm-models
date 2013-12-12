@@ -28,7 +28,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <ewoms/models/modules/energy/vcfvenergymodule.hh>
+#include <ewoms/models/modules/energymodule.hh>
 
 #include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
@@ -71,8 +71,7 @@ class ImmisciblePrimaryVariables
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
-    typedef VcfvEnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    EnergyModule;
+    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     /*!

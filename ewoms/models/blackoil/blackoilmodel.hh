@@ -2,7 +2,6 @@
 // vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2010-2013 by Andreas Lauser
-  Copyright (C) 2012 by Klaus Mosthaf
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -36,8 +35,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup BlackOilVcfvModel
- * \brief A fully-implicit black-oil flow model using the VCFV discretization.
+ * \ingroup BlackOilModel
+ * \brief A fully-implicit black-oil flow model.
  *
  * The black-oil model is a three-phase, three-component model widely
  * used for oil reservoir simulation.  The phases are denoted by lower
@@ -91,17 +90,17 @@ namespace Ewoms {
  * \c VelocityModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::VcfvForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
  * \endcode
  *
  * The primary variables used by this model are:
  * - The pressure of the phase with the lowest index
  * - The two saturations of the phases with the lowest indices
  */
-template <class TypeTag>
-class BlackOilModel : public GET_PROP_TYPE(TypeTag, BaseModel)
+template<class TypeTag >
+class BlackOilModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
-    typedef VcfvModel<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -120,39 +119,36 @@ public:
     {}
 
     /*!
-     * \brief Register all run-time parameters for the immiscible VCVF
-     * discretization.
+     * \brief Register all run-time parameters for the immiscible model.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VcfvVtkBlackOilModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkCompositionModule<TypeTag>::registerParameters();
-        Ewoms::VcfvVtkTemperatureModule<TypeTag>::registerParameters();
+        Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
+        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
     }
 
     /*!
-     * \copydoc VcfvModel::init
+     * \copydoc FvBaseDiscretization::init
      */
     void init()
     {
         ParentType::init();
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-        intrinsicPermeability_.resize(this->numDofs());
+        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
-     * \copydoc VcfvModel::name
+     * \copydoc FvBaseDiscretization::name
      */
     const char *name() const
     { return "blackoil"; }
 
     /*!
-     * \copydoc VcfvModel::primaryVarName
+     * \copydoc FvBaseDiscretization::primaryVarName
      */
     std::string primaryVarName(int pvIdx) const
     {
@@ -161,11 +157,9 @@ public:
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
-        else if (Indices::saturation0Idx <= pvIdx
-                 && pvIdx <= Indices::saturation0Idx + numPhases - 1) {
+        else if (Indices::saturation0Idx <= pvIdx && pvIdx <= Indices::saturation0Idx + numPhases - 1) {
             int phaseIdx = pvIdx - Indices::saturation0Idx;
-            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
-            ;
+            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);;
         }
         else
             assert(false);
@@ -174,16 +168,14 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::eqName
+     * \copydoc FvBaseDiscretization::eqName
      */
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
 
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
-                                                     + numComponents)
-            oss << "conti_"
-                << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
 
@@ -191,29 +183,28 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::primaryVarWeight
+     * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
         if (Indices::pressure0Idx == pvIdx) {
             // use a pressure gradient of 1e2 Pa/m for liquid water as
             // a reference
-            Scalar KRef = intrinsicPermeability_[globalVertexIdx];
+            Scalar KRef = intrinsicPermeability_[globalDofIdx];
             static const Scalar muRef = 1e-3;
             static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r
-                = std::pow(this->boxVolume(globalVertexIdx), 1.0 / dimWorld);
+            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
 
-            return std::max(10 / referencePressure_, pGradRef * KRef / muRef / r);
+            return std::max(10/referencePressure_, pGradRef * KRef/muRef / r);
         }
 
         return 1;
     }
 
     /*!
-     * \copydoc VcfvModel::eqWeight
+     * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalVertexIdx, int eqIdx) const
+    Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
         int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
@@ -223,48 +214,47 @@ public:
     }
 
     /*!
-     * \copydoc VcfvModel::updateBegin
+     * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(
-            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ = this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!
-     * \copydoc VcfvModel::updatePVWeights
+     * \copydoc FvBaseDiscretization::updatePVWeights
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int scvIdx = 0; scvIdx < elemCtx.numScv(); ++scvIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(scvIdx, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-            const auto &K
-                = elemCtx.volVars(scvIdx, /*timeIdx=*/0).intrinsicPermeability();
+            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
             intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
-protected:
-    friend class VcfvModel<TypeTag>;
+// HACK: this should be made private and the BaseModel should be
+// declared to be a friend. Since C++-2003 (and more relevantly GCC
+// 4.4) don't support friend typedefs, we need to make this method
+// public until the oldest supported compiler supports friend
+// typedefs...
+
+//protected:
+//    friend typename GET_PROP_TYPE(TypeTag, Discretization);
 
     void registerVtkModules_()
     {
         ParentType::registerVtkModules_();
 
         // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkBlackOilModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkCompositionModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(
-            new Ewoms::VcfvVtkTemperatureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
     }
 
+private:
     mutable Scalar referencePressure_;
     mutable std::vector<Scalar> intrinsicPermeability_;
 };
