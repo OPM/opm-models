@@ -1,5 +1,23 @@
-Notable Differences Between eWoms 2.3 and eWoms 2.4
-===================================================
+Notable Differences Between eWoms 2013.10 and eWoms 2014.03
+===========================================================
+
+- eWoms now supports the usage or multiple spatial discretizations. So
+  far, only element-centered finite volume have been added, but the
+  plan is to implement the first order finite elements and the
+  staggered grid method for the next release, as well as discontinuous
+  Galerkin methods in the medium term future.
+
+  To make a problem use the element-centered finite volume
+  discretization, include the file "ewoms/disc/ecfv/ecfvdiscretization.hh"
+  and set the "SpatialDiscretizationSplice" property to
+  "EcfvDiscretization". The latter is achieved by adding the line
+
+  SET_TAG_PROP(YourProblemTypeTag, SpatialDiscretizationSplice, EcfvDiscretization);
+
+  to your problem file.
+
+Notable Differences Between eWoms 2.3 and eWoms 2013.10
+=======================================================
 
 - The semi implicit ("decoupled", "IMPET") models have been removed
   due to a lack of interest and the slowly increasing maintenance
