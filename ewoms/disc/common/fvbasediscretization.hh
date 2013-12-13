@@ -719,7 +719,7 @@ public:
             def[pvIdx] = writer.allocateManagedBuffer(numDof);
         }
 
-        for (int globalIdx = 0; globalIdx < numDof; ++ globalIdx)
+        for (unsigned globalIdx = 0; globalIdx < numDof; ++ globalIdx)
         {
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
                 (*priVars[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
@@ -882,7 +882,7 @@ protected:
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
             {
                 // map the local vertex index to the global one
-                int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                 if (!(0 <= globalIdx && globalIdx < asImp_().numDof())) {
                     elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                 }

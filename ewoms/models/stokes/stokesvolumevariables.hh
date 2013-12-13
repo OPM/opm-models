@@ -69,7 +69,7 @@ class StokesVolumeVariables
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
-    typedef EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
 
 public:
     /*!
