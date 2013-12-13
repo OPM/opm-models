@@ -29,8 +29,8 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/models/modules/diffusionmodule.hh>
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
 

@@ -31,7 +31,7 @@
 #include "multiphasebaseproblem.hh"
 #include "multiphasebasefluxvariables.hh"
 
-#include <ewoms/models/modules/velocity.hh>
+#include <ewoms/models/common/velocity.hh>
 #include <ewoms/disc/common/fvbasepropertydefaults.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>

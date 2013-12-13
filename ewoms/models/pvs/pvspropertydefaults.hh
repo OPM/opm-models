@@ -40,7 +40,7 @@
 #include "pvsproperties.hh"
 
 #include <ewoms/models/common/multiphasebaseproblem.hh>
-#include <ewoms/models/modules/velocity.hh>
+#include <ewoms/models/common/velocity.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>

@@ -30,7 +30,7 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 #include <dune/common/fvector.hh>
 

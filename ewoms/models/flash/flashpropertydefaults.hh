@@ -39,7 +39,7 @@
 #include "flashindices.hh"
 #include "flashproperties.hh"
 
-#include <ewoms/models/modules/velocity.hh>
+#include <ewoms/models/common/velocity.hh>
 #include <ewoms/models/common/multiphasebaseproblem.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>

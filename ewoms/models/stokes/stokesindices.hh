@@ -27,7 +27,7 @@
 #define EWOMS_STOKES_INDICES_HH
 
 #include "stokesproperties.hh"
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
 /*!

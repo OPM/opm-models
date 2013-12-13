@@ -30,7 +30,7 @@
 #include "immiscibleproperties.hh"
 #include "immisciblelocalresidual.hh"
 
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 #include <dune/common/unused.hh>
 

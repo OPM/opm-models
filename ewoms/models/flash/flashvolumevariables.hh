@@ -29,8 +29,8 @@
 #include "flashproperties.hh"
 #include "flashindices.hh"
 
-#include <ewoms/models/modules/energymodule.hh>
-#include <ewoms/models/modules/diffusionmodule.hh>
+#include <ewoms/models/common/energymodule.hh>
+#include <ewoms/models/common/diffusionmodule.hh>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <dune/common/fvector.hh>

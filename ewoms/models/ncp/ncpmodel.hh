@@ -29,8 +29,8 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/modules/diffusionmodule.hh>
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>

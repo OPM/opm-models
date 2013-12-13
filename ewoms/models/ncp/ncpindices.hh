@@ -27,7 +27,7 @@
 #define EWOMS_NCP_INDICES_HH
 
 #include "ncpproperties.hh"
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
 

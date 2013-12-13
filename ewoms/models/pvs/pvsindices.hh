@@ -27,7 +27,7 @@
 #define EWOMS_PVS_INDICES_HH
 
 #include "pvsproperties.hh"
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
 

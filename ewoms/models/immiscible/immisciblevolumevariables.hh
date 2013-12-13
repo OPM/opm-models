@@ -28,7 +28,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <ewoms/models/modules/energymodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
 #include <dune/common/fvector.hh>

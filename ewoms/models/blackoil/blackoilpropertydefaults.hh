@@ -38,7 +38,7 @@
 #include "blackoilproperties.hh"
 
 #include <ewoms/models/common/multiphasebaseproblem.hh>
-#include <ewoms/models/modules/velocity.hh>
+#include <ewoms/models/common/velocity.hh>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>

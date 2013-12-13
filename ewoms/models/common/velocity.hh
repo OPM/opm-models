@@ -27,7 +27,7 @@
 #ifndef EWOMS_VELOCITY_MODULES_HH
 #define EWOMS_VELOCITY_MODULES_HH
 
-#include <ewoms/models/modules/velocity/darcyvelocitymodule.hh>
-#include <ewoms/models/modules/velocity/forchheimervelocitymodule.hh>
+#include <ewoms/models/common/darcyvelocitymodule.hh>
+#include <ewoms/models/common/forchheimervelocitymodule.hh>
 
 #endif
