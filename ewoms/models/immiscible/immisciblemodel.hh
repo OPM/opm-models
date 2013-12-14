@@ -75,7 +75,8 @@ namespace Ewoms {
  *   via the energy equation
  */
 template <class TypeTag>
-class ImmiscibleModel : public Ewoms::MultiPhaseBaseModel<TypeTag>
+class ImmiscibleModel
+    : public Ewoms::MultiPhaseBaseModel<TypeTag>
 {
     typedef Ewoms::MultiPhaseBaseModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;

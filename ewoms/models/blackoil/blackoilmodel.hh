@@ -98,9 +98,10 @@ namespace Ewoms {
  * - The two saturations of the phases with the lowest indices
  */
 template<class TypeTag >
-class BlackOilModel : public GET_PROP_TYPE(TypeTag, Discretization)
+class BlackOilModel
+    : public MultiPhaseBaseModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
+    typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;

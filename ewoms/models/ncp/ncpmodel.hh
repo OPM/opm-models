@@ -121,9 +121,9 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class NcpModel
-    : public GET_PROP_TYPE(TypeTag, Discretization)
+    : public MultiPhaseBaseModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
+    typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;

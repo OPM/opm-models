@@ -134,9 +134,10 @@ namespace Ewoms {
  * </ul>
  */
 template <class TypeTag>
-class PvsModel : public GET_PROP_TYPE(TypeTag, Discretization)
+class PvsModel
+    : public MultiPhaseBaseModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
+    typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;

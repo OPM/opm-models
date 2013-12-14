@@ -93,9 +93,11 @@ namespace Ewoms {
  * pressure to zero if the Richards model ought to be used!
  */
 template <class TypeTag>
-class RichardsModel : public GET_PROP_TYPE(TypeTag, Discretization)
+class RichardsModel
+    : public MultiPhaseBaseModel<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
+    typedef MultiPhaseBaseModel<TypeTag> ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
