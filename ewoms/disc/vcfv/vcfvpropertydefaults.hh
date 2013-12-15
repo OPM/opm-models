@@ -32,7 +32,7 @@
 #include "vcfvstencil.hh"
 #include "vcfvgradientcalculator.hh"
 #include "vcfvgridcommhandlefactory.hh"
-#include "vcfvvtkoutputmodule.hh"
+#include "vcfvvtkbaseoutputmodule.hh"
 
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasepropertydefaults.hh>
@@ -62,7 +62,7 @@ SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, Ver
 SET_TYPE_PROP(VcfvDiscretization, Discretization, Ewoms::VcfvDiscretization<TypeTag>);
 
 //! The base class for the VTK output modules (decides whether to write element or vertex based fields)
-SET_TYPE_PROP(VcfvDiscretization, DiscVtkOutputModule, Ewoms::VcfvVtkOutputModule<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, DiscVtkBaseOutputModule, Ewoms::VcfvVtkBaseOutputModule<TypeTag>);
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(VcfvDiscretization, GradientCalculator, Ewoms::VcfvGradientCalculator<TypeTag>);

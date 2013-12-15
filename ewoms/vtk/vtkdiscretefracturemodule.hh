@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_DISCRETE_FRACTURE_MODULE_HH
 #define EWOMS_VTK_DISCRETE_FRACTURE_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -47,7 +47,7 @@ NEW_PROP_TAG(VtkWriteFracturePorosity);
 NEW_PROP_TAG(VtkWriteFractureIntrinsicPermeabilities);
 NEW_PROP_TAG(VtkWriteFractureFilterVelocities);
 NEW_PROP_TAG(VtkWriteFractureVolumeFraction);
-NEW_PROP_TAG(DiscVtkOutputModule);
+NEW_PROP_TAG(DiscVtkBaseOutputModule);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureSaturations, true);
@@ -76,9 +76,9 @@ namespace Ewoms {
  * - Norm of the intrinsic permeability of the medium in the fracture
  */
 template <class TypeTag>
-class VtkDiscreteFractureModule : public VtkOutputModule<TypeTag>
+class VtkDiscreteFractureModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -87,7 +87,7 @@ class VtkDiscreteFractureModule : public VtkOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkOutputModule) DiscVtkOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
 
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
@@ -278,7 +278,7 @@ public:
                 char name[512];
                 snprintf(name, 512, "fractureFilterVelocity_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkOutputModule::attachDofData_(writer, velocity_[phaseIdx], name, dim);
+                DiscVtkBaseOutputModule::attachDofData_(writer, velocity_[phaseIdx], name, dim);
             }
         }
     }

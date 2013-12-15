@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_TEMPERATURE_MODULE_HH
 #define EWOMS_VTK_TEMPERATURE_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <ewoms/common/parametersystem.hh>
 #include <opm/core/utility/PropertySystem.hpp>
@@ -54,9 +54,9 @@ namespace Ewoms {
  *        thermal equilibrium
  */
 template<class TypeTag>
-class VtkTemperatureModule : public VtkOutputModule<TypeTag>
+class VtkTemperatureModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

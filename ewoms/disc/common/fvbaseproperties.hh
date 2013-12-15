@@ -98,7 +98,7 @@ NEW_PROP_TAG(GradientCalculator); //!< Calculates gradients of arbitrary quantit
 NEW_PROP_TAG(DiscBaseVolumeVariables); //!< The part of the volume variables which is specific to the spatial discretization
 NEW_PROP_TAG(DiscFluxVariables); //!< The part of the flux variables which is specific to the spatial discretization
 
-NEW_PROP_TAG(DiscVtkOutputModule); //!< The part of the VTK ouput modules which is specific to the spatial discretization
+NEW_PROP_TAG(DiscVtkBaseOutputModule); //!< The part of the VTK ouput modules which is specific to the spatial discretization
 
 NEW_PROP_TAG(GridCommHandleFactory); //!< The class to create grid communication handles
 

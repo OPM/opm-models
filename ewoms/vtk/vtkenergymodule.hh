@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_ENERGY_MODULE_HH
 #define EWOMS_VTK_ENERGY_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -63,9 +63,9 @@ namespace Ewoms {
  * - Lumped heat conductivity (solid phase plus all fluid phases)
  */
 template <class TypeTag>
-class VtkEnergyModule : public VtkOutputModule<TypeTag>
+class VtkEnergyModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

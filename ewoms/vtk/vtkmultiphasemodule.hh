@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_MULTI_PHASE_MODULE_HH
 #define EWOMS_VTK_MULTI_PHASE_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -87,9 +87,9 @@ namespace Ewoms {
  * - Norm of the intrinsic permeability of the medium
  */
 template<class TypeTag>
-class VtkMultiPhaseModule : public VtkOutputModule<TypeTag>
+class VtkMultiPhaseModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -97,7 +97,7 @@ class VtkMultiPhaseModule : public VtkOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkOutputModule) DiscVtkOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
 
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
@@ -277,7 +277,7 @@ public:
                 char name[512];
                 snprintf(name, 512, "filterVelocity_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkOutputModule::attachDofData_(writer, velocity_[phaseIdx], name, dim);
+                DiscVtkBaseOutputModule::attachDofData_(writer, velocity_[phaseIdx], name, dim);
             }
         }
 
@@ -293,7 +293,7 @@ public:
                 char name[512];
                 snprintf(name, 512, "gradP_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkOutputModule::attachDofData_(writer, potentialGradient_[phaseIdx], name, dim);
+                DiscVtkBaseOutputModule::attachDofData_(writer, potentialGradient_[phaseIdx], name, dim);
             }
         }
     }

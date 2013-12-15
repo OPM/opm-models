@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_COMPOSITION_MODULE_HH
 #define EWOMS_VTK_COMPOSITION_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -69,9 +69,9 @@ namespace Ewoms {
  * - FugacityCoefficient of all components in all phases
  */
 template <class TypeTag>
-class VtkCompositionModule : public VtkOutputModule<TypeTag>
+class VtkCompositionModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

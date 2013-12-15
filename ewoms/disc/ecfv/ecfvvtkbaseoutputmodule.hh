@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2011-2013 by Andreas Lauser
+  Copyright (C) 2013 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -21,25 +21,23 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvVtkOutputModule
+ * \copydoc Ewoms::EcfvVtkBaseOutputModule
  */
-#ifndef EWOMS_VCFV_VTK_OUTPUT_MODULE_HH
-#define EWOMS_VCFV_VTK_OUTPUT_MODULE_HH
+#ifndef EWOMS_ECFV_VTK_BASE_OUTPUT_MODULE_HH
+#define EWOMS_ECFV_VTK_BASE_OUTPUT_MODULE_HH
 
-#include "vcfvproperties.hh"
+#include "ecfvproperties.hh"
 
 #include <ewoms/io/vtkmultiwriter.hh>
 
-#include <string>
-
 namespace Ewoms {
 /*!
- * \ingroup VcfvVtkOutputModule
+ * \ingroup EcfvVtkBaseOutputModule
  *
  * \brief Implements the discretization specific parts of writing VTK files.
  */
 template<class TypeTag>
-class VcfvVtkOutputModule
+class EcfvVtkBaseOutputModule
 {
 public:
     /*!
@@ -48,7 +46,7 @@ public:
      */
     template <class MultiWriter, class Buffer>
     static void attachDofData_(MultiWriter &writer, Buffer &buffer, const std::string &name, int numComponents)
-    { writer.attachVertexData(buffer, name.c_str(), numComponents); }
+    { writer.attachElementData(buffer, name, numComponents); }
 };
 
 } // namespace Ewoms

@@ -65,7 +65,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, GradientCalculator) GradientCalculator;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkOutputModule) DiscVtkOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
@@ -734,21 +734,21 @@ public:
             (*relError)[globalIdx] = asImp_().relativeDofError(globalIdx, uOld, uNew);
         }
 
-        DiscVtkOutputModule::attachDofData_(writer, *relError, "relErr", /*numComponents=*/1);
+        DiscVtkBaseOutputModule::attachDofData_(writer, *relError, "relErr", /*numComponents=*/1);
 
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
             oss.str(""); oss << "priVar_" << asImp_().primaryVarName(i);
-            DiscVtkOutputModule::attachDofData_(writer, *priVars[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer, *priVars[i], oss.str(), /*numComponents=*/1);
 
             oss.str(""); oss << "delta_" << asImp_().primaryVarName(i);
-            DiscVtkOutputModule::attachDofData_(writer, *delta[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer, *delta[i], oss.str(), /*numComponents=*/1);
 
             oss.str(""); oss << "weight_" << asImp_().primaryVarName(i);
-            DiscVtkOutputModule::attachDofData_(writer, *priVarWeight[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer, *priVarWeight[i], oss.str(), /*numComponents=*/1);
 
             oss.str(""); oss << "defect_" << asImp_().eqName(i);
-            DiscVtkOutputModule::attachDofData_(writer, *def[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer, *def[i], oss.str(), /*numComponents=*/1);
         }
 
         asImp_().addOutputVtkFields(writer);
@@ -939,7 +939,7 @@ protected:
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
 
-    std::list<VtkOutputModule<TypeTag>*> vtkOutputModules_;
+    std::list<VtkBaseOutputModule<TypeTag>*> vtkOutputModules_;
 
     std::vector<Scalar> boxVolume_;
 };

@@ -25,7 +25,7 @@
 #ifndef EWOMS_VTK_PRIMARY_VARS_MODULE_HH
 #define EWOMS_VTK_PRIMARY_VARS_MODULE_HH
 
-#include <ewoms/vtk/vtkoutputmodule.hh>
+#include <ewoms/vtk/vtkbaseoutputmodule.hh>
 
 #include <ewoms/common/parametersystem.hh>
 #include <opm/core/utility/PropertySystem.hpp>
@@ -50,9 +50,9 @@ namespace Ewoms {
  * \brief VTK output module for the fluid composition
  */
 template<class TypeTag>
-class VtkPrimaryVarsModule : public VtkOutputModule<TypeTag>
+class VtkPrimaryVarsModule : public VtkBaseOutputModule<TypeTag>
 {
-    typedef VtkOutputModule<TypeTag> ParentType;
+    typedef VtkBaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;

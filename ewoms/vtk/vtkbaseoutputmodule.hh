@@ -20,10 +20,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkOutputModule
+ * \copydoc Ewoms::VtkBaseOutputModule
  */
-#ifndef EWOMS_VTK_OUTPUT_MODULE_HH
-#define EWOMS_VTK_OUTPUT_MODULE_HH
+#ifndef EWOMS_VTK_BASE_OUTPUT_MODULE_HH
+#define EWOMS_VTK_BASE_OUTPUT_MODULE_HH
 
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/common/parametersystem.hh>
@@ -53,7 +53,7 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementContext);
 NEW_PROP_TAG(VtkMultiWriter);
 NEW_PROP_TAG(FluidSystem);
-NEW_PROP_TAG(DiscVtkOutputModule);
+NEW_PROP_TAG(DiscVtkBaseOutputModule);
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -64,7 +64,7 @@ namespace Ewoms {
  * management and is the base class for all other VTK writer modules.
  */
 template<class TypeTag>
-class VtkOutputModule
+class VtkBaseOutputModule
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
@@ -72,7 +72,7 @@ class VtkOutputModule
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkOutputModule) DiscVtkOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
 
     typedef typename Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
@@ -88,12 +88,12 @@ public:
     typedef std::array<ScalarBuffer, numComponents> ComponentBuffer;
     typedef std::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
 
-    VtkOutputModule(const Problem &problem)
+    VtkBaseOutputModule(const Problem &problem)
         : problem_(problem)
     {
     }
 
-    virtual ~VtkOutputModule()
+    virtual ~VtkBaseOutputModule()
     {}
 
     /*!
@@ -244,7 +244,7 @@ protected:
                              BufferType bufferType = DofBuffer)
     {
         if (bufferType == DofBuffer)
-            DiscVtkOutputModule::attachDofData_(writer, buffer, name, 1);
+            DiscVtkBaseOutputModule::attachDofData_(writer, buffer, name, 1);
         else if (bufferType == VertexBuffer)
             attachVertexData_(writer, buffer, name, 1);
         else if (bufferType == ElementBuffer)
@@ -268,7 +268,7 @@ protected:
             snprintf(name, 512, pattern, eqName.c_str());
 
             if (bufferType == DofBuffer)
-                DiscVtkOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
             else if (bufferType == VertexBuffer)
                 attachVertexData_(writer, buffer[i], name, 1);
             else if (bufferType == ElementBuffer)
@@ -294,7 +294,7 @@ protected:
             snprintf(name, 512, pattern, oss.str().c_str());
 
             if (bufferType == DofBuffer)
-                DiscVtkOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
             else if (bufferType == VertexBuffer)
                 attachVertexData_(writer, buffer[i], name, 1);
             else if (bufferType == ElementBuffer)
@@ -318,7 +318,7 @@ protected:
             snprintf(name, 512, pattern, FluidSystem::phaseName(i));
 
             if (bufferType == DofBuffer)
-                DiscVtkOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
             else if (bufferType == VertexBuffer)
                 attachVertexData_(writer, buffer[i], name, 1);
             else if (bufferType == ElementBuffer)
@@ -342,7 +342,7 @@ protected:
             snprintf(name, 512, pattern, FluidSystem::componentName(i));
 
             if (bufferType == DofBuffer)
-                DiscVtkOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
             else if (bufferType == VertexBuffer)
                 attachVertexData_(writer, buffer[i], name, 1);
             else if (bufferType == ElementBuffer)
@@ -369,7 +369,7 @@ protected:
                          FluidSystem::componentName(j));
 
                 if (bufferType == DofBuffer)
-                    DiscVtkOutputModule::attachDofData_(writer, buffer[i][j], name, 1);
+                    DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i][j], name, 1);
                 else if (bufferType == VertexBuffer)
                     attachVertexData_(writer, buffer[i][j], name, 1);
                 else if (bufferType == ElementBuffer)
