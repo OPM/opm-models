@@ -27,7 +27,9 @@
 
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/common/parametersystem.hh>
+
 #include <opm/core/utility/PropertySystem.hpp>
+#include <opm/core/utility/ErrorMacros.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
@@ -134,7 +136,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
-            assert(false);
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         buffer.resize(n);
         std::fill(buffer.begin(), buffer.end(), 0.0);
@@ -155,7 +157,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
-            assert(false);
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         for (int i = 0; i < numEq; ++i) {
             buffer[i].resize(n);
@@ -178,7 +180,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
-            assert(false);
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         for (int i = 0; i < numPhases; ++i) {
             buffer[i].resize(n);
@@ -201,7 +203,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
-            assert(false);
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         for (int i = 0; i < numComponents; ++i) {
             buffer[i].resize(n);
@@ -224,7 +226,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
-            assert(false);
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         for (int i = 0; i < numPhases; ++i) {
             for (int j = 0; j < numComponents; ++j) {
@@ -250,7 +252,7 @@ protected:
         else if (bufferType == ElementBuffer)
             attachElementData_(writer, buffer, name, 1);
         else
-            assert(false); // unknown buffer type
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
     }
 
     /*!
@@ -274,7 +276,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachElementData_(writer, buffer[i], name, 1);
             else
-                assert(false); // unknown buffer type
+                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -300,7 +302,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachElementData_(writer, buffer[i], name, 1);
             else
-                assert(false); // unknown buffer type
+                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -324,7 +326,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachElementData_(writer, buffer[i], name, 1);
             else
-                assert(false); // unknown buffer type
+                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -348,7 +350,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachElementData_(writer, buffer[i], name, 1);
             else
-                assert(false); // unknown buffer type
+                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -375,7 +377,7 @@ protected:
                 else if (bufferType == ElementBuffer)
                     attachElementData_(writer, buffer[i][j], name, 1);
                 else
-                    assert(false); // unknown buffer type
+                    OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
             }
         }
     }
