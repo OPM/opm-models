@@ -87,7 +87,7 @@ public:
     void allocBuffers(VtkMultiWriter &writer)
     {
         if (primaryVarsOutput_()) this->resizeEqBuffer_(primaryVars_);
-        if (processRankOutput_()) this->resizeScalarBuffer_(processRank_);
+        if (processRankOutput_()) this->resizeScalarBuffer_(processRank_, /*type=*/ParentType::ElementBuffer);
     }
 
     /*!
@@ -115,7 +115,11 @@ public:
     void commitBuffers(VtkMultiWriter &writer)
     {
         if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
-        if (processRankOutput_()) this->commitScalarBuffer_(writer, "process rank", processRank_);
+        if (processRankOutput_())
+            this->commitScalarBuffer_(writer,
+                                      "process rank",
+                                      processRank_,
+                                      /*bufferType=*/ParentType::ElementBuffer);
     }
 
 private:

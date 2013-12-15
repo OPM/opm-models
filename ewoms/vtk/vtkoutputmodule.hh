@@ -127,11 +127,11 @@ protected:
                              BufferType bufferType = DofBuffer)
     {
         Scalar n;
-        if (DofBuffer == VertexBuffer)
+        if (bufferType == VertexBuffer)
             n = problem_.gridView().size(dim);
-        else if (DofBuffer == VertexBuffer)
+        else if (bufferType == ElementBuffer)
             n = problem_.gridView().size(0);
-        else if (DofBuffer == DofBuffer)
+        else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
             assert(false);
@@ -148,11 +148,11 @@ protected:
                          BufferType bufferType = DofBuffer)
     {
         Scalar n;
-        if (DofBuffer == VertexBuffer)
+        if (bufferType == VertexBuffer)
             n = problem_.gridView().size(dim);
-        else if (DofBuffer == VertexBuffer)
+        else if (bufferType == ElementBuffer)
             n = problem_.gridView().size(0);
-        else if (DofBuffer == DofBuffer)
+        else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
             assert(false);
@@ -171,11 +171,11 @@ protected:
                             BufferType bufferType = DofBuffer)
     {
         Scalar n;
-        if (DofBuffer == VertexBuffer)
+        if (bufferType == VertexBuffer)
             n = problem_.gridView().size(dim);
-        else if (DofBuffer == VertexBuffer)
+        else if (bufferType == ElementBuffer)
             n = problem_.gridView().size(0);
-        else if (DofBuffer == DofBuffer)
+        else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
             assert(false);
@@ -194,11 +194,11 @@ protected:
                                 BufferType bufferType = DofBuffer)
     {
         Scalar n;
-        if (DofBuffer == VertexBuffer)
+        if (bufferType == VertexBuffer)
             n = problem_.gridView().size(dim);
-        else if (DofBuffer == VertexBuffer)
+        else if (bufferType == ElementBuffer)
             n = problem_.gridView().size(0);
-        else if (DofBuffer == DofBuffer)
+        else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
             assert(false);
@@ -217,11 +217,11 @@ protected:
                                      BufferType bufferType = DofBuffer)
     {
         Scalar n;
-        if (DofBuffer == VertexBuffer)
+        if (bufferType == VertexBuffer)
             n = problem_.gridView().size(dim);
-        else if (DofBuffer == VertexBuffer)
+        else if (bufferType == ElementBuffer)
             n = problem_.gridView().size(0);
-        else if (DofBuffer == DofBuffer)
+        else if (bufferType == DofBuffer)
             n = problem_.model().numDof();
         else
             assert(false);
