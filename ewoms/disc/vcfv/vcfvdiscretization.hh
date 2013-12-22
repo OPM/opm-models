@@ -27,9 +27,61 @@
 #define EWOMS_VCFV_DISCRETIZATION_HH
 
 #include "vcfvproperties.hh"
-#include "vcfvpropertydefaults.hh"
+#include "vcfvstencil.hh"
+#include "vcfvgradientcalculator.hh"
+#include "vcfvgridcommhandlefactory.hh"
+#include "vcfvvtkbaseoutputmodule.hh"
 
+#include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
+
+namespace Ewoms {
+template <class TypeTag>
+class VcfvDiscretization;
+}
+
+namespace Opm {
+namespace Properties {
+//! Set the stencil
+SET_PROP(VcfvDiscretization, Stencil)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::ctype CoordScalar;
+
+public:
+    typedef Ewoms::VcfvStencil<CoordScalar, GridView> type;
+};
+
+//! Mapper for the degrees of freedoms.
+SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
+
+//! The concrete class which manages the spatial discretization
+SET_TYPE_PROP(VcfvDiscretization, Discretization, Ewoms::VcfvDiscretization<TypeTag>);
+
+//! The base class for the VTK output modules (decides whether to write element or vertex based fields)
+SET_TYPE_PROP(VcfvDiscretization, DiscVtkBaseOutputModule, Ewoms::VcfvVtkBaseOutputModule<TypeTag>);
+
+//! Calculates the gradient of any quantity given the index of a flux approximation point
+SET_TYPE_PROP(VcfvDiscretization, GradientCalculator, Ewoms::VcfvGradientCalculator<TypeTag>);
+
+//! The class to create grid communication handles
+SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory, Ewoms::VcfvGridCommHandleFactory<TypeTag>);
+
+//! Use P1-finite element gradients by default for the vertex centered
+//! finite volume scheme.
+SET_BOOL_PROP(VcfvDiscretization, UseTwoPointGradients, false);
+
+//! Set the border list creator for vertices
+SET_PROP(VcfvDiscretization, BorderListCreator)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+public:
+    typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
+};
+
+}} // namespace Opm, Properties
 
 namespace Ewoms {
 /*!
