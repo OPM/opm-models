@@ -28,14 +28,126 @@
 
 #include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
+#include "immiscibleindices.hh"
+#include "immisciblefluxvariables.hh"
+#include "immiscibleprimaryvariables.hh"
+#include "immisciblevolumevariables.hh"
+#include "immiscibleratevector.hh"
+#include "immiscibleboundaryratevector.hh"
 #include "immisciblelocalresidual.hh"
 
+#include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/energymodule.hh>
+#include <ewoms/vtk/vtkenergymodule.hh>
+#include <opm/material/components/NullComponent.hpp>
+#include <opm/material/fluidsystems/GasPhase.hpp>
+#include <opm/material/fluidsystems/LiquidPhase.hpp>
+#include <opm/material/fluidsystems/1pFluidSystem.hpp>
+#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
 
 #include <dune/common/unused.hh>
 
 #include <sstream>
 #include <string>
+
+namespace Ewoms {
+template <class TypeTag>
+class ImmiscibleModel;
+}
+
+namespace Opm {
+namespace Properties {
+//! The generic type tag for problems using the immiscible multi-phase model
+NEW_TYPE_TAG(ImmiscibleModel, INHERITS_FROM(MultiPhaseBaseModel, VtkEnergy));
+//! The type tag for single-phase immiscible problems
+NEW_TYPE_TAG(ImmiscibleOnePhaseModel, INHERITS_FROM(ImmiscibleModel));
+//! The type tag for two-phase immiscible problems
+NEW_TYPE_TAG(ImmiscibleTwoPhaseModel, INHERITS_FROM(ImmiscibleModel));
+
+//! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
+SET_TYPE_PROP(ImmiscibleModel, LocalResidual,
+              Ewoms::ImmiscibleLocalResidual<TypeTag>);
+
+//! the Model property
+SET_TYPE_PROP(ImmiscibleModel, Model, Ewoms::ImmiscibleModel<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(ImmiscibleModel, RateVector, Ewoms::ImmiscibleRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(ImmiscibleModel, BoundaryRateVector, Ewoms::ImmiscibleBoundaryRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(ImmiscibleModel, PrimaryVariables, Ewoms::ImmisciblePrimaryVariables<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(ImmiscibleModel, VolumeVariables, Ewoms::ImmiscibleVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(ImmiscibleModel, FluxVariables, Ewoms::ImmiscibleFluxVariables<TypeTag>);
+
+//! The indices required by the isothermal immiscible multi-phase model
+SET_TYPE_PROP(ImmiscibleModel, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
+
+//! Disable the energy equation by default
+SET_BOOL_PROP(ImmiscibleModel, EnableEnergy, false);
+
+/////////////////////
+// set slightly different properties for the single-phase case
+/////////////////////
+
+//! The fluid system to use by default
+SET_TYPE_PROP(ImmiscibleOnePhaseModel, FluidSystem, Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
+
+SET_PROP(ImmiscibleOnePhaseModel, Fluid)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
+public:
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
+};
+
+// disable output of a few quantities which make sense in a
+// multi-phase but not in a single-phase context
+SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteSaturations, false);
+SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteMobilities, false);
+SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteRelativePermeabilities, false);
+
+/////////////////////
+// set slightly different properties for the two-phase case
+/////////////////////
+SET_PROP(ImmiscibleTwoPhaseModel, WettingPhase)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
+public:
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
+};
+
+SET_PROP(ImmiscibleTwoPhaseModel, NonwettingPhase)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
+public:
+    typedef Opm::LiquidPhase<Scalar, Opm::NullComponent<Scalar> > type;
+};
+
+SET_PROP(ImmiscibleTwoPhaseModel, FluidSystem)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
+
+public:
+    typedef Opm::FluidSystems::TwoPImmiscible<Scalar, WettingPhase,
+                                              NonwettingPhase> type;
+};
+
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 /*!
@@ -300,7 +412,5 @@ private:
     mutable std::vector<Scalar> intrinsicPermeability_;
 };
 } // namespace Ewoms
-
-#include "immisciblepropertydefaults.hh"
 
 #endif

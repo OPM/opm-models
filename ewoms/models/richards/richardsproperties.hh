@@ -27,14 +27,11 @@
 #ifndef EWOMS_RICHARDS_PROPERTIES_HH
 #define EWOMS_RICHARDS_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
+#include <ewoms/models/common/multiphasebaseproperties.hh>
 
 // \{
 namespace Opm {
 namespace Properties {
-//! The type tag for problems discretized using the Richards model
-NEW_TYPE_TAG(Richards, INHERITS_FROM(MultiPhaseBaseModel));
-
 NEW_PROP_TAG(LiquidPhaseIndex); //!< Index of the fluid which represents the wetting phase
 
 NEW_PROP_TAG(FluidSystem); //!< The fluid system used for the problem

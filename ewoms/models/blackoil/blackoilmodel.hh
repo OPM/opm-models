@@ -27,13 +27,76 @@
 #define EWOMS_BLACK_OIL_MODEL_HH
 
 #include "blackoilproperties.hh"
+#include "blackoilindices.hh"
+#include "blackoilfluxvariables.hh"
+#include "blackoilprimaryvariables.hh"
+#include "blackoilvolumevariables.hh"
+#include "blackoilratevector.hh"
+#include "blackoilboundaryratevector.hh"
 #include "blackoillocalresidual.hh"
+
+#include <ewoms/models/common/multiphasebasemodel.hh>
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkblackoilmodule.hh>
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <sstream>
 #include <string>
 
 namespace Ewoms {
+template <class TypeTag>
+class BlackOilModel;
+}
 
+namespace Opm {
+namespace Properties {
+//! The type tag for the black-oil problems
+NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel, VtkBlackOil, VtkComposition));
+
+//! Set the local residual function
+SET_TYPE_PROP(BlackOilModel,
+              LocalResidual,
+              Ewoms::BlackOilLocalResidual<TypeTag>);
+
+//! The Model property
+SET_TYPE_PROP(BlackOilModel, Model, Ewoms::BlackOilModel<TypeTag>);
+
+//! The BlackOilFluidState property
+SET_PROP(BlackOilModel, BlackOilFluidState)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+public:
+    typedef Opm::CompositionalFluidState<Scalar,
+                                         FluidSystem,
+                                         /*enableEnthalpy=*/false> type;
+};
+
+//! the RateVector property
+SET_TYPE_PROP(BlackOilModel, RateVector, Ewoms::BlackOilRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(BlackOilModel, BoundaryRateVector, Ewoms::BlackOilBoundaryRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(BlackOilModel, PrimaryVariables, Ewoms::BlackOilPrimaryVariables<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(BlackOilModel, VolumeVariables, Ewoms::BlackOilVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(BlackOilModel, FluxVariables, Ewoms::BlackOilFluxVariables<TypeTag>);
+
+//! The indices required by the model
+SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
+
+//! Set the fluid system to the black-oil fluid system by default
+SET_TYPE_PROP(BlackOilModel,
+              FluidSystem,
+              Opm::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+}} // namespace Properties, Opm
+
+namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
  * \brief A fully-implicit black-oil flow model.
@@ -260,7 +323,5 @@ private:
     mutable std::vector<Scalar> intrinsicPermeability_;
 };
 } // namespace Ewoms
-
-#include "blackoilpropertydefaults.hh"
 
 #endif

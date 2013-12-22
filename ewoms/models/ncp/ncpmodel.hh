@@ -28,9 +28,22 @@
 #define EWOMS_NCP_MODEL_HH
 
 #include "ncpproperties.hh"
+#include "ncplocalresidual.hh"
+#include "ncpfluxvariables.hh"
+#include "ncpprimaryvariables.hh"
+#include "ncpboundaryratevector.hh"
+#include "ncpratevector.hh"
+#include "ncpvolumevariables.hh"
+#include "ncpnewtonmethod.hh"
+#include "ncpindices.hh"
 
-#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/energymodule.hh>
+#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/vtk/vtkdiffusionmodule.hh>
+#include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -39,6 +52,82 @@
 #include <string>
 #include <vector>
 #include <array>
+
+namespace Ewoms {
+template <class TypeTag>
+class NcpModel;
+}
+
+namespace Opm {
+namespace Properties {
+/*!
+ * \brief Define the type tag for the compositional NCP model.
+ */
+NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
+
+/*!
+ * \brief Set the themodynamic constraint solver which calculates the
+ *        composition of any phase given all component fugacities.
+ */
+SET_PROP(NcpModel, NcpCompositionFromFugacitiesSolver)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    typedef Opm::CompositionFromFugacities<Scalar, FluidSystem> type;
+};
+
+//! Use the Ncp local jacobian operator for the compositional NCP model
+SET_TYPE_PROP(NcpModel,
+              LocalResidual,
+              Ewoms::NcpLocalResidual<TypeTag>);
+
+//! Use the Ncp specific newton method for the compositional NCP model
+SET_TYPE_PROP(NcpModel, NewtonMethod, Ewoms::NcpNewtonMethod<TypeTag>);
+
+//! the Model property
+SET_TYPE_PROP(NcpModel, Model, Ewoms::NcpModel<TypeTag>);
+
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(NcpModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
+
+//! Disable the energy equation by default
+SET_BOOL_PROP(NcpModel, EnableEnergy, false);
+
+//! disable diffusion by default
+SET_BOOL_PROP(NcpModel, EnableDiffusion, false);
+
+//! the RateVector property
+SET_TYPE_PROP(NcpModel, RateVector, Ewoms::NcpRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(NcpModel, BoundaryRateVector, Ewoms::NcpBoundaryRateVector<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(NcpModel, PrimaryVariables, Ewoms::NcpPrimaryVariables<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(NcpModel, VolumeVariables, Ewoms::NcpVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(NcpModel, FluxVariables, Ewoms::NcpFluxVariables<TypeTag>);
+
+//! truncate the newton update for the first 3 iterations of a time step
+SET_INT_PROP(NcpModel, NcpNewtonNumChoppedIterations, 3);
+
+//! The indices required by the compositional NCP model
+SET_TYPE_PROP(NcpModel, Indices, Ewoms::NcpIndices<TypeTag, 0>);
+
+//! The unmodified weight for the pressure primary variable
+SET_SCALAR_PROP(NcpModel, NcpPressureBaseWeight, 1.0);
+//! The weight for the saturation primary variables
+SET_SCALAR_PROP(NcpModel, NcpSaturationsBaseWeight, 1.0);
+//! The unmodified weight for the fugacity primary variables
+SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0);
+
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 
@@ -407,7 +496,5 @@ public:
 };
 
 } // namespace Ewoms
-
-#include "ncppropertydefaults.hh"
 
 #endif

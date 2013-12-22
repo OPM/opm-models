@@ -27,14 +27,87 @@
 #define EWOMS_PVS_MODEL_HH
 
 #include "pvsproperties.hh"
+#include "pvslocalresidual.hh"
+#include "pvsmodel.hh"
+#include "pvsnewtonmethod.hh"
+#include "pvsprimaryvariables.hh"
+#include "pvsratevector.hh"
+#include "pvsboundaryratevector.hh"
+#include "pvsvolumevariables.hh"
+#include "pvsfluxvariables.hh"
+#include "pvsindices.hh"
 
+#include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 #include <ewoms/models/common/energymodule.hh>
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/vtk/vtkdiffusionmodule.hh>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+
+namespace Ewoms {
+template <class TypeTag>
+class PvsModel;
+}
+
+namespace Opm {
+namespace Properties {
+//! The type tag for the isothermal single phase problems
+NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel, VtkPhasePresence, VtkComposition, VtkEnergy, VtkDiffusion));
+
+//! Use the PVS local jacobian operator for the PVS model
+SET_TYPE_PROP(PvsModel,
+              LocalResidual,
+              Ewoms::PvsLocalResidual<TypeTag>);
+
+//! Use the PVS specific newton method for the PVS model
+SET_TYPE_PROP(PvsModel, NewtonMethod, Ewoms::PvsNewtonMethod<TypeTag>);
+
+//! the Model property
+SET_TYPE_PROP(PvsModel, Model, Ewoms::PvsModel<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(PvsModel, PrimaryVariables, Ewoms::PvsPrimaryVariables<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(PvsModel, RateVector, Ewoms::PvsRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(PvsModel, BoundaryRateVector, Ewoms::PvsBoundaryRateVector<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(PvsModel, VolumeVariables, Ewoms::PvsVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(PvsModel, FluxVariables, Ewoms::PvsFluxVariables<TypeTag>);
+
+//! The indices required by the isothermal PVS model
+SET_TYPE_PROP(PvsModel, Indices, Ewoms::PvsIndices<TypeTag, /*PVIdx=*/0>);
+
+// set the model to a medium verbosity
+SET_INT_PROP(PvsModel, PvsVerbosity, 1);
+
+//! Disable the energy equation by default
+SET_BOOL_PROP(PvsModel, EnableEnergy, false);
+
+// disable molecular diffusion by default
+SET_BOOL_PROP(PvsModel, EnableDiffusion, false);
+
+//! The basis value for the weight of the pressure primary variable
+SET_SCALAR_PROP(PvsModel, PvsPressureBaseWeight, 1.0);
+
+//! The basis value for the weight of the saturation primary variables
+SET_SCALAR_PROP(PvsModel, PvsSaturationsBaseWeight, 1.0);
+
+//! The basis value for the weight of the mole fraction primary variables
+SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 
@@ -556,7 +629,5 @@ public:
     int verbosity_;
 };
 }
-
-#include "pvspropertydefaults.hh"
 
 #endif

@@ -247,7 +247,7 @@ public:
      *
      * This is not specific to the discretization. By default it just
      * throws an exception so it must be overloaded by the problem if
-     * no energy equation is used.
+     * no energy equation is to be used.
      */
     Scalar temperature() const
     { OPM_THROW(std::logic_error, "Not implemented:temperature() method not implemented by the actual problem"); }

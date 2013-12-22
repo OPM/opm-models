@@ -28,8 +28,9 @@
 #ifndef EWOMS_PVS_PROPERTIES_HH
 #define EWOMS_PVS_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
-
+#include <ewoms/models/common/multiphasebaseproperties.hh>
+#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/energymodule.hh>
 #include <ewoms/vtk/vtkcompositionmodule.hh>
 #include <ewoms/vtk/vtkphasepresencemodule.hh>
 #include <ewoms/vtk/vtkdiffusionmodule.hh>
@@ -37,9 +38,6 @@
 
 namespace Opm {
 namespace Properties {
-//! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel, VtkPhasePresence, VtkComposition, VtkEnergy, VtkDiffusion));
-
 NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy is considered as a conservation quantity or not
 NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
 

@@ -26,8 +26,9 @@
 #ifndef EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
 #define EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
 
-#include "immisciblepropertydefaults.hh"
+#include "immiscibleproperties.hh"
 
+#include <ewoms/models/common/multiphasebasefluxvariables.hh>
 #include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {

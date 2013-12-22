@@ -27,10 +27,49 @@
 #define EWOMS_DISCRETE_FRACTURE_MODEL_HH
 
 #include "discretefractureproperties.hh"
+#include "discretefractureprimaryvariables.hh"
+#include "discretefracturevolumevariables.hh"
+#include "discretefracturefluxvariables.hh"
+#include "discretefracturelocalresidual.hh"
 
 #include <ewoms/models/immiscible/immisciblemodel.hh>
+#include <ewoms/vtk/vtkdiscretefracturemodule.hh>
 
 #include <string>
+
+namespace Ewoms {
+template <class TypeTag>
+class DiscreteFractureModel;
+}
+
+namespace Opm {
+namespace Properties {
+//! The generic type tag for problems using the immiscible multi-phase model
+NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDiscreteFracture));
+
+//! The class for the model
+SET_TYPE_PROP(DiscreteFractureModel, Model, Ewoms::DiscreteFractureModel<TypeTag>);
+
+//! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
+SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocalResidual<TypeTag>);
+
+// The type of the base base class for actual problems.
+// TODO!?
+//SET_TYPE_PROP(DiscreteFractureModel BaseProblem, DiscreteFractureBaseProblem<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(DiscreteFractureModel, PrimaryVariables, Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(DiscreteFractureModel, VolumeVariables, Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(DiscreteFractureModel, FluxVariables, Ewoms::DiscreteFractureFluxVariables<TypeTag>);
+
+//! For the discrete fracture model, we need to use two-point flux
+//! appoximation or it will converge very poorly
+SET_BOOL_PROP(DiscreteFractureModel, UseTwoPointGradients, true);
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 /*!
@@ -86,7 +125,5 @@ public:
     }
 };
 } // namespace Ewoms
-
-#include "discretefracturepropertydefaults.hh"
 
 #endif

@@ -35,18 +35,14 @@ namespace Ewoms {
  */
 struct RichardsIndices
 {
-    //////////
-    // primary variable indices
-    //////////
-
     //! Primary variable index for the wetting phase pressure
     static const int pressureWIdx = 0;
 
-    //////////
-    // equation indices
-    //////////
     //! Equation index for the mass conservation of the wetting phase
     static const int contiWEqIdx = 0;
+
+    //! The number of equations
+    static const int numEq = 1;
 };
 
 } // namespace Ewoms

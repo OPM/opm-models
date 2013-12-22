@@ -28,6 +28,8 @@
 
 #include "blackoilproperties.hh"
 
+#include <ewoms/models/common/multiphasebasefluxvariables.hh>
+
 namespace Ewoms {
 
 /*!

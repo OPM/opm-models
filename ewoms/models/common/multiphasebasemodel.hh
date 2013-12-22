@@ -28,8 +28,86 @@
 
 #include <ewoms/parallel/mpihelper.hh>
 #include "multiphasebaseproperties.hh"
+#include "multiphasebaseproblem.hh"
+#include "multiphasebasefluxvariables.hh"
+
+#include <ewoms/models/common/velocity.hh>
+#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
+
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
 
 #include <dune/common/unused.hh>
+
+namespace Ewoms {
+template <class TypeTag>
+class MultiPhaseBaseModel;
+}
+
+namespace Opm {
+namespace Properties {
+//! The generic type tag for problems using the immiscible multi-phase model
+NEW_TYPE_TAG(MultiPhaseBaseModel, INHERITS_FROM(VtkMultiPhase, VtkTemperature));
+
+//! Specify the splices of the MultiPhaseBaseModel type tag
+SET_SPLICES(MultiPhaseBaseModel, SpatialDiscretizationSplice);
+
+//! Set the default spatial discretization
+//!
+//! We use a vertex centered finite volume method by default
+SET_TAG_PROP(MultiPhaseBaseModel, SpatialDiscretizationSplice, VcfvDiscretization);
+
+SET_INT_PROP(MultiPhaseBaseModel, NumEq, GET_PROP_TYPE(TypeTag, Indices)::numEq); //!< set the number of equations to the number of phases
+SET_INT_PROP(MultiPhaseBaseModel, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)::numPhases); //!< The number of phases is determined by the fluid system
+SET_INT_PROP(MultiPhaseBaseModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents); //!< Number of chemical species in the system
+
+//! The type of the base base class for actual problems
+SET_TYPE_PROP(MultiPhaseBaseModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
+
+//! Use the Darcy relation by default
+SET_TYPE_PROP(MultiPhaseBaseModel, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
+
+/*!
+ * \brief Set the material law to the null law by default.
+ */
+SET_PROP(MultiPhaseBaseModel, MaterialLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+
+public:
+    typedef Opm::NullMaterial<Traits> type;
+};
+
+/*!
+ * \brief Set the property for the material parameters by extracting
+ *        it from the material law.
+ */
+SET_TYPE_PROP(MultiPhaseBaseModel,
+              MaterialLawParams,
+              typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
+
+//! set the heat conduction law to a dummy one by default
+SET_TYPE_PROP(MultiPhaseBaseModel,
+              HeatConductionLaw,
+              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the heat conduction law
+//! from the law itself
+SET_TYPE_PROP(MultiPhaseBaseModel,
+              HeatConductionLawParams,
+              typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
+
+//! disable the smooth upwinding method by default
+SET_BOOL_PROP(MultiPhaseBaseModel, EnableSmoothUpwinding, false);
+
+//! disable gravity by default
+SET_BOOL_PROP(MultiPhaseBaseModel, EnableGravity, false);
+
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 /*!
@@ -131,7 +209,5 @@ private:
     { return *static_cast<const Implementation *>(this); }
 };
 } // namespace Ewoms
-
-#include "multiphasebasepropertydefaults.hh"
 
 #endif

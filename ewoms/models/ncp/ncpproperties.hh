@@ -28,23 +28,13 @@
 #ifndef EWOMS_NCP_PROPERTIES_HH
 #define EWOMS_NCP_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
-
+#include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/vtk/vtkcompositionmodule.hh>
 #include <ewoms/vtk/vtkenergymodule.hh>
 #include <ewoms/vtk/vtkdiffusionmodule.hh>
 
 namespace Opm {
 namespace Properties {
-//////////////////////////////////////////////////////////////////
-// Type tags
-//////////////////////////////////////////////////////////////////
-
-/*!
- * \brief Define the type tag for the compositional NCP model.
- */
-NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
-
 //! Enable the energy equation?
 NEW_PROP_TAG(EnableEnergy);
 

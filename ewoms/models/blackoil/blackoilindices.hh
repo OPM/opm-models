@@ -37,16 +37,21 @@ template <int PVOffset = 0>
 struct BlackOilIndices
 {
     // Primary variable indices
-    static const int pressure0Idx
-        = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure
-                        //(depending on formulation) in a solution vector
-    static const int saturation0Idx
-        = PVOffset
-          + 1; //!< Index of the saturation of the non-wetting/wetting phase
+
+    //! Index of pressure of the first fluid phase in a vector of primary variables
+    static const int pressure0Idx  = PVOffset + 0;
+    //! Index of the saturation of the first fluid phase in a vector of primary variables
+    static const int saturation0Idx = PVOffset + 1;
+    // numPhases - 2 saturations follow
 
     // indices of the equations
-    static const int conti0EqIdx
-        = PVOffset + 0; //!< Index of the continuity equation of the first phase
+
+    //! Index of the continuity equation of the first phase
+    static const int conti0EqIdx = PVOffset + 0;
+    // numPhases - 1 continuity equations follow
+
+    //! The number of equations
+    static const int numEq = 3;
 };
 
 } // namespace Ewoms

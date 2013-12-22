@@ -31,17 +31,6 @@
 
 namespace Opm {
 namespace Properties {
-//! The type tag for the problems using the Stokes equations
-NEW_TYPE_TAG(StokesModel, INHERITS_FROM(VcfvDiscretization));
-
-/*!
- * \brief The type tag for the problems using the Navier-Stokes equations.
- *
- * Basically this just takes everything from the Stokes model, but
- * sets the \c EnableNavierTerm property to true by default.
- */
-NEW_TYPE_TAG(NavierStokesModel, INHERITS_FROM(StokesModel));
-
 NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using
                        //!< a generic name
 NEW_PROP_TAG(Fluid);

@@ -28,26 +28,13 @@
 #ifndef EWOMS_MULTI_PHASE_BASE_PROPERTIES_HH
 #define EWOMS_MULTI_PHASE_BASE_PROPERTIES_HH
 
-#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
+#include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/vtk/vtkmultiphasemodule.hh>
 #include <ewoms/vtk/vtktemperaturemodule.hh>
 
 namespace Opm {
 namespace Properties {
-//! The generic type tag for problems using the immiscible multi-phase model
-NEW_TYPE_TAG(MultiPhaseBaseModel, INHERITS_FROM(VtkMultiPhase, VtkTemperature));
-
-//! The property for the spatial discretization splice
-NEW_PROP_TAG(SpatialDiscretizationSplice);
-
-//! Specify the splices of the MultiPhaseBaseModel type tag
-SET_SPLICES(MultiPhaseBaseModel, SpatialDiscretizationSplice);
-
-//! Set the default spatial discretization
-//!
-//! We use a vertex centered finte volume method by default
-SET_TAG_PROP(MultiPhaseBaseModel, SpatialDiscretizationSplice, VcfvDiscretization);
-
+NEW_PROP_TAG(SpatialDiscretizationSplice); //!< The splice to be used for the spatial discretization
 NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
 NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
 NEW_PROP_TAG(Indices); //!< Enumerations used by the model

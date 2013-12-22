@@ -28,6 +28,8 @@
 
 #include "richardsproperties.hh"
 
+#include <ewoms/models/common/multiphasebasefluxvariables.hh>
+
 namespace Ewoms {
 
 /*!

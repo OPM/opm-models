@@ -28,6 +28,7 @@
 
 #include "flashproperties.hh"
 
+#include <ewoms/models/common/multiphasebasefluxvariables.hh>
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 

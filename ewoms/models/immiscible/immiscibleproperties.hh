@@ -28,18 +28,11 @@
 #ifndef EWOMS_IMMISCIBLE_PROPERTIES_HH
 #define EWOMS_IMMISCIBLE_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
+#include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/vtk/vtkenergymodule.hh>
 
 namespace Opm {
 namespace Properties {
-//! The generic type tag for problems using the immiscible multi-phase model
-NEW_TYPE_TAG(ImmiscibleModel, INHERITS_FROM(MultiPhaseBaseModel, VtkEnergy));
-//! The type tag for single-phase immiscible problems
-NEW_TYPE_TAG(ImmiscibleOnePhaseModel, INHERITS_FROM(ImmiscibleModel));
-//! The type tag for two-phase immiscible problems
-NEW_TYPE_TAG(ImmiscibleTwoPhaseModel, INHERITS_FROM(ImmiscibleModel));
-
 NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
 NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
 

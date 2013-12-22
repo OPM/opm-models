@@ -26,9 +26,11 @@
 #ifndef EWOMS_NCP_FLUX_VARIABLES_HH
 #define EWOMS_NCP_FLUX_VARIABLES_HH
 
-#include <ewoms/models/ncp/ncpproperties.hh>
+#include "ncpproperties.hh"
+
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/multiphasebasefluxvariables.hh>
 
 namespace Ewoms {
 

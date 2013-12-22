@@ -27,12 +27,75 @@
 #define EWOMS_FLASH_MODEL_HH
 
 #include "flashproperties.hh"
+#include "flashprimaryvariables.hh"
+#include "flashlocalresidual.hh"
+#include "flashratevector.hh"
+#include "flashboundaryratevector.hh"
+#include "flashvolumevariables.hh"
+#include "flashfluxvariables.hh"
+#include "flashindices.hh"
 
-#include <ewoms/models/common/diffusionmodule.hh>
+#include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/energymodule.hh>
+#include <ewoms/vtk/vtkcompositionmodule.hh>
+#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/vtk/vtkdiffusionmodule.hh>
+#include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
+#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include <sstream>
 #include <string>
+
+namespace Ewoms {
+template <class TypeTag>
+class FlashModel;
+}
+
+namespace Opm {
+namespace Properties {
+//! The type tag for the isothermal single phase problems
+NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
+
+//! Use the FlashLocalResidual function for the flash model
+SET_TYPE_PROP(FlashModel, LocalResidual,
+              Ewoms::FlashLocalResidual<TypeTag>);
+
+//! Use the NCP flash solver by default
+SET_TYPE_PROP(FlashModel, FlashSolver,
+              Opm::NcpFlash<typename GET_PROP_TYPE(TypeTag, Scalar),
+                            typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
+
+//! Let the flash solver choose its tolerance by default
+SET_SCALAR_PROP(FlashModel, FlashTolerance, 0.0);
+
+//! the Model property
+SET_TYPE_PROP(FlashModel, Model, Ewoms::FlashModel<TypeTag>);
+
+//! the PrimaryVariables property
+SET_TYPE_PROP(FlashModel, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(FlashModel, RateVector, Ewoms::FlashRateVector<TypeTag>);
+
+//! the BoundaryRateVector property
+SET_TYPE_PROP(FlashModel, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
+
+//! the VolumeVariables property
+SET_TYPE_PROP(FlashModel, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);
+
+//! the FluxVariables property
+SET_TYPE_PROP(FlashModel, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
+
+//! The indices required by the flash-baseed isothermal compositional model
+SET_TYPE_PROP(FlashModel, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
+
+// disable molecular diffusion by default
+SET_BOOL_PROP(FlashModel, EnableDiffusion, false);
+
+//! Disable the energy equation by default
+SET_BOOL_PROP(FlashModel, EnableEnergy, false);
+}} // namespace Properties, Opm
 
 namespace Ewoms {
 /*!
@@ -274,7 +337,5 @@ public:
 };
 
 } // namespace Ewoms
-
-#include "flashpropertydefaults.hh"
 
 #endif

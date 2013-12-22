@@ -27,10 +27,10 @@
 #define EWOMS_PVS_INDICES_HH
 
 #include "pvsproperties.hh"
+
 #include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
-
 /*!
  * \ingroup PvsModel
  *
@@ -41,27 +41,30 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 class PvsIndices
-    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents),
+                           GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
-    //! Number of partial differential equations or primary variables
-    // respectively
+    //! Number of partial differential equations or primary variables,
+    //! respectively
     static const int numEq = numComponents + EnergyIndices::numEq_;
 
     // Primary variable indices
-    static const int pressure0Idx
-        = PVOffset + 0; //!< Index for the pressure of the first phase
-    static const int switch0Idx
-        = PVOffset + 1; //!< Index of the either the saturation or the mole
-    // fraction of the phase with the lowest index
+
+    //! Index for the pressure of the first phase
+    static const int pressure0Idx = PVOffset + 0;
+    //! Index of the either the saturation or the mole
+    //! fraction of the phase with the lowest index
+    static const int switch0Idx = PVOffset + 1;
 
     // equation indices
-    static const int conti0EqIdx = PVOffset; //!< Index of the mass conservation
-                                             // equation for the first component
+
+    //! Index of the mass conservation equation for the first component
+    static const int conti0EqIdx = PVOffset;
 };
 
 } // namespace Ewoms
