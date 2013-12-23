@@ -340,18 +340,8 @@ private:
         BorderListCreator borderListCreator(problem_.gridView(),
                                             problem_.model().dofMapper());
 
-        // blacklist all ghost and overlap entries
         std::set<Ewoms::Linear::Index> blackList;
-        auto vIt = problem_.gridView().template begin<dimWorld>();
-        const auto &vEndIt = problem_.gridView().template end<dimWorld>();
-        for (; vIt != vEndIt; ++vIt) {
-            if (vIt->partitionType() != Dune::InteriorEntity
-                && vIt->partitionType() != Dune::BorderEntity) {
-                // we blacklist everything except interior and border
-                // vertices
-                blackList.insert(problem_.vertexMapper().map(*vIt));
-            }
-        }
+        borderListCreator.createBlackList(blackList);
 
         // create the overlapping Jacobian matrix
         int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);

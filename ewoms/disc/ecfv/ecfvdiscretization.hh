@@ -31,6 +31,7 @@
 #include "ecfvgridcommhandlefactory.hh"
 #include "ecfvvtkbaseoutputmodule.hh"
 
+#include <ewoms/linear/elementborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
 
 namespace Ewoms {
@@ -62,6 +63,15 @@ SET_TYPE_PROP(EcfvDiscretization, DiscVtkBaseOutputModule, Ewoms::EcfvVtkBaseOut
 
 //! The class to create grid communication handles
 SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory, Ewoms::EcfvGridCommHandleFactory<TypeTag>);
+
+//! Set the border list creator for vertices
+SET_PROP(EcfvDiscretization, BorderListCreator)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+public:
+    typedef Ewoms::Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
+};
 
 } // namespace Properties
 } // namespace Opm

@@ -394,8 +394,8 @@ private:
         assert(i == numOverlapRows);
 
         // actually communicate with the peer
-        rowIndicesSendBuff_[peerRank]->send(peerRank);
         rowSizesSendBuff_[peerRank]->send(peerRank);
+        rowIndicesSendBuff_[peerRank]->send(peerRank);
 
         // create and fill the MPI buffer for the indices of the
         // matrix entries
@@ -443,10 +443,10 @@ private:
 
         // create receive buffer for the row sizes and receive them
         // from the peer
-        rowIndicesRecvBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
         rowSizesRecvBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
-        rowIndicesRecvBuff_[peerRank]->receive(peerRank);
+        rowIndicesRecvBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
         rowSizesRecvBuff_[peerRank]->receive(peerRank);
+        rowIndicesRecvBuff_[peerRank]->receive(peerRank);
 
         // calculate the total number of indices which are send by the
         // peer

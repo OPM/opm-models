@@ -51,6 +51,8 @@ class VertexBorderListFromGrid
     : public Dune::CommDataHandleIF<VertexBorderListFromGrid<GridView, VertexMapper>,
                                     int>
 {
+    static const int dimWorld = GridView::dimensionworld;
+
 public:
     VertexBorderListFromGrid(const GridView &gridView, const VertexMapper &map)
         : gridView_(gridView), map_(map)
@@ -58,6 +60,21 @@ public:
         gridView.communicate(*this,
                              Dune::InteriorBorder_InteriorBorder_Interface,
                              Dune::ForwardCommunication);
+    }
+
+    void createBlackList(std::set<Ewoms::Linear::Index> &blackList) const
+    {
+        // blacklist all ghost and overlap entries
+        auto dofIt = gridView_.template begin</*codim=*/dimWorld>();
+        const auto &dofEndIt = gridView_.template end</*codim=*/dimWorld>();
+        for (; dofIt != dofEndIt; ++dofIt) {
+            if (dofIt->partitionType() != Dune::InteriorEntity
+                && dofIt->partitionType() != Dune::BorderEntity) {
+                // we blacklist everything except degrees of freedom
+                // in the interior and on the border
+                blackList.insert(map_.map(*dofIt));
+            }
+        }
     }
 
     // data handle methods

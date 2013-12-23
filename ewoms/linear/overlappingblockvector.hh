@@ -521,8 +521,9 @@ private:
         // copy them into the block vector
         for (unsigned j = 0; j < indices.size(); ++j) {
             Index domRowIdx = indices[j];
-            if (overlap_->masterRank(domRowIdx) == peerRank)
+            if (overlap_->masterRank(domRowIdx) == peerRank) {
                 (*this)[domRowIdx] = values[j];
+            }
         }
     }
 

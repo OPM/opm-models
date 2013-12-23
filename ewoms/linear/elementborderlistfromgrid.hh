@@ -55,6 +55,21 @@ public:
                              Dune::BackwardCommunication);
     }
 
+    void createBlackList(std::set<Ewoms::Linear::Index> &blackList) const
+    {
+        // blacklist all ghost and overlap entries
+        auto dofIt = gridView_.template begin</*codim=*/0>();
+        const auto &dofEndIt = gridView_.template end</*codim=*/0>();
+        for (; dofIt != dofEndIt; ++dofIt) {
+            if (dofIt->partitionType() != Dune::InteriorEntity
+                && dofIt->partitionType() != Dune::BorderEntity) {
+                // we blacklist everything except degrees of freedom
+                // in the interior and on the border
+                blackList.insert(map_.map(*dofIt));
+            }
+        }
+    }
+
     // data handle methods
     bool contains(int dim, int codim) const
     { return codim == 0; }

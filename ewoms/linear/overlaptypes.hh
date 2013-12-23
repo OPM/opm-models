@@ -35,13 +35,12 @@
 #include <cstddef>
 
 namespace Ewoms {
-
 namespace Linear {
 
 /*!
  * \brief The type of an index of a degree of freedom.
  */
-typedef size_t Index;
+typedef int Index;
 
 /*!
  * \brief The type of the rank of a process.
@@ -145,7 +144,7 @@ public:
 /*!
  * \brief A set of process ranks
  */
-class PeerSet : public std::set<Index>
+class PeerSet : public std::set<ProcessRank>
 {
 public:
     void update(const BorderList &borderList)
