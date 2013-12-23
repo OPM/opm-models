@@ -26,22 +26,13 @@
 #ifndef EWOMS_MULTI_PHASE_BASE_FLUX_VARIABLES_HH
 #define EWOMS_MULTI_PHASE_BASE_FLUX_VARIABLES_HH
 
+#include "multiphasebaseproperties.hh"
+
 #include <ewoms/models/common/quantitycallbacks.hh>
-#include <ewoms/disc/common/fvbasepropertydefaults.hh>
 #include <ewoms/disc/common/fvbasefluxvariables.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
-
 #include <dune/common/fvector.hh>
-
-namespace Opm {
-namespace Properties {
-NEW_PROP_TAG(EnableSmoothUpwinding);
-NEW_PROP_TAG(MaterialLaw);
-NEW_PROP_TAG(EnableGravity);
-NEW_PROP_TAG(VelocityModule);
-}}
 
 namespace Ewoms {
 /*!
