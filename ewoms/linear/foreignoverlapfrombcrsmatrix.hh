@@ -420,7 +420,7 @@ protected:
     {
         // create the native <-> local maps
         Index localIdx = 0;
-        for (unsigned nativeIdx = 0; nativeIdx < numNative_;) {
+        for (Index nativeIdx = 0; nativeIdx < numNative_;) {
             if (blackList_.count(nativeIdx) == 0) {
                 localToNativeIndices_.push_back(nativeIdx);
                 nativeToLocalIndices_.push_back(localIdx);
@@ -678,10 +678,10 @@ protected:
     BorderDistance overlapSize_;
 
     // number of local indices
-    size_t numLocal_;
+    Index numLocal_;
 
     // number of native indices
-    size_t numNative_;
+    Index numNative_;
 
     // the MPI rank of the local process
     ProcessRank myRank_;

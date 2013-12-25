@@ -353,11 +353,11 @@ private:
 
         // send size of foreign overlap to peer
         int numOverlapRows = peerOverlap.size();
-        numRowsSendBuff_[peerRank] = new MpiBuffer<size_t>(1);
+        numRowsSendBuff_[peerRank] = new MpiBuffer<Index>(1);
         (*numRowsSendBuff_[peerRank])[0] = numOverlapRows;
         numRowsSendBuff_[peerRank]->send(peerRank);
 
-        rowSizesSendBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
+        rowSizesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
         rowIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
 
         const auto &foreignOverlap = overlap_->foreignOverlap();
@@ -435,7 +435,7 @@ private:
     {
 #if HAVE_MPI
         // receive size of foreign overlap to peer
-        size_t numOverlapRows;
+        Index numOverlapRows;
         auto &numRowsRecvBuff = numRowsRecvBuff_[peerRank];
         numRowsRecvBuff.resize(1);
         numRowsRecvBuff.receive(peerRank);
@@ -443,7 +443,7 @@ private:
 
         // create receive buffer for the row sizes and receive them
         // from the peer
-        rowSizesRecvBuff_[peerRank] = new MpiBuffer<size_t>(numOverlapRows);
+        rowSizesRecvBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
         rowIndicesRecvBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
         rowSizesRecvBuff_[peerRank]->receive(peerRank);
         rowIndicesRecvBuff_[peerRank]->receive(peerRank);
@@ -557,12 +557,17 @@ private:
 
             typedef typename ParentType::ConstColIterator ColIt;
             ColIt colIt = (*this)[domRowIdx].begin();
-            for (unsigned j = 0; j < mpiRowSizesSendBuff[i]; ++j) {
+            for (Index j = 0;
+                 j < static_cast<Index>(mpiRowSizesSendBuff[i]);
+                 ++j)
+            {
+                // move to the next column which is in the overlap
                 Index domColIdx = mpiColIndicesSendBuff[k];
-                for (; colIt.index() < domColIdx; ++colIt) {
-                };
-                assert(colIt.index() == domColIdx);
+                for (; static_cast<Index>(colIt.index()) < domColIdx; ++colIt)
+                { }
+                assert(static_cast<Index>(colIt.index()) == domColIdx);
 
+                // add the values of this column to the send buffer
                 mpiSendBuff[k] = (*colIt);
                 ++k;
             }
@@ -585,9 +590,9 @@ private:
 
         // retrieve the values from the receive buffer
         int k = 0;
-        for (unsigned i = 0; i < mpiRowIndicesRecvBuff.size(); ++i) {
+        for (Index i = 0; i < static_cast<Index>(mpiRowIndicesRecvBuff.size()); ++i) {
             Index domRowIdx = mpiRowIndicesRecvBuff[i];
-            for (unsigned j = 0; j < mpiRowSizesRecvBuff[i]; ++j) {
+            for (Index j = 0; j < static_cast<Index>(mpiRowSizesRecvBuff[i]); ++j) {
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
                 (*this)[domRowIdx][domColIdx] += mpiRecvBuff[k];
@@ -603,7 +608,7 @@ private:
         MpiBuffer<block_type> &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
 
         MpiBuffer<Index> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
-        MpiBuffer<size_t> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
+        MpiBuffer<Index> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
         MpiBuffer<Index> &mpiColIndicesRecvBuff
             = *entryIndicesRecvBuff_[peerRank];
 
@@ -638,14 +643,14 @@ private:
     Entries entries_;
     std::shared_ptr<Overlap> overlap_;
 
-    std::map<ProcessRank, MpiBuffer<size_t> *> numRowsSendBuff_;
-    std::map<ProcessRank, MpiBuffer<size_t> *> rowSizesSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> numRowsSendBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> rowSizesSendBuff_;
     std::map<ProcessRank, MpiBuffer<Index> *> rowIndicesSendBuff_;
     std::map<ProcessRank, MpiBuffer<Index> *> entryIndicesSendBuff_;
     std::map<ProcessRank, MpiBuffer<block_type> *> entryValuesSendBuff_;
 
-    std::map<ProcessRank, MpiBuffer<size_t> > numRowsRecvBuff_;
-    std::map<ProcessRank, MpiBuffer<size_t> *> rowSizesRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> > numRowsRecvBuff_;
+    std::map<ProcessRank, MpiBuffer<Index> *> rowSizesRecvBuff_;
     std::map<ProcessRank, MpiBuffer<Index> *> rowIndicesRecvBuff_;
     std::map<ProcessRank, MpiBuffer<Index> *> entryIndicesRecvBuff_;
     std::map<ProcessRank, MpiBuffer<block_type> *> entryValuesRecvBuff_;
