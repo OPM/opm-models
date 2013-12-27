@@ -97,8 +97,8 @@ public:
      */
     FvBaseProblem(TimeManager &timeManager, const GridView &gridView)
         : gridView_(gridView)
-        , bboxMin_(std::numeric_limits<double>::max())
-        , bboxMax_(-std::numeric_limits<double>::max())
+        , boundingBoxMin_(std::numeric_limits<double>::max())
+        , boundingBoxMax_(-std::numeric_limits<double>::max())
         , elementMapper_(gridView)
         , vertexMapper_(gridView)
         , timeManager_(&timeManager)
@@ -424,15 +424,15 @@ public:
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the smallest values.
      */
-    const GlobalPosition &bboxMin() const
-    { return bboxMin_; }
+    const GlobalPosition &boundingBoxMin() const
+    { return boundingBoxMin_; }
 
     /*!
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the largest values.
      */
-    const GlobalPosition &bboxMax() const
-    { return bboxMax_; }
+    const GlobalPosition &boundingBoxMax() const
+    { return boundingBoxMax_; }
 
     /*!
      * \brief Returns the mapper for vertices to indices.
@@ -599,15 +599,15 @@ private:
         const VertexIterator vEndIt = gridView_.template end<dim>();
         for (; vIt!=vEndIt; ++vIt) {
             for (int i=0; i<dim; i++) {
-                bboxMin_[i] = std::min(bboxMin_[i], vIt->geometry().corner(0)[i]);
-                bboxMax_[i] = std::max(bboxMax_[i], vIt->geometry().corner(0)[i]);
+                boundingBoxMin_[i] = std::min(boundingBoxMin_[i], vIt->geometry().corner(0)[i]);
+                boundingBoxMax_[i] = std::max(boundingBoxMax_[i], vIt->geometry().corner(0)[i]);
             }
         }
 
         // communicate to get the bounding box of the whole domain
         for (int i = 0; i < dim; ++i) {
-            bboxMin_[i] = gridView_.comm().min(bboxMin_[i]);
-            bboxMax_[i] = gridView_.comm().max(bboxMax_[i]);
+            boundingBoxMin_[i] = gridView_.comm().min(boundingBoxMin_[i]);
+            boundingBoxMax_[i] = gridView_.comm().max(boundingBoxMax_[i]);
         }
 
         // set a default name for the problem
@@ -635,8 +635,8 @@ private:
     std::string simName_;
     const GridView gridView_;
 
-    GlobalPosition bboxMin_;
-    GlobalPosition bboxMax_;
+    GlobalPosition boundingBoxMin_;
+    GlobalPosition boundingBoxMax_;
 
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
