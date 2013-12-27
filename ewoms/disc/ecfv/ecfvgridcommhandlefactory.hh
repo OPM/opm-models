@@ -26,6 +26,8 @@
 #ifndef EWOMS_ECFV_GRID_COMM_HANDLE_FACTORY_HH
 #define EWOMS_ECFV_GRID_COMM_HANDLE_FACTORY_HH
 
+#include "ecfvproperties.hh"
+
 #include <ewoms/parallel/gridcommhandles.hh>
 
 namespace Ewoms {
@@ -41,7 +43,6 @@ template<class TypeTag>
 class EcfvGridCommHandleFactory
 {
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
-
 
 public:
     /*!

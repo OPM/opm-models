@@ -28,6 +28,8 @@
 
 #include "overlaptypes.hh"
 
+#include <opm/core/utility/ErrorMacros.hpp>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/istl/bcrsmatrix.hh>

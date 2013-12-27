@@ -27,6 +27,8 @@
 #ifndef EWOMS_MULTI_PHASE_BASE_PROBLEM_HH
 #define EWOMS_MULTI_PHASE_BASE_PROBLEM_HH
 
+#include "multiphasebaseproperties.hh"
+
 #include <ewoms/disc/common/fvbaseproblem.hh>
 #include <ewoms/disc/common/fvbaseproperties.hh>
 

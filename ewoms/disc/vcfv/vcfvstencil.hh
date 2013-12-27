@@ -33,6 +33,7 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 
 #include <dune/grid/common/intersectioniterator.hh>
+#include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
 #include <dune/common/version.hh>
