@@ -75,7 +75,6 @@ class VtkDiffusionModule : public VtkBaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    enum { dim = GridView::dimension };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 

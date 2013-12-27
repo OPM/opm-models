@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NewtonConvergenceWriter
+ * \copydoc Ewoms::FvBaseNewtonConvergenceWriter
  */
 #ifndef EWOMS_FV_BASE_NEWTON_CONVERGENCE_WRITER_HH
 #define EWOMS_FV_BASE_NEWTON_CONVERGENCE_WRITER_HH

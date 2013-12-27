@@ -63,7 +63,6 @@ class VtkTemperatureModule : public VtkBaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    enum { dim = GridView::dimension };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;

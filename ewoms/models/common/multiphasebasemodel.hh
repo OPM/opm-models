@@ -130,7 +130,6 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
 

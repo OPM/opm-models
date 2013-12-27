@@ -49,16 +49,17 @@ public:
     static const int numEq = numPhases + EnergyIndices::numEq_;
 
     // Primary variable indices
-    static const int pressure0Idx
-        = PVOffset + 0; //!< Index for wetting/non-wetting phase pressure
-                        //(depending on formulation) in a solution vector
-    static const int saturation0Idx
-        = PVOffset
-          + 1; //!< Index of the saturation of the non-wetting/wetting phase
+
+    //! Index for wetting/non-wetting phase pressure
+    //! (depending on formulation) in a solution vector
+    static const int pressure0Idx = PVOffset + 0;
+    //! Index of the saturation of the non-wetting/wetting phase
+    static const int saturation0Idx = PVOffset + 1;
 
     // indices of the equations
-    static const int conti0EqIdx
-        = PVOffset + 0; //!< Index of the continuity equation of the first phase
+
+    //! Index of the continuity equation of the first phase
+    static const int conti0EqIdx = PVOffset + 0;
 };
 } // namespace Ewoms
 

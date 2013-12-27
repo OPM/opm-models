@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NewtonMethod
+ * \copydoc Ewoms::FvBaseNewtonMethod
  */
 #ifndef EWOMS_FV_BASE_NEWTON_METHOD_HH
 #define EWOMS_FV_BASE_NEWTON_METHOD_HH
@@ -108,7 +108,6 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

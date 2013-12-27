@@ -48,17 +48,20 @@ class FlashIndices
     typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
-    // number of equations/primary variables
+    //! number of equations/primary variables
     static const int numEq = numComponents + EnergyIndices::numEq_;
 
     // Primary variable indices
-    static const int cTot0Idx = PVOffset; //!< Index of the total concentration
-    // of the first component in the pore
-    // space.
+
+    //! Index of the total concentration of the first component in the
+    //! pore space.
+    static const int cTot0Idx = PVOffset;
 
     // equation indices
-    static const int conti0EqIdx = PVOffset; //!< Index of the mass conservation
-    // equation for the first component.
+
+    //! Index of the mass conservation equation for the first
+    //! component.
+    static const int conti0EqIdx = PVOffset;
 };
 
 } // namespace Ewoms

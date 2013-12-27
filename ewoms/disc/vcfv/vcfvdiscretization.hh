@@ -100,7 +100,6 @@ class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
 
     enum { dim = GridView::dimension };
 
-    typedef typename GridView::template Codim<dim>::Entity Vertex;
 
 public:
     VcfvDiscretization(Problem &problem)

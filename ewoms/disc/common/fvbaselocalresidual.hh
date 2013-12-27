@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::LocalResidual
+ * \copydoc Ewoms::FvBaseLocalResidual
  */
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
@@ -32,7 +32,6 @@
 #include <dune/grid/common/geometry.hh>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/version.hh>
 
 #include <opm/core/utility/ClassName.hpp>
 
@@ -59,18 +58,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     enum { dim = GridView::dimension };
     typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::ctype CoordScalar;
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-    typedef typename Dune::ReferenceElements<CoordScalar, dim> ReferenceElements;
-    typedef typename Dune::ReferenceElement<CoordScalar, dim> ReferenceElement;
-#else
-    typedef typename Dune::GenericReferenceElements<CoordScalar, dim> ReferenceElements;
-    typedef typename Dune::GenericReferenceElement<CoordScalar, dim> ReferenceElement;
-#endif
-
-    typedef typename GridView::Intersection Intersection;
-    typedef typename GridView::IntersectionIterator IntersectionIterator;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

@@ -470,7 +470,6 @@ class VcfvStencil
     enum{maxNC = (dim < 3 ? 4 : 8)};
     enum{maxNE = (dim < 3 ? 4 : 12)};
     enum{maxNF = (dim < 3 ? 1 : 6)};
-    enum{maxCOS = (dim < 3 ? 2 : 4)};
     enum{maxBF = (dim < 3 ? 8 : 24)};
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Traits::template Codim<0>::Entity Element;

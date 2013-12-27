@@ -63,7 +63,6 @@ class VtkPrimaryVarsModule : public VtkBaseOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::EqBuffer EqBuffer;
 
-    enum { dim = GridView::dimension };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:

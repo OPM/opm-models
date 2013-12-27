@@ -40,7 +40,6 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseGradientCalculator
 {
-    typedef FvBaseGradientCalculator<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

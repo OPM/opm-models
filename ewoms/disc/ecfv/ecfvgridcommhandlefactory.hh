@@ -41,9 +41,7 @@ template<class TypeTag>
 class EcfvGridCommHandleFactory
 {
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    static const int dim = GridView::dimension;
 
 public:
     /*!

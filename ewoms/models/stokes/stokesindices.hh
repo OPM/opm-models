@@ -52,20 +52,18 @@ private:
 
 public:
     // Primary variable indices
-    static const int conti0EqIdx = PVOffset
-                                   + 0; //!< Index of the mass balance equation
-    static const int momentum0EqIdx
-        = PVOffset + numComponents; //!< Index of the first component of the
-    // momentum equation
 
-    static const int pressureIdx
-        = PVOffset + 0; //!< Index of the pressure in a solution vector
-    static const int moleFrac1Idx
-        = PVOffset
-          + 1; //!< Index of the mole fraction of the _SECOND_ component
-    static const int velocity0Idx
-        = PVOffset
-          + numComponents; //!< Index of the first component of the velocity
+    //! Index of the mass balance equation
+    static const int conti0EqIdx = PVOffset + 0;
+    //! Index of the first component of the momentum equation
+    static const int momentum0EqIdx = PVOffset + numComponents;
+
+    //! Index of the pressure in a solution vector
+    static const int pressureIdx = PVOffset + 0;
+    //! Index of the mole fraction of the _SECOND_ component
+    static const int moleFrac1Idx = PVOffset + 1;
+    //! Index of the first component of the velocity
+    static const int velocity0Idx = PVOffset + numComponents;
 };
 } // namespace Ewoms
 

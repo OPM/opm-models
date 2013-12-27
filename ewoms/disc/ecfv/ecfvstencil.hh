@@ -74,7 +74,6 @@ class EcfvStencil
 
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout > ElementMapper;
 
-    typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
     typedef Dune::FieldVector<Scalar, dimWorld> WorldVector;

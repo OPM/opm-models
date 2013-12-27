@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::Constraints
+ * \copydoc Ewoms::FvBaseConstraints
  */
 #ifndef EWOMS_FV_BASE_CONSTRAINTS_HH
 #define EWOMS_FV_BASE_CONSTRAINTS_HH

@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ElementContext
+ * \copydoc Ewoms::FvBaseElementContext
  */
 #ifndef EWOMS_FV_BASE_ELEMENT_CONTEXT_HH
 #define EWOMS_FV_BASE_ELEMENT_CONTEXT_HH

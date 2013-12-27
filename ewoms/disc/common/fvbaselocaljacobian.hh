@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::LocalJacobian
+ * \copydoc Ewoms::FvBaseLocalJacobian
  */
 #ifndef EWOMS_FV_BASE_LOCAL_JACOBIAN_HH
 #define EWOMS_FV_BASE_LOCAL_JACOBIAN_HH

@@ -57,7 +57,6 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    enum { dim = GridView::dimension };
     enum { pressureWIdx = Indices::pressureWIdx };
     enum { numPhases = FluidSystem::numPhases };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };

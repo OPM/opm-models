@@ -61,7 +61,6 @@ class VtkPhasePresenceModule : public VtkBaseOutputModule<TypeTag>
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
-    enum { dim = GridView::dimension };
 
 public:
     VtkPhasePresenceModule(const Problem &problem)

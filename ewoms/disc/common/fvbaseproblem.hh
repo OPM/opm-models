@@ -22,7 +22,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::Problem
+ * \copydoc Ewoms::FvBaseProblem
  */
 #ifndef EWOMS_FV_BASE_PROBLEM_HH
 #define EWOMS_FV_BASE_PROBLEM_HH

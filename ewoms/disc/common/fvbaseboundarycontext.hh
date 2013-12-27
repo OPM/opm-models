@@ -21,7 +21,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BoundaryContext
+ * \copydoc Ewoms::FvBaseBoundaryContext
  */
 #ifndef EWOMS_FV_BASE_BOUNDARY_CONTEXT_HH
 #define EWOMS_FV_BASE_BOUNDARY_CONTEXT_HH
