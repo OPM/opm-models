@@ -1,5 +1,4 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set ts=4 sw=2 et sts=2:
 /*
   Copyright (C) 2004-2012 by Christian Engwer
   Copyright (C) 2005-2011 by Markus Blatt

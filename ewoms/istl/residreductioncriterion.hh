@@ -1,5 +1,4 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-// vi: set ts=4 sw=2 et sts=2:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
 
