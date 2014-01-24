@@ -1,4 +1,3 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /*
   Copyright (C) 2004-2012 by Christian Engwer
   Copyright (C) 2005-2011 by Markus Blatt
@@ -60,13 +59,14 @@
 #include <dune/istl/operators.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/scalarproducts.hh>
-#include <dune/istl/solvers.hh>
+#include <dune/istl/solver.hh>
 
 #include <dune/common/timer.hh>
 #include <dune/common/ftraits.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
 
+#include <algorithm>
 #include <memory>
 
 namespace Ewoms {
@@ -285,6 +285,9 @@ public:
             }
         }
 
+        //correct i which is wrong if convergence was not achieved.
+        i=std::min(_maxit,i);
+
         // print
         if (_verbose == 1)
             this->convergenceCriterion().print(i);
@@ -412,6 +415,9 @@ public:
                 break;
             }
         }
+
+        //correct i which is wrong if convergence was not achieved.
+        i=std::min(_maxit,i);
 
         if (_verbose == 1) // printing for non verbose
             this->convergenceCriterion().print(i);
@@ -545,6 +551,9 @@ public:
             p += q;               // orthogonalization with correction
             rholast = rho;        // remember rho for recurrence
         }
+
+        //correct i which is wrong if convergence was not achieved.
+        i=std::min(_maxit,i);
 
         if (_verbose == 1) // printing for non verbose
             this->convergenceCriterion().print(i);
@@ -771,6 +780,9 @@ public:
             }
         } // end for
 
+        //correct i which is wrong if convergence was not achieved.
+        it=std::min(_maxit,it);
+
         if (_verbose == 1) // printing for non verbose
             this->convergenceCriterion().print(it);
 
@@ -785,7 +797,7 @@ private:
     Dune::Preconditioner<X, X> &_prec;
     Dune::ScalarProduct<X> &_sp;
     Dune::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
-    int _maxit;
+    double _maxit;
     int _verbose;
 };
 
@@ -996,6 +1008,9 @@ public:
             }
         }
 
+        //correct i which is wrong if convergence was not achieved.
+        i=std::min(_maxit,i);
+
         if (_verbose == 1) // printing for non verbose
             this->convergenceCriterion().print(i);
 
@@ -1118,7 +1133,7 @@ public:
             // norm_0 = norm(M^-1 b)
             w = 0.0;
             _M.apply(w, b); // w = M^-1 b
-            norm_0 = _sp.norm(w);
+            norm_0 = _sp.norm(w); // use defect of preconditioned residual
             // r = _M.solve(b - A * x);
             w = b;
             _A_.applyscaleadd(-1, x, /* => */ w); // w = b - Ax;
@@ -1129,16 +1144,16 @@ public:
         else {
             // norm_0 = norm(b-Ax)
             _A_.applyscaleadd(-1, x, /* => */ b); // b = b - Ax;
-            norm_0 = _sp.norm(b);
             v[0] = 0.0;
             _M.apply(v[0], b); // r = M^-1 b
             beta = _sp.norm(v[0]);
+            norm_0 = beta; // use defect of preconditioned residual
         }
 
         // avoid division by zero
         if (norm_0 == 0.0)
             norm_0 = 1.0;
-        norm = norm_old = _sp.norm(v[0]);
+        norm = norm_old = beta;
 
         // check convergence
         this->convergenceCriterion().setInitial(x, b, norm_0);
@@ -1157,7 +1172,8 @@ public:
                 s[i] = 0.0;
             s[0] = beta;
 
-            for (i = 0; i < m && j <= _maxit && res.converged != true; i++, j++) {
+            int end=std::min(m, _maxit-j+1);
+            for (i = 0; i < end && res.converged != true; i++, j++) {
                 w = 0.0;
                 v[i + 1] = 0.0; // use v[i+1] as temporary vector
                 _A_.apply(v[i], /* => */ v[i + 1]);
@@ -1170,7 +1186,7 @@ public:
                 H[i + 1][i] = _sp.norm(w);
                 if (H[i + 1][i] == 0.0)
                     DUNE_THROW(Dune::ISTLError, "breakdown in GMRes - |w| "
-                                                << w << " == 0.0 after " << j
+                                                << " == 0.0 after " << j
                                                 << " iterations");
                 // v[i+1] = w * (1.0 / H[i+1][i]);
                 v[i + 1] = w;
@@ -1232,16 +1248,13 @@ public:
             norm_old = norm;
 
             this->convergenceCriterion().update(x, b, norm);
-
-            if (_verbose > 1) // print
-            {
-                this->convergenceCriterion().print(i);
-            }
-
             if (this->convergenceCriterion().converged()) {
                 // fill statistics
                 res.converged = true;
             }
+
+            if (res.converged != true && _verbose > 0)
+                std::cout << "=== GMRes::restart\n";
         }
 
         _M.post(x); // postprocess preconditioner
@@ -1251,8 +1264,9 @@ public:
     }
 
 private:
-    static void update(X &x, int k, std::vector<std::vector<field_type> > &h,
-                       std::vector<field_type> &s, std::vector<F> v)
+    static void update(X &x, int k,
+                       const std::vector< std::vector<field_type> > & h,
+                       const std::vector<field_type> & s, const std::vector<F> &v)
     {
         std::vector<field_type> y(s);
 
