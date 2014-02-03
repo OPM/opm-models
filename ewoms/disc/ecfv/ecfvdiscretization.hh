@@ -84,10 +84,14 @@ template<class TypeTag>
 class EcfvDiscretization : public FvBaseDiscretization<TypeTag>
 {
     typedef FvBaseDiscretization<TypeTag> ParentType;
+
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     enum { dim = GridView::dimension };
 
@@ -115,6 +119,33 @@ public:
      */
     const DofMapper &dofMapper() const
     { return this->problem_.elementMapper(); }
+
+    /*!
+     * \brief Try to progress the model to the next timestep.
+     *
+     * For the Element centered finite volume discretization, this
+     * method first syncronizes the overlap/ghost elements with its
+     * neighbor processes and then runs the generic update() method of
+     * the finite volume discretizations.
+     *
+     * \param solver The non-linear solver
+     */
+    bool update(NewtonMethod &solver)
+    {
+        // syncronize the solution on the ghost and overlap elements
+        typedef GridCommHandleGhostSync<PrimaryVariables,
+                                        SolutionVector,
+                                        DofMapper,
+                                        /*commCodim=*/0> GhostSyncHandle;
+        auto ghostSync = GhostSyncHandle(this->solution_[/*timeIdx=*/0],
+                                         asImp_().dofMapper());
+
+        this->gridView().communicate(ghostSync,
+                                     Dune::Overlap_All_Interface,
+                                     Dune::BackwardCommunication);
+
+        return ParentType::update(solver);
+    }
 
     /*!
      * \brief Serializes the current state of the model.

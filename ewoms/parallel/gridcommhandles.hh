@@ -20,7 +20,7 @@
  * \file
  *
  * \brief Provides data handles for parallel communication which
- *        operate on vertices
+ *        operate on DOFs
  */
 #ifndef EWOMS_GRID_COMM_HANDLES_HH
 #define EWOMS_GRID_COMM_HANDLES_HH
@@ -31,7 +31,7 @@ namespace Ewoms {
 
 /*!
  * \brief Data handle for parallel communication which sums up all
- *        values are attached to vertices
+ *        values are attached to DOFs
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleSum
@@ -53,8 +53,8 @@ public:
 
     bool fixedsize(int dim, int codim) const
     {
-        // for each vertex we communicate a single field vector which
-        // has a fixed size
+        // for each DOF we communicate a single value which has a
+        // fixed size
         return true;
     }
 
@@ -68,18 +68,75 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
-        int vertIdx = mapper_.map(e);
-        buff.write(container_[vertIdx]);
+        int dofIdx = mapper_.map(e);
+        buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
-        int vertIdx = mapper_.map(e);
+        int dofIdx = mapper_.map(e);
 
         FieldType tmp;
         buff.read(tmp);
-        container_[vertIdx] += tmp;
+        container_[dofIdx] += tmp;
+    }
+
+private:
+    const EntityMapper &mapper_;
+    Container &container_;
+};
+
+/*!
+ * \brief Data handle for parallel communication which can be used to
+ *        set the values values of ghost and overlap DOFs from their
+ *        respective master processes.
+ */
+template <class FieldType, class Container, class EntityMapper, int commCodim>
+class GridCommHandleGhostSync
+    : public Dune::CommDataHandleIF<GridCommHandleGhostSync<FieldType, Container,
+                                                            EntityMapper, commCodim>,
+                                    FieldType>
+{
+public:
+    GridCommHandleGhostSync(Container &container, const EntityMapper &mapper)
+        : mapper_(mapper), container_(container)
+    {
+    }
+
+    bool contains(int dim, int codim) const
+    {
+        // return true if the codim is the same as the codim which we
+        // are asked to communicate with.
+        return codim == commCodim;
+    }
+
+    bool fixedsize(int dim, int codim) const
+    {
+        // for each DOF we communicate a single value which has a
+        // fixed size
+        return true;
+    }
+
+    template <class EntityType>
+    size_t size(const EntityType &e) const
+    {
+        // communicate a field type per entity
+        return 1;
+    }
+
+    template <class MessageBufferImp, class EntityType>
+    void gather(MessageBufferImp &buff, const EntityType &e) const
+    {
+        int dofIdx = mapper_.map(e);
+        buff.write(container_[dofIdx]);
+    }
+
+    template <class MessageBufferImp, class EntityType>
+    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    {
+        int dofIdx = mapper_.map(e);
+        buff.read(container_[dofIdx]);
     }
 
 private:
@@ -89,7 +146,7 @@ private:
 
 /*!
  * \brief Data handle for parallel communication which takes the
- *        maximum of all values that are attached to vertices
+ *        maximum of all values that are attached to DOFs
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMax
@@ -111,8 +168,8 @@ public:
 
     bool fixedsize(int dim, int codim) const
     {
-        // for each vertex we communicate a single field vector which
-        // has a fixed size
+        // for each DOF we communicate a single value which has a
+        // fixed size
         return true;
     }
 
@@ -126,18 +183,18 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
-        int vertIdx = mapper_.map(e);
-        buff.write(container_[vertIdx]);
+        int dofIdx = mapper_.map(e);
+        buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
-        int vertIdx = mapper_.map(e);
+        int dofIdx = mapper_.map(e);
 
         FieldType tmp;
         buff.read(tmp);
-        container_[vertIdx] = std::max(container_[vertIdx], tmp);
+        container_[dofIdx] = std::max(container_[dofIdx], tmp);
     }
 
 private:
@@ -147,7 +204,7 @@ private:
 
 /*!
  * \brief Provides data handle for parallel communication which takes
- *        the minimum of all values that are attached to vertices
+ *        the minimum of all values that are attached to DOFs
  */
 template <class FieldType, class Container, class EntityMapper, int commCodim>
 class GridCommHandleMin
@@ -169,8 +226,8 @@ public:
 
     bool fixedsize(int dim, int codim) const
     {
-        // for each vertex we communicate a single field vector which
-        // has a fixed size
+        // for each DOF we communicate a single value which has a
+        // fixed size
         return true;
     }
 
@@ -184,18 +241,18 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp &buff, const EntityType &e) const
     {
-        int vertIdx = mapper_.map(e);
-        buff.write(container_[vertIdx]);
+        int dofIdx = mapper_.map(e);
+        buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
     {
-        int vertIdx = mapper_.map(e);
+        int dofIdx = mapper_.map(e);
 
         FieldType tmp;
         buff.read(tmp);
-        container_[vertIdx] = std::min(container_[vertIdx], tmp);
+        container_[dofIdx] = std::min(container_[dofIdx], tmp);
     }
 
 private:
