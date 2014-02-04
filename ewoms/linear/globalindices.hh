@@ -156,13 +156,16 @@ public:
         MPI_Recv(&recvBuf,                     // buff
                  sizeof(PeerIndexGlobalIndex), // count
                  MPI_BYTE,                     // data type
-                 peerRank, 0,                  // tag
+                 peerRank,                     // peer process
+                 0,                            // tag
                  MPI_COMM_WORLD,               // communicator
                  MPI_STATUS_IGNORE);           // status
 
         int domesticIdx = foreignOverlap_.nativeToLocal(recvBuf.peerIdx);
-        int globalIdx = recvBuf.globalIdx;
-        addIndex(domesticIdx, globalIdx);
+        if (domesticIdx >= 0) {
+            int globalIdx = recvBuf.globalIdx;
+            addIndex(domesticIdx, globalIdx);
+        }
 #endif // HAVE_MPI
     }
 
@@ -282,7 +285,8 @@ protected:
         BorderList::const_iterator borderEndIt = borderList_().end();
         for (; borderIt != borderEndIt; ++borderIt) {
             ProcessRank borderPeer = borderIt->peerRank;
-            if (borderPeer != peerRank)
+            int borderDistance = borderIt->borderDistance;
+            if (borderPeer != peerRank || borderDistance != 0)
                 continue;
 
             int localIdx = foreignOverlap_.nativeToLocal(borderIt->localIdx);
@@ -304,7 +308,8 @@ protected:
         BorderList::const_iterator borderEndIt = borderList_().end();
         for (; borderIt != borderEndIt; ++borderIt) {
             ProcessRank borderPeer = borderIt->peerRank;
-            if (borderPeer != peerRank)
+            int borderDistance = borderIt->borderDistance;
+            if (borderPeer != peerRank || borderDistance != 0)
                 continue;
 
             int nativeIdx = borderIt->localIdx;
