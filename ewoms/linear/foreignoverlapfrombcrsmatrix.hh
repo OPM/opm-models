@@ -110,10 +110,19 @@ public:
         SeedList initialSeedList;
         initialSeedList.update(borderList);
 
+        // calculate the minimum distance from the border of the
+        // initial seed list
+        int minBorderDist = overlapSize;
+        auto borderIt = borderList.begin();
+        const auto &borderEndIt = borderList.end();
+        for (; borderIt != borderEndIt; ++borderIt) {
+            minBorderDist = std::min<int>(minBorderDist, borderIt->borderDistance);
+        }
+
         // calculate the foreign overlap for the local partition,
         // i.e. find the distance of each row from the seed set.
         foreignOverlapByLocalIndex_.resize(numLocal());
-        extendForeignOverlap_(A, initialSeedList, 0, overlapSize);
+        extendForeignOverlap_(A, initialSeedList, minBorderDist, overlapSize);
 
         // computes the process with the lowest rank for all local
         // indices.
