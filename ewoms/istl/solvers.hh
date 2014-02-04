@@ -59,7 +59,7 @@
 #include <dune/istl/operators.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/scalarproducts.hh>
-#include <dune/istl/solver.hh>
+#include <dune/istl/solvers.hh>
 
 #include <dune/common/timer.hh>
 #include <dune/common/ftraits.hh>
