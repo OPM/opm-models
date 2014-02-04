@@ -111,6 +111,13 @@ EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
 
+EwomsAddTest(co2injection_immiscible_ecfv_parallel
+  SOURCES tests/co2injection_immiscible_ecfv.cc
+  EXE_NAME co2injection_immiscible_ecfv
+  NO_COMPILE
+  CONDITION MPI_FOUND
+  DRIVER_ARGS --parallel-simulation co2injection_immiscible_ecfv --end-time=10 --initial-time-step-size=1)
+
 EwomsAddTest(obstacle_immiscible_parallel
   SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
