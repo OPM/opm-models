@@ -77,10 +77,12 @@ public:
 
     void check() const
     {
+#ifndef NDEBUG
         // check consistency of global indices
         for (int domIdx = 0; domIdx < numDomestic(); ++domIdx) {
             assert(int(globalToDomestic(domesticToGlobal(domIdx))) == domIdx);
         }
+#endif // NDEBUG
 
         // send the foreign overlap for which we are master to the
         // peers
@@ -374,7 +376,7 @@ protected:
         for (int i = 0; overlapIt != overlapEndIt; ++overlapIt, ++i) {
             int localIdx = overlapIt->index;
             int borderDistance = overlapIt->borderDistance;
-            int numPeers = foreignOverlap_.foreignOverlapByIndex(localIdx).size();
+            int numPeers = foreignOverlap_.foreignOverlapByLocalIndex(localIdx).size();
 
             IndexDistanceNpeers tmp;
             tmp.index = globalIndices_.domesticToGlobal(localIdx);

@@ -112,7 +112,7 @@ public:
 
         // calculate the foreign overlap for the local partition,
         // i.e. find the distance of each row from the seed set.
-        foreignOverlapByIndex_.resize(numLocal());
+        foreignOverlapByLocalIndex_.resize(numLocal());
         extendForeignOverlap_(A, initialSeedList, 0, overlapSize);
 
         // computes the process with the lowest rank for all local
@@ -141,7 +141,7 @@ public:
      */
     bool isBorderWith(Index localIdx, int peerRank) const
     {
-        const auto &indexOverlap = foreignOverlapByIndex_[localIdx];
+        const auto &indexOverlap = foreignOverlapByLocalIndex_[localIdx];
         const auto &borderDistIt = indexOverlap.find(peerRank);
         if (borderDistIt == indexOverlap.end())
             return false;
@@ -192,10 +192,10 @@ public:
      * index.
      */
     const std::map<ProcessRank, BorderDistance> &
-    foreignOverlapByIndex(Index localIdx) const
+    foreignOverlapByLocalIndex(Index localIdx) const
     {
         assert(isLocal(localIdx));
-        return foreignOverlapByIndex_[localIdx];
+        return foreignOverlapByLocalIndex_[localIdx];
     }
 
     /*!
@@ -203,7 +203,7 @@ public:
      */
     bool peerHasIndex(int peerRank, Index localIdx) const
     {
-        const auto &idxOverlap = foreignOverlapByIndex_[localIdx];
+        const auto &idxOverlap = foreignOverlapByLocalIndex_[localIdx];
         return idxOverlap.find(peerRank) != idxOverlap.end();
     }
 
@@ -231,7 +231,7 @@ public:
      */
     bool isFrontFor(int peerRank, Index localIdx) const
     {
-        const auto &idxOverlap = foreignOverlapByIndex_[localIdx];
+        const auto &idxOverlap = foreignOverlapByLocalIndex_[localIdx];
 
         auto it = idxOverlap.find(peerRank);
         if (it == idxOverlap.end())
@@ -295,14 +295,14 @@ public:
      *        index is visible.
      */
     int numPeers(Index localIdx) const
-    { return foreignOverlapByIndex_[localIdx].size(); }
+    { return foreignOverlapByLocalIndex_[localIdx].size(); }
 
     /*!
      * \brief Returns true if a given local index is in the foreign overlap of
      * any rank.
      */
     bool isInOverlap(Index localIdx) const
-    { return foreignOverlapByIndex_[localIdx].size() > 0; }
+    { return foreignOverlapByLocalIndex_[localIdx].size() > 0; }
 
     /*!
      * \brief Print the foreign overlap for debugging purposes.
@@ -338,16 +338,16 @@ protected:
 
         // add all processes in the seed rows of the current overlap
         // level
-        auto it = seedList.begin();
-        const auto &endIt = seedList.end();
-        for (; it != endIt; ++it) {
-            Index localIdx = nativeToLocal(it->index);
-            int peerRank = it->peerRank;
+        auto seedIt = seedList.begin();
+        const auto &seedEndIt = seedList.end();
+        for (; seedIt != seedEndIt; ++seedIt) {
+            Index localIdx = nativeToLocal(seedIt->index);
+            int peerRank = seedIt->peerRank;
             int distance = borderDistance;
             if (localIdx < 0)
                 continue;
-            if (foreignOverlapByIndex_[localIdx].count(peerRank) == 0)
-                foreignOverlapByIndex_[localIdx][peerRank] = distance;
+            if (foreignOverlapByLocalIndex_[localIdx].count(peerRank) == 0)
+                foreignOverlapByLocalIndex_[localIdx][peerRank] = distance;
         }
 
         // if we have reached the maximum overlap distance, i.e. we're
@@ -358,12 +358,12 @@ protected:
         // find the seed list for the next overlap level using the
         // seed set for the current level
         SeedList nextSeedList;
-        it = seedList.begin();
-        for (; it != endIt; ++it) {
-            Index nativeRowIdx = it->index;
+        seedIt = seedList.begin();
+        for (; seedIt != seedEndIt; ++seedIt) {
+            Index nativeRowIdx = seedIt->index;
             if (nativeToLocal(nativeRowIdx) < 0)
                 continue; // ignore blacklisted indices
-            ProcessRank peerRank = it->peerRank;
+            ProcessRank peerRank = seedIt->peerRank;
 
             // find all column indices in the row. The indices of the
             // columns are the additional indices of the overlap which
@@ -380,7 +380,7 @@ protected:
                     continue;
                 // if the process is already is in the overlap of the
                 // column index, ignore this column index!
-                else if (foreignOverlapByIndex_[localColIdx].count(peerRank) > 0)
+                else if (foreignOverlapByLocalIndex_[localColIdx].count(peerRank) > 0)
                     continue;
 
                 // check whether the new index is already in the overlap
@@ -401,7 +401,7 @@ protected:
                 IndexRankDist newTuple;
                 newTuple.index = nativeColIdx;
                 newTuple.peerRank = peerRank;
-                newTuple.borderDistance = it->borderDistance + 1;
+                newTuple.borderDistance = seedIt->borderDistance + 1;
                 nextSeedList.push_back(newTuple);
             }
         }
@@ -468,8 +468,8 @@ protected:
             borderHandle.borderDistance = it->borderDistance;
 
             // add the border index to all the neighboring peers
-            auto neighborIt = foreignOverlapByIndex_[localIdx].begin();
-            const auto &neighborEndIt = foreignOverlapByIndex_[localIdx].end();
+            auto neighborIt = foreignOverlapByLocalIndex_[localIdx].begin();
+            const auto &neighborEndIt = foreignOverlapByLocalIndex_[localIdx].end();
             for (; neighborIt != neighborEndIt; ++neighborIt) {
                 if (neighborIt->second != 0)
                     // not a border index for the neighbor
@@ -551,8 +551,8 @@ protected:
                 // check if the index is already in the overlap for
                 // the peer
                 const auto &distIt
-                    = foreignOverlapByIndex_[localIdx].find(peerRank);
-                if (distIt != foreignOverlapByIndex_[localIdx].end())
+                    = foreignOverlapByLocalIndex_[localIdx].find(peerRank);
+                if (distIt != foreignOverlapByLocalIndex_[localIdx].end())
                     continue;
 
                 // make sure the index is not already in the seed list
@@ -603,8 +603,8 @@ protected:
                 // if the local index is a border index, loop over all ranks
                 // for which this index is also a border index. the lowest
                 // rank wins!
-                auto it = foreignOverlapByIndex_[localIdx].begin();
-                const auto &endIt = foreignOverlapByIndex_[localIdx].end();
+                auto it = foreignOverlapByLocalIndex_[localIdx].begin();
+                const auto &endIt = foreignOverlapByLocalIndex_[localIdx].end();
                 for (; it != endIt; ++it) {
                     if (it->second == 0) {
                         // if the border distance is zero, the rank with the
@@ -624,15 +624,15 @@ protected:
     {
         // loop over all indices which are in the overlap of some
         // process
-        int nIndices = foreignOverlapByIndex_.size();
-        for (int i = 0; i < nIndices; ++i) {
+        int numLocal = foreignOverlapByLocalIndex_.size();
+        for (int localIdx = 0; localIdx < numLocal; ++localIdx) {
             // loop over the list of processes for the current index
-            auto it = foreignOverlapByIndex_[i].begin();
-            const auto &endIt = foreignOverlapByIndex_[i].end();
-            int nRanks = foreignOverlapByIndex_[i].size();
+            auto it = foreignOverlapByLocalIndex_[localIdx].begin();
+            const auto &endIt = foreignOverlapByLocalIndex_[localIdx].end();
+            int nRanks = foreignOverlapByLocalIndex_[localIdx].size();
             for (; it != endIt; ++it) {
                 IndexDistanceNpeers tmp;
-                tmp.index = i;
+                tmp.index = localIdx;
                 tmp.borderDistance = it->second;
                 tmp.numPeers = nRanks;
                 foreignOverlapByRank_[it->first].push_back(tmp);
@@ -667,7 +667,7 @@ protected:
     // stores the set of process ranks which are in the overlap for a
     // given row index "owned" by the current rank. The second value
     // store the distance from the nearest process border.
-    OverlapByIndex foreignOverlapByIndex_;
+    OverlapByIndex foreignOverlapByLocalIndex_;
 
     // stores a list of foreign overlap indices for each rank
     OverlapByRank foreignOverlapByRank_;

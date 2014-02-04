@@ -139,9 +139,10 @@ public:
         MPI_Send(&sendBuf,                     // buff
                  sizeof(PeerIndexGlobalIndex), // count
                  MPI_BYTE,                     // data type
-                 peerRank, 0,                  // tag
+                 peerRank,                     // peer process
+                 0,                            // tag
                  MPI_COMM_WORLD);              // communicator
-#endif                                         // HAVE_MPI
+#endif
     }
 
     /*!
@@ -211,7 +212,8 @@ protected:
             MPI_Recv(&domesticOffset_, // buffer
                      1,                // count
                      MPI_INT,          // data type
-                     myRank_ - 1, 0,   // tag
+                     myRank_ - 1,      // peer rank
+                     0,                // tag
                      MPI_COMM_WORLD,   // communicator
                      MPI_STATUS_IGNORE);
         }
@@ -324,7 +326,7 @@ protected:
     ProcessRank myRank_;
     size_t mpiSize_;
 
-    size_t domesticOffset_;
+    int domesticOffset_;
     size_t numDomestic_;
     const ForeignOverlap &foreignOverlap_;
 
