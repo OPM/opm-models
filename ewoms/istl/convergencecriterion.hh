@@ -1,4 +1,3 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /*
   Copyright (C) 2012-2013 by Andreas Lauser
 
