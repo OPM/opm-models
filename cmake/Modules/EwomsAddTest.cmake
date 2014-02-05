@@ -33,7 +33,11 @@ macro(EwomsAddTest TestName)
     if (NOT DISABLE_TESTS)  
       if (NOT CURTEST_ONLY_COMPILE)
         set(SKIP_CUR_TEST "1")
-        if (CURTEST_CONDITION STREQUAL "")
+        # the "x " is a hack which is required to prevent CMake from
+        # evaluating the condition in the string. (which might
+        # evaluate to an empty string even though "${CURTEST_CONDITION}"
+        # is not empty.)
+        if ("x ${CURTEST_CONDITION}" STREQUAL "x ")
           set(SKIP_CUR_TEST "0")
         elseif(${CURTEST_CONDITION})
           set(SKIP_CUR_TEST "0")
