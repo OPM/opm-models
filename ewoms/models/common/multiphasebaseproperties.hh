@@ -32,19 +32,31 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(SpatialDiscretizationSplice); //!< The splice to be used for the spatial discretization
-NEW_PROP_TAG(NumPhases);   //!< Number of fluid phases in the system
-NEW_PROP_TAG(NumComponents);   //!< Number of chemical species in the system
-NEW_PROP_TAG(Indices); //!< Enumerations used by the model
-NEW_PROP_TAG(MaterialLaw);   //!< The material law which ought to be used (extracted from the spatial parameters)
-NEW_PROP_TAG(MaterialLawParams); //!< The context material law (extracted from the spatial parameters)
-NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
-NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG(VelocityModule); //! Specifies the relation used for velocity
+//! The splice to be used for the spatial discretization
+NEW_PROP_TAG(SpatialDiscretizationSplice);
+//! Number of fluid phases in the system
+NEW_PROP_TAG(NumPhases);
+//! Number of chemical species in the system
+NEW_PROP_TAG(NumComponents);
+//! Enumerations used by the model
+NEW_PROP_TAG(Indices);
+//! The material law which ought to be used (extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLaw);
+//! The context material law (extracted from the spatial parameters)
+NEW_PROP_TAG(MaterialLawParams);
+//! The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLaw);
+//! The parameters of the material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams);
+//!The fluid systems including the information about the phases
+NEW_PROP_TAG(FluidSystem);
+//! Specifies the relation used for velocity
+NEW_PROP_TAG(VelocityModule);
 
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(EnableSmoothUpwinding); //!< Specify whether the "upwinding kink" should be avoided
+//! Returns whether gravity is considered in the problem
+NEW_PROP_TAG(EnableGravity);
+//! Specify whether the "upwinding kink" should be avoided
+NEW_PROP_TAG(EnableSmoothUpwinding);
 } // namespace Properties
 } // namespace Opm
 

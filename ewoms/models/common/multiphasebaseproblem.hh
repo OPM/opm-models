@@ -84,7 +84,8 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity, "Use the gravity correction for the pressure gradients.");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity,
+                             "Use the gravity correction for the pressure gradients.");
     };
 
     /*!
@@ -250,7 +251,8 @@ public:
      * no energy equation is to be used.
      */
     Scalar temperature() const
-    { OPM_THROW(std::logic_error, "Not implemented:temperature() method not implemented by the actual problem"); }
+    { OPM_THROW(std::logic_error,
+                "Not implemented:temperature() method not implemented by the actual problem"); }
 
 
     /*!

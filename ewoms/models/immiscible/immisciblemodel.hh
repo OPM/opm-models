@@ -95,7 +95,13 @@ SET_BOOL_PROP(ImmiscibleModel, EnableEnergy, false);
 /////////////////////
 
 //! The fluid system to use by default
-SET_TYPE_PROP(ImmiscibleOnePhaseModel, FluidSystem, Opm::FluidSystems::OneP<typename GET_PROP_TYPE(TypeTag, Scalar), typename GET_PROP_TYPE(TypeTag, Fluid)>);
+SET_PROP(ImmiscibleOnePhaseModel, FluidSystem)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
+public:
+    typedef Opm::FluidSystems::OneP<Scalar , Fluid> type;
+};
 
 SET_PROP(ImmiscibleOnePhaseModel, Fluid)
 {

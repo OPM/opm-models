@@ -53,7 +53,10 @@ class FlashModel;
 namespace Opm {
 namespace Properties {
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
+NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel,
+                                       VtkComposition,
+                                       VtkEnergy,
+                                       VtkDiffusion));
 
 //! Use the FlashLocalResidual function for the flash model
 SET_TYPE_PROP(FlashModel, LocalResidual,
@@ -326,11 +329,14 @@ public:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 };
 

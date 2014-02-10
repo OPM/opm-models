@@ -211,10 +211,15 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance, "The maximum allowed weighted difference between two iterations of the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize, "The size of the algebraic overlap for the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations, "The maximum number of iterations of the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity, "The verbosity level of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance,
+                             "The maximum allowed weighted difference between two iterations of "
+                             "the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize,
+                             "The size of the algebraic overlap for the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
+                             "The maximum number of iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity,
+                             "The verbosity level of the linear solver");
 
         LinearSolverWrapper::registerParameters();
         PreconditionerWrapper::registerParameters();

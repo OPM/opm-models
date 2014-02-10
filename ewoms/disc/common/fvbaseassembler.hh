@@ -133,8 +133,12 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling, "Re-use of the jacobian matrix at the first iteration of the next time step");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble, "Re-assemble only those degrees of freedom that have changed 'sufficiently' be changed between two Newton iterations");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling,
+                             "Re-use of the jacobian matrix at the first iteration of "
+                             "the next time step");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble,
+                             "Re-assemble only those degrees of freedom that have changed "
+                             "'sufficiently' between two Newton iterations");
     }
 
     /*!
@@ -185,7 +189,8 @@ public:
     }
 
     /*!
-     * \brief Assemble the global Jacobian of the residual and the residual for the current solution.
+     * \brief Assemble the global Jacobian of the residual and the
+     *        residual for the current solution.
      *
      * The current state of affairs (esp. the previous and the current
      * solutions) is represented by the model object.
@@ -221,8 +226,8 @@ public:
             problem_().newtonMethod().endIterMsg()
                 << ", reassembled "
                 << totalElems_ - greenElems_ << "/" << totalElems_
-                << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%) elems @accuracy="
-                << reassembleAccuracy_;
+                << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
+                << " elems @accuracy=" << reassembleAccuracy_;
         }
 
         // reset all DOF colors to green
@@ -422,7 +427,9 @@ public:
         // at this point we communicate the yellow DOFs to the
         // neighboring processes because a neigbor process may not see
         // the red DOF for yellow border DOFs
-        auto minHandle = GridCommHandleFactory::template minHandle<EntityColor>(dofColor_, dofMapper_());
+        auto minHandle =
+            GridCommHandleFactory::template minHandle<EntityColor>(dofColor_,
+                                                                   dofMapper_());
         gridView_().communicate(*minHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
                                 Dune::ForwardCommunication);
@@ -472,7 +479,9 @@ public:
         }
 
         // demote the border orange DOFs
-        const auto maxHandle = GridCommHandleFactory::template maxHandle<EntityColor>(dofColor_, dofMapper_());
+        const auto maxHandle =
+            GridCommHandleFactory::template maxHandle<EntityColor>(dofColor_,
+                                                                   dofMapper_());
         gridView_().communicate(*maxHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
                                 Dune::ForwardCommunication);
@@ -750,7 +759,10 @@ private:
         elementCtx_->updateAll(elem);
         model_().localJacobian().assemble(*elementCtx_);
 
-        for (int primaryDofIdx = 0; primaryDofIdx < elementCtx_->numPrimaryDof(/*timeIdx=*/0); ++ primaryDofIdx) {
+        for (int primaryDofIdx = 0;
+             primaryDofIdx < elementCtx_->numPrimaryDof(/*timeIdx=*/0);
+             ++ primaryDofIdx)
+        {
             int globI = elementCtx_->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
             // update the right hand side

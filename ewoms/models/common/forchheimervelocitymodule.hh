@@ -153,7 +153,11 @@ protected:
         ergunCoefficient_ = problem.ergunCoefficient(elemCtx, dofIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            mobilityPassabilityRatio_[phaseIdx] = problem.mobilityPassabilityRatio(elemCtx, dofIdx, timeIdx, phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] =
+                problem.mobilityPassabilityRatio(elemCtx,
+                                                 dofIdx,
+                                                 timeIdx,
+                                                 phaseIdx);
     }
 
 private:

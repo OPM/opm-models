@@ -36,13 +36,19 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy is considered as a conservation quantity or not
-NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
+//! Specifies whether energy is considered as a conservation quantity or not
+NEW_PROP_TAG(EnableEnergy);
+//! Enable diffusive fluxes?
+NEW_PROP_TAG(EnableDiffusion);
 
-NEW_PROP_TAG(PvsVerbosity); //!< The verbosity of the model (0 -> do not print anything, 2 -> spam stdout a lot)
-NEW_PROP_TAG(PvsPressureBaseWeight); //!< The basis value for the weight of the pressure primary variable
-NEW_PROP_TAG(PvsSaturationsBaseWeight); //!< The basis value for the weight of the saturation primary variables
-NEW_PROP_TAG(PvsMoleFractionsBaseWeight); //!< The basis value for the weight of the mole fraction primary variables
+//! The verbosity of the model (0 -> do not print anything, 2 -> spam stdout a lot)
+NEW_PROP_TAG(PvsVerbosity);
+//! The basis value for the weight of the pressure primary variable
+NEW_PROP_TAG(PvsPressureBaseWeight);
+//! The basis value for the weight of the saturation primary variables
+NEW_PROP_TAG(PvsSaturationsBaseWeight);
+//! The basis value for the weight of the mole fraction primary variables
+NEW_PROP_TAG(PvsMoleFractionsBaseWeight);
 } // namespace Properties
 } // namespace Opm
 

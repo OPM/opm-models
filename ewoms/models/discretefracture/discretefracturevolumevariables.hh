@@ -90,8 +90,10 @@ public:
 
         // retrieve the facture width and intrinsic permeability from
         // the problem
-        fracturePorosity_ = problem.fracturePorosity(elemCtx, dofIdx, timeIdx);
-        fractureIntrinsicPermeability_ = problem.fractureIntrinsicPermeability(elemCtx, dofIdx, timeIdx);
+        fracturePorosity_ =
+            problem.fracturePorosity(elemCtx, dofIdx, timeIdx);
+        fractureIntrinsicPermeability_ =
+            problem.fractureIntrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // compute the fracture volume for the current sub-control
         // volume. note, that we don't take overlaps of fractures into
@@ -133,7 +135,8 @@ public:
 
         // ask the problem for the material law parameters of the
         // fracture.
-        const auto &fractureMatParams = problem.fractureMaterialLawParams(elemCtx, dofIdx, timeIdx);
+        const auto &fractureMatParams =
+            problem.fractureMaterialLawParams(elemCtx, dofIdx, timeIdx);
 
         // calculate the fracture saturations which would be required
         // to be consistent with the pressures

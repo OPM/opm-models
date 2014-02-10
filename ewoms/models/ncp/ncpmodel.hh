@@ -61,7 +61,10 @@ namespace Properties {
 /*!
  * \brief Define the type tag for the compositional NCP model.
  */
-NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel, VtkComposition, VtkEnergy, VtkDiffusion));
+NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel,
+                                     VtkComposition,
+                                     VtkEnergy,
+                                     VtkDiffusion));
 
 /*!
  * \brief Set the themodynamic constraint solver which calculates the
@@ -417,7 +420,8 @@ public:
             assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
-            static const Scalar fugacityBaseWeight = GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
+            static const Scalar fugacityBaseWeight =
+                GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
             return fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
@@ -481,11 +485,14 @@ public:
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

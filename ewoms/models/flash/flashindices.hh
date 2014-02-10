@@ -39,7 +39,8 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 class FlashIndices
-    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumComponents),
+                           GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };

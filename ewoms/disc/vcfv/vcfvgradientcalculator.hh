@@ -71,13 +71,15 @@ class VcfvGradientCalculator : public FvBaseGradientCalculator<TypeTag>
 
 public:
     /*!
-     * \brief Register all run-time parameters for the gradient calculator of the VCVF discretization.
+     * \brief Register all run-time parameters for the gradient calculator
+     *        of the VCVF discretization.
      */
     static void registerParameters()
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, UseTwoPointGradients, "Use two-point gradients instead of P1-finite element ones");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, UseTwoPointGradients,
+                             "Use two-point gradients instead of P1-finite element ones");
     }
 
     /*!
@@ -149,7 +151,10 @@ public:
                                 const QuantityCallback &quantityCallback) const
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, UseTwoPointGradients)) {
-            return ParentType::template calculateValue<QuantityCallback, QuantityType>(elemCtx, fapIdx, quantityCallback);
+            return ParentType::template calculateValue<QuantityCallback,
+                                                       QuantityType>(elemCtx,
+                                                                     fapIdx,
+                                                                     quantityCallback);
         }
 
         // If the user does not want to use two-point gradients, we

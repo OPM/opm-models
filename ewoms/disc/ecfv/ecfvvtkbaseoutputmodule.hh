@@ -43,7 +43,10 @@ public:
      *        degrees of freedom to the current VTK output file.
      */
     template <class MultiWriter, class Buffer>
-    static void attachDofData_(MultiWriter &writer, Buffer &buffer, const std::string &name, int numComponents)
+    static void attachDofData_(MultiWriter &writer,
+                               Buffer &buffer,
+                               const std::string &name,
+                               int numComponents)
     { writer.attachElementData(buffer, name, numComponents); }
 };
 

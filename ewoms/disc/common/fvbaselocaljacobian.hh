@@ -55,13 +55,15 @@ namespace Ewoms {
  * - if the value of this property is 0, central
  *   differences are used, i.e.:
  *   \f[
- *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
+ *     \frac{\partial f(x)}{\partial x} \approx
+ *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
  *   \f]
  *
  * - if the value of this property is larger than 0, forward
  *   differences are used, i.e.:
  *   \f[
- *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
+ *     \frac{\partial f(x)}{\partial x} \approx
+ *          \frac{f(x + \epsilon) - f(x)}{\epsilon}
  *   \f]
  *
  * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$
@@ -117,7 +119,9 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod, "The method used for numeric differentiation (-1: backward differences, 0: central differences, 1: forward differences)");
+        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod,
+                             "The method used for numeric differentiation (-1: backward "
+                             "differences, 0: central differences, 1: forward differences)");
     }
 
     /*!
@@ -249,8 +253,10 @@ public:
     /*!
      * \brief Returns the local Jacobian matrix of the residual of a sub-control volume.
      *
-     * \param domainScvIdx The local index of the sub control volume which contains the independents
-     * \param rangeScvIdx The local index of the sub control volume which contains the local residual
+     * \param domainScvIdx The local index of the sub control volume
+     *                     which contains the independents
+     * \param rangeScvIdx The local index of the sub control volume
+     *                    which contains the local residual
      */
     const MatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
@@ -354,7 +360,8 @@ protected:
      * - if the value of this property is 0, central
      *   differences are used, i.e.:
      *   \f[
-           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
+     *     \frac{\partial f(x)}{\partial x} \approx
+     *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
      *   \f]
      *
      * - if the value of this property is larger than 0, forward
@@ -474,7 +481,8 @@ protected:
                 // change of the residual of equation 'eqIdx' at
                 // vertex 'primaryDofIdx' depending on the primary variable
                 // 'pvIdx' at vertex 'dofIdx'.
-                jacobian_[primaryDofIdx][dofIdx][eqIdx][pvIdx] = derivResidual_[primaryDofIdx][eqIdx];
+                jacobian_[primaryDofIdx][dofIdx][eqIdx][pvIdx] =
+                    derivResidual_[primaryDofIdx][eqIdx];
                 Valgrind::CheckDefined(jacobian_[primaryDofIdx][dofIdx][eqIdx][pvIdx]);
             }
         }

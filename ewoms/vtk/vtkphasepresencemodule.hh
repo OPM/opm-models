@@ -70,7 +70,9 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence, "Include the phase presence pseudo primary variable in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence,
+                             "Include the phase presence pseudo primary "
+                             "variable in the VTK output files");
     }
 
     /*!
@@ -104,7 +106,8 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (phasePresenceOutput_()) this->commitScalarBuffer_(writer, "phase presence", phasePresence_);
+        if (phasePresenceOutput_())
+            this->commitScalarBuffer_(writer, "phase presence", phasePresence_);
     }
 
 private:

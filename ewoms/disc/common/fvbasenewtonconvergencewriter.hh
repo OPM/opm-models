@@ -87,7 +87,9 @@ public:
     {
         ++ iteration_;
         if (!vtkMultiWriter_)
-            vtkMultiWriter_ = new VtkMultiWriter(newtonMethod_.problem().gridView(), "convergence");
+            vtkMultiWriter_ =
+                new VtkMultiWriter(newtonMethod_.problem().gridView(),
+                                   "convergence");
         vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
     }
 
@@ -104,10 +106,14 @@ public:
                      const GlobalEqVector &deltaU)
     {
         try {
-            newtonMethod_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_, uLastIter, deltaU);
+            newtonMethod_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_,
+                                                                    uLastIter,
+                                                                    deltaU);
         }
         catch (...) {
-            std::cout << "oops: exception thrown on rank " << newtonMethod_.problem().gridView().comm().rank() << " while writing the convergence\n";
+            std::cout << "Oops: exception thrown on rank "
+                      << newtonMethod_.problem().gridView().comm().rank()
+                      << " while writing the convergence\n";
         };
 
     }

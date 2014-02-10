@@ -111,7 +111,8 @@ protected:
                         continue;
 
                     // calculate the old wetting phase saturation
-                    const MaterialLawParams &matParams = problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
+                    const MaterialLawParams &matParams =
+                        problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
 
                     Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
@@ -134,8 +135,9 @@ protected:
                     // reference pressure if the medium is fully
                     // saturated by the wetting phase
                     Scalar pWOld = uLastIter[globI][pressureWIdx];
-                    Scalar pNOld = std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                                            pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                    Scalar pNOld =
+                        std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
+                                 pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
                     /////////
                     // find the saturations of the previous iteration

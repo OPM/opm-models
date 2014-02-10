@@ -56,10 +56,12 @@ SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocal
 //SET_TYPE_PROP(DiscreteFractureModel BaseProblem, DiscreteFractureBaseProblem<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(DiscreteFractureModel, PrimaryVariables, Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, PrimaryVariables,
+              Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
 
 //! the VolumeVariables property
-SET_TYPE_PROP(DiscreteFractureModel, VolumeVariables, Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, VolumeVariables,
+              Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
 
 //! the FluxVariables property
 SET_TYPE_PROP(DiscreteFractureModel, FluxVariables, Ewoms::DiscreteFractureFluxVariables<TypeTag>);
@@ -119,7 +121,8 @@ public:
     {
         ParentType::registerVtkModules_();
 
-        this->vtkOutputModules_.push_back(new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->problem_));
     }
 };
 } // namespace Ewoms

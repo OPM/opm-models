@@ -53,7 +53,8 @@ class FvBaseGradientCalculator
 
 public:
     /*!
-     * \brief Register all run-time parameters for the gradient calculator of the base class of the discretization.
+     * \brief Register all run-time parameters for the gradient calculator
+     *        of the base class of the discretization.
      */
     static void registerParameters()
     { }

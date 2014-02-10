@@ -70,7 +70,8 @@ class EcfvStencil
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout > ElementMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
+                                                      Dune::MCMGElementLayout> ElementMapper;
 
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
@@ -238,7 +239,8 @@ public:
             if (isIt->neighbor()) {
                 elements_.push_back(isIt->outside());
                 subControlVolumes_.push_back(SubControlVolume(isIt->outside()));
-                interiorFaces_.push_back(SubControlVolumeFace(*isIt, subControlVolumes_.size() - 1));
+                interiorFaces_.push_back(SubControlVolumeFace(*isIt,
+                                                              subControlVolumes_.size() - 1));
             }
             else {
                 boundaryFaces_.push_back(SubControlVolumeFace(*isIt, - 10000));

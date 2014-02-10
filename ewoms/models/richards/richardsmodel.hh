@@ -319,7 +319,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
+        referencePressure_ =
+            this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressureWIdx];
     }
 
     /*!

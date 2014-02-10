@@ -57,7 +57,11 @@ class PvsModel;
 namespace Opm {
 namespace Properties {
 //! The type tag for the isothermal single phase problems
-NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel, VtkPhasePresence, VtkComposition, VtkEnergy, VtkDiffusion));
+NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel,
+                                     VtkPhasePresence,
+                                     VtkComposition,
+                                     VtkEnergy,
+                                     VtkDiffusion));
 
 //! Use the PVS local jacobian operator for the PVS model
 SET_TYPE_PROP(PvsModel,
@@ -607,12 +611,16 @@ public:
         ParentType::registerVtkModules_();
 
         // add the VTK output modules meaninful for the model
-        this->vtkOutputModules_.push_back(new Ewoms::VtkPhasePresenceModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VtkPhasePresenceModule<TypeTag>(this->problem_));
+        this->vtkOutputModules_.push_back(
+            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+            this->vtkOutputModules_.push_back(
+                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
     mutable Scalar referencePressure_;

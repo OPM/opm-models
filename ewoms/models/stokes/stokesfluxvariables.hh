@@ -127,9 +127,10 @@ public:
                                              scvfIdx,
                                              viscosityCallback);
         velocity_ =
-            gradCalc.template calculateValue<VelocityCallback<TypeTag>, DimVector>(elemCtx,
-                                                                                   scvfIdx,
-                                                                                   velocityCallback);
+            gradCalc.template calculateValue<VelocityCallback<TypeTag>,
+                                             DimVector>(elemCtx,
+                                                        scvfIdx,
+                                                        velocityCallback);
 
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             velocityComponentCallback.setDimIndex(dimIdx);

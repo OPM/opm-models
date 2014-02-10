@@ -249,7 +249,9 @@ protected:
             if (fsInterior.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
                 // the exterior of the domain has higher pressure. we
                 // need to calculate the mobility
-                mobility_[phaseIdx] = kr[phaseIdx]/FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+                mobility_[phaseIdx] =
+                    kr[phaseIdx]
+                    / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             }
             else {
                 mobility_[phaseIdx] = volVarsInterior.mobility(phaseIdx);

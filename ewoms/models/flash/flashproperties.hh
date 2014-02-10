@@ -33,15 +33,22 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(FluidSystem); //!< Provides the thermodynamic relations
-NEW_PROP_TAG(FlashSolver); //!< The type of the flash constraint solver
-NEW_PROP_TAG(FlashTolerance); //!< The maximum accepted error of the flash solver
+//! Provides the thermodynamic relations
+NEW_PROP_TAG(FluidSystem);
+//! The type of the flash constraint solver
+NEW_PROP_TAG(FlashSolver);
+//! The maximum accepted error of the flash solver
+NEW_PROP_TAG(FlashTolerance);
 
-NEW_PROP_TAG(HeatConductionLaw);   //!< The heat conduction law which ought to be used
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the heat conduction law
+//! The heat conduction law which ought to be used
+NEW_PROP_TAG(HeatConductionLaw);
+//! The parameters of the heat conduction law
+NEW_PROP_TAG(HeatConductionLawParams);
 
-NEW_PROP_TAG(EnableEnergy); //!< Specifies whether energy should be considered as a conservation quantity or not
-NEW_PROP_TAG(EnableDiffusion); //!< Enable diffusive fluxes?
+//! Specifies whether energy should be considered as a conservation quantity or not
+NEW_PROP_TAG(EnableEnergy);
+//! Enable diffusive fluxes?
+NEW_PROP_TAG(EnableDiffusion);
 }} // namespace Properties, Opm
 
 #endif

@@ -73,8 +73,10 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars, "Include the primary variables in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank, "Include the MPI process rank in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVars,
+                             "Include the primary variables in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank,
+                             "Include the MPI process rank in the VTK output files");
     }
 
     /*!
@@ -83,8 +85,10 @@ public:
      */
     void allocBuffers(VtkMultiWriter &writer)
     {
-        if (primaryVarsOutput_()) this->resizeEqBuffer_(primaryVars_);
-        if (processRankOutput_()) this->resizeScalarBuffer_(processRank_, /*type=*/ParentType::ElementBuffer);
+        if (primaryVarsOutput_())
+            this->resizeEqBuffer_(primaryVars_);
+        if (processRankOutput_())
+            this->resizeScalarBuffer_(processRank_, /*type=*/ParentType::ElementBuffer);
     }
 
     /*!

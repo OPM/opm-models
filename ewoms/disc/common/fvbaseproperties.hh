@@ -54,54 +54,90 @@ SET_SPLICES(FvBaseDiscretization, LinearSolverSplice);
 //! use a parallel iterative linear solver by default
 SET_TAG_PROP(FvBaseDiscretization, LinearSolverSplice, ParallelIterativeLinearSolver);
 
-NEW_PROP_TAG(Grid); //!< The type of the DUNE grid
-NEW_PROP_TAG(GridView); //!< The type of the grid view
+//! The type of the DUNE grid
+NEW_PROP_TAG(Grid);
+//! The type of the grid view
+NEW_PROP_TAG(GridView);
 
-NEW_PROP_TAG(Stencil); //!< The class describing the stencil of the spatial discretization
+//! The class describing the stencil of the spatial discretization
+NEW_PROP_TAG(Stencil);
 
-NEW_PROP_TAG(Problem); //!< The type of the problem
-NEW_PROP_TAG(BaseProblem);   //!< The type of the base class for all problems which use this model
-NEW_PROP_TAG(Model); //!< The type of the model
-NEW_PROP_TAG(NumEq); //!< Number of equations in the system of PDEs
+//! The type of the problem
+NEW_PROP_TAG(Problem);
+//! The type of the base class for all problems which use this model
+NEW_PROP_TAG(BaseProblem);
+//! The type of the model
+NEW_PROP_TAG(Model);
+//! Number of equations in the system of PDEs
+NEW_PROP_TAG(NumEq);
 
-NEW_PROP_TAG(Discretization); //!< The type of the spatial discretization used by the model
-NEW_PROP_TAG(DiscLocalResidual); //!< The discretization specific part of the local residual
-NEW_PROP_TAG(LocalResidual); //!< The type of the local residual function
-NEW_PROP_TAG(DiscLocalJacobian); //!< The discretization specific part of the local jacobian of the residual
-NEW_PROP_TAG(LocalJacobian); //!< The type of the local jacobian operator
+//! The type of the spatial discretization used by the model
+NEW_PROP_TAG(Discretization);
+//! The discretization specific part of the local residual
+NEW_PROP_TAG(DiscLocalResidual);
+//! The type of the local residual function
+NEW_PROP_TAG(LocalResidual);
+//! The discretization specific part of the local jacobian of the residual
+NEW_PROP_TAG(DiscLocalJacobian);
+//! The type of the local jacobian operator
+NEW_PROP_TAG(LocalJacobian);
 
-NEW_PROP_TAG(BaseJacobianAssembler); //!< Assembles the global jacobian matrix
-NEW_PROP_TAG(JacobianMatrix); //!< Type of the global jacobian matrix
+//! Assembles the global jacobian matrix
+NEW_PROP_TAG(BaseJacobianAssembler);
+//! Type of the global jacobian matrix
+NEW_PROP_TAG(JacobianMatrix);
 
-NEW_PROP_TAG(EqVector); //!< A vector of holding a quantity for each equation (usually at a given spatial location)
-NEW_PROP_TAG(ElementEqVector); //!< A vector of holding a quantity for each equation for each DOF of an element
-NEW_PROP_TAG(GlobalEqVector); //!< Vector containing a quantity of for equation for each DOF of the whole grid
+//! A vector of holding a quantity for each equation (usually at a given spatial location)
+NEW_PROP_TAG(EqVector);
+//! A vector of holding a quantity for each equation for each DOF of an element
+NEW_PROP_TAG(ElementEqVector);
+//! Vector containing a quantity of for equation for each DOF of the whole grid
+NEW_PROP_TAG(GlobalEqVector);
 
-NEW_PROP_TAG(RateVector); //!< Vector containing volumetric or areal rates of quantities
-NEW_PROP_TAG(BoundaryRateVector); //!< Type of object for specifying boundary conditions
-NEW_PROP_TAG(Constraints); //!< The class which represents a constraint degree of freedom
+//! Vector containing volumetric or areal rates of quantities
+NEW_PROP_TAG(RateVector);
+//! Type of object for specifying boundary conditions
+NEW_PROP_TAG(BoundaryRateVector);
+//! The class which represents a constraint degree of freedom
+NEW_PROP_TAG(Constraints);
 
-NEW_PROP_TAG(SolutionVector); //!< Vector containing all primary variables of the grid
+//! Vector containing all primary variables of the grid
+NEW_PROP_TAG(SolutionVector);
 
-NEW_PROP_TAG(PrimaryVariables); //!< A vector of primary variables within a sub-control volume
-NEW_PROP_TAG(VolumeVariables);  //!< The secondary variables within a sub-control volume
-NEW_PROP_TAG(DiscVolumeVariables); //!< The discretization specific part of the volume variables
+//! A vector of primary variables within a sub-control volume
+NEW_PROP_TAG(PrimaryVariables);
+//! The secondary variables within a sub-control volume
+NEW_PROP_TAG(VolumeVariables);
+//! The discretization specific part of the volume variables
+NEW_PROP_TAG(DiscVolumeVariables);
 
-NEW_PROP_TAG(ElementContext); //!< The secondary variables of all degrees of freedom in an element's stencil
-NEW_PROP_TAG(BoundaryContext); //!< The secondary variables of a boundary segment
-NEW_PROP_TAG(ConstraintsContext); //!< The secondary variables of a constraint degree of freedom
-NEW_PROP_TAG(FluxVariables); //!< Data required to calculate a flux over a face
-NEW_PROP_TAG(GradientCalculator); //!< Calculates gradients of arbitrary quantities at flux integration points
+//! The secondary variables of all degrees of freedom in an element's stencil
+NEW_PROP_TAG(ElementContext);
+//! The secondary variables of a boundary segment
+NEW_PROP_TAG(BoundaryContext);
+//! The secondary variables of a constraint degree of freedom
+NEW_PROP_TAG(ConstraintsContext);
+//! Data required to calculate a flux over a face
+NEW_PROP_TAG(FluxVariables);
+//! Calculates gradients of arbitrary quantities at flux integration points
+NEW_PROP_TAG(GradientCalculator);
 
-NEW_PROP_TAG(DiscBaseVolumeVariables); //!< The part of the volume variables which is specific to the spatial discretization
-NEW_PROP_TAG(DiscFluxVariables); //!< The part of the flux variables which is specific to the spatial discretization
+//! The part of the volume variables which is specific to the spatial discretization
+NEW_PROP_TAG(DiscBaseVolumeVariables);
 
-NEW_PROP_TAG(DiscVtkBaseOutputModule); //!< The part of the VTK ouput modules which is specific to the spatial discretization
+//! The part of the flux variables which is specific to the spatial discretization
+NEW_PROP_TAG(DiscFluxVariables);
 
-NEW_PROP_TAG(GridCommHandleFactory); //!< The class to create grid communication handles
+//! The part of the VTK ouput modules which is specific to the spatial discretization
+NEW_PROP_TAG(DiscVtkBaseOutputModule);
+
+//! The class to create grid communication handles
+NEW_PROP_TAG(GridCommHandleFactory);
 
 // high level simulation control
-NEW_PROP_TAG(TimeManager);  //!< Manages the simulation time
+
+//! Manages the simulation time
+NEW_PROP_TAG(TimeManager);
 
 //! Specify whether the jacobian matrix of the last iteration of a
 //! time step should be re-used as the jacobian of the first iteration

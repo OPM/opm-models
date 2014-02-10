@@ -30,11 +30,15 @@
 // \{
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(LiquidPhaseIndex); //!< Index of the fluid which represents the wetting phase
+//! Index of the fluid which represents the wetting phase
+NEW_PROP_TAG(LiquidPhaseIndex);
 
-NEW_PROP_TAG(FluidSystem); //!< The fluid system used for the problem
-NEW_PROP_TAG(WettingPhase); //!< The component which constitutes the wetting phase of the problem
-NEW_PROP_TAG(NonwettingPhase); //!< The component which constitutes the non-wetting phase of the problem
+//! The fluid system used for the problem
+NEW_PROP_TAG(FluidSystem);
+//! The component which constitutes the wetting phase of the problem
+NEW_PROP_TAG(WettingPhase);
+//! The component which constitutes the non-wetting phase of the problem
+NEW_PROP_TAG(NonwettingPhase);
 // \}
 }} // namespace Properties, Opm
 

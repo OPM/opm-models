@@ -116,9 +116,13 @@ public:
     static void registerParameters()
     {
         Model::registerParameters();
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize, "The maximum size to which all time steps are limited to [s]");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize, "The minimum size to which all time steps are limited to [s]");
-        EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions, "The maximum number of divisions by two of the timestep size before the simulation bails out");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MaxTimeStepSize,
+                             "The maximum size to which all time steps are limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, MinTimeStepSize,
+                             "The minimum size to which all time steps are limited to [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions,
+                             "The maximum number of divisions by two of the timestep size "
+                             "before the simulation bails out");
     }
 
     /*!
@@ -150,7 +154,8 @@ public:
             int numCores = this->gridView().comm().size();
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "Timing receipt [s] (solve total/assemble/linear solve/update): "
-                      << totalTime  << " (" << totalTime*numCores << " cummulative, " << numCores <<" processes) / "
+                      << totalTime  << " (" << totalTime*numCores
+                      << " cummulative, " << numCores <<" processes) / "
                       << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
                       << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
                       << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
@@ -176,7 +181,8 @@ public:
      * \brief Evaluate the boundary conditions for a boundary segment.
      *
      * \param values Stores the fluxes over the boundary segment.
-     * \param context The object representing the execution context from which this method is called.
+     * \param context The object representing the execution context from
+     *                which this method is called.
      * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
@@ -189,8 +195,10 @@ public:
     /*!
      * \brief Evaluate the constraints for a control volume.
      *
-     * \param constraints Stores the values of the primary variables at a given spatial and temporal location.
-     * \param context The object representing the execution context from which this method is called.
+     * \param constraints Stores the values of the primary variables at a
+     *                    given spatial and temporal location.
+     * \param context The object representing the execution context from
+     *                which this method is called.
      * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
@@ -204,9 +212,12 @@ public:
      * \brief Evaluate the source term for all phases within a given
      *        sub-control-volume.
      *
-     * \param rate Stores the values of the volumetric creation/anihilition rates of the conserved quantities.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param rate Stores the values of the volumetric creation/anihilition
+     *             rates of the conserved quantities.
+     * \param context The object representing the execution context from which
+     *                this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *                 the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
@@ -219,8 +230,10 @@ public:
      * \brief Evaluate the initial value for a control volume.
      *
      * \param values Stores the primary variables.
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param context The object representing the execution context from which
+     *                this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *                 the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
@@ -238,8 +251,10 @@ public:
      * thought as pipes with a cross section of 1 m^2 and 2D problems
      * are assumed to extend 1 m to the back.
      *
-     * \param context The object representing the execution context from which this method is called.
-     * \param spaceIdx The local index of the spatial entity which represents the boundary segment.
+     * \param context The object representing the execution context from which
+     *                this method is called.
+     * \param spaceIdx The local index of the spatial entity which represents
+     *                 the boundary segment.
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>

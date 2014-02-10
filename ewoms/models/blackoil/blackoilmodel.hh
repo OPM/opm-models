@@ -219,7 +219,9 @@ public:
         if (pvIdx == Indices::pressure0Idx) {
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
         }
-        else if (Indices::saturation0Idx <= pvIdx && pvIdx <= Indices::saturation0Idx + numPhases - 1) {
+        else if (Indices::saturation0Idx <= pvIdx
+                 && pvIdx <= Indices::saturation0Idx + numPhases - 1)
+        {
             int phaseIdx = pvIdx - Indices::saturation0Idx;
             oss << "saturation_" << FluidSystem::phaseName(phaseIdx);;
         }
@@ -282,7 +284,8 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        referencePressure_ =
+            this->solution(/*timeIdx=*/0)[/*dofIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
     }
 
     /*!

@@ -67,7 +67,8 @@ class FvBaseElementContext
 
     static const int dim = GridView::dimension;
     static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
-    static const int requireScvCenterGradients = GET_PROP_VALUE(TypeTag, RequireScvCenterGradients);
+    static const int requireScvCenterGradients =
+        GET_PROP_VALUE(TypeTag, RequireScvCenterGradients);
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
@@ -173,7 +174,9 @@ public:
 
         // update gradients
         for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, dofIdx, timeIdx);
+            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                 dofIdx,
+                                                                 timeIdx);
         }
     }
 
@@ -195,7 +198,9 @@ public:
         // update gradients inside a sub control volume
         int nDof = numDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this, dofIdx, timeIdx);
+            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                 dofIdx,
+                                                                 timeIdx);
         }
     }
 

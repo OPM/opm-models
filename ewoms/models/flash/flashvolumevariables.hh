@@ -129,7 +129,11 @@ public:
         // compute the phase compositions, densities and pressures
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
-        FlashSolver::template solve<MaterialLaw>(fluidState_, paramCache, materialParams, cTotal, flashTolerance);
+        FlashSolver::template solve<MaterialLaw>(fluidState_,
+                                                 paramCache,
+                                                 materialParams,
+                                                 cTotal,
+                                                 flashTolerance);
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

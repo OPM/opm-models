@@ -31,15 +31,22 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(FluidSystem); //!<The fluid systems including the information about the phases
-NEW_PROP_TAG(EnableEnergy); //!< Specify whether energy should be considered as a conservation quantity or not
+//!The fluid systems including the information about the phases
+NEW_PROP_TAG(FluidSystem);
+//! Specify whether energy should be considered as a conservation quantity or not
+NEW_PROP_TAG(EnableEnergy);
 
 // these properties only make sense for the ImmiscibleTwoPhase type tag
-NEW_PROP_TAG(WettingPhase); //!< The wetting phase for two-phase models
-NEW_PROP_TAG(NonwettingPhase); //!< The non-wetting phase for two-phase models
+
+//! The wetting phase for two-phase models
+NEW_PROP_TAG(WettingPhase);
+//! The non-wetting phase for two-phase models
+NEW_PROP_TAG(NonwettingPhase);
 
 // these properties only make sense for the ImmiscibleOnePhase type tag
-NEW_PROP_TAG(Fluid); //!< The fluid used by the model
+
+//! The fluid used by the model
+NEW_PROP_TAG(Fluid);
 
 } // namespace Properties
 } // namespace Opm

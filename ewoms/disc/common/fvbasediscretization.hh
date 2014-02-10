@@ -95,7 +95,8 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscFluxVariables, Ewoms::FvBaseFluxVariable
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
 
 SET_TYPE_PROP(FvBaseDiscretization, DiscLocalJacobian, Ewoms::FvBaseLocalJacobian<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, LocalJacobian, typename GET_PROP_TYPE(TypeTag, DiscLocalJacobian));
+SET_TYPE_PROP(FvBaseDiscretization, LocalJacobian,
+              typename GET_PROP_TYPE(TypeTag, DiscLocalJacobian));
 
 
 //! Set the type of a global jacobian matrix from the solution types
@@ -223,7 +224,8 @@ SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverRelativeTolerance, 1e-6);
 // By default, looking at the absolute defect is "almost" disabled.
 SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverAbsoluteTolerance, 1e-30);
 
-//! set the default for the accepted fix-point tolerance (we use 0 to disable considering the fix-point tolerance)
+//! set the default for the accepted fix-point tolerance.
+//! (we use 0 to disable considering the fix-point tolerance)
 SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverFixPointTolerance, 0.0);
 
 //! Set the history size of the time discretization to 2 (for implicit euler)
@@ -777,7 +779,8 @@ public:
         int dofIdx = asImp_().dofMapper().map(dof);
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                OPM_THROW(std::runtime_error, "Could not deserialize degree of freedom " << dofIdx);
+                OPM_THROW(std::runtime_error,
+                          "Could not deserialize degree of freedom " << dofIdx);
             instream >> solution_[/*timeIdx=*/0][dofIdx][eqIdx];
         }
     }
@@ -786,14 +789,16 @@ public:
      * \brief Returns the number of global degrees of freedoms (DOFs)
      */
     size_t numDof() const
-    { OPM_THROW(std::logic_error, "The discretization class must implement the numDof() method!"); }
+    { OPM_THROW(std::logic_error,
+                "The discretization class must implement the numDof() method!"); }
 
     /*!
      * \brief Mapper to convert the Dune entities of the
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper &dofMapper() const
-    { OPM_THROW(std::logic_error, "The discretization class must implement the dofMapper() method!"); }
+    { OPM_THROW(std::logic_error,
+                "The discretization class must implement the dofMapper() method!"); }
 
     /*!
      * \brief Mapper for vertices to indices.
@@ -922,16 +927,28 @@ public:
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
             oss.str(""); oss << "priVar_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer, *priVars[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer,
+                                                    *priVars[i],
+                                                    oss.str(),
+                                                    /*numComponents=*/1);
 
             oss.str(""); oss << "delta_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer, *delta[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer,
+                                                    *delta[i],
+                                                    oss.str(),
+                                                    /*numComponents=*/1);
 
             oss.str(""); oss << "weight_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer, *priVarWeight[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer,
+                                                    *priVarWeight[i],
+                                                    oss.str(),
+                                                    /*numComponents=*/1);
 
             oss.str(""); oss << "defect_" << asImp_().eqName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer, *def[i], oss.str(), /*numComponents=*/1);
+            DiscVtkBaseOutputModule::attachDofData_(writer,
+                                                    *def[i],
+                                                    oss.str(),
+                                                    /*numComponents=*/1);
         }
 
         asImp_().addOutputVtkFields(writer);
@@ -1080,7 +1097,9 @@ protected:
             }
         }
 
-        const auto sumHandle = GridCommHandleFactory::template sumHandle<double>(boxVolume_, asImp_().dofMapper());
+        const auto sumHandle =
+            GridCommHandleFactory::template sumHandle<double>(boxVolume_,
+                                                              asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);

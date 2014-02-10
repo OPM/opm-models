@@ -102,7 +102,9 @@ public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry &get(int scvIdx)
-    { OPM_THROW(std::logic_error, "Not implemented: VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
+    { OPM_THROW(std::logic_error,
+                "Not implemented: "
+                "VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
 };
 
 ////////////////////
@@ -486,7 +488,10 @@ class VcfvStencil
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
 
-    Scalar quadrilateralArea(const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
+    Scalar quadrilateralArea(const GlobalPosition& p0,
+                             const GlobalPosition& p1,
+                             const GlobalPosition& p2,
+                             const GlobalPosition& p3)
     {
         return 0.5*std::abs((p3[0] - p1[0])*(p2[1] - p0[1]) - (p3[1] - p1[1])*(p2[0] - p0[0]));
     }
@@ -498,7 +503,11 @@ class VcfvStencil
         c[2] = a[0]*b[1] - a[1]*b[0];
     }
 
-    Scalar pyramidVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3, const GlobalPosition& p4)
+    Scalar pyramidVolume(const GlobalPosition& p0,
+                         const GlobalPosition& p1,
+                         const GlobalPosition& p2,
+                         const GlobalPosition& p3,
+                         const GlobalPosition& p4)
     {
         DimVector a(p2); a -= p0;
         DimVector b(p3); b -= p1;
@@ -511,7 +520,12 @@ class VcfvStencil
         return 1.0/6.0*(n*a);
     }
 
-    Scalar prismVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3, const GlobalPosition& p4, const GlobalPosition& p5)
+    Scalar prismVolume(const GlobalPosition& p0,
+                       const GlobalPosition& p1,
+                       const GlobalPosition& p2,
+                       const GlobalPosition& p3,
+                       const GlobalPosition& p4,
+                       const GlobalPosition& p5)
     {
         DimVector a(p4);
         for (int k = 0; k < dimWorld; ++k)
@@ -536,15 +550,25 @@ class VcfvStencil
         return std::abs(1.0/6.0*(n*a));
     }
 
-    Scalar hexahedronVolume (const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3,
-                             const GlobalPosition& p4, const GlobalPosition& p5, const GlobalPosition& p6, const GlobalPosition& p7)
+    Scalar hexahedronVolume(const GlobalPosition& p0,
+                            const GlobalPosition& p1,
+                            const GlobalPosition& p2,
+                            const GlobalPosition& p3,
+                            const GlobalPosition& p4,
+                            const GlobalPosition& p5,
+                            const GlobalPosition& p6,
+                            const GlobalPosition& p7)
     {
         return
             prismVolume(p0,p1,p2,p4,p5,p6)
             + prismVolume(p0,p2,p3,p4,p6,p7);
     }
 
-    void normalOfQuadrilateral3D(DimVector &normal, const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
+    void normalOfQuadrilateral3D(DimVector &normal,
+                                 const GlobalPosition& p0,
+                                 const GlobalPosition& p1,
+                                 const GlobalPosition& p2,
+                                 const GlobalPosition& p3)
     {
         DimVector a(p2);
         for (int k = 0; k < dimWorld; ++k)
@@ -557,7 +581,10 @@ class VcfvStencil
         normal *= 0.5;
     }
 
-    Scalar quadrilateralArea3D(const GlobalPosition& p0, const GlobalPosition& p1, const GlobalPosition& p2, const GlobalPosition& p3)
+    Scalar quadrilateralArea3D(const GlobalPosition& p0,
+                               const GlobalPosition& p1,
+                               const GlobalPosition& p2,
+                               const GlobalPosition& p3)
     {
         DimVector normal;
         normalOfQuadrilateral3D(normal, p0, p1, p2, p3);
@@ -601,7 +628,9 @@ class VcfvStencil
             rightFace = edgeToFaceHex[1][k];
             break;
         default:
-            OPM_THROW(std::logic_error, "Not implemented: VcfvStencil::getFaceIndices for numVertices = " << numVertices);
+            OPM_THROW(std::logic_error,
+                      "Not implemented: VcfvStencil::getFaceIndices for "
+                      << numVertices << " overtices");
             break;
         }
     }
@@ -683,13 +712,16 @@ class VcfvStencil
             rightEdge = faceAndVertexToRightEdgeHex[face][vert];
             break;
         default:
-            OPM_THROW(std::logic_error, "Not implemented:VcfvStencil :: getFaceIndices for numVertices = " << numVertices);
+            OPM_THROW(std::logic_error,
+                      "Not implemented: VcfvStencil::getFaceIndices for "
+                      << numVertices << " vertices");
             break;
         }
     }
 
 public:
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout > VertexMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
+                                                      Dune::MCMGVertexLayout > VertexMapper;
 
     class ScvGeometry
     {
@@ -732,7 +764,8 @@ public:
         Scalar volume_; //!< volume of scv
         ScvGeometry geometry_; //!< The geometry of the sub-control volume in local coordinates.
 
-        Dune::FieldVector<DimVector, maxNC> gradCenter; //! derivative of shape function at the center of the sub control volume
+        //! derivative of shape function at the center of the sub control volume
+        Dune::FieldVector<DimVector, maxNC> gradCenter;
     };
 
     struct SubControlVolumeFace //! interior face of a sub control volume
@@ -755,14 +788,20 @@ public:
         const GlobalPosition &integrationPos() const
         { return ipGlobal_; }
 
-        int i,j; //!< scvf seperates corner i and j of elem
-        LocalPosition ipLocal_; //!< integration point in local coords
-        GlobalPosition ipGlobal_; //!< integration point in global coords
-        DimVector normal_; //!< normal on face pointing to CV j or outward of the domain with length equal to |scvf|
-        Scalar area_; //!< area of face
+        //! scvf seperates corner i and j of elem
+        int i,j;
+        //! integration point in local coords
+        LocalPosition ipLocal_;
+        //! integration point in global coords
+        GlobalPosition ipGlobal_;
+        //! normal on face pointing to CV j or outward of the domain with length equal to |scvf|
+        DimVector normal_;
+        //! area of face
+        Scalar area_;
     };
 
-    typedef SubControlVolumeFace BoundaryFace; //!< compatibility typedef
+    //! compatibility typedef
+    typedef SubControlVolumeFace BoundaryFace;
 
     VcfvStencil(const GridView &gridView)
         : gridView_(gridView)
@@ -808,7 +847,8 @@ public:
             referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
 #else
         const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
-            referenceElement = Dune::GenericReferenceElements<CoordScalar,dim>::general(geometryType_);
+            referenceElement = Dune::GenericReferenceElements<CoordScalar,
+                                                              dim>::general(geometryType_);
 #endif
 
         elementVolume = geometry.volume();
@@ -931,8 +971,11 @@ public:
                         + referenceElement.position(leftEdge, dim-1)
                         + referenceElement.position(rightEdge, dim-1);
                     boundaryFace_[bfIdx].ipLocal_ *= 0.25;
-                    boundaryFace_[bfIdx].area_ = quadrilateralArea3D(subContVol[vertInElement].global,
-                                                                   edgeCoord[rightEdge], faceCoord[face], edgeCoord[leftEdge]);
+                    boundaryFace_[bfIdx].area_ =
+                        quadrilateralArea3D(subContVol[vertInElement].global,
+                                            edgeCoord[rightEdge],
+                                            faceCoord[face],
+                                            edgeCoord[leftEdge]);
                 }
                 else
                     OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim);
@@ -957,13 +1000,15 @@ public:
         if (geomType.isTriangle() || geomType.isTetrahedron()) {
             for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
-                subContVol[vertIdx].geometry_.localGeometry_ = &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::simplex>::get(vertIdx);
+                subContVol[vertIdx].geometry_.localGeometry_ =
+                    &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::simplex>::get(vertIdx);
             }
         }
         else if (geomType.isLine() || geomType.isQuadrilateral() || geomType.isHexahedron()) {
             for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
-                subContVol[vertIdx].geometry_.localGeometry_ = &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
+                subContVol[vertIdx].geometry_.localGeometry_ =
+                    &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
             }
         }
         else
@@ -1043,13 +1088,31 @@ private:
                 subContVol[2].volume_ = elementVolume/3;
                 break;
             case 4: // 2D, quadrilinear
-                subContVol[0].volume_ = quadrilateralArea(subContVol[0].global, edgeCoord[2], elementGlobal, edgeCoord[0]);
-                subContVol[1].volume_ = quadrilateralArea(subContVol[1].global, edgeCoord[1], elementGlobal, edgeCoord[2]);
-                subContVol[2].volume_ = quadrilateralArea(subContVol[2].global, edgeCoord[0], elementGlobal, edgeCoord[3]);
-                subContVol[3].volume_ = quadrilateralArea(subContVol[3].global, edgeCoord[3], elementGlobal, edgeCoord[1]);
+                subContVol[0].volume_ =
+                    quadrilateralArea(subContVol[0].global,
+                                      edgeCoord[2],
+                                      elementGlobal,
+                                      edgeCoord[0]);
+                subContVol[1].volume_ =
+                    quadrilateralArea(subContVol[1].global,
+                                      edgeCoord[1],
+                                      elementGlobal,
+                                      edgeCoord[2]);
+                subContVol[2].volume_ =
+                    quadrilateralArea(subContVol[2].global,
+                                      edgeCoord[0],
+                                      elementGlobal,
+                                      edgeCoord[3]);
+                subContVol[3].volume_ =
+                    quadrilateralArea(subContVol[3].global,
+                                      edgeCoord[3],
+                                      elementGlobal,
+                                      edgeCoord[1]);
                 break;
             default:
-                OPM_THROW(std::logic_error, "Not implemented:VcfvStencil dim = " << dim << ", numVertices = " << numVertices);
+                OPM_THROW(std::logic_error,
+                          "Not implemented:VcfvStencil dim = " << dim
+                          << ", numVertices = " << numVertices);
             }
         }
         else if (dim == 3) {
@@ -1214,7 +1277,9 @@ private:
                                                         edgeCoord[9]);
                 break;
             default:
-                OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim << ", numVertices = " << numVertices);
+                OPM_THROW(std::logic_error,
+                          "Not implemented:VcfvStencil for dim = " << dim
+                          << ", numVertices = " << numVertices);
             }
         }
         else
@@ -1226,18 +1291,29 @@ private:
     ElementPointer elementPtr_;
     static LocalFiniteElementCache feCache_;
 
-    LocalPosition elementLocal; //!< local coordinate of element center
-    GlobalPosition elementGlobal; //!< global coordinate of element center
-    Scalar elementVolume; //!< element volume
-    SubControlVolume subContVol[maxNC]; //!< data of the sub control volumes
-    SubControlVolumeFace subContVolFace[maxNE]; //!< data of the sub control volume faces
-    BoundaryFace boundaryFace_[maxBF]; //!< data of the boundary faces
+    //! local coordinate of element center
+    LocalPosition elementLocal;
+    //! global coordinate of element center
+    GlobalPosition elementGlobal;
+    //! element volume
+    Scalar elementVolume;
+    //! data of the sub control volumes
+    SubControlVolume subContVol[maxNC];
+    //! data of the sub control volume faces
+    SubControlVolumeFace subContVolFace[maxNE];
+    //! data of the boundary faces
+    BoundaryFace boundaryFace_[maxBF];
     int numBoundarySegments_;
-    GlobalPosition edgeCoord[maxNE]; //!< global coordinates of the edge centers
-    GlobalPosition faceCoord[maxNF]; //!< global coordinates of the face centers
-    int numVertices; //!< number of verts
-    int numEdges; //!< number of edges
-    int numFaces; //!< number of faces (0 in < 3D)
+    //! global coordinates of the edge centers
+    GlobalPosition edgeCoord[maxNE];
+    //! global coordinates of the face centers
+    GlobalPosition faceCoord[maxNF];
+    //! number of verts
+    int numVertices;
+    //! number of edges
+    int numEdges;
+    //! number of faces (0 in < 3D)
+    int numFaces;
     Dune::GeometryType geometryType_;
 };
 

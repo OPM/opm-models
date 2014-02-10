@@ -120,17 +120,28 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePressures, "Include the phase pressures in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDensities, "Include the phase densities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturations, "Include the phase saturations in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMobilities, "Include the phase mobilities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities, "Include the phase relative permeabilities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteViscosities, "Include component phase viscosities in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses, "Include the average phase mass in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePorosity, "Include the porosity in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities, "Include the intrinsic permeability in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFilterVelocities, "Include in the filter velocities of the phases the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePotentialGradients, "Include the phase pressure potential gradients in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePressures,
+                             "Include the phase pressures in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDensities,
+                             "Include the phase densities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturations,
+                             "Include the phase saturations in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMobilities,
+                             "Include the phase mobilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities,
+                             "Include the phase relative permeabilities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteViscosities,
+                             "Include component phase viscosities in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses,
+                             "Include the average phase mass in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePorosity,
+                             "Include the porosity in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities,
+                             "Include the intrinsic permeability in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFilterVelocities,
+                             "Include in the filter velocities of the phases the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePotentialGradients,
+                             "Include the phase pressure potential gradients in the VTK output files");
     }
 
     /*!
@@ -187,13 +198,20 @@ public:
             }
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (pressureOutput_()) pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
-                if (densityOutput_()) density_[phaseIdx][I] = fs.density(phaseIdx);
-                if (saturationOutput_()) saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
-                if (mobilityOutput_()) mobility_[phaseIdx][I] = volVars.mobility(phaseIdx);
-                if (relativePermeabilityOutput_()) relativePermeability_[phaseIdx][I] = volVars.relativePermeability(phaseIdx);
-                if (viscosityOutput_()) viscosity_[phaseIdx][I] = fs.viscosity(phaseIdx);
-                if (averageMolarMassOutput_()) averageMolarMass_[phaseIdx][I] = fs.averageMolarMass(phaseIdx);
+                if (pressureOutput_())
+                    pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
+                if (densityOutput_())
+                    density_[phaseIdx][I] = fs.density(phaseIdx);
+                if (saturationOutput_())
+                    saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
+                if (mobilityOutput_())
+                    mobility_[phaseIdx][I] = volVars.mobility(phaseIdx);
+                if (relativePermeabilityOutput_())
+                    relativePermeability_[phaseIdx][I] = volVars.relativePermeability(phaseIdx);
+                if (viscosityOutput_())
+                    viscosity_[phaseIdx][I] = fs.viscosity(phaseIdx);
+                if (averageMolarMassOutput_())
+                    averageMolarMass_[phaseIdx][I] = fs.averageMolarMass(phaseIdx);
             }
         }
 
@@ -252,16 +270,25 @@ public:
      */
     void commitBuffers(VtkMultiWriter &writer)
     {
-        if (pressureOutput_()) this->commitPhaseBuffer_(writer, "pressure_%s", pressure_);
-        if (densityOutput_()) this->commitPhaseBuffer_(writer, "density_%s", density_);
-        if (saturationOutput_()) this->commitPhaseBuffer_(writer, "saturation_%s", saturation_);
-        if (mobilityOutput_()) this->commitPhaseBuffer_(writer, "mobility_%s", mobility_);
-        if (relativePermeabilityOutput_()) this->commitPhaseBuffer_(writer, "relativePerm_%s", relativePermeability_);
-        if (viscosityOutput_()) this->commitPhaseBuffer_(writer, "viscosity_%s", viscosity_);
-        if (averageMolarMassOutput_()) this->commitPhaseBuffer_(writer, "averageMolarMass_%s", averageMolarMass_);
+        if (pressureOutput_())
+            this->commitPhaseBuffer_(writer, "pressure_%s", pressure_);
+        if (densityOutput_())
+            this->commitPhaseBuffer_(writer, "density_%s", density_);
+        if (saturationOutput_())
+            this->commitPhaseBuffer_(writer, "saturation_%s", saturation_);
+        if (mobilityOutput_())
+            this->commitPhaseBuffer_(writer, "mobility_%s", mobility_);
+        if (relativePermeabilityOutput_())
+            this->commitPhaseBuffer_(writer, "relativePerm_%s", relativePermeability_);
+        if (viscosityOutput_())
+            this->commitPhaseBuffer_(writer, "viscosity_%s", viscosity_);
+        if (averageMolarMassOutput_())
+            this->commitPhaseBuffer_(writer, "averageMolarMass_%s", averageMolarMass_);
 
-        if (porosityOutput_()) this->commitScalarBuffer_(writer, "porosity", porosity_);
-        if (intrinsicPermeabilityOutput_()) this->commitScalarBuffer_(writer, "intrinsicPerm", intrinsicPermeability_);
+        if (porosityOutput_())
+            this->commitScalarBuffer_(writer, "porosity", porosity_);
+        if (intrinsicPermeabilityOutput_())
+            this->commitScalarBuffer_(writer, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
             int nDof = this->problem_.model().numDof();
@@ -291,7 +318,10 @@ public:
                 char name[512];
                 snprintf(name, 512, "gradP_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkBaseOutputModule::attachDofData_(writer, potentialGradient_[phaseIdx], name, dim);
+                DiscVtkBaseOutputModule::attachDofData_(writer,
+                                                        potentialGradient_[phaseIdx],
+                                                        name,
+                                                        dim);
             }
         }
     }

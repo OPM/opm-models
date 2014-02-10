@@ -82,9 +82,12 @@ NEW_PROP_TAG(EnableJacobianRecycling);
 NEW_PROP_TAG(EnablePartialReassemble);
 
 // set default values
-SET_TYPE_PROP(FvBaseNewtonMethod, DiscNewtonMethod, Ewoms::FvBaseNewtonMethod<TypeTag>);
-SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod, typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
-SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter, Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
+SET_TYPE_PROP(FvBaseNewtonMethod, DiscNewtonMethod,
+              Ewoms::FvBaseNewtonMethod<TypeTag>);
+SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod,
+              typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
+SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
+              Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(FvBaseNewtonMethod, NewtonEnableLineSearch, false);
 }} // namespace Properties, Opm
 
@@ -124,7 +127,9 @@ public:
     {
         ParentType::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch, "Use the line-search update method for the Newton method (warning: slow!)");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch,
+                             "Use the line-search update method for the "
+                             "Newton method (warning: slow!)");
     }
 
 protected:
@@ -267,7 +272,8 @@ protected:
            // calculate the residual of the current solution
            updateAbsError_(uCurrentIter, uLastIter, deltaU);
            if (this->absError_ < this->lastAbsError_ || lambda <= 1.0/8) {
-               this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"  << this->absError_ << "@lambda=" << lambda;
+               this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"
+                                  << this->absError_ << "@lambda=" << lambda;
                return;
            }
 

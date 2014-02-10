@@ -36,7 +36,8 @@ namespace Ewoms {
  */
 template <class TypeTag, int PVOffset>
 struct ImmiscibleIndices
-    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases), GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    : public EnergyIndices<PVOffset + GET_PROP_VALUE(TypeTag, NumPhases),
+                           GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };

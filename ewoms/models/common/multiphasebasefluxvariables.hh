@@ -73,7 +73,8 @@ public:
      * \brief Update the flux variables for a given sub-control-volume-face.
      *
      * \param elemCtx Reference to the current element context.
-     * \param scvfIdx The local index of the sub-control-volume face for which the flux variables should be calculated.
+     * \param scvfIdx The local index of the sub-control-volume face for
+     *                which the flux variables should be calculated.
      * \param timeIdx The index used by the time discretization.
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -128,7 +129,8 @@ public:
      * \brief Update the flux variables for a given boundary face.
      *
      * \param context Reference to the current execution context.
-     * \param bfIdx The local index of the boundary face for which the flux variables should be calculated.
+     * \param bfIdx The local index of the boundary face for which
+     *              the flux variables should be calculated.
      * \param timeIdx The index used by the time discretization.
      * \param fluidState The FluidState on the domain boundary.
      * \param paramCache The FluidSystem's parameter cache.
@@ -143,7 +145,11 @@ public:
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
         calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
-        VelocityFluxVariables::calculateBoundaryVelocities_(context, bfIdx, timeIdx, fluidState, paramCache);
+        VelocityFluxVariables::calculateBoundaryVelocities_(context,
+                                                            bfIdx,
+                                                            timeIdx,
+                                                            fluidState,
+                                                            paramCache);
     }
 
     /*!
@@ -296,7 +302,9 @@ private:
         {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            DimVector g(context.problem().gravity(context.elementContext(), this->interiorIndex(), timeIdx));
+            DimVector g(context.problem().gravity(context.elementContext(),
+                                                  this->interiorIndex(),
+                                                  timeIdx));
 
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {

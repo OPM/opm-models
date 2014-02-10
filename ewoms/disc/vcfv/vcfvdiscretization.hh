@@ -57,14 +57,18 @@ SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, Ver
 //! The concrete class which manages the spatial discretization
 SET_TYPE_PROP(VcfvDiscretization, Discretization, Ewoms::VcfvDiscretization<TypeTag>);
 
-//! The base class for the VTK output modules (decides whether to write element or vertex based fields)
-SET_TYPE_PROP(VcfvDiscretization, DiscVtkBaseOutputModule, Ewoms::VcfvVtkBaseOutputModule<TypeTag>);
+//! The base class for the VTK output modules
+//! (decides whether to write element or vertex based fields)
+SET_TYPE_PROP(VcfvDiscretization, DiscVtkBaseOutputModule,
+              Ewoms::VcfvVtkBaseOutputModule<TypeTag>);
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
-SET_TYPE_PROP(VcfvDiscretization, GradientCalculator, Ewoms::VcfvGradientCalculator<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, GradientCalculator,
+              Ewoms::VcfvGradientCalculator<TypeTag>);
 
 //! The class to create grid communication handles
-SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory, Ewoms::VcfvGridCommHandleFactory<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory,
+              Ewoms::VcfvGridCommHandleFactory<TypeTag>);
 
 //! Use P1-finite element gradients by default for the vertex centered
 //! finite volume scheme.

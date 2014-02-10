@@ -375,17 +375,24 @@ protected:
                 else if (bufferType == ElementBuffer)
                     attachElementData_(writer, buffer[i][j], name, 1);
                 else
-                    OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+                    OPM_THROW(std::logic_error,
+                              "bufferType must be one of Dof, Vertex or Element");
             }
         }
     }
 
     template <class MultiWriter, class Buffer>
-    void attachElementData_(MultiWriter &writer, Buffer &buffer, const char *name, int numComponents)
+    void attachElementData_(MultiWriter &writer,
+                            Buffer &buffer,
+                            const char *name,
+                            int numComponents)
     { writer.attachElementData(buffer, name, numComponents); }
 
     template <class MultiWriter, class Buffer>
-    void attachVertexData_(MultiWriter &writer, Buffer &buffer, const char *name, int numComponents)
+    void attachVertexData_(MultiWriter &writer,
+                           Buffer &buffer,
+                           const char *name,
+                           int numComponents)
     { writer.attachVertexData(buffer, name, numComponents); }
 
     const Problem &problem_;
