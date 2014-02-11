@@ -31,10 +31,14 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the problem
-NEW_PROP_TAG(BlackOilFluidState); //!< The fluid state used by the model
-NEW_PROP_TAG(HeatConductionLaw); //!< The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams); //!< The parameters of the material law for heat conduction
+//! Returns whether gravity is considered in the problem
+NEW_PROP_TAG(EnableGravity);
+//! The fluid state used by the model
+NEW_PROP_TAG(BlackOilFluidState);
+//! The material law for heat conduction
+NEW_PROP_TAG(HeatConductionLaw);
+//! The parameters of the material law for heat conduction
+NEW_PROP_TAG(HeatConductionLawParams);
 }} // namespace Properties, Opm
 
 #endif

@@ -68,7 +68,8 @@ NEW_TYPE_TAG(StokesModel, INHERITS_FROM(VcfvDiscretization));
  */
 NEW_TYPE_TAG(NavierStokesModel, INHERITS_FROM(StokesModel));
 
-SET_PROP(StokesModel, NumEq) //!< set the number of equations
+//! set the number of equations
+SET_PROP(StokesModel, NumEq)
 {
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;

@@ -115,9 +115,14 @@ public:
 
 protected:
     enum BufferType {
-        DofBuffer, //!< Buffer contains data associated with the degrees of freedom
-        VertexBuffer, //!< Buffer contains data associated with the grid's vertices
-        ElementBuffer //!< Buffer contains data associated with the grid's elements
+        //! Buffer contains data associated with the degrees of freedom
+        DofBuffer,
+
+        //! Buffer contains data associated with the grid's vertices
+        VertexBuffer,
+
+        //! Buffer contains data associated with the grid's elements
+        ElementBuffer
     };
 
     /*!

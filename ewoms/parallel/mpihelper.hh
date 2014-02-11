@@ -74,9 +74,11 @@ class MpiHelper
 public:
     enum {
 #if HAVE_MPI
-        isFake = false //!< Returns whether MPI is really available or not
+        //! Specify whether MPI is really available or not
+        isFake = false
 #else
-        isFake = true //!< Returns whether MPI is really available or not
+        //! Specify whether MPI is really available or not
+        isFake = true
 #endif
     };
 

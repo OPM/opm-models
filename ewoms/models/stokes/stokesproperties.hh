@@ -29,22 +29,23 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(Indices); //!< Enumerations for the Stokes models accessible using
-                       //!< a generic name
+//! Enumerations for the Stokes models accessible using a generic name
+NEW_PROP_TAG(Indices);
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);
 NEW_PROP_TAG(FluidState);
 NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
-NEW_PROP_TAG(StokesPhaseIndex); //!< The index of the considered fluid phase
-NEW_PROP_TAG(BaseProblem); //!< The type of the base class for problems using
-                           //!< the stokes model
-NEW_PROP_TAG(EnableGravity); //!< Returns whether gravity is considered in the
-                             //!< problem
-NEW_PROP_TAG(EnableEnergy); //!< Specify whether the energy equation is enabled
-                            //!< or not
-NEW_PROP_TAG(EnableNavierTerm); //!< Specify whether the model should feature an
-                                //!< inertial term or not (default: false)
+//! The index of the considered fluid phase
+NEW_PROP_TAG(StokesPhaseIndex);
+//! The type of the base class for problems using the stokes model
+NEW_PROP_TAG(BaseProblem);
+//! Returns whether gravity is considered in the problem
+NEW_PROP_TAG(EnableGravity);
+//! Specify whether the energy equation is enabled or not
+NEW_PROP_TAG(EnableEnergy);
+//! Specify whether the model should feature an inertial term or not
+NEW_PROP_TAG(EnableNavierTerm);
 } // namespace Properties
 } // namespace Opm
 

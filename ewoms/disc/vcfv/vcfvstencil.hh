@@ -759,10 +759,14 @@ public:
         const ScvGeometry &geometry() const
         { return geometry_; }
 
-        LocalPosition local; //!< local vert position
-        GlobalPosition global; //!< global vert position
-        Scalar volume_; //!< volume of scv
-        ScvGeometry geometry_; //!< The geometry of the sub-control volume in local coordinates.
+        //! local vertex position
+        LocalPosition local;
+        //! global vertex position
+        GlobalPosition global;
+        //! space occupied by the sub-control volume
+        Scalar volume_;
+        //! The geometry of the sub-control volume in local coordinates.
+        ScvGeometry geometry_;
 
         //! derivative of shape function at the center of the sub control volume
         Dune::FieldVector<DimVector, maxNC> gradCenter;
