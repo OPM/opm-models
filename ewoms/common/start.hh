@@ -146,7 +146,7 @@ int setupParameters_(int argc, char **argv)
             std::ostringstream oss;
             if (myRank == 0) {
                 oss << "Parameter file \"" << paramFileName
-                    << "\" is does not exist or is not readable.";
+                    << "\" does not exist or is not readable.";
                 Parameters::printUsage<TypeTag>(argv[0], oss.str());
             }
             return /*status=*/1;
