@@ -237,8 +237,8 @@ public:
      */
     bool finished() const
     {
-        return finished_
-            || time() + std::max(std::abs(time()), timeStepSize_)* 1e-8 >= endTime();
+        assert(timeStepSize_ > 0.0);
+        return finished_ || this->time() + std::max(std::abs(this->time()), timeStepSize_)*1e-8 >= endTime();
     }
 
     /*!
@@ -246,7 +246,14 @@ public:
      *        time level is incremented by the current time step size.
      */
     bool willBeFinished() const
-    { return finished_ || time() + timeStepSize_ * (1 + 1e-8) >= endTime(); }
+    {
+        return
+            finished_
+            || this->time()
+               + std::max(std::abs(this->time()), timeStepSize_)*1e-8
+               + timeStepSize_
+               >= endTime();
+    }
 
     /*!
      * \brief Aligns dt to the episode boundary or the end time of the
@@ -258,7 +265,7 @@ public:
             return 0.0;
 
         return std::min(episodeMaxTimeStepSize(),
-                        std::max<Scalar>(0.0, endTime() - time()));
+                        std::max<Scalar>(0.0, endTime() - this->time()));
     }
 
     /*
@@ -332,7 +339,7 @@ public:
      *        current time.
      */
     bool episodeIsOver() const
-    { return time() >= episodeStartTime_ + episodeLength() * (1 - 1e-8); }
+    { return this->time() >= episodeStartTime_ + episodeLength() * (1 - 1e-8); }
 
     /*!
      * \brief Returns true if the current episode will be finished
@@ -340,8 +347,9 @@ public:
      */
     bool episodeWillBeOver() const
     {
-        return time() + timeStepSize_ >= episodeStartTime_ + episodeLength()
-                                                             * (1 - 1e-8);
+        return
+            this->time() + timeStepSize_
+            >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
     }
 
     /*!
@@ -359,8 +367,9 @@ public:
 
         // make sure that we don't exceed the end of the
         // current episode.
-        return std::max<Scalar>(0.0, episodeLength()
-                                     - (time() - episodeStartTime()));
+        return std::max<Scalar>(0.0,
+                                episodeLength()
+                                - (this->time() - episodeStartTime()));
     }
 
     /*
@@ -400,17 +409,6 @@ public:
             time_ += dt;
             ++timeStepIdx_;
 
-            if (verbose_) {
-                std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Wall time:" << timer_.elapsed()
-                          << ", time:" << time() << ", time step size:" << dt
-                          << "\n";
-            }
-
-            // write restart file if mandated by the problem
-            if (problem_->shouldWriteRestartFile())
-                problem_->serialize();
-
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
                 // define what to do at the end of an episode in the problem
@@ -421,6 +419,17 @@ public:
                 // for a suggestion for the next timestep size
                 // set the time step size for the next step
                 setTimeStepSize(problem_->nextTimeStepSize());
+            }
+
+            // write restart file if mandated by the problem
+            if (problem_->shouldWriteRestartFile())
+                problem_->serialize();
+
+            if (verbose_) {
+                std::cout << "Time step " << timeStepIndex() << " done. "
+                          << "Wall time:" << timer_.elapsed()
+                          << ", time:" << this->time() << ", time step size:" << dt
+                          << "\n";
             }
         }
 
