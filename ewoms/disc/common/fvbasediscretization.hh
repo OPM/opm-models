@@ -213,20 +213,12 @@ SET_BOOL_PROP(FvBaseDiscretization, EnablePartialReassemble, false);
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
 
-// if the deflection of the newton method is large, we do not
-// need to solve the linear approximation accurately. Assuming
-// that the initial value for the delta vector u is quite
-// close to the final value, a reduction of 6 orders of
-// magnitude in the defect should be sufficient...
-SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverRelativeTolerance, 1e-6);
-
-// the absolute defect of a component tolerated by the linear solver.
-// By default, looking at the absolute defect is "almost" disabled.
-SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverAbsoluteTolerance, 1e-30);
-
-//! set the default for the accepted fix-point tolerance.
-//! (we use 0 to disable considering the fix-point tolerance)
-SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverFixPointTolerance, 0.0);
+// if the deflection of the newton method is large, we do not need to
+// solve the linear approximation accurately. Assuming that the value
+// for the current solution is quite close to the final value, a
+// reduction of 3 orders of magnitude in the defect should be
+// sufficient...
+SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverTolerance, 1e-3);
 
 //! Set the history size of the time discretization to 2 (for implicit euler)
 SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
@@ -343,7 +335,7 @@ public:
         int nDofs = asImp_().numDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
             solution_[timeIdx].resize(nDofs);
-        boxVolume_.resize(nDofs);
+        dofTotalVolume_.resize(nDofs);
 
         localJacobian_.init(problem_);
         jacAsm_ = new JacobianAssembler();
@@ -527,8 +519,8 @@ public:
      * \param globalIdx The global index of the control volume's
      *                  associated vertex
      */
-    Scalar boxVolume(int globalIdx) const
-    { return boxVolume_[globalIdx]; }
+    Scalar dofTotalVolume(int globalIdx) const
+    { return dofTotalVolume_[globalIdx]; }
 
     /*!
      * \brief Reference to the solution at a given history index as a block vector.
@@ -1061,44 +1053,40 @@ protected:
         uCur = Scalar(0.0);
 
         // initialize the volume of the FV boxes to zero
-        std::fill(boxVolume_.begin(),
-                  boxVolume_.end(),
+        std::fill(dofTotalVolume_.begin(),
+                  dofTotalVolume_.end(),
                   0.0);
 
         ElementContext elemCtx(problem_);
 
-        // iterate through leaf grid and evaluate initial
-        // condition at the center of each sub control volume
-        //
-        // TODO: the initial condition needs to be unique for
-        // each vertex. we should think about the API...
+        // iterate through the grid and evaluate the initial condition
         ElementIterator it = gridView_.template begin</*codim=*/0>();
         const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
         for (; it != eendit; ++it) {
+            if (it->partitionType() != Dune::InteriorEntity)
+                continue;
+
             // deal with the current element
             elemCtx.updateStencil(*it);
 
             // loop over all element vertices, i.e. sub control volumes
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
             {
-                // map the local vertex index to the global one
+                // map the local degree of freedom index to the global one
                 unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (!(0 <= globalIdx && globalIdx < asImp_().numDof())) {
-                    elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                }
 
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
                 problem_.initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
                 Valgrind::CheckDefined(uCur[globalIdx]);
 
-                boxVolume_[globalIdx] +=
+                dofTotalVolume_[globalIdx] +=
                     elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
             }
         }
 
         const auto sumHandle =
-            GridCommHandleFactory::template sumHandle<double>(boxVolume_,
+            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_InteriorBorder_Interface,
@@ -1143,7 +1131,7 @@ protected:
 
     std::list<VtkBaseOutputModule<TypeTag>*> vtkOutputModules_;
 
-    std::vector<Scalar> boxVolume_;
+    std::vector<Scalar> dofTotalVolume_;
 };
 } // namespace Ewoms
 

@@ -37,7 +37,7 @@ namespace Ewoms {
  * \brief Base class for all problems which use the Stokes model.
  *
  * This implements gravity (if desired) and a function returning the
- *temperature.
+ * temperature.
  */
 template <class TypeTag>
 class StokesProblem : public Ewoms::FvBaseProblem<TypeTag>

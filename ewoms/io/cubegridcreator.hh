@@ -143,7 +143,7 @@ public:
      * \brief Destroys the grid
      *
      * This is required to guarantee that the grid is deleted before
-     *MPI_Comm_free is called.
+     * MPI_Comm_free is called.
      */
     static void deleteGrid()
     {

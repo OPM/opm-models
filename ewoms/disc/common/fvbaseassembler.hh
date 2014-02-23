@@ -275,13 +275,13 @@ public:
     }
 
     /*!
-     * \brief Returns the largest relative error of a "green" DOF
-     *        for the most recent call of the assemble() method.
+     * \brief Returns the largest error of a "green" DOF for the most
+     *        recent call of the assemble() method.
      *
      * This only has an effect if partial Jacobian reassembly is
      * enabled. If it is disabled, then this method always returns 0.
      *
-     * This returns the _actual_ relative computed seen by
+     * This returns the _actual_ error computed as seen by
      * computeColors(), not the tolerance which it was given.
      */
     Scalar reassembleAccuracy() const
@@ -313,9 +313,7 @@ public:
 
             // we need to add the distance the solution was moved for
             // this DOF
-            Scalar dist = model_().relativeDofError(i,
-                                                    uCurrent,
-                                                    uNext);
+            Scalar dist = model_().relativeDofError(i, uCurrent, uNext);
             dofDelta_[i] += std::abs(dist);
         }
 
@@ -383,8 +381,7 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             stencil.update(*elemIt);
 
-            // find out whether the current element features a red
-            // dof
+            // find out whether the current element features a red DOF
             bool isRed = false;
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
@@ -732,12 +729,10 @@ private:
         ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             const Element &elem = *elemIt;
-            if (elem.partitionType() != Dune::InteriorEntity  &&
-                elem.partitionType() != Dune::BorderEntity) {
-                assembleGhostElement_(elem);
-            }
-            else
-                assembleElement_(elem);
+            if (elem.partitionType() != Dune::InteriorEntity)
+                continue;
+
+            assembleElement_(elem);
         };
     }
 
@@ -805,34 +800,6 @@ private:
                 storageTerm_[globI] += model_().localResidual().storageTerm(dofIdx);
         }
     }
-
-    // "assemble" a ghost element
-    void assembleGhostElement_(const Element &elem)
-    {
-        const auto &stencil = elementCtx_->stencil(/*timeIdx=*/0);
-        elementCtx_->updateStencilTopology(elem);
-
-        for (int dofIdx = 0; dofIdx < stencil.numPrimaryDof(); ++dofIdx) {
-            int partitionType = stencil.partitionType(dofIdx);
-
-            if (partitionType == Dune::InteriorEntity ||
-                partitionType == Dune::BorderEntity)
-            {
-                // do not change the non-ghost dofs
-                continue;
-            }
-
-            // set main diagonal entries for the vertex
-            int globalIdx = stencil.globalSpaceIndex(dofIdx);
-            typedef typename Matrix::block_type BlockType;
-            BlockType &J = (*matrix_)[globalIdx][globalIdx];
-            for (int j = 0; j < BlockType::rows; ++j)
-                J[j][j] = 1.0;
-
-            // set residual for the dof
-            residual_[globalIdx] = 0;
-        }
-     }
 
     Problem *problemPtr_;
     ElementContext *elementCtx_;

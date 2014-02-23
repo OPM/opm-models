@@ -258,7 +258,7 @@ public:
             // divide the fracture volume by the total volume of the finite
             // volumes
             for (unsigned I = 0; I < volumeFraction_.size(); ++I)
-                volumeFraction_[I] /= this->problem_.model().boxVolume(I);
+                volumeFraction_[I] /= this->problem_.model().dofTotalVolume(I);
             this->commitScalarBuffer_(writer, "fractureVolumeFraction",
                                       volumeFraction_);
         }

@@ -85,7 +85,8 @@ private:
     /*!
      * \copydoc FvBaseNewtonMethod::update_
      */
-    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
+    void update_(SolutionVector &uCurrentIter,
+                 const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
     {
         // make sure not to swallow non-finite values at this point
@@ -94,31 +95,28 @@ private:
 
         // compute the DOF and element colors for partial reassembly
         if (this->enablePartialReassemble_()) {
-            const Scalar minReasmTol = 1e-2 * this->relTolerance_();
-            const Scalar maxReasmTol = 1e1 * this->relTolerance_();
+            const Scalar minReasmTol = 1e-2 * this->tolerance_();
+            const Scalar maxReasmTol = 1e1 * this->tolerance_();
             Scalar reassembleTol
                 = std::max(minReasmTol,
-                           std::min(maxReasmTol, this->relError_ / 1e4));
+                           std::min(maxReasmTol, this->error_ / 1e4));
 
             this->model_().jacobianAssembler().updateDiscrepancy(uLastIter,
                                                                  deltaU);
             this->model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
-        if (this->enableLineSearch_())
-            this->lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
-        else {
-            for (size_t i = 0; i < uLastIter.size(); ++i) {
-                for (int j = 0; j < numEq; ++j) {
-                    uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
-                }
+        // normal Newton-Raphson update
+        for (size_t i = 0; i < uLastIter.size(); ++i) {
+            for (int j = 0; j < numEq; ++j) {
+                uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
             }
+        }
 
-            if (this->numIterations_ < choppedIterations_) {
-                // put crash barriers along the update path at the
-                // beginning...
-                chopUpdate_(uCurrentIter, uLastIter);
-            }
+        // put crash barriers along the update path at the
+        // beginning...
+        if (this->numIterations_ < choppedIterations_) {
+            chopUpdate_(uCurrentIter, uLastIter);
         }
     }
 

@@ -136,74 +136,6 @@ protected:
     friend class Ewoms::NewtonMethod<TypeTag>;
 
     /*!
-     * \brief Update the relative error of the solution compared to
-     *        the previous iteration.
-     *
-     * The relative error can be seen as a norm of the difference
-     * between the current and the next iteration. For the ECFV Newton
-     * method, this is the maxiumum of the difference weighted by the
-     * primary variable weight.
-     *
-     * \param uCurrentIter The current iterative solution
-     * \param uLastIter The solution of the last iteration
-     * \param deltaU The difference between the current and the next solution
-     */
-    void updateRelError_(const SolutionVector &uCurrentIter,
-                         const SolutionVector &uLastIter,
-                         const GlobalEqVector &deltaU)
-    {
-        if (!this->enableRelativeCriterion_() && !enablePartialReassemble_())
-            return;
-
-        // calculate the relative error as the maximum relative
-        // deflection in any degree of freedom.
-        this->relError_ = 0;
-        for (int i = 0; i < int(uLastIter.size()); ++i) {
-            PrimaryVariables uNewI = uLastIter[i];
-            uNewI -= deltaU[i];
-
-            Scalar vertError = model_().relativeDofError(i,
-                                                         uLastIter[i],
-                                                         uNewI);
-            this->relError_ = std::max(this->relError_, vertError);
-
-        }
-
-        // take the other processes into account
-        this->relError_ = this->comm_.max(this->relError_);
-
-        Scalar maxError = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError);
-        if (this->relError_ > maxError)
-            OPM_THROW(Opm::NumericalProblem,
-                       "Newton: Relative error " << this->relError_
-                       << " is larger than maximum allowed error of " << maxError);
-    }
-
-    /*!
-     * \brief Update the absolute error of the solution compared to
-     *        the previous iteration.
-     *
-     * \param uCurrentIter The current iterative solution
-     * \param uLastIter The solution of the last iteration
-     * \param deltaU The difference between the current and the next solution
-     */
-    void updateAbsError_(const SolutionVector &uCurrentIter,
-                         const SolutionVector &uLastIter,
-                         const GlobalEqVector &deltaU)
-    {
-        if (!this->enableAbsoluteCriterion_())
-            return;
-        if (enableLineSearch_())
-            // the absolute error has already been calculated by
-            // updateLineSearch()
-            return;
-
-        // we actually have to do the heavy lifting...
-        GlobalEqVector tmp(uLastIter.size());
-        this->absError_ = model_().globalResidual(tmp, uCurrentIter);
-    }
-
-    /*!
      * \brief Update the current solution with a delta vector.
      *
      * The error estimates required for the newtonConverged() and
@@ -230,11 +162,11 @@ protected:
 
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_()) {
-            Scalar minReasmTol = 10*this->relTolerance_();
+            Scalar minReasmTol = 10*this->tolerance_();
             Scalar maxReasmTol = 1e-4;
 
             // rationale: the newton method has quadratic convergene1
-            Scalar reassembleTol = this->relError_*this->relError_;
+            Scalar reassembleTol = this->error_*this->error_;
             reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
             //Scalar reassembleTol = minReasmTol;
 
@@ -242,44 +174,11 @@ protected:
             model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
-        if (enableLineSearch_())
-            lineSearchUpdate_(uCurrentIter, uLastIter, deltaU);
-        else {
-            for (unsigned i = 0; i < uLastIter.size(); ++i) {
-                uCurrentIter[i] = uLastIter[i];
-                uCurrentIter[i] -= deltaU[i];
-            }
+        // update the solution
+        for (unsigned i = 0; i < uLastIter.size(); ++i) {
+            uCurrentIter[i] = uLastIter[i];
+            uCurrentIter[i] -= deltaU[i];
         }
-    }
-
-    /*!
-     * \brief Update using the line search algorithm.
-     */
-    void lineSearchUpdate_(SolutionVector &uCurrentIter,
-                           const SolutionVector &uLastIter,
-                           const GlobalEqVector &deltaU)
-    {
-       Scalar lambda = 1.0;
-       GlobalEqVector tmp(uLastIter.size());
-
-       while (true) {
-           for (unsigned i = 0; i < uCurrentIter.size(); ++i) {
-               for (int j = 0; j < numEq; ++j) {
-                   uCurrentIter[i][j] = uLastIter[i][j] - lambda*deltaU[i][j];
-               }
-           }
-
-           // calculate the residual of the current solution
-           updateAbsError_(uCurrentIter, uLastIter, deltaU);
-           if (this->absError_ < this->lastAbsError_ || lambda <= 1.0/8) {
-               this->endIterMsg() << ", defect " << this->lastAbsError_ << "->"
-                                  << this->absError_ << "@lambda=" << lambda;
-               return;
-           }
-
-           // try with a smaller update
-           lambda /= 2.0;
-       }
     }
 
     /*!

@@ -68,8 +68,7 @@ public:
     /*!
      * \brief Constructor with assignment from scalar
      *
-     * \param value The scalar value to which all entries of the vector will be
-     *set.
+     * \param value The scalar value to which all entries of the vector will be set.
      */
     ImmiscibleRateVector(Scalar value) : ParentType(value)
     {}
@@ -101,8 +100,7 @@ public:
      * means that it must be set to the desired value in the
      * parameter.
      *
-     * \param value The molar rate in \f$[mol/(m^2\,s)]\f$ (unit for areal
-     *fluxes)
+     * \param value The new molar rate in \f$[mol/(m^2\,s)]\f$
      */
     void setMolarRate(const ParentType &value)
     {
@@ -120,8 +118,7 @@ public:
      *
      * If the energy equation is not enabled, this method is a no-op.
      *
-     * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$ (unit for areal
-     *fluxes)
+     * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$
      */
     void setEnthalpyRate(Scalar rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }

@@ -96,27 +96,12 @@ NEW_PROP_TAG(NewtonWriteConvergence);
 //! gets written out to disk for every Newton iteration
 NEW_PROP_TAG(ConvergenceWriter);
 
-//! Indicate whether the relative error should be used
-NEW_PROP_TAG(NewtonEnableRelativeCriterion);
+//! The value for the error below which convergence is declared
+NEW_PROP_TAG(NewtonTolerance);
 
-//! The value for the relative error below which convergence is
-//! declared
-NEW_PROP_TAG(NewtonRelativeTolerance);
-
-//! The maximum relative error which may occur in a simulation before
-//! the Newton method is aborted
-NEW_PROP_TAG(NewtonMaxRelativeError);
-
-//! Indicate whether the absolute error should be used
-NEW_PROP_TAG(NewtonEnableAbsoluteCriterion);
-
-//! The value for the absolute error reduction below which convergence
-//! is declared
-NEW_PROP_TAG(NewtonAbsoluteTolerance);
-
-//! Indicate whether both of the criteria should be satisfied to
-//! declare convergence
-NEW_PROP_TAG(NewtonSatisfyAbsoluteAndRelative);
+//! The maximum error which may occur in a simulation before the
+//! Newton method for the time step is aborted
+NEW_PROP_TAG(NewtonMaxError);
 
 /*!
  * \brief The number of iterations at which the Newton method
@@ -136,14 +121,11 @@ SET_TYPE_PROP(NewtonMethod, NewtonMethod, Ewoms::NewtonMethod<TypeTag>);
 SET_TYPE_PROP(NewtonMethod, NewtonConvergenceWriter,
               Ewoms::NullConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonWriteConvergence, false);
-SET_BOOL_PROP(NewtonMethod, NewtonEnableRelativeCriterion, true);
-SET_BOOL_PROP(NewtonMethod, NewtonEnableAbsoluteCriterion, false);
-SET_BOOL_PROP(NewtonMethod, NewtonSatisfyAbsoluteAndRelative, false);
 SET_BOOL_PROP(NewtonMethod, NewtonVerbose, true);
-SET_SCALAR_PROP(NewtonMethod, NewtonRelativeTolerance, 1e-8);
-SET_SCALAR_PROP(NewtonMethod, NewtonAbsoluteTolerance, 1e-5);
-SET_SCALAR_PROP(NewtonMethod, NewtonMaxRelativeError,
-                1e100); // effectively disabled if not overwritten at run-time
+SET_SCALAR_PROP(NewtonMethod, NewtonTolerance, 1e-8);
+// set the abortion tolerace to some very large value. if not
+// overwritten at run-time this basically disables abortions
+SET_SCALAR_PROP(NewtonMethod, NewtonMaxError, 1e100);
 SET_INT_PROP(NewtonMethod, NewtonTargetIterations, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxIterations, 18);
 } // namespace Properties
@@ -169,10 +151,8 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
-    typedef typename GET_PROP_TYPE(TypeTag,
-                                   LinearSolverBackend) LinearSolverBackend;
-    typedef typename GET_PROP_TYPE(TypeTag,
-                                   NewtonConvergenceWriter) ConvergenceWriter;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) ConvergenceWriter;
 
     typedef typename Dune::MPIHelper::MPICommunicator Communicator;
     typedef Dune::CollectiveCommunication<Communicator> CollectiveCommunication;
@@ -183,30 +163,8 @@ public:
           linearSolver_(problem), comm_(Dune::MPIHelper::getCommunicator()),
           convergenceWriter_(asImp_())
     {
-        if (!enableRelativeCriterion_() && !enableAbsoluteCriterion_()) {
-            OPM_THROW(std::logic_error,
-                      "At least one of NewtonEnableRelativeCriterion or "
-                      "NewtonEnableAbsoluteCriterion has to be set to true");
-        }
-        /*
-                else if (satisfyAbsAndRel_() &&
-                         (!enableRelativeCriterion_() ||
-           !enableAbsoluteCriterion_()))
-                {
-                    OPM_THROW(std::logic_error,
-                               "If you set NewtonSatisfyAbsoluteAndRelative to
-           true, you also must set "
-                               "NewtonEnableRelativeCriterion and
-           NewtonEnableAbsoluteCriterion");
-
-                }
-        */
-
-        lastRelError_ = 1e100;
-        lastAbsError_ = 1e100;
-
-        relError_ = 1e100;
-        absError_ = 1e100;
+        lastError_ = 1e100;
+        error_ = 1e100;
 
         numIterations_ = 0;
     }
@@ -224,31 +182,19 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonWriteConvergence,
                              "Write the convergence behaviour of the Newton "
                              "method to a VTK file");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion,
-                             "Make the Newton method consider the relative "
-                             "convergence criterion");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion,
-                             "Make the Newton method consider the absolute "
-                             "convergence criterion");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative,
-                             "Let the Newton method only consider a solution "
-                             "to be converged if the relative _and_ the "
-                             "absolute criterion are fulfilled");
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonTargetIterations,
                              "The 'optimimum' number of Newton iterations per "
                              "time step");
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonMaxIterations,
                              "The maximum number of Newton iterations per time "
                              "step");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonRelativeTolerance,
-                             "The maximum relative error between two "
-                             "iterations tolerated by the Newton method");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonMaxRelativeError,
-                             "The maximum relative error for which the next "
-                             "iteration of the Newton method is executed");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance,
-                             "The maximum residual tolerated by the Newton "
-                             "method");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonTolerance,
+                             "The maximum error tolerated by the Newton "
+                             "method for considering a solution to be "
+                             "converged");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonMaxError,
+                             "The maximum error tolerated by the Newton "
+                             "method to which does not cause an abort");
     }
 
     /*!
@@ -256,22 +202,7 @@ public:
      *        tolerance.
      */
     bool converged() const
-    {
-        if (enableRelativeCriterion_() && !enableAbsoluteCriterion_())
-            // only look at the relative error
-            return relError_ <= relTolerance_();
-        else if (!enableRelativeCriterion_() && enableAbsoluteCriterion_())
-            // only look at the absolute error
-            return absError_ <= absTolerance_();
-        else if (satisfyAbsAndRel_())
-            // both, the absolute and the relative tolerances must be
-            // attained
-            return relError_ <= relTolerance_() && absError_ <= absTolerance_();
-
-        // we're done as soon as either the absolute or the
-        // relative tolerance is achieved.
-        return relError_ <= relTolerance_() || absError_ <= absTolerance_();
-    }
+    { return error_ <= tolerance_(); }
 
     /*!
      * \brief Returns a reference to the current numeric problem.
@@ -312,14 +243,14 @@ public:
      */
     bool apply()
     {
-        SolutionVector &uCurrentIter = model().solution(/*historyIdx=*/0);
-        SolutionVector uLastIter(uCurrentIter);
-        GlobalEqVector deltaU(uCurrentIter.size());
+        SolutionVector &currentSolution = model().solution(/*historyIdx=*/0);
+        SolutionVector previousSolution(currentSolution);
+        GlobalEqVector solutionUpdate(currentSolution.size());
 
         JacobianAssembler &jacobianAsm = model().jacobianAssembler();
 
         // tell the implementation that we begin solving
-        asImp_().begin_(uCurrentIter);
+        asImp_().begin_(currentSolution);
 
         assembleTimer_.reset();
         solveTimer_.reset();
@@ -333,7 +264,7 @@ public:
             asImp_().beginIteration_();
 
             // make the current solution to the old one
-            uLastIter = uCurrentIter;
+            previousSolution = currentSolution;
 
             if (asImp_().verbose_()) {
                 std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad "
@@ -380,9 +311,9 @@ public:
             solveTimer_.start();
 
             // set the delta vector to zero before solving the linear system!
-            deltaU = 0;
+            solutionUpdate = 0;
             // ask the implementation to solve the linearized system
-            if (!asImp_().solveLinear_(jacobianAsm.matrix(), deltaU,
+            if (!asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate,
                                        jacobianAsm.residual())) {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Linear solver did not converge\n";
@@ -404,13 +335,14 @@ public:
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
-                asImp_().updateErrors_(uCurrentIter, uLastIter, deltaU);
-                asImp_().update_(uCurrentIter, uLastIter, deltaU);
+                asImp_().updateError_(currentSolution, previousSolution,
+                                      jacobianAsm.residual(), solutionUpdate);
+                asImp_().update_(currentSolution, previousSolution, solutionUpdate);
                 updateTimer_.stop();
 
                 // tell the implementation that we're done with this
                 // iteration
-                asImp_().endIteration_(uCurrentIter, uLastIter);
+                asImp_().endIteration_(currentSolution, previousSolution);
             }
             catch (const Dune::Exception &e)
             {
@@ -540,10 +472,7 @@ protected:
      * \brief Indicates the beginning of a Newton iteration.
      */
     void beginIteration_()
-    {
-        lastRelError_ = relError_;
-        lastAbsError_ = absError_;
-    }
+    { lastError_ = error_; }
 
     /*!
      * \brief Assemble the global linear system of equations.
@@ -566,108 +495,79 @@ protected:
     { return linearSolver_.solve(A, x, b); }
 
     /*!
-     * \brief Update the relative and absolute errors given delta vector.
+     * \brief Update the error of the solution given the previous
+     *        iteration.
      *
-     * \param uCurrentIter The solution vector after the current iteration
-     * \param uLastIter The solution vector after the last iteration
-     * \param deltaU The delta as calculated from solving the linear
-     *               system of equations. This parameter also stores
-     *               the updated solution.
+     * For our purposes, the error of a solution is defined as the
+     * maximum of the weighted residual of a given solution.
+     *
+     * \param currentSolution The current iterative solution
+     * \param previousSolution The last iterative solution
+     * \param previousResidual The residual (i.e., right-hand-side) of
+     *                         the previous iteration's solution.
+     * \param solutionUpdate The difference between the current and the next solution
      */
-    void updateErrors_(const SolutionVector &uCurrentIter,
-                       const SolutionVector &uLastIter,
-                       const GlobalEqVector &deltaU)
+    void updateError_(const SolutionVector &currentSolution,
+                      const SolutionVector &previousSolution,
+                      const GlobalEqVector &previousResidual,
+                      const GlobalEqVector &solutionUpdate)
     {
-        lastRelError_ = relError_;
-        lastAbsError_ = absError_;
-        asImp_().updateRelError_(uCurrentIter, uLastIter, deltaU);
-        asImp_().updateAbsError_(uCurrentIter, uLastIter, deltaU);
-        writeConvergence_(uLastIter, deltaU);
-    }
+        lastError_ = error_;
 
-    /*!
-     * \brief Update the relative error of the solution compared to
-     *        the previous iteration.
-     *
-     * The relative error can be seen as a norm of the difference
-     * between the current and the next iteration. By default, this is
-     * the maxiumum of the difference.
-     *
-     * \param uCurrentIter The current iterative solution
-     * \param uLastIter The last iterative solution
-     * \param deltaU The difference between the current and the next solution
-     */
-    void updateRelError_(const SolutionVector &uCurrentIter,
-                         const SolutionVector &uLastIter,
-                         const GlobalEqVector &deltaU)
-    {
-        if (!this->enableRelativeCriterion_)
-            return;
+        // calculate the error as the maximum weighted tolerance of
+        // the solution's residual
+        error_ = 0;
+        for (unsigned i = 0; i < previousResidual.size(); ++i) {
+            if (model().dofTotalVolume(i) <= 0)
+                continue;
 
-        // calculate the relative error as the maximum relative
-        // deflection in any degree of freedom.
-        relError_ = 0;
-        for (unsigned i = 0; i < uLastIter.size(); ++i) {
-            const auto &delta = deltaU[i];
-            for (unsigned j = 0; j < delta.size(); ++j)
-                relError_ = std::max(std::abs(deltaU[i][j]), relError_);
+            const auto &r = previousResidual[i];
+            for (unsigned j = 0; j < r.size(); ++j)
+                error_ = std::max(std::abs(r[j] * model().eqWeight(i, j)), error_);
         }
 
         // take the other processes into account
-        relError_ = comm_.max(relError_);
+        error_ = comm_.max(error_);
 
-        if (relError_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxRelativeError))
+        // make sure that the error never grows beyond the maximum
+        // allowed one
+        if (error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
             OPM_THROW(Opm::NumericalProblem,
-                      "Newton: Relative error "
-                      << relError_
+                      "Newton: Error "
+                      << error_
                       << " is larger than maximum allowed error of "
                       << EWOMS_GET_PARAM(TypeTag, Scalar,
-                                         NewtonMaxRelativeError));
-    }
-
-    /*!
-     * \brief Update  the absolute error  of the solution  compared to
-     *        the previous iteration.
-     *
-     * Since this method might be very computationally expensive, the
-     * generic Newton method does not really implement it and only
-     * throws an exception.
-     */
-    void updateAbsError_(const SolutionVector &uCurrentIter,
-                         const SolutionVector &uLastIter,
-                         const GlobalEqVector &deltaU)
-    {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: The Newton controller ("
-                  << Opm::className<Implementation>()
-                  << ") "
-                     "does not provide a newtonUpdateAbsError() method!");
+                                         NewtonMaxError));
     }
 
     /*!
      * \brief Update the current solution with a delta vector.
      *
-     * Different update strategies, such as line search and chopped
-     * updates can be implemented. The default behavior is just to
-     * subtract deltaU from uLastIter, i.e.
+     * Different update strategies, such as chopped updates can be
+     * implemented by overriding this method. The default behavior is
+     * use the standard Newton-Raphson update strategy, i.e.
      * \f[ u^{k+1} = u^k - \Delta u^k \f]
      *
-     * \param uCurrentIter The solution vector after the current iteration
-     * \param uLastIter The solution vector after the last iteration
-     * \param deltaU The delta as calculated from solving the linear
-     *               system of equations. This parameter also stores
-     *               the updated solution.
+     * \param currentSolution The solution vector after the current iteration
+     * \param previousSolution The solution vector after the last iteration
+     * \param solutionUpdate The delta vector as calculated by solving
+     *                       the linear system of equations
      */
-    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU)
+    void update_(SolutionVector &currentSolution,
+                 const SolutionVector &previousSolution,
+                 const GlobalEqVector &solutionUpdate)
     {
+        // first, write out the current solution to make convergence
+        // analysis possible
+        writeConvergence_(previousSolution, solutionUpdate);
+
         // make sure not to swallow non-finite values at this point
-        if (!std::isfinite(deltaU.two_norm2()))
+        if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        for (unsigned i = 0; i < uLastIter.size(); ++i) {
-            uCurrentIter[i] = uLastIter[i];
-            uCurrentIter[i] -= deltaU[i];
+        for (unsigned i = 0; i < previousSolution.size(); ++i) {
+            currentSolution[i] = previousSolution[i];
+            currentSolution[i] -= solutionUpdate[i];
         }
     }
 
@@ -677,12 +577,12 @@ protected:
      *
      * This method is called as part of the update proceedure.
      */
-    void writeConvergence_(const SolutionVector &uLastIter,
-                           const GlobalEqVector &deltaU)
+    void writeConvergence_(const SolutionVector &previousSolution,
+                           const GlobalEqVector &solutionUpdate)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
             convergenceWriter_.beginIteration();
-            convergenceWriter_.writeFields(uLastIter, deltaU);
+            convergenceWriter_.writeFields(previousSolution, solutionUpdate);
             convergenceWriter_.endIteration();
         }
     }
@@ -690,21 +590,17 @@ protected:
     /*!
      * \brief Indicates that one Newton iteration was finished.
      *
-     * \param uCurrentIter The solution after the current Newton iteration
-     * \param uLastIter The solution at the beginning of the current Newton
-     *iteration
+     * \param currentSolution The solution after the current Newton iteration
+     * \param previousSolution The solution at the beginning of the current Newton iteration
      */
-    void endIteration_(const SolutionVector &uCurrentIter,
-                       const SolutionVector &uLastIter)
+    void endIteration_(const SolutionVector &currentSolution,
+                       const SolutionVector &previousSolution)
     {
         ++numIterations_;
 
         if (asImp_().verbose_()) {
-            std::cout << "\rNewton iteration " << numIterations_ << " done";
-            if (enableRelativeCriterion_())
-                std::cout << ", relative error = " << relError_;
-            if (enableAbsoluteCriterion_())
-                std::cout << ", absolute error = " << absError_;
+            std::cout << "\rNewton iteration " << numIterations_ << "";
+            std::cout << " error: " << error_;
             std::cout << endIterMsg().str() << "\n";
         }
 
@@ -728,10 +624,7 @@ protected:
             // error was reduced by a factor of at least 4,
             // in the last iterations we proceed even if we are above
             // the maximum number of steps
-            if (enableRelativeCriterion_())
-                return relError_ * 4.0 < lastRelError_;
-            else
-                return absError_ * 4.0 < lastAbsError_;
+            return error_ * 4.0 < lastError_;
         }
 
         return true;
@@ -771,25 +664,11 @@ protected:
 
     std::ostringstream endIterMsgStream_;
 
-    // relative errors and tolerance
-    Scalar relError_;
-    Scalar lastRelError_;
-    Scalar relTolerance_() const
-    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance); }
-
-    // absolute errors and tolerance
-    Scalar absError_;
-    Scalar lastAbsError_;
-    Scalar absTolerance_() const
-    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonAbsoluteTolerance); }
-
-    // which criteria do we have to satisfy in order to be converged?
-    bool enableRelativeCriterion_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableRelativeCriterion); }
-    bool enableAbsoluteCriterion_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableAbsoluteCriterion); }
-    bool satisfyAbsAndRel_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonSatisfyAbsoluteAndRelative); }
+    // errors and tolerance
+    Scalar error_;
+    Scalar lastError_;
+    Scalar tolerance_() const
+    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance); }
 
     // optimal number of iterations we want to achieve
     int targetIterations_() const
@@ -797,6 +676,7 @@ protected:
     // maximum number of iterations we do before giving up
     int maxIterations_() const
     { return EWOMS_GET_PARAM(TypeTag, int, NewtonMaxIterations); }
+
     // actual number of iterations done so far
     int numIterations_;
 

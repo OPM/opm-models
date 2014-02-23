@@ -82,24 +82,12 @@ NEW_PROP_TAG(LinearSolverOverlapSize);
 /*!
  * \brief Maximum accepted error of the solution of the non-linear solver.
  */
-NEW_PROP_TAG(NewtonRelativeTolerance);
+NEW_PROP_TAG(NewtonTolerance);
 
 /*!
  * \brief Maximum accepted error of the solution of the linear solver.
  */
-NEW_PROP_TAG(LinearSolverRelativeTolerance);
-
-/*!
- * \brief Maximum accepted defect of a component for the solution of the linear
- * solver.
- */
-NEW_PROP_TAG(LinearSolverAbsoluteTolerance);
-
-/*!
- * \brief Maximum difference between two iterations for the linear solver below
- * which the linear solver consideres itself to be converged.
- */
-NEW_PROP_TAG(LinearSolverFixPointTolerance);
+NEW_PROP_TAG(LinearSolverTolerance);
 
 /*!
  * \brief Specifies the verbosity of the linear solver
@@ -112,8 +100,6 @@ NEW_PROP_TAG(LinearSolverVerbosity);
 
 //! Maximum number of iterations eyecuted by the linear solver
 NEW_PROP_TAG(LinearSolverMaxIterations);
-
-NEW_PROP_TAG(LinearSolverUseTwoNormReductionCriterion);
 
 //! The order of the sequential preconditioner
 NEW_PROP_TAG(PreconditionerOrder);
@@ -143,8 +129,7 @@ namespace Linear {
  * \code SET_TAG_PROP(YourTypeTag, LinearSolver, DesiredLinearSolver); \endcode
  *
  * The possible choices for '\c DesiredLinearSolver' are:
- * - \c SolverWrapperRichardson: A fixpoint solver using the Richardson
- *iteration
+ * - \c SolverWrapperRichardson: A fixpoint solver using the Richardson iteration
  * - \c SolverWrapperSteepestDescent: The steepest descent solver
  * - \c SolverWrapperConjugatedGradients: A conjugated gradients solver
  * - \c SolverWrapperBiCGStab: A stabilized bi-conjugated gradients solver
@@ -157,8 +142,7 @@ namespace Linear {
  * Where the choices possible for '\c DesiredPreconditioner' are:
  * - \c PreconditionerJacobi: A Jacobi preconditioner
  * - \c PreconditionerGaussSeidel: A Gauss-Seidel preconditioner
- * - \c PreconditionerSSOR: A symmetric successive overrelaxation (SSOR)
- *preconditioner
+ * - \c PreconditionerSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
  * - \c PreconditionerSOR: A successive overrelaxation (SOR) preconditioner
  * - \c PreconditionerILU: An ILU(n) preconditioner
  */
@@ -211,9 +195,8 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance,
-                             "The maximum allowed weighted difference between two iterations of "
-                             "the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance,
+                             "The maximum allowed error between of the linear solver");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize,
                              "The size of the algebraic overlap for the linear solver");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
@@ -260,20 +243,22 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
-        // overlappingMatrix_->resetFront();
         overlappingb_->assignAddBorder(b);
-        // overlappingb_->resetFront();
+
+        // copy the result back to the non-overlapping vector. This is
+        // necessary here as assignAddBorder() might modify the
+        // residual vector for the border entities and we need the
+        // "globalized" residual in b...
+        overlappingb_->assignTo(b);
 
         (*overlappingx_) = 0.0;
 
         int preconditionerIsReady = 1;
-        try
-        {
+        try {
             // update sequential preconditioner
             precWrapper_.prepare(*overlappingMatrix_);
         }
-        catch (const Dune::Exception &e)
-        {
+        catch (const Dune::Exception &e) {
             std::cout << "Preconditioner threw exception \"" << e.what()
                       << " on rank " << overlappingMatrix_->overlap().myRank()
                       << "\n";
@@ -297,12 +282,50 @@ public:
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
 
-        // run the linear solver and have some fun
+        // retrieve the linear solver
         auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
+
+        /////
+        // create a residual reduction convergence criterion
+
+        // set the weighting of the residuals
+        OverlappingVector residWeightVec(*overlappingx_);
+        residWeightVec = 0.0;
+        const auto &foreignOverlap
+            = overlappingMatrix_->overlap().foreignOverlap();
+        for (unsigned localIdx = 0;
+             localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
+            int nativeIdx = foreignOverlap.localToNative(localIdx);
+            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
+                residWeightVec[localIdx][eqIdx]
+                    = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+            }
+        }
+
+        Scalar linearSolverTolerance = GET_PROP_VALUE(TypeTag, LinearSolverTolerance);
+        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonTolerance) / 100.0;
+        Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
+        typedef typename GridView::CollectiveCommunication Comm;
+        auto *convCrit =
+            new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
+                problem_.gridView().comm(),
+                residWeightVec,
+                /*fixPointTolerance=*/linearSolverFixPointTolerance,
+                /*residualReductionTolerance=*/linearSolverTolerance,
+                /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
+
+        // done creating the convergence criterion
+        /////
+
+        // tell the linear solver to use it
+        typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(
+            Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+
+        // run the linear solver and have some fun
         Dune::InverseOperatorResult result;
         int solverSucceeded = 1;
-        try
-        {
+        try {
             solver.apply(*overlappingx_, *overlappingb_, result);
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
@@ -447,7 +470,7 @@ private:
                             Preconditioner &parPreCond)                            \
         {                                                                          \
             Scalar tolerance = EWOMS_GET_PARAM(TypeTag, Scalar,                    \
-                                               LinearSolverRelativeTolerance);     \
+                                               LinearSolverTolerance);             \
             int maxIter                                                            \
                 = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);        \
                                                                                    \
@@ -580,19 +603,6 @@ SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverWrapper,
               Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
 SET_TYPE_PROP(ParallelIterativeLinearSolver, PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
-
-SET_BOOL_PROP(ParallelIterativeLinearSolver,
-              LinearSolverUseTwoNormReductionCriterion, false);
-
-//! set the default for the accepted absolute tolerance (by default, we use 0 to
-// disable considering the absolute tolerance)
-SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverAbsoluteTolerance,
-                0.0);
-
-//! set the default for the accepted fix-point tolerance (by default, we use 0
-// to disable considering the fix-point tolerance)
-SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverFixPointTolerance,
-                0.0);
 
 //! set the default overlap size to 3
 SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);

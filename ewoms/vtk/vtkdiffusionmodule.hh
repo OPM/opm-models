@@ -57,7 +57,7 @@ namespace Ewoms {
  * This module deals with the following quantities:
  * - Molecular diffusion coefficients of all components in all fluid phases
  * - Effective molecular diffusion coefficients of the porous medium of all
- *components in all fluid phases
+ *   components in all fluid phases
  */
 template <class TypeTag>
 class VtkDiffusionModule : public VtkBaseOutputModule<TypeTag>

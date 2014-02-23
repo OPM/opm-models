@@ -96,33 +96,32 @@ public:
     bool converged() const
     { return curDefect_ <= tolerance(); }
 
+    /*!
+     * \copydoc ConvergenceCriterion::printInitial()
+     */
+    void printInitial(std::ostream &os=std::cout) const
+    {
+        os << std::setw(20) << " Iter ";
+        os << std::setw(20) << " Defect ";
+        os << std::setw(20) << " Reduction ";
+        os << std::endl;
 
-  /*!
-   * \copydoc ConvergenceCriterion::printInitial()
-   */
-  void printInitial(std::ostream &os=std::cout) const
-  {
-    os << std::setw(20) << " Iter ";
-    os << std::setw(20) << " Defect ";
-    os << std::setw(20) << " Reduction ";
-    os << std::endl;
+        os << std::setw(20) << 0 << " ";
+        os << std::setw(20) << curDefect_ << " ";
+        os << std::setw(20) << defectReduction_ << " ";
+        os << std::endl;
+    }
 
-    os << std::setw(20) << 0 << " ";
-    os << std::setw(20) << curDefect_ << " ";
-    os << std::setw(20) << defectReduction_ << " ";
-    os << std::endl;
-  }
-
-  /*!
-   * \copydoc ConvergenceCriterion::print()
-   */
-  void print(Scalar iter, std::ostream &os=std::cout) const
-  {
-    os << std::setw(20) << iter << " ";
-    os << std::setw(20) << curDefect_ << " ";
-    os << std::setw(20) << defectReduction_ << " ";
-    os << std::endl;
-  }
+    /*!
+     * \copydoc ConvergenceCriterion::print()
+     */
+    void print(Scalar iter, std::ostream &os=std::cout) const
+    {
+        os << std::setw(20) << iter << " ";
+        os << std::setw(20) << curDefect_ << " ";
+        os << std::setw(20) << defectReduction_ << " ";
+        os << std::endl;
+    }
 
 private:
     Dune::ScalarProduct<Vector> &scalarProduct_;

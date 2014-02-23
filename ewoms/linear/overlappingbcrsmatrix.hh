@@ -115,8 +115,6 @@ public:
      */
     void assignAdd(const BCRSMatrix &M)
     {
-        // first, set everything to 0
-        BCRSMatrix::operator=(0.0);
 
         // copy the native entries
         assignFromNative_(M);
@@ -133,9 +131,6 @@ public:
      */
     void assignCopy(const BCRSMatrix &M)
     {
-        // first, set everything to 0
-        BCRSMatrix::operator=(0.0);
-
         // copy the native entries
         assignFromNative_(M);
 
@@ -203,27 +198,34 @@ private:
     {
         const auto &foreignOverlap = overlap_->foreignOverlap();
 
+        // first, set everything to 0,
+        BCRSMatrix::operator=(0.0);
+
         // then copy the local entries of M to the overlapping matrix
         for (unsigned nativeRowIdx = 0; nativeRowIdx < M.N(); ++nativeRowIdx) {
             int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
-            if (localRowIdx < 0)
-                continue; // black-listed entry
+            if (localRowIdx < 0) {
+                continue; // row corresponds to a black-listed entry
+            }
 
-            ConstColIterator colIt = M[nativeRowIdx].begin();
-            ConstColIterator colEndIt = M[nativeRowIdx].end();
-            ColIterator myColIt = (*this)[localRowIdx].begin();
-            for (; colIt != colEndIt; ++colIt) {
-                int localColIdx = foreignOverlap.nativeToLocal(colIt.index());
-                if (localColIdx < 0)
-                    continue; // black.listed entry
+            ConstColIterator nativeColIt = M[nativeRowIdx].begin();
+            const ConstColIterator &nativeColEndIt = M[nativeRowIdx].end();
+            ColIterator localColIt = (*this)[localRowIdx].begin();
+            for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
+                int localColIdx = foreignOverlap.nativeToLocal(nativeColIt.index());
+                if (localColIdx < 0) {
+                    continue; // column corresponds to a black-listed entry
+                }
 
                 while (true) {
-                    if (int(myColIt.index()) == localColIdx) {
-                        (*myColIt) = *colIt;
+                    // go to the local column which corresponds the
+                    // the same entry of the native matrix
+                    if (static_cast<int>(localColIt.index()) == localColIdx) {
+                        (*localColIt) = *nativeColIt;
                         break;
                     }
 
-                    ++myColIt;
+                    ++localColIt;
                 }
             }
         }

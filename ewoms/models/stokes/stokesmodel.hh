@@ -95,8 +95,8 @@ SET_TYPE_PROP(StokesModel,
               BaseProblem,
               Ewoms::StokesProblem<TypeTag>);
 
-//! Increase the relative tolerance of the newton method to 10^-7
-SET_SCALAR_PROP(StokesModel, NewtonRelativeTolerance, 1e-7);
+//! Increase the tolerance of the newton method to 10^-7
+SET_SCALAR_PROP(StokesModel, NewtonTolerance, 1e-7);
 
 #if HAVE_SUPERLU
 SET_TAG_PROP(StokesModel, LinearSolverSplice, SuperLULinearSolver);
@@ -305,14 +305,7 @@ public:
         // small, so we need higher precision for pressure. TODO: find
         // a good weight for the pressure.
         if (Indices::pressureIdx == pvIdx) {
-            // use a pressure gradient of 1e3 Pa/m an intrinisc
-            // permeability of 1e-12 as reference (basically, a highly
-            // permeable sand stone filled with liquid water.)
-            static const Scalar KRef = 1e-12;   // [m^2]
-            static const Scalar pGradRef = 1e3; // [Pa / m]
-            Scalar V = this->boxVolume(globalDofIdx);
-
-            return std::max(1e-5, pGradRef * KRef / V);
+            return 1e-5;
         }
 
         return 1;

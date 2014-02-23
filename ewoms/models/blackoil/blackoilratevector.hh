@@ -37,7 +37,7 @@ namespace Ewoms {
  * \ingroup BlackOilModel
  *
  * \brief Implements a vector representing mass, molar or volumetric rates for
- *the black oil model.
+ *        the black oil model.
  *
  * This class is basically a Dune::FieldVector which can be set using
  * either mass, molar or volumetric rates.

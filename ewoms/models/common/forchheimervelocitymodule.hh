@@ -95,9 +95,10 @@ public:
     }
 
     /*!
-     * \brief Returns the ratio between the phase mobility \f$k_{r,\alpha}\f$
-     *and its passability
-     *        \f$\eta_{r,\alpha}\f$ for a given fluid phase \f$\alpha\f$.
+     * \brief Returns the ratio between the phase mobility
+     *        \f$k_{r,\alpha}\f$ and its passability
+     *        \f$\eta_{r,\alpha}\f$ for a given fluid phase
+     *        \f$\alpha\f$.
      *
      * The passability coefficient specifies the influence of the
      * other fluid phases on the turbolent behaviour of a given fluid
@@ -416,7 +417,7 @@ protected:
         // equation
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
-            if (newtonIter >= 30)
+            if (newtonIter >= 50)
                 OPM_THROW(Opm::NumericalProblem,
                           "Could not determine Forchheimer velocity within "
                           << newtonIter << " iterations");

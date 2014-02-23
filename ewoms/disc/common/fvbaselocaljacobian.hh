@@ -106,7 +106,7 @@ public:
     FvBaseLocalJacobian()
     {
         internalElemContext_ = 0;
-        newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance);
+        newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
     }
 
     ~FvBaseLocalJacobian()

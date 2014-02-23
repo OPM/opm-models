@@ -34,8 +34,8 @@ namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
  *
- * \brief Implements a boundary vector for the fully implicit immiscible
- *multi-phase model.
+ * \brief Implements a boundary vector for the fully implicit
+ *        multi-phase model which assumes immiscibility.
  */
 template <class TypeTag>
 class ImmiscibleBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
@@ -79,12 +79,12 @@ public:
      * \brief Specify a free-flow boundary
      *
      * \param context The execution context for which the boundary rate should
-     *be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space
-     *index).
+     *                be specified.
+     * \param bfIdx The local space index of the boundary segment.
      * \param timeIdx The index used by the time discretization.
-     * \param fluidState The repesentation of the thermodynamic state of the
-     *system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state
+     *                   of the system on the integration point of the
+     *                   boundary segment.
      */
     template <class Context, class FluidState>
     void setFreeFlow(const Context &context, int bfIdx, int timeIdx,

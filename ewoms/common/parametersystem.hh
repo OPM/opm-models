@@ -54,11 +54,9 @@
  *
  * \code
  * // Registers a run-time parameter "UpwindWeight" which has type
- *  // "Scalar" and the description "Relative weight of the upwind node."
- *  EWOMS_REGISTER_PARAM(TypeTag,
- *                    Scalar,
- *                    UpwindWeight,
- *                    "Relative weight of the upwind node.");
+ * // "Scalar" and the description "Relative weight of the upwind node."
+ * EWOMS_REGISTER_PARAM(TypeTag, Scalar, UpwindWeight,
+ *                      "Relative weight of the upwind node.");
  * \endcode
  */
 #define EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \

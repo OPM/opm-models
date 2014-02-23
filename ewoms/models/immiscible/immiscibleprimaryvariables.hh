@@ -81,8 +81,7 @@ public:
     /*!
      * \brief Constructor with assignment from scalar
      *
-     * \param value The scalar value to which all entries of the vector will be
-     *set.
+     * \param value The scalar value to which all entries of the vector will be set.
      */
     ImmisciblePrimaryVariables(Scalar value) : ParentType(value)
     {}

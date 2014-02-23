@@ -41,6 +41,7 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseElementContext
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
@@ -295,7 +296,7 @@ public:
     /*!
      * \brief Return the position of a local entities in global coordinates
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
@@ -306,13 +307,26 @@ public:
     /*!
      * \brief Return the global spatial index for a sub-control volume
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
     int globalSpaceIndex(int dofIdx, int timeIdx) const
     { return stencil(timeIdx).globalSpaceIndex(dofIdx); }
+
+    /*!
+     * \brief Return the total volume associated with a degree of freedom
+     *
+     * \param dofIdx The local index of the degree of freedom
+     *               in the current element.
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
+    Scalar dofTotalVolume(int dofIdx, int timeIdx) const
+    {
+        return model().dofTotalVolume(globalSpaceIndex(dofIdx, timeIdx));
+    }
 
     /*!
      * \brief Returns whether the current element is on the domain's
@@ -369,7 +383,7 @@ public:
      *
      * \sa Discretization::hint(int, int)
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
@@ -391,7 +405,7 @@ public:
     /*!
      * \brief Return the primary variables for a given local index.
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
@@ -413,7 +427,7 @@ public:
     /*!
      * \brief Returns the volume variables at the evaluation point.
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
     void saveVolVars(int dofIdx)
@@ -428,7 +442,7 @@ public:
     /*!
      * \brief Restores the volume variables at the evaluation point.
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
     void restoreVolVars(int dofIdx)
@@ -477,7 +491,7 @@ public:
      * \brief Returns the volume variables for history index 0 at the
      *        evaluation point.
      *
-     * \param dofIdx The local index of the sub-control-volume index
+     * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.

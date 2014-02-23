@@ -135,7 +135,7 @@ EwomsAddTest(obstacle_pvs_restart
   SOURCES tests/obstacle_pvs.cc
   EXE_NAME obstacle_pvs
   NO_COMPILE
-  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=12000)
+  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=35000)
 
 # add the tutorial
 EwomsAddTest(tutorial1 SOURCES tutorial/tutorial1.cc)

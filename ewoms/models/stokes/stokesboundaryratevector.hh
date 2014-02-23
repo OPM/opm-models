@@ -37,7 +37,7 @@ namespace Ewoms {
  * \ingroup StokesModel
  *
  * \brief Implements a boundary vector for the fully implicit (Navier-)Stokes
- *model.
+ *        model.
  */
 template <class TypeTag>
 class StokesBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
@@ -79,14 +79,13 @@ public:
     {}
 
     /*!
-     * \param context The execution context for which the boundary rate should
-     *be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space
-     *index).
+     * \param context The execution context for which the boundary rate should be specified.
+     * \param bfIdx The local index of the boundary segment (-> local space index).
      * \param timeIdx The index used by the time discretization.
      * \param velocity The velocity vector [m/s] at the boundary.
-     * \param fluidState The repesentation of the thermodynamic state of the
-     *system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state
+     *                   of the system on the integration point of the
+     *                   boundary segment.
      */
     template <class Context, class FluidState>
     void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
@@ -153,13 +152,13 @@ public:
      * \brief Set a in-flow boundary in the (Navier-)Stoke model
      *
      * \param context The execution context for which the boundary rate should
-     *be specified.
-     * \param bfIdx The local index of the boundary segment (-> local space
-     *index).
+     *                be specified.
+     * \param bfIdx The local space index of the boundary segment.
      * \param timeIdx The index used by the time discretization.
      * \param velocity The velocity vector [m/s] at the boundary.
-     * \param fluidState The repesentation of the thermodynamic state of the
-     *system on the integration point of the boundary segment.
+     * \param fluidState The repesentation of the thermodynamic state
+     *                   of the system on the integration point of the
+     *                   boundary segment.
      */
     template <class Context, class FluidState>
     void setInFlow(const Context &context, int bfIdx, int timeIdx,

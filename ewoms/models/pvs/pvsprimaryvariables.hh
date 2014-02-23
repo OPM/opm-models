@@ -178,8 +178,7 @@ public:
      * \brief Set whether a given indivividual phase should be present
      *        or not.
      *
-     * \param phaseIdx The index of the phase which's presence ought to be set
-     *or reset.
+     * \param phaseIdx The index of the phase which's presence ought to be set or reset.
      * \param yesno If true, the presence of the phase is set, else it is reset
      */
     void setPhasePresent(int phaseIdx, bool yesno = true)

@@ -375,8 +375,16 @@ public:
     {
         ParentType::updateBegin();
 
-        referencePressure_ = this->solution(
-            /*timeIdx=*/0)[/*vertexIdx=*/0][/*pvIdx=*/Indices::pressure0Idx];
+        // find the a reference pressure. The first degree of freedom
+        // might correspond to non-interior entities which would lead
+        // to an undefined value, so we have to iterate...
+        for (size_t dofIdx = 0; dofIdx < this->numDof(); ++ dofIdx) {
+            if (this->dofTotalVolume(dofIdx) > 0) {
+                referencePressure_ =
+                    this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
+                break;
+            }
+        }
     }
 
     /*!
@@ -425,17 +433,9 @@ public:
             return fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
-            // use a pressure gradient of 1e2 Pa/m for liquid water as
-            // a reference
-            Scalar KRef = intrinsicPermeability_[globalDofIdx];
-            static const Scalar muRef = 1e-3;
-            static const Scalar pGradRef = 1e-2; // [Pa / m]
-            Scalar r = std::pow(this->boxVolume(globalDofIdx), 1.0/dimWorld);
-
             static const Scalar pressureBaseWeight
                 = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
-            return std::max(pressureBaseWeight / referencePressure_,
-                            pGradRef * KRef / muRef / r);
+            return pressureBaseWeight / referencePressure_;
         }
 
 #ifndef NDEBUG

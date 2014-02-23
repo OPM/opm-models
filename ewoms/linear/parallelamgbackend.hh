@@ -214,25 +214,21 @@ public:
             std::cout << "Creating the solver\n";
 
         typedef Ewoms::BiCGSTABSolver<Vector> SolverType;
-        Scalar linearSolverTolerance
-            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        int maxIterations
-            = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
-        SolverType solver(fineOperator, scalarProduct,
-                          /*preconditioner=*/*amg_, linearSolverTolerance,
-                          /*maxSteps=*/maxIterations, verbosity);
+        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+        int maxIterations = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
+        SolverType solver(fineOperator,
+                          scalarProduct,
+                          /*preconditioner=*/*amg_,
+                          linearSolverTolerance,
+                          /*maxSteps=*/maxIterations,
+                          verbosity);
 
-        // use the residual reduction convergence criterion
-        OverlappingVector residWeightVec(*overlappingx_),
-            fixPointWeightVec(*overlappingx_);
+        /////
+        // create a residual reduction convergence criterion
 
-        // set the default weight of the row to 0 (-> do not consider
-        // the row when calculating the error)
+        // set the weighting of the residuals
+        OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        fixPointWeightVec = 0.0;
-
-        // for rows local to the current peer, ping the model for their
-        // relative weight
         const auto &foreignOverlap
             = overlappingMatrix_->overlap().foreignOverlap();
         for (unsigned localIdx = 0;
@@ -241,27 +237,25 @@ public:
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
                 residWeightVec[localIdx][eqIdx]
                     = this->problem_.model().eqWeight(nativeIdx, eqIdx);
-                fixPointWeightVec[localIdx][eqIdx]
-                    = this->problem_.model().primaryVarWeight(nativeIdx, eqIdx);
             }
         }
 
-        // create a residual reduction convergence criterion
-        Scalar linearSolverRelTolerance
-            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverRelativeTolerance);
-        Scalar linearSolverAbsTolerance
-            = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsoluteTolerance);
-        Scalar linearSolverFixPointTolerance
-            = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRelativeTolerance) / 1e4;
-        auto *convCrit = new Ewoms::
-            WeightedResidReductionCriterion<Vector,
-                                            typename GridView::CollectiveCommunication>(
-                problem_.gridView().comm(), fixPointWeightVec, residWeightVec,
-                linearSolverFixPointTolerance, linearSolverRelTolerance,
-                linearSolverAbsTolerance);
+        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonTolerance) / 100.0;
+        Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
+        typedef typename GridView::CollectiveCommunication Comm;
+        auto *convCrit =
+            new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
+                problem_.gridView().comm(),
+                residWeightVec,
+                /*fixPointTolerance=*/linearSolverFixPointTolerance,
+                /*residualReductionTolerance=*/linearSolverTolerance,
+                /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
+
+        // done creating the convergence criterion
+        /////
 
         // tell the linear solver to use it
-        typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
+        typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
         solver.setConvergenceCriterion(
             Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 

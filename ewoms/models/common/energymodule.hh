@@ -100,7 +100,7 @@ public:
     { return -1; }
 
     /*!
-     * \brief Returns the relative weight of a equation.
+     * \brief Returns the relative weight of a equation of the residual.
      */
     static Scalar eqWeight(const Model &model,
                            int globalDofIdx,
@@ -470,8 +470,7 @@ public:
  * \ingroup Energy
  * \class Ewoms::EnergyIndices
  *
- * \brief Provides the indices required for consideration of the energy
- *equation.
+ * \brief Provides the indices required for the energy equation.
  */
 template <int PVOffset, bool enableEnergy>
 struct EnergyIndices;
