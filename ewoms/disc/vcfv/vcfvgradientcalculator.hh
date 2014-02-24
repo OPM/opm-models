@@ -87,8 +87,6 @@ public:
      *        values of quantities at any flux approximation point.
      *
      * \param elemCtx The current execution context
-     * \param fapIdx The local index of the flux approximation point
-     *               in the current element's stencil.
      */
     template <bool prepareValues = true, bool prepareGradients = true>
     void prepare(const ElementContext &elemCtx, int timeIdx)

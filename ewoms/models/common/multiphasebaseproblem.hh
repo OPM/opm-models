@@ -86,7 +86,7 @@ public:
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGravity,
                              "Use the gravity correction for the pressure gradients.");
-    };
+    }
 
     /*!
      * \brief Averages the intrinsic permeability Tensor.

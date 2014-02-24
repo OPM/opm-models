@@ -393,8 +393,10 @@ public:
             // energy related equation
             return tmp;
 
-        DUNE_UNUSED int compIdx = eqIdx - Indices::conti0EqIdx;
+#ifndef NDEBUG
+        int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
+#endif
 
         // make all kg equal
         return 1.0;

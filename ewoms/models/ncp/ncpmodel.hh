@@ -438,8 +438,10 @@ public:
                             pGradRef * KRef / muRef / r);
         }
 
-        DUNE_UNUSED int phaseIdx = pvIdx - saturation0Idx;
+#ifndef NDEBUG
+        int phaseIdx = pvIdx - saturation0Idx;
         assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
+#endif
 
         // saturation
         static const Scalar saturationsBaseWeight

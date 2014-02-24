@@ -591,7 +591,7 @@ class VcfvStencil
         return normal.two_norm();
     }
 
-    void getFaceIndices(int numVertices, int k, int& leftFace, int& rightFace)
+    void getFaceIndices(int numElemVertices, int k, int& leftFace, int& rightFace)
     {
         static const int edgeToFaceTet[2][6] = {
             {1, 0, 3, 2, 1, 3},
@@ -610,7 +610,7 @@ class VcfvStencil
             {2, 1, 0, 3, 0, 4, 4, 3, 5, 1, 2, 5}
         };
 
-        switch (numVertices) {
+        switch (numElemVertices) {
         case 4:
             leftFace = edgeToFaceTet[0][k];
             rightFace = edgeToFaceTet[1][k];
@@ -630,12 +630,12 @@ class VcfvStencil
         default:
             OPM_THROW(std::logic_error,
                       "Not implemented: VcfvStencil::getFaceIndices for "
-                      << numVertices << " overtices");
+                      << numElemVertices << " vertices");
             break;
         }
     }
 
-    void getEdgeIndices(int numVertices, int face, int vert, int& leftEdge, int& rightEdge)
+    void getEdgeIndices(int numElemVertices, int face, int vert, int& leftEdge, int& rightEdge)
     {
         static const int faceAndVertexToLeftEdgeTet[4][4] = {
                 { 0, 0, 2, -1},
@@ -694,7 +694,7 @@ class VcfvStencil
             {-1, -1, -1, -1, 8, 10, 11, 9}
         };
 
-        switch (numVertices) {
+        switch (numElemVertices) {
         case 4:
             leftEdge = faceAndVertexToLeftEdgeTet[face][vert];
             rightEdge = faceAndVertexToRightEdgeTet[face][vert];
@@ -714,7 +714,7 @@ class VcfvStencil
         default:
             OPM_THROW(std::logic_error,
                       "Not implemented: VcfvStencil::getFaceIndices for "
-                      << numVertices << " vertices");
+                      << numElemVertices << " vertices");
             break;
         }
     }
@@ -733,10 +733,10 @@ public:
         { return global(localGeometry_->corner(cornerIdx)); }
 
         const GlobalPosition global(const LocalPosition &localPos) const
-        { return element_->geometry().global(localPos); };
+        { return element_->geometry().global(localPos); }
 
         const ScvLocalGeometry &localGeometry() const
-        { return *localGeometry_; };
+        { return *localGeometry_; }
 
         const ScvLocalGeometry *localGeometry_;
         const Element *element_;

@@ -162,15 +162,16 @@ public:
                 // read the vertex indices of an edge
                 std::vector<unsigned int> vertIndices;
                 while (iss) {
-                    unsigned int tmp;
-                    iss >> tmp;
+                    unsigned int tmp2;
+                    iss >> tmp2;
                     if (!iss)
                         break;
-                    vertIndices.push_back(tmp);
-                    assert(tmp < vertexPos.size());
+                    vertIndices.push_back(tmp2);
+                    assert(tmp2 < vertexPos.size());
                 }
-                assert(vertIndices.size()
-                       == 2); // an edge always has two indices
+
+                // an edge always has two indices!
+                assert(vertIndices.size() == 2);
 
                 std::pair<int, int> edge(vertIndices[0], vertIndices[1]);
                 edges.push_back(edge);
@@ -192,12 +193,12 @@ public:
                 // read the edge indices of an element
                 std::vector<unsigned int> edgeIndices;
                 while (iss) {
-                    unsigned int tmp;
-                    iss >> tmp;
+                    unsigned int tmp2;
+                    iss >> tmp2;
                     if (!iss)
                         break;
-                    edgeIndices.push_back(tmp);
-                    assert(tmp < edges.size());
+                    edgeIndices.push_back(tmp2);
+                    assert(tmp2 < edges.size());
                 }
                 assert(edgeIndices.size()
                        == 3); // so far, we only support triangles
@@ -236,7 +237,7 @@ public:
                 mat[0] -= vertexPos[vertIndices[0]];
                 mat[1] = vertexPos[vertIndices[2]];
                 mat[1] -= vertexPos[vertIndices[0]];
-                assert(mat.determinant() != 0);
+                assert(std::abs(mat.determinant()) > 1e-50);
                 if (mat.determinant() < 0)
                     std::swap(vertIndices[2], vertIndices[1]);
 
@@ -259,7 +260,7 @@ public:
         // first create a map of the dune to ART vertex indices
         typedef Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView,
                                                           Dune::MCMGVertexLayout>
-        VertexMapper;
+            VertexMapper;
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
         VertexMapper vertexMapper(gridPtr_->leafGridView());
 #else
@@ -290,7 +291,7 @@ public:
     static Grid &grid()
     {
         return *gridPtr_;
-    };
+    }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
@@ -299,7 +300,7 @@ public:
     static void loadBalance()
     {
         gridPtr_->loadBalance();
-    };
+    }
 
     /*!
      * \brief Destroys the grid

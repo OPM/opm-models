@@ -63,7 +63,7 @@
  */
 #define EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
     Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(     \
-        #ParamName, #TypeTag, #ParamName, Description)
+        #ParamName, #ParamName, Description)
 
 /*!
  * \ingroup Parameter
@@ -210,6 +210,13 @@ SET_STRING_PROP(ParameterSystem, Description, "");
 
 namespace Ewoms {
 namespace Parameters {
+// function prototype declarations
+void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo);
+void getFlattenedKeyList_(std::list<std::string> &dest,
+                          const Dune::ParameterTree &tree,
+                          const std::string &prefix = "");
+
+
 void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
 {
     std::string paramMessage, paramType, paramDescription;
@@ -220,7 +227,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     for (unsigned i = 0; i < camelCaseName.size(); ++i) {
         if (isupper(camelCaseName[i]))
             cmdLineName += "-";
-        cmdLineName += tolower(camelCaseName[i]);
+        cmdLineName += static_cast<char>(std::tolower(camelCaseName[i]));
     }
 
     // assemble the printed output
@@ -266,7 +273,7 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
 
 void getFlattenedKeyList_(std::list<std::string> &dest,
                           const Dune::ParameterTree &tree,
-                          const std::string &prefix = "")
+                          const std::string &prefix)
 {
     // add the keys of the current sub-structure
     auto keyIt = tree.getValueKeys().begin();
@@ -475,7 +482,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
                                                 std::cerr);
                         return oss.str();
                     }
-                    s[j] = std::toupper(s[j]);
+                    s[j] = static_cast<char>(std::toupper(s[j]));
                 }
                 else if (!std::isalnum(s[j])) {
                     std::ostringstream oss;
@@ -513,7 +520,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
         }
 
         // capitalize first letter of parameter name
-        paramName[0] = std::toupper(paramName[0]);
+        paramName[0] = static_cast<char>(std::toupper(paramName[0]));
 
         // Put the key=value pair into the parameter tree
         paramTree[paramName] = paramValue;
@@ -585,10 +592,10 @@ void printValues(std::ostream &os = std::cout)
         os << "###########\n";
         os << "# Unused run-time specified parameters\n";
         os << "###########\n";
-        auto keyIt = unknownKeyList.begin();
-        const auto &keyEndIt = unknownKeyList.end();
-        for (; keyIt != keyEndIt; ++keyIt) {
-            os << *keyIt << "=\"" << tree.get(*keyIt, "") << "\"\n";
+        auto unusedKeyIt = unknownKeyList.begin();
+        const auto &unusedKeyEndIt = unknownKeyList.end();
+        for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
+            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n";
         }
     }
 }
@@ -622,10 +629,10 @@ void printUnused(std::ostream &os = std::cout)
         os << "###########\n";
         os << "# Unused run-time specified parameters\n";
         os << "###########\n";
-        auto keyIt = unknownKeyList.begin();
-        const auto &keyEndIt = unknownKeyList.end();
-        for (; keyIt != keyEndIt; ++keyIt) {
-            os << *keyIt << "=\"" << tree.get(*keyIt, "") << "\"\n";
+        auto unusedKeyIt = unknownKeyList.begin();
+        const auto &unusedKeyEndIt = unknownKeyList.end();
+        for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
+            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n";
         }
     }
 }
@@ -759,8 +766,7 @@ const ParamType &get(const char *propTagName, const char *paramName,
 }
 
 template <class TypeTag, class ParamType, class PropTag>
-void registerParam(const char *paramName, const char *typeTagName,
-                   const char *propertyName, const char *usageString)
+void registerParam(const char *paramName, const char *propertyName, const char *usageString)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())

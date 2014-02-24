@@ -79,8 +79,6 @@ public:
     {}
 
     /*!
-     * \param velocity The velocity vector [m/s] at the boundary.
-     *
      * \param context The execution context for which the boundary rate should
      *be specified.
      * \param bfIdx The local index of the boundary segment (-> local space

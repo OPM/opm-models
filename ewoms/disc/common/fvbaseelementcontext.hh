@@ -197,10 +197,10 @@ public:
 
         // update gradients inside a sub control volume
         int nDof = numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                 dofIdx,
-                                                                 timeIdx);
+        for (int gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
+            volVars_[gradDofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                     gradDofIdx,
+                                                                     timeIdx);
         }
     }
 

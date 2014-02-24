@@ -276,7 +276,7 @@ public:
      *        current element interacts with.
      */
     int numDof() const
-    { return subControlVolumes_.size(); };
+    { return subControlVolumes_.size(); }
 
     /*!
      * \brief Returns the number of degrees of freedom which are contained
@@ -288,7 +288,7 @@ public:
      * For element centered finite elements, this is only the central DOF.
      */
     int numPrimaryDof() const
-    { return 1; };
+    { return 1; }
 
     /*!
      * \brief Return the global space index given the index of a degree of
@@ -326,33 +326,33 @@ public:
      *        given degree of freedom.
      */
     const SubControlVolume &subControlVolume(int dofIdx) const
-    { return subControlVolumes_[dofIdx]; };
+    { return subControlVolumes_[dofIdx]; }
 
     /*!
      * \brief Returns the number of interior faces of the stencil.
      */
     int numInteriorFaces() const
-    { return interiorFaces_.size(); };
+    { return interiorFaces_.size(); }
 
     /*!
      * \brief Returns the face object belonging to a given face index
      *        in the interior of the domain.
      */
     const SubControlVolumeFace &interiorFace(int bfIdx) const
-    { return interiorFaces_[bfIdx]; };
+    { return interiorFaces_[bfIdx]; }
 
     /*!
      * \brief Returns the number of boundary faces of the stencil.
      */
     int numBoundaryFaces() const
-    { return boundaryFaces_.size(); };
+    { return boundaryFaces_.size(); }
 
     /*!
      * \brief Returns the boundary face object belonging to a given
      *        boundary face index.
      */
     const SubControlVolumeFace &boundaryFace(int bfIdx) const
-    { return boundaryFaces_[bfIdx]; };
+    { return boundaryFaces_[bfIdx]; }
 
 private:
     GridView gridView_;

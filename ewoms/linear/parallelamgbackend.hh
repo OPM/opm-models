@@ -272,7 +272,7 @@ public:
             solver.apply(*overlappingx_, *overlappingb_, result);
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
         }
-        catch (const Dune::Exception &e)
+        catch (const Dune::Exception &)
         {
             solverSucceeded = 0;
             solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
@@ -432,7 +432,7 @@ private:
 #else
         amg_ = new AMG(fineOperator, coarsenCriterion, smootherArgs);
 #endif
-    };
+    }
 
     const Problem &problem_;
 

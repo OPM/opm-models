@@ -45,8 +45,8 @@ class Restart
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView &gridView)
     {
-        const std::string gridName = "blubb"; // gridView.grid().name();
-        const int dim = GridView::dimension;
+        static const std::string gridName = "blubb"; // gridView.grid().name();
+        static const int dim = GridView::dimension;
 
         int numVertices = gridView.size(dim);
         int numElements = gridView.size(0);

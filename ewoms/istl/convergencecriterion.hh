@@ -104,7 +104,7 @@ public:
      *
      * \param os The output stream to which the message gets written.
      */
-    virtual void printInitial(std::ostream &os = std::cout) const {};
+    virtual void printInitial(std::ostream &os = std::cout) const {}
 
     /*!
      * \brief Prints the information about the convergence behaviour for
@@ -114,7 +114,7 @@ public:
      *             are chosen by the linear solver.
      * \param os The output stream to which the message gets written.
      */
-    virtual void print(Scalar iter, std::ostream &os = std::cout) const {};
+    virtual void print(Scalar iter, std::ostream &os = std::cout) const {}
 };
 
 //! \} end documentation

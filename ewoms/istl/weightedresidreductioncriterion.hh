@@ -252,7 +252,7 @@ public:
         os << std::setw(20) << lastResidError_ / std::max(residError_, 1e-80)
            << " ";
         os << std::endl;
-    };
+    }
 
 private:
     // update the weighted absolute residual

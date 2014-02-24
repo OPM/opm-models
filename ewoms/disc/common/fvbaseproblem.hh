@@ -282,8 +282,8 @@ public:
      */
     void timeIntegration()
     {
-        const int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
-        const Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
+        int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
+        Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
 
         // if the time step size of the time manager is smaller than
         // the specified minimum size and we're not going to finish

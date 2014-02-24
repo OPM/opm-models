@@ -337,7 +337,7 @@ public:
         OPM_THROW(std::logic_error,
                    "Not implemented: The local residual " << Opm::className<Implementation>()
                    << " does not implement the required method 'computeStorage()'");
-    };
+    }
 
     /*!
      * \brief Evaluates the total mass flux of all conservation

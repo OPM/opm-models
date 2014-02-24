@@ -221,7 +221,7 @@ int start(int argc, char **argv)
         // deal with the restart stuff
         bool restart = false;
         Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
-        if (restartTime != -1e100)
+        if (restartTime > -1e100)
             restart = true;
         else
             restartTime = 0.0;

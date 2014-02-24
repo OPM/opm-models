@@ -136,7 +136,7 @@ public:
     Scalar ergunCoefficient() const
     {
         return ergunCoefficient_;
-    };
+    }
 
     /*!
      * \brief Returns the passability of a phase.
@@ -144,7 +144,7 @@ public:
     Scalar mobilityPassabilityRatio(int phaseIdx) const
     {
         return mobilityPassabilityRatio_[phaseIdx];
-    };
+    }
 
 protected:
     void update_(const ElementContext &elemCtx, int dofIdx, int timeIdx)
@@ -429,7 +429,7 @@ protected:
             gradResid.solve(deltaV, residual);
             velocity -= deltaV;
         }
-    };
+    }
 
     void forchheimerResid_(DimVector &residual, int phaseIdx) const
     {

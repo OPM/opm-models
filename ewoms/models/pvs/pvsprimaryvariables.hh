@@ -111,7 +111,7 @@ public:
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
         for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
-            assert(fluidState.temperature(0) == fluidState.temperature(phaseIdx));
+            assert(std::abs(fluidState.temperature(0) - fluidState.temperature(phaseIdx)) < 1e-30);
         }
 #endif // NDEBUG
 
@@ -237,7 +237,7 @@ public:
     /*!
      * \brief Assignment operator from a scalar value
      */
-    ThisType &operator=(const Scalar value)
+    ThisType &operator=(Scalar value)
     {
         ParentType::operator=(value);
 

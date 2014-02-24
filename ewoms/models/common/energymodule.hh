@@ -45,9 +45,8 @@ NEW_PROP_TAG(HeatConductionLawParams);
 namespace Ewoms {
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyModule
- * \brief Provides the auxiliary methods required for consideration of the
- * energy equation.
+ * \brief Provides the auxiliary methods required for consideration of
+ *        the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
 class EnergyModule;
@@ -95,13 +94,17 @@ public:
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      */
-    static Scalar primaryVarWeight(const Model &model, int globalDofIdx, int pvIdx)
+    static Scalar primaryVarWeight(const Model &model,
+                                   int globalDofIdx,
+                                   int pvIdx)
     { return -1; }
 
     /*!
      * \brief Returns the relative weight of a equation.
      */
-    static Scalar eqWeight(const Model &model, int globalDofIdx, int eqIdx)
+    static Scalar eqWeight(const Model &model,
+                           int globalDofIdx,
+                           int eqIdx)
     { return -1; }
 
     /*!
@@ -118,20 +121,23 @@ public:
      */
     template <class FluidState>
     static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState, int phaseIdx,
+                                const FluidState &fluidState,
+                                int phaseIdx,
                                 Scalar volume)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    static void setEnthalpyRate(RateVector &rateVec,
+                                Scalar rate)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void addToEnthalpyRate(RateVector &rateVec, Scalar rate)
+    static void addToEnthalpyRate(RateVector &rateVec,
+                                  Scalar rate)
     {}
 
     /*!
@@ -145,7 +151,8 @@ public:
      * vector
      */
     static void addPhaseStorage(EqVector &storage,
-                                const VolumeVariables &volVars, int phaseIdx)
+                                const VolumeVariables &volVars,
+                                int phaseIdx)
     {}
 
     /*!
@@ -155,7 +162,8 @@ public:
     template <class Scv>
     static void addFracturePhaseStorage(EqVector &storage,
                                         const VolumeVariables &volVars,
-                                        const Scv &scv, int phaseIdx)
+                                        const Scv &scv,
+                                        int phaseIdx)
     {}
 
     /*!
@@ -173,8 +181,10 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addAdvectiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addAdvectiveFlux(RateVector &flux,
+                                 const Context &context,
+                                 int spaceIdx,
+                                 int timeIdx)
     {}
 
     /*!
@@ -183,8 +193,10 @@ public:
      *        volume and adds the result in the flux vector.
      */
     template <class Context>
-    static void handleFractureFlux(RateVector &flux, const Context &context,
-                                   int spaceIdx, int timeIdx)
+    static void handleFractureFlux(RateVector &flux,
+                                   const Context &context,
+                                   int spaceIdx,
+                                   int timeIdx)
     {}
 
     /*!
@@ -194,8 +206,10 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addDiffusiveFlux(RateVector &flux,
+                                 const Context &context,
+                                 int spaceIdx,
+                                 int timeIdx)
     {}
 };
 
@@ -267,7 +281,9 @@ public:
     /*!
      * \brief Returns the relative weight of a equation.
      */
-    static Scalar eqWeight(const Model &model, int globalDofIdx, int eqIdx)
+    static Scalar eqWeight(const Model &model,
+                           int globalDofIdx,
+                           int eqIdx)
     {
         if (eqIdx != energyEqIdx)
             return -1;
@@ -318,7 +334,7 @@ public:
         priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
 #ifndef NDEBUG
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            assert(fs.temperature(/*phaseIdx=*/0) == fs.temperature(phaseIdx));
+            assert(std::abs(fs.temperature(/*phaseIdx=*/0) - fs.temperature(phaseIdx)) < 1e-30);
         }
 #endif
     }

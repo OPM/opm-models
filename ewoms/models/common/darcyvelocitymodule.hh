@@ -268,7 +268,7 @@ protected:
         // taking the mobility into account
         K_.mv(asImp_().potentialGrad(phaseIdx), filterVelocity_[phaseIdx]);
         filterVelocity_[phaseIdx] *= - mobility_[phaseIdx];
-    };
+    }
 
 private:
     Implementation &asImp_()

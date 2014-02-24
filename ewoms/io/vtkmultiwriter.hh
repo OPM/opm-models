@@ -156,7 +156,6 @@ public:
     /*!
      * \brief Add a finished vertex centered vector field to the
      *        output.
-     * \brief Add a vertex-centered quantity to the output.
      *
      * If the buffer is managed by the VtkMultiWriter, it must have
      * been created using createField() and may not be used by
@@ -280,7 +279,7 @@ public:
             if (fileLen > 0) {
                 std::ifstream multiFileIn(multiFileName_.c_str());
                 char *tmp = new char[fileLen];
-                multiFileIn.read(tmp, fileLen);
+                multiFileIn.read(tmp, static_cast<long>(fileLen));
                 res.serializeStream().write(tmp, fileLen);
                 delete[] tmp;
             }

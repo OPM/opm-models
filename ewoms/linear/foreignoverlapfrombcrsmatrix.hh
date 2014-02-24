@@ -441,7 +441,7 @@ protected:
         }
 
         numLocal_ = localToNativeIndices_.size();
-    };
+    }
 
     Index localToPeerIdx_(Index localIdx, ProcessRank peerRank) const
     {

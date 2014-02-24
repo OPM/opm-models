@@ -122,7 +122,7 @@ public:
     os << std::setw(20) << curDefect_ << " ";
     os << std::setw(20) << defectReduction_ << " ";
     os << std::endl;
-  };
+  }
 
 private:
     Dune::ScalarProduct<Vector> &scalarProduct_;
