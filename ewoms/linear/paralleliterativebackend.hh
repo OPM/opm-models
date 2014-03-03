@@ -126,25 +126,40 @@ namespace Linear {
  * sense that it allows to combine any linear solver implemented by
  * Dune-ISTL with any preconditioner (except the algebraic multigrid
  * preconditioner). To set the linear solver, use
- * \code SET_TAG_PROP(YourTypeTag, LinearSolver, DesiredLinearSolver); \endcode
+ * \code
+ * SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,
+ *               Ewoms::Linear::SolverWrapper$SOLVER<TypeTag>);
+ * \endcode
  *
- * The possible choices for '\c DesiredLinearSolver' are:
- * - \c SolverWrapperRichardson: A fixpoint solver using the Richardson iteration
- * - \c SolverWrapperSteepestDescent: The steepest descent solver
- * - \c SolverWrapperConjugatedGradients: A conjugated gradients solver
- * - \c SolverWrapperBiCGStab: A stabilized bi-conjugated gradients solver
- * - \c SolverWrapperMinRes: A solver based on the  minimized residual algorithm
- * - \c SolverWrapperGMRes: A restarted GMRES solver
+ * The possible choices for '\c $SOLVER' are:
+ * - \c Richardson: A fixpoint solver using the Richardson iteration
+ * - \c SteepestDescent: The steepest descent solver
+ * - \c ConjugatedGradients: A conjugated gradients solver
+ * - \c BiCGStab: A stabilized bi-conjugated gradients solver
+ * - \c MinRes: A solver based on the  minimized residual algorithm
+ * - \c RestartedGMRes: A restarted GMRES solver
  *
- * Chosing the preconditioner works analogous: \code
- * SET_TAG_PROP(YourTypeTag, Preconditioner, DesiredPreconditioner); \endcode
+ * Chosing the preconditioner works in an analogous way:
+ * \code
+ * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,
+ *               Ewoms::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
+ * \endcode
  *
- * Where the choices possible for '\c DesiredPreconditioner' are:
- * - \c PreconditionerJacobi: A Jacobi preconditioner
- * - \c PreconditionerGaussSeidel: A Gauss-Seidel preconditioner
- * - \c PreconditionerSSOR: A symmetric successive overrelaxation (SSOR) preconditioner
- * - \c PreconditionerSOR: A successive overrelaxation (SOR) preconditioner
- * - \c PreconditionerILU: An ILU(n) preconditioner
+ * Where the choices possible for '\c $PRECONDITIONER' are:
+ * - \c Jacobi: A Jacobi preconditioner
+ * - \c GaussSeidel: A Gauss-Seidel preconditioner
+ * - \c SSOR: A symmetric successive overrelaxation (SSOR) preconditioner
+ * - \c SOR: A successive overrelaxation (SOR) preconditioner
+ * - \c ILUn: An ILU(n) preconditioner
+ * - \c ILU0: An ILU(0) preconditioner. The results of this
+ *            preconditioner are the same as setting the
+ *            PreconditionerOrder property to 0 and using the ILU(n)
+ *            preconditioner. The reason for the existence of ILU0 is
+ *            that it is computationally cheaper because it does not
+ *            need to consider things which are only required for
+ *            higher orders
+ * - \c Solver: A BiCGSTAB solver wrapped into the preconditioner
+ *              interface (may be useful for parallel computations)
  */
 template <class TypeTag>
 class ParallelIterativeSolverBackend
@@ -493,11 +508,11 @@ private:
     };
 
 EWOMS_WRAP_ISTL_SOLVER(Richardson, Ewoms::LoopSolver)
-// EWOMS_WRAP_ISTL_SOLVER(SteepestDescent, Ewoms::GradientSolver)
+EWOMS_WRAP_ISTL_SOLVER(SteepestDescent, Ewoms::GradientSolver)
 EWOMS_WRAP_ISTL_SOLVER(ConjugatedGradients, Ewoms::CGSolver)
 EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Ewoms::BiCGSTABSolver)
-// EWOMS_WRAP_ISTL_SOLVER(MinRes, Ewoms::MINRESSolver)
-// EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
+EWOMS_WRAP_ISTL_SOLVER(MinRes, Ewoms::MINRESSolver)
+EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
 
 #undef EWOMS_WRAP_ISTL_SOLVER
 #undef EWOMS_ISTL_SOLVER_TYPDEF
@@ -545,12 +560,55 @@ EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Ewoms::BiCGSTABSolver)
         SequentialPreconditioner *seqPreCond_;                                  \
     };
 
+// the same as the EWOMS_WRAP_ISTL_PRECONDITIONER macro, but without
+// an 'order' argument for the preconditioner's constructor
+#define EWOMS_WRAP_ISTL_SIMPLE_PRECONDITIONER(PREC_NAME, ISTL_PREC_TYPE)        \
+    template <class TypeTag>                                                    \
+    class PreconditionerWrapper##PREC_NAME                                      \
+    {                                                                           \
+        typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;                 \
+        typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix; \
+        typedef typename GET_PROP_TYPE(TypeTag,                                 \
+                                       OverlappingVector) OverlappingVector;    \
+                                                                                \
+    public:                                                                     \
+        typedef ISTL_PREC_TYPE<JacobianMatrix, OverlappingVector,               \
+                               OverlappingVector> SequentialPreconditioner;     \
+        PreconditionerWrapper##PREC_NAME()                                      \
+        {}                                                                      \
+                                                                                \
+        static void registerParameters()                                        \
+        {                                                                       \
+            EWOMS_REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation,     \
+                                 "The relaxation factor of the "                \
+                                 "preconditioner");                             \
+        }                                                                       \
+                                                                                \
+        void prepare(JacobianMatrix &matrix)                                    \
+        {                                                                       \
+            Scalar relaxationFactor                                             \
+                = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \
+            seqPreCond_ = new SequentialPreconditioner(matrix,                  \
+                                                       relaxationFactor);       \
+        }                                                                       \
+                                                                                \
+        SequentialPreconditioner &get()                                         \
+        { return *seqPreCond_; }                                                \
+                                                                                \
+        void cleanup()                                                          \
+        { delete seqPreCond_; }                                                 \
+                                                                                \
+    private:                                                                    \
+        SequentialPreconditioner *seqPreCond_;                                  \
+    };
+
 EWOMS_WRAP_ISTL_PRECONDITIONER(Jacobi, Dune::SeqJac)
 // EWOMS_WRAP_ISTL_PRECONDITIONER(Richardson, Dune::Richardson)
 EWOMS_WRAP_ISTL_PRECONDITIONER(GaussSeidel, Dune::SeqGS)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SOR, Dune::SeqSOR)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SSOR, Dune::SeqSSOR)
-EWOMS_WRAP_ISTL_PRECONDITIONER(ILU, Dune::SeqILUn)
+EWOMS_WRAP_ISTL_SIMPLE_PRECONDITIONER(ILU0, Dune::SeqILU0)
+EWOMS_WRAP_ISTL_PRECONDITIONER(ILUm, Dune::SeqILUn)
 EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
@@ -602,7 +660,7 @@ SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverBackend,
 SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverWrapper,
               Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
 SET_TYPE_PROP(ParallelIterativeLinearSolver, PreconditionerWrapper,
-              Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
+              Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
 
 //! set the default overlap size to 3
 SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
