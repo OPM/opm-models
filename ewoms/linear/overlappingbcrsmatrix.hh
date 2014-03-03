@@ -84,7 +84,7 @@ public:
             return;
 
         // delete all MPI buffers
-        const PeerSet &peerSet = overlap_->foreignOverlap().peerSet();
+        const PeerSet &peerSet = overlap_->peerSet();
         typename PeerSet::const_iterator peerIt = peerSet.begin();
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
@@ -287,7 +287,7 @@ private:
         /////////
 
         // first, send all our indices to all peers
-        const PeerSet &peerSet = overlap_->foreignOverlap().peerSet();
+        const PeerSet &peerSet = overlap_->peerSet();
         typename PeerSet::const_iterator peerIt = peerSet.begin();
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
@@ -493,7 +493,7 @@ private:
     void syncAdd_()
     {
         // first, send all entries to the peers
-        const PeerSet &peerSet = overlap_->foreignOverlap().peerSet();
+        const PeerSet &peerSet = overlap_->peerSet();
         typename PeerSet::const_iterator peerIt = peerSet.begin();
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
