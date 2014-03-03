@@ -177,19 +177,17 @@ class ParallelIterativeSolverBackend
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
 
-    typedef typename GET_PROP_TYPE(TypeTag,
-                                   PreconditionerWrapper) PreconditionerWrapper;
-    typedef typename PreconditionerWrapper::SequentialPreconditioner
-    SequentialPreconditioner;
+    typedef typename GET_PROP_TYPE(TypeTag, PreconditionerWrapper) PreconditionerWrapper;
+    typedef typename PreconditionerWrapper::SequentialPreconditioner SequentialPreconditioner;
 
-    typedef typename GET_PROP_TYPE(TypeTag,
-                                   LinearSolverWrapper) LinearSolverWrapper;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverWrapper) LinearSolverWrapper;
 
     typedef Ewoms::Linear::OverlappingPreconditioner<SequentialPreconditioner,
                                                      Overlap> ParallelPreconditioner;
-    typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector, Overlap>
-    ParallelScalarProduct;
-    typedef Ewoms::Linear::OverlappingOperator<OverlappingMatrix, OverlappingVector,
+    typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector,
+                                                    Overlap> ParallelScalarProduct;
+    typedef Ewoms::Linear::OverlappingOperator<OverlappingMatrix,
+                                               OverlappingVector,
                                                OverlappingVector> ParallelOperator;
 
     enum { dimWorld = GridView::dimensionworld };
@@ -282,8 +280,7 @@ public:
 
         // make sure that the preconditioner is also ready on all peer
         // ranks.
-        preconditionerIsReady
-            = problem_.gridView().comm().min(preconditionerIsReady);
+        preconditionerIsReady = problem_.gridView().comm().min(preconditionerIsReady);
         if (!preconditionerIsReady) {
             Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
             return false;
@@ -306,11 +303,9 @@ public:
         // set the weighting of the residuals
         OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        const auto &foreignOverlap
-            = overlappingMatrix_->overlap().foreignOverlap();
-        for (unsigned localIdx = 0;
-             localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
-            int nativeIdx = foreignOverlap.localToNative(localIdx);
+        const auto &overlap = overlappingMatrix_->overlap();
+        for (unsigned localIdx = 0; localIdx < unsigned(overlap.numLocal()); ++localIdx) {
+            int nativeIdx = overlap.domesticToNative(localIdx);
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
                 residWeightVec[localIdx][eqIdx]
                     = this->problem_.model().eqWeight(nativeIdx, eqIdx);

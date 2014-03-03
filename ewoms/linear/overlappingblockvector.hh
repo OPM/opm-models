@@ -109,24 +109,18 @@ public:
      * \brief Assign an overlapping block vector from a
      *        non-overlapping one, border entries are added.
      */
-    void assignAddBorder(const BlockVector &nbv)
+    void assignAddBorder(const BlockVector &nativeBlockVector)
     {
-        int numLocal = overlap_->numLocal();
         int numDomestic = overlap_->numDomestic();
 
         // assign the local rows from the non-overlapping block vector
-        const auto &foreignOverlap = overlap_->foreignOverlap();
-        for (int localRowIdx = 0; localRowIdx < numLocal; ++localRowIdx) {
-            int nativeRowIdx = foreignOverlap.localToNative(localRowIdx);
-            (*this)[localRowIdx] = nbv[nativeRowIdx];
+        for (int domRowIdx = 0; domRowIdx < numDomestic; ++domRowIdx) {
+            int nativeRowIdx = overlap_->domesticToNative(domRowIdx);
+            if (nativeRowIdx < 0)
+                (*this)[domRowIdx] = 0.0;
+            else
+                (*this)[domRowIdx] = nativeBlockVector[nativeRowIdx];
         };
-
-        // set the remote indices to 0 (strictly speaking, that's not
-        // necessary because they will be overwritten by the values
-        // from their respective master process, but setting them to 0
-        // does not cost us much and keeps valgrind from complaining).
-        for (int rowIdx = numLocal; rowIdx < numDomestic; ++rowIdx)
-            (*this)[rowIdx] = 0.0;
 
         // add up the contents of border rows, for the remaining rows,
         // get the values from their respective master process.
@@ -137,18 +131,18 @@ public:
      * \brief Assign the local values to a non-overlapping block
      *        vector.
      */
-    void assignTo(BlockVector &nbv) const
+    void assignTo(BlockVector &nativeBlockVector) const
     {
         // assign the local rows
-        const auto &foreignOverlap = overlap_->foreignOverlap();
-        int numNative = foreignOverlap.numNative();
+        int numNative = overlap_->numNative();
+        nativeBlockVector.resize(numNative);
         for (int nativeRowIdx = 0; nativeRowIdx < numNative; ++nativeRowIdx) {
-            int localRowIdx = foreignOverlap.nativeToLocal(nativeRowIdx);
+            int localRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
 
             if (localRowIdx < 0)
-                nbv[nativeRowIdx] = 0.0;
+                nativeBlockVector[nativeRowIdx] = 0.0;
             else
-                nbv[nativeRowIdx] = (*this)[localRowIdx];
+                nativeBlockVector[nativeRowIdx] = (*this)[localRowIdx];
         }
     }
 
@@ -259,8 +253,6 @@ public:
         // wait until we have send everything
         waitSendFinished_();
 
-        // copy all entries from the master process
-        sync();
     }
 
     /*!
@@ -298,23 +290,19 @@ private:
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
 
-            const auto &foreignOverlap
-                = overlap_->foreignOverlapWithPeer(peerRank);
-            int numEntries = foreignOverlap.size();
+            int numEntries = overlap_->foreignOverlapSize(peerRank);
             numIndicesSendBuff_[peerRank]
                 = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            indicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
-                new MpiBuffer<Index>(numEntries));
-            valuesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<FieldVector> >(
-                new MpiBuffer<FieldVector>(numEntries));
+            indicesSendBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numEntries));
+            valuesSendBuff_[peerRank]
+                = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numEntries));
 
             // fill the indices buffer with global indices
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
-            auto ovlpIt = foreignOverlap.begin();
-            const auto &ovlpEndIt = foreignOverlap.end();
-            for (int i = 0; ovlpIt != ovlpEndIt; ++ovlpIt, ++i) {
-                int rowIdx = ovlpIt->index;
-                indicesSendBuff[i] = overlap_->domesticToGlobal(rowIdx);
+            for (int i = 0; i < numEntries; ++i) {
+                int domRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, i);
+                indicesSendBuff[i] = overlap_->domesticToGlobal(domRowIdx);
             }
 
             // first, send the number of indices
@@ -375,30 +363,25 @@ private:
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
 
-            int numFrontEntries = overlap_->foreignOverlap().numFront(peerRank);
-            const auto &foreignOverlap
-                = overlap_->foreignOverlapWithPeer(peerRank);
-            numFrontIndicesSendBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            frontIndicesSendBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
-                new MpiBuffer<Index>(numFrontEntries));
-            frontValuesSendBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<FieldVector> >(
-                    new MpiBuffer<FieldVector>(numFrontEntries));
+            int numFrontEntries = overlap_->numFront(peerRank);
+            numFrontIndicesSendBuff_[peerRank] =
+                std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
+            frontIndicesSendBuff_[peerRank] =
+                std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numFrontEntries));
+            frontValuesSendBuff_[peerRank] =
+                std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numFrontEntries));
 
             // fill the indices buffer with global indices
-            MpiBuffer<Index> &frontIndicesSendBuff
-                = *frontIndicesSendBuff_[peerRank];
-            auto ovlpIt = foreignOverlap.begin();
-            const auto &ovlpEndIt = foreignOverlap.end();
-            int i = 0;
-            for (; ovlpIt != ovlpEndIt; ++ovlpIt) {
-                int rowIdx = ovlpIt->index;
-                if (!overlap_->foreignOverlap().isFrontFor(peerRank, rowIdx))
+            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
+            int numOverlapRows = overlap_->foreignOverlapSize(peerRank);
+            int mpiBuffOffset = 0;
+            for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
+                int rowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
+                if (!overlap_->isFrontFor(peerRank, rowIdx))
                     continue;
 
-                frontIndicesSendBuff[i] = overlap_->domesticToGlobal(rowIdx);
-                ++i;
+                frontIndicesSendBuff[mpiBuffOffset] = overlap_->domesticToGlobal(rowIdx);
+                ++ mpiBuffOffset;
             }
 
             // first, send the number of indices
@@ -551,9 +534,10 @@ private:
         // add up the values of rows on the shared boundary
         for (unsigned j = 0; j < indices.size(); ++j) {
             int domRowIdx = indices[j];
-            if (overlap_->isBorderWith(domRowIdx, peerRank)) {
+            if (overlap_->isBorderWith(domRowIdx, peerRank))
                 (*this)[domRowIdx] += values[j];
-            }
+            else
+                (*this)[domRowIdx] = values[j];
         }
     }
 

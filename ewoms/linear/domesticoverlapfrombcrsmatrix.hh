@@ -75,6 +75,8 @@ public:
 
         buildDomesticOverlap_();
         updateMasterRanks_();
+
+        setupDebugMapping_();
     }
 
     void check() const
@@ -134,16 +136,20 @@ public:
     { return peerSet_; }
 
     /*!
-     * \brief Return the list of border indices.
+     * \brief Returns the number of indices on the border with a given
+     *        peer rank.
      */
-    const BorderList &borderList() const
-    { return foreignOverlap_.borderList(); }
+    int numBorder(int peerRank) const
+    { return foreignOverlap_.numBorder(peerRank); }
 
     /*!
      * \brief Returns true iff a domestic index is a border index.
      */
     bool isBorder(int domesticIdx) const
-    { return isLocal(domesticIdx) && foreignOverlap_.isBorder(domesticIdx); }
+    {
+        return isLocal(domesticIdx)
+            && foreignOverlap_.isBorder(mapExternalToInternal_(domesticIdx));
+    }
 
     /*!
      * \brief Returns true iff a domestic index is on the border with
@@ -152,8 +158,16 @@ public:
     bool isBorderWith(int domesticIdx, int peerRank) const
     {
         return isLocal(domesticIdx)
-               && foreignOverlap_.isBorderWith(domesticIdx, peerRank);
+            && foreignOverlap_.isBorderWith(mapExternalToInternal_(domesticIdx),
+                                            peerRank);
     }
+
+    /*!
+     * \brief Returns the number of indices on the front within a given
+     *        peer rank's grid partition.
+     */
+    int numFront(int peerRank) const
+    { return foreignOverlap_.numFront(peerRank); }
 
     /*!
      * \brief Returns true iff a domestic index is on the front.
@@ -162,12 +176,13 @@ public:
     {
         if (isLocal(domesticIdx))
             return false;
+        Index internalDomesticIdx = mapExternalToInternal_(domesticIdx);
 
         // check wether the border distance of the domestic overlap is
         // maximal for the index
-        const auto &domOverlap = domesticOverlapByIndex_[domesticIdx];
-        return domOverlap.size() > 0 && int(domOverlap.begin()->second)
-                                        == foreignOverlap_.overlapSize();
+        const auto &domOverlap = domesticOverlapByIndex_[internalDomesticIdx];
+        return domOverlap.size() > 0
+            && int(domOverlap.begin()->second) == foreignOverlap_.overlapSize();
     }
 
     /*!
@@ -175,13 +190,23 @@ public:
      *        index.
      */
     int numPeers(int domesticIdx) const
-    { return domesticOverlapByIndex_[domesticIdx].size(); }
+    { return domesticOverlapByIndex_[mapExternalToInternal_(domesticIdx)].size(); }
 
     /*!
      * \brief Returns the size of the overlap region
      */
     int overlapSize() const
     { return foreignOverlap_.overlapSize(); }
+
+    /*!
+     * \brief Returns the number native indices
+     *
+     * I.e. the number of indices of the "raw" grid partition of the
+     * local process (including the indices in ghost and overlap
+     * elements).
+     */
+    int numNative() const
+    { return foreignOverlap_.numNative(); }
 
     /*!
      * \brief Returns the number local indices
@@ -209,7 +234,7 @@ public:
      * border of the process' domain.
      */
     bool isLocal(int domesticIdx) const
-    { return domesticIdx < numLocal(); }
+    { return mapExternalToInternal_(domesticIdx) < numLocal(); }
 
     /*!
      * \brief Return true iff the current process is the master of a
@@ -219,14 +244,14 @@ public:
     {
         if (!isLocal(domesticIdx))
             return false;
-        return foreignOverlap_.iAmMasterOf(domesticIdx);
+        return foreignOverlap_.iAmMasterOf(mapExternalToInternal_(domesticIdx));
     }
 
     /*!
      * \brief Return the rank of a master process for a domestic index
      */
     int masterRank(int domesticIdx) const
-    { return masterRank_[domesticIdx]; }
+    { return masterRank_[mapExternalToInternal_(domesticIdx)]; }
 
     /*!
      * \brief Print the foreign overlap for debugging purposes.
@@ -238,53 +263,105 @@ public:
      * \brief Returns a domestic index given a global one
      */
     Index globalToDomestic(Index globalIdx) const
-    { return globalIndices_.globalToDomestic(globalIdx); }
+    {
+        Index internalIdx = globalIndices_.globalToDomestic(globalIdx);
+        if (internalIdx < 0)
+            return -1;
+        return mapInternalToExternal_(internalIdx);
+    }
 
     /*!
      * \brief Returns a global index given a domestic one
      */
     Index domesticToGlobal(Index domIdx) const
-    { return globalIndices_.domesticToGlobal(domIdx); }
+    { return globalIndices_.domesticToGlobal(mapExternalToInternal_(domIdx)); }
 
     /*!
-     * \brief Returns the foreign overlap of the other processes with
-     *        the local process.
+     * \brief Returns a native index given a domestic one
      */
-    const ForeignOverlap &foreignOverlap() const
-    { return foreignOverlap_; }
+    Index domesticToNative(Index domIdx) const
+    {
+        Index internalIdx = mapExternalToInternal_(domIdx);
+        if (internalIdx >= numLocal())
+            return -1;
+        return foreignOverlap_.localToNative(internalIdx);
+    }
 
     /*!
-     * \brief Returns true if a given domestic index is either in the foreign or
-     * in the domestic overlap.
+     * \brief Returns a domestic index given a native one
+     */
+    Index nativeToDomestic(Index nativeIdx) const
+    {
+        Index localIdx = foreignOverlap_.nativeToLocal(nativeIdx);
+        if (localIdx < 0)
+            return localIdx;
+        return mapInternalToExternal_(localIdx);
+    }
+
+    /*!
+     * \brief Returns true if a given domestic index is either in the
+     *        foreign or in the domestic overlap.
      */
     bool isInOverlap(Index domesticIdx) const
     {
         return !this->isLocal(domesticIdx)
-               || this->foreignOverlap_.isInOverlap(domesticIdx);
+               || this->foreignOverlap_.isInOverlap(mapExternalToInternal_(domesticIdx));
     }
 
     /*!
-     * \brief Returns the foreign overlap of a peer process with the
-     *        local process.
+     * \brief Returns true if a given domestic index is a front index
+     *        for a peer rank.
      */
-    const OverlapWithPeer &foreignOverlapWithPeer(ProcessRank peerRank) const
-    { return foreignOverlap_.foreignOverlapWithPeer(peerRank); }
+    bool isFrontFor(ProcessRank peerRank, Index domesticIdx) const
+    {
+        int internalIdx = mapExternalToInternal_(domesticIdx);
+        return this->foreignOverlap_.isFrontFor(peerRank, internalIdx);
+    }
 
     /*!
      * \brief Returns true iff a local index is seen by a peer rank.
      */
     bool peerHasIndex(int peerRank, int localIdx) const
-    { return foreignOverlap_.peerHasIndex(peerRank, localIdx); }
+    {
+        return foreignOverlap_.peerHasIndex(peerRank,
+                                            mapExternalToInternal_(localIdx));
+    }
 
     /*!
-     * \brief Returns the domestic overlap of a local process with a
-     *        remote process.
+     * \brief Returns number of indices which are contained in the
+     *        foreign overlap with a peer.
      */
-    const DomesticOverlapWithPeer &domesticOverlapWithPeer(ProcessRank peerRank) const
+    int foreignOverlapSize(ProcessRank peerRank) const
+    { return foreignOverlap_.foreignOverlapWithPeer(peerRank).size(); }
+
+    /*!
+     * \brief Returns the domestic index given an offset in the
+     *        foreign overlap of a peer process with the local
+     *        process.
+     */
+    int foreignOverlapOffsetToDomesticIdx(ProcessRank peerRank, int overlapOffset) const
     {
-        assert(domesticOverlapWithPeer_.find(peerRank)
-               != domesticOverlapWithPeer_.end());
-        return domesticOverlapWithPeer_.find(peerRank)->second;
+        int internalIdx =
+            foreignOverlap_.foreignOverlapWithPeer(peerRank)[overlapOffset].index;
+        return mapInternalToExternal_(internalIdx);
+    }
+
+    /*!
+     * \brief Returns number of indices which are contained in the
+     *        domestic overlap with a peer.
+     */
+    int domesticOverlapSize(ProcessRank peerRank) const
+    { return domesticOverlapWithPeer_.at(peerRank).size(); }
+
+    /*!
+     * \brief Returns the domestic index given an offset in the
+     *        domestic overlap of a peer process with the local
+     *        process.
+     */
+    int domesticOverlapOffsetToDomesticIdx(ProcessRank peerRank, int overlapOffset) const
+    {
+        int internalIdx = domesticOverlapWithPeer_.at(peerRank)[overlapOffset];
+        return mapInternalToExternal_(internalIdx);
     }
 
 protected:
@@ -351,7 +428,7 @@ protected:
             auto idxIt = overlapWithPeer.begin();
             const auto &idxEndIt = overlapWithPeer.end();
             for (; idxIt != idxEndIt; ++idxIt) {
-                if (*idxIt >= 0 && isLocal(*idxIt))
+                if (*idxIt >= 0 && foreignOverlap_.isLocal(*idxIt))
                     continue; // ignore border indices
 
                 masterRank_[*idxIt] = std::min(masterRank_[*idxIt], *peerIt);
@@ -444,14 +521,41 @@ protected:
             assert(borderDistance >= 0);
             assert(globalIdx >= 0);
             assert(domesticIdx >= 0);
-            assert(!(borderDistance == 0 && !isLocal(domesticIdx)));
-            assert(!(borderDistance > 0 && isLocal(domesticIdx)));
+            assert(!(borderDistance == 0 && !foreignOverlap_.isLocal(domesticIdx)));
+            assert(!(borderDistance > 0 && foreignOverlap_.isLocal(domesticIdx)));
 
             borderDistance_[domesticIdx]
                 = std::min(borderDistance, borderDistance_[domesticIdx]);
         }
 #endif // HAVE_MPI
     }
+
+    // this method is intended to set up the code mapping code for
+    // mapping domestic indices to the same ones used by a sequential
+    // grid. this requires detailed knowledge about how a grid
+    // distributes the degrees of freedom over multiple processes, but
+    // it can simplify debugging considerably because the indices can
+    // be made identical for the parallel and the sequential
+    // computations.
+    //
+    // by default, this method does nothing
+    void setupDebugMapping_()
+    {
+    }
+
+    // this method is intended to map domestic indices to the ones
+    // used by a sequential grid.
+    //
+    // by default, this method does nothing
+    Index mapInternalToExternal_(Index internalIdx) const
+    { return internalIdx; }
+
+    // this method is intended to map the indices used by a sequential
+    // to grid domestic indices ones.
+    //
+    // by default, this method does nothing
+    Index mapExternalToInternal_(Index externalIdx) const
+    { return externalIdx; }
 
     int myRank_;
     int worldSize_;
