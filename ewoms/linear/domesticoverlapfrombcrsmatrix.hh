@@ -66,9 +66,11 @@ public:
           globalIndices_(foreignOverlap_)
     {
         myRank_ = 0;
+        worldSize_ = 1;
 
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
+        MPI_Comm_size(MPI_COMM_WORLD, &worldSize_);
 #endif // HAVE_MPI
 
         buildDomesticOverlap_();
@@ -117,6 +119,12 @@ public:
      */
     int myRank() const
     { return myRank_; }
+
+    /*!
+     * \brief Returns the number of processes in the global MPI communicator.
+     */
+    int worldSize() const
+    { return worldSize_; }
 
     /*!
      * \brief Return the set of process ranks which share an overlap
@@ -446,6 +454,7 @@ protected:
     }
 
     int myRank_;
+    int worldSize_;
     ForeignOverlap foreignOverlap_;
 
     DomesticOverlapByRank domesticOverlapWithPeer_;
