@@ -111,6 +111,8 @@ EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
 
+# test for the parallelization of the element centered finite volume
+# discretization (using BiCGSTAB + ILU0)
 EwomsAddTest(co2injection_immiscible_ecfv_parallel
   SOURCES tests/co2injection_immiscible_ecfv.cc
   EXE_NAME co2injection_immiscible_ecfv
@@ -118,12 +120,23 @@ EwomsAddTest(co2injection_immiscible_ecfv_parallel
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation co2injection_immiscible_ecfv --end-time=10 --initial-time-step-size=1)
 
+# test for the parallelization of the vertex centered finite volume
+# discretization (using BiCGSTAB + ILU0)
 EwomsAddTest(obstacle_immiscible_parallel
   SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
+
+# test for the parallel AMG linear solver using the vertex centered
+# finite volume discretization
+EwomsAddTest(obstacle_lens_parallel
+  SOURCES tests/lens_immiscible.cc
+  EXE_NAME lens_immiscible
+  NO_COMPILE
+  CONDITION MPI_FOUND
+  DRIVER_ARGS --parallel-simulation lens_immiscible --end-time=250 --initial-time-step-size=250)
 
 EwomsAddTest(obstacle_immiscible_parameters
   SOURCES tests/obstacle_immiscible.cc
