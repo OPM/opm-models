@@ -137,12 +137,12 @@ public:
         int numNative = overlap_->numNative();
         nativeBlockVector.resize(numNative);
         for (int nativeRowIdx = 0; nativeRowIdx < numNative; ++nativeRowIdx) {
-            int localRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
+            int domRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
 
-            if (localRowIdx < 0)
+            if (domRowIdx < 0)
                 nativeBlockVector[nativeRowIdx] = 0.0;
             else
-                nativeBlockVector[nativeRowIdx] = (*this)[localRowIdx];
+                nativeBlockVector[nativeRowIdx] = (*this)[domRowIdx];
         }
     }
 

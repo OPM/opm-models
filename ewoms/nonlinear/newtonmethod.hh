@@ -313,8 +313,8 @@ public:
             // set the delta vector to zero before solving the linear system!
             solutionUpdate = 0;
             // ask the implementation to solve the linearized system
-            if (!asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate,
-                                       jacobianAsm.residual())) {
+            auto b = jacobianAsm.residual();
+            if (!asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate, b)) {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Linear solver did not converge\n";
                 solveTimer_.stop();
@@ -335,9 +335,11 @@ public:
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
-                asImp_().updateError_(currentSolution, previousSolution,
-                                      jacobianAsm.residual(), solutionUpdate);
                 asImp_().update_(currentSolution, previousSolution, solutionUpdate);
+                asImp_().updateError_(currentSolution,
+                                      previousSolution,
+                                      b,
+                                      solutionUpdate);
                 updateTimer_.stop();
 
                 // tell the implementation that we're done with this
@@ -490,8 +492,9 @@ protected:
      * \param x The vector which solves the linear system
      * \param b The right hand side of the linear system
      */
-    bool solveLinear_(const JacobianMatrix &A, GlobalEqVector &x,
-                      const GlobalEqVector &b)
+    bool solveLinear_(const JacobianMatrix &A,
+                      GlobalEqVector &x,
+                      GlobalEqVector &b)
     { return linearSolver_.solve(A, x, b); }
 
     /*!

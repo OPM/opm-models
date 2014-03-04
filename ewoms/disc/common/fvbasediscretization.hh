@@ -1053,9 +1053,7 @@ protected:
         uCur = Scalar(0.0);
 
         // initialize the volume of the FV boxes to zero
-        std::fill(dofTotalVolume_.begin(),
-                  dofTotalVolume_.end(),
-                  0.0);
+        std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
         ElementContext elemCtx(problem_);
 
@@ -1063,6 +1061,8 @@ protected:
         ElementIterator it = gridView_.template begin</*codim=*/0>();
         const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
         for (; it != eendit; ++it) {
+            // ignore everything which is not in the interior if the
+            // current process' piece of the grid
             if (it->partitionType() != Dune::InteriorEntity)
                 continue;
 

@@ -240,7 +240,7 @@ public:
      *
      * \return true if the residual reduction could be achieved, else false.
      */
-    bool solve(const Matrix &M, Vector &x, const Vector &b)
+    bool solve(const Matrix &M, Vector &x, Vector &b)
     {
         Scalar oldSingularLimit
             = Dune::FMatrixPrecision<Scalar>::singular_limit();
