@@ -254,6 +254,13 @@ public:
 
         // compute norm, \todo parallelization
         this->convergenceCriterion().setInitial(x, b);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         // printing
         if (_verbose > 0) {
@@ -386,6 +393,13 @@ public:
         X q(b);
 
         this->convergenceCriterion().setInitial(x, b);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         if (_verbose > 0) // printing
         {
@@ -504,6 +518,13 @@ public:
         X q(x); // a temporary vector
 
         this->convergenceCriterion().setInitial(x, b);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         if (_verbose > 0) // printing
         {
@@ -670,6 +691,13 @@ public:
         omega = 1;
 
         this->convergenceCriterion().setInitial(x, r);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         if (_verbose > 0) // printing
         {
@@ -681,7 +709,6 @@ public:
         //
         // iteration
         //
-
         for (it = 0.5; it < _maxit; it += .5) {
             //
             // preprocess, set vecsizes etc.
@@ -875,6 +902,13 @@ public:
         _op.applyscaleadd(-1, x, b); // overwrite b with defect/residual
 
         this->convergenceCriterion().setInitial(x, b);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         if (_verbose > 0) // printing
         {
@@ -1157,6 +1191,13 @@ public:
 
         // check convergence
         this->convergenceCriterion().setInitial(x, b, norm_0);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         // print header
         if (_verbose > 0) {
@@ -1410,6 +1451,13 @@ public:
         p[0].reset(new X(x));
 
         this->convergenceCriterion().setInitial(x, b);
+        if (this->convergenceCriterion().converged()) {
+            // fill statistics
+            res.converged = 1;
+            res.iterations = 0;
+            res.elapsed = 0;
+            return;
+        }
 
         // print header
         if (_verbose > 0) {
