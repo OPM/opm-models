@@ -146,38 +146,37 @@ protected:
      * subtract deltaU from uLastIter, i.e.
      * \f[ u^{k+1} = u^k - \Delta u^k \f]
      *
-     * \param uCurrentIter The solution vector after the current iteration
-     * \param uLastIter The solution vector after the last iteration
-     * \param deltaU The delta as calculated from solving the linear
+     * \param currentSolution The solution vector after the current iteration
+     * \param previousSolution The solution vector after the last iteration
+     * \param solutionUpdate The delta as calculated from solving the linear
      *               system of equations. This parameter also stores
      *               the updated solution.
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU)
+    void update_(SolutionVector &currentSolution,
+                 const SolutionVector &previousSolution,
+                 const GlobalEqVector &solutionUpdate)
     {
+        // first, write out the current solution to make convergence
+        // analysis possible
+        this->writeConvergence_(previousSolution, solutionUpdate);
+
         // make sure not to swallow non-finite values at this point
-        if (!std::isfinite(deltaU.two_norm2()))
+        if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_()) {
-            Scalar minReasmTol = 10*this->tolerance_();
-            Scalar maxReasmTol = 1e-4;
+            // rationale: the newton method has quadratic convergence
+            Scalar reassembleTol = 0.1 * this->tolerance_();
 
-            // rationale: the newton method has quadratic convergene1
-            Scalar reassembleTol = this->error_*this->error_;
-            reassembleTol = std::max(minReasmTol, std::min(maxReasmTol, reassembleTol));
-            //Scalar reassembleTol = minReasmTol;
-
-            model_().jacobianAssembler().updateDiscrepancy(uLastIter, deltaU);
+            model_().jacobianAssembler().updateDiscrepancy(previousSolution, solutionUpdate);
             model_().jacobianAssembler().computeColors(reassembleTol);
         }
 
         // update the solution
-        for (unsigned i = 0; i < uLastIter.size(); ++i) {
-            uCurrentIter[i] = uLastIter[i];
-            uCurrentIter[i] -= deltaU[i];
+        for (unsigned i = 0; i < previousSolution.size(); ++i) {
+            currentSolution[i] = previousSolution[i];
+            currentSolution[i] -= solutionUpdate[i];
         }
     }
 
