@@ -456,6 +456,9 @@ public:
         ElementIterator elemIt = gridView_.template begin<0>();
         const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            if (elemIt->partitionType() != Dune::InteriorEntity)
+                continue;
+
             elemCtx.updateAll(*elemIt);
             residual.resize(elemCtx.numDof(/*timeIdx=*/0));
             storageTerm.resize(elemCtx.numDof(/*timeIdx=*/0));
