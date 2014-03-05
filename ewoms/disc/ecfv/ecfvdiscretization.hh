@@ -140,12 +140,12 @@ public:
                                         SolutionVector,
                                         DofMapper,
                                         /*commCodim=*/0> GhostSyncHandle;
+
         auto ghostSync = GhostSyncHandle(this->solution_[/*timeIdx=*/0],
                                          asImp_().dofMapper());
-
         this->gridView().communicate(ghostSync,
-                                     Dune::Overlap_All_Interface,
-                                     Dune::BackwardCommunication);
+                                     Dune::InteriorBorder_All_Interface,
+                                     Dune::ForwardCommunication);
 
         return ParentType::update(solver);
     }
