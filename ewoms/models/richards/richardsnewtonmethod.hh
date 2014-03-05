@@ -76,7 +76,8 @@ protected:
     /*!
      * \copydoc FvBaseNewtonMethod::update_
      */
-    void update_(SolutionVector &uCurrentIter, const SolutionVector &uLastIter,
+    void update_(SolutionVector &uCurrentIter,
+                 const SolutionVector &uLastIter,
                  const GlobalEqVector &deltaU)
     {
         const auto &assembler = this->problem().model().jacobianAssembler();
@@ -84,94 +85,92 @@ protected:
 
         ParentType::update_(uCurrentIter, uLastIter, deltaU);
 
-        if (!this->enableLineSearch_()) {
-            // do not clamp anything after 5 iterations
-            if (this->numIterations_ > 4)
-                return;
+        // do not clamp anything after 5 iterations
+        if (this->numIterations_ > 4)
+            return;
 
-            // clamp saturation change to at most 20% per iteration
-            ElementContext elemCtx(problem);
+        // clamp saturation change to at most 20% per iteration
+        ElementContext elemCtx(problem);
 
-            ElementIterator elemIt = problem.gridView().template begin<0>();
-            const ElementIterator &elemEndIt
-                = problem.gridView().template end<0>();
-            for (; elemIt != elemEndIt; ++elemIt) {
-                if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
-                    // don't look at green elements, since they
+        ElementIterator elemIt = problem.gridView().template begin<0>();
+        const ElementIterator &elemEndIt
+            = problem.gridView().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
+                // don't look at green elements, since they
+                // probably have not changed much anyways
+                continue;
+
+            elemCtx.updateStencil(*elemIt);
+
+            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+                int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                if (assembler.dofColor(globI) == JacobianAssembler::Green)
+                    // don't limit at green DOFs, since they
                     // probably have not changed much anyways
                     continue;
 
-                elemCtx.updateStencil(*elemIt);
+                // calculate the old wetting phase saturation
+                const MaterialLawParams &matParams =
+                    problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
 
-                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                    int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                    if (assembler.dofColor(globI) == JacobianAssembler::Green)
-                        // don't limit at green DOFs, since they
-                        // probably have not changed much anyways
-                        continue;
+                Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
-                    // calculate the old wetting phase saturation
-                    const MaterialLawParams &matParams =
-                        problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
+                // set the temperatures
+                Scalar T = elemCtx.problem().temperature(elemCtx, dofIdx, /*timeIdx=*/0);
+                fs.setTemperature(T);
 
-                    Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+                /////////
+                // calculate the phase pressures of the previous iteration
+                /////////
 
-                    // set the temperatures
-                    Scalar T = elemCtx.problem().temperature(elemCtx, dofIdx, /*timeIdx=*/0);
-                    fs.setTemperature(T);
+                // first, we have to find the minimum capillary pressure
+                // (i.e. Sw = 0)
+                fs.setSaturation(wPhaseIdx, 1.0);
+                fs.setSaturation(nPhaseIdx, 0.0);
+                PhaseVector pC;
+                MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-                    /////////
-                    // calculate the phase pressures of the previous iteration
-                    /////////
+                // non-wetting pressure can be larger than the
+                // reference pressure if the medium is fully
+                // saturated by the wetting phase
+                Scalar pWOld = uLastIter[globI][pressureWIdx];
+                Scalar pNOld =
+                    std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
+                             pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
 
-                    // first, we have to find the minimum capillary pressure
-                    // (i.e. Sw = 0)
-                    fs.setSaturation(wPhaseIdx, 1.0);
-                    fs.setSaturation(nPhaseIdx, 0.0);
-                    PhaseVector pC;
-                    MaterialLaw::capillaryPressures(pC, matParams, fs);
+                /////////
+                // find the saturations of the previous iteration
+                /////////
+                fs.setPressure(wPhaseIdx, pWOld);
+                fs.setPressure(nPhaseIdx, pNOld);
 
-                    // non-wetting pressure can be larger than the
-                    // reference pressure if the medium is fully
-                    // saturated by the wetting phase
-                    Scalar pWOld = uLastIter[globI][pressureWIdx];
-                    Scalar pNOld =
-                        std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                                 pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                PhaseVector satOld;
+                MaterialLaw::saturations(satOld, matParams, fs);
+                satOld[wPhaseIdx] = std::max<Scalar>(0.0, satOld[wPhaseIdx]);
 
-                    /////////
-                    // find the saturations of the previous iteration
-                    /////////
-                    fs.setPressure(wPhaseIdx, pWOld);
-                    fs.setPressure(nPhaseIdx, pNOld);
+                /////////
+                // find the wetting phase pressures which
+                // corrospond to a 20% increase and a 20% decrease
+                // of the wetting saturation
+                /////////
+                fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] - 0.2);
+                fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
+                MaterialLaw::capillaryPressures(pC, matParams, fs);
+                Scalar pwMin = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
 
-                    PhaseVector satOld;
-                    MaterialLaw::saturations(satOld, matParams, fs);
-                    satOld[wPhaseIdx] = std::max<Scalar>(0.0, satOld[wPhaseIdx]);
+                fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] + 0.2);
+                fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
+                MaterialLaw::capillaryPressures(pC, matParams, fs);
+                Scalar pwMax = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
 
-                    /////////
-                    // find the wetting phase pressures which
-                    // corrospond to a 20% increase and a 20% decrease
-                    // of the wetting saturation
-                    /////////
-                    fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] - 0.2);
-                    fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
-                    MaterialLaw::capillaryPressures(pC, matParams, fs);
-                    Scalar pwMin = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
-
-                    fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] + 0.2);
-                    fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
-                    MaterialLaw::capillaryPressures(pC, matParams, fs);
-                    Scalar pwMax = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
-
-                    /////////
-                    // clamp the result to the minimum and the maximum
-                    // pressures we just calculated
-                    /////////
-                    Scalar pW = uCurrentIter[globI][pressureWIdx];
-                    pW = std::max(pwMin, std::min(pW, pwMax));
-                    uCurrentIter[globI][pressureWIdx] = pW;
-                }
+                /////////
+                // clamp the result to the minimum and the maximum
+                // pressures we just calculated
+                /////////
+                Scalar pW = uCurrentIter[globI][pressureWIdx];
+                pW = std::max(pwMin, std::min(pW, pwMax));
+                uCurrentIter[globI][pressureWIdx] = pW;
             }
         }
     }

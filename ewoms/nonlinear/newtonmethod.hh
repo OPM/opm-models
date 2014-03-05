@@ -243,6 +243,11 @@ public:
      */
     bool apply()
     {
+        // Clear the current line using an ansi escape
+        // sequence.  For an explanation see
+        // http://en.wikipedia.org/wiki/ANSI_escape_code
+        const char clearRemainingLine[] = { 0x1b, '[', 'K', 0 };
+
         SolutionVector &currentSolution = model().solution(/*historyIdx=*/0);
         SolutionVector previousSolution(currentSolution);
         GlobalEqVector solutionUpdate(currentSolution.size());
@@ -267,9 +272,8 @@ public:
             previousSolution = currentSolution;
 
             if (asImp_().verbose_()) {
-                std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad "
-                             "r";
-                std::cout.flush();
+                std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                          << std::flush;
             }
 
             // linearize the problem at the current solution
@@ -296,15 +300,10 @@ public:
                 return false;
             };
 
-            // Clear the current line using an ansi escape
-            // sequence.  For an explanation see
-            // http://en.wikipedia.org/wiki/ANSI_escape_code
-            const char clearRemainingLine[] = { 0x1b, '[', 'K', 0 };
-
             if (asImp_().verbose_()) {
-                std::cout << "\rSolve: M deltax^k = r";
-                std::cout << clearRemainingLine;
-                std::cout.flush();
+                std::cout << "\rSolve: M deltax^k = r"
+                          << clearRemainingLine
+                          << std::flush;
             }
 
             // solve the resulting linear equation system
@@ -325,9 +324,9 @@ public:
 
             // update the solution
             if (asImp_().verbose_()) {
-                std::cout << "\rUpdate: x^(k+1) = x^k - deltax^k";
-                std::cout << clearRemainingLine;
-                std::cout.flush();
+                std::cout << "\rUpdate: x^(k+1) = x^k - deltax^k"
+                          << clearRemainingLine
+                          << std::flush;
             }
 
             try
@@ -336,11 +335,19 @@ public:
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
                 asImp_().update_(currentSolution, previousSolution, solutionUpdate);
+
                 asImp_().updateError_(currentSolution,
                                       previousSolution,
                                       b,
                                       solutionUpdate);
                 updateTimer_.stop();
+
+
+                // clear current line on terminal
+                if (asImp_().verbose_())
+                    std::cout << "\r"
+                              << clearRemainingLine
+                              << std::flush;
 
                 // tell the implementation that we're done with this
                 // iteration
@@ -602,9 +609,9 @@ protected:
         ++numIterations_;
 
         if (asImp_().verbose_()) {
-            std::cout << "\rNewton iteration " << numIterations_ << "";
-            std::cout << " error: " << error_;
-            std::cout << endIterMsg().str() << "\n";
+            std::cout << "Newton iteration " << numIterations_ << ""
+                      << " error: " << error_
+                      << endIterMsg().str() << "\n" << std::flush;
         }
 
         endIterMsgStream_.str("");

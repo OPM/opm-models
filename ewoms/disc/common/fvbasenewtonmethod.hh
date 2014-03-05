@@ -65,16 +65,6 @@ NEW_PROP_TAG(NewtonMethod);
 //! if the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialReassemble);
 
-/*!
- * \brief Specifies whether the update should be done using the line search
- *        method instead of the plain Newton method.
- *
- * Whether this property has any effect depends on whether the line
- * search method is implemented for the actual model's Newton
- * method's update_() method. By default line search is not used.
- */
-NEW_PROP_TAG(NewtonEnableLineSearch);
-
 //! Enable Jacobian recycling?
 NEW_PROP_TAG(EnableJacobianRecycling);
 
@@ -88,7 +78,6 @@ SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod,
               typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
 SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
               Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
-SET_BOOL_PROP(FvBaseNewtonMethod, NewtonEnableLineSearch, false);
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -126,10 +115,6 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, bool, NewtonEnableLineSearch,
-                             "Use the line-search update method for the "
-                             "Newton method (warning: slow!)");
     }
 
 protected:
@@ -228,13 +213,6 @@ protected:
      */
     bool enableJacobianRecycling_() const
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
-
-    /*!
-     * \brief Returns true iff line search update proceedure should be
-     *        used instead of the normal one.
-     */
-    bool enableLineSearch_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, NewtonEnableLineSearch); }
 };
 } // namespace Ewoms
 
