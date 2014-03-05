@@ -97,7 +97,7 @@ public:
         for (; peerIt != peerEndIt; ++peerIt) {
             auto &buffer = *(new MpiBuffer<int>(1));
             sizeBufferMap[*peerIt] = &buffer;
-            buffer[0] = foreignOverlapWithPeer(*peerIt).size();
+            buffer[0] = foreignOverlap_.foreignOverlapWithPeer(*peerIt).size();
             buffer.send(*peerIt);
         }
 
