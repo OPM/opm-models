@@ -233,6 +233,7 @@ public:
     {
         int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
+        assert(pvWeight > 0 && std::isfinite(pvWeight));
         Valgrind::CheckDefined(pvWeight);
 
         return baseEpsilon()/pvWeight;
@@ -441,6 +442,8 @@ protected:
             derivResidual_ -= residual_;
             derivStorage_ -= residualStorage_;
         }
+
+        assert(delta > 0);
 
         // divide difference in residuals by the magnitude of the
         // deflections between the two function evaluation

@@ -374,6 +374,8 @@ public:
      */
     Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
+        assert(referencePressure_ > 0);
+
         Scalar tmp = EnergyModule::primaryVarWeight(asImp_(), globalDofIdx, pvIdx);
         if (tmp > 0)
             // energy related quantity
