@@ -197,7 +197,11 @@ public:
      */
     void assemble()
     {
-        bool printReassembleStatistics = enablePartialReassemble_() && !reuseMatrix_;
+        // we need to store whether the matrix was recycled here
+        // because the assemble_ method modifies the reuseMatrix_
+        // attribute!
+        bool matrixReused = reuseMatrix_;
+
         int succeeded;
         try {
             assemble_();
@@ -218,8 +222,7 @@ public:
                        "A process did not succeed in linearizing the system");
         };
 
-        if (printReassembleStatistics)
-        {
+        if (!matrixReused && enablePartialReassemble_()) {
             greenElems_ = gridView_().comm().sum(greenElems_);
             reassembleAccuracy_ = gridView_().comm().max(nextReassembleAccuracy_);
 
@@ -718,6 +721,9 @@ private:
 
             reuseMatrix_ = false;
             oldDt_ = curDt;
+
+            problem_().newtonMethod().endIterMsg()
+                << ", matrix reused from previous time step";
             return;
         }
 

@@ -187,13 +187,15 @@ public:
         // evaluate the storage and the source terms
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
 
+        for (int dofIdx=0; dofIdx < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof(); dofIdx++) {
+            storage[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
+
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof(); i++) {
             for (int j = 0; j < numEq; ++ j)
-                assert(std::isfinite(residual[i][j]));
-            Valgrind::CheckDefined(residual[i]);
-        }
+                assert(std::isfinite(residual[dofIdx][j]));
+            Valgrind::CheckDefined(residual[dofIdx]);
 #endif // !defined NDEBUG && HAVE_VALGRIND
+        }
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, storage, elemCtx, /*timeIdx=*/0);
