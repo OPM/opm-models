@@ -342,6 +342,7 @@ public:
         jacAsm_->init(problem_);
 
         asImp_().applyInitialSolution_();
+        asImp_().syncOverlap();
 
         // resize the hint vectors
         if (enableHints_()) {
@@ -641,11 +642,12 @@ public:
         asImp_().updateBegin();
 
         bool converged = solver.apply();
-        if (converged)
+        if (converged) {
+            asImp_().syncOverlap();
             asImp_().updateSuccessful();
+        }
         else
             asImp_().updateFailed();
-
 
 #if HAVE_VALGRIND
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
@@ -655,6 +657,16 @@ public:
 
         return converged;
     }
+
+    /*!
+     * \brief Syncronize the values of the primary variables on the
+     *        degrees of freedom that overlap with the neighboring
+     *        processes.
+     *
+     * By default, this method does nothing...
+     */
+    void syncOverlap()
+    { }
 
     /*!
      * \brief Called by the update() method before it tries to

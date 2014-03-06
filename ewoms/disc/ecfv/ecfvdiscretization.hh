@@ -124,16 +124,15 @@ public:
     { return this->problem_.elementMapper(); }
 
     /*!
-     * \brief Try to progress the model to the next timestep.
+     * \brief Syncronize the values of the primary variables on the
+     *        degrees of freedom that overlap with the neighboring
+     *        processes.
      *
-     * For the Element centered finite volume discretization, this
-     * method first syncronizes the overlap/ghost elements with its
-     * neighbor processes and then runs the generic update() method of
-     * the finite volume discretizations.
-     *
-     * \param solver The non-linear solver
+     * For the Element Centered Finite Volume discretization, this
+     * method retrieves the primary variables corresponding to
+     * overlap/ghost elements from their respective master process.
      */
-    bool update(NewtonMethod &solver)
+    void syncOverlap()
     {
         // syncronize the solution on the ghost and overlap elements
         typedef GridCommHandleGhostSync<PrimaryVariables,
@@ -146,8 +145,6 @@ public:
         this->gridView().communicate(ghostSync,
                                      Dune::InteriorBorder_All_Interface,
                                      Dune::ForwardCommunication);
-
-        return ParentType::update(solver);
     }
 
     /*!
