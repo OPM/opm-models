@@ -209,14 +209,15 @@ public:
         os << std::setw(20) << " Delta ";
         os << std::setw(20) << " Residual ";
         os << std::setw(20) << " ResidRed ";
-        os << std::setw(20) << " Rate " << std::endl;
+        os << std::setw(20) << " Rate ";
+        os << std::endl;
 
         os << std::setw(20) << 0 << " ";
         os << std::setw(20) << " ";
         os << std::setw(20) << residualError_ << " ";
         os << std::setw(20) << 1/residualAccuracy() << " ";
         os << std::setw(20) << " ";
-        os << std::endl;
+        os << std::endl << std::flush;
     }
 
     /*!
@@ -229,7 +230,7 @@ public:
         os << std::setw(20) << residualError_ << " ";
         os << std::setw(20) << 1/residualAccuracy() << " ";
         os << std::setw(20) << lastResidualError_ / std::max(residualError_, 1e-80) << " ";
-        os << std::endl;
+        os << std::endl << std::flush;
     }
 
 private:

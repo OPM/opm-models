@@ -211,7 +211,7 @@ public:
         // set-up the linear solver
         /////////////
         if (verbosity > 1 && problem_.gridView().comm().rank() == 0)
-            std::cout << "Creating the solver\n";
+            std::cout << "Creating the solver\n" << std::flush;
 
         typedef Ewoms::BiCGSTABSolver<Vector> SolverType;
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);

@@ -136,7 +136,7 @@ public:
             os << "(c_tot," << FluidSystem::componentName(compIdx) << " = "
                << this->operator[](cTot0Idx + compIdx);
         };
-        os << ")";
+        os << ")" << std::flush;
     }
 };
 

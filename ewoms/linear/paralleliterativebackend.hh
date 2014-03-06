@@ -274,7 +274,7 @@ public:
         catch (const Dune::Exception &e) {
             std::cout << "Preconditioner threw exception \"" << e.what()
                       << " on rank " << overlappingMatrix_->overlap().myRank()
-                      << "\n";
+                      << "\n"  << std::flush;
             preconditionerIsReady = 0;
         }
 
@@ -408,7 +408,7 @@ private:
     {
         for (int lookedAtRank = 0;
              lookedAtRank < problem_.gridView().comm().size(); ++lookedAtRank) {
-            std::cout << "writing overlap for rank " << lookedAtRank << "\n";
+            std::cout << "writing overlap for rank " << lookedAtRank << "\n"  << std::flush;
             typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > VtkField;
             int n = problem_.gridView().size(/*codim=*/dimWorld);
             VtkField isInOverlap(n);

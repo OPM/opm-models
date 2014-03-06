@@ -575,25 +575,25 @@ void printValues(std::ostream &os = std::cout)
     if (runTimeKeyList.size() > 0) {
         os << "###########\n";
         os << "# Used run-time specified parameters\n";
-        os << "###########\n";
+        os << "###########\n" << std::flush;
         printParamList_<TypeTag>(os, runTimeKeyList);
     }
 
     if (compileTimeKeyList.size() > 0) {
         os << "###########\n";
         os << "# Compile-time specified parameters\n";
-        os << "###########\n";
+        os << "###########\n" << std::flush;
         printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
     }
 
     if (unknownKeyList.size() > 0) {
         os << "###########\n";
         os << "# Unused run-time specified parameters\n";
-        os << "###########\n";
+        os << "###########\n" << std::flush;
         auto unusedKeyIt = unknownKeyList.begin();
         const auto &unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
-            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n";
+            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
     }
 }
@@ -626,11 +626,11 @@ void printUnused(std::ostream &os = std::cout)
     if (unknownKeyList.size() > 0) {
         os << "###########\n";
         os << "# Unused run-time specified parameters\n";
-        os << "###########\n";
+        os << "###########\n"  << std::flush;
         auto unusedKeyIt = unknownKeyList.begin();
         const auto &unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
-            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n";
+            os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
     }
 }

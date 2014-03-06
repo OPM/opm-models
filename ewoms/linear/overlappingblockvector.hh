@@ -273,7 +273,7 @@ public:
     {
         for (int i = 0; i < this->size(); ++i) {
             std::cout << "row " << i << (overlap_->isLocal(i) ? " " : "*")
-                      << ": " << (*this)[i] << "\n";
+                      << ": " << (*this)[i] << "\n" << std::flush;
         };
     }
 

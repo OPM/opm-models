@@ -159,7 +159,7 @@ public:
                       << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
                       << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
                       << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
-                      << "\n";
+                      << "\n" << std::flush;
         }
     }
 
@@ -319,7 +319,7 @@ public:
             if (gridView().comm().rank() == 0)
                 std::cout << "Newton solver did not converge with "
                           << "dt=" << dt << " seconds. Retrying with time step of "
-                          << nextDt << " seconds\n";
+                          << nextDt << " seconds\n" << std::flush;
         }
 
         OPM_THROW(std::runtime_error,
@@ -505,7 +505,8 @@ public:
         res.serializeBegin(asImp_());
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
-                      << ", next time step size: " << asImp_().timeManager().timeStepSize() << "\n";
+                      << ", next time step size: " << asImp_().timeManager().timeStepSize()
+                      << "\n" << std::flush;
 
         timeManager().serialize(res);
         asImp_().serialize(res);
@@ -548,7 +549,7 @@ public:
 
         res.deserializeBegin(asImp_(), tRestart);
         if (gridView().comm().rank() == 0)
-            std::cout << "Deserialize from file '" << res.fileName() << "'\n";
+            std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
         timeManager().deserialize(res);
         asImp_().deserialize(res);
         res.deserializeEnd();
@@ -585,7 +586,8 @@ public:
         // write the current result to disk
         if (asImp_().shouldWriteOutput()) {
             if (verbose && gridView().comm().rank() == 0)
-                std::cout << "Writing result file for \"" << asImp_().name() << "\"\n";
+                std::cout << "Writing result file for \"" << asImp_().name() << "\""
+                          << "\n" << std::flush;
 
             // calculate the time _after_ the time was updated
             Scalar t = timeManager().time() + timeManager().timeStepSize();

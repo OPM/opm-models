@@ -264,7 +264,7 @@ public:
 
         // printing
         if (_verbose > 0) {
-            std::cout << "=== LoopSolver" << std::endl;
+            std::cout << "=== LoopSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }
@@ -310,7 +310,7 @@ public:
         if (_verbose > 0) {
             std::cout << "=== rate=" << res.conv_rate << ", T=" << res.elapsed
                       << ", TIT=" << res.elapsed / i << ", IT=" << i
-                      << std::endl;
+                      << std::endl << std::flush;
         }
     }
 
@@ -403,7 +403,7 @@ public:
 
         if (_verbose > 0) // printing
         {
-            std::cout << "=== GradientSolver" << std::endl;
+            std::cout << "=== GradientSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }
@@ -528,7 +528,7 @@ public:
 
         if (_verbose > 0) // printing
         {
-            std::cout << "=== CGSolver" << std::endl;
+            std::cout << "=== CGSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }
@@ -701,7 +701,7 @@ public:
 
         if (_verbose > 0) // printing
         {
-            std::cout << "=== BiCGSTABSolver" << std::endl;
+            std::cout << "=== BiCGSTABSolver" << std::endl << std::flush;
             if (_verbose > 1)
                 this->convergenceCriterion().printInitial();
         }
@@ -912,7 +912,7 @@ public:
 
         if (_verbose > 0) // printing
         {
-            std::cout << "=== MINRESSolver" << std::endl;
+            std::cout << "=== MINRESSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }
@@ -1201,7 +1201,7 @@ public:
 
         // print header
         if (_verbose > 0) {
-            std::cout << "=== RestartedGMResSolver" << std::endl;
+            std::cout << "=== RestartedGMResSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }
@@ -1295,7 +1295,7 @@ public:
             }
 
             if (res.converged != true && _verbose > 0)
-                std::cout << "=== GMRes::restart\n";
+                std::cout << "=== GMRes::restart\n" << std::flush;
         }
 
         _M.post(x); // postprocess preconditioner
@@ -1461,7 +1461,7 @@ public:
 
         // print header
         if (_verbose > 0) {
-            std::cout << "=== GeneralizedPCGSolver" << std::endl;
+            std::cout << "=== GeneralizedPCGSolver" << std::endl << std::flush;
             if (_verbose > 1) {
                 this->convergenceCriterion().printInitial();
             }

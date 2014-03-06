@@ -109,7 +109,7 @@ public:
         os << std::setw(20) << 0 << " ";
         os << std::setw(20) << curDefect_ << " ";
         os << std::setw(20) << defectReduction_ << " ";
-        os << std::endl;
+        os << std::endl << std::flush;
     }
 
     /*!
@@ -120,7 +120,7 @@ public:
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << curDefect_ << " ";
         os << std::setw(20) << defectReduction_ << " ";
-        os << std::endl;
+        os << std::endl << std::flush;
     }
 
 private:

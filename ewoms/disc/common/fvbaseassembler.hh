@@ -212,7 +212,7 @@ public:
         {
             std::cout << "rank " << problem_().gridView().comm().rank()
                       << " caught an exception while assembling:" << e.what()
-                      << "\n";
+                      << "\n"  << std::flush;
             succeeded = 0;
             succeeded = gridView_().comm().min(succeeded);
         }

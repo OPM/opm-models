@@ -272,7 +272,7 @@ public:
             previousSolution = currentSolution;
 
             if (asImp_().verbose_()) {
-                std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                std::cout << "\rAssemble: r(x^k) = dS/dt + div F - q;   M = grad r"
                           << std::flush;
             }
 
@@ -287,7 +287,7 @@ public:
             {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Dune exception during linearization: \""
-                              << e.what() << "\"\n";
+                              << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
             }
@@ -295,7 +295,7 @@ public:
             {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Opm exception during linearization: \""
-                              << e.what() << "\"\n";
+                              << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
             };
@@ -315,7 +315,7 @@ public:
             auto b = jacobianAsm.residual();
             if (!asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate, b)) {
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Linear solver did not converge\n";
+                    std::cout << "Newton: Linear solver did not converge\n" << std::flush;
                 solveTimer_.stop();
                 asImp_().failed_();
                 return false;
@@ -358,7 +358,7 @@ public:
                 updateTimer_.stop();
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught exception during update: \""
-                              << e.what() << "\"\n";
+                              << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
             }
@@ -366,7 +366,7 @@ public:
             {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Opm exception during linearization: \""
-                              << e.what() << "\"\n";
+                              << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
             };
@@ -385,7 +385,7 @@ public:
                       << 100 * solveTimer_.elapsed() / elapsedTot << "%)/"
                       << updateTimer_.elapsed() << "("
                       << 100 * updateTimer_.elapsed() / elapsedTot << "%)"
-                      << "\n";
+                      << "\n" << std::flush;
         }
 
         if (!asImp_().converged()) {

@@ -120,8 +120,7 @@ int setupParameters_(int argc, char **argv)
     for (int i = 1; i < argc; ++i) {
         if (std::string("--help") == argv[i] || std::string("-h") == argv[i]) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "",
-                                                /*handleHelp=*/true, std::cout);
+                Parameters::printUsage<TypeTag>(argv[0], "", /*handleHelp=*/true, std::cout);
             return /*status=*/2;
         }
     }
@@ -232,7 +231,8 @@ int start(int argc, char **argv)
                       << " (\"" << EWOMS_CODENAME << "\")"
 #endif
                       << " will now start the trip. "
-                      << "Please sit back, relax and enjoy the ride.\n";
+                      << "Please sit back, relax and enjoy the ride.\n"
+                      << std::flush;
 
         // print the parameters if requested
         int printParams = EWOMS_GET_PARAM(TypeTag, int, PrintParameters);
@@ -258,17 +258,20 @@ int start(int argc, char **argv)
 
         // try to create a grid (from the given grid file)
         if (myRank == 0)
-            std::cout << "Creating the grid\n";
+            std::cout << "Creating the grid\n"
+                      << std::flush;
         try
         { GridCreator::makeGrid(); }
         catch (const Dune::Exception &e)
         {
             std::cout << __FILE__ << ":" << __LINE__ << ":"
-                      << " Creation of the grid failed: " << e.what() << "\n";
+                      << " Creation of the grid failed: " << e.what() << "\n"
+                      << std::flush;
             return 1;
         }
         if (myRank == 0)
-            std::cout << "Distributing the grid\n";
+            std::cout << "Distributing the grid\n"
+                      << std::flush;
         GridCreator::loadBalance();
 
         // instantiate and run the concrete problem. make sure to
@@ -282,9 +285,9 @@ int start(int argc, char **argv)
         }
 
         if (myRank == 0) {
-            std::cout << "eWoms reached the destination. "
-                      << "If it took a wrong corner, change your booking and "
-                         "try again.\n";
+            std::cout << "eWoms reached the destination. If it took a wrong "
+                      << "corner, change your booking and try again.\n"
+                      << std::flush;
         }
         GridCreator::deleteGrid();
         return 0;
@@ -292,21 +295,21 @@ int start(int argc, char **argv)
     catch (std::runtime_error &e)
     {
         if (myRank == 0)
-            std::cout << e.what() << ". Abort!\n";
+            std::cout << e.what() << ". Abort!\n" << std::flush;
         GridCreator::deleteGrid();
         return 1;
     }
     catch (Dune::Exception &e)
     {
         if (myRank == 0)
-            std::cout << "Dune reported an error: " << e.what() << std::endl;
+            std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;
         GridCreator::deleteGrid();
         return 2;
     }
     catch (...)
     {
         if (myRank == 0)
-            std::cout << "Unknown exception thrown!\n";
+            std::cout << "Unknown exception thrown!\n" << std::flush;
         GridCreator::deleteGrid();
         return 3;
     }

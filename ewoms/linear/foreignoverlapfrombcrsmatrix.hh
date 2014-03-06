@@ -330,7 +330,7 @@ public:
                 std::cout << rowIt->index << "(" << rowIt->borderDistance
                           << ") ";
             };
-            std::cout << "\n";
+            std::cout << "\n" << std::flush;
         }
     }
 

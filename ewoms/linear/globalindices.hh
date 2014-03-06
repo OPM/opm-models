@@ -190,7 +190,7 @@ public:
                       << ", " << globalToDomestic(domesticToGlobal(domIdx))
                       << ") ";
         };
-        std::cout << "\n";
+        std::cout << "\n" << std::flush;
     }
 
 protected:

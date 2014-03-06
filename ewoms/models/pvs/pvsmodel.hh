@@ -539,7 +539,8 @@ public:
             if (oldPhasePresent && !newPhasePresent) {
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
                           << "' phase disappears at position " << pos
-                          << ". saturation=" << fs.saturation(phaseIdx);
+                          << ". saturation=" << fs.saturation(phaseIdx)
+                          << std::flush;
             }
             else {
                 Scalar sumx = 0;
@@ -548,13 +549,13 @@ public:
 
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
                           << "' phase appears at position " << pos
-                          << " sum x = " << sumx;
+                          << " sum x = " << sumx  << std::flush;
             }
         };
 
         std::cout << ", new primary variables: ";
         newPv.print();
-        std::cout << "\n";
+        std::cout << "\n"  << std::flush;
     }
 
     void registerVtkModules_()

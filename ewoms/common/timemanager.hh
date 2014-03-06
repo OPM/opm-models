@@ -104,8 +104,7 @@ public:
      *                loaded or if the problem should provide the
      *                initial condition.
      */
-    void init(Problem &problem, Scalar tStart, Scalar dtInitial, Scalar tEnd,
-              bool restart = false)
+    void init(Problem &problem, Scalar tStart, Scalar dtInitial, Scalar tEnd, bool restart = false)
     {
         problem_ = &problem;
         time_ = tStart;
@@ -114,7 +113,7 @@ public:
 
         if (verbose_)
             std::cout << "Initializing problem \"" << problem_->name()
-                      << "\"\n";
+                      << "\"\n" << std::flush;
 
         // initialize the problem
         problem_->init();
@@ -429,7 +428,7 @@ public:
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "Wall time:" << timer_.elapsed()
                           << ", time:" << this->time() << ", time step size:" << dt
-                          << "\n";
+                          << "\n" << std::flush;
             }
         }
 
