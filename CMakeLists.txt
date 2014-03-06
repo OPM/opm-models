@@ -118,8 +118,9 @@ EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
   SOURCES tests/co2injection_ncp_ni_ecfv.cc
   EXE_NAME co2injection_ncp_ni_ecfv
   NO_COMPILE
+	PROCESSORS 4
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation co2injection_ncp_ni_ecfv --end-time=10 --initial-time-step-size=1)
+  DRIVER_ARGS --parallel-simulation=4 co2injection_ncp_ni_ecfv --end-time=10 --initial-time-step-size=1)
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
@@ -127,8 +128,9 @@ EwomsAddTest(obstacle_immiscible_parallel
   SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
+	PROCESSORS 4
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation obstacle_immiscible --end-time=1 --initial-time-step-size=1)
+  DRIVER_ARGS --parallel-simulation=4 obstacle_immiscible --end-time=1 --initial-time-step-size=1)
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
@@ -136,20 +138,23 @@ EwomsAddTest(lens_parallel
   SOURCES tests/lens_immiscible.cc
   EXE_NAME lens_immiscible
   NO_COMPILE
+	PROCESSORS 4
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation lens_immiscible --end-time=250 --initial-time-step-size=250)
+  DRIVER_ARGS --parallel-simulation=4 lens_immiscible --end-time=250 --initial-time-step-size=250)
 
 EwomsAddTest(obstacle_immiscible_parameters
   SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
+	DEPENDS obstacle_immiscible
   DRIVER_ARGS --parameters obstacle_immiscible)
 
 EwomsAddTest(obstacle_pvs_restart
   SOURCES tests/obstacle_pvs.cc
   EXE_NAME obstacle_pvs
   NO_COMPILE
-  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=35000)
+	DEPENDS obstacle_pvs
+  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=15000)
 
 # add the tutorial
 EwomsAddTest(tutorial1 SOURCES tutorial/tutorial1.cc)

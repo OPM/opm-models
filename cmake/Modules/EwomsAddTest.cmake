@@ -7,14 +7,16 @@
 #              [EXE_NAME TestExecutableName]
 #              [CONDITION ConditionalExpression]
 #              [DRIVER_ARGS TestDriverScriptArguments]
-#              [SOURCES SourceFile1 SourceFile2 ...])
+#              [SOURCES SourceFile1 SourceFile2 ...]
+#              [PROCESSORS NumberOfRequiredCores]
+#              [DEPENDS TestName1 TestName2 ...])
 include(CMakeParseArguments)
 
 macro(EwomsAddTest TestName)
   CMAKE_PARSE_ARGUMENTS(CURTEST
     "NO_COMPILE;ONLY_COMPILE" # flags
-    "EXE_NAME" # one value args
-    "CONDITION;DRIVER_ARGS;SOURCES" # multi-value args
+    "EXE_NAME;PROCESSORS" # one value args
+    "CONDITION;DEPENDS;DRIVER_ARGS;SOURCES" # multi-value args
     ${ARGN})
 
   set(BUILD_TESTING "${BUILD_TESTING}")
@@ -51,7 +53,15 @@ macro(EwomsAddTest TestName)
 
           add_test(NAME ${TestName} 
             WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+            ${DEPENDS_ON}
             COMMAND ${CMAKE_SOURCE_DIR}/bin/runtest.sh ${CURTEST_DRIVER_ARGS})
+
+          if (CURTEST_DEPENDS)
+            set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_DEPENDS}")
+          endif()
+          if (CURTEST_PROCESSORS)
+            set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
+          endif()
         else ()
           add_test(${TestName} skip_test_dummy)
         endif()
