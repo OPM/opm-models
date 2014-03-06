@@ -112,13 +112,14 @@ EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUN
 EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
 
 # test for the parallelization of the element centered finite volume
-# discretization (using BiCGSTAB + ILU0)
-EwomsAddTest(co2injection_immiscible_ecfv_parallel
-  SOURCES tests/co2injection_immiscible_ecfv.cc
-  EXE_NAME co2injection_immiscible_ecfv
+# discretization (using the non-isothermal NCP model and BiCGSTAB +
+# ILU0)
+EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
+  SOURCES tests/co2injection_ncp_ni_ecfv.cc
+  EXE_NAME co2injection_ncp_ni_ecfv
   NO_COMPILE
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation co2injection_immiscible_ecfv --end-time=10 --initial-time-step-size=1)
+  DRIVER_ARGS --parallel-simulation co2injection_ncp_ni_ecfv --end-time=10 --initial-time-step-size=1)
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
@@ -131,7 +132,7 @@ EwomsAddTest(obstacle_immiscible_parallel
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-EwomsAddTest(obstacle_lens_parallel
+EwomsAddTest(lens_parallel
   SOURCES tests/lens_immiscible.cc
   EXE_NAME lens_immiscible
   NO_COMPILE
