@@ -200,7 +200,6 @@ public:
         ParentType::init();
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
@@ -289,19 +288,6 @@ public:
         }
     }
 
-    /*!
-     * \copydoc FvBaseDiscretization::updatePVWeights
-     */
-    void updatePVWeights(const ElementContext &elemCtx) const
-    {
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
-            intrinsicPermeability_[globalIdx] = K[0][0];
-        }
-    }
-
 // HACK: this should be made private and the BaseModel should be
 // declared to be a friend. Since C++-2003 (and more relevantly GCC
 // 4.4) don't support friend typedefs, we need to make this method
@@ -322,7 +308,6 @@ public:
 
 private:
     mutable Scalar referencePressure_;
-    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 } // namespace Ewoms
 

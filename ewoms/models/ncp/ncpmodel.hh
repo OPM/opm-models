@@ -274,45 +274,6 @@ public:
         ParentType::init();
         minActivityCoeff_.resize(this->numDof());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
-
-        intrinsicPermeability_.resize(this->numDof());
-    }
-
-    /*!
-     * \copydoc ImmiscibleModel::globalPhaseStorage
-     */
-    void globalPhaseStorage(EqVector &storage, int phaseIdx)
-    {
-        storage = 0;
-        EqVector tmp;
-
-        ElementContext elemCtx(this->problem_);
-        ElementIterator elemIt = this->gridView_.template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue; // ignore ghost and overlap elements
-
-            elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
-
-            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-
-            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      dofIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *=
-                    stencil.subControlVolume(dofIdx).volume()
-                    * elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
-                storage += tmp;
-            }
-        };
-
-        storage = this->gridView_.comm().sum(storage);
     }
 
     /*!
@@ -394,9 +355,6 @@ public:
     {
         for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
             int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
-            intrinsicPermeability_[globalIdx] = K[0][0];
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
@@ -499,7 +457,6 @@ public:
 
     mutable Scalar referencePressure_;
     mutable std::vector<ComponentVector> minActivityCoeff_;
-    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 
 } // namespace Ewoms

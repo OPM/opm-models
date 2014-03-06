@@ -273,8 +273,6 @@ public:
         numSwitched_ = 0;
 
         ParentType::init();
-
-        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
@@ -329,43 +327,6 @@ public:
     }
 
     /*!
-     * \copydoc ImmiscibleModel::globalPhaseStorage
-     */
-    void globalPhaseStorage(EqVector &storage, int phaseIdx)
-    {
-        storage = 0;
-        EqVector tmp;
-
-        ElementContext elemCtx(this->problem_);
-        ElementIterator elemIt = this->gridView_.template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue; // ignore ghost and overlap elements
-
-            elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
-
-            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-
-            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      dofIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *=
-                    stencil.subControlVolume(dofIdx).volume()
-                    * elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
-                storage += tmp;
-            }
-        };
-
-        storage = this->gridView_.comm().sum(storage);
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::updateFailed
      */
     void updateFailed()
@@ -390,19 +351,6 @@ public:
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
                 break;
             }
-        }
-    }
-
-    /*!
-     * \copydoc FvBaseDiscretization::updatePVWeights
-     */
-    void updatePVWeights(const ElementContext &elemCtx) const
-    {
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
-
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-            intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
@@ -625,7 +573,6 @@ public:
     }
 
     mutable Scalar referencePressure_;
-    mutable std::vector<Scalar> intrinsicPermeability_;
 
     // number of switches of the phase state in the last Newton
     // iteration

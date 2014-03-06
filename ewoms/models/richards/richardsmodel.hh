@@ -243,8 +243,6 @@ public:
     void init()
     {
         ParentType::init();
-
-        intrinsicPermeability_.resize(this->numDof());
     }
 
     /*!
@@ -325,19 +323,6 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::updatePVWeights
-     */
-    void updatePVWeights(const ElementContext &elemCtx) const
-    {
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
-            intrinsicPermeability_[globalIdx] = K[0][0];
-        }
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::phaseIsConsidered
      */
     bool phaseIsConsidered(int phaseIdx) const
@@ -349,7 +334,6 @@ public:
     }
 
     mutable Scalar referencePressure_;
-    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 } // namespace Ewoms
 

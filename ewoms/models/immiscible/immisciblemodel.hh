@@ -232,16 +232,6 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::init
-     */
-    void init()
-    {
-        ParentType::init();
-
-        intrinsicPermeability_.resize(this->numDof());
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::name
      */
     const char *name() const
@@ -294,50 +284,6 @@ public:
     }
 
     /*!
-     * \brief Compute the total storage inside one phase of all
-     *        conservation quantities.
-     *
-     * \copydetails Doxygen::storageParam
-     * \copydetails Doxygen::phaseIdxParam
-     */
-    void globalPhaseStorage(EqVector &storage, int phaseIdx)
-    {
-        assert(0 <= phaseIdx && phaseIdx < numPhases);
-
-        storage = 0;
-        EqVector tmp;
-
-        ElementContext elemCtx(this->problem_);
-        ElementIterator elemIt = this->gridView_.template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue; // ignore ghost and overlap elements
-
-            elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
-
-            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-
-            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                const auto &scv = stencil.subControlVolume(dofIdx);
-                const auto &volVars = elemCtx.volVars(dofIdx, /*timeIdx=*/0);
-
-                tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      dofIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *= scv.volume()*volVars.extrusionFactor();
-                storage += tmp;
-            }
-        };
-
-        storage = this->gridView_.comm().sum(storage);
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::updateBegin
      */
     void updateBegin()
@@ -353,19 +299,6 @@ public:
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
                 break;
             }
-        }
-    }
-
-    /*!
-     * \copydoc FvBaseDiscretization::updatePVWeights
-     */
-    void updatePVWeights(const ElementContext &elemCtx) const
-    {
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-            const auto &K = elemCtx.volVars(dofIdx, /*timeIdx=*/0).intrinsicPermeability();
-            intrinsicPermeability_[globalIdx] = K[0][0];
         }
     }
 
@@ -418,7 +351,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 
     mutable Scalar referencePressure_;
-    mutable std::vector<Scalar> intrinsicPermeability_;
 };
 } // namespace Ewoms
 
