@@ -973,8 +973,10 @@ public:
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt)
-        {
+        for (; elemIt != elemEndIt; ++elemIt) {
+            if (elemIt->partitionType() != Dune::InteriorEntity)
+                continue;
+
             elemCtx.updateStencil(*elemIt);
             elemCtx.updateVolVars(/*timeIdx=*/0);
             elemCtx.updateFluxVars(/*timeIdx=*/0);
