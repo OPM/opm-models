@@ -72,6 +72,11 @@ class PressureCallback
 public:
     PressureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    { Valgrind::SetUndefined(phaseIdx_); }
+
+    PressureCallback(const ElementContext& elemCtx, short phaseIdx)
+        : elemCtx_(elemCtx)
+        , phaseIdx_(phaseIdx)
     {}
 
     /*!
@@ -86,7 +91,10 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -108,6 +116,14 @@ public:
     BoundaryPressureCallback(const ElementContext& elemCtx, const FluidState& boundaryFs)
         : elemCtx_(elemCtx)
         , boundaryFs_(boundaryFs)
+    { Valgrind::SetUndefined(phaseIdx_); }
+
+    BoundaryPressureCallback(const ElementContext& elemCtx,
+                             const FluidState& boundaryFs,
+                             short phaseIdx)
+        : elemCtx_(elemCtx)
+        , boundaryFs_(boundaryFs)
+        , phaseIdx_(phaseIdx)
     {}
 
     /*!
@@ -122,10 +138,16 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
+    }
 
     Scalar boundaryValue() const
-    { return boundaryFs_.pressure(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return boundaryFs_.pressure(phaseIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -147,6 +169,11 @@ class DensityCallback
 public:
     DensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    { Valgrind::SetUndefined(phaseIdx_); }
+
+    DensityCallback(const ElementContext& elemCtx, short phaseIdx)
+        : elemCtx_(elemCtx)
+        , phaseIdx_(phaseIdx)
     {}
 
     /*!
@@ -161,7 +188,10 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -182,6 +212,11 @@ class MolarDensityCallback
 public:
     MolarDensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    { Valgrind::SetUndefined(phaseIdx_); }
+
+    MolarDensityCallback(const ElementContext& elemCtx, short phaseIdx)
+        : elemCtx_(elemCtx)
+        , phaseIdx_(phaseIdx)
     {}
 
     /*!
@@ -196,7 +231,10 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -217,6 +255,11 @@ class ViscosityCallback
 public:
     ViscosityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    { Valgrind::SetUndefined(phaseIdx_); }
+
+    ViscosityCallback(const ElementContext& elemCtx, short phaseIdx)
+        : elemCtx_(elemCtx)
+        , phaseIdx_(phaseIdx)
     {}
 
     /*!
@@ -231,7 +274,10 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -289,6 +335,11 @@ class VelocityComponentCallback
 public:
     VelocityComponentCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    { Valgrind::SetUndefined(dimIdx_); }
+
+    VelocityComponentCallback(const ElementContext& elemCtx, short dimIdx)
+        : elemCtx_(elemCtx)
+        , dimIdx_(dimIdx)
     {}
 
     /*!
@@ -303,7 +354,10 @@ public:
      *        degree of freedom within an element context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_]; }
+    {
+        Valgrind::CheckDefined(dimIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
+    }
 
 private:
     const ElementContext& elemCtx_;
@@ -324,6 +378,15 @@ class MoleFractionCallback
 public:
     MoleFractionCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
+    {
+        Valgrind::SetUndefined(phaseIdx_);
+        Valgrind::SetUndefined(compIdx_);
+    }
+
+    MoleFractionCallback(const ElementContext& elemCtx, short phaseIdx, short compIdx)
+        : elemCtx_(elemCtx)
+        , phaseIdx_(phaseIdx)
+        , compIdx_(compIdx)
     {}
 
     /*!
@@ -346,7 +409,11 @@ public:
      *        context.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().moleFraction(phaseIdx_, compIdx_); }
+    {
+        Valgrind::CheckDefined(phaseIdx_);
+        Valgrind::CheckDefined(compIdx_);
+        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().moleFraction(phaseIdx_, compIdx_);
+    }
 
 private:
     const ElementContext& elemCtx_;

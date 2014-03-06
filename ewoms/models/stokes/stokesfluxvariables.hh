@@ -80,8 +80,7 @@ public:
      * \param isBoundaryFace Specifies whether the sub-control-volume
      *                       face is on the domain boundary or not.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx,
-                bool isBoundaryFace = false)
+    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace=false)
     {
         const auto &stencil = elemCtx.stencil(timeIdx);
         const auto &scvf =
@@ -98,10 +97,10 @@ public:
 
         // calculate gradients and secondary variables at IPs
         const auto& gradCalc = elemCtx.gradientCalculator();
-        PressureCallback<TypeTag> pressureCallback(elemCtx);
-        DensityCallback<TypeTag> densityCallback(elemCtx);
-        MolarDensityCallback<TypeTag> molarDensityCallback(elemCtx);
-        ViscosityCallback<TypeTag> viscosityCallback(elemCtx);
+        PressureCallback<TypeTag> pressureCallback(elemCtx, phaseIdx);
+        DensityCallback<TypeTag> densityCallback(elemCtx, phaseIdx);
+        MolarDensityCallback<TypeTag> molarDensityCallback(elemCtx, phaseIdx);
+        ViscosityCallback<TypeTag> viscosityCallback(elemCtx, phaseIdx);
         VelocityCallback<TypeTag> velocityCallback(elemCtx);
         VelocityComponentCallback<TypeTag> velocityComponentCallback(elemCtx);
 
@@ -110,22 +109,11 @@ public:
         molarDensityCallback.setPhaseIndex(0);
         viscosityCallback.setPhaseIndex(0);
 
-        pressure_ = gradCalc.calculateValue(elemCtx,
-                                            scvfIdx,
-                                            pressureCallback);
-        gradCalc.calculateGradient(pressureGrad_,
-                                   elemCtx,
-                                   scvfIdx,
-                                   pressureCallback);
-        density_ = gradCalc.calculateValue(elemCtx,
-                                           scvfIdx,
-                                           densityCallback);
-        molarDensity_ = gradCalc.calculateValue(elemCtx,
-                                                scvfIdx,
-                                                molarDensityCallback);
-        viscosity_ = gradCalc.calculateValue(elemCtx,
-                                             scvfIdx,
-                                             viscosityCallback);
+        pressure_ = gradCalc.calculateValue(elemCtx, scvfIdx, pressureCallback);
+        gradCalc.calculateGradient(pressureGrad_, elemCtx, scvfIdx, pressureCallback);
+        density_ = gradCalc.calculateValue(elemCtx, scvfIdx, densityCallback);
+        molarDensity_ = gradCalc.calculateValue(elemCtx, scvfIdx, molarDensityCallback);
+        viscosity_ = gradCalc.calculateValue(elemCtx, scvfIdx, viscosityCallback);
         velocity_ =
             gradCalc.template calculateValue<VelocityCallback<TypeTag>,
                                              DimVector>(elemCtx,

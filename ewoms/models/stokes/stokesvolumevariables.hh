@@ -102,12 +102,8 @@ public:
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
 
-        fluidState_.setDensity(phaseIdx,
-                               FluidSystem::density(fluidState_, paramCache,
-                                                    phaseIdx));
-        fluidState_.setViscosity(phaseIdx,
-                                 FluidSystem::viscosity(fluidState_, paramCache,
-                                                        phaseIdx));
+        fluidState_.setDensity(phaseIdx, FluidSystem::density(fluidState_, paramCache, phaseIdx));
+        fluidState_.setViscosity(phaseIdx, FluidSystem::viscosity(fluidState_, paramCache, phaseIdx));
 
         // energy related quantities
         EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
