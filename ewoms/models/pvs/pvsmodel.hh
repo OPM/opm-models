@@ -473,6 +473,8 @@ public:
         ElementIterator elemIt = this->gridView_.template begin<0>();
         ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            if (elemIt->partitionType() != Dune::InteriorEntity)
+                continue;
             elemCtx.updateStencil(*elemIt);
 
             int numDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
