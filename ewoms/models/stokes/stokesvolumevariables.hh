@@ -214,7 +214,7 @@ public:
     { return gravity_; }
 
 private:
-    DimVector velocityAtPos_(const ElementContext elemCtx,
+    DimVector velocityAtPos_(const ElementContext &elemCtx,
                              int timeIdx,
                              const LocalPosition &localPos) const
     {

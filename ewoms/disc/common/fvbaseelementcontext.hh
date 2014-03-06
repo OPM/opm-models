@@ -74,6 +74,10 @@ class FvBaseElementContext
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
+    // we don't allow copies of element contexts!
+    FvBaseElementContext(const FvBaseElementContext &context)
+    {}
+
 public:
     /*!
      * \brief The constructor.
