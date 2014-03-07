@@ -205,7 +205,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::name
      */
-    const char *name() const
+    static std::string name()
     { return "blackoil"; }
 
     /*!

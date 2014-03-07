@@ -279,6 +279,9 @@ int start(int argc, char **argv)
         // grid
         TimeManager timeManager;
         {
+            if (myRank == 0)
+                std::cout << "Initializing the problem \"" << Problem::name() << "\"\n"
+                          << std::flush;
             Problem problem(timeManager);
             timeManager.init(problem, restartTime, dt, tEnd, restart);
             timeManager.run();

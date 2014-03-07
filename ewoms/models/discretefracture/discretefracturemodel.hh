@@ -114,7 +114,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::name
      */
-    const char *name() const
+    static std::string name()
     { return "discretefracture"; }
 
     void registerVtkModules_()

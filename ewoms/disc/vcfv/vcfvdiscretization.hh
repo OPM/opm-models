@@ -111,7 +111,7 @@ public:
     /*!
      * \brief Returns a string of discretization's human-readable name
      */
-    std::string discretizationName() const
+    static std::string discretizationName()
     { return "vcfv"; }
 
     /*!

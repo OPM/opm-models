@@ -111,10 +111,6 @@ public:
         timeStepSize_ = dtInitial;
         endTime_ = tEnd;
 
-        if (verbose_)
-            std::cout << "Initializing problem \"" << problem_->name()
-                      << "\"\n" << std::flush;
-
         // initialize the problem
         problem_->init();
 

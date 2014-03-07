@@ -209,7 +209,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::name
      */
-    std::string name() const
+    static std::string name()
     { return "flash"; }
 
     /*!
