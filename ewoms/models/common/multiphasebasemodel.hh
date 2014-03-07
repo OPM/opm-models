@@ -66,7 +66,7 @@ SET_INT_PROP(MultiPhaseBaseModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSys
 //! The type of the base base class for actual problems
 SET_TYPE_PROP(MultiPhaseBaseModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
 
-//! Use the Darcy relation by default
+//! By default, use the Darcy relation to determine the phase velocity
 SET_TYPE_PROP(MultiPhaseBaseModel, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
 
 /*!

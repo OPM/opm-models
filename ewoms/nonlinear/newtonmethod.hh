@@ -334,12 +334,11 @@ public:
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
-                asImp_().update_(currentSolution, previousSolution, solutionUpdate);
-
                 asImp_().updateError_(currentSolution,
                                       previousSolution,
                                       b,
                                       solutionUpdate);
+                asImp_().update_(currentSolution, previousSolution, solutionUpdate, b);
                 updateTimer_.stop();
 
 
@@ -562,10 +561,13 @@ protected:
      * \param previousSolution The solution vector after the last iteration
      * \param solutionUpdate The delta vector as calculated by solving
      *                       the linear system of equations
+     * \param previousResidual The residual vector of the previous
+     *                         Newton-Raphson iteraton
      */
     void update_(SolutionVector &currentSolution,
                  const SolutionVector &previousSolution,
-                 const GlobalEqVector &solutionUpdate)
+                 const GlobalEqVector &solutionUpdate,
+                 const GlobalEqVector &previousResidual)
     {
         // first, write out the current solution to make convergence
         // analysis possible

@@ -71,6 +71,14 @@ NEW_PROP_TAG(EnableJacobianRecycling);
 //! Enable partial reassembly?
 NEW_PROP_TAG(EnablePartialReassemble);
 
+/*!
+ * \brief The desired residual reduction of the linear solver.
+ *
+ * In the context of this class, this is needed to implement partial
+ * reassembly of the linearized system of equations.
+ */
+NEW_PROP_TAG(LinearSolverTolerance);
+
 // set default values
 SET_TYPE_PROP(FvBaseNewtonMethod, DiscNewtonMethod,
               Ewoms::FvBaseNewtonMethod<TypeTag>);
@@ -133,13 +141,17 @@ protected:
      *
      * \param currentSolution The solution vector after the current iteration
      * \param previousSolution The solution vector after the last iteration
-     * \param solutionUpdate The delta as calculated from solving the linear
-     *               system of equations. This parameter also stores
-     *               the updated solution.
+     * \param solutionUpdate The delta as calculated from solving the
+     *                       linear system of equations. This
+     *                       parameter also stores the updated
+     *                       solution.
+     * \param previousResidual The residual (i.e., right-hand-side) of
+     *                         the previous iteration's solution.
      */
     void update_(SolutionVector &currentSolution,
                  const SolutionVector &previousSolution,
-                 const GlobalEqVector &solutionUpdate)
+                 const GlobalEqVector &solutionUpdate,
+                 const GlobalEqVector &previousResidual)
     {
         // first, write out the current solution to make convergence
         // analysis possible
@@ -152,9 +164,12 @@ protected:
         // compute the vertex and element colors for partial reassembly
         if (enablePartialReassemble_()) {
             // rationale: the newton method has quadratic convergence
-            Scalar reassembleTol = 0.1 * this->tolerance_();
+            Scalar reassembleTol =
+                this->error_
+                * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance)
+                * 0.1;
 
-            model_().jacobianAssembler().updateDiscrepancy(previousSolution, solutionUpdate);
+            model_().jacobianAssembler().updateDiscrepancy(previousResidual);
             model_().jacobianAssembler().computeColors(reassembleTol);
         }
 

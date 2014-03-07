@@ -78,12 +78,13 @@ protected:
      */
     void update_(SolutionVector &uCurrentIter,
                  const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU)
+                 const GlobalEqVector &deltaU,
+                 const GlobalEqVector &previousResidual)
     {
         const auto &assembler = this->problem().model().jacobianAssembler();
         const auto &problem = this->problem();
 
-        ParentType::update_(uCurrentIter, uLastIter, deltaU);
+        ParentType::update_(uCurrentIter, uLastIter, deltaU, previousResidual);
 
         // do not clamp anything after 5 iterations
         if (this->numIterations_ > 4)

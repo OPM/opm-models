@@ -87,7 +87,8 @@ private:
      */
     void update_(SolutionVector &uCurrentIter,
                  const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU)
+                 const GlobalEqVector &deltaU,
+                 const GlobalEqVector &previousResidual)
     {
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(deltaU.two_norm2()))
@@ -95,14 +96,13 @@ private:
 
         // compute the DOF and element colors for partial reassembly
         if (this->enablePartialReassemble_()) {
-            const Scalar minReasmTol = 1e-2 * this->tolerance_();
-            const Scalar maxReasmTol = 1e1 * this->tolerance_();
-            Scalar reassembleTol
-                = std::max(minReasmTol,
-                           std::min(maxReasmTol, this->error_ / 1e4));
+            // rationale: the newton method has quadratic convergence
+            Scalar reassembleTol =
+                this->error_
+                * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance)
+                * 0.1;
 
-            this->model_().jacobianAssembler().updateDiscrepancy(uLastIter,
-                                                                 deltaU);
+            this->model_().jacobianAssembler().updateDiscrepancy(previousResidual);
             this->model_().jacobianAssembler().computeColors(reassembleTol);
         }
 

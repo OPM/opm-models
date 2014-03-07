@@ -312,8 +312,8 @@ public:
             }
         }
 
-        Scalar linearSolverTolerance = GET_PROP_VALUE(TypeTag, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonTolerance) / 100.0;
+        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+        Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance) / 100.0;
         Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =

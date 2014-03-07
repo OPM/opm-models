@@ -300,24 +300,26 @@ public:
      * \param u The iterative solution of the last iteration of the Newton method
      * \param uDelta The negative difference between the last and the next iterative solution.
      */
-    void updateDiscrepancy(const SolutionVector &u,
-                           const GlobalEqVector &uDelta)
+    void updateDiscrepancy(const GlobalEqVector &previousResid)
     {
         if (!enablePartialReassemble_())
             return;
 
-        // update the vector with the distances of the current
-        // evaluation point used for linearization from the original
-        // evaluation point
-        for (unsigned i = 0; i < dofDelta_.size(); ++i) {
-            PrimaryVariables uCurrent(u[i]);
-            PrimaryVariables uNext(uCurrent);
-            uNext -= uDelta[i];
+        // update the vector which stores relevant error relevant for
+        // partial reassembly for each degree of freedom
+        for (unsigned globalDofIdx = 0; globalDofIdx < previousResid.size(); ++globalDofIdx) {
+            if (model_().dofTotalVolume(globalDofIdx) <= 0) {
+                dofDelta_[globalDofIdx] = 0;
+                continue; // ignore overlap and ghost DOFs
+            }
 
             // we need to add the distance the solution was moved for
             // this DOF
-            Scalar dist = model_().relativeDofError(i, uCurrent, uNext);
-            dofDelta_[i] += std::abs(dist);
+            const auto &r = previousResid[globalDofIdx];
+            Scalar dist = 0;
+            for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
+                dist = std::max(dist, std::abs(r[eqIdx]*model_().eqWeight(globalDofIdx, eqIdx)));
+            dofDelta_[globalDofIdx] = dist;
         }
 
     }
