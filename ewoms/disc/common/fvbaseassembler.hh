@@ -162,7 +162,7 @@ public:
         // initialize the jacobian matrix and the right hand side
         // vector
         *matrix_ = 0;
-        reuseMatrix_ = false;
+        reuseLinearization_ = false;
 
         int numDof = problem.model().numDof();
         int numElems = gridView_().size(/*codim=*/0);
@@ -198,9 +198,9 @@ public:
     void assemble()
     {
         // we need to store whether the matrix was recycled here
-        // because the assemble_ method modifies the reuseMatrix_
+        // because the assemble_ method modifies the reuseLinearization_
         // attribute!
-        bool matrixReused = reuseMatrix_;
+        bool matrixReused = reuseLinearization_;
 
         int succeeded;
         try {
@@ -249,7 +249,7 @@ public:
     void setMatrixReuseable(bool yesno = true)
     {
         if (enableJacobianRecycling_())
-            reuseMatrix_ = yesno;
+            reuseLinearization_ = yesno;
     }
 
     /*!
@@ -260,7 +260,7 @@ public:
     void reassembleAll()
     {
         // do not reuse the current linearization
-        reuseMatrix_ = false;
+        reuseLinearization_ = false;
 
         // do not use partial reassembly for the next iteration
         nextReassembleAccuracy_ = 0.0;
@@ -643,7 +643,7 @@ private:
     void resetSystem_()
     {
         // do not do anything if we can re-use the current linearization
-        if (reuseMatrix_)
+        if (reuseLinearization_)
             return;
 
         // reset the right hand side.
@@ -698,7 +698,7 @@ private:
         // if we can "recycle" the current linearization, we do it
         // here and be done with it...
         Scalar curDt = problem_().timeManager().timeStepSize();
-        if (reuseMatrix_) {
+        if (reuseLinearization_) {
             int numDof = storageJacobian_.size();
             for (int i = 0; i < numDof; ++i) {
                 // rescale the mass term of the jacobian matrix
@@ -719,11 +719,11 @@ private:
                 residual_[i] *= -1;
             };
 
-            reuseMatrix_ = false;
+            reuseLinearization_ = false;
             oldDt_ = curDt;
 
             problem_().newtonMethod().endIterMsg()
-                << ", matrix reused from previous time step";
+                << ", linear system of equations reused from previous time step";
             return;
         }
 
@@ -816,7 +816,7 @@ private:
     GlobalEqVector residual_;
 
     // attributes required for jacobian matrix recycling
-    bool reuseMatrix_;
+    bool reuseLinearization_;
     // The storage part of the local Jacobian
     std::vector<MatrixBlock> storageJacobian_;
     std::vector<VectorBlock> storageTerm_;
