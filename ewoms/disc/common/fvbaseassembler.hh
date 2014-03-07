@@ -133,11 +133,11 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableJacobianRecycling,
-                             "Re-use of the jacobian matrix at the first iteration of "
-                             "the next time step");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableLinearizationRecycling,
+                             "Re-use of the linearized system of equations at the first "
+                             "iteration of the next time step");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble,
-                             "Re-assemble only those degrees of freedom that have changed "
+                             "Re-linearize only those degrees of freedom that have changed "
                              "'sufficiently' between two Newton iterations");
     }
 
@@ -172,7 +172,7 @@ public:
         // initialize the storage part of the Jacobian matrix. Since
         // we only need this if Jacobian matrix recycling is enabled,
         // we do not waste space if it is disabled
-        if (enableJacobianRecycling_()) {
+        if (enableLinearizationRecycling_()) {
             storageJacobian_.resize(numDof);
             storageTerm_.resize(numDof);
         }
@@ -197,10 +197,10 @@ public:
      */
     void assemble()
     {
-        // we need to store whether the matrix was recycled here
-        // because the assemble_ method modifies the reuseLinearization_
-        // attribute!
-        bool matrixReused = reuseLinearization_;
+        // we need to store whether the linearization was recycled
+        // here because the assemble_ method modifies the
+        // reuseLinearization_ attribute!
+        bool linearizationReused = reuseLinearization_;
 
         int succeeded;
         try {
@@ -222,7 +222,7 @@ public:
                        "A process did not succeed in linearizing the system");
         };
 
-        if (!matrixReused && enablePartialReassemble_()) {
+        if (!linearizationReused && enablePartialReassemble_()) {
             greenElems_ = gridView_().comm().sum(greenElems_);
             reassembleAccuracy_ = gridView_().comm().max(nextReassembleAccuracy_);
 
@@ -240,22 +240,21 @@ public:
     }
 
     /*!
-     * \brief If Jacobian matrix recycling is enabled, this method
+     * \brief If linearization recycling is enabled, this method
      *        specifies whether the next call to assemble() just
      *        rescales the storage term or does a full reassembly
      *
      * \param yesno If true, only rescale; else do full Jacobian assembly.
      */
-    void setMatrixReuseable(bool yesno = true)
+    void setLinearizationReusable(bool yesno = true)
     {
-        if (enableJacobianRecycling_())
+        if (enableLinearizationRecycling_())
             reuseLinearization_ = yesno;
     }
 
     /*!
-     * \brief If partial Jacobian matrix reassembly is enabled, this
-     *        method causes all elements to be reassembled in the next
-     *        assemble() call.
+     * \brief If partial reassembly is enabled, this method causes all
+     *        elements to be reassembled in the next assemble() call.
      */
     void reassembleAll()
     {
@@ -571,8 +570,8 @@ public:
     { return residual_; }
 
 private:
-    static bool enableJacobianRecycling_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
+    static bool enableLinearizationRecycling_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
     static bool enablePartialReassemble_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
 
@@ -657,7 +656,7 @@ private:
             (*matrix_) = 0;
 
             // reset the parts needed for Jacobian recycling
-            if (enableJacobianRecycling_()) {
+            if (enableLinearizationRecycling_()) {
                 int numDof = matrix_->N();
                 for (int i=0; i < numDof; ++ i) {
                     storageJacobian_[i] = 0;
@@ -677,7 +676,7 @@ private:
             // here we have yellow or red DOFs...
 
             // reset the parts needed for Jacobian recycling
-            if (enableJacobianRecycling_()) {
+            if (enableLinearizationRecycling_()) {
                 storageJacobian_[rowIdx] = 0;
                 storageTerm_[rowIdx] = 0;
             }
@@ -771,14 +770,14 @@ private:
             // update the right hand side
             residual_[globI] += model_().localJacobian().residual(primaryDofIdx);
 
-            if (enableJacobianRecycling_()) {
+            if (enableLinearizationRecycling_()) {
                 storageTerm_[globI] +=
                     model_().localJacobian().residualStorage(primaryDofIdx);
             }
 
             // only update the jacobian matrix for non-green degrees of freedom
             if (dofColor(globI) != Green) {
-                if (enableJacobianRecycling_())
+                if (enableLinearizationRecycling_())
                     storageJacobian_[globI] +=
                         model_().localJacobian().jacobianStorage(primaryDofIdx);
 
@@ -804,7 +803,7 @@ private:
 
             // update the right hand side
             residual_[globI] += model_().localResidual().residual(dofIdx);
-            if (enableJacobianRecycling_())
+            if (enableLinearizationRecycling_())
                 storageTerm_[globI] += model_().localResidual().storageTerm(dofIdx);
         }
     }

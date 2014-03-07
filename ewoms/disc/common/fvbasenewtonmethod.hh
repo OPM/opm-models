@@ -46,8 +46,8 @@ NEW_TYPE_TAG(FvBaseNewtonMethod, INHERITS_FROM(NewtonMethod));
 //! The class dealing with the balance equations
 NEW_PROP_TAG(Model);
 
-//! The assembler for the Jacobian matrix
-NEW_PROP_TAG(JacobianBaseAssembler);
+//! The assembler
+NEW_PROP_TAG(BaseAssembler);
 
 //! The class storing primary variables plus pseudo primary variables
 NEW_PROP_TAG(PrimaryVariables);
@@ -61,12 +61,12 @@ NEW_PROP_TAG(DiscNewtonMethod);
 //! The class implementing the Newton algorithm
 NEW_PROP_TAG(NewtonMethod);
 
-//! Specifies whether the Jacobian matrix should only be reassembled
-//! if the current solution deviates too much from the evaluation point
+//! Specifies whether the linearization should only be reassembled if
+//! the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialReassemble);
 
-//! Enable Jacobian recycling?
-NEW_PROP_TAG(EnableJacobianRecycling);
+//! Enable linearization recycling?
+NEW_PROP_TAG(EnableLinearizationRecycling);
 
 //! Enable partial reassembly?
 NEW_PROP_TAG(EnablePartialReassemble);
@@ -197,8 +197,8 @@ protected:
     {
         ParentType::succeeded_();
 
-        if (enableJacobianRecycling_())
-            model_().jacobianAssembler().setMatrixReuseable(true);
+        if (enableLinearizationRecycling_())
+            model_().jacobianAssembler().setLinearizationReusable(true);
         else
             model_().jacobianAssembler().reassembleAll();
     }
@@ -216,18 +216,18 @@ protected:
     { return ParentType::model(); }
 
     /*!
-     * \brief Returns true iff the Jacobian assembler uses partial
+     * \brief Returns true iff the assembler uses partial
      *        reassembly.
      */
     bool enablePartialReassemble_() const
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
 
     /*!
-     * \brief Returns true iff the Jacobian assembler recycles the matrix
-     *        possible.
+     * \brief Returns true iff the assembler recycles the
+     *        linearization if possible.
      */
-    bool enableJacobianRecycling_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableJacobianRecycling); }
+    bool enableLinearizationRecycling_() const
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
 };
 } // namespace Ewoms
 

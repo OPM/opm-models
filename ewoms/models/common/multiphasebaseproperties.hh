@@ -55,8 +55,6 @@ NEW_PROP_TAG(VelocityModule);
 
 //! Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableGravity);
-//! Specify whether the "upwinding kink" should be avoided
-NEW_PROP_TAG(EnableSmoothUpwinding);
 } // namespace Properties
 } // namespace Opm
 

@@ -102,9 +102,6 @@ SET_TYPE_PROP(MultiPhaseBaseModel,
               HeatConductionLawParams,
               typename GET_PROP_TYPE(TypeTag, HeatConductionLaw)::Params);
 
-//! disable the smooth upwinding method by default
-SET_BOOL_PROP(MultiPhaseBaseModel, EnableSmoothUpwinding, false);
-
 //! disable gravity by default
 SET_BOOL_PROP(MultiPhaseBaseModel, EnableGravity, false);
 

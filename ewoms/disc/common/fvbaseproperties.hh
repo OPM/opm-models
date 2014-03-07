@@ -139,10 +139,10 @@ NEW_PROP_TAG(GridCommHandleFactory);
 //! Manages the simulation time
 NEW_PROP_TAG(TimeManager);
 
-//! Specify whether the jacobian matrix of the last iteration of a
-//! time step should be re-used as the jacobian of the first iteration
-//! of the next time step.
-NEW_PROP_TAG(EnableJacobianRecycling);
+//! Specify whether the linear system of equations of the last
+//! iteration of a time step should be re-used as the jacobian of the
+//! first iteration of the next time step.
+NEW_PROP_TAG(EnableLinearizationRecycling);
 
 //! Specify whether the jacobian matrix should be only reassembled for
 //! elements where at least one degree of freedom is above the

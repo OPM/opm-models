@@ -204,8 +204,8 @@ SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 //! do not use hints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableHints, false);
 
-// disable jacobian matrix recycling by default
-SET_BOOL_PROP(FvBaseDiscretization, EnableJacobianRecycling, false);
+// disable linearization recycling by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 
 // disable partial reassembling by default
 SET_BOOL_PROP(FvBaseDiscretization, EnablePartialReassemble, false);
