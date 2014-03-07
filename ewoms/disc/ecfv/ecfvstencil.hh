@@ -46,18 +46,9 @@ namespace Ewoms {
  * \brief Represents the stencil (finite volume geometry) of a single
  *        element in the ECFV discretization.
  *
- * The ECFV discretization is a element centered finite volume approach. This
- * means that each vertex corresponds to a control volume which
- * intersects each of the vertex' neighboring elements. If only
- * looking at a single element of the primary grid (which is what this
- * class does), the element is subdivided into multiple fragments of
- * control volumes called sub-control volumes. Each of the element's
- * vertices corresponds to exactly one sub-control volume in this
- * scenario.
- *
- * For the vertex-cented finite volume method the sub-control volumes
- * are constructed by connecting the element's center with each edge
- * of the element.
+ * The ECFV discretization is a element centered finite volume
+ * approach. This means that each element corresponds to a control
+ * volume.
  */
 template <class Scalar, class GridView>
 class EcfvStencil

@@ -40,7 +40,8 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief Base class for all problems which use the ECFV discretization.
+ * \brief Base class for all problems which use a finite volume
+ *        spatial discretization.
  *
  * \note All quantities are specified assuming a threedimensional
  *       world. Problems discretized using 2D grids are assumed to be

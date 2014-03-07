@@ -65,7 +65,8 @@ SET_TYPE_PROP(EcfvDiscretization, DiscVtkBaseOutputModule,
 SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory,
               Ewoms::EcfvGridCommHandleFactory<TypeTag>);
 
-//! Set the border list creator for vertices
+//! Set the border list creator for to the one of an element based
+//! method
 SET_PROP(EcfvDiscretization, BorderListCreator)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;

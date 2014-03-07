@@ -39,11 +39,12 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief Calculates the Jacobian of the local residual for ECFV discretizations
+ * \brief Calculates the Jacobian of the local residual for finite
+ *        volume spatial discretizations
  *
  * The default behavior is to use numeric differentiation, i.e.
- * forward or backward differences (2nd order), or central
- * differences (3rd order). The method used is determined by the
+ * forward or backward differences (2nd order), or central differences
+ * (3rd order). The method used is determined by the
  * "NumericDifferenceMethod" property:
  *
  * - if the value of this property is smaller than 0, backward

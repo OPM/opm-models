@@ -39,7 +39,7 @@ namespace Properties {
  * \ingroup Discretization
  */
 // \{
-//! The type tag for models based on the ECFV-scheme
+//! The type tag for models based on the finite volume schemes
 NEW_TYPE_TAG(FvBaseDiscretization,
              INHERITS_FROM(ImplicitModel,
                            FvBaseNewtonMethod,

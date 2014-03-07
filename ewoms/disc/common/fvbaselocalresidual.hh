@@ -43,7 +43,7 @@ namespace Ewoms {
  * \ingroup Discretization
  *
  * \brief Element-wise caculation of the residual matrix for models
- *        based on the ECFV discretization .
+ *        based on a finite volume spatial discretization.
  *
  * \copydetails Doxygen::typeTagTParam
  */

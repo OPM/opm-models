@@ -44,7 +44,7 @@ namespace Ewoms {
  * \ingroup Newton
  *
  * \brief Writes the intermediate solutions during the Newton scheme
- *        for models using the ECFV discretization
+ *        for models using a finite volume discretization
  */
 template <class TypeTag>
 class FvBaseNewtonConvergenceWriter

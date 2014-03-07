@@ -21,7 +21,7 @@
  * \ingroup EcfvDiscretization
  *
  * \brief Declare the basic properties used by the common infrastructure of
- *        the vertex-centered finite volume discretization.
+ *        the element-centered finite volume discretization.
  */
 #ifndef EWOMS_ECFV_PROPERTIES_HH
 #define EWOMS_ECFV_PROPERTIES_HH

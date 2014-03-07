@@ -40,7 +40,7 @@ class FvBaseNewtonConvergenceWriter;
 
 namespace Opm {
 namespace Properties {
-//! create a type tag for the ECFV specific Newton method
+//! create a type tag for the Newton method of the finite-volume discretization
 NEW_TYPE_TAG(FvBaseNewtonMethod, INHERITS_FROM(NewtonMethod));
 
 //! The class dealing with the balance equations
@@ -93,9 +93,11 @@ namespace Ewoms {
  * \ingroup Discretization
  * \ingroup Newton
  *
- * \brief A Newton method for models using the ECFV discretization.
+ * \brief A Newton method for models using a finite volume
+ *        discretization.
  *
- * This class is sufficient for most models which use the ECFV discretization.
+ * This class is sufficient for most models which use an Element or a
+ * Vertex Centered Finite Volume discretization.
  */
 template <class TypeTag>
 class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
