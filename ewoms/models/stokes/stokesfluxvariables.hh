@@ -104,11 +104,6 @@ public:
         VelocityCallback<TypeTag> velocityCallback(elemCtx);
         VelocityComponentCallback<TypeTag> velocityComponentCallback(elemCtx);
 
-        pressureCallback.setPhaseIndex(0);
-        densityCallback.setPhaseIndex(0);
-        molarDensityCallback.setPhaseIndex(0);
-        viscosityCallback.setPhaseIndex(0);
-
         pressure_ = gradCalc.calculateValue(elemCtx, scvfIdx, pressureCallback);
         gradCalc.calculateGradient(pressureGrad_, elemCtx, scvfIdx, pressureCallback);
         density_ = gradCalc.calculateValue(elemCtx, scvfIdx, densityCallback);

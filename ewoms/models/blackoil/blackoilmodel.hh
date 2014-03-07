@@ -222,7 +222,7 @@ public:
                  && pvIdx <= Indices::saturation0Idx + numPhases - 1)
         {
             int phaseIdx = pvIdx - Indices::saturation0Idx;
-            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);;
+            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
         }
         else
             assert(false);

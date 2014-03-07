@@ -206,18 +206,20 @@ public:
                                                  /*setEnthalpy=*/false);
         }
 
-        // make valgrind happy and set an enthalpy
+#ifndef NDEBUG
+        // make valgrind happy and set the enthalpies to NaN
         if (!enableEnergy) {
+            Scalar myNan = std::numeric_limits<Scalar>::quiet_NaN();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                fluidState_.setEnthalpy(phaseIdx, 0);
+                fluidState_.setEnthalpy(phaseIdx, myNan);
         }
+#endif
 
         /////////////
         // calculate the remaining quantities
         /////////////
 
         // calculate relative permeabilities
-        fluidState_.checkDefined();
         MaterialLaw::relativePermeabilities(relativePermeability_,
                                             materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
@@ -237,6 +239,8 @@ public:
 
         // update the diffusion specific quantities of the volume variables
         DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+
+        fluidState_.checkDefined();
     }
 
     /*!
