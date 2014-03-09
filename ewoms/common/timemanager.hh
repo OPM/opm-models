@@ -406,6 +406,8 @@ public:
 
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
+                problem_->model().jacobianAssembler().setLinearizationReusable(false);
+
                 // define what to do at the end of an episode in the problem
                 problem_->episodeEnd();
             }
