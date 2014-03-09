@@ -182,7 +182,7 @@ public:
         // initialize data needed for partial reassembly
         if (enablePartialReassemble_()) {
             dofColor_.resize(numDof);
-            dofDelta_.resize(numDof);
+            dofError_.resize(numDof);
             elementColor_.resize(numElems);
         }
         reassembleAll();
@@ -264,8 +264,8 @@ public:
         // do not use partial reassembly for the next iteration
         nextReassembleAccuracy_ = 0.0;
         if (enablePartialReassemble_()) {
-            std::fill(dofDelta_.begin(),
-                      dofDelta_.end(),
+            std::fill(dofError_.begin(),
+                      dofError_.end(),
                       0.0);
             std::fill(dofColor_.begin(),
                       dofColor_.end(),
@@ -308,7 +308,7 @@ public:
         // partial reassembly for each degree of freedom
         for (unsigned globalDofIdx = 0; globalDofIdx < previousResid.size(); ++globalDofIdx) {
             if (model_().dofTotalVolume(globalDofIdx) <= 0) {
-                dofDelta_[globalDofIdx] = 0;
+                dofError_[globalDofIdx] = 0;
                 continue; // ignore overlap and ghost DOFs
             }
 
@@ -318,7 +318,7 @@ public:
             Scalar dist = 0;
             for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
                 dist = std::max(dist, std::abs(r[eqIdx]*model_().eqWeight(globalDofIdx, eqIdx)));
-            dofDelta_[globalDofIdx] = dist;
+            dofError_[globalDofIdx] = dist;
         }
 
     }
@@ -371,13 +371,13 @@ public:
         // linearization which actually will get achieved
         nextReassembleAccuracy_ = 0;
         for (unsigned i = 0; i < dofColor_.size(); ++i) {
-            if (dofDelta_[i] > relTol)
+            if (dofError_[i] > relTol)
                 // mark dof as red if discrepancy is larger than
                 // the relative tolerance
                 dofColor_[i] = Red;
             else
                 nextReassembleAccuracy_ =
-                    std::max(nextReassembleAccuracy_, dofDelta_[i]);
+                    std::max(nextReassembleAccuracy_, dofError_[i]);
         };
 
         Stencil stencil(gridView_());
@@ -499,7 +499,7 @@ public:
 
             // set the error of this DOF to 0 because the system
             // will be consistently linearized at this dof
-            dofDelta_[i] = 0.0;
+            dofError_[i] = 0.0;
         };
     }
 
@@ -826,7 +826,7 @@ private:
 
     // attributes required for partial jacobian reassembly
     std::vector<EntityColor> dofColor_;
-    std::vector<Scalar> dofDelta_;
+    std::vector<Scalar> dofError_;
     std::vector<EntityColor> elementColor_;
 
     int totalElems_;
