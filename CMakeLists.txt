@@ -60,22 +60,20 @@ endmacro (tests_hook)
 # not very interesting for people who just want to use eWoms but not
 # develop it. To enable testing, either pass --enable-testing to the
 # configure script or call cmake with -DBUILD_TESTING=ON
-if (NOT DEFINED BUILD_TESTING)
-	set(MY_BUILD_TESTING "OFF")
-else()
-	set(MY_BUILD_TESTING "${BUILD_TESTING}")
-endif()
+set(MY_BUILD_TESTING "${BUILD_TESTING}")
+set(BUILD_TESTING "ON" CACHE BOOL "Build the tests" FORCE)
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
-
-set(BUILD_TESTING "${MY_BUILD_TESTING}"
-	CACHE BOOL "Compile the tests" FORCE)
 
 file(GLOB grids "tests/grids/*.dgf" "tests/grids/*.art")
 foreach(file ${grids})
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
 endforeach()
+
+if (NOT MY_BUILD_TESTING)
+	set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
+endif()
 
 include(EwomsAddTest)
 
