@@ -31,6 +31,9 @@ macro(EwomsAddTest TestName)
     set(CURTEST_DRIVER_ARGS --simulation ${CURTEST_EXE_NAME})
   endif()
   if (NOT BUILD_TESTING)
+    # don't build the tests by _default_ (i.e., when typing
+    # 'make'). Though they can still be build using 'make tests' and
+    # they can be build and run using 'make check'
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
@@ -51,6 +54,12 @@ macro(EwomsAddTest TestName)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
         target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
         add_dependencies("check" "${CURTEST_EXE_NAME}")
+
+        get_target_property(tests_TARGET_LOCATION "tests" LOCATION)
+        if(NOT TARGET "tests")
+          add_custom_target("tests")
+        endif()
+        add_dependencies("tests" "${CURTEST_EXE_NAME}")
       endif()
 
       add_test(NAME ${TestName}
