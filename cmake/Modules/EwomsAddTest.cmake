@@ -55,7 +55,6 @@ macro(EwomsAddTest TestName)
         target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
         add_dependencies("check" "${CURTEST_EXE_NAME}")
 
-        get_target_property(tests_TARGET_LOCATION "tests" LOCATION)
         if(NOT TARGET "tests")
           add_custom_target("tests")
         endif()
