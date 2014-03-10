@@ -55,10 +55,10 @@ macro(EwomsAddTest TestName)
         target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
         add_dependencies("check" "${CURTEST_EXE_NAME}")
 
-        if(NOT TARGET "tests")
-          add_custom_target("tests")
+        if(NOT TARGET "ctests")
+          add_custom_target("ctests")
         endif()
-        add_dependencies("tests" "${CURTEST_EXE_NAME}")
+        add_dependencies("ctests" "${CURTEST_EXE_NAME}")
       endif()
 
       add_test(NAME ${TestName}
