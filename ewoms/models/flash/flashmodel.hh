@@ -91,6 +91,16 @@ SET_TYPE_PROP(FlashModel, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
 //! The indices required by the flash-baseed isothermal compositional model
 SET_TYPE_PROP(FlashModel, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
 
+// The volume variable updates tend to be _very_ expensive for this
+// model, so let's try to minimize the number of required ones
+SET_BOOL_PROP(FlashModel, EnableVolumeVariablesCache, true);
+
+// since thermodynamic hints are basically free if the volume
+// variables cache is enabled, and this model usually shows quite a
+// performance improvment if they are enabled, let's enable them by
+// default.
+SET_BOOL_PROP(FlashModel, EnableThermodynamicHints, true);
+
 // disable molecular diffusion by default
 SET_BOOL_PROP(FlashModel, EnableDiffusion, false);
 
