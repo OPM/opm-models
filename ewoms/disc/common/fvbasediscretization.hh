@@ -398,12 +398,19 @@ public:
      */
     const VolumeVariables *thermodynamicHint(int globalIdx, int timeIdx) const
     {
-        if (!enableVolumeVariablesCache() ||
-            !enableHints_() ||
-            !volVarsCacheUpToDate_[timeIdx][globalIdx])
+        if (!enableHints_())
             return 0;
 
-        return &volVarsCache_[timeIdx][globalIdx];
+        if (volVarsCacheUpToDate_[timeIdx][globalIdx])
+            return &volVarsCache_[timeIdx][globalIdx];
+
+        // use the volume variables for the first up-to-date time index as hint
+        for (int timeIdx2 = 0; timeIdx2 < historySize; ++timeIdx2)
+            if (volVarsCacheUpToDate_[timeIdx2][globalIdx])
+                return &volVarsCache_[timeIdx2][globalIdx];
+
+        // no suitable up-to-date volume variables...
+        return 0;
     }
 
     /*!
