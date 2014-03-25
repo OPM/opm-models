@@ -580,6 +580,8 @@ protected:
         for (unsigned i = 0; i < previousSolution.size(); ++i) {
             currentSolution[i] = previousSolution[i];
             currentSolution[i] -= solutionUpdate[i];
+
+            this->model().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
         }
     }
 

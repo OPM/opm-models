@@ -170,15 +170,6 @@ public:
      */
     void assemble(ElementContext &elemCtx)
     {
-        // update the hints for the element's volume variables
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
-                model_().setHint(elemCtx.volVars(dofIdx, timeIdx),
-                                 globalIdx,
-                                 timeIdx);
-        }
-
         // update the weights of the primary variables using the
         // current element variables
         model_().updatePVWeights(elemCtx);

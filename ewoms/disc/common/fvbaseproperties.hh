@@ -134,7 +134,7 @@ NEW_PROP_TAG(DiscVtkBaseOutputModule);
 //! The class to create grid communication handles
 NEW_PROP_TAG(GridCommHandleFactory);
 
-// high level simulation control
+// high-level simulation control
 
 //! Manages the simulation time
 NEW_PROP_TAG(TimeManager);
@@ -182,6 +182,17 @@ NEW_PROP_TAG(MaxTimeStepDivisions);
 NEW_PROP_TAG(NumericDifferenceMethod);
 
 /*!
+ * \brief Specify whether all volume variables for the grid should be
+ *        cached in the discretization.
+ *
+ * This potentially reduces the CPU time, but comes at the cost of
+ * higher memory consumption. In turn, the higher memory requirements
+ * may cause the simulation to exhibit worse cache coherence behavior
+ * which eats some of the computational benefits again.
+ */
+NEW_PROP_TAG(EnableVolumeVariablesCache);
+
+/*!
  * \brief Specify whether to use the already calculated solutions as
  *        starting values of the volume variables.
  *
@@ -189,7 +200,7 @@ NEW_PROP_TAG(NumericDifferenceMethod);
  * very expensive (e.g. for non-linear fugacity functions where the
  * solver converges faster).
  */
-NEW_PROP_TAG(EnableHints);
+NEW_PROP_TAG(EnableThermodynamicHints);
 
 //! The base epsilon value for finite difference calculations
 NEW_PROP_TAG(BaseEpsilon);

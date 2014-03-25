@@ -52,7 +52,7 @@ class FvBaseElementContext
     struct DofStore_ {
         VolumeVariables volVars[timeDiscHistorySize];
         PrimaryVariables priVars[timeDiscHistorySize];
-        const VolumeVariables *hint[timeDiscHistorySize];
+        const VolumeVariables *thermodynamicHint[timeDiscHistorySize];
     };
     typedef std::vector<DofStore_> DofVarsVector;
     typedef std::vector<FluxVariables> FluxVarsVector;
@@ -125,7 +125,7 @@ public:
 
         // resize the arrays containing the flux and the volume
         // variables
-        volVars_.resize(stencil_.numDof());
+        dofVars_.resize(stencil_.numDof());
         fluxVars_.resize(stencil_.numInteriorFaces());
     }
 
@@ -173,13 +173,25 @@ public:
             int globalIdx = globalSpaceIndex(dofIdx, timeIdx);
             const PrimaryVariables &volSol = globalSol[globalIdx];
 
-            volVars_[dofIdx].hint[timeIdx] = model().hint(globalIdx, timeIdx);
-            updateSingleVolVars_(volSol, dofIdx, timeIdx);
+            dofVars_[dofIdx].thermodynamicHint[timeIdx] =
+                model().thermodynamicHint(globalIdx, timeIdx);
+
+            const auto *cachedVolVars = model().cachedVolumeVariables(globalIdx, timeIdx);
+            if (cachedVolVars) {
+                dofVars_[dofIdx].priVars[timeIdx] = volSol;
+                dofVars_[dofIdx].volVars[timeIdx] = *cachedVolVars;
+            }
+            else {
+                updateSingleVolVars_(volSol, dofIdx, timeIdx);
+                model().updateCachedVolumeVariables(dofVars_[dofIdx].volVars[timeIdx],
+                                                    globalIdx,
+                                                    timeIdx);
+            }
         }
 
         // update gradients
         for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            volVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
+            dofVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
                                                                  dofIdx,
                                                                  timeIdx);
         }
@@ -203,7 +215,7 @@ public:
         // update gradients inside a sub control volume
         int nDof = numDof(/*timeIdx=*/0);
         for (int gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
-            volVars_[gradDofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
+            dofVars_[gradDofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
                                                                      gradDofIdx,
                                                                      timeIdx);
         }
@@ -379,23 +391,23 @@ public:
     const VolumeVariables &volVars(int dofIdx, int timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return volVars_[dofIdx].volVars[timeIdx];
+        return dofVars_[dofIdx].volVars[timeIdx];
     }
 
     /*!
-     * \brief Return the hint for a given local index.
+     * \brief Return the thermodynamic hint for a given local index.
      *
-     * \sa Discretization::hint(int, int)
+     * \sa Discretization::thermodynamicHint(int, int)
      *
      * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const VolumeVariables *hint(int dofIdx, int timeIdx) const
+    const VolumeVariables *thermodynamicHint(int dofIdx, int timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return volVars_[dofIdx].hint[timeIdx];
+        return dofVars_[dofIdx].thermodynamicHint[timeIdx];
     }
     /*!
      * \copydoc volVars()
@@ -403,7 +415,7 @@ public:
     VolumeVariables &volVars(int dofIdx, int timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return volVars_[dofIdx].volVars[timeIdx];
+        return dofVars_[dofIdx].volVars[timeIdx];
     }
 
     /*!
@@ -417,7 +429,7 @@ public:
     PrimaryVariables &primaryVars(int dofIdx, int timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return volVars_[dofIdx].priVars[timeIdx];
+        return dofVars_[dofIdx].priVars[timeIdx];
     }
     /*!
      * \copydoc primaryVars()
@@ -425,7 +437,7 @@ public:
     const PrimaryVariables &primaryVars(int dofIdx, int timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return volVars_[dofIdx].priVars[timeIdx];
+        return dofVars_[dofIdx].priVars[timeIdx];
     }
 
     /*!
@@ -439,8 +451,8 @@ public:
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
         dofIdxSaved_ = dofIdx;
-        volVarsSaved_ = volVars_[dofIdx].volVars[/*timeIdx=*/0];
-        priVarsSaved_ = volVars_[dofIdx].priVars[/*timeIdx=*/0];
+        volVarsSaved_ = dofVars_[dofIdx].volVars[/*timeIdx=*/0];
+        priVarsSaved_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
     }
 
     /*!
@@ -452,8 +464,8 @@ public:
     void restoreVolVars(int dofIdx)
     {
         dofIdxSaved_ = -1;
-        volVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
-        volVars_[dofIdx].volVars[/*timeIdx=*/0] = volVarsSaved_;
+        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
+        dofVars_[dofIdx].volVars[/*timeIdx=*/0] = volVarsSaved_;
     }
 
     /*!
@@ -512,11 +524,11 @@ public:
 protected:
     void updateSingleVolVars_(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
-        volVars_[dofIdx].priVars[timeIdx] = priVars;
-        volVars_[dofIdx].volVars[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
+        dofVars_[dofIdx].priVars[timeIdx] = priVars;
+        dofVars_[dofIdx].volVars[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }
 
-    DofVarsVector volVars_;
+    DofVarsVector dofVars_;
 
     int dofIdxSaved_;
     VolumeVariables volVarsSaved_;

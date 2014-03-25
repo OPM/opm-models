@@ -111,6 +111,7 @@ private:
             for (int j = 0; j < numEq; ++j) {
                 uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
             }
+            this->model_().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
         }
 
         // put crash barriers along the update path at the

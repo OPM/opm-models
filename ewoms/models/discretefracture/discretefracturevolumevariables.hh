@@ -67,17 +67,23 @@ public:
     /*!
      * \copydoc VolumeVariables::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext &elemCtx, int vertexIdx, int timeIdx)
     {
-        ParentType::update(elemCtx, dofIdx, timeIdx);
+        ParentType::update(elemCtx, vertexIdx, timeIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
-        int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        int globalVertexIdx = elemCtx.globalSpaceIndex(vertexIdx, timeIdx);
+
+        Valgrind::SetUndefined(fractureFluidState_);
+        Valgrind::SetUndefined(fractureVolume_);
+        Valgrind::SetUndefined(fracturePorosity_);
+        Valgrind::SetUndefined(fractureIntrinsicPermeability_);
+        Valgrind::SetUndefined(fractureRelativePermeabilities_);
 
         // do nothing if there is no fracture within the current finite
         // volume
-        if (!fractureMapper.isFractureVertex(globalDofIdx)) {
+        if (!fractureMapper.isFractureVertex(globalVertexIdx)) {
             fractureVolume_ = 0;
             return;
         }
@@ -91,27 +97,27 @@ public:
         // retrieve the facture width and intrinsic permeability from
         // the problem
         fracturePorosity_ =
-            problem.fracturePorosity(elemCtx, dofIdx, timeIdx);
+            problem.fracturePorosity(elemCtx, vertexIdx, timeIdx);
         fractureIntrinsicPermeability_ =
-            problem.fractureIntrinsicPermeability(elemCtx, dofIdx, timeIdx);
+            problem.fractureIntrinsicPermeability(elemCtx, vertexIdx, timeIdx);
 
         // compute the fracture volume for the current sub-control
         // volume. note, that we don't take overlaps of fractures into
         // account for this.
         fractureVolume_ = 0;
-        const auto &dofPos = elemCtx.pos(dofIdx, timeIdx);
-        for (int dof2Idx = 0; dof2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ dof2Idx) {
-            int globalVertex2Idx = elemCtx.globalSpaceIndex(dof2Idx, timeIdx);
+        const auto &vertexPos = elemCtx.pos(vertexIdx, timeIdx);
+        for (int vertex2Idx = 0; vertex2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ vertex2Idx) {
+            int globalVertex2Idx = elemCtx.globalSpaceIndex(vertex2Idx, timeIdx);
 
-            if (dofIdx == dof2Idx ||
-                !fractureMapper.isFractureEdge(globalDofIdx, globalVertex2Idx))
+            if (vertexIdx == vertex2Idx ||
+                !fractureMapper.isFractureEdge(globalVertexIdx, globalVertex2Idx))
                 continue;
 
             Scalar fractureWidth =
-                problem.fractureWidth(elemCtx, dofIdx, dof2Idx, timeIdx);
+                problem.fractureWidth(elemCtx, vertexIdx, vertex2Idx, timeIdx);
 
-            auto distVec = elemCtx.pos(dof2Idx, timeIdx);
-            distVec -= dofPos;
+            auto distVec = elemCtx.pos(vertex2Idx, timeIdx);
+            distVec -= vertexPos;
 
             Scalar edgeLength = distVec.two_norm();
 
@@ -123,6 +129,9 @@ public:
             // volume, so its length also needs to divided by 2.
             fractureVolume_ += (fractureWidth / 2) * (edgeLength / 2);
         }
+
+        if (fractureVolume_ <= 0.0)
+            return;
 
         //////////
         // set the fluid state for the fracture.
@@ -136,7 +145,7 @@ public:
         // ask the problem for the material law parameters of the
         // fracture.
         const auto &fractureMatParams =
-            problem.fractureMaterialLawParams(elemCtx, dofIdx, timeIdx);
+            problem.fractureMaterialLawParams(elemCtx, vertexIdx, timeIdx);
 
         // calculate the fracture saturations which would be required
         // to be consistent with the pressures

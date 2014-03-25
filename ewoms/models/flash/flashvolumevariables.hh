@@ -114,7 +114,7 @@ public:
             cTotal[compIdx] = priVars[cTot0Idx + compIdx];
 
         typename FluidSystem::ParameterCache paramCache;
-        const auto *hint = elemCtx.hint(dofIdx, timeIdx);
+        const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
         if (hint) {
             // use the same fluid state as the one of the hint, but
             // make sure that we don't overwrite the temperature

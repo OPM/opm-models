@@ -111,6 +111,7 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
@@ -179,6 +180,8 @@ protected:
         for (unsigned i = 0; i < previousSolution.size(); ++i) {
             currentSolution[i] = previousSolution[i];
             currentSolution[i] -= solutionUpdate[i];
+
+            this->model_().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
         }
     }
 

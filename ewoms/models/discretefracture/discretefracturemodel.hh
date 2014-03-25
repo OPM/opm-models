@@ -69,6 +69,14 @@ SET_TYPE_PROP(DiscreteFractureModel, FluxVariables, Ewoms::DiscreteFractureFluxV
 //! For the discrete fracture model, we need to use two-point flux
 //! appoximation or it will converge very poorly
 SET_BOOL_PROP(DiscreteFractureModel, UseTwoPointGradients, true);
+
+// The volume variable cache cannot be used by the discrete fracture
+// model, because the volume variables of a control sub-control volume
+// are not identical to the volume variables of the other volume
+// variables of the same of the same control volume. This is because
+// the fracture properties (volume, permeability, etc) are specific
+// for each sub control volume...
+SET_BOOL_PROP(DiscreteFractureModel, EnableVolumeVariablesCache, false);
 }} // namespace Properties, Opm
 
 namespace Ewoms {

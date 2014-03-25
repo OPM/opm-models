@@ -130,7 +130,7 @@ public:
             fug[compIdx] = priVars[fugacity0Idx + compIdx];
 
         // calculate phase compositions
-        const auto *hint = elemCtx.hint(dofIdx, timeIdx);
+        const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
             if (hint) {

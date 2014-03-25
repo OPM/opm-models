@@ -201,9 +201,6 @@ SET_SCALAR_PROP(FvBaseDiscretization, BaseEpsilon, 0.9123e-10);
 //! use forward differences to calculate the jacobian by default
 SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 
-//! do not use hints by default
-SET_BOOL_PROP(FvBaseDiscretization, EnableHints, false);
-
 // disable linearization recycling by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 
@@ -212,6 +209,17 @@ SET_BOOL_PROP(FvBaseDiscretization, EnablePartialReassemble, false);
 
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
+
+// by default, disable the volume variable cache. If the volume
+// variables are relatively cheap to calculate, the cache basically
+// does not yield any performance impact because of the volume
+// variable cache will cause additional pressure on the CPU caches...
+SET_BOOL_PROP(FvBaseDiscretization, EnableVolumeVariablesCache, false);
+
+// do not use thermodynamic hints by default. If you enable this, make
+// sure to also enable the volume variable cache above to avoid
+// getting an exception...
+SET_BOOL_PROP(FvBaseDiscretization, EnableThermodynamicHints, false);
 
 // if the deflection of the newton method is large, we do not need to
 // solve the linear approximation accurately. Assuming that the value
@@ -267,6 +275,8 @@ class FvBaseDiscretization
         dim = GridView::dimension
     };
 
+    typedef std::vector<VolumeVariables> VolumeVariablesVector;
+
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
@@ -320,7 +330,8 @@ public:
         // register runtime parameters of the VTK output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableHints, "Enable thermodynamic hints");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVolumeVariablesCache, "Turn on caching of local quantities");
     }
 
     /*!
@@ -332,9 +343,22 @@ public:
     {
         asImp_().updateBoundary_();
 
+        if (enableHints_() && !enableVolumeVariablesCache()) {
+            OPM_THROW(std::runtime_error,
+                      "Using thermodynamic hints requires to also enable "
+                      "the volume variable cache!\n");
+        }
+
         int nDofs = asImp_().numDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx)
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDofs);
+
+            if (enableVolumeVariablesCache()) {
+                volVarsCache_[timeIdx].resize(nDofs);
+                volVarsCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
+            }
+        }
+
         dofTotalVolume_.resize(nDofs);
 
         localJacobian_.init(problem_);
@@ -344,26 +368,17 @@ public:
         asImp_().applyInitialSolution_();
         asImp_().syncOverlap();
 
-        // resize the hint vectors
-        if (enableHints_()) {
-            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-                hints_[timeIdx].resize(asImp_().numDof());
-                hintsUsable_[timeIdx].resize(asImp_().numDof());
-                std::fill(hintsUsable_[timeIdx].begin(),
-                          hintsUsable_[timeIdx].end(),
-                          false);
-            }
-        }
-
-        // also set the solution of the "previous" time step to the
+        // also set the solution of the "previous" time steps to the
         // initial solution.
-        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
+        for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
+            solution_[timeIdx] = solution_[/*timeIdx=*/0];
 
         asImp_().registerVtkModules_();
     }
 
     /*!
-     * \brief Return the hint for a entity on the grid at given time.
+     * \brief Return the thermodynamic hint for a entity on the grid
+     *        at given time.
      *
      * The hint is defined as a VolumeVariables object which is
      * supposed to be "close" to the VolumeVariables of the current
@@ -373,55 +388,101 @@ public:
      * performance boost depending on how the physical models
      * require.)
      *
-     * \attention If no hint is available, this method will return 0.
+     * \attention If no up-to date volume variables are available, or
+     *            if hints have been disabled, this method will return
+     *            0.
      *
      * \param globalIdx The global space index for the entity where a
      *                  hint is requested.
      * \param timeIdx The index used by the time discretization.
      */
-    const VolumeVariables *hint(int globalIdx, int timeIdx) const
+    const VolumeVariables *thermodynamicHint(int globalIdx, int timeIdx) const
     {
-        if (!enableHints_() ||
-            !hintsUsable_[timeIdx][globalIdx])
-        {
+        if (!enableVolumeVariablesCache() ||
+            !enableHints_() ||
+            !volVarsCacheUpToDate_[timeIdx][globalIdx])
             return 0;
-        }
 
-        return &hints_[timeIdx][globalIdx];
+        return &volVarsCache_[timeIdx][globalIdx];
     }
 
     /*!
-     * \brief Update the hint for a entity on the grid at given time.
+     * \brief Return the cached volume variables for a entity on the
+     *        grid at given time.
      *
-     * \param hint The VolumeVariables object which ought to serve as
-     *             the hint for a given entity.
+     * \attention If no up-to date volume variables are available,
+     *            this method will return 0.
+     *
+     * \param globalIdx The global space index for the entity where a
+     *                  hint is requested.
+     * \param timeIdx The index used by the time discretization.
+     */
+    const VolumeVariables *cachedVolumeVariables(int globalIdx, int timeIdx) const
+    {
+        if (!enableVolumeVariablesCache() ||
+            !volVarsCacheUpToDate_[timeIdx][globalIdx])
+            return 0;
+
+        return &volVarsCache_[timeIdx][globalIdx];
+    }
+
+    /*!
+     * \brief Update the volume variable cache for a entity on the grid at given time.
+     *
+     * \param volVars The VolumeVariables object hint for a given degree of freedom.
      * \param globalIdx The global space index for the entity where a
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void setHint(const VolumeVariables &hint,
-                 int globalIdx,
-                 int timeIdx) const
+    void updateCachedVolumeVariables(const VolumeVariables &volVars,
+                                     int globalIdx,
+                                     int timeIdx) const
     {
-        if (!enableHints_())
+        if (!enableVolumeVariablesCache())
             return;
 
-        hints_[timeIdx][globalIdx] = hint;
-        hintsUsable_[timeIdx][globalIdx] = true;
+        volVarsCache_[timeIdx][globalIdx] = volVars;
+        volVarsCacheUpToDate_[timeIdx][globalIdx] = true;
     }
 
     /*!
-     * \brief Move the hints for a given time index to the back.
+     * \brief Invalidate the cache for a given volume variables object.
+     *
+     * \param globalIdx The global space index for the entity where a
+     *                  hint is to be set.
+     * \param timeIdx The index used by the time discretization.
+     */
+    void invalidateVolumeVariablesCacheEntry(int globalIdx,
+                                             int timeIdx) const
+    {
+        if (!enableVolumeVariablesCache())
+            return;
+
+        volVarsCacheUpToDate_[timeIdx][globalIdx] = false;
+    }
+
+    /*!
+     * \brief Move the volume variables for a given time index to the back.
      *
      * This method should only be called by the time discretization.
      *
      * \param numSlots The number of time step slots for which the
      *                 hints should be shifted.
      */
-    void shiftHints(int numSlots = 1)
+    void shiftVolumeVariablesCache(int numSlots = 1)
     {
-        for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx)
-            hints_[timeIdx + numSlots] = hints_[timeIdx];
+        if (!enableVolumeVariablesCache())
+            return;
+
+        for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
+            volVarsCache_[timeIdx + numSlots] = volVarsCache_[timeIdx];
+            volVarsCacheUpToDate_[timeIdx + numSlots] = volVarsCacheUpToDate_[timeIdx];
+        }
+
+        // invalidate the cache for the most recent time index
+        std::fill(volVarsCacheUpToDate_[/*timeIdx=*/0].begin(),
+                  volVarsCacheUpToDate_[/*timeIdx=*/0].end(),
+                  false);
     }
 
     /*!
@@ -695,7 +756,8 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        hints_[/*timeIdx=*/0] = hints_[/*timeIdx=*/1];
+        volVarsCache_[/*timeIdx=*/0] = volVarsCache_[/*timeIdx=*/1];
+        volVarsCacheUpToDate_[/*timeIdx=*/0] = volVarsCacheUpToDate_[/*timeIdx=*/1];
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
         jacAsm_->reassembleAll();
@@ -713,8 +775,9 @@ public:
         // make the current solution the previous one.
         solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
 
-        // shift the hints by one position in the history
-        asImp_().shiftHints();
+        // shift the volume variables cache by one position in the
+        // history
+        asImp_().shiftVolumeVariablesCache(/*numSlots=*/1);
     }
 
     /*!
@@ -1009,9 +1072,15 @@ public:
     const GridView &gridView() const
     { return problem_.gridView(); }
 
+    /*!
+     * \brief Returns if the volume variables are cached by the model.
+     */
+    static bool enableVolumeVariablesCache()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache); }
+
 protected:
     static bool enableHints_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableHints); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
 
     /*!
      * \brief Register all VTK output modules which make sense for the model.
@@ -1108,12 +1177,16 @@ protected:
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);
-    }
 
-    // the hint cache for the previous and the current volume
-    // variables
-    mutable std::vector<bool> hintsUsable_[historySize];
-    mutable std::vector<VolumeVariables> hints_[historySize];
+        if (enableVolumeVariablesCache()) {
+            // invalidate all cached volume variables
+            for (int timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
+                std::fill(volVarsCacheUpToDate_[timeIdx].begin(),
+                          volVarsCacheUpToDate_[timeIdx].end(),
+                          false);
+            }
+        }
+    }
 
     /*!
      * \brief Returns whether messages should be printed
@@ -1142,6 +1215,8 @@ protected:
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
     mutable SolutionVector solution_[historySize];
+    mutable VolumeVariablesVector volVarsCache_[historySize];
+    mutable std::vector<bool> volVarsCacheUpToDate_[historySize];
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;

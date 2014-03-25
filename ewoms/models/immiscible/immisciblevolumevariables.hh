@@ -33,7 +33,6 @@
 #include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
-
 /*!
  * \ingroup ImmiscibleModel
  * \ingroup VolumeVariables
