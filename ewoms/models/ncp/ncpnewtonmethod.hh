@@ -96,11 +96,20 @@ private:
 
         // compute the DOF and element colors for partial reassembly
         if (this->enablePartialReassemble_()) {
-            // rationale: the newton method has quadratic convergence
-            Scalar reassembleTol =
+            // rationale: the change of the derivatives of the
+            // residual are relatively small if the solution is
+            // largely unchanged and a solution is largly unchanged if
+            // the right hand side is close to zero. This argument may
+            // not be bullet proof, but it is a heuristic that usually
+            // works.
+            Scalar linearTol =
                 this->error_
-                * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance)
-                * 0.1;
+                * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+            Scalar newtonTol = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
+
+            Scalar reassembleTol = 0.01*linearTol;
+            if (reassembleTol < newtonTol/10)
+                reassembleTol = newtonTol/10;
 
             this->model_().jacobianAssembler().updateDiscrepancy(previousResidual);
             this->model_().jacobianAssembler().computeColors(reassembleTol);
