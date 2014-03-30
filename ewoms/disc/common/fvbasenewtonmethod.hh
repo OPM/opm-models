@@ -61,21 +61,18 @@ NEW_PROP_TAG(DiscNewtonMethod);
 //! The class implementing the Newton algorithm
 NEW_PROP_TAG(NewtonMethod);
 
-//! Specifies whether the linearization should only be reassembled if
+//! Specifies whether the linearization should only be relinearized if
 //! the current solution deviates too much from the evaluation point
-NEW_PROP_TAG(EnablePartialReassemble);
+NEW_PROP_TAG(EnablePartialRelinearization);
 
 //! Enable linearization recycling?
 NEW_PROP_TAG(EnableLinearizationRecycling);
-
-//! Enable partial reassembly?
-NEW_PROP_TAG(EnablePartialReassemble);
 
 /*!
  * \brief The desired residual reduction of the linear solver.
  *
  * In the context of this class, this is needed to implement partial
- * reassembly of the linearized system of equations.
+ * relinearization of the linearized system of equations.
  */
 NEW_PROP_TAG(LinearSolverTolerance);
 
@@ -164,8 +161,9 @@ protected:
         if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        // compute the vertex and element colors for partial reassembly
-        if (enablePartialReassemble_()) {
+        // compute the degree of freedom and element colors for
+        // partial relinearization
+        if (enablePartialRelinearization_()) {
             // rationale: the change of the derivatives of the
             // residual are relatively small if the solution is
             // largely unchanged and a solution is largly unchanged if
@@ -177,12 +175,12 @@ protected:
                 * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
             Scalar newtonTol = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
 
-            Scalar reassembleTol = 0.01*linearTol;
-            if (reassembleTol < newtonTol/10)
-                reassembleTol = newtonTol/10;
+            Scalar relinearizationTol = 0.01*linearTol;
+            if (relinearizationTol < newtonTol/10)
+                relinearizationTol = newtonTol/10;
 
             model_().jacobianAssembler().updateDiscrepancy(previousResidual);
-            model_().jacobianAssembler().computeColors(reassembleTol);
+            model_().jacobianAssembler().computeColors(relinearizationTol);
         }
 
         // update the solution
@@ -201,7 +199,7 @@ protected:
     {
         ParentType::failed_();
 
-        model_().jacobianAssembler().reassembleAll();
+        model_().jacobianAssembler().relinearizeAll();
     }
 
     /*!
@@ -214,7 +212,7 @@ protected:
         if (enableLinearizationRecycling_())
             model_().jacobianAssembler().setLinearizationReusable(true);
         else
-            model_().jacobianAssembler().reassembleAll();
+            model_().jacobianAssembler().relinearizeAll();
     }
 
     /*!
@@ -231,10 +229,10 @@ protected:
 
     /*!
      * \brief Returns true iff the assembler uses partial
-     *        reassembly.
+     *        relinearization.
      */
-    bool enablePartialReassemble_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
+    bool enablePartialRelinearization_() const
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
 
     /*!
      * \brief Returns true iff the assembler recycles the

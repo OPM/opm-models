@@ -144,10 +144,10 @@ NEW_PROP_TAG(TimeManager);
 //! first iteration of the next time step.
 NEW_PROP_TAG(EnableLinearizationRecycling);
 
-//! Specify whether the jacobian matrix should be only reassembled for
-//! elements where at least one degree of freedom is above the
-//! specified tolerance
-NEW_PROP_TAG(EnablePartialReassemble);
+//! Specify whether the system of equations should be only
+//! relinearized for elements where at least one degree of freedom is
+//! above the specified tolerance
+NEW_PROP_TAG(EnablePartialRelinearization);
 
 //! Specify whether the some degrees of fredom can be constraint
 NEW_PROP_TAG(EnableConstraints);

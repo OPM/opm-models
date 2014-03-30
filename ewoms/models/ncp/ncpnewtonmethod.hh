@@ -94,8 +94,9 @@ private:
         if (!std::isfinite(deltaU.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        // compute the DOF and element colors for partial reassembly
-        if (this->enablePartialReassemble_()) {
+        // compute the degree of freedom and element colors for
+        // partial relinearization
+        if (this->enablePartialRelinearization_()) {
             // rationale: the change of the derivatives of the
             // residual are relatively small if the solution is
             // largely unchanged and a solution is largly unchanged if
@@ -107,12 +108,12 @@ private:
                 * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
             Scalar newtonTol = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
 
-            Scalar reassembleTol = 0.01*linearTol;
-            if (reassembleTol < newtonTol/10)
-                reassembleTol = newtonTol/10;
+            Scalar relinearizationTol = 0.01*linearTol;
+            if (relinearizationTol < newtonTol/10)
+                relinearizationTol = newtonTol/10;
 
             this->model_().jacobianAssembler().updateDiscrepancy(previousResidual);
-            this->model_().jacobianAssembler().computeColors(reassembleTol);
+            this->model_().jacobianAssembler().computeColors(relinearizationTol);
         }
 
         // normal Newton-Raphson update

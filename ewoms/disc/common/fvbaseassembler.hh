@@ -120,7 +120,7 @@ public:
         // relinearization of the system of equations is disabled, the
         // relinearization accuracy is always smaller than the current
         // tolerance
-        reassembleAccuracy_ = 0.0;
+        relinearizationAccuracy_ = 0.0;
     }
 
     ~FvBaseAssembler()
@@ -137,7 +137,7 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableLinearizationRecycling,
                              "Re-use of the linearized system of equations at the first "
                              "iteration of the next time step");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble,
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialRelinearization,
                              "relinearize only those degrees of freedom that have changed "
                              "'sufficiently' between two Newton iterations");
     }
@@ -181,12 +181,12 @@ public:
         totalElems_ = gridView_().comm().sum(numElems);
 
         // initialize data needed for partial relinearization
-        if (enablePartialReassemble_()) {
+        if (enablePartialRelinearization_()) {
             dofColor_.resize(numDof);
             dofError_.resize(numDof);
             elementColor_.resize(numElems);
         }
-        reassembleAll();
+        relinearizeAll();
     }
 
     /*!
@@ -223,15 +223,15 @@ public:
                        "A process did not succeed in linearizing the system");
         };
 
-        if (!linearizationReused && enablePartialReassemble_()) {
+        if (!linearizationReused && enablePartialRelinearization_()) {
             greenElems_ = gridView_().comm().sum(greenElems_);
-            reassembleAccuracy_ = gridView_().comm().max(nextReassembleAccuracy_);
+            relinearizationAccuracy_ = gridView_().comm().max(nextRelinearizationAccuracy_);
 
             problem_().newtonMethod().endIterMsg()
                 << ", relinearized "
                 << totalElems_ - greenElems_ << " of " << totalElems_
                 << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
-                << " elemements. Accuracy: " << reassembleAccuracy_;
+                << " elemements. Accuracy: " << relinearizationAccuracy_;
         }
 
         // reset all degree of freedom colors to green
@@ -257,14 +257,14 @@ public:
      * \brief If partial relinearization is enabled, this method causes all
      *        elements to be relinearized in the next assemble() call.
      */
-    void reassembleAll()
+    void relinearizeAll()
     {
         // do not reuse the current linearization
         reuseLinearization_ = false;
 
         // do not use partial relinearization for the next iteration
-        nextReassembleAccuracy_ = 0.0;
-        if (enablePartialReassemble_()) {
+        nextRelinearizationAccuracy_ = 0.0;
+        if (enablePartialRelinearization_()) {
             std::fill(dofError_.begin(), dofError_.end(), 0.0);
             std::fill(dofColor_.begin(), dofColor_.end(), Red);
             std::fill(elementColor_.begin(), elementColor_.end(), Red);
@@ -281,8 +281,8 @@ public:
      * This returns the _actual_ error computed as seen by
      * computeColors(), not the tolerance which it was given.
      */
-    Scalar reassembleAccuracy() const
-    { return reassembleAccuracy_; }
+    Scalar relinearizationAccuracy() const
+    { return relinearizationAccuracy_; }
 
     /*!
      * \brief Update the distance where the non-linear system was
@@ -296,7 +296,7 @@ public:
      */
     void updateDiscrepancy(const GlobalEqVector &previousResid)
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return;
 
         // update the vector which stores the error for partial
@@ -328,7 +328,7 @@ public:
      */
     void markDofRed(int globalDofIdx)
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return;
 
         dofColor_[globalDofIdx] = Red;
@@ -355,7 +355,7 @@ public:
      */
     void computeColors(Scalar tolerance)
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return;
 
         ElementIterator elemIt = gridView_().template begin<0>();
@@ -363,15 +363,15 @@ public:
 
         // mark the red degrees of freedom and update the tolerance of
         // the linearization which actually will get achieved
-        nextReassembleAccuracy_ = 0;
+        nextRelinearizationAccuracy_ = 0;
         for (unsigned i = 0; i < dofColor_.size(); ++i) {
             if (dofError_[i] > tolerance)
                 // mark the degree of freedom 'red' if discrepancy is
                 // larger than the given tolerance
                 dofColor_[i] = Red;
             else
-                nextReassembleAccuracy_ =
-                    std::max(nextReassembleAccuracy_, dofError_[i]);
+                nextRelinearizationAccuracy_ =
+                    std::max(nextRelinearizationAccuracy_, dofError_[i]);
         };
 
         Stencil stencil(gridView_());
@@ -506,7 +506,7 @@ public:
      */
     int dofColor(const ElementContext &elemCtx, int dofIdx) const
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return Red;
 
         int globalIdx = elemCtx.globalSpaceIdx(dofIdx, /*timeIdx=*/0);
@@ -520,7 +520,7 @@ public:
      */
     int dofColor(int globalDofIdx) const
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return Red;
 
         return dofColor_[globalDofIdx];
@@ -533,7 +533,7 @@ public:
      */
     int elementColor(const Element &element) const
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return Red;
 
         return elementColor_[elementMapper_().map(element)];
@@ -546,7 +546,7 @@ public:
      */
     int elementColor(int globalElementIdx) const
     {
-        if (!enablePartialReassemble_())
+        if (!enablePartialRelinearization_())
             return Red;
 
         return elementColor_[globalElementIdx];
@@ -567,8 +567,8 @@ public:
 private:
     static bool enableLinearizationRecycling_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
-    static bool enablePartialReassemble_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialReassemble); }
+    static bool enablePartialRelinearization_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
 
     Problem &problem_()
     { return *problemPtr_; }
@@ -645,7 +645,7 @@ private:
         // reset the right hand side.
         residual_ = 0.0;
 
-        if (!enablePartialReassemble_()) {
+        if (!enablePartialRelinearization_()) {
             // If partial relinearization of the jacobian is not enabled,
             // we can just reset everything!
             (*matrix_) = 0;
@@ -744,7 +744,7 @@ private:
     // partition
     void assembleElement_(const Element &elem)
     {
-        if (enablePartialReassemble_()) {
+        if (enablePartialRelinearization_()) {
             int globalElemIdx = model_().elementMapper().map(elem);
             if (elementColor_[globalElemIdx] == Green) {
                 ++greenElems_;
@@ -828,8 +828,8 @@ private:
     int totalElems_;
     int greenElems_;
 
-    Scalar nextReassembleAccuracy_;
-    Scalar reassembleAccuracy_;
+    Scalar nextRelinearizationAccuracy_;
+    Scalar relinearizationAccuracy_;
 };
 
 } // namespace Ewoms

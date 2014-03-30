@@ -204,8 +204,8 @@ SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 // disable linearization recycling by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 
-// disable partial reassembling by default
-SET_BOOL_PROP(FvBaseDiscretization, EnablePartialReassemble, false);
+// disable partial relinearization by default
+SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
@@ -767,7 +767,7 @@ public:
         volVarsCacheUpToDate_[/*timeIdx=*/0] = volVarsCacheUpToDate_[/*timeIdx=*/1];
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
-        jacAsm_->reassembleAll();
+        jacAsm_->relinearizeAll();
     }
 
     /*!
