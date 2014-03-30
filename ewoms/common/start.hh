@@ -237,16 +237,19 @@ int start(int argc, char **argv)
         // print the parameters if requested
         int printParams = EWOMS_GET_PARAM(TypeTag, int, PrintParameters);
         if (myRank == 0) {
+            std::string endParametersSeparator("# [end of parameters]\n");
             if (printParams) {
                 if (printParams == 1 || !isatty(fileno(stdout)))
                     Ewoms::Parameters::printValues<TypeTag>();
                 else
                     // always print the list of specified but unused parameters
                     Ewoms::Parameters::printUnused<TypeTag>();
+                std::cout << endParametersSeparator;
             }
             else
                 // always print the list of specified but unused parameters
-                Ewoms::Parameters::printUnused<TypeTag>();
+                if (Ewoms::Parameters::printUnused<TypeTag>())
+                    std::cout << endParametersSeparator;
         }
 
         // print the properties if requested

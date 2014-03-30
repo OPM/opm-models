@@ -231,7 +231,7 @@ public:
                 << ", relinearized "
                 << totalElems_ - greenElems_ << " of " << totalElems_
                 << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
-                << " elemements. Accuracy: " << relinearizationAccuracy_;
+                << " elements and achieved an accuracy of " << relinearizationAccuracy_;
         }
 
         // reset all degree of freedom colors to green

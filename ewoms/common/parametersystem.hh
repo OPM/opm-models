@@ -572,23 +572,17 @@ void printValues(std::ostream &os = std::cout)
     // report the values of all registered (and unregistered)
     // parameters
     if (runTimeKeyList.size() > 0) {
-        os << "###########\n";
-        os << "# Used run-time specified parameters\n";
-        os << "###########\n" << std::flush;
+        os << "# [known parameters which were specified at run-time]\n";
         printParamList_<TypeTag>(os, runTimeKeyList);
     }
 
     if (compileTimeKeyList.size() > 0) {
-        os << "###########\n";
-        os << "# Compile-time specified parameters\n";
-        os << "###########\n" << std::flush;
+        os << "# [parameters which were specified at compile-time]\n";
         printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
     }
 
     if (unknownKeyList.size() > 0) {
-        os << "###########\n";
-        os << "# Unused run-time specified parameters\n";
-        os << "###########\n" << std::flush;
+        os << "# [unused run-time specified parameters]\n";
         auto unusedKeyIt = unknownKeyList.begin();
         const auto &unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
@@ -602,9 +596,11 @@ void printValues(std::ostream &os = std::cout)
  * \brief Print the list of unused run-time parameters.
  *
  * \param os The \c std::ostream on which the message should be printed
+ *
+ * \return true if something was printed
  */
 template <class TypeTag>
-void printUnused(std::ostream &os = std::cout)
+bool printUnused(std::ostream &os = std::cout)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
@@ -623,15 +619,15 @@ void printUnused(std::ostream &os = std::cout)
     }
 
     if (unknownKeyList.size() > 0) {
-        os << "###########\n";
-        os << "# Unused run-time specified parameters\n";
-        os << "###########\n"  << std::flush;
+        os << "# [unused run-time specified parameters]\n";
         auto unusedKeyIt = unknownKeyList.begin();
         const auto &unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
             os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
+        return true;
     }
+    return false;
 }
 
 //! \cond SKIP_THIS
