@@ -77,34 +77,34 @@ class FvBaseAssembler
 
 public:
     /*!
-     * \brief The colors of elements and DOFs required for partial
-     *        Jacobian reassembly.
+     * \brief The colors of elements and degrees of freedom required
+     *        for partial relinearization.
      */
     enum EntityColor {
         /*!
-         * DOF/element that needs to be reassembled because some
-         * relative error is above the tolerance
+         * Degree of freedom/element that needs to be relinearized
+         * because some error is above the tolerance
          */
         Red = 0,
 
         /*!
-         * DOF/element that needs to be reassembled because a
-         * neighboring element/DOF is red
+         * Degree of freedom/element that needs to be relinearized because a
+         * neighboring element/degree of freedom is red
          */
         Yellow = 1,
 
         /*!
-         * Yellow DOF has only non-green neighbor elements.
+         * Yellow degree of freedom has only non-green neighbor elements.
          *
-         * This means that its relative error is below the tolerance,
-         * but its defect can be linearized without any additional
-         * cost. This is just an "internal" color which is not used
-         * ouside of the jacobian assembler.
+         * This means that its error is below the tolerance, but its
+         * defect can be linearized without any additional cost. This
+         * is just an "internal" color which is not used ouside of the
+         * jacobian assembler.
          */
         Orange = 2,
 
         /*!
-         * DOF/element that does not need to be reassembled
+         * Degree of freedom/element that does not need to be relinearized
          */
         Green = 3
     };
@@ -116,9 +116,10 @@ public:
 
         matrix_ = 0;
 
-        // set reassemble accuracy to 0, so that if partial reassembly
-        // of the jacobian matrix is disabled, the reassemble accuracy
-        // is always smaller than the current relative tolerance
+        // set relinearization accuracy to 0, so that if partial
+        // relinearization of the system of equations is disabled, the
+        // relinearization accuracy is always smaller than the current
+        // tolerance
         reassembleAccuracy_ = 0.0;
     }
 
@@ -137,7 +138,7 @@ public:
                              "Re-use of the linearized system of equations at the first "
                              "iteration of the next time step");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialReassemble,
-                             "Re-linearize only those degrees of freedom that have changed "
+                             "relinearize only those degrees of freedom that have changed "
                              "'sufficiently' between two Newton iterations");
     }
 
@@ -179,7 +180,7 @@ public:
 
         totalElems_ = gridView_().comm().sum(numElems);
 
-        // initialize data needed for partial reassembly
+        // initialize data needed for partial relinearization
         if (enablePartialReassemble_()) {
             dofColor_.resize(numDof);
             dofError_.resize(numDof);
@@ -227,13 +228,13 @@ public:
             reassembleAccuracy_ = gridView_().comm().max(nextReassembleAccuracy_);
 
             problem_().newtonMethod().endIterMsg()
-                << ", reassembled "
-                << totalElems_ - greenElems_ << "/" << totalElems_
+                << ", relinearized "
+                << totalElems_ - greenElems_ << " of " << totalElems_
                 << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
-                << " elems @accuracy=" << reassembleAccuracy_;
+                << " elemements. Accuracy: " << reassembleAccuracy_;
         }
 
-        // reset all DOF colors to green
+        // reset all degree of freedom colors to green
         for (unsigned i = 0; i < dofColor_.size(); ++i) {
             dofColor_[i] = Green;
         }
@@ -242,7 +243,7 @@ public:
     /*!
      * \brief If linearization recycling is enabled, this method
      *        specifies whether the next call to assemble() just
-     *        rescales the storage term or does a full reassembly
+     *        rescales the storage term or does a full relinearization
      *
      * \param yesno If true, only rescale; else do full Jacobian assembly.
      */
@@ -253,34 +254,28 @@ public:
     }
 
     /*!
-     * \brief If partial reassembly is enabled, this method causes all
-     *        elements to be reassembled in the next assemble() call.
+     * \brief If partial relinearization is enabled, this method causes all
+     *        elements to be relinearized in the next assemble() call.
      */
     void reassembleAll()
     {
         // do not reuse the current linearization
         reuseLinearization_ = false;
 
-        // do not use partial reassembly for the next iteration
+        // do not use partial relinearization for the next iteration
         nextReassembleAccuracy_ = 0.0;
         if (enablePartialReassemble_()) {
-            std::fill(dofError_.begin(),
-                      dofError_.end(),
-                      0.0);
-            std::fill(dofColor_.begin(),
-                      dofColor_.end(),
-                      Red);
-            std::fill(elementColor_.begin(),
-                      elementColor_.end(),
-                      Red);
+            std::fill(dofError_.begin(), dofError_.end(), 0.0);
+            std::fill(dofColor_.begin(), dofColor_.end(), Red);
+            std::fill(elementColor_.begin(), elementColor_.end(), Red);
         }
     }
 
     /*!
-     * \brief Returns the largest error of a "green" DOF for the most
-     *        recent call of the assemble() method.
+     * \brief Returns the largest error of a "green" degree of freedom
+     *        for the most recent call of the assemble() method.
      *
-     * This only has an effect if partial Jacobian reassembly is
+     * This only has an effect if partial Jacobian relinearization is
      * enabled. If it is disabled, then this method always returns 0.
      *
      * This returns the _actual_ error computed as seen by
@@ -294,7 +289,7 @@ public:
      *        originally insistently linearized and the point where it
      *        will be linerized the next time.
      *
-     * This only has an effect if partial reassemble is enabled.
+     * This only has an effect if partial relinearize is enabled.
      *
      * \param u The iterative solution of the last iteration of the Newton method
      * \param uDelta The negative difference between the last and the next iterative solution.
@@ -304,16 +299,17 @@ public:
         if (!enablePartialReassemble_())
             return;
 
-        // update the vector which stores relevant error relevant for
-        // partial reassembly for each degree of freedom
+        // update the vector which stores the error for partial
+        // relinearization for each degree of freedom
         for (unsigned globalDofIdx = 0; globalDofIdx < previousResid.size(); ++globalDofIdx) {
             if (model_().dofTotalVolume(globalDofIdx) <= 0) {
+                // ignore overlap and ghost degrees of freedom
                 dofError_[globalDofIdx] = 0;
-                continue; // ignore overlap and ghost DOFs
+                continue;
             }
 
             // we need to add the distance the solution was moved for
-            // this DOF
+            // this degree of freedom
             const auto &r = previousResid[globalDofIdx];
             Scalar dist = 0;
             for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
@@ -324,11 +320,11 @@ public:
     }
 
     /*!
-     * \brief Force to reassemble a given degree of freedom the next
+     * \brief Force to relinearize a given degree of freedom the next
      *        time the assemble() method is called.
      *
-     * \param globalDofIdx The global index of the DOF which ought
-     *                     to be red.
+     * \param globalDofIdx The global index of the degree of freedom
+     *                     which ought to be red.
      */
     void markDofRed(int globalDofIdx)
     {
@@ -339,27 +335,25 @@ public:
     }
 
     /*!
-     * \brief Determine the colors of dofs and elements for partial
-     *        reassembly given a relative tolerance.
+     * \brief Determine the colors of the degrees of freedom and of
+     *        the elements for partial re-linarization for a given
+     *        tolerance.
      *
      * The following approach is used:
      *
-     * - Set all DOFs and elements to 'green'
-     * - Mark all DOFs as 'red' which exhibit an relative error above
-     *   the tolerance
-     * - Mark all elements which feature a 'red' DOF as 'red'
-     * - Mark all DOFs which are not 'red' and are part of a
+     * - Set all degrees of freedom and elements to 'green'
+     * - Mark all degrees of freedom as 'red' which exhibit an error
+     *   above the tolerance
+     * - Mark all elements which contain 'red' degrees of freedom as 'red'
+     * - Mark all degrees of freedom which are not 'red' and are part of a
      *   'red' element as 'yellow'
      * - Mark all elements which are not 'red' and contain a
-     *   'yellow' DOF as 'yellow'
+     *   'yellow' degree of freedom as 'yellow'
      *
-     * \param relTol The relative error below which a DOF won't be
-     *               reassembled. Note that this specifies the
-     *               worst-case relative error between the last
-     *               linearization point and the current solution and
-     *               _not_ the delta vector of the Newton iteration!
+     * \param tolerance The error below which a degree of freedom
+     *                  won't be relinearized.
      */
-    void computeColors(Scalar relTol)
+    void computeColors(Scalar tolerance)
     {
         if (!enablePartialReassemble_())
             return;
@@ -367,13 +361,13 @@ public:
         ElementIterator elemIt = gridView_().template begin<0>();
         ElementIterator elemEndIt = gridView_().template end<0>();
 
-        // mark the red DOFs and update the tolerance of the
-        // linearization which actually will get achieved
+        // mark the red degrees of freedom and update the tolerance of
+        // the linearization which actually will get achieved
         nextReassembleAccuracy_ = 0;
         for (unsigned i = 0; i < dofColor_.size(); ++i) {
-            if (dofError_[i] > relTol)
-                // mark dof as red if discrepancy is larger than
-                // the relative tolerance
+            if (dofError_[i] > tolerance)
+                // mark the degree of freedom 'red' if discrepancy is
+                // larger than the given tolerance
                 dofColor_[i] = Red;
             else
                 nextReassembleAccuracy_ =
@@ -385,7 +379,8 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             stencil.update(*elemIt);
 
-            // find out whether the current element features a red DOF
+            // find out whether the current element contains a red
+            // degree of freedom
             bool isRed = false;
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
@@ -405,32 +400,32 @@ public:
                 elementColor_[globalElemIdx] = Green;
         }
 
-        // Mark yellow DOFs (as orange for the mean time)
+        // Mark yellow degrees of freedom (as orange for the mean time)
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             int elemIdx = this->elementMapper_().map(*elemIt);
             if (elementColor_[elemIdx] != Red)
-                continue; // non-red elements do not tint DOFs
-                          // yellow!
+                // non-red elements do not tint degrees of freedom yellow!
+                continue;
 
             stencil.update(*elemIt);
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
-                // if a DOF is already red, don't recolor it to
-                // yellow!
+                // if a degree of freedom is already red, don't
+                // recolor it to yellow!
                 if (dofColor_[globalIdx] != Red) {
                     dofColor_[globalIdx] = Orange;
                 }
             };
         }
 
-        // at this point we communicate the yellow DOFs to the
-        // neighboring processes because a neigbor process may not see
-        // the red DOF for yellow border DOFs
+        // at this point, we communicate the yellow degrees of freedom
+        // to the neighboring processes because a neigbor process may
+        // not see the red degree of freedom for yellow border degrees
+        // of freedom
         auto minHandle =
-            GridCommHandleFactory::template minHandle<EntityColor>(dofColor_,
-                                                                   dofMapper_());
+            GridCommHandleFactory::template minHandle<EntityColor>(dofColor_, dofMapper_());
         gridView_().communicate(*minHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
                                 Dune::ForwardCommunication);
@@ -439,12 +434,12 @@ public:
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             int elemIdx = this->elementMapper_().map(*elemIt);
-            if (elementColor_[elemIdx] == Red) {
-                continue; // element is already red!
-            }
+            if (elementColor_[elemIdx] == Red)
+                // element is already red
+                continue;
 
             // check whether the element features a yellow
-            // (resp. orange at this point) DOF
+            // (resp. orange at this point) degree of freedom
             bool isYellow = false;
             stencil.update(*elemIt);
             int numDof = stencil.numDof();
@@ -460,51 +455,51 @@ public:
                 elementColor_[elemIdx] = Yellow;
         }
 
-        // Demote orange DOFs to yellow ones if it has at least
-        // one green element as a neighbor.
+        // Demote orange degrees of freedom to yellow ones if it has
+        // at least one green element as a neighbor.
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             int elemIdx = this->elementMapper_().map(*elemIt);
             if (elementColor_[elemIdx] != Green)
-                continue; // yellow and red elements do not make
-                          // orange DOFs yellow!
+                // yellow and red elements do not make orange degrees
+                // of freedom yellow!
+                continue;
 
             stencil.update(*elemIt);
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
-                // if a DOF is orange, recolor it to yellow!
+                // if a degree of freedom is orange, recolor it to yellow!
                 if (dofColor_[globalIdx] == Orange)
                     dofColor_[globalIdx] = Yellow;
             };
         }
 
-        // demote the border orange DOFs
+        // demote the border orange degrees of freedom
         const auto maxHandle =
-            GridCommHandleFactory::template maxHandle<EntityColor>(dofColor_,
-                                                                   dofMapper_());
+            GridCommHandleFactory::template maxHandle<EntityColor>(dofColor_, dofMapper_());
         gridView_().communicate(*maxHandle,
                                 Dune::InteriorBorder_InteriorBorder_Interface,
                                 Dune::ForwardCommunication);
 
-        // promote the remaining orange DOFs to red
+        // promote the remaining orange degrees of freedom to red
         for (unsigned i = 0; i < dofColor_.size(); ++i) {
-            // if a DOF is green or yellow don't do anything!
+            // if a degree of freedom is green or yellow don't do anything!
             if (dofColor_[i] == Green || dofColor_[i] == Yellow)
                 continue;
 
-            // make sure the DOF is red (this is a no-op DOFs
-            // which are already red!)
+            // make sure the degree of freedom is red (this is a no-op
+            // degrees of freedom which are already red!)
             dofColor_[i] = Red;
 
-            // set the error of this DOF to 0 because the system
-            // will be consistently linearized at this dof
+            // set the error of this degree of freedom to 0 because
+            // the system will be relinearized at this dof
             dofError_[i] = 0.0;
         };
     }
 
     /*!
-     * \brief Returns the reassemble color of a DOF
+     * \brief Returns the relinearization color of a degree of freedom
      *
      * \copydetails Doxygen::elementParam
      * \copydetails Doxygen::dofIdxParam
@@ -519,9 +514,9 @@ public:
     }
 
     /*!
-     * \brief Returns the reassemble color of a DOF
+     * \brief Returns the relinearization color of a degree of freedom
      *
-     * \param globalDofIdx The global index of the DOF.
+     * \param globalDofIdx The global index of the degree of freedom.
      */
     int dofColor(int globalDofIdx) const
     {
@@ -532,7 +527,7 @@ public:
     }
 
     /*!
-     * \brief Returns the Jacobian reassemble color of an element
+     * \brief Returns the relinearization color of an element
      *
      * \copydetails Doxygen::elementParam
      */
@@ -545,7 +540,7 @@ public:
     }
 
     /*!
-     * \brief Returns the Jacobian reassemble color of an element
+     * \brief Returns the relinearization color of an element
      *
      * \param globalElementIdx The global index of the element.
      */
@@ -600,8 +595,8 @@ private:
 
         Stencil stencil(gridView_());
 
-        // find out the global indices of the neighboring DOFs of
-        // each primary DOF
+        // find out the global indices of the neighboring degrees of
+        // freedom of each primary degree of freedom
         typedef std::set<int> NeighborSet;
         std::vector<NeighborSet> neighbors(numDof);
         ElementIterator eIt = gridView_().template begin<0>();
@@ -625,9 +620,9 @@ private:
         }
         matrix_->endrowsizes();
 
-        // fill the rows with indices. each DOF talks to all of its
-        // neighbors. (it also talks to itself since DOFs are
-        // sometimes quite egocentric.)
+        // fill the rows with indices. each degree of freedom talks to
+        // all of its neighbors. (it also talks to itself since
+        // degrees of freedom are sometimes quite egocentric.)
         for (int i = 0; i < numDof; ++i) {
             typename NeighborSet::iterator nIt = neighbors[i].begin();
             typename NeighborSet::iterator nEndIt = neighbors[i].end();
@@ -639,8 +634,8 @@ private:
     }
 
     // reset the global linear system of equations. if partial
-    // reassemble is enabled, this means that the jacobian matrix must
-    // only be erased partially!
+    // relinearization is enabled, this means that the Jacobian matrix
+    // must only be erased partially!
     void resetSystem_()
     {
         // do not do anything if we can re-use the current linearization
@@ -651,7 +646,7 @@ private:
         residual_ = 0.0;
 
         if (!enablePartialReassemble_()) {
-            // If partial reassembly of the jacobian is not enabled,
+            // If partial relinearization of the jacobian is not enabled,
             // we can just reset everything!
             (*matrix_) = 0;
 
@@ -667,13 +662,14 @@ private:
             return;
         }
 
-        // reset all entries corrosponding to a red or yellow DOF
+        // reset all entries corrosponding to a red or yellow degree
+        // of freedom
         for (unsigned rowIdx = 0; rowIdx < matrix_->N(); ++rowIdx) {
             if (dofColor_[rowIdx] == Green)
                 continue; // the equations for this control volume are
                           // already below the treshold
 
-            // here we have yellow or red DOFs...
+            // here we have yellow or red degrees of freedom...
 
             // reset the parts needed for Jacobian recycling
             if (enableLinearizationRecycling_()) {
@@ -731,7 +727,7 @@ private:
         oldDt_ = curDt;
         greenElems_ = 0;
 
-        // reassemble the elements...
+        // relinearize the elements...
         ElementIterator elemIt = gridView_().template begin<0>();
         ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -824,7 +820,7 @@ private:
     // time step size of last assembly
     Scalar oldDt_;
 
-    // attributes required for partial jacobian reassembly
+    // data required for partial relinearization
     std::vector<EntityColor> dofColor_;
     std::vector<Scalar> dofError_;
     std::vector<EntityColor> elementColor_;

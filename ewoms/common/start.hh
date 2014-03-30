@@ -203,17 +203,17 @@ int start(int argc, char **argv)
         tEnd = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         if (tEnd < -1e50) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(
-                    argv[0], "Mandatory parameter '--end-time' not specified!");
+                Parameters::printUsage<TypeTag>(argv[0],
+                                                "Mandatory parameter '--end-time' not specified!");
             return 1;
         }
 
         dt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         if (dt < -1e50) {
             if (myRank == 0)
-                Parameters::printUsage<TypeTag>(
-                    argv[0], "Mandatory parameter '--initial-time-step-size' "
-                             "not specified!");
+                Parameters::printUsage<TypeTag>(argv[0],
+                                                "Mandatory parameter '--initial-time-step-size' "
+                                                "not specified!");
             return 1;
         }
 
@@ -264,8 +264,7 @@ int start(int argc, char **argv)
         { GridCreator::makeGrid(); }
         catch (const Dune::Exception &e)
         {
-            std::cout << __FILE__ << ":" << __LINE__ << ":"
-                      << " Creation of the grid failed: " << e.what() << "\n"
+            std::cout << "Creation of the grid failed: " << e.what() << "\n"
                       << std::flush;
             return 1;
         }

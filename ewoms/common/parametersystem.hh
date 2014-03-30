@@ -513,8 +513,7 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
             }
 
             paramValue = argv[i + 1];
-            ++i; // In the case of '-myOpt abc' each pair counts as two
-                 // arguments
+            ++i; // In the case of '-myOpt abc' each pair counts as two arguments
         }
 
         // capitalize first letter of parameter name
