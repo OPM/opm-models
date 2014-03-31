@@ -404,7 +404,7 @@ protected:
                          const FluidState &fluidState)
     {
         const auto &stencil = context.stencil(timeIdx);
-        const auto &face = stencil.boundaryFace[bfIdx];
+        const auto &face = stencil.boundaryFace(bfIdx);
 
         const auto &elemCtx = context.elementContext();
         int insideScvIdx = face.interiorIndex();
@@ -416,7 +416,7 @@ protected:
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = face.integrationPos();
-        distVec -= context.element().geometry().global(insideScv.localGeometry->center());
+        distVec -= context.element().geometry().global(insideScv.localGeometry().center());
 
         Scalar dist = distVec * face.normal();
 
