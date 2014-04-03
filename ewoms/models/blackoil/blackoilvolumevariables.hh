@@ -56,12 +56,12 @@ class BlackOilVolumeVariables
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { saturation0Idx = Indices::saturation0Idx };
-    enum { wCompIdx = FluidSystem::wCompIdx };
-    enum { oCompIdx = FluidSystem::oCompIdx };
-    enum { gCompIdx = FluidSystem::gCompIdx };
-    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
-    enum { oPhaseIdx = FluidSystem::oPhaseIdx };
-    enum { gPhaseIdx = FluidSystem::gPhaseIdx };
+    enum { waterCompIdx = FluidSystem::waterCompIdx };
+    enum { oilCompIdx = FluidSystem::oilCompIdx };
+    enum { gasCompIdx = FluidSystem::gasCompIdx };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
+    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -115,20 +115,20 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
         // set composition of gas and water phases
-        fluidState_.setMoleFraction(gPhaseIdx, gCompIdx, 1.0);
-        fluidState_.setMoleFraction(wPhaseIdx, wCompIdx, 1.0);
+        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
+        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
 
         // retrieve the relevant parameters from the fluid
         // system.
-        Scalar p = fluidState_.pressure(oPhaseIdx);
+        Scalar p = fluidState_.pressure(oilPhaseIdx);
         Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);
         Scalar Bo = FluidSystem::oilFormationVolumeFactor(p);
         Scalar Rs = FluidSystem::gasDissolutionFactor(p);
-        Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx) / Bo;
-        Scalar rhorefg = FluidSystem::surfaceDensity(gPhaseIdx);
+        Scalar rhoo = FluidSystem::surfaceDensity(oilPhaseIdx) / Bo;
+        Scalar rhorefg = FluidSystem::surfaceDensity(gasPhaseIdx);
         Scalar rhog = rhorefg / Bg;
-        Scalar MG = FluidSystem::molarMass(gPhaseIdx);
-        Scalar MO = FluidSystem::molarMass(oPhaseIdx);
+        Scalar MG = FluidSystem::molarMass(gasPhaseIdx);
+        Scalar MO = FluidSystem::molarMass(oilPhaseIdx);
 
         // calculate composition of oil phase in terms of mass
         // fractions.
@@ -146,8 +146,8 @@ public:
         // saturations as the amount of gas that needs to get out pf
         // the oil. The saturation of the oil phase is then given by 1
         // minus the water saturation
-        Scalar Sg = fluidState_.saturation(gPhaseIdx);
-        Scalar Sw = fluidState_.saturation(wPhaseIdx);
+        Scalar Sg = fluidState_.saturation(gasPhaseIdx);
+        Scalar Sw = fluidState_.saturation(waterPhaseIdx);
         if (Sg < 0) {
             Scalar So = 1 - Sw;
 
@@ -174,19 +174,19 @@ public:
                 Scalar pBubb = FluidSystem::oilSaturationPressure(XoG);
 
                 // calculate the density of the oil at the saturation pressure
-                rhoo = FluidSystem::surfaceDensity(oPhaseIdx)
+                rhoo = FluidSystem::surfaceDensity(oilPhaseIdx)
                        / FluidSystem::oilFormationVolumeFactor(p);
                 // compress to the actual pressure of the system
                 rhoo *= 1.0 + FluidSystem::oilCompressibility()
-                              * (fluidState_.pressure(oPhaseIdx) - pBubb);
+                              * (fluidState_.pressure(oilPhaseIdx) - pBubb);
 
                 // convert the "residual gas" into a saturation
                 Sg = -rho_GInPhase / rhog;
             }
 
             // update the saturations. Gas phase is not present!
-            fluidState_.setSaturation(gPhaseIdx, Sg);
-            fluidState_.setSaturation(oPhaseIdx, So);
+            fluidState_.setSaturation(gasPhaseIdx, Sg);
+            fluidState_.setSaturation(oilPhaseIdx, So);
         }
 
         // convert mass to mole fractions
@@ -195,20 +195,20 @@ public:
         Scalar xoO = 1 - xoG;
 
         // set the oil-phase composition
-        fluidState_.setMoleFraction(oPhaseIdx, gCompIdx, xoG);
-        fluidState_.setMoleFraction(oPhaseIdx, oCompIdx, xoO);
+        fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
+        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, xoO);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
-        rhoo = FluidSystem::density(fluidState_, paramCache, oPhaseIdx);
+        rhoo = FluidSystem::density(fluidState_, paramCache, oilPhaseIdx);
 
         // set the phase densities for the phases
-        fluidState_.setDensity(wPhaseIdx,
+        fluidState_.setDensity(waterPhaseIdx,
                                FluidSystem::density(fluidState_, paramCache,
-                                                    wPhaseIdx));
-        fluidState_.setDensity(gPhaseIdx, rhog);
-        fluidState_.setDensity(oPhaseIdx, rhoo);
+                                                    waterPhaseIdx));
+        fluidState_.setDensity(gasPhaseIdx, rhog);
+        fluidState_.setDensity(oilPhaseIdx, rhoo);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity

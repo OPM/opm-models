@@ -57,8 +57,8 @@ class DiscreteFractureVolumeVariables : public ImmiscibleVolumeVariables<TypeTag
                                   "implemented for two fluid phases!");
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    enum { wPhaseIdx = MaterialLaw::wPhaseIdx };
-    enum { nPhaseIdx = MaterialLaw::nPhaseIdx };
+    enum { wettingPhaseIdx = MaterialLaw::wettingPhaseIdx };
+    enum { nonWettingPhaseIdx = MaterialLaw::nonWettingPhaseIdx };
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
@@ -90,9 +90,9 @@ public:
 
         // Make sure that the wetting saturation in the matrix fluid
         // state does not get larger than 1
-        Scalar SwMatrix = std::min(1.0, this->fluidState_.saturation(wPhaseIdx));
-        this->fluidState_.setSaturation(wPhaseIdx, SwMatrix);
-        this->fluidState_.setSaturation(nPhaseIdx, 1 - SwMatrix);
+        Scalar SwMatrix = std::min(1.0, this->fluidState_.saturation(wettingPhaseIdx));
+        this->fluidState_.setSaturation(wettingPhaseIdx, SwMatrix);
+        this->fluidState_.setSaturation(nonWettingPhaseIdx, 1 - SwMatrix);
 
         // retrieve the facture width and intrinsic permeability from
         // the problem
@@ -158,9 +158,9 @@ public:
         // Make sure that the wetting saturation in the fracture does
         // not get negative
         Scalar SwFracture
-            = std::max(0.0, fractureFluidState_.saturation(wPhaseIdx));
-        fractureFluidState_.setSaturation(wPhaseIdx, SwFracture);
-        fractureFluidState_.setSaturation(nPhaseIdx, 1 - SwFracture);
+            = std::max(0.0, fractureFluidState_.saturation(wettingPhaseIdx));
+        fractureFluidState_.setSaturation(wettingPhaseIdx, SwFracture);
+        fractureFluidState_.setSaturation(nonWettingPhaseIdx, 1 - SwFracture);
 
         // calculate the relative permeabilities of the fracture
         MaterialLaw::relativePermeabilities(fractureRelativePermeabilities_,

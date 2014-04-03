@@ -58,7 +58,7 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     enum { pressureWIdx = Indices::pressureWIdx };
     enum { numPhases = FluidSystem::numPhases };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
-    enum { nPhaseIdx = 1 - wPhaseIdx };
+    enum { nonWettingPhaseIdx = 1 - wPhaseIdx };
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
@@ -128,7 +128,7 @@ protected:
                 // first, we have to find the minimum capillary pressure
                 // (i.e. Sw = 0)
                 fs.setSaturation(wPhaseIdx, 1.0);
-                fs.setSaturation(nPhaseIdx, 0.0);
+                fs.setSaturation(nonWettingPhaseIdx, 0.0);
                 PhaseVector pC;
                 MaterialLaw::capillaryPressures(pC, matParams, fs);
 
@@ -138,13 +138,13 @@ protected:
                 Scalar pWOld = uLastIter[globI][pressureWIdx];
                 Scalar pNOld =
                     std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                             pWOld + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                             pWOld + (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]));
 
                 /////////
                 // find the saturations of the previous iteration
                 /////////
                 fs.setPressure(wPhaseIdx, pWOld);
-                fs.setPressure(nPhaseIdx, pNOld);
+                fs.setPressure(nonWettingPhaseIdx, pNOld);
 
                 PhaseVector satOld;
                 MaterialLaw::saturations(satOld, matParams, fs);
@@ -156,14 +156,14 @@ protected:
                 // of the wetting saturation
                 /////////
                 fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] - 0.2);
-                fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
+                fs.setSaturation(nonWettingPhaseIdx, 1.0 - (satOld[wPhaseIdx] - 0.2));
                 MaterialLaw::capillaryPressures(pC, matParams, fs);
-                Scalar pwMin = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
+                Scalar pwMin = pNOld - (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]);
 
                 fs.setSaturation(wPhaseIdx, satOld[wPhaseIdx] + 0.2);
-                fs.setSaturation(nPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
+                fs.setSaturation(nonWettingPhaseIdx, 1.0 - (satOld[wPhaseIdx] + 0.2));
                 MaterialLaw::capillaryPressures(pC, matParams, fs);
-                Scalar pwMax = pNOld - (pC[nPhaseIdx] - pC[wPhaseIdx]);
+                Scalar pwMax = pNOld - (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]);
 
                 /////////
                 // clamp the result to the minimum and the maximum

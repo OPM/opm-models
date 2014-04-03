@@ -71,8 +71,8 @@ class VtkBlackOilModule : public VtkBaseOutputModule<TypeTag>
 
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    enum { oPhaseIdx = FluidSystem::oPhaseIdx };
-    enum { gCompIdx = FluidSystem::gCompIdx };
+    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    enum { gasCompIdx = FluidSystem::gasCompIdx };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
@@ -127,8 +127,8 @@ public:
             const auto &fs
                 = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
             int I = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
-            Scalar po = fs.pressure(oPhaseIdx);
-            Scalar X_oG = fs.massFraction(oPhaseIdx, gCompIdx);
+            Scalar po = fs.pressure(oilPhaseIdx);
+            Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
 
             if (gasDissolutionFactorOutput_())
                 gasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);

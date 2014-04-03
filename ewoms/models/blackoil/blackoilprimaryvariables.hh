@@ -56,12 +56,12 @@ class BlackOilPrimaryVariables
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     // phase indices from the fluid system
-    enum { gPhaseIdx = FluidSystem::gPhaseIdx };
-    enum { wPhaseIdx = FluidSystem::wPhaseIdx };
-    enum { oPhaseIdx = FluidSystem::oPhaseIdx };
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
+    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
 
     // component indices from the fluid system
-    enum { gCompIdx = FluidSystem::gCompIdx };
+    enum { gasCompIdx = FluidSystem::gasCompIdx };
 
     static_assert(numPhases == 3, "The black-oil model has three phases!");
     static_assert(numComponents == 3,
@@ -98,9 +98,9 @@ public:
             saturation[phaseIdx] = fluidState.saturation(phaseIdx);
 
         // check whether the oil is undersaturated
-        Scalar po = fluidState.pressure(oPhaseIdx);
+        Scalar po = fluidState.pressure(oilPhaseIdx);
         Scalar poSat = FluidSystem::oilSaturationPressure(
-            fluidState.massFraction(oPhaseIdx, gCompIdx));
+            fluidState.massFraction(oilPhaseIdx, gasCompIdx));
         if (po > poSat) {
             // use a "negative saturation" of the gas phase to
             // compensate
@@ -108,20 +108,19 @@ public:
             // calculate the "mass per cubic meter of pore space" of
             // gas which is missing to make the oil saturated
             Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
-            Scalar rhoo = FluidSystem::surfaceDensity(oPhaseIdx) / Bo;
+            Scalar rhoo = FluidSystem::surfaceDensity(oilPhaseIdx) / Bo;
             Scalar Rs = FluidSystem::gasDissolutionFactor(po);
-            Scalar XoGSat = Rs * FluidSystem::surfaceDensity(gPhaseIdx) / rhoo;
+            Scalar XoGSat = Rs * FluidSystem::surfaceDensity(gasPhaseIdx) / rhoo;
 
             Scalar rhogDef
-                = fluidState.saturation(oPhaseIdx) * rhoo
-                  * (XoGSat - fluidState.massFraction(oPhaseIdx, gCompIdx));
+                = fluidState.saturation(oilPhaseIdx) * rhoo
+                  * (XoGSat - fluidState.massFraction(oilPhaseIdx, gasCompIdx));
 
             Scalar Bg = FluidSystem::gasFormationVolumeFactor(po);
-            Scalar rhog = FluidSystem::surfaceDensity(gPhaseIdx) / Bg;
+            Scalar rhog = FluidSystem::surfaceDensity(gasPhaseIdx) / Bg;
 
-            saturation[gPhaseIdx] = -rhogDef / rhog;
-            saturation[oPhaseIdx] = 1 - saturation[wPhaseIdx]
-                                    - saturation[gPhaseIdx];
+            saturation[gasPhaseIdx] = -rhogDef / rhog;
+            saturation[oilPhaseIdx] = 1 - saturation[waterPhaseIdx]- saturation[gasPhaseIdx];
         }
 
         (*this)[saturation0Idx] = saturation[/*phaseIdx=*/0];

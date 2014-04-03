@@ -58,7 +58,7 @@ class RichardsVolumeVariables
     enum { pressureWIdx = Indices::pressureWIdx };
     enum { numPhases = FluidSystem::numPhases };
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
-    enum { nPhaseIdx = 1 - wPhaseIdx };
+    enum { nonWettingPhaseIdx = 1 - wPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
@@ -76,7 +76,7 @@ public:
                 int dofIdx,
                 int timeIdx)
     {
-        assert(!FluidSystem::isLiquid(nPhaseIdx));
+        assert(!FluidSystem::isLiquid(nonWettingPhaseIdx));
 
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
@@ -95,7 +95,7 @@ public:
 
         // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
         fluidState_.setSaturation(wPhaseIdx, 1.0);
-        fluidState_.setSaturation(nPhaseIdx, 0.0);
+        fluidState_.setSaturation(nonWettingPhaseIdx, 0.0);
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
@@ -104,18 +104,18 @@ public:
         // saturated by the wetting phase
         Scalar pW = priVars[pressureWIdx];
         Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                             pW + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+                             pW + (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]));
 
         /////////
         // calculate the saturations
         /////////
         fluidState_.setPressure(wPhaseIdx, pW);
-        fluidState_.setPressure(nPhaseIdx, pN);
+        fluidState_.setPressure(nonWettingPhaseIdx, pN);
 
         PhaseVector sat;
         MaterialLaw::saturations(sat, materialParams, fluidState_);
         fluidState_.setSaturation(wPhaseIdx, sat[wPhaseIdx]);
-        fluidState_.setSaturation(nPhaseIdx, 1.0 - sat[wPhaseIdx]);
+        fluidState_.setSaturation(nonWettingPhaseIdx, 1.0 - sat[wPhaseIdx]);
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
@@ -123,12 +123,12 @@ public:
         // compute and set the wetting phase viscosity
         Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, wPhaseIdx);
         fluidState_.setViscosity(wPhaseIdx, mu);
-        fluidState_.setViscosity(nPhaseIdx, 1e-20);
+        fluidState_.setViscosity(nonWettingPhaseIdx, 1e-20);
 
         // compute and set the wetting phase density
         Scalar rho = FluidSystem::density(fluidState_, paramCache, wPhaseIdx);
         fluidState_.setDensity(wPhaseIdx, rho);
-        fluidState_.setDensity(nPhaseIdx, 1e-20);
+        fluidState_.setDensity(nonWettingPhaseIdx, 1e-20);
 
         //////////
         // specify the other parameters

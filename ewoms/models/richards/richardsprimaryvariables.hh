@@ -60,7 +60,7 @@ class RichardsPrimaryVariables
     enum { pressureWIdx = Indices::pressureWIdx };
 
     enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
-    enum { nPhaseIdx = 1 - wPhaseIdx };
+    enum { nonWettingPhaseIdx = 1 - wPhaseIdx };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -106,14 +106,14 @@ public:
 
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, Sw);
-        fs.setSaturation(nPhaseIdx, 1 - Sw);
+        fs.setSaturation(nonWettingPhaseIdx, 1 - Sw);
 
         // set phase pressures
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
         fs.setPressure(wPhaseIdx, pw);
-        fs.setPressure(nPhaseIdx, pw + (pC[nPhaseIdx] - pC[wPhaseIdx]));
+        fs.setPressure(nonWettingPhaseIdx, pw + (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]));
 
         assignNaive(fs);
     }
@@ -134,14 +134,14 @@ public:
 
         fs.setTemperature(T);
         fs.setSaturation(wPhaseIdx, 1 - Sn);
-        fs.setSaturation(nPhaseIdx, Sn);
+        fs.setSaturation(nonWettingPhaseIdx, Sn);
 
         // set phase pressures
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-        fs.setPressure(nPhaseIdx, pn);
-        fs.setPressure(nPhaseIdx, pn + (pC[wPhaseIdx] - pC[nPhaseIdx]));
+        fs.setPressure(nonWettingPhaseIdx, pn);
+        fs.setPressure(nonWettingPhaseIdx, pn + (pC[wPhaseIdx] - pC[nonWettingPhaseIdx]));
 
         assignNaive(fs);
     }
