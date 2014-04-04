@@ -130,7 +130,7 @@ public:
      * The buffer will be deleted automatically after the data has
      * been written by to disk.
      */
-    template <class Scalar, int nComp>
+    template <class Scalar = double, int nComp = 1>
     Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > *
     allocateManagedBuffer(int nEntities)
     {
@@ -142,23 +142,12 @@ public:
         return &(vfs->vf);
     }
 
-    // todo: remove these two functions as soon as we depend on a
-    //       contemporary compilers which support default template
-    //       arguments for function templates
-    template <class Scalar>
-    Dune::BlockVector<Dune::FieldVector<Scalar, 1> > *
-    allocateManagedBuffer(int nEntities)
-    { return allocateManagedBuffer<Scalar, 1>(nEntities); }
-    Dune::BlockVector<Dune::FieldVector<double, 1> > *
-    allocateManagedBuffer(int nEntities)
-    { return allocateManagedBuffer<double, 1>(nEntities); }
-
     /*!
      * \brief Add a finished vertex centered vector field to the
      *        output.
      *
      * If the buffer is managed by the VtkMultiWriter, it must have
-     * been created using createField() and may not be used by
+     * been created using allocateManagedBuffer() and may not be used
      * anywhere after calling this method. After the data is written
      * to disk, it will be deleted automatically.
      *
@@ -167,7 +156,7 @@ public:
      * finishes.
      *
      * In both cases, modifying the buffer between the call to this
-     * method and endWrite() results in _undefined behaviour_.
+     * method and endWrite() results in _undefined behavior_.
      */
     template <class DataBuffer>
     void attachVertexData(DataBuffer &buf, std::string name, int nComps = 1)
@@ -418,17 +407,12 @@ private:
     //       virtual destructor for the type given to the linked
     //       list and a derived template class which actually
     //       knows the type of the vector field it must delete.
-
-    /** \todo Please doc me! */
-
     class ManagedObject_
     {
     public:
         virtual ~ManagedObject_()
         {}
     };
-
-    /** \todo Please doc me! */
 
     template <class VF>
     class ManagedVectorField_ : public ManagedObject_
