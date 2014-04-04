@@ -36,8 +36,10 @@
 #include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkblackoilmodule.hh>
-#warning TODO
-//#include <ewoms/io/eclipseoutputblackoilmodule.hh>
+
+#include <ewoms/io/eclipseoutputblackoilmodule.hh>
+#include <ewoms/io/eclipsewriter.hh>
+
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <sstream>
@@ -54,8 +56,7 @@ namespace Properties {
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel, VtkBlackOil, VtkComposition));
 
 //! Set the local residual function
-SET_TYPE_PROP(BlackOilModel,
-              LocalResidual,
+SET_TYPE_PROP(BlackOilModel, LocalResidual,
               Ewoms::BlackOilLocalResidual<TypeTag>);
 
 //! The Model property
@@ -91,9 +92,26 @@ SET_TYPE_PROP(BlackOilModel, FluxVariables, Ewoms::BlackOilFluxVariables<TypeTag
 SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
-SET_TYPE_PROP(BlackOilModel,
-              FluidSystem,
+SET_TYPE_PROP(BlackOilModel, FluidSystem,
               Opm::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! Only produce Eclipse output if the necessary preconditions are fulfilled.
+SET_PROP(BlackOilModel, EnableEclipseOutput)
+{ private:
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+
+#if HAVE_DUNE_CORNERPOINT
+    static const bool isCpGrid = std::is_same<Grid, Dune::CpGrid>::value;
+#else
+    static const bool isCpGrid = false;
+#endif
+
+public:
+    // in addition to Dune::CpGrid, the ERT libraries must be
+    // available...
+    static const bool value = isCpGrid && HAVE_ERT;
+};
+
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -307,12 +325,16 @@ public:
         this->outputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
         this->outputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
 
-        // add the output module for the Eclipse binary output
-#warning TODO
-        //this->outputModules_.push_back(new Ewoms::EclipseOutputBlackoilModule<TypeTag>(this->simulator_));
+        if (enableEclipseOutput_()) {
+            // add the output module for the Eclipse binary output
+            this->outputModules_.push_back(new Ewoms::EclipseOutputBlackOilModule<TypeTag>(this->simulator_));
+        }
     }
 
 private:
+    static bool enableEclipseOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseOutput); }
+
     mutable Scalar referencePressure_;
 };
 } // namespace Ewoms

@@ -31,8 +31,9 @@
 
 namespace Opm {
 namespace Properties {
-//! Returns whether gravity is considered in the problem
-NEW_PROP_TAG(EnableGravity);
+//! Specifies if the simulation should write output files that are
+//! compatible with those produced by the commercial Eclipse simulator
+NEW_PROP_TAG(EnableEclipseOutput);
 //! The fluid state used by the model
 NEW_PROP_TAG(BlackOilFluidState);
 //! The material law for heat conduction
